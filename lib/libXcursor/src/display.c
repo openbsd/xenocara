@@ -50,6 +50,8 @@ _XcursorCloseDisplay (Display *dpy, XExtCodes *codes)
 {
     XcursorDisplayInfo  *info, **prev;
 
+    (void) codes;	/* UNUSED */
+
     /*
      * Unhook from the global list
      */
@@ -70,20 +72,20 @@ _XcursorCloseDisplay (Display *dpy, XExtCodes *codes)
 static int
 _XcursorDefaultParseBool (char *v)
 {
-    char    c0, c1;
+    char    c0;
 
     c0 = *v;
     if (isupper ((int)c0))
-	c0 = tolower (c0);
+	c0 = (char) tolower (c0);
     if (c0 == 't' || c0 == 'y' || c0 == '1')
 	return 1;
     if (c0 == 'f' || c0 == 'n' || c0 == '0')
 	return 0;
     if (c0 == 'o')
     {
-	c1 = v[1];
+	char c1 = v[1];
 	if (isupper ((int)c1))
-	    c1 = tolower (c1);
+	    c1 = (char) tolower (c1);
 	if (c1 == 'n')
 	    return 1;
 	if (c1 == 'f')

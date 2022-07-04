@@ -23,11 +23,12 @@
 #ifndef _XCURSOR_H_
 #define _XCURSOR_H_
 #include <stdio.h>
+#include <stdint.h>
 #include <X11/Xfuncproto.h>
 #include <X11/Xlib.h>
 
 typedef int		XcursorBool;
-typedef unsigned int	XcursorUInt;
+typedef uint32_t	XcursorUInt;
 
 typedef XcursorUInt	XcursorDim;
 typedef XcursorUInt	XcursorPixel;

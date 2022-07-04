@@ -32,7 +32,6 @@ _XcursorFontIsCursor (Display *dpy, Font font)
     XcursorDisplayInfo	*info;
     XcursorBool		ret;
     XFontStruct		*fs;
-    int			n;
     Atom		cursor;
 
     if (!dpy || !font)
@@ -57,6 +56,7 @@ _XcursorFontIsCursor (Display *dpy, Font font)
     fs = XQueryFont (dpy, font);
     if (fs)
     {
+	int n;
 	cursor = XInternAtom (dpy, "cursor", False);
 	for (n = 0; n < fs->n_properties; n++)
 	    if (fs->properties[n].name == XA_FONT)
@@ -291,7 +291,7 @@ XcursorImageHash (XImage	  *image,
 	    if (bit_swap)
 		t = _reverse_byte[t];
 	    if (t)
-		hash[(i++) & (XCURSOR_BITMAP_HASH_SIZE - 1)] ^= RotByte (t, y & 7);
+		hash[(i++) & (XCURSOR_BITMAP_HASH_SIZE - 1)] ^= (unsigned char) RotByte (t, y & 7);
 	}
 	line += image->bytes_per_line;
     }
@@ -336,7 +336,7 @@ XcursorNoticePutBitmap (Display	    *dpy,
     /*
      * Make sure the image fills the bitmap
      */
-    if (image->width != bmi->width || image->height != bmi->height)
+    if (image->width != (int)bmi->width || image->height != (int)bmi->height)
     {
 	bmi->bitmap = 0;
 	return;
@@ -402,6 +402,10 @@ XcursorTryShapeBitmapCursor (Display		*dpy,
     char		name[8 * XCURSOR_BITMAP_HASH_SIZE];
     int			i;
     Cursor		cursor;
+
+    (void) mask;	/* UNUSED */
+    (void) x;		/* UNUSED */
+    (void) y;		/* UNUSED */
 
     if (!dpy || !foreground || !background)
         return 0;

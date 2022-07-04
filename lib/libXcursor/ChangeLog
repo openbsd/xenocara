@@ -1,3 +1,372 @@
+commit 27adb16027fa99d83818a0ed9f6623cb03f0c574
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 09:55:44 2022 -0700
+
+    libXcursor 1.2.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e864ad83068016c121962a0bbe8dde26755bf26f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 09:43:29 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0d8a59186d415101040e7761b6cc6adfce36c5d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 09:22:14 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d223fce4c7b2792ccc32e4b68090ac2d92d49f09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 09:21:29 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66accad188420c40f0d62b409bfd2af605bb6f05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 09:19:14 2022 -0700
+
+    Convert COPYING from ISO-8859-1 to UTF-8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 801925839d26e7c8d942c5e02c4897652ead26c8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu May 6 20:10:41 2021 -0400
+
+    more cppcheck-style fixes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f807ac9c786714ef4e86ad7edfa60f92baf0b4a6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 3 20:25:43 2021 -0400
+
+    cppcheck style-fixes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 13ca987eafed426d5347bafdf274ad59e2641650
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue May 4 04:20:14 2021 -0400
+
+    mention "Inherits=" lists
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6edf1caf6fe6826b3727ab19ba9e4d7ad163a48e
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Tue May 4 18:30:53 2021 +0200
+
+    fix XcursorTheme loop regression
+    
+    Handle themes with multiple inherit entries. Although the previous
+    commit keeped track of inherited themes, it only handled multiple theme
+    entries on the highest level.
+    
+    This fix unconditionally checks if the next upper level contains a line.
+    If it does, it processes contained themes (i.e. the current theme had an
+    inherited entry in its index file).
+    
+    If the upper level has no more themes, it goes down a level and
+    processes the next theme there. If no next theme exists, it moves down
+    another level and so on until it reaches level 0, i.e. the initially
+    supplied theme.
+    
+    The lowest level (d = 0) is treated specially because we must not modify
+    the supplied theme, which could happen when calling _XcursorNextPath.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+
+commit b47ca9858ee11bdbd08f1e31102116ff51cb6be5
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun May 2 16:00:25 2021 +0200
+
+    Handle more theme loop situations
+    
+    This is a follow up for commit f64a8cc1a65dcad4294e2988b402a34175019663
+    resulting from https://bugs.freedesktop.org/show_bug.cgi?id=3603
+    
+    The current loop detection only works for direct self references but not
+    for transitive ones. Limiting the inheritance depth fixes this issue as
+    suggested by Keith Packard.
+    
+    I avoided the introduction of a recursion function. Instead I modified
+    XcursorScanTheme to work iterative.
+    
+    The current recursion code adds the "Inherits=..." line to heap and has
+    an iteration variable to go through all themes listed in that line per
+    recursion. This is covered with the newly introduced XcursorInherit
+    struct with its fields "line" and "theme". Since "theme" points into
+    "line", only "line" has to be freed eventually.
+    
+    If a fixed inheritage limit of 32 is reached, the code stops processing
+    and returns NULL. It also returns NULL if it detects the initial theme
+    in one of the inheritages to break the loop early on.
+    
+    Last but not least I removed the printf statement. The only situation in
+    which libXcursor writes to stdout is when it is explicitly requested.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+
+commit 403bb32d5fb0dbb9e83ec7a5743b2fee75445ea7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Mar 19 17:08:42 2021 -0400
+
+    eliminate special escaping for "/*" which produces look-alike Unicode for
+    newer groff (making select/paste useless), but is not necessary with
+    groff, mandoc or Solaris 10 nroff.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1ab5ffa9e394bf51f90893210fc6f1e3849891ab
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 18 10:29:49 2021 -0400
+
+    fix a typo and a style issue
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 9898afadfbe000159cbaaa0c4dc11c1fb09bde5b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 17 19:07:19 2021 -0400
+
+    update copyright notice
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d64dda62def8318ddf613918f6b7a652aafb1471
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 17 18:52:16 2021 -0400
+
+    fix raggedy prototypes and structure declarations using tabstops in appropriate macros
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8560016436dc521b373c5bb25860e009fa4e291d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 20:36:15 2021 -0400
+
+    document the API called from libX11
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit bacd41c0c068c5f55b635a4887b4185ad2e3ea10
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 19:34:51 2021 -0400
+
+    document the cursor-comments functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 821254578e15440d2177fff0b61f73590ae29869
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 18:21:47 2021 -0400
+
+    document the animation support functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2695829868243d41db5b47c9269423caca8dd1b4
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 18:00:22 2021 -0400
+
+    improve explanation of Xcursor's search algorithm
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 80cd802e0c2bf3af730dc7f852cb80c713e9db6c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 16:40:03 2021 -0400
+
+    start on the animated cursors; fixup whitespace
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 36650c9455428f007f4feb682ecbc9385e31ce71
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 15:52:39 2021 -0400
+
+    update ".so" links, and fix a special case for "const char *" in parsing function-names
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 23a0faa12948bfd9cc18ecb95025007c9261c2dd
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 04:25:38 2021 -0400
+
+    document the cursor-load functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5b15abee96488c4771228ac6020c67c0d59d5100
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Mar 16 03:58:23 2021 -0400
+
+    add see-also section
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 8ca8885d3153d6091e7c7b0a8c9510cd487cd583
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Mar 15 20:24:39 2021 -0400
+
+    document the library-attributes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 61adeda1d32b1f298551d51616286bff104fcd69
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Mar 15 19:49:27 2021 -0400
+
+    document the theme_core setter/getter functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f5b6dc1af2398ce2e55d0e71d91b12e6612e1f3e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Mar 15 19:32:12 2021 -0400
+
+    improve explanation for functions which load images
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit bd591012ed1521d4d6dd602f831f13bd57d6782b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Mar 15 19:00:14 2021 -0400
+
+    italicize parameter names, for readability
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 438e798b34c7ef7c52455247cb5361eab728fe76
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Mar 15 18:47:03 2021 -0400
+
+    correct a prototype
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a383f6cc5d64715012e7c53c70a624c303103d4d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 14 19:24:48 2021 -0400
+
+    further formatting fixes.  added script to create/find ".so" files which are missing
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1fd32263c0d11310b7d04f34f43051f802cc8ea7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Mar 14 17:18:59 2021 -0400
+
+    make the function-prototypes easier to read, by eliminating hyphenation and filling
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 979809b752773eacba6737095b1a4174cd5cf744
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 20:17:08 2021 -0500
+
+    document the other environment variables
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fb377b9a71dbc0a6d52d61eed4d47f99bb06d584
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 18:28:05 2021 -0500
+
+    amend that...
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 362fdcfc3ed7fd0841c48c2a7b6f3fc3af5d5cdb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 18:26:48 2021 -0500
+
+    add check in case the image size is 0x0
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 09f69a8829fea8939afda32fe4f25f1eda57085d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 18:04:23 2021 -0500
+
+    fix stricter gcc warnings using casts
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 152f8e45db1d2cceeceac6ae8dafb9b48d20d8e8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 17:24:36 2021 -0500
+
+    fix stricter gcc warnings using casts
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 628cde0575a1e3819e73fa631d6532f9f5409e14
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 17:18:31 2021 -0500
+
+    fix stricter gcc warnings by changing the type for the loop variable to
+    match the type of the loop limit
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ce907e36e0869a4fcf89e2aeaa4d9d0cb52d7644
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Mar 11 04:14:45 2021 -0500
+
+    quiet warnings for unused parameters
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 7623dae73c71fd3bfc2b820e6c98eb99b36dba44
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 10 19:41:43 2021 -0500
+
+    fix a missing initializer
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cea72e14274d3288b641e14f6cf1171b97485790
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Mar 10 19:36:04 2021 -0500
+
+    quiet normal gcc warnings using casts (no object change)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 204b6f130858ef038832887ea10488e7aed711a6
+Author: Valentin <vakevk+git@gmail.com>
+Date:   Sun Aug 30 15:37:19 2020 +0200
+
+    Fix undefined behavior
+    
+    Without the casts the bytes accesses get converted to int. but int is
+    not guaranteed to be 4 bytes large. Even when it is 4 bytes large
+    `bytes[3] << 24` does not fit because int is signed.
+
+commit 448398a3b97a77648e90cc993597bafb2ad95eac
+Author: Valentin <vakevk+git@gmail.com>
+Date:   Sun Aug 30 15:35:16 2020 +0200
+
+    Use fixed size integer type
+    
+    This type is meant to be 4 bytes large as seen in _XcursorReadUInt which
+    always reads 4 bytes. An unsigned int is often 4 bytes large but this
+    isnt' guaranteed so it is cleaner to use the exact type we want.
+
 commit b84b5d100f193fda0630c4d6fa889cd3e05ca033
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 10 17:36:26 2019 -0700
@@ -927,19 +1296,19 @@ Date:   Mon Jun 13 16:44:53 2005 +0000
     Bug #1043: Fix leak when creating animated cursors.
 
 commit 89e52cde6eaf5e2d46198ee2fa16b67ef7e1dd32
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 20:51:37 2005 +0000
 
     Remove experiment with calling the man page file 4x
 
 commit 5589b4f6a36f2c039adc81fa4d406574eeef35b3
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 20:44:18 2005 +0000
 
     Remove all the not found with pkgconfig stuff
 
 commit 4070c0af6c7bfe12218181d56e8e3cbb86006d27
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 19:15:43 2005 +0000
 
     - Add Xcursor build system

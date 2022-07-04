@@ -5,37 +5,65 @@ libman_PRE =				\
 	$(Xcursor_shadows:=.man)
 
 Xcursor_shadows =			\
-	XcursorImageCreate		\
-	XcursorImageDestroy		\
-	XcursorImagesCreate		\
-	XcursorImagesDestroy		\
+	XcursorAnimateCreate		\
+	XcursorAnimateDestroy		\
+	XcursorAnimateNext		\
+	XcursorCommentCreate		\
+	XcursorCommentDestroy		\
+	XcursorCommentsCreate		\
+	XcursorCommentsDestroy		\
 	XcursorCursorsCreate		\
 	XcursorCursorsDestroy		\
-	XcursorXcFileLoadImage		\
-	XcursorXcFileLoadImages		\
-	XcursorXcFileLoadAllImages	\
-	XcursorXcFileLoad		\
-	XcursorXcFileSave		\
+	XcursorFileLoad			\
+	XcursorFileLoadAllImages	\
+	XcursorFileLoadImage		\
+	XcursorFileLoadImages		\
+	XcursorFileSave			\
+	XcursorFileSaveImages		\
+	XcursorFilenameLoad		\
+	XcursorFilenameLoadAllImages	\
+	XcursorFilenameLoadCursor	\
+	XcursorFilenameLoadCursors	\
 	XcursorFilenameLoadImage	\
 	XcursorFilenameLoadImages	\
-	XcursorFilenameLoadAllImages	\
-	XcursorFilenameLoad		\
-	XcursorFilenameSaveImages	\
 	XcursorFilenameSave		\
-	XcursorLibraryLoadImage		\
-	XcursorLibraryLoadImages	\
-	XcursorFilenameLoadCursor	\
+	XcursorFilenameSaveImages	\
+	XcursorGetDefaultSize		\
+	XcursorGetTheme			\
+	XcursorGetThemeCore		\
+	XcursorImageCreate		\
+	XcursorImageDestroy		\
+	XcursorImageHash		\
+	XcursorImageLoadCursor		\
+	XcursorImagesCreate		\
+	XcursorImagesDestroy		\
+	XcursorImagesLoadCursor		\
+	XcursorImagesLoadCursors	\
+	XcursorImagesSetName		\
 	XcursorLibraryLoadCursor	\
 	XcursorLibraryLoadCursors	\
-	XcursorShapeLoadImage		\
-	XcursorShapeLoadImages		\
+	XcursorLibraryLoadImage		\
+	XcursorLibraryLoadImages	\
+	XcursorLibraryPath		\
+	XcursorLibraryShape		\
+	XcursorNoticeCreateBitmap	\
+	XcursorNoticePutBitmap		\
+	XcursorSetDefaultSize		\
+	XcursorSetTheme			\
+	XcursorSetThemeCore		\
 	XcursorShapeLoadCursor		\
 	XcursorShapeLoadCursors		\
+	XcursorShapeLoadImage		\
+	XcursorShapeLoadImages		\
 	XcursorSupportsARGB		\
-	XcursorSetDefaultSize		\
-	XcursorGetDefaultSize		\
-	XcursorSetTheme			\
-	XcursorGetTheme
+	XcursorSupportsAnim		\
+	XcursorTryShapeBitmapCursor	\
+	XcursorTryShapeCursor		\
+	XcursorXcFileLoad		\
+	XcursorXcFileLoadAllImages	\
+	XcursorXcFileLoadImage		\
+	XcursorXcFileLoadImages		\
+	XcursorXcFileSave
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
 

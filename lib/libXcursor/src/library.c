@@ -32,6 +32,11 @@
 #define XCURSORPATH "~/.local/share/icons:~/.icons:/usr/share/icons:/usr/share/pixmaps:"ICONDIR
 #endif
 
+typedef struct XcursorInherit {
+    char	*line;
+    const char	*theme;
+} XcursorInherit;
+
 const char *
 XcursorLibraryPath (void)
 {
@@ -58,15 +63,15 @@ _XcursorAddPathElt (char *path, const char *elt, int len)
 	pathlen++;
     }
     if (len == -1)
-	len = strlen (elt);
+	len = (int) strlen (elt);
     /* strip leading slashes */
     while (len && elt[0] == '/')
     {
 	elt++;
 	len--;
     }
-    strncpy (path + pathlen, elt, len);
-    path[pathlen + len] = '\0';
+    strncpy (path + pathlen, elt, (size_t) len);
+    path[pathlen + (size_t) len] = '\0';
 }
 
 static char *
@@ -82,19 +87,19 @@ _XcursorBuildThemeDir (const char *dir, const char *theme)
     int		    len;
 
     if (!dir || !theme)
-        return NULL;
+	return NULL;
 
     colon = strchr (dir, ':');
     if (!colon)
 	colon = dir + strlen (dir);
 
-    dirlen = colon - dir;
+    dirlen = (int) (colon - dir);
 
     tcolon = strchr (theme, ':');
     if (!tcolon)
 	tcolon = theme + strlen (theme);
 
-    themelen = tcolon - theme;
+    themelen = (int) (tcolon - theme);
 
     home = NULL;
     homelen = 0;
@@ -103,7 +108,7 @@ _XcursorBuildThemeDir (const char *dir, const char *theme)
 	home = getenv ("HOME");
 	if (!home)
 	    return NULL;
-	homelen = strlen (home);
+	homelen = (int) strlen (home);
 	dir++;
 	dirlen--;
     }
@@ -114,7 +119,7 @@ _XcursorBuildThemeDir (const char *dir, const char *theme)
      */
     len = 1 + homelen + 1 + dirlen + 1 + themelen + 1;
 
-    full = malloc (len);
+    full = malloc ((size_t)len);
     if (!full)
 	return NULL;
     full[0] = '\0';
@@ -132,7 +137,7 @@ _XcursorBuildFullname (const char *dir, const char *subdir, const char *file)
     char    *full;
 
     if (!dir || !subdir || !file)
-        return NULL;
+	return NULL;
 
     full = malloc (strlen (dir) + 1 + strlen (subdir) + 1 + strlen (file) + 1);
     if (!full)
@@ -165,7 +170,7 @@ _XcursorThemeInherits (const char *full)
     FILE    *f;
 
     if (!full)
-        return NULL;
+	return NULL;
 
     f = fopen (full, "r");
     if (f)
@@ -175,7 +180,6 @@ _XcursorThemeInherits (const char *full)
 	    if (!strncmp (line, "Inherits", 8))
 	    {
 		char    *l = line + 8;
-		char    *r;
 		while (*l == ' ') l++;
 		if (*l != '=') continue;
 		l++;
@@ -183,7 +187,7 @@ _XcursorThemeInherits (const char *full)
 		result = malloc (strlen (l) + 1);
 		if (result)
 		{
-		    r = result;
+		    char *r = result;
 		    while (*l)
 		    {
 			while (XcursorSep(*l) || XcursorWhite (*l)) l++;
@@ -206,19 +210,20 @@ _XcursorThemeInherits (const char *full)
 }
 
 #define XCURSOR_SCAN_CORE   ((FILE *) 1)
+#define MAX_INHERITS_DEPTH  32
 
 static FILE *
 XcursorScanTheme (const char *theme, const char *name)
 {
-    FILE	*f = NULL;
-    char	*full;
-    char	*dir;
-    const char  *path;
-    char	*inherits = NULL;
-    const char	*i;
+    FILE		*f = NULL;
+    char		*full;
+    char		*dir;
+    const char		*path;
+    XcursorInherit	 inherits[MAX_INHERITS_DEPTH + 1];
+    int			 d;
 
     if (!theme || !name)
-        return NULL;
+	return NULL;
 
     /*
      * XCURSOR_CORE_THEME is a magic name; cursors from the core set
@@ -228,46 +233,72 @@ XcursorScanTheme (const char *theme, const char *name)
      */
     if (!strcmp (theme, XCURSOR_CORE_THEME) && XcursorLibraryShape (name) >= 0)
 	return XCURSOR_SCAN_CORE;
-    /*
-     * Scan this theme
-     */
-    for (path = XcursorLibraryPath ();
-	 path && f == NULL;
-	 path = _XcursorNextPath (path))
+
+    memset (inherits, 0, sizeof (inherits));
+
+    d = 0;
+    inherits[d].theme = theme;
+
+    while (f == NULL && d >= 0 && inherits[d].theme != NULL)
     {
-	dir = _XcursorBuildThemeDir (path, theme);
-	if (dir)
+	/*
+	 * Scan this theme
+	 */
+	for (path = XcursorLibraryPath ();
+	     path && f == NULL;
+	     path = _XcursorNextPath (path))
 	{
-	    full = _XcursorBuildFullname (dir, "cursors", name);
-	    if (full)
+	    dir = _XcursorBuildThemeDir (path, inherits[d].theme);
+	    if (dir)
 	    {
-		f = fopen (full, "r");
-		free (full);
-	    }
-	    if (!f && !inherits)
-	    {
-		full = _XcursorBuildFullname (dir, "", "index.theme");
+		full = _XcursorBuildFullname (dir, "cursors", name);
 		if (full)
 		{
-		    inherits = _XcursorThemeInherits (full);
+		    f = fopen (full, "r");
 		    free (full);
 		}
+		if (!f && inherits[d + 1].line == NULL)
+		{
+		    if (d + 1 >= MAX_INHERITS_DEPTH)
+		    {
+			free (dir);
+			goto finish;
+		    }
+		    full = _XcursorBuildFullname (dir, "", "index.theme");
+		    if (full)
+		    {
+			inherits[d + 1].line = _XcursorThemeInherits (full);
+			inherits[d + 1].theme = inherits[d + 1].line;
+			free (full);
+		    }
+		}
+		free (dir);
 	    }
-	    free (dir);
 	}
+
+	d++;
+	while (d > 0 && inherits[d].theme == NULL)
+	{
+	    free (inherits[d].line);
+	    inherits[d].line = NULL;
+
+	    if (--d == 0)
+		inherits[d].theme = NULL;
+	    else
+		inherits[d].theme = _XcursorNextPath (inherits[d].theme);
+	}
+
+	/*
+	 * Detect and break self reference loop early on.
+	 */
+	if (inherits[d].theme != NULL && strcmp (inherits[d].theme, theme) == 0)
+	    break;
     }
-    /*
-     * Recurse to scan inherited themes
-     */
-    for (i = inherits; i && f == NULL; i = _XcursorNextPath (i))
-    {
-        if (strcmp(i, theme) != 0)
-            f = XcursorScanTheme (i, name);
-        else
-            printf("Not calling XcursorScanTheme because of circular dependency: %s. %s", i, name);
-    }
-    if (inherits != NULL)
-	free (inherits);
+
+finish:
+    for (d = 1; d <= MAX_INHERITS_DEPTH; d++)
+	free (inherits[d].line);
+
     return f;
 }
 
@@ -278,15 +309,13 @@ XcursorLibraryLoadImage (const char *file, const char *theme, int size)
     XcursorImage    *image = NULL;
 
     if (!file)
-        return NULL;
+	return NULL;
 
     if (theme)
 	f = XcursorScanTheme (theme, file);
     if (!f)
 	f = XcursorScanTheme ("default", file);
-    if (f == XCURSOR_SCAN_CORE)
-	return NULL;
-    if (f)
+    if (f != NULL && f != XCURSOR_SCAN_CORE)
     {
 	image = XcursorFileLoadImage (f, size);
 	fclose (f);
@@ -301,15 +330,13 @@ XcursorLibraryLoadImages (const char *file, const char *theme, int size)
     XcursorImages   *images = NULL;
 
     if (!file)
-        return NULL;
+	return NULL;
 
     if (theme)
 	f = XcursorScanTheme (theme, file);
     if (!f)
 	f = XcursorScanTheme ("default", file);
-    if (f == XCURSOR_SCAN_CORE)
-	return NULL;
-    if (f)
+    if (f != NULL && f != XCURSOR_SCAN_CORE)
     {
 	images = XcursorFileLoadImages (f, size);
 	if (images)
@@ -328,14 +355,14 @@ XcursorLibraryLoadCursor (Display *dpy, const char *file)
     Cursor	    cursor;
 
     if (!file)
-        return 0;
+	return 0;
 
     if (!images)
     {
 	int id = XcursorLibraryShape (file);
 
 	if (id >= 0)
-	    return _XcursorCreateFontCursor (dpy, id);
+	    return _XcursorCreateFontCursor (dpy, (unsigned) id);
 	else
 	    return 0;
     }
@@ -356,7 +383,7 @@ XcursorLibraryLoadCursors (Display *dpy, const char *file)
     XcursorCursors  *cursors;
 
     if (!file)
-        return NULL;
+	return NULL;
 
     if (!images)
     {
@@ -367,7 +394,7 @@ XcursorLibraryLoadCursors (Display *dpy, const char *file)
 	    cursors = XcursorCursorsCreate (dpy, 1);
 	    if (cursors)
 	    {
-		cursors->cursors[0] = _XcursorCreateFontCursor (dpy, id);
+		cursors->cursors[0] = _XcursorCreateFontCursor (dpy, (unsigned) id);
 		if (cursors->cursors[0] == None)
 		{
 		    XcursorCursorsDestroy (cursors);
@@ -529,15 +556,13 @@ int
 XcursorLibraryShape (const char *library)
 {
     int	low, high;
-    int	mid;
-    int	c;
 
     low = 0;
     high = NUM_STANDARD_NAMES - 1;
     while (low < high - 1)
     {
-	mid = (low + high) >> 1;
-	c = strcmp (library, STANDARD_NAME (mid));
+	int mid = (low + high) >> 1;
+	int c = strcmp (library, STANDARD_NAME (mid));
 	if (c == 0)
 	    return (mid << 1);
 	if (c > 0)
