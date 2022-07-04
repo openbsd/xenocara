@@ -1,3 +1,70 @@
+commit 98b121f22c3477b508dd17aa5db99f2ebf36ade4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 17:49:42 2021 -0700
+
+    libXft 2.3.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcd637d0f162e177a73a121feeb9d9e4fd69d4bb
+Author: Samanta Navarro <ferivoz@riseup.net>
+Date:   Sat Oct 3 11:51:35 2020 +0000
+
+    Fix typo in manual
+
+commit 6e7da3c7c40deed551d14b6bab6f3d1ac256509f
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 3 17:53:33 2020 -0700
+
+    Remove call to FcNameRegisterObjectTypes
+    
+    This fontconfig function has been deprecated and no longer does
+    anything.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 26a3a497409279d74827f374e65ae4b8d3c1f1f7
+Author: Keith Packard <keithp@keithp.com>
+Date:   Fri Apr 3 17:43:04 2020 -0700
+
+    Skip 'render' pattern elements with invalid type
+    
+    Fontconfig no longer supports the FcNameRegisterObjectTypes API, which
+    means that any Xft custom fields cannot be specified in a fontconfig
+    name as those will always be set to FcTypeUnknown in the pattern.
+    
+    The only one of those we care about is XFT_RENDER, which was used to
+    disable the Render extension, something most apps probably don't need
+    to support in names anyways. Allow the call requesting this value to
+    return FcResultTypeMismatch and pretend that XFT_RENDER is missing
+    from the pattern.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 972fa05c3df73fd3c99c409c0ac2225a58f76d09
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 1 20:57:52 2020 -0400
+
+    build-fix for c89
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 86c2355b116fd9febe2ac7f577e7c12e069d3986
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 1 20:53:30 2020 -0400
+
+    minor typography fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ed8bb9667ac1e0f0863a03a44962be9654c4d04e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Apr 1 20:52:25 2020 -0400
+
+    fix most type-conversion warnings from gcc-normal, without object-file changes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
 commit a266847d3c17dcdfcac719a1aa970ad54f4b545a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 11:03:38 2019 -0700
@@ -821,7 +888,7 @@ Date:   Fri Jul 29 21:22:51 2005 +0000
     - Update modular Xorg version
 
 commit 0dd89a9e7ba09ed0c3f90a415b506a4ed89b91bb
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 21:48:38 2005 +0000
 
     Build system for Xft
@@ -860,14 +927,14 @@ Date:   Tue May 17 08:10:10 2005 +0000
         which however is not visible outside the DDX) (Bugzilla #3268).
 
 commit 0161d08ecd543c80e5625bf63d0091dbccd95f4e
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Aug 13 19:03:15 2004 +0000
 
     Fri Aug 13 21:01:34 2004 Soeren Sandmann <sandmann@daimi.au.dk>
     Fix the build
 
 commit 0641e99b21eead5aaee0c1136dd2d640028f6783
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Aug 13 18:24:06 2004 +0000
 
     Fri Aug 13 19:53:10 2004 Soeren Sandmann <sandmann@redhat.com>

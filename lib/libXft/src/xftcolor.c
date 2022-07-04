@@ -90,9 +90,9 @@ XftColorAllocValue (Display	    *dpy,
 	green_len = masklen (visual->green_mask);
 	blue_shift = maskbase (visual->blue_mask);
 	blue_len = masklen (visual->blue_mask);
-	result->pixel = (((color->red >> (16 - red_len)) << red_shift) |
-			 ((color->green >> (16 - green_len)) << green_shift) |
-			 ((color->blue >> (16 - blue_len)) << blue_shift));
+	result->pixel = (unsigned long)(((color->red   >> (16 - red_len))   << red_shift) |
+					((color->green >> (16 - green_len)) << green_shift) |
+					((color->blue  >> (16 - blue_len))  << blue_shift));
     }
     else
     {

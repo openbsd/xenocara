@@ -96,7 +96,7 @@ XftGlyphRender (Display		*dpy,
     chars = char_local;
     if (nglyphs * size > sizeof (char_local))
     {
-	chars = malloc (nglyphs * size);
+	chars = malloc ((size_t)(nglyphs * size));
 	if (!chars)
 	    goto bail1;
     }
@@ -111,7 +111,7 @@ XftGlyphRender (Display		*dpy,
 	switch (width) {
 	case 1: char8[i] = (char) wire; break;
 	case 2: char16[i] = (unsigned short) wire; break;
-	case 4: char32[i] = (unsigned long) wire; break;
+	case 4: char32[i] = (unsigned int) wire; break;
 	}
     }
     switch (width) {
@@ -217,7 +217,7 @@ XftGlyphSpecRender (Display		    *dpy,
     chars = char_local;
     if (nglyphs * size > NUM_LOCAL)
     {
-	chars = malloc (nglyphs * size);
+	chars = malloc ((size_t)(nglyphs * size));
 	if (!chars)
 	    goto bail1;
     }
@@ -269,7 +269,7 @@ XftGlyphSpecRender (Display		    *dpy,
     elts = elts_local;
     if (nelt > NUM_ELT_LOCAL)
     {
-	elts = malloc (nelt * sizeof (XGlyphElt8));
+	elts = malloc ((size_t)nelt * sizeof (XGlyphElt8));
 	if (!elts)
 	    goto bail2;
     }
@@ -366,7 +366,7 @@ XftCharSpecRender (Display		*dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (XftGlyphSpec));
+	glyphs = malloc ((size_t)len * sizeof (XftGlyphSpec));
 	if (!glyphs)
 	    return;
     }
@@ -489,7 +489,7 @@ XftGlyphFontSpecRender (Display			    *dpy,
     chars = char_local;
     if (nglyphs * size > NUM_LOCAL)
     {
-	chars = malloc (nglyphs * size);
+	chars = malloc ((size_t)(nglyphs * size));
 	if (!chars)
 	    goto bail1;
     }
@@ -554,7 +554,7 @@ XftGlyphFontSpecRender (Display			    *dpy,
     elts = elts_local;
     if (nelt > NUM_ELT_LOCAL)
     {
-	elts = malloc (nelt * sizeof (XGlyphElt8));
+	elts = malloc ((size_t)nelt * sizeof (XGlyphElt8));
 	if (!elts)
 	    goto bail2;
     }
@@ -656,7 +656,7 @@ XftCharFontSpecRender (Display			*dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (XftGlyphFontSpec));
+	glyphs = malloc ((size_t)len * sizeof (XftGlyphFontSpec));
 	if (!glyphs)
 	    return;
     }
@@ -693,7 +693,7 @@ XftTextRender8 (Display		*dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
@@ -725,7 +725,7 @@ XftTextRender16 (Display	    *dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
@@ -757,13 +757,13 @@ XftTextRender16BE (Display	    *dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
     for (i = 0; i < len; i++)
 	glyphs[i] = XftCharIndex (dpy, pub,
-				  (string[i*2]<<8) | string[i*2+1]);
+				  (FcChar32)((string[i*2]<<8) | string[i*2+1]));
     XftGlyphRender (dpy, op, src, pub, dst,
 		     srcx, srcy, x, y, glyphs, len);
     if (glyphs != glyphs_local)
@@ -790,13 +790,13 @@ XftTextRender16LE (Display	    *dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
     for (i = 0; i < len; i++)
 	glyphs[i] = XftCharIndex (dpy, pub,
-				  string[i*2] | (string[i*2+1]<<8));
+				  (FcChar32)(string[i*2] | (string[i*2+1]<<8)));
     XftGlyphRender (dpy, op, src, pub, dst,
 		     srcx, srcy, x, y, glyphs, len);
     if (glyphs != glyphs_local)
@@ -823,7 +823,7 @@ XftTextRender32 (Display	    *dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
@@ -855,16 +855,16 @@ XftTextRender32BE (Display	    *dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
     for (i = 0; i < len; i++)
 	glyphs[i] = XftCharIndex (dpy, pub,
-				  (string[i*4] << 24) |
-				  (string[i*4+1] << 16) |
-				  (string[i*4+2] << 8) |
-				  (string[i*4+3]));
+				  (FcChar32)((string[i*4] << 24) |
+					     (string[i*4+1] << 16) |
+					     (string[i*4+2] << 8) |
+					     (string[i*4+3])));
     XftGlyphRender (dpy, op, src, pub, dst,
 		     srcx, srcy, x, y, glyphs, len);
     if (glyphs != glyphs_local)
@@ -891,16 +891,16 @@ XftTextRender32LE (Display	    *dpy,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc (len * sizeof (FT_UInt));
+	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
 	if (!glyphs)
 	    return;
     }
     for (i = 0; i < len; i++)
 	glyphs[i] = XftCharIndex (dpy, pub,
-				  (string[i*4]) |
-				  (string[i*4+1] << 8) |
-				  (string[i*4+2] << 16) |
-				  (string[i*4+3] << 24));
+				  (FcChar32)((string[i*4]) |
+					     (string[i*4+1] << 8) |
+					     (string[i*4+2] << 16) |
+					     (string[i*4+3] << 24)));
     XftGlyphRender (dpy, op, src, pub, dst,
 		     srcx, srcy, x, y, glyphs, len);
     if (glyphs != glyphs_local)
@@ -933,14 +933,14 @@ XftTextRenderUtf8 (Display	    *dpy,
     {
 	if (i == size)
 	{
-	    glyphs_new = malloc (size * 2 * sizeof (FT_UInt));
+	    glyphs_new = malloc ((size_t)size * 2 * sizeof (FT_UInt));
 	    if (!glyphs_new)
 	    {
 		if (glyphs != glyphs_local)
 		    free (glyphs);
 		return;
 	    }
-	    memcpy (glyphs_new, glyphs, size * sizeof (FT_UInt));
+	    memcpy (glyphs_new, glyphs, (size_t)size * sizeof (FT_UInt));
 	    size *= 2;
 	    if (glyphs != glyphs_local)
 		free (glyphs);
@@ -983,14 +983,14 @@ XftTextRenderUtf16 (Display	    *dpy,
     {
 	if (i == size)
 	{
-	    glyphs_new = malloc (size * 2 * sizeof (FT_UInt));
+	    glyphs_new = malloc ((size_t)size * 2 * sizeof (FT_UInt));
 	    if (!glyphs_new)
 	    {
 		if (glyphs != glyphs_local)
 		    free (glyphs);
 		return;
 	    }
-	    memcpy (glyphs_new, glyphs, size * sizeof (FT_UInt));
+	    memcpy (glyphs_new, glyphs, (size_t)size * sizeof (FT_UInt));
 	    size *= 2;
 	    if (glyphs != glyphs_local)
 		free (glyphs);

@@ -32,7 +32,6 @@ XftInit (_Xconst char *config)
     _XftConfigInitialized = True;
     if (!FcInit ())
 	return False;
-    _XftNameInit ();
     return True;
 }
 

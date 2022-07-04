@@ -288,7 +288,7 @@ The X
 .BR Drawable ,
 .BR Colormap ,
 and
-.BR Visual
+.B Visual
 of an
 .B XftDraw
 can be queried with
@@ -698,7 +698,7 @@ returns the X drawable associated with the Xft draw object
 \fBXftDrawColormap (XftDraw *\fIdraw\fB);\fR
 .fi
 .B XftDrawColormap
-returns the colormap associatied with the Xft draw object
+returns the colormap associated with the Xft draw object
 .IR draw .
 .PP
 .nf

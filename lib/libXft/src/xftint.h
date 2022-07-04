@@ -428,8 +428,6 @@ XftListFontsPatternObjects (Display	    *dpy,
 			    FcObjectSet    *os);
 
 /* xftname.c */
-void
-_XftNameInit (void);
 
 /* xftrender.c */
 

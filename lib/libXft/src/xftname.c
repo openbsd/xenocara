@@ -22,30 +22,9 @@
 
 #include "xftint.h"
 
-static const FcObjectType	_XftObjectTypes[] = {
-    { XFT_CORE,		FcTypeBool, },
-    { XFT_XLFD,		FcTypeString, },
-    { XFT_RENDER,	FcTypeBool, },
-    { XFT_MAX_GLYPH_MEMORY, FcTypeInteger, },
-};
-
-#define NUM_OBJECT_TYPES    (sizeof _XftObjectTypes / sizeof _XftObjectTypes[0])
-
-static FcBool _XftNameInitialized;
-
-_X_HIDDEN void
-_XftNameInit (void)
-{
-    if (_XftNameInitialized)
-	return;
-    _XftNameInitialized = FcTrue;
-    FcNameRegisterObjectTypes (_XftObjectTypes, NUM_OBJECT_TYPES);
-}
-
 _X_EXPORT FcPattern
 *XftNameParse (const char *name)
 {
-    _XftNameInit ();
     return FcNameParse ((FcChar8 *) name);
 }
 
@@ -54,7 +33,6 @@ XftNameUnparse (FcPattern *pat, char *dest, int len)
 {
     FcChar8 *name;
 
-    _XftNameInit ();
     name = FcNameUnparse (pat);
     if (!name)
 	return FcFalse;

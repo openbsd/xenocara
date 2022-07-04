@@ -1,11 +1,16 @@
 			Xft
 		X FreeType library
-		  Version 2.3.3
-		    2019-03-16
+		  Version 2.3.4
+		    2021-08-01
 
 Xft version 2.1 was the first stand alone release of Xft, a library that
 connects X applications with the FreeType font rasterization library. Xft
 uses fontconfig to locate fonts so it has no configuration files.
+
+Version 2.3.4
+
+Handle deprecation of FcNameRegisterObjectTypes API by fontconfig.
+Minor cleanups for compiler warnings and man pages.
 
 Version 2.3.3
 

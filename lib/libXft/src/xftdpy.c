@@ -165,7 +165,7 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
     _XftDisplayInfo = info;
 
     info->glyph_memory = 0;
-    info->max_glyph_memory = XftDefaultGetInteger (dpy,
+    info->max_glyph_memory = (unsigned long)XftDefaultGetInteger (dpy,
 						   XFT_MAX_GLYPH_MEMORY, 0,
 						   XFT_DPY_MAX_GLYPH_MEMORY);
     if (XftDebug () & XFT_DBG_CACHE)
@@ -274,9 +274,9 @@ XftDefaultSet (Display *dpy, FcPattern *defaults)
     info->defaults = defaults;
     if (!info->max_glyph_memory)
 	info->max_glyph_memory = XFT_DPY_MAX_GLYPH_MEMORY;
-    info->max_glyph_memory = XftDefaultGetInteger (dpy,
+    info->max_glyph_memory = (unsigned long)XftDefaultGetInteger (dpy,
 						   XFT_MAX_GLYPH_MEMORY, 0,
-						   info->max_glyph_memory);
+						   (int)info->max_glyph_memory);
     if (!info->max_unref_fonts)
 	info->max_unref_fonts = XFT_DPY_MAX_UNREF_FONTS;
     info->max_unref_fonts = XftDefaultGetInteger (dpy,
@@ -292,7 +292,7 @@ XftDefaultParseBool (const char *v)
 
     c0 = *v;
     if (isupper ((int)c0))
-	c0 = tolower (c0);
+	c0 = (char)tolower (c0);
     if (c0 == 't' || c0 == 'y' || c0 == '1')
 	return 1;
     if (c0 == 'f' || c0 == 'n' || c0 == '0')
@@ -301,7 +301,7 @@ XftDefaultParseBool (const char *v)
     {
 	c1 = v[1];
 	if (isupper ((int)c1))
-	    c1 = tolower (c1);
+	    c1 = (char)tolower (c1);
 	if (c1 == 'n')
 	    return 1;
 	if (c1 == 'f')
@@ -349,7 +349,7 @@ _XftDefaultInitInteger (Display *dpy, FcPattern *pat, const char *option)
     {
 	if (FcNameConstant ((FcChar8 *) v, &i))
 	    return FcPatternAddInteger (pat, option, i);
-	i = strtol (v, &e, 0);
+	i = (int)strtol (v, &e, 0);
 	if (e != v)
 	    return FcPatternAddInteger (pat, option, i);
     }

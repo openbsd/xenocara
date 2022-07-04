@@ -86,11 +86,11 @@ _compute_xrender_bitmap_size( FT_Bitmap*	target,
     if ( slot->format != FT_GLYPH_FORMAT_BITMAP )
 	return -1;
 
-    // compute the size of the final bitmap
+    /* compute the size of the final bitmap */
     ftbit = &slot->bitmap;
 
-    width = ftbit->width;
-    height = ftbit->rows;
+    width = (int)ftbit->width;
+    height = (int)ftbit->rows;
     pitch = (width+3) & ~3;
 
     switch ( ftbit->pixel_mode )
@@ -134,8 +134,8 @@ _compute_xrender_bitmap_size( FT_Bitmap*	target,
 	return -1;
     }
 
-    target->width = width;
-    target->rows = height;
+    target->width = (unsigned)width;
+    target->rows = (unsigned)height;
     target->pitch = pitch;
     target->buffer = NULL;
 
@@ -168,8 +168,8 @@ _fill_xrender_bitmap( FT_Bitmap*	target,
 	unsigned char*	srcLine	= ftbit->buffer;
         unsigned char*	dstLine	= target->buffer;
         int		src_pitch = ftbit->pitch;
-        int		width = target->width;
-        int		height = target->rows;
+        int		width = (int)target->width;
+        int		height = (int)target->rows;
         int		pitch = target->pitch;
         int		subpixel;
         int		h;
@@ -178,7 +178,7 @@ _fill_xrender_bitmap( FT_Bitmap*	target,
 		     mode == FT_RENDER_MODE_LCD_V );
 
 	if ( src_pitch < 0 )
-	    srcLine -= src_pitch*(ftbit->rows-1);
+	    srcLine -= ((unsigned)src_pitch * (ftbit->rows-1));
 
 	switch ( ftbit->pixel_mode )
 	{
@@ -214,7 +214,7 @@ _fill_xrender_bitmap( FT_Bitmap*	target,
 		int bytes = (width+7) >> 3;
 
 		for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-		    memcpy( dstLine, srcLine, bytes );
+		    memcpy( dstLine, srcLine, (size_t)bytes );
 	    }
 	    break;
 
@@ -240,7 +240,7 @@ _fill_xrender_bitmap( FT_Bitmap*	target,
 	    else  /* copy gray into gray */
 	    {
 		for ( h = height; h > 0; h--, srcLine += src_pitch, dstLine += pitch )
-		    memcpy( dstLine, srcLine, width );
+		    memcpy( dstLine, srcLine, (size_t)width );
 	    }
 	    break;
 
@@ -456,28 +456,28 @@ XftFontLoadGlyphs (Display	    *dpy,
 			printf("Trans %d %d: %d %d\n", (int) xc, (int) yc,
 			       (int) vector.x, (int) vector.y);
 		    if(xc == 0 && yc == 0) {
-			left = right = vector.x;
-			top = bottom = vector.y;
+			left = right = (int)vector.x;
+			top = bottom = (int)vector.y;
 		    } else {
-			if(left > vector.x) left = vector.x;
-			if(right < vector.x) right = vector.x;
-			if(bottom > vector.y) bottom = vector.y;
-			if(top < vector.y) top = vector.y;
+			if(left	  > vector.x) left   = (int)vector.x;
+			if(right  < vector.x) right  = (int)vector.x;
+			if(bottom > vector.y) bottom = (int)vector.y;
+			if(top	  < vector.y) top    = (int)vector.y;
 		    }
 
 		}
 	    }
-	    left = FLOOR(left);
-	    right = CEIL(right);
-	    bottom = FLOOR(bottom);
-	    top = CEIL(top);
+	    left   = (int)FLOOR(left);
+	    right  = (int)CEIL(right);
+	    bottom = (int)FLOOR(bottom);
+	    top	   = CEIL(top);
 
 	} else {
-	    left  = FLOOR( glyphslot->metrics.horiBearingX );
-	    right = CEIL( glyphslot->metrics.horiBearingX + glyphslot->metrics.width );
+	    left   = (int)FLOOR( glyphslot->metrics.horiBearingX );
+	    right  = (int)CEIL( glyphslot->metrics.horiBearingX + glyphslot->metrics.width );
 
-	    top    = CEIL( glyphslot->metrics.horiBearingY );
-	    bottom = FLOOR( glyphslot->metrics.horiBearingY - glyphslot->metrics.height );
+	    top    = (int)CEIL( glyphslot->metrics.horiBearingY );
+	    bottom = (int)FLOOR( glyphslot->metrics.horiBearingY - glyphslot->metrics.height );
 	}
 
 	width = TRUNC(right - left);
@@ -543,34 +543,34 @@ XftFontLoadGlyphs (Display	    *dpy,
 		    vector.y = 0;
 		}
 		FT_Vector_Transform (&vector, &font->info.matrix);
-		xftg->metrics.xOff = vector.x >> 6;
-		xftg->metrics.yOff = -(vector.y >> 6);
+		xftg->metrics.xOff = (short)(vector.x >> 6);
+		xftg->metrics.yOff = (short)(-(vector.y >> 6));
 	    }
 	    else
 	    {
 		if (font->info.load_flags & FT_LOAD_VERTICAL_LAYOUT)
 		{
 		    xftg->metrics.xOff = 0;
-		    xftg->metrics.yOff = -font->public.max_advance_width;
+		    xftg->metrics.yOff = (short)(-font->public.max_advance_width);
 		}
 		else
 		{
-		    xftg->metrics.xOff = font->public.max_advance_width;
+		    xftg->metrics.xOff = (short)(font->public.max_advance_width);
 		    xftg->metrics.yOff = 0;
 		}
 	    }
 	}
 	else
 	{
-	    xftg->metrics.xOff = TRUNC(ROUND(glyphslot->advance.x));
-	    xftg->metrics.yOff = -TRUNC(ROUND(glyphslot->advance.y));
+	    xftg->metrics.xOff = (short)(TRUNC(ROUND(glyphslot->advance.x)));
+	    xftg->metrics.yOff = (short)(-TRUNC(ROUND(glyphslot->advance.y)));
 	}
 
-	// compute the size of the final bitmap
+	/* compute the size of the final bitmap */
 	ftbit = &glyphslot->bitmap;
 
-	width = ftbit->width;
-	height = ftbit->rows;
+	width = (int)ftbit->width;
+	height = (int)ftbit->rows;
 
 	if (XftDebug() & XFT_DBG_GLYPH)
 	{
@@ -617,10 +617,10 @@ XftFontLoadGlyphs (Display	    *dpy,
 	if ( size < 0 )
 	    continue;
 
-	xftg->metrics.width  = local.width;
-	xftg->metrics.height = local.rows;
-	xftg->metrics.x      = - glyphslot->bitmap_left;
-	xftg->metrics.y      =   glyphslot->bitmap_top;
+	xftg->metrics.width  = (unsigned short)local.width;
+	xftg->metrics.height = (unsigned short)local.rows;
+	xftg->metrics.x      = (short)(- glyphslot->bitmap_left);
+	xftg->metrics.y      = (short)(  glyphslot->bitmap_top);
 
 	/*
 	 * If the glyph is relatively large (> 1% of server memory),
@@ -636,12 +636,12 @@ XftFontLoadGlyphs (Display	    *dpy,
 	{
 	    if (bufBitmap != bufLocal)
 		free (bufBitmap);
-	    bufBitmap = (unsigned char *) malloc (size);
+	    bufBitmap = (unsigned char *) malloc ((size_t)size);
 	    if (!bufBitmap)
 		continue;
 	    bufSize = size;
 	}
-	memset (bufBitmap, 0, size);
+	memset (bufBitmap, 0, (size_t)size);
 
 	local.buffer = bufBitmap;
 
@@ -662,7 +662,7 @@ XftFontLoadGlyphs (Display	    *dpy,
 	 */
 	glyph = (Glyph) glyphindex;
 
-	xftg->glyph_memory = size + sizeof (XftGlyph);
+	xftg->glyph_memory = (size_t)size + sizeof (XftGlyph);
 	if (font->format)
 	{
 	    if (!font->glyphset)
@@ -681,7 +681,7 @@ XftFontLoadGlyphs (Display	    *dpy,
 			c = ((c << 1) & 0xaa) | ((c >> 1) & 0x55);
 			c = ((c << 2) & 0xcc) | ((c >> 2) & 0x33);
 			c = ((c << 4) & 0xf0) | ((c >> 4) & 0x0f);
-			*line++ = c;
+			*line++ = (unsigned char)c;
 		    }
 		}
 	    }
@@ -699,9 +699,9 @@ XftFontLoadGlyphs (Display	    *dpy,
 	{
 	    if (size)
 	    {
-		xftg->bitmap = malloc (size);
+		xftg->bitmap = malloc ((size_t)size);
 		if (xftg->bitmap)
-		    memcpy (xftg->bitmap, bufBitmap, size);
+		    memcpy (xftg->bitmap, bufBitmap, (size_t)size);
 	    }
 	    else
 		xftg->bitmap = NULL;
@@ -836,7 +836,7 @@ XftCharIndex (Display	    *dpy,
     if (!font->hash_value)
 	return 0;
 
-    ent = ucs4 % font->hash_value;
+    ent = ucs4 % (FcChar32)font->hash_value;
     offset = 0;
     while (font->hash_table[ent].ucs4 != ucs4)
     {
@@ -854,13 +854,13 @@ XftCharIndex (Display	    *dpy,
 	}
 	if (!offset)
 	{
-	    offset = ucs4 % font->rehash_value;
+	    offset = ucs4 % (FcChar32)font->rehash_value;
 	    if (!offset)
 		offset = 1;
 	}
 	ent = ent + offset;
 	if (ent >= font->hash_value)
-	    ent -= font->hash_value;
+	    ent -= (FcChar32)font->hash_value;
     }
     return font->hash_table[ent].glyph;
 }
