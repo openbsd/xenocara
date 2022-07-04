@@ -705,6 +705,7 @@
 ./usr/X11R6/lib/pkgconfig/compositeproto.pc
 ./usr/X11R6/lib/pkgconfig/damageproto.pc
 ./usr/X11R6/lib/pkgconfig/dmxproto.pc
+./usr/X11R6/lib/pkgconfig/dpmsproto.pc
 ./usr/X11R6/lib/pkgconfig/dri2proto.pc
 ./usr/X11R6/lib/pkgconfig/dri3proto.pc
 ./usr/X11R6/lib/pkgconfig/fixesproto.pc
