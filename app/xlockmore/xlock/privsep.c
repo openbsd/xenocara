@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.1 2022/06/26 14:09:51 matthieu Exp $ */
+/* $OpenBSD: privsep.c,v 1.2 2022/07/07 05:00:19 semarie Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -255,8 +255,14 @@ priv_init(gid_t gid)
 
 	imsg_init(&child_ibuf, socks[0]);
 
+	if (unveil(_PATH_LOGIN_CONF, "r") == -1)
+		err(1, "unveil %s", _PATH_LOGIN_CONF);
+	if (unveil(_PATH_LOGIN_CONF ".db", "r") == -1)
+		err(1, "unveil %s.db", _PATH_LOGIN_CONF);
+	if (unveil(_PATH_LOGIN_CONF_D, "r") == -1)
+		err(1, "unveil %s", _PATH_LOGIN_CONF_D);
 	if (unveil(_PATH_AUTHPROGDIR, "rx") == -1)
-		err(1, "unveil");
+		err(1, "unveil %s", _PATH_AUTHPROGDIR);
 	if (pledge("stdio rpath getpw proc exec", NULL) == -1)
 		err(1, "pledge");
 
