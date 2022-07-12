@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.480 2022/07/04 08:54:48 matthieu Exp $
+# $OpenBSD: MODULES,v 1.481 2022/07/12 19:39:45 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -27,19 +27,19 @@ app/xauth		1.1.2
 app/xbacklight		1.2.3
 app/xbiff		1.0.4
 app/xcalc		1.1.1
-app/xclipboard		1.1.3
+app/xclipboard		1.1.4		needs-update
 app/xclock		1.1.1
-app/xcmsdb		1.0.5		remove?
+app/xcmsdb		1.0.6		needs-update/remove?
 app/xcompmgr		1.1.8
-app/xconsole		1.0.7
+app/xconsole		1.0.8		needs-update
 app/xdpyinfo		1.3.3
 app/xdriinfo		1.0.6
 app/xedit		1.2.3
-app/xev			1.2.4
+app/xev			1.2.5		needs-update
 app/xeyes		1.2.0
 app/xf86dga		1.0.3
 app/xfd			1.1.3
-app/xfontsel		1.0.6
+app/xfontsel		1.1.0		needs-update
 app/xgamma		1.0.6
 app/xgc			1.0.5		remove?
 app/xhost		1.0.8
@@ -48,22 +48,22 @@ app/xinput		1.6.3
 app/xkbcomp		1.4.5
 app/xkbevd		1.1.4
 app/xkbprint		1.0.5
-app/xkbutils		1.0.4
+app/xkbutils		1.0.5		needs-update
 app/xkill		1.0.5
 app/xload		1.1.4
 app/xlogo		1.0.5
 app/xlsatoms		1.1.3
 app/xlsclients		1.1.4
 app/xlsfonts		1.0.7
-app/xmag		1.0.6
-app/xmessage		1.0.5
-app/xmodmap		1.0.10
+app/xmag		1.0.7		needs-update
+app/xmessage		1.0.6		needs-update
+app/xmodmap		1.0.11		needs-update
 app/xmore		1.0.3
-app/xpr			1.0.5
+app/xpr			1.1.0		needs-update
 app/xprop		1.2.5
 app/xrandr		1.5.1
 app/xrdb		1.2.1
-app/xrefresh		1.0.6
+app/xrefresh		1.0.7		needs-update
 app/xset		1.2.4
 app/xsetroot		1.1.2
 app/xsm			1.0.5
@@ -71,7 +71,7 @@ app/xvidtune		1.0.3
 app/xvinfo		1.1.3
 app/xwd			1.0.8
 app/xwininfo		1.1.5
-app/xwud		1.0.5
+app/xwud		1.0.6		needs-update
 
 data/bitmaps		1.1.2
 
@@ -82,23 +82,23 @@ driver/xf86-input-elographics	1.4.2
 driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
 driver/xf86-input-joystick	1.6.3
-driver/xf86-input-keyboard	1.9.0
+driver/xf86-input-keyboard	2.0.0		needs-update
 driver/xf86-input-mouse		1.9.3
 driver/xf86-input-mutouch	1.3.0
 driver/xf86-input-penmount	1.5.0
-driver/xf86-input-synaptics	1.9.1
+driver/xf86-input-synaptics	1.9.2		needs-update
 driver/xf86-input-vmmouse	13.1.0
 driver/xf86-input-void		1.4.1
 driver/xf86-video-amdgpu	22.0.0
 driver/xf86-video-apm		1.3.0
 driver/xf86-video-ast		1.0.1
 driver/xf86-video-ati		19.1.0
-driver/xf86-video-cirrus	1.5.3
+driver/xf86-video-cirrus	1.6.0		needs-update
 driver/xf86-video-dummy		0.4.0
 driver/xf86-video-geode		2.11.20		needs-update
 driver/xf86-video-intel		2.99.917	needs-update
-driver/xf86-video-mach64	6.9.6
-driver/xf86-video-mga		2.0.0
+driver/xf86-video-mach64	6.9.7		needs-update
+driver/xf86-video-mga		2.0.1		needs-update
 driver/xf86-video-nv		2.1.21
 driver/xf86-video-openchrome	0.6.179		needs-update
 driver/xf86-video-r128		6.12.0
@@ -109,7 +109,7 @@ driver/xf86-video-vesa		2.5.0		needs-update
 driver/xf86-video-vmware	13.3.0
 driver/xf86-video-wsfb		0.4.1
 
-font/encodings			1.0.5
+font/encodings			1.0.6		needs-update
 font/adobe-100dpi		1.0.3
 font/adobe-75dpi		1.0.3
 font/adobe-utopia-100dpi	1.0.4
@@ -143,7 +143,7 @@ font/schumacher-misc		1.1.2
 font/screen-cyrillic		1.0.4
 font/sony-misc			1.0.3
 font/sun-misc			1.0.3
-font/util			1.3.2
+font/util			1.3.3	needs-update
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
@@ -198,4 +198,4 @@ util/gccmakedep			1.0.3
 util/macros			1.19.3
 util/makedepend			1.0.6
 
-xserver				21.1.3
+xserver				21.1.4		needs-update
