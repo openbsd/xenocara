@@ -1,3 +1,98 @@
+commit 025697278897648e33be6b5d662fbeda2a14871f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 15:07:08 2022 -0700
+
+    xconsole 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c8e22bcc450bcd6c0697fab4d89d99bae168b8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 07:50:50 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5a13a9eb0cb2ab0627192dce684ccb61e59678a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Apr 8 08:29:40 2022 -0700
+
+    Reduce scope of ttydev & ptydev
+    
+    Eliminates them completely if HAS_OPENPTY is set.
+    
+    Resolves gcc warnings:
+    xconsole.c: In function ‘get_pty’:
+    xconsole.c:792:35: warning: declaration of ‘ttydev’ shadows a
+     global declaration [-Wshadow]
+     get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
+                                       ^~~~~~
+    xconsole.c:181:13: note: shadowed declaration is here
+     static char ttydev[64], ptydev[64];
+                 ^~~~~~
+    xconsole.c:792:49: warning: declaration of ‘ptydev’ shadows a
+     global declaration [-Wshadow]
+     get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
+                                                     ^~~~~~
+    xconsole.c:181:25: note: shadowed declaration is here
+     static char ttydev[64], ptydev[64];
+                             ^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c374939e9e2cf36fcb6aa1984a472d73b05a821d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 7 18:17:32 2022 -0700
+
+    unifdef sgi
+    
+    SGI Irix end of support life was in 2013
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a223524f5f4b62cf8bd85bd7467314629de93a9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 7 18:08:23 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 18 out of 44 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85a37c5a06633022723cd44a3d8d35cd317e1c53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:27:53 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 32c9d454a20b4c55b08b27f06f9c4da239153a31
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:27:51 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cfc99aa8eb3beb9da60e14240c6edf3e43eee859
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:00:33 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e23fd38e1cb43d552ad6e27f491a2550bc3cea4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:20:23 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 61318786d4c171423cea84071da1bc7ab1a36427
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sun Jan 29 11:17:53 2017 -0800
@@ -701,7 +796,7 @@ Date:   Sun Jul 17 21:11:32 2005 +0000
     fix rules to work with non-GNU make.
 
 commit 6fa7b824f077a0c04eb678c8736cda077232a084
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 7 23:08:22 2005 +0000
 
     - Build system for xconsole

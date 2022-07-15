@@ -184,7 +184,6 @@ static XrmOptionDescRec options[] = {
 # if defined(TIOCCONS) || defined(SRIOCSREDIR)
 #  define USE_PTY
 static int  tty_fd, pty_fd;
-static char ttydev[64], ptydev[64];
 # endif
 #endif
 
@@ -194,7 +193,7 @@ static char ttydev[64], ptydev[64];
 #endif
 
 #ifdef USE_PTY
-static int get_pty(int *pty, int *tty, char *ttydev, char *ptydev);
+static int get_pty(int *pty, int *tty);
 #endif
 
 #ifdef USE_OSM
@@ -249,14 +248,15 @@ OpenConsole(void)
 #endif
 
 #ifdef USE_PTY
-		if (!input && get_pty (&pty_fd, &tty_fd, ttydev, ptydev) == 0)
+		if (!input && get_pty (&pty_fd, &tty_fd) == 0)
 		{
 # ifdef TIOCCONS
-		    int on = 1;
 #  ifdef USE_PRIVSEP
 		    if (priv_set_console(tty_fd) != -1)
  			input = fdopen (pty_fd, "r");
 #  else
+		    int on = 1;
+
 		    if (ioctl (tty_fd, TIOCCONS, (char *) &on) != -1)
 			input = fdopen (pty_fd, "r");
 #  endif
@@ -829,7 +829,7 @@ ScrollLine(Widget w)
  */
 
 static int
-get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
+get_pty(int *pty, int *tty)
 {
 #ifdef USE_PRIVSEP
 	if (priv_openpty(pty, tty) < 0) {
@@ -841,7 +841,10 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 		return 1;
 	}
 	return 0;
-#elif defined (SVR4) || defined (USE_PTS)
+#else
+       static char ttydev[64], ptydev[64];
+
+#if defined (SVR4) || defined (USE_PTS)
 #if defined (_AIX)
 	if ((*pty = open ("/dev/ptc", O_RDWR)) < 0)
 #else
@@ -868,14 +871,6 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 #else
 	static int devindex, letter = 0;
 
-#ifdef sgi
-	{
-	    char *slave;
-	    slave = _getpty (pty, O_RDWR, 0622, 0);
-	    if ((*tty = open (slave, O_RDWR)) != -1)
-		return 0;
-	}
-#else
 	strcpy (ttydev, "/dev/ttyxx");
 	strcpy (ptydev, "/dev/ptyxx");
 	while (PTYCHAR1[letter]) {
@@ -902,7 +897,6 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 	    devindex = 0;
 	    (void) letter++;
 	}
-#endif /* sgi else not sgi */
 #endif /* USE_GET_PSEUDOTTY */
 #endif /* SVR4 */
 	/*
@@ -910,6 +904,7 @@ get_pty(int *pty, int *tty, char *ttydev, char *ptydev)
 	 * condition and let our caller terminate cleanly.
 	 */
 	return(1);
+#endif /* HAVE_OPENPTY */
 }
 #endif
 

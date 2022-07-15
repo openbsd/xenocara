@@ -22,6 +22,7 @@
 SUBDIRS = man
 bin_PROGRAMS = xconsole
 
+AM_CPPFLAGS = -D_CONST_X_STRING
 AM_CFLAGS = $(XCONSOLE_CFLAGS) $(CWARNFLAGS)
 xconsole_LDADD = $(XCONSOLE_LIBS)
 
@@ -52,3 +53,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md
