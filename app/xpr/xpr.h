@@ -29,7 +29,7 @@ enum orientation {
     LANDSCAPE_LEFT = 3
   };
 
-enum device {LN01, LN03, LA100, PS, PP, LJET, PJET, PJETXL};
+enum device {PS, PP, LJET, PJET, PJETXL};
 
 /* Global variables */
 extern const char *progname;

@@ -1054,13 +1054,21 @@ void validate_visual(void)
 
   switch (xwd_header.visual_class) {
   case GrayScale:
-    if (depth > 8)  invalid_depth_for_visual(depth, "GrayScale");    break;
+    if (depth > 8)
+        invalid_depth_for_visual(depth, "GrayScale");
+    break;
   case StaticGray:
-    if (depth > 8)  invalid_depth_for_visual(depth, "StaticGray");   break;
+    if (depth > 8)
+        invalid_depth_for_visual(depth, "StaticGray");
+    break;
   case PseudoColor:
-    if (depth > 8)  invalid_depth_for_visual(depth, "PseudoColor");  break;
+    if (depth > 8)
+        invalid_depth_for_visual(depth, "PseudoColor");
+    break;
   case StaticColor:
-    if (depth > 8)  invalid_depth_for_visual(depth, "StaticColor");  break;
+    if (depth > 8)
+        invalid_depth_for_visual(depth, "StaticColor");
+    break;
   case DirectColor:
     if (depth != 12 && depth != 24)
 	invalid_depth_for_visual(depth, "DirectColor");

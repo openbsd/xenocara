@@ -1,4 +1,4 @@
-.TH XDPR 1 "Release 6" "X Version 11"
+.TH XDPR 1 __xorgversion__
 .SH NAME
 xdpr \- dump an X window directly to a printer
 .SH SYNOPSIS
@@ -60,29 +60,23 @@ Normally,
 .I xdpr
 gets the host and display number to use from the environment
 variable ``DISPLAY.''
-One can, however, specify them explicitly; see \fIX\fP(1).
+One can, however, specify them explicitly; see \fIX\fP(__miscmansuffix__).
 .TP
 .B \-device \fIdevtype\fP
 Specifies the device on which the file will be printed.  Currently supported:
 .RS 12
 .PD 0
 .TP
-.B la100
-Digital LA100
-.TP
 .B ljet
 HP LaserJet series and other monochrome PCL devices
 such as ThinkJet, QuietJet, RuggedWriter, \s-1HP\s+12560 series,
 and HP 2930 series printers
 .TP
-.B ln03
-Digital LN03
-.TP
 .B pjet
 HP PaintJet (color mode)
 .TP
 .B pjetxl
-HP HP PaintJet XL Color Graphics Printer (color mode)
+HP PaintJet XL Color Graphics Printer (color mode)
 .TP
 .B pp
 IBM PP3812
@@ -123,10 +117,6 @@ which display to use by default.
 .TP 10
 PRINTER
 which printer to use by default.
-.SH COPYRIGHT
-Copyright X Consortium
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHORS
 Paul Boutin, MIT Project Athena
 .br

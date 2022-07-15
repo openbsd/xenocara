@@ -1,3 +1,187 @@
+commit 2ca9da7c52152add1567deb11000cf9570577b12
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 15:55:09 2022 -0700
+
+    xpr 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5a3ca5e4f239db8be0975052911ceae1d4e4a3dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:11:44 2022 -0700
+
+    xdpr.man: minor corrections
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aafb02ad1e0580775d1f25b2a2469ccd9744e8f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:09:55 2022 -0700
+
+    man pages: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d028dd60ebde9d7e5aeb3f7a6e5bc3dfbd8577d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 12:44:25 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ce8015efcf0828208dcd4da0fcf36c66012a0b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 30 11:28:14 2021 -0800
+
+    gitlab CI: enable Static Application Security Testing (SAST)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7ae6067fd186c22c4cc0a3b57d776e492a520b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 17:30:33 2021 -0800
+
+    gitlab CI: Use ci-fairy image template
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0d8629839550c50edcf648a1f4391d3f2bb56b1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:59:06 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bcbe24155c6a631ddddcab6ce6f435a7dca62bd
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Oct 25 11:44:27 2021 +0200
+
+    remove extra 3rd parameter to open()
+    
+    When O_CREAT is not present in flags, this parameter is ignored.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit f7d5299db57e3e6ae654e561349c54a01b417e78
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Sep 12 14:48:36 2021 -0700
+
+    gitlab CI: add a basic build test
+    
+    Based on the config from libX11
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91c9f2bf4de6a508b537afb95d45cab750a439d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 15:21:52 2021 -0700
+
+    Remove support for Digital LN03 laser printer
+    
+    This DEC printer from the early 1980's is not widely used today.
+    This was the last remaining printer using the "sixel" and "sixmap"
+    support, so those functions were removed as well.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c22fc002e2b5a08c8678db673afa32fefea07a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 14:56:54 2021 -0700
+
+    Remove support for Digital LA100 dot matrix printer
+    
+    This DEC printer from the early 1980's is not widely used today.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9d9a64e094e4eb8ec5f391b7dd131231f9106dd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 14:46:18 2021 -0700
+
+    xpr.man: show current version in footer instead of X11R6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63e5e8f9e50efa30fc7c6a4a0689ceba834a1c9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 14:41:15 2021 -0700
+
+    xpr.man: remove duplicate "HP" from PaintJet XL Color name
+    
+    HP is not in fact so nice that we need to name it twice.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bcd74f809413dee8682d8c51b08f6a6360c9b9e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 1 14:29:55 2021 -0700
+
+    Use time_t instead of long with time() & ctime()
+    
+    Fixes: #1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 26ef28fd82d610c1908ca9a8ae3fda75c52befa3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:16:45 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c322eb8f9eb6caf9d9903abd04c95043dc0e0457
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:44:28 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ce80499aa7cadb253a815673bf6934df8132990a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 5 12:49:40 2018 -0700
+
+    Standardize indentation in validate_visual()
+    
+    Fixes gcc 7.3 warnings:
+    x2jet.c: In function ‘validate_visual’:
+    x2jet.c:1057:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+         if (depth > 8)  invalid_depth_for_visual(depth, "GrayScale");    break;
+         ^~
+    x2jet.c:1057:70: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+         if (depth > 8)  invalid_depth_for_visual(depth, "GrayScale");    break;
+                                                                          ^~~~~
+    x2jet.c:1059:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+         if (depth > 8)  invalid_depth_for_visual(depth, "StaticGray");   break;
+         ^~
+    x2jet.c:1059:70: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+         if (depth > 8)  invalid_depth_for_visual(depth, "StaticGray");   break;
+                                                                          ^~~~~
+    x2jet.c:1061:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+         if (depth > 8)  invalid_depth_for_visual(depth, "PseudoColor");  break;
+         ^~
+    x2jet.c:1061:70: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+         if (depth > 8)  invalid_depth_for_visual(depth, "PseudoColor");  break;
+                                                                          ^~~~~
+    x2jet.c:1063:5: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+         if (depth > 8)  invalid_depth_for_visual(depth, "StaticColor");  break;
+         ^~
+    x2jet.c:1063:70: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+         if (depth > 8)  invalid_depth_for_visual(depth, "StaticColor");  break;
+                                                                          ^~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0b852ef27abda922ae18b8042acd18104b25d596
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 18:17:12 2018 -0800
@@ -479,7 +663,7 @@ Date:   Wed Jul 20 19:32:03 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit e3928f9b676c1054790b5ef69b8a568e80482189
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 21:10:15 2005 +0000
 
     symlink.sh: add xplsprinters.sgml xprehashprinterlist.sgml xdpr.script

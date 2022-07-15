@@ -33,12 +33,12 @@ from the X Consortium.
  *
  * Author: Michael R. Gretzinger, MIT Project Athena
  *
- * Modified by Marvin Solomon, Univeristy of Wisconsin, to handle Apple
+ * Modified by Marvin Solomon, University of Wisconsin, to handle Apple
  * Laserwriter (PostScript) devices (-device ps).
  * Also accepts the -compact flag that produces more compact output
  * by using run-length encoding on white (1) pixels.
  * This version does not (yet) support the following options
- *   -append -dump -noff -nosixopt -split
+ *   -append -dump -noff -split
  *
  * Changes
  * Copyright 1986 by Marvin Solomon and the University of Wisconsin
@@ -84,7 +84,6 @@ from the X Consortium.
 #ifndef WIN32
 #include <pwd.h>
 #endif
-#include "lncmd.h"
 #include "xpr.h"
 #include <X11/XWDFile.h>
 #include <X11/Xmu/SysUtil.h>
@@ -122,8 +121,6 @@ int debug = 0;
 
 #define F_PORTRAIT 1
 #define F_LANDSCAPE 2
-#define F_DUMP 4
-#define F_NOSIXOPT 8
 #define F_APPEND 16
 #define F_NOFF 32
 #define F_REPORT 64
@@ -216,35 +213,6 @@ char *convert_data(
     GrayPtr gray,
     XColor *colors,
     int flags);
-static
-void dump_sixmap(
-  register unsigned char (*sixmap)[],
-  int iw,
-  int ih);
-static
-void build_sixmap(
-  int ih,
-  int iw,
-  unsigned char (*sixmap)[],
-  int hpad,
-  XWDFileHeader *win,
-  const char *data);
-static
-void ln03_setup(
-  int iw,
-  int ih,
-  enum orientation orientation,
-  int scale,
-  int left,
-  int top,
-  int *left_margin,
-  int *top_margin,
-  int flags,
-  const char *header,
-  const char *trailer);
-static void ln03_finish(void);
-static void la100_setup(int iw, int ih, int scale);
-static void la100_finish(void);
 static void dump_prolog(int flags);
 static int points(int n);
 static char *escape(const char *s);
@@ -261,21 +229,6 @@ void ps_setup(
   const char *trailer,
   const char *name);
 static void ps_finish(void);
-static
-void ln03_output_sixels(
-  unsigned char (*sixmap)[],
-  int iw,
-  int ih,
-  int nosixopt,
-  int split,
-  int scale,
-  int top_margin,
-  int left_margin);
-static void la100_output_sixels(
-  unsigned char (*sixmap)[],
-  int iw,
-  int ih,
-  int nosixopt);
 static void ps_output_bits(
   int iw,
   int ih,
@@ -303,16 +256,12 @@ int main(int argc, char **argv)
 {
     unsigned long swaptest = 1;
     XWDFileHeader win;
-    register unsigned char (*sixmap)[];
     register int i;
     register int iw;
     register int ih;
-    register int sixel_count;
     char *w_name;
     int scale, width, height, flags, split;
     int left, top;
-    int top_margin, left_margin;
-    int hpad;
     char *header, *trailer;
     int plane;
     int density, render;
@@ -356,7 +305,10 @@ int main(int argc, char **argv)
 	      (flags & F_SLIDE),
 	      device, cutoff, gamma, render);
 	exit(0);
+    } else if (device != PS) {
+	fprintf(stderr, "xpr: device not supported\n");
     }
+    /* everything past here is for device == PS */
 
     /* read in window header */
     fullread(0, (char *)&win, sizeof win);
@@ -420,42 +372,13 @@ int main(int argc, char **argv)
     setup_layout(device, (int) win.pixmap_width, (int) win.pixmap_height,
 		 flags, width, height, header, trailer, &scale, &orientation);
 
-    if (device == PS) {
-	iw = win.pixmap_width;
-	ih = win.pixmap_height;
-	sixmap = NULL;
-    } else {
-	/* calculate w and h cell count */
-	iw = win.pixmap_width;
-	ih = (win.pixmap_height + 5) / 6;
-	hpad = (ih * 6) - win.pixmap_height;
+    iw = win.pixmap_width;
+    ih = win.pixmap_height;
 
-	/* build pixcells from input file */
-	sixel_count = iw * ih;
-	sixmap = (unsigned char (*)[])malloc((unsigned)sixel_count);
-	build_sixmap(iw, ih, sixmap, hpad, &win, data);
-    }
-
-    /* output commands and sixel graphics */
-    if (device == LN03) {
-/*	ln03_grind_fonts(sixmap, iw, ih, scale, &pixmap); */
-	ln03_setup(iw, ih, orientation, scale, left, top,
-		   &left_margin, &top_margin, flags, header, trailer);
-	ln03_output_sixels(sixmap, iw, ih, (flags & F_NOSIXOPT), split,
-			   scale, top_margin, left_margin);
-	ln03_finish();
-    } else if (device == LA100) {
-	la100_setup(iw, ih, scale);
-	la100_output_sixels(sixmap, iw, ih, (flags & F_NOSIXOPT));
-	la100_finish();
-    } else if (device == PS) {
-	ps_setup(iw, ih, orientation, scale, left, top,
-		   flags, header, trailer, w_name);
-	ps_output_bits(iw, ih, flags, orientation, &win, data);
-	ps_finish();
-    } else {
-	fprintf(stderr, "xpr: device not supported\n");
-    }
+    ps_setup(iw, ih, orientation, scale, left, top,
+             flags, header, trailer, w_name);
+    ps_output_bits(iw, ih, flags, orientation, &win, data);
+    ps_finish();
 
     /* print some statistics */
     if (flags & F_REPORT) {
@@ -465,8 +388,6 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Orientation: %s, Scale: %d\n",
 		(orientation==PORTRAIT) ? "Portrait" : "Landscape", scale);
     }
-    if (((device == LN03) || (device == LA100)) && (flags & F_DUMP))
-	dump_sixmap(sixmap, iw, ih);
     exit(EXIT_SUCCESS);
 }
 
@@ -498,7 +419,7 @@ usage(void)
     fprintf(stderr, "usage: %s [options] [file]\n%s", progname,
 	    "    -append <file>  -noff  -output <file>\n"
 	    "    -compact\n"
-	    "    -device {ln03 | la100 | ps | lw | pp | ljet | pjet | pjetxl}\n"
+	    "    -device {ps | lw | pp | ljet | pjet | pjetxl}\n"
 	    "    -dump\n"
 	    "    -gamma <correction>\n"
 	    "    -gray {2 | 3 | 4}\n"
@@ -507,7 +428,6 @@ usage(void)
 	    "    -landscape  -portrait\n"
 	    "    -left <inches>  -top <inches>\n"
 	    "    -noposition\n"
-	    "    -nosixopt\n"
 	    "    -plane <n>\n"
 	    "    -psfig\n"
 	    "    -render <type>\n"
@@ -581,8 +501,6 @@ void parse_args(
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
 	    *cutoff = min((atof(*argv) / 100.0 * 0xFFFF), 0xFFFF);
-	} else if (!strcmp(*argv, "-dump")) {
-	    *flags |= F_DUMP;
 	} else if (!strcmp(*argv, "-density")) {
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
@@ -590,11 +508,7 @@ void parse_args(
 	} else if (!strcmp(*argv, "-device")) {
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
-	    if (!strcmp(*argv, "ln03")) {
-		*device = LN03;
-	    } else if (!strcmp(*argv, "la100")) {
-		*device = LA100;
-	    } else if (!strcmp(*argv, "ps")) {
+	    if (!strcmp(*argv, "ps")) {
 		*device = PS;
 	    } else if (!strcmp(*argv, "lw")) {
 		*device = PS;
@@ -644,8 +558,6 @@ void parse_args(
 	    argc--; argv++;
 	    if (argc == 0) missing_arg(arg);
 	    *left = (int)(300.0 * atof(*argv));
-	} else if (!strcmp(*argv, "-nosixopt")) {
-	    *flags |= F_NOSIXOPT;
 	} else if (!strcmp(*argv, "-noff")) {
 	    *flags |= F_NOFF;
 	} else if (!strcmp(*argv, "-noposition")) {
@@ -760,7 +672,7 @@ void setup_layout(
     if (trailer != NULL) win_height += 75;
 
     /* check maximum width and height; set orientation and scale*/
-    if (device == LN03 || device == PS) {
+    if (device == PS) {
 	if ((win_width < win_height || (flags & F_PORTRAIT)) &&
 	    !(flags & F_LANDSCAPE)) {
 	    *orientation = PORTRAIT;
@@ -777,7 +689,7 @@ void setup_layout(
 	    h_scale = h_max / win_height;
 	    *scale = min(w_scale, h_scale);
 	}
-    } else {			/* device == LA100 */
+    } else {
 	*orientation = PORTRAIT;
 	*scale = W_MAX / win_width;
     }
@@ -980,214 +892,6 @@ char *convert_data(
     return (out_image->data);
 }
 
-static
-void dump_sixmap(
-  register unsigned char (*sixmap)[],
-  int iw,
-  int ih)
-{
-    register int i, j;
-    register unsigned char *c;
-
-    c = (unsigned char *)sixmap;
-    fprintf(stderr, "Sixmap:\n");
-    for (i = 0; i < ih; i++) {
-	for (j = 0; j < iw; j++) {
-	    fprintf(stderr, "%02X ", *c++);
-	}
-	fprintf(stderr, "\n\n");
-    }
-}
-
-static
-void build_sixmap(
-  int ih,
-  int iw,
-  unsigned char (*sixmap)[],
-  int hpad,
-  XWDFileHeader *win,
-  const char *data)
-{
-    int iwb = win->bytes_per_line;
-    unsigned char *line[6];
-    register unsigned char *c;
-    register int i, j;
-#ifdef NOINLINE
-    register int w;
-#endif
-    register int sixel;
-    unsigned char *buffer = (unsigned char *)data;
-
-    c = (unsigned char *)sixmap;
-
-
-    while (--ih >= 0) {
-        for (i = 0; i <= 5; i++) {
-	    line[i] = buffer;
-	    buffer += iwb;
-        }
-	if ((ih == 0) && (hpad > 0)) {
-	    unsigned char *ffbuf;
-
-	    ffbuf = (unsigned char *)malloc((unsigned)iwb);
-	    for (j = 0; j < iwb; j++)
-		ffbuf[j] = 0xFF;
-	    for (; --hpad >= 0; i--)
-		line[i] = ffbuf;
-	}
-
-#ifndef NOINLINE
-	for (i = 0; i < iw; i++) {
-	    sixel =  extzv(line[0], i, 1);
-	    sixel |= extzv(line[1], i, 1) << 1;
-	    sixel |= extzv(line[2], i, 1) << 2;
-	    sixel |= extzv(line[3], i, 1) << 3;
-	    sixel |= extzv(line[4], i, 1) << 4;
-	    sixel |= extzv(line[5], i, 1) << 5;
-	    *c++ = sixel;
-	}
-#else
-	for (i = 0, w = iw; w > 0; i++) {
-	    for (j = 0; j <= 7; j++) {
-		sixel =  ((line[0][i] >> j) & 1);
-		sixel |= ((line[1][i] >> j) & 1) << 1;
-		sixel |= ((line[2][i] >> j) & 1) << 2;
-		sixel |= ((line[3][i] >> j) & 1) << 3;
-		sixel |= ((line[4][i] >> j) & 1) << 4;
-		sixel |= ((line[5][i] >> j) & 1) << 5;
-		*c++ = sixel;
-		if (--w == 0) break;
-	    }
-	}
-#endif
-    }
-}
-
-/*
-ln03_grind_fonts(sixmap, iw, ih, scale, pixmap)
-unsigned char (*sixmap)[];
-int iw;
-int ih;
-int scale;
-struct pixmap (**pixmap)[];
-{
-}
-*/
-
-static
-void ln03_setup(
-  int iw,
-  int ih,
-  enum orientation orientation,
-  int scale,
-  int left,
-  int top,
-  int *left_margin,
-  int *top_margin,
-  int flags,
-  const char *header,
-  const char *trailer)
-{
-    register int i;
-    register int lm, tm, xm;
-    char buf[256];
-    register char *bp = buf;
-
-    if (!(flags & F_APPEND)) {
-	sprintf(bp, LN_STR); bp += 4;
-	sprintf(bp, LN_SSU, 7); bp += 5;
-	sprintf(bp, LN_PUM_SET); bp += sizeof LN_PUM_SET - 1;
-    }
-
-    if (orientation == PORTRAIT) {
-	lm = (left > 0)? left : (((W_MAX - scale * iw) / 2) + W_MARGIN);
-	tm = (top > 0)? top : (((H_MAX - scale * ih * 6) / 2) + H_MARGIN);
-	sprintf(bp, LN_PFS, "?20"); bp += 7;
-	sprintf(bp, LN_DECOPM_SET); bp += sizeof LN_DECOPM_SET - 1;
-	sprintf(bp, LN_DECSLRM, lm, W_PAGE - lm); bp += strlen(bp);
-    } else {
-	lm = (left > 0)? left : (((H_MAX - scale * iw) / 2) + H_MARGIN);
-	tm = (top > 0)? top : (((W_MAX - scale * ih * 6) / 2) + W_MARGIN);
-	sprintf(bp, LN_PFS, "?21"); bp += 7;
-	sprintf(bp, LN_DECOPM_SET); bp += sizeof LN_DECOPM_SET - 1;
-	sprintf(bp, LN_DECSLRM, lm, H_PAGE - lm); bp += strlen(bp);
-    }
-
-    if (header != NULL) {
-	sprintf(bp, LN_VPA, tm - 100); bp += strlen(bp);
-	i = strlen(header);
-	xm = (((scale * iw) - (i * 30)) / 2) + lm;
-	sprintf(bp, LN_HPA, xm); bp += strlen(bp);
-	sprintf(bp, LN_SGR, 3); bp += strlen(bp);
-	memmove(bp, header, i);
-	bp += i;
-    }
-    if (trailer != NULL) {
-	sprintf(bp, LN_VPA, tm + (scale * ih * 6) + 75); bp += strlen(bp);
-	i = strlen(trailer);
-	xm = (((scale * iw) - (i * 30)) / 2) + lm;
-	sprintf(bp, LN_HPA, xm); bp += strlen(bp);
-	sprintf(bp, LN_SGR, 3); bp += strlen(bp);
-	memmove(bp, trailer, i);
-	bp += i;
-    }
-
-    sprintf(bp, LN_HPA, lm); bp += strlen(bp);
-    sprintf(bp, LN_VPA, tm); bp += strlen(bp);
-    sprintf(bp, LN_SIXEL_GRAPHICS, 9, 0, scale); bp += strlen(bp);
-    sprintf(bp, "\"1;1"); bp += 4; /* Pixel aspect ratio */
-    write(1, buf, bp-buf);
-    *top_margin = tm;
-    *left_margin = lm;
-}
-
-static
-void ln03_finish(void)
-{
-    char buf[256];
-    register char *bp = buf;
-
-    sprintf(bp, LN_DECOPM_RESET); bp += sizeof LN_DECOPM_SET - 1;
-    sprintf(bp, LN_LNM); bp += 5;
-    sprintf(bp, LN_PUM); bp += 5;
-    sprintf(bp, LN_PFS, "?20"); bp += 7;
-    sprintf(bp, LN_SGR, 0); bp += strlen(bp);
-    sprintf(bp, LN_HPA, 1); bp += strlen(bp);
-    sprintf(bp, LN_VPA, 1); bp += strlen(bp);
-
-
-    write(1, buf, bp-buf);
-}
-
-/*ARGSUSED*/
-static
-void la100_setup(int iw, int ih, int scale)
-{
-    char buf[256];
-    register char *bp;
-    int lm, tm;
-
-    bp = buf;
-    lm = ((80 - (int)((double)iw / 6.6)) / 2) - 1;
-    if (lm < 1) lm = 1;
-    tm = ((66 - (int)((double)ih / 2)) / 2) - 1;
-    if (tm < 1) tm = 1;
-    sprintf(bp, "\033[%d;%ds", lm, 81-lm); bp += strlen(bp);
-    sprintf(bp, "\033[?7l"); bp += 5;
-    sprintf(bp, "\033[%dd", tm); bp += strlen(bp);
-    sprintf(bp, "\033[%d`", lm); bp += strlen(bp);
-    sprintf(bp, "\033P0q"); bp += 4;
-    write(1, buf, bp-buf);
-}
-
-#define LA100_RESET "\033[1;80s\033[?7h"
-
-static
-void la100_finish(void)
-{
-    write(1, LA100_RESET, sizeof LA100_RESET - 1);
-}
-
 #define COMMENTVERSION "PS-Adobe-1.0"
 
 #ifdef XPROLOG
@@ -1376,7 +1080,7 @@ void ps_setup(
 #else
     struct passwd  *pswd;
 #endif
-    long    clock;
+    time_t    clock;
     int lm, bm; /* left (bottom) margin */
 
     /* calculate margins */
@@ -1485,148 +1189,6 @@ void ps_finish(void)
 	const char * const *p = ps_epilog;
 
 	while (*p) printf("%s\n",*p++);
-}
-
-static
-void ln03_output_sixels(
-  unsigned char (*sixmap)[],
-  int iw,
-  int ih,
-  int nosixopt,
-  int split,
-  int scale,
-  int top_margin,
-  int left_margin)
-{
-    unsigned char *buf;
-    register unsigned char *bp;
-    int i;
-    int j;
-    register int k;
-    register unsigned char *c;
-    register int lastc;
-    register int count;
-    char snum[6];
-    register char *snp;
-
-    bp = (unsigned char *)malloc((unsigned)(iw*ih+512));
-    buf = bp;
-    count = 0;
-    lastc = -1;
-    c = (unsigned char *)sixmap;
-    split = ih / split;		/* number of lines per page */
-
-    iw--;			/* optimization */
-    for (i = 0; i < ih; i++) {
-	for (j = 0; j <= iw; j++) {
-	    if (!nosixopt) {
-		if (*c == lastc && j < iw) {
-		    count++;
-		    c++;
-		    continue;
-		}
-		if (count >= 3) {
-		    bp--;
-		    count++;
-		    *bp++ = '!';
-		    snp = snum;
-		    while (count > 0) {
-			k = count / 10;
-			*snp++ = count - (k * 10) + '0';
-			count = k;
-		    }
-		    while (--snp >= snum) *bp++ = *snp;
-		    *bp++ = (~lastc & 0x3F) + 0x3F;
-		} else if (count > 0) {
-		    lastc = (~lastc & 0x3F) + 0x3F;
-		    do {
-			*bp++ = lastc;
-		    } while (--count > 0);
-		}
-	    }
-	    lastc = *c++;
-	    *bp++ = (~lastc & 0x3F) + 0x3F;
-	}
-	*bp++ = '-';		/* New line */
-	lastc = -1;
-	if ((i % split) == 0 && i != 0) {
-	    sprintf((char *)bp, LN_ST); bp += sizeof LN_ST - 1;
-	    *bp++ = '\f';
-	    sprintf((char *)bp, LN_VPA, top_margin + (i * 6 * scale));
-	    bp += strlen((char *)bp);
-	    sprintf((char *)bp, LN_HPA, left_margin);
-	    bp += strlen((char *)bp);
-	    sprintf((char *)bp, LN_SIXEL_GRAPHICS, 9, 0, scale);
-	    bp += strlen((char *)bp);
-	    sprintf((char *)bp, "\"1;1"); bp += 4;
-	}
-    }
-
-    sprintf((char *)bp, LN_ST); bp += sizeof LN_ST - 1;
-    write(1, (char *)buf, bp-buf);
-}
-
-/*ARGSUSED*/
-static
-void la100_output_sixels(
-  unsigned char (*sixmap)[],
-  int iw,
-  int ih,
-  int nosixopt)
-{
-    unsigned char *buf;
-    register unsigned char *bp;
-    int i;
-    register int j, k;
-    register unsigned char *c;
-    register int lastc;
-    register int count;
-    char snum[6];
-
-    bp = (unsigned char *)malloc((unsigned)(iw*ih+512));
-    buf = bp;
-    count = 0;
-    lastc = -1;
-    c = (unsigned char *)sixmap;
-
-    for (i = 0; i < ih; i++) {
-	for (j = 0; j < iw; j++) {
-	    if (*c == lastc && (j+1) < iw) {
-		count++;
-		c++;
-		continue;
-	    }
-	    if (count >= 2) {
-		bp -= 2;
-		count = 2 * (count + 1);
-		*bp++ = '!';
-		k = 0;
-		while (count > 0) {
-		    snum[k++] = (count % 10) + '0';
-		    count /= 10;
-		}
-		while (--k >= 0) *bp++ = snum[k];
-		*bp++ = (~lastc & 0x3F) + 0x3F;
-		count = 0;
-	    } else if (count > 0) {
-		lastc = (~lastc & 0x3F) + 0x3F;
-		do {
-		    *bp++ = lastc;
-		    *bp++ = lastc;
-		} while (--count > 0);
-	    }
-	    lastc = (~*c & 0x3F) + 0x3F;
-	    *bp++ = lastc;
-	    *bp++ = lastc;
-	    lastc = *c++;
-	}
-	*bp++ = '-';		/* New line */
-	lastc = -1;
-    }
-
-    sprintf((char *)bp, LN_ST); bp += sizeof LN_ST - 1;
-    *bp++ = '\f';
-    write(1, (char *)buf, bp-buf);
 }
 
 #define LINELEN 72 /* number of CHARS (bytes*2) per line of bitmap output */

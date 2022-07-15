@@ -25,7 +25,6 @@ AM_CFLAGS = $(CWARNFLAGS) $(XPR_CFLAGS) -DNOINLINE
 xpr_LDADD = $(XPR_LIBS)
 
 xpr_SOURCES =	\
-        lncmd.h \
         pmp.h \
         x2jet.c \
         x2pmp.c \
@@ -44,7 +43,7 @@ xdpr: xdpr.script
 
 CLEANFILES = xdpr
 
-EXTRA_DIST = xdpr.script ChangeLog autogen.sh
+EXTRA_DIST = xdpr.script ChangeLog autogen.sh README.md
 
 MAINTAINERCLEANFILES=ChangeLog
 

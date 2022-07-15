@@ -75,7 +75,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xpr$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL NEWS \
 	compile config.guess config.sub depcomp install-sh missing
@@ -294,6 +294,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -305,7 +306,6 @@ top_srcdir = @top_srcdir@
 AM_CFLAGS = $(CWARNFLAGS) $(XPR_CFLAGS) -DNOINLINE
 xpr_LDADD = $(XPR_LIBS)
 xpr_SOURCES = \
-        lncmd.h \
         pmp.h \
         x2jet.c \
         x2pmp.c \
@@ -318,7 +318,7 @@ appman_PRE = \
 
 bin_SCRIPTS = xdpr
 CLEANFILES = xdpr $(appman_DATA)
-EXTRA_DIST = xdpr.script ChangeLog autogen.sh $(appman_PRE)
+EXTRA_DIST = xdpr.script ChangeLog autogen.sh README.md $(appman_PRE)
 MAINTAINERCLEANFILES = ChangeLog
 appmandir = $(APP_MAN_DIR)
 appman_DATA = $(appman_PRE:man=@APP_MAN_SUFFIX@)
