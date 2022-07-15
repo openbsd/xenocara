@@ -63,21 +63,21 @@ get_data_from_file (char *filename, int *len_return)
     fp = fopen (filename, "r");
     if (!fp) {
 	perror(filename);
-	(void) free (cp);
+	free (cp);
 	return NULL;
     }
 
     count = fread (cp, 1, statbuf.st_size, fp);
     if (count == 0 && statbuf.st_size != 0) {
 	perror(filename);
-	(void) free (cp);
-	(void) fclose (fp);
+	free (cp);
+	fclose (fp);
 	return NULL;
     }
 
     cp[count] = '\0';		/* since we allocated one extra */
     *len_return = count;
-    (void) fclose (fp);
+    fclose (fp);
     return cp;
 }
 

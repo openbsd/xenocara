@@ -115,7 +115,7 @@ parse_name_and_exit_code_list (char *buttonlist, ButtonRecord **brptr)
 
     cp = malloc (len + 1);
     if (!cp) {
-	(void) free ((char *) br);
+	free (br);
 	return -1;
     }
     copy = cp;
@@ -164,8 +164,8 @@ parse_name_and_exit_code_list (char *buttonlist, ButtonRecord **brptr)
 	    fprintf (stderr,
 		     "%s:  internal error, found extra pairs (should be %d)\n",
 		     ProgramName, shouldfind);
-	    (void) free ((char *) br);
-	    (void) free (copy);
+	    free (br);
+	    free (copy);
 	    return -1;
 	}
 
@@ -183,8 +183,8 @@ parse_name_and_exit_code_list (char *buttonlist, ButtonRecord **brptr)
     if (npairs != shouldfind) {
 	fprintf (stderr, "%s:  internal error found %d instead of %d pairs\n",
 		 ProgramName, npairs, shouldfind);
-	(void) free ((char *) br);
-	(void) free (copy);
+	free (br);
+	free (copy);
 	return -1;
     }
 

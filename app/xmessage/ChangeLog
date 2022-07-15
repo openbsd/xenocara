@@ -1,3 +1,65 @@
+commit 52d1690c3e1291f7d7be6b4cc39925e3fe4381e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 10:37:50 2022 -0700
+
+    xmessage 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f8be5016e618dcd650540b4cea5f710fd9a16e00
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 16:01:36 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a2d2c371a11302d8df204527119c6ec91cc9e898
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 15:58:42 2022 -0700
+
+    Stop casting function return values to void
+    
+    This was used to make lint stop warning that you weren't checking
+    the return value.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 55cc3615df9045684c70293dcfcbaa26371e46ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 15:57:02 2022 -0700
+
+    Stop casting arguments to free()
+    
+    This was needed for some pre-ANSI systems that declared free() to take
+    'char *' instead of 'void *' arguments, but hasn't been needed in decades.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cda8cd860d7cbbcab8da5d0bb28b0e55b35c000f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 12:29:45 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bed195ac430ffa991e9e5c89ad447c6efc1ed2c8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 12:29:42 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e315069848aea3aaeb72bd3bc9a5d0bdb1242ed7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:15:50 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f1e22dc070daa73857ff2fd951424b9d1ef31a54
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 18:00:17 2018 -0800
@@ -523,7 +585,7 @@ Date:   Wed Jul 20 19:32:02 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 665ba4b9cf9a7c94782637051eb8e0d735bbaf7c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:11 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
