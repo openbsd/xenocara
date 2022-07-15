@@ -50,9 +50,8 @@ repaint.
 .PP
 .TP 10
 .B \-black
-Use a black background (in effect, turning off all of the electron guns to
-the tube).  This can be somewhat disorienting as everything goes black for
-a moment.
+Use a black background.  This can be somewhat disorienting as everything goes
+black for a moment.
 .PP
 .TP 10
 .B \-solid \fIcolor\fP

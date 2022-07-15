@@ -1,3 +1,51 @@
+commit 8d1b74a3bf970609d1d2a2db5191bf7d67353197
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 10:45:59 2022 -0700
+
+    xrefresh 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfc817a20c3e0390860161ea4374aee793e3827e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:59:19 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d6b5be13cf5214b7086b80f8ba977d48dd7007ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:59:07 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83eda01d6b8d448c6ac3cbdde92bf50a766e9c57
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 31 10:30:56 2019 -0700
+
+    xrefresh.man: In 2019, few monitors have electron guns in tubes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d78dd6c2927eb26746f60c1d98490ad9e9ec36ad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:17:42 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9933b560d5056135eab1246d58c2b3590ce85f4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:50:53 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3900110b0ca575030b9d097349e6907ac28fe7fb
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 20:13:34 2018 -0800
@@ -464,7 +512,7 @@ Date:   Wed Jul 20 19:32:04 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 67d4877c3b7fcc2324da39842da689f8bdf6122d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:27:45 2005 +0000
 
     Build systems for xrdb, xrandr, xrefresh
