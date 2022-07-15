@@ -37,6 +37,7 @@ from The Open Group.
 #include "xmodmap.h"
 #include "wq.h"
 #include <stdlib.h>
+#include <stdint.h>
 
 #ifdef HAVE_STRNCASECMP
 #include <strings.h>
@@ -59,6 +60,26 @@ struct wq work_queue = {NULL, NULL};
  * common utility routines
  */
 
+/*
+ * This is a combination of reallocf() and reallocarray().
+ * If the realloc fails, it frees the old pointer so it doesn't leak.
+ */
+static void *
+reallocfarray(void *old, size_t num, size_t size)
+{
+    static void *new;
+
+    if (size > 0 && num > (SIZE_MAX / size)) /* overflow would happen */
+        new = NULL;
+    else
+        new = realloc(old, num * size);
+
+    if (new == NULL)
+        free(old);
+
+    return new;
+}
+
 static KeyCode *
 KeysymToKeycodes(Display *dpy, KeySym keysym, int *pnum_kcs)
 {
@@ -72,7 +93,12 @@ KeysymToKeycodes(Display *dpy, KeySym keysym, int *pnum_kcs)
 		if (!kcs)
 		    kcs = malloc(sizeof(KeyCode));
 		else
-		    kcs = realloc(kcs, sizeof(KeyCode) * (*pnum_kcs + 1));
+		    kcs = reallocfarray(kcs, (*pnum_kcs + 1), sizeof(KeyCode));
+		if (!kcs) {
+		    fprintf(stderr, "attempt to allocate %ld byte keycode set",
+			    (long) ((*pnum_kcs + 1) * sizeof (KeyCode)));
+		    return NULL;
+		}
 		kcs[*pnum_kcs] = i;
 		*pnum_kcs += 1;
 		break;
@@ -690,7 +716,7 @@ do_remove(char *line, int len)
 	}
 	if (nc + num_kcs > tot) {
 	    tot = nc + num_kcs;
-	    kclist = realloc(kclist, tot * sizeof(KeyCode));
+	    kclist = reallocfarray(kclist, tot, sizeof(KeyCode));
 	    if (!kclist) {
 		badmsg ("attempt to allocate %ld byte keycode list",
 			(long) (tot * sizeof (KeyCode)));
@@ -708,6 +734,7 @@ do_remove(char *line, int len)
     if (!uop) {
 	badmsg ("attempt to allocate %ld byte removemodifier opcode",
 		(long) sizeof (struct op_removemodifier));
+	free(kclist);
 	return;
     }
     oprm = &uop->removemodifier;
@@ -889,8 +916,16 @@ do_pointer(char *line, int len)
     }
     
     if (i > 0 && i != nbuttons) {
-	fprintf (stderr, "Warning: Only changing the first %d of %d buttons.\n",
-		 i, nbuttons);
+	if (i < nbuttons) {
+	    fprintf (stderr, 
+		     "Warning: Only changing the first %d of %d buttons.\n",
+		     i, nbuttons);
+	}
+	else {  /* i > nbuttons */ 
+	    fprintf (stderr, 
+		     "Warning: Not changing %d extra buttons beyond %d.\n",
+		     i - nbuttons, nbuttons);
+	}
 	i = nbuttons;
     }
 
@@ -974,13 +1009,11 @@ get_keysym_list(const char *line, int len, int *np, KeySym **kslistp)
 
 	/* grow the list bigger if necessary */
 	if (havesofar >= maxcanhave) {
-	    KeySym *origkeysymlist = keysymlist;
 	    maxcanhave *= 2;
-	    keysymlist = realloc (keysymlist, maxcanhave * sizeof (KeySym));
+	    keysymlist = reallocfarray(keysymlist, maxcanhave, sizeof(KeySym));
 	    if (!keysymlist) {
 		badmsg ("attempt to grow keysym list to %ld bytes",
 			(long) (maxcanhave * sizeof (KeySym)));
-		free(origkeysymlist);
 		return (-1);
 	    }
 	}

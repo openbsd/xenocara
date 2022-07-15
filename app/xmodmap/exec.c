@@ -208,6 +208,18 @@ ClearModifier(XModifierKeymap **mapp, int modifier)
     return (0);
 }
 
+static int
+GetKeysymsPerKeycode(void)
+{
+    int min_keycode, max_keycode, keysyms_per_keycode = 0;
+    KeySym *m;
+
+    XDisplayKeycodes(dpy, &min_keycode, &max_keycode);
+    m = XGetKeyboardMapping(dpy, min_keycode, (max_keycode - min_keycode + 1),
+                            &keysyms_per_keycode);
+    XFree(m);
+    return keysyms_per_keycode;
+}
 
 /*
  * print the contents of the map
@@ -215,21 +227,16 @@ ClearModifier(XModifierKeymap **mapp, int modifier)
 void
 PrintModifierMapping(XModifierKeymap *map, FILE *fp)
 {
-    int i, k = 0;
-    int min_keycode, max_keycode, keysyms_per_keycode = 0;
-
-    XDisplayKeycodes (dpy, &min_keycode, &max_keycode);
-    XGetKeyboardMapping (dpy, min_keycode, (max_keycode - min_keycode + 1),
-			 &keysyms_per_keycode);
+    int k = 0;
+    int keysyms_per_keycode = GetKeysymsPerKeycode();
 
     fprintf (fp,
     	     "%s:  up to %d keys per modifier, (keycodes in parentheses):\n\n", 
     	     ProgramName, map->max_keypermod);
-    for (i = 0; i < 8; i++) {
-	int j;
-
+    for (int i = 0; i < 8; i++) {
 	fprintf(fp, "%-10s", modifier_table[i].name);
-	for (j = 0; j < map->max_keypermod; j++) {
+
+	for (int j = 0; j < map->max_keypermod; j++) {
 	    if (map->modifiermap[k]) {
 		KeySym ks;
 		int index = 0;
