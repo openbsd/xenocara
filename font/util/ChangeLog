@@ -1,3 +1,80 @@
+commit 2ef6b22ad908c024b6c2fbde5c1de62123f82dc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 11:28:17 2022 -0700
+
+    font-util 1.3.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88bd16463e59455cda7e45e563867988c7e70d8d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 11:26:05 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aaddab088412777ffea435e83847f8aac9b9ce81
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 14:11:58 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e1a2c79b4edea2af1a82db24b2dc993a6e530d5a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 14:11:54 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 564adb96f10a0bf43d67401b05ba0fcafe7c0a83
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 16 18:22:23 2020 -0800
+
+    ucs2any: handle NULL returns from zquotedcpy()
+    
+    bdf file for testing:
+    
+    STARTFONT 2.1
+    FONT "Bad quotes test font-ISO10646-1
+    SIZE 7 75 75
+    FONTBOUNDINGBOX 5 7 0 -1
+    STARTPROPERTIES 3
+    SPACING "C
+    SLANT "R
+    ENDPROPERTIES
+    CHARS 0
+    ENDFONT
+    
+    Before this fix, the above segfaults when the NULL return from
+    zquotedcpy() is passed to other functions expecting a string.
+    
+    Fixes: 21063_61 & 21063_86 from https://cyber-itl.org/2020/10/28/citl-7000-defects.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f78cd55ccd913855cc5569dfe2a9213e217bc469
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 15 17:06:26 2020 -0800
+
+    ucs2any: avoid segfaults if SLANT property is missing
+    
+    Test case:
+     grep -v SLANT ../../misc-misc/5x7.bdf > 5x7-noslant.bdf
+     ucs2any 5x7-noslant.bdf ../map-ISO8859-1 -d
+    
+    Before this fix, the above segfaults in strcmp with a NULL slant pointer.
+    
+    Fixes: 21063_131 from https://cyber-itl.org/2020/10/28/citl-7000-defects.html
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d45011b8324fecebb4fc79e57491d341dd96e325
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Aug 25 15:23:33 2019 -0700
@@ -344,6 +421,191 @@ Date:   Thu Apr 28 00:39:17 2011 -0700
     
     Found-by: clang static analyzer
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit a0d43f88e563ca2fd376bbe222d4809b9976624b
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 6 17:00:03 2010 -0700
+
+    font-util 1.2.0
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+
+commit 5cad514d15c61cdf73a7dbd6d88f3e823a0d2d99
+Author: Jeremy Huddleston <jeremyhu@apple.com>
+Date:   Wed Oct 6 16:59:20 2010 -0700
+
+    fontutil.m4: Add XORG_FONT_FC_CONFDIR to find fontconfig's confdir
+    
+    Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 62529733e57b6d6c775b1bcf584260b1cff6af5c
+Author: Michał Górny < <mgorny@gentoo.org>
+Date:   Thu Oct 7 17:31:06 2010 +0200
+
+    fontutil.m4: Add a shorthand --disable-all-encodings option.
+    
+    This option is useful to disable all possible font encodings at once,
+    without fine-graining the calling ebuilds for a list of encodings
+    supported by each font package.
+    
+    The option is parsed before all other encoding options, so it basically
+    sets defaults for all of them. Afterwards, any encoding can be
+    re-enabled back using '--enable-<encoding>' (much like
+    '--disable-all-encodings --enable-iso8859-2').
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Acked-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 7757000fca0f7fc6d966eb1f45c226862ed8e489
+Author: Jesse Adkins <jesserayadkins@gmail.com>
+Date:   Tue Sep 28 13:30:01 2010 -0700
+
+    Purge cvs tags.
+    
+    Signed-off-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0a715f61f878cfe22470608036c3fdfc7d89bca1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 4 21:31:43 2010 -0700
+
+    font-util 1.1.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a43ab24c31aa5626b3f28b813a246c4b930b0e97
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 4 21:30:06 2010 -0700
+
+    Sun's copyrights now belong to Oracle
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c2112acec406c80cfc29a7af9c2a39afb9c38475
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Tue Jul 20 18:45:18 2010 -0400
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 41bf28914ae27d8cf9a93db5fa5f65ca5a68d4bf
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Aug 27 18:22:37 2010 -0400
+
+    XORG_FONT_REQUIRED_PROG: should stop when program is missing #14436
+    
+    The macro was designed to test for a program and, when missing, stop
+    the configuration. The first parameter to the macro is a variable
+    name which is used by AC_PATH_PROG to store the program path.
+    The test failed to reference the variable content, it tested the
+    variable name which is never blank.
+    
+    BDFTOPCF MKFONTSCALE MKFONTDIR COMPRESS and UCS2ANY were affected.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Tested-by: Jesse Adkins <jesserayadkins@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit e8d3097d42969fa1e32eff2ece252ff584d3d56a
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Fri Aug 20 09:27:12 2010 -0400
+
+    config: upgrade to util-macros 1.8 for additional man page support
+    
+    Use MAN_SUBST now supplied in XORG_MANPAGE_SECTIONS
+    The value of MAN_SUBST is the same for all X.Org packages.
+    
+    Use AC_PROG_SED now supplied by XORG_DEFAULT_OPTIONS
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit d310e0321f888bf2fc215587457722a73b0f127a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 20 19:11:38 2010 -0700
+
+    Replace /usr/X11R6 mapfiles path in manpage with actual path via sed
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ce4badc29d599835a9f2593aa9835b1905a72a2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Mar 28 14:45:56 2010 -0400
+
+    config:  remove fontutil.pc.in from the EXTRA_DIST variable
+    
+    It is automatically distributed in the tarball by Automake
+    
+    Reviewed-by: Dan Nicholson <dbn.lists@gmail.com>
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 86893646727ac02b46d67ec81502451463dd9ed2
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sat Mar 27 11:21:41 2010 -0400
+
+    config: generated fontutil.m4 is "installed", not "distributed"
+    
+    Generated files are not included in the tarball, only .in files
+    The fontutil.m4.in file is added in the tarball by Automake.
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 85e9d27df3e806106d395f66143bcc1372fece90
+Author: Alan Coopersmith <alan.coopersmith@sun.com>
+Date:   Thu Jan 14 21:51:38 2010 -0800
+
+    Update Sun license notices to current X.Org standard form
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
+
+commit af6b1bfacb2ebd2dc27b5c81398ec3d9f5cd35cc
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 14:59:02 2009 -0500
+
+    Makefile.am: add ChangeLog and INSTALL on MAINTAINERCLEANFILES
+    
+    Now that the INSTALL file is generated.
+    Allows running make maintainer-clean.
+
+commit b80d458dbe1704a7a351849a6e588c57205ac9c9
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 18 20:49:07 2009 -0400
+
+    Makefile.am: add INSTALL target and clean ChangeLog DIST targets
+    
+    Add INSTALL target to generate file with INSTALL_CMD #24206
+    ChangeLog is not required in EXTRA_DIST  #24432
+    ChangeLog is not required in MAINTAINERCLEANFILES #24432
+
+commit af090eb780ae74f102d6eda036e0b3bc888561b4
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Oct 18 20:34:34 2009 -0400
+
+    INSTALL, NEWS, README COPYING or AUTHORS files are missing/incorrect #24206
+    
+    Add missing INSTALL file. Use standard GNU file on building tarball
+    README may have been updated
+    COPYING may have been updated
+    Remove AUTHORS file as it is empty and no content available yet.
+    Remove NEWS file as it is empty and no content available yet.
+
+commit 2ca7b784d9a53e00a393dcfd7c4ea1bf7223d98b
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Nov 23 13:38:51 2009 -0500
+
+    .gitignore: use common defaults with custom section # 24239
+    
+    Using common defaults will reduce errors and maintenance.
+    Only the very small or inexistent custom section need periodic maintenance
+    when the structure of the component changes. Do not edit defaults.
 
 commit 640a11b930dde29a5a74bcecec858d0a8255c013
 Author: Alan Coopersmith <alan.coopersmith@sun.com>
