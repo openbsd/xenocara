@@ -1,3 +1,375 @@
+commit 8067bc3bd82c1bd3b50e03b7f1614907509495cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 14:54:38 2022 -0700
+
+    xcmsdb 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 337a55d303d76aa4f3f6d1e4d7885544436ee2be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 11:38:44 2022 -0700
+
+    LoadSCCData: avoid leaking memory if we give up early
+    
+    Resolves issues reported by Oracle Parfait static analyser:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1615 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1634 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626.
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1656 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables != 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 3 at line 1648
+                  and pCurrent->pRedTbl == NULL at line 1651.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1664 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables != 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 3 at line 1648
+                  and pCurrent->pGreenTbl == NULL at line 1659.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1672 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables != 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 3 at line 1648
+                  and pCurrent->pBlueTbl == NULL at line 1667.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1685 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables == 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 1 at line 1648
+                  and pCurrent->pRedTbl == NULL at line 1680.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ff9e623b48a8998324a75ebaadb6adc97b189ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 11:31:33 2022 -0700
+
+    Remove unnecessary casts and make allocation failure checks more consistent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54b7f6247be611d1f357220a59be05322d78998a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 11:02:27 2022 -0700
+
+    Adopt X.Org standard coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63f48f29a8c93ead05b53823fc62fa909d527431
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 14:33:19 2022 -0700
+
+    Fix -Wsign-compare warnings in PrintTableType1()
+    
+    xcmsdb.c: In function ‘PrintTableType1’:
+    xcmsdb.c:299:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (count = 0; count < max_index+1; count++) {
+                            ^
+    xcmsdb.c:307:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (count = 0; count < max_index+1; count++) {
+                            ^
+    xcmsdb.c:315:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (count = 0; count < max_index+1; count++) {
+                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c5d7d7ba21b69f606b832e38efe64a4805bd94e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:13:16 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e7a36cb750e2ef619885225e937224a5949928f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:13:13 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8c157bf095fa8be00c9b8d0ee7550610ae79c86
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:38:16 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d9c61bbc5f5c485df099e1b8536c25ec3afd741
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:00:09 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d4de6604ab692cc1a70a330efa5b15f3e88c47ed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:18:18 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97a1bb6e0b22c9ae3be1694711acf052b927766c
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 5ef3260cbf8a6b097467a72aa6d16befe9095b78
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7c2442e5332b7edeb8f6855b8cce2001c91df04f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 8067bc3bd82c1bd3b50e03b7f1614907509495cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 14:54:38 2022 -0700
+
+    xcmsdb 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 337a55d303d76aa4f3f6d1e4d7885544436ee2be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 11:38:44 2022 -0700
+
+    LoadSCCData: avoid leaking memory if we give up early
+    
+    Resolves issues reported by Oracle Parfait static analyser:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1615 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1634 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626.
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1656 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables != 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 3 at line 1648
+                  and pCurrent->pRedTbl == NULL at line 1651.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1664 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables != 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 3 at line 1648
+                  and pCurrent->pGreenTbl == NULL at line 1659.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1672 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables != 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 3 at line 1648
+                  and pCurrent->pBlueTbl == NULL at line 1667.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pCurrent allocated with calloc(1, 112)
+            at line 1685 of app/xcmsdb/loadData.c in function 'LoadSCCData'.
+              pCurrent allocated at line 1600 with calloc(1, 112)
+              pCurrent leaks when VisualFlag == 0 at line 1618
+                  and VisualFlag == 0 at line 1626
+                  and pCurrent->nTables != 0 at line 1628
+                  and pCurrent->nTables == 1 at line 1628
+                  and token3 == NULL at line 1642
+                  and pCurrent->nTables is 1 at line 1648
+                  and pCurrent->pRedTbl == NULL at line 1680.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ff9e623b48a8998324a75ebaadb6adc97b189ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 11:31:33 2022 -0700
+
+    Remove unnecessary casts and make allocation failure checks more consistent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54b7f6247be611d1f357220a59be05322d78998a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 11:02:27 2022 -0700
+
+    Adopt X.Org standard coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63f48f29a8c93ead05b53823fc62fa909d527431
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 14:33:19 2022 -0700
+
+    Fix -Wsign-compare warnings in PrintTableType1()
+    
+    xcmsdb.c: In function ‘PrintTableType1’:
+    xcmsdb.c:299:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (count = 0; count < max_index+1; count++) {
+                            ^
+    xcmsdb.c:307:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (count = 0; count < max_index+1; count++) {
+                            ^
+    xcmsdb.c:315:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (count = 0; count < max_index+1; count++) {
+                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c5d7d7ba21b69f606b832e38efe64a4805bd94e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:13:16 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e7a36cb750e2ef619885225e937224a5949928f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:13:13 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8c157bf095fa8be00c9b8d0ee7550610ae79c86
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:38:16 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d9c61bbc5f5c485df099e1b8536c25ec3afd741
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:00:09 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d4de6604ab692cc1a70a330efa5b15f3e88c47ed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:18:18 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97a1bb6e0b22c9ae3be1694711acf052b927766c
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 5ef3260cbf8a6b097467a72aa6d16befe9095b78
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7c2442e5332b7edeb8f6855b8cce2001c91df04f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 152d7f3992fc0982006f7024589c1491feb273ee
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 22:49:23 2015 -0700
@@ -7,7 +379,7 @@ Date:   Thu Apr 16 22:49:23 2015 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit aa02eb3d4f0c5722b8f9012ec08512daa7420184
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Sun Jan 4 12:51:10 2015 -0800
 
     _XcmsGetProperty: don't deal with uninitialized values, fail instead
@@ -470,7 +842,7 @@ Date:   Wed Jul 20 19:31:52 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit bdf7beaadb08e4599d28433a49422825949b8295
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 20:07:41 2005 +0000
 
     Build system for xcmsdb

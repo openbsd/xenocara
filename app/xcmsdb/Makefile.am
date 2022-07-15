@@ -30,7 +30,7 @@ xcmsdb_SOURCES =	\
         SCCDFile.h \
         xcmsdb.c
 
-EXTRA_DIST = datafiles/sample1.dcc datafiles/sample2.dcc
+EXTRA_DIST = datafiles/sample1.dcc datafiles/sample2.dcc README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
