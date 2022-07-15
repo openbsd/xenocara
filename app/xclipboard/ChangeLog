@@ -1,3 +1,154 @@
+commit 0220c7d59cbb83c53dce331ec7e8108a76f75328
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 14:42:43 2022 -0700
+
+    xclipboard 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6a3f6fd8544907c0e28a3b97b906b06ca51e0581
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 14:11:06 2022 -0700
+
+    NewClip: use calloc instead of manually setting values to 0 after malloc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b43e14be1b0a292fbe71424161c8a9244eea9dab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 14:10:16 2022 -0700
+
+    NewCurrentClipContents: fix a -Wnull-dereference warning
+    
+    xclipboard.c: In function ‘NewCurrentClipContents’:
+    xclipboard.c:402:28: warning: potential null pointer dereference [-Wnull-dereference]
+         if (strlen (currentClip->clip) != 0)
+                     ~~~~~~~~~~~^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f7cef0b64f3baf5b07f1b906d646c2ad35812e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 13:59:19 2022 -0700
+
+    Fix a -Wformat-truncation warning
+    
+    xclipboard.c: In function ‘set_button_state’:
+    xclipboard.c:196:52: warning: ‘snprintf’ output may be truncated before the last format character [-Wformat-truncation=]
+         snprintf (labelString, sizeof(labelString), "%d", IndexCurrentClip ());
+                                                        ^
+    xclipboard.c:196:5: note: ‘snprintf’ output between 2 and 11 bytes into a destination of size 10
+         snprintf (labelString, sizeof(labelString), "%d", IndexCurrentClip ());
+         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 931ad744c4235157c48f1008c4880dc598eaeb13
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 13:58:18 2022 -0700
+
+    Fix another -Wdiscarded-qualifiers warning
+    
+    xclipboard.c: In function ‘SaveToFile’:
+    xclipboard.c:313:14: warning: assignment discards ‘const’ qualifier from
+     pointer target type [-Wdiscarded-qualifiers]
+         filename = "clipboard";
+                  ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 715914f703187eafd17815d673712c609afaf9a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 13:51:53 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Gets rid of 20 out of 37 -Wdiscarded-qualifiers errors from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f8a4a6430cb5910ebfe0d0edcb8bd85b54492d46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:45:59 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0868a2c91cdd7d208c4a660c588d41d89eec972
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:45:52 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a4d0f421cc9f332df9e373e1ebbcf78424570c6f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:59:39 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d6641bfdcd441d7619bdf4f3acf36dcf1a0c213
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:12:40 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c232c42f1201dd7e83300765dddea351d76c7c6a
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 6b81a6f2696a6f0573aaae2552aa0fa222e25e2b
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit bceb31e48c3151dd40158371406495a2592eed75
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit bc6aef147a677ba9d91a61081b9251998c3cceea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:11:16 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 447281d7835e089e0f5aa90d0cd439faab99656c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 2 22:11:16 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 8cf6dfbbdb10f1ab41deb3d0e87cd0dfb79e3273
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Sep 5 23:22:16 2013 -0700
@@ -568,7 +719,7 @@ Date:   Sun Jul 17 20:11:02 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit e0a326f3bd7889da2352a1e534871a64b693545a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 17:30:20 2005 +0000
 
     Build system for xclipboard and xcutsel

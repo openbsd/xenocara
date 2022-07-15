@@ -134,14 +134,10 @@ NewClip(Widget w, ClipPtr old)
 {
     ClipPtr newClip;
 
-    newClip = (ClipPtr) malloc (sizeof (ClipRec));
+    newClip = calloc (1, sizeof (ClipRec));
     if (!newClip)
 	return newClip;
-    newClip->clip = NULL;
-    newClip->avail = 0;
     newClip->prev = old;
-    newClip->next = NULL;
-    newClip->filename = NULL;
     if (old)
     {
 	newClip->next = old->next;
@@ -185,7 +181,7 @@ set_button_state (void)
 {
     Boolean prevvalid, nextvalid;
     Arg arg;
-    char labelString[10];
+    char labelString[12];
 
     prevvalid = currentClip->prev != NULL;
     nextvalid = currentClip->next != NULL;
@@ -308,7 +304,7 @@ static void
 SaveToFile(Widget w, XEvent *e, String *argv, Cardinal *argc)
 {
     Arg	    args[1];
-    char    *filename;
+    const char    *filename;
 
     filename = "clipboard";
     if (currentClip->filename)
@@ -399,7 +395,7 @@ NewCurrentClipContents(char *data, int len)
     while (currentClip && currentClip->next)
 	currentClip = currentClip->next;
     /* any trailing clips with no text get overwritten */
-    if (strlen (currentClip->clip) != 0)
+    if ((currentClip == NULL) || (strlen (currentClip->clip) != 0))
 	currentClip = NewClip (text, currentClip);
 
     textBlock.ptr = data;

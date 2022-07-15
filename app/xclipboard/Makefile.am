@@ -23,6 +23,7 @@ SUBDIRS = man
 bin_PROGRAMS = xclipboard xcutsel
 
 AM_CFLAGS = $(CWARNFLAGS) $(XCLIPBOARD_CFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 
 # xclipboard
 
@@ -58,3 +59,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md
