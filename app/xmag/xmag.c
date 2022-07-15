@@ -26,7 +26,9 @@ from The Open Group.
 
 */
 
+#ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
 
 #include <stdlib.h>		/* for exit() and abs() */
 #include <stdio.h>
@@ -532,7 +534,7 @@ SelectCB(Widget w, XtPointer clientData, XtPointer callData)
 
 
 /*
- * PasteCB() -- Paste from the primary selectin into xmag.
+ * PasteCB() -- Paste from the primary selection into xmag.
  */
 static void			/* ARGSUSED */
 PasteCB(Widget w, XtPointer clientData, XtPointer callData)

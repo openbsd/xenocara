@@ -22,6 +22,7 @@
 SUBDIRS = man
 bin_PROGRAMS = xmag
 
+AM_CPPFLAGS = -D_CONST_X_STRING
 AM_CFLAGS = $(XMAG_CFLAGS) $(CWARNFLAGS)
 xmag_LDADD = $(XMAG_LIBS)
 
@@ -46,7 +47,7 @@ dist_appdefault_DATA = \
         app-defaults/Xmag
 
 # Developer documentation for Scale widget in Scale.c
-EXTRA_DIST = Scale.txt xmag.icon
+EXTRA_DIST = Scale.txt xmag.icon README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

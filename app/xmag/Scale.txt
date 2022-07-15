@@ -13,7 +13,7 @@ widget is resized the image can be autoscaled to fit new size of the
 widget window.  The widget can also cut and paste its contents.
 
 When creating a Scale widget instance, the following resources are
-retreived from the argument list or from the resource database:
+retrieved from the argument list or from the resource database:
 
 All the Simple Widget resources plus...
 -------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ All the Simple Widget resources plus...
  background	This resource has the same meaning as for the Simple widget.
 		However, it is worth mentioning that if the most frequent
 		pixel value in the XYPixmap or ZPixmap image is specified
-		as backgroud, the scaling process can be speeded up noticably.
+		as background, the scaling process can be speeded up noticeably.
 
  foreground	The color used to paint the image if in XYBitmap format.
 		If the image is XYPixmap or ZPixmap format, the foreground
