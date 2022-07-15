@@ -1,3 +1,107 @@
+commit c0c98ec2072a78cee53e52b3ec3b03527b276403
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 16:19:50 2022 -0700
+
+    xf86-input-keyboard 2.0.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit baef4f0057047c09c207123c95768112772ca07f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 11:35:33 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Uses FreeBSD 13.0 for build environment
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8104e36c6121375e2a7233a6c1a39de892839558
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 11:28:20 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 61c24f539463d9bebc4044bba776652306b7c0db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 11:25:48 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b0803b608a24cbcecaddd89ca1d6ab7a86decfc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Oct 30 14:25:34 2019 +1000
+
+    Remove two more linux mentions
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 7e366936d7b7d6c3b4d9c1554908ad20eef74a27
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Oct 29 16:17:27 2019 -0400
+
+    linux: Remove
+    
+    You almost certainly want to be using libinput or evdev on Linux
+    systems, and the Linux code is arguably under the GPL, which is a fine
+    license in general but not for X.org. Delete the Linux support so people
+    stop using it.
+
+commit 44fc9bb658b435222c32611c79f7002d544d15e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 12:46:53 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d2c19a8b1236a0a67969fcc9a3066809ac929656
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 11:36:01 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 940f44149d1037cfc14bbb3628044a2bd002c33e
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit ac04d59b3757390cce31295d1029bf65ae3102c2
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6c80cbbd1d4981b4b3d40491c1a2e4b4742f185a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 0c7f51291f91eee61fcaf05080001a5e9b22fb53
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Thu Nov 17 14:21:48 2016 +1000
@@ -504,7 +608,7 @@ Date:   Thu May 24 21:36:17 2012 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit dd6f110c4568dc0922bae47530906b01396e2d41
-Author: François Tigeot <ftigeot@wolfpond.org>
+Author: François Tigeot  <ftigeot@wolfpond.org>
 Date:   Sat May 5 13:12:10 2012 +0200
 
     Recognize DragonFly as a BSD system.
@@ -1723,7 +1827,7 @@ Date:   Tue Aug 19 10:20:47 2008 -0400
     Remove XFree86-Misc leftovers.
 
 commit 80b04aa649f5e65294439264b6bbb0dc90c22a7c
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Thu Jul 24 16:39:02 2008 -0400
 
     Move atKeynames.h and xf86CommonSpecialKey() here.
@@ -2134,7 +2238,7 @@ Date:   Thu Aug 18 09:03:39 2005 +0000
     Update autogen.sh to one that does objdir != srcdir.
 
 commit ea7e6dfb03714a48edfb04053ac49f71f553872d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Aug 10 14:07:23 2005 +0000
 
     Don\'t lose existing CFLAGS in all the input drivers and some of the video

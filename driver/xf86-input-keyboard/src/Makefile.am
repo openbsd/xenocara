@@ -28,7 +28,6 @@ kbd_drv_ladir = @inputdir@
 
 BSD_SRCS = bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c
 HURD_SRCS = hurd_kbd.c at_scancode.c
-LINUX_SRCS = lnx_KbdMap.c lnx_kbd.c lnx_kbd.h at_scancode.c
 SOLARIS_SRCS = sun_kbd.c sun_kbd.h sun_kbdMap.c
 
 if BSD
@@ -39,12 +38,8 @@ if SOLARIS
 kbd_drv_la_SOURCES += $(SOLARIS_SRCS)
 endif
 
-if LINUX
-kbd_drv_la_SOURCES += $(LINUX_SRCS)
-endif
-
 if HURD
 kbd_drv_la_SOURCES += $(HURD_SRCS)
 endif
 
-EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(LINUX_SRCS) $(SOLARIS_SRCS)
+EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(SOLARIS_SRCS)

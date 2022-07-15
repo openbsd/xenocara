@@ -23,15 +23,15 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-keyboard],
-        [1.9.0],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [2.0.0],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-input-keyboard/issues],
         [xf86-input-keyboard])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_DISABLE_STATIC
@@ -58,7 +58,7 @@ AC_SUBST(inputdir)
 # The keyboard driver code is O/S specific
 case $host_os in
   linux*)
-    IS_LINUX="yes"
+    AC_MSG_ERROR([This is not the keyboard driver you are looking for. Use evdev or libinput.])
     ;;
 
   freebsd* | kfreebsd-gnu* | netbsd* | openbsd* | dragonfly*)
@@ -95,7 +95,6 @@ case $host_os in
 esac
 AC_SUBST([OS_FLAGS])
 
-AM_CONDITIONAL(LINUX, [test "x$IS_LINUX" = xyes])
 AM_CONDITIONAL(BSD, [test "x$IS_BSD" = xyes])
 AM_CONDITIONAL(SOLARIS, [test "x$IS_SOLARIS" = xyes])
 AM_CONDITIONAL(HURD, [test "x$IS_HURD" = xyes])

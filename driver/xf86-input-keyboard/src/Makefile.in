@@ -72,8 +72,7 @@ build_triplet = @build@
 host_triplet = @host@
 @BSD_TRUE@am__append_1 = $(BSD_SRCS)
 @SOLARIS_TRUE@am__append_2 = $(SOLARIS_SRCS)
-@LINUX_TRUE@am__append_3 = $(LINUX_SRCS)
-@HURD_TRUE@am__append_4 = $(HURD_SRCS)
+@HURD_TRUE@am__append_3 = $(HURD_SRCS)
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/depcomp
@@ -118,18 +117,15 @@ am__DEPENDENCIES_1 =
 kbd_drv_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__kbd_drv_la_SOURCES_DIST = kbd.c xf86OSKbd.h xf86Keymap.h \
 	atKeynames.h bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c \
-	sun_kbd.c sun_kbd.h sun_kbdMap.c lnx_KbdMap.c lnx_kbd.c \
-	lnx_kbd.h hurd_kbd.c
+	sun_kbd.c sun_kbd.h sun_kbdMap.c hurd_kbd.c
 am__objects_1 = bsd_KbdMap.lo bsd_kbd.lo at_scancode.lo
 @BSD_TRUE@am__objects_2 = $(am__objects_1)
 am__objects_3 = sun_kbd.lo sun_kbdMap.lo
 @SOLARIS_TRUE@am__objects_4 = $(am__objects_3)
-am__objects_5 = lnx_KbdMap.lo lnx_kbd.lo at_scancode.lo
-@LINUX_TRUE@am__objects_6 = $(am__objects_5)
-am__objects_7 = hurd_kbd.lo at_scancode.lo
-@HURD_TRUE@am__objects_8 = $(am__objects_7)
+am__objects_5 = hurd_kbd.lo at_scancode.lo
+@HURD_TRUE@am__objects_6 = $(am__objects_5)
 am_kbd_drv_la_OBJECTS = kbd.lo $(am__objects_2) $(am__objects_4) \
-	$(am__objects_6) $(am__objects_8)
+	$(am__objects_6)
 kbd_drv_la_OBJECTS = $(am_kbd_drv_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -316,6 +312,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -328,15 +325,13 @@ AM_CFLAGS = $(XORG_CFLAGS) $(CWARNFLAGS) $(OS_FLAGS)
 kbd_drv_la_LTLIBRARIES = kbd_drv.la
 kbd_drv_la_LDFLAGS = -avoid-version -module
 kbd_drv_la_SOURCES = kbd.c xf86OSKbd.h xf86Keymap.h atKeynames.h \
-	$(am__append_1) $(am__append_2) $(am__append_3) \
-	$(am__append_4)
+	$(am__append_1) $(am__append_2) $(am__append_3)
 kbd_drv_la_LIBADD = $(XORG_LIBS)
 kbd_drv_ladir = @inputdir@
 BSD_SRCS = bsd_KbdMap.c bsd_kbd.c bsd_kbd.h at_scancode.c
 HURD_SRCS = hurd_kbd.c at_scancode.c
-LINUX_SRCS = lnx_KbdMap.c lnx_kbd.c lnx_kbd.h at_scancode.c
 SOLARIS_SRCS = sun_kbd.c sun_kbd.h sun_kbdMap.c
-EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(LINUX_SRCS) $(SOLARIS_SRCS)
+EXTRA_DIST = $(BSD_SRCS) $(HURD_SRCS) $(SOLARIS_SRCS)
 all: all-am
 
 .SUFFIXES:
@@ -419,8 +414,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bsd_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/hurd_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/kbd.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_KbdMap.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lnx_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sun_kbd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sun_kbdMap.Plo@am__quote@
 
