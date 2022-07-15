@@ -1,3 +1,109 @@
+commit 4834eadad2edb9838a1a58679323a6bbf286ed97
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 11:09:05 2022 -0700
+
+    encodings 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91a831bd1a6c0a82d40ff032e34787bdda3ef500
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 14:16:54 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2975d5f72d7e60fbe1fc0df3e64dad6474b56f7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 14:16:51 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d11226add93d362a3d020cd744e8782a6ff20ff6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:34:36 2021 -0500
+
+    whitespace-only, reformat with annotate-enc
+
+commit 58c771a7955acdcf95d1b00af737f3cce9180b83
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:33:42 2021 -0500
+
+    add descriptions from UnicodeData.txt, with annotate-enc
+
+commit b216aa1c9f5ce38ad1d2cdffe944de9fd0f55adc
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:32:11 2021 -0500
+
+    add descriptions from UnicodeData.txt, with annotate-enc
+
+commit 45fb87eba4b32f71b2c78d1bd3efdd80aa1e122f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:31:07 2021 -0500
+
+    add descriptions from UnicodeData.txt, using annotate-enc
+
+commit 30d3df462189370931a9d2502a121287344bf597
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:30:04 2021 -0500
+
+    add descriptions from UnicodeData.txt, using annotate-enc
+
+commit acedfb99b793259ad88721160e3db0956c730f59
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:28:24 2021 -0500
+
+    add descriptions from UnicodeData.txt, using annotate-enc
+
+commit 30d4aebb6739183ff8d0dac86a6d4d8da8115eb7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 18:26:05 2021 -0500
+
+    whitespace-only changes for consistency, using luit's annotate-enc script
+
+commit 6941b549e645e55b495b6d80a4e3b74f473c7681
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 10:40:46 2021 -0500
+
+    use Armenian eternity symbol from Unicode 6.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a0daf5d2d0e1afd075cece93b5e2d2506c82be17
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 10:35:41 2021 -0500
+
+    correct a typo (in original), and use appropriate description
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 41605319c6239278517d4d3154c4bf415c713b43
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Feb 18 10:33:55 2021 -0500
+
+    use descriptions from UnicodeData.txt except for two obsolete or incorrect maps
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 38bebc0d90b12eeaa809b3833e0fd7fa7a87c2f2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Feb 16 19:14:45 2021 -0500
+
+    add mapping for 0x80-0x9f, as per Unicode.org data files.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit fd9fb521f38597758806fcaa26dad6ea1df602bb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Feb 16 19:05:41 2021 -0500
+
+    adjust descriptions for the Unicode mapping to match the Unicode.org data file.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
 commit 144b735d4942cf2715ed450fe7207fd7deb64cf7
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Jun 17 12:37:53 2019 -0400
@@ -377,7 +483,7 @@ Date:   Fri Jul 29 21:22:48 2005 +0000
     - Update modular Xorg version
 
 commit c9b1f243c82c35f5a01b4f930afd149236ad387d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 21:03:09 2005 +0000
 
     Move encodings here.

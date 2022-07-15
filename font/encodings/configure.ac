@@ -1,7 +1,7 @@
 AC_PREREQ([2.60])
-AC_INIT([encodings], [1.0.5],
+AC_INIT([encodings], [1.0.6],
         [https://gitlab.freedesktop.org/xorg/font/encodings/issues])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require xorg-macros: XORG_DEFAULT_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
