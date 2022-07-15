@@ -1,3 +1,49 @@
+commit 46334b79e8aea2c444927eee3b0281e4ab012085
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 16:13:11 2022 -0700
+
+    xwud 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9126cd2e641f7e9b129a8763c890598ee82cb653
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 16:00:38 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6093be87e6a88623ebe2594a586ab6bad1b07560
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 16:00:34 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d52282a70f1fb542d269c0cde46b83eab1cffcb1
+Author: scrouthtv <lennivh24@gmail.com>
+Date:   Sun Feb 28 18:29:41 2021 +0000
+
+    Added case for window_name_size == 0
+
+commit df7eed701a7f341277df5e92419174237cf93ce4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:22:04 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4cc3d8d6a812dd38b6507725a8aa64062ca9f706
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 23:32:56 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 50c1949e9984fa6210636b131fed978dd3c31550
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 20:43:49 2018 -0800
@@ -452,7 +498,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 78c7fa573ce8acc58820ef0f8b587cb49bc285b2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:16:57 2005 +0000
 
     Build system for xwud

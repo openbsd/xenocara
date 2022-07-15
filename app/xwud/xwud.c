@@ -287,7 +287,7 @@ main(int argc, char *argv[])
 
     /* alloc window name */
     win_name_size = (header.header_size - SIZEOF(XWDheader));
-    if (win_name_size < 1)
+    if (win_name_size < 0)
       Error("win_name_size");
     if((win_name = malloc((unsigned) win_name_size + 6)) == NULL)
       Error("Can't malloc window name storage.");
