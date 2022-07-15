@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.481 2022/07/12 19:39:45 matthieu Exp $
+# $OpenBSD: MODULES,v 1.482 2022/07/15 15:39:12 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -27,19 +27,19 @@ app/xauth		1.1.2
 app/xbacklight		1.2.3
 app/xbiff		1.0.4
 app/xcalc		1.1.1
-app/xclipboard		1.1.4		needs-update
+app/xclipboard		1.1.4
 app/xclock		1.1.1
-app/xcmsdb		1.0.6		needs-update/remove?
+app/xcmsdb		1.0.6
 app/xcompmgr		1.1.8
-app/xconsole		1.0.8		needs-update
+app/xconsole		1.0.8
 app/xdpyinfo		1.3.3
 app/xdriinfo		1.0.6
 app/xedit		1.2.3
-app/xev			1.2.5		needs-update
+app/xev			1.2.5
 app/xeyes		1.2.0
 app/xf86dga		1.0.3
 app/xfd			1.1.3
-app/xfontsel		1.1.0		needs-update
+app/xfontsel		1.1.0
 app/xgamma		1.0.6
 app/xgc			1.0.5		remove?
 app/xhost		1.0.8
@@ -48,22 +48,22 @@ app/xinput		1.6.3
 app/xkbcomp		1.4.5
 app/xkbevd		1.1.4
 app/xkbprint		1.0.5
-app/xkbutils		1.0.5		needs-update
+app/xkbutils		1.0.5
 app/xkill		1.0.5
 app/xload		1.1.4
 app/xlogo		1.0.5
 app/xlsatoms		1.1.3
 app/xlsclients		1.1.4
 app/xlsfonts		1.0.7
-app/xmag		1.0.7		needs-update
-app/xmessage		1.0.6		needs-update
-app/xmodmap		1.0.11		needs-update
+app/xmag		1.0.7
+app/xmessage		1.0.6
+app/xmodmap		1.0.11
 app/xmore		1.0.3
-app/xpr			1.1.0		needs-update
+app/xpr			1.1.0
 app/xprop		1.2.5
 app/xrandr		1.5.1
 app/xrdb		1.2.1
-app/xrefresh		1.0.7		needs-update
+app/xrefresh		1.0.7
 app/xset		1.2.4
 app/xsetroot		1.1.2
 app/xsm			1.0.5
@@ -71,7 +71,7 @@ app/xvidtune		1.0.3
 app/xvinfo		1.1.3
 app/xwd			1.0.8
 app/xwininfo		1.1.5
-app/xwud		1.0.6		needs-update
+app/xwud		1.0.6
 
 data/bitmaps		1.1.2
 
@@ -82,11 +82,11 @@ driver/xf86-input-elographics	1.4.2
 driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
 driver/xf86-input-joystick	1.6.3
-driver/xf86-input-keyboard	2.0.0		needs-update
+driver/xf86-input-keyboard	2.0.0
 driver/xf86-input-mouse		1.9.3
 driver/xf86-input-mutouch	1.3.0
 driver/xf86-input-penmount	1.5.0
-driver/xf86-input-synaptics	1.9.2		needs-update
+driver/xf86-input-synaptics	1.9.2
 driver/xf86-input-vmmouse	13.1.0
 driver/xf86-input-void		1.4.1
 driver/xf86-video-amdgpu	22.0.0
@@ -98,7 +98,7 @@ driver/xf86-video-dummy		0.4.0
 driver/xf86-video-geode		2.11.20		needs-update
 driver/xf86-video-intel		2.99.917	needs-update
 driver/xf86-video-mach64	6.9.7		needs-update
-driver/xf86-video-mga		2.0.1		needs-update
+driver/xf86-video-mga		2.0.1
 driver/xf86-video-nv		2.1.21
 driver/xf86-video-openchrome	0.6.179		needs-update
 driver/xf86-video-r128		6.12.0
