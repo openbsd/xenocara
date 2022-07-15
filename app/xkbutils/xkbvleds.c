@@ -210,7 +210,7 @@ main(int argc, char *argv[])
     static Arg boxArgs[] = { {XtNorientation, (XtArgVal) XtorientHorizontal} };
     static Arg onArgs[] = { {XtNon, (XtArgVal) True} };
     static Arg offArgs[] = { {XtNon, (XtArgVal) False} };
-    static char *fallback_resources[] = {
+    static String fallback_resources[] = {
         "*Box*background: grey40",
         NULL
     };

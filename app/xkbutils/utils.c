@@ -171,26 +171,4 @@ uStrCaseCmp(const char *str1, const char *str2)
     *s = '\0';
     return (strcmp(buf1, buf2));
 }
-
-int
-uStrCasePrefix(const char *prefix, const char *str)
-{
-    char c1;
-    char c2;
-
-    while (((c1 = *prefix) != '\0') && ((c2 = *str) != '\0')) {
-        if (isupper(c1))
-            c1 = tolower(c1);
-        if (isupper(c2))
-            c2 = tolower(c2);
-        if (c1 != c2)
-            return 0;
-        prefix++;
-        str++;
-    }
-    if (c1 != '\0')
-        return 0;
-    return 1;
-}
-
 #endif

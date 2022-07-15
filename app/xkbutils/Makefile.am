@@ -23,6 +23,7 @@ SUBDIRS = man
 bin_PROGRAMS = xkbvleds xkbwatch xkbbell
 
 AM_CFLAGS = $(CWARNFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 
 # xkbvleds
 
@@ -55,3 +56,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md

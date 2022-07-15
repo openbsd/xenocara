@@ -202,7 +202,7 @@ main(int argc, char *argv[])
                 XkbMajorVersion, XkbMinorVersion);
         fprintf(stderr, "         Trying anyway\n");
     }
-    if (!XkbQueryExtension(dpy, &i1, &i2, &i3, &i4, &i5) > 0) {
+    if (!XkbQueryExtension(dpy, &i1, &i2, &i3, &i4, &i5)) {
         if ((i4 != 0) || (i5 != 0))
             fprintf(stderr,
                     "server supports incompatible XKB version %d.%02d\n", i4,
