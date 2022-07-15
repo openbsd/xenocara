@@ -215,10 +215,6 @@ parsed.  An error message indicating a missing menu is printed
 to stderr but otherwise nothing bad (or good) happens.
 .PP
 The average-width menu is too large to be useful.
-.SH COPYRIGHT
-Copyright 1989, 1991,  X Consortium
-.PP
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHOR
 .PP
 Ralph R. Swick, Digital Equipment Corporation/MIT Project Athena

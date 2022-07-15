@@ -36,8 +36,8 @@
 
 *appDefaultsVersion:	1
 
-*pixelSizeList: 7, 30, 40, 50, 60
-*pointSizeList: 250, 300, 350, 400
+*pixelSizeList: 0
+*pointSizeList: 80, 90, 100, 110, 120, 140, 160, 170, 180, 200, 250, 300, 350, 400
 
 XFontSel.cursor:	left_ptr
 *allowShellResize:	true
@@ -50,8 +50,13 @@ XFontSel.cursor:	left_ptr
 *quitButton.left:	chainLeft
 *quitButton.right:	chainLeft
 
+*resetButton.Label:	reset
+*resetButton.fromHoriz:	quitButton
+*resetButton.left:	chainLeft
+*resetButton.right:	chainLeft
+
 *ownButton.Label:	select
-*ownButton.fromHoriz:	quitButton
+*ownButton.fromHoriz:	resetButton
 *ownButton.left:	chainLeft
 *ownButton.right:	chainLeft
 

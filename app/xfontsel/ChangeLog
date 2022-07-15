@@ -1,3 +1,187 @@
+commit 6ef6ff13da2adc354eeca629d2fc523cbe3aab42
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 15:16:18 2022 -0700
+
+    xfontsel 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 770bea4ba363e30b9274c71a3ab51be34f2199b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 15 07:46:20 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d92f14a70546d9fac579d7750b4ac0280743123a
+Author: Greg A. Woods <woods@robohack.ca>
+Date:   Thu Jan 27 23:55:08 2022 -0800
+
+    include actual screen resolution in the resX & resY menus
+    
+    When given the "-scaled" option fetch the actual screen resolution and
+    add that to the list of available resolutions for the resX and resY
+    menus.
+    
+    I.e. If the pattern contains '*' for the resX and resY fields (i.e.
+    instead of '0') then we wil end up with the menu containing "0, 100,
+    NNN", which makes for a really good demonstration of how scaling of
+    fonts without knowing the true screen resolution can lead to very wonky
+    results.  Even if the values in the pattern are '0' you still get the
+    true DPI as an option in the menus.
+    
+    When you specify a size for a scalable font, you should use points,
+    never pixels.  Points are a physical unit of measurement.  There are
+    always 72 points per inch.  Never more or less.  So to scale fonts
+    properly on a screen the scaler needs to know the resolution of the
+    display in pixels per inch in order to render text at a measurable
+    physical point size.  In the current X11 world it is still up to the
+    user to correctly specify the actual screen resolution when requesting a
+    scalable font to render text with, and this is now possible to
+    demonstrate with this change to Xfontsel.
+    
+    So with the actual correct resolution selected from the resX and resY
+    menus (and if the resolution figures are accurate and if the display
+    hasn't been scaled by the hardware or, e.g. XrandR) then choosing any
+    avaliable point size will show the sample text with a height on the
+    screen physically matching the chosen point size.  To that end the
+    default pixelSizeList resource has been changed to just "0", as it
+    should never be changed, and instead the default "pointSizeList"
+    resource has been extended with a list of reasonable real-world
+    sample (deci)point sizes.
+    
+    [also touch up the help text and call exit() to exit main()]
+    
+    Signed-off-by: Greg A. Woods <woods@robohack.ca>
+
+commit 148a592bf5b10c5f536cb515536351d73952fc6f
+Author: Alexander Gromnitsky <alexander.gromnitsky@gmail.com>
+Date:   Thu Dec 2 05:56:33 2021 +0200
+
+    Add 'reset' button
+    
+    It's very tedious to deselect multiple XLFD field names if you want to
+    start from scratch (it's often easier to relaunch the app). Hence, a
+    simple reset button can be handy.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d55f7ed9893bb74fb9d1f4cc84501928c0d52c46
+Author: Thomas Kuehne <thomas@kuehne.cn>
+Date:   Sun Dec 5 13:40:43 2021 +0100
+
+    Fixed -Wmissing-field-initializers warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ef81a443a264c48f606dfedd47eb160822457fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 15:48:25 2022 -0700
+
+    mark Quit() & QuitAction() as noreturn
+    
+    Clears gcc warnings:
+    
+    xfontsel.c: In function ‘QuitAction’:
+    xfontsel.c:1477:1: warning: function might be candidate for
+     attribute ‘noreturn’ [-Wsuggest-attribute=noreturn]
+     QuitAction(Widget w, XEvent *event, String *params, Cardinal *num_params)
+     ^~~~~~~~~~
+    
+    xfontsel.c: In function ‘Quit’:
+    xfontsel.c:1392:6: warning: function might be candidate for
+     attribute ‘noreturn’ [-Wsuggest-attribute=noreturn]
+     void Quit(Widget w, XtPointer closure, XtPointer callData)
+          ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be2a75ec654722b282c9e2fac2b73a4dba9f50d0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 15:45:07 2022 -0700
+
+    Clean up variable scoping in GetFontNames()
+    
+    Gets rid of gcc warning:
+    xfontsel.c: In function ‘GetFontNames’:
+    xfontsel.c:498:16: warning: declaration of ‘f’ shadows a previous local [-Wshadow]
+      int maxField, f;
+                    ^
+    xfontsel.c:446:9: note: shadowed declaration is here
+         int f, field, count;
+             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 93112d07d66cd9ee93ef00527df1da39dfaf7290
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 15:36:59 2022 -0700
+
+    Fix -Wsign-compare warning from gcc
+    
+    ULabel.c: In function ‘SetValues’:
+    ULabel.c:670:19: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+         for (i = 0; i < *num_args; i++) {
+                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 954fc5687b9805201c425fd3139acb6d19bd9bd5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 15:34:31 2022 -0700
+
+    const cleanup
+    
+    Clears up 32 out of 49 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b08c43c680e4ad3092893bc7f3eb5f98e67648af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:54:45 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfc30b3eec7fe816c63c773a535fb2b3efbb969e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:08:39 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 613461cf2b1fe8505027bdf8159e3ebde80276c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:08:33 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8a708af87051de4f6f6d23655cfab1ed25ddf5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:03:41 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e168e2b7c344f527edcd0d466b7c05d5071a460
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:00:23 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a98ec351f665d12b0f0aa26dddeaf7a33423ffd1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:30:13 2018 -0800
@@ -605,7 +789,7 @@ Date:   Wed Jul 20 19:31:55 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit fb8c54ae47b8dd71f082fd0c4b705690c8aca524
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:11:22 2005 +0000
 
     Build system for xfontsel

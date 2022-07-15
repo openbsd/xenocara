@@ -82,7 +82,7 @@ typedef struct {
     Pixel	foreground;
     XFontStruct	*font;
     XFontSet 	fontset;
-    char	*label;
+    String	label;
     XtJustify	justify;
     Dimension	internal_width;
     Dimension	internal_height;

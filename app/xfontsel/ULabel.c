@@ -153,6 +153,9 @@ UCSLabelClassRec ucsLabelClassRec = {
 /* Simple class fields initialization */
   {
     /* change_sensitive		*/	XtInheritChangeSensitive
+#ifndef OLDXAW
+    /* extension		*/	,NULL
+#endif
   },
 /* UCSLabel class fields initialization */
   {
@@ -177,9 +180,9 @@ static XChar2b *buf2b;
 static int buf2blen = 0;
 
 static void _XawLabelDrawUCS(Display *dpy, Drawable d, GC gc,
-			     int x, int y, char *str, int n)
+			     int x, int y, const char *str, int n)
 {
-    char *ep;
+    const char *ep;
     unsigned short codepoint;
     XChar2b *ptr;
 
@@ -214,11 +217,11 @@ static void _XawLabelDrawUCS(Display *dpy, Drawable d, GC gc,
 
 static int _XawLabelWidthUCS(
     XFontStruct *fs,
-    char *str,
+    const char *str,
     int	n
 )
 {
-    char *ep;
+    const char *ep;
     unsigned short codepoint;
     XChar2b *ptr;
 
@@ -287,7 +290,7 @@ static void SetTextWidthAndHeight(UCSLabelWidget lw)
 	  lw->label.label_width = 0;
       }
       else if ((nl = index(lw->label.label, '\n')) != NULL) {
-	  char *label;
+	  const char *label;
 	  lw->label.label_len = MULTI_LINE_LABEL;
 	  lw->label.label_width = 0;
 	  for (label = lw->label.label; nl != NULL; nl = index(label, '\n')) {
@@ -320,7 +323,7 @@ static void SetTextWidthAndHeight(UCSLabelWidget lw)
             lw->label.label_width = 0;
         }
         else if ((nl = index(lw->label.label, '\n')) != NULL) {
-	    char *label;
+	    const char *label;
             lw->label.label_len = MULTI_LINE_LABEL;
             lw->label.label_width = 0;
             for (label = lw->label.label; nl != NULL; nl = index(label, '\n')) {
@@ -520,7 +523,7 @@ static void Redisplay(Widget gw, XEvent *event, Region region)
 
     if (w->label.pixmap == None) {
 	int len = w->label.label_len;
-	char *label = w->label.label;
+	const char *label = w->label.label;
 	Position y = w->label.label_y + w->label.font->max_bounds.ascent;
         Position ksy = w->label.label_y;
 
@@ -661,7 +664,7 @@ SetValues(Widget current, Widget request, Widget new,
     UCSLabelWidget curlw = (UCSLabelWidget) current;
     UCSLabelWidget reqlw = (UCSLabelWidget) request;
     UCSLabelWidget newlw = (UCSLabelWidget) new;
-    int i;
+    unsigned int i;
     Boolean was_resized = False, redisplay = False, checks[NUM_CHECKS];
 
     for (i = 0; i < NUM_CHECKS; i++)
@@ -756,7 +759,7 @@ static void Destroy(Widget w)
     UCSLabelWidget lw = (UCSLabelWidget)w;
 
     if ( lw->label.label != lw->core.name )
-	XtFree( lw->label.label );
+	XtFree( (char *) lw->label.label );
     XtReleaseGC( w, lw->label.normal_GC );
     XtReleaseGC( w, lw->label.gray_GC);
     XmuReleaseStippledPixmap( XtScreen(w), lw->label.stipple );
