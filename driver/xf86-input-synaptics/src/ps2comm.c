@@ -1,9 +1,9 @@
 /*
- * Copyright © 1997 C. Scott Ananian
- * Copyright © 1998-2000 Bruce Kalk
- * Copyright © 2001 Stefan Gmeiner
- * Copyright © 2002 Linuxcare Inc. David Kennedy
- * Copyright © 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
+ * Copyright Â© 1997 C. Scott Ananian
+ * Copyright Â© 1998-2000 Bruce Kalk
+ * Copyright Â© 2001 Stefan Gmeiner
+ * Copyright Â© 2002 Linuxcare Inc. David Kennedy
+ * Copyright Â© 2003 Fred Hucht <fred@thp.Uni-Duisburg.de>
  *
  * Permission to use, copy, modify, distribute, and sell this software
  * and its documentation for any purpose is hereby granted without

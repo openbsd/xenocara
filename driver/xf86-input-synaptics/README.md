@@ -86,7 +86,7 @@ FAQ
 
     If you are having problems with Mozilla, try this link:
 
-	http://lists.debian.org/debian-laptop/2004/08/msg00167.html
+  https://lists.debian.org/debian-laptop/2004/08/msg00167.html
 
 * Can the driver be used together with gpm?
 
@@ -130,23 +130,15 @@ Contacts
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
+  https://lists.x.org/mailman/listinfo/xorg
 
-Please submit bug reports to the Xorg bugzilla:
+The primary development code repository can be found at:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+  https://gitlab.freedesktop.org/xorg/driver/xf86-input-synaptics
 
-The master development code repository can be found at:
-
-        git://anongit.freedesktop.org/git/xorg/driver/xf86-input-synaptics
-
-        http://cgit.freedesktop.org/xorg/driver/xf86-input-synaptics
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
+  https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 

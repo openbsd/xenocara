@@ -130,7 +130,7 @@ ALPS_get_packet(struct CommData *comm, InputInfoPtr pInfo)
 }
 
 /*
- * ALPS abolute Mode
+ * ALPS absolute Mode
  * byte 0: 1 1 1 1 1 mid0 rig0 lef0
  * byte 1: 0 x6 x5 x4 x3 x2 x1 x0
  * byte 2: 0 x10 x9 x8 x7 up1 fin ges

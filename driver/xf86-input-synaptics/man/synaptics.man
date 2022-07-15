@@ -408,7 +408,7 @@ from user space.
 .
 When changing this parameter with the synclient program, the change
 will not take effect until the synaptics driver is disabled and
-reenabled. 
+re-enabled.
 .
 This can be achieved by switching to a text console and then switching
 back to X.
@@ -714,7 +714,7 @@ when the finger leaves the corner.
 The synaptics has a built-in noise cancellation based on hysteresis. This means
 that incoming coordinates actually shift a box of predefined dimensions such
 that it covers the incoming coordinate, and only the boxes own center is used
-as input. Obviously, the smaller the box the better, but the likelyhood of
+as input. Obviously, the smaller the box the better, but the likelihood of
 noise motion coming through also increases.
 
 .SS ClickPad support

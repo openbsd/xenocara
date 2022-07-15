@@ -34,6 +34,14 @@
 #include <xf86Xinput.h>
 #include "synproto.h"
 
+#ifndef input_event_sec
+#define input_event_sec time.tv_sec
+#endif
+
+#ifndef input_event_usec
+#define input_event_usec time.tv_usec
+#endif
+
 /* for auto-dev: */
 #define DEV_INPUT_EVENT "/dev/input"
 #define EVENT_DEV_NAME "event"

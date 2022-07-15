@@ -1,3 +1,100 @@
+commit bf3c0cb38ad5dba43f0454e655e0448712cb412e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 16:32:38 2022 -0700
+
+    xf86-input-synaptics 1.9.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ae160fc87bd2d52e0ab807b31dc2682beb3db772
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 13:04:35 2022 -0800
+
+    Convert remaining source files from ISO-8859-1 to UTF-8
+    
+    Most were already converted.  Fixes error raised by FlawFinder in CI:
+    Error: encoding error in ./src/synaptics.c
+    'utf-8' codec can't decode byte 0xa9 in position 16: invalid start byte
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 74282e856cb09c18460dd81ae2e5cac8cc531d51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 12:46:06 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 592215a584100db752cde86f6e9fb2115212a648
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 12:42:17 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d6c2e79221e6f362d1f47d3e52259e1d4e32315
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 12:37:06 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e4bc35dfe96208fc55d1b5a279206a2013153ef
+Author: Pip Cet <pipcet@gmail.com>
+Date:   Fri Apr 9 16:58:38 2021 +0000
+
+    synclient: allow negative/large values for AreaLeftEdge etc.
+
+commit 7c32bc6f1f689b2c877be3a6b65a68844f9ce7e4
+Author: Ariadne Conill <ariadne@dereferenced.org>
+Date:   Tue Jul 28 04:03:08 2020 -0600
+
+    eventcomm: fix compile with pre-time64 kernels
+
+commit 073b1b40bde9935928758c3452176c0d8dc67370
+Author: Ariadne Conill <ariadne@dereferenced.org>
+Date:   Wed Jul 22 02:29:08 2020 -0600
+
+    eventcomm: use 64-bit time safe accessors instead of timeval directly
+    
+    when building on a 32-bit host with 64-bit time_t, using the
+    input_event and input_event_usec accessors are necessary to deal with
+    translation.
+
+commit a4e5f74b589441077678d5d1546f7de0365a4627
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun Feb 10 17:29:22 2019 +0100
+
+    Use fabs() instead of abs() on double values.
+    
+    Silences clang warnings.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Walter Harms <wharms@bfs.de>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f8d896ddca8f24fcbe115366db9ab3ce2badefd1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 12:50:31 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e61f0d57ecf967d523cd0ca63088120a12e942a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 12:01:00 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a46338a9923a2434b130cdaaed014e54020edf2a
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue May 29 13:17:59 2018 +1000
@@ -2467,7 +2564,7 @@ Date:   Mon Apr 16 11:39:44 2012 +0800
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 50124d3ddf9bbc4be6734b47a273dbd46b4db0ba
-Author: Pierre Lulé <pierre@lule.fr>
+Author: Pierre Lulé  <pierre@lule.fr>
 Date:   Mon Apr 16 12:01:56 2012 +0200
 
     Stop coasting when two-finger scroll begins
@@ -2533,7 +2630,7 @@ Date:   Mon Apr 2 11:23:05 2012 -0700
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 5a1612d4496b51682c9043aa064025c545249de6
-Author: Pierre Lulé <pierre@lule.fr>
+Author: Pierre Lulé  <pierre@lule.fr>
 Date:   Wed Mar 28 00:13:30 2012 +0200
 
     Fix coasting speed
@@ -4398,7 +4495,7 @@ Date:   Fri May 27 11:11:44 2011 -0500
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 6eb829e07e455a8a04dabae7f257dd42a9b8bcdf
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Wed May 25 18:16:22 2011 +0200
 
     build: apply the distcheck tricks used in xf86-input-evdev
@@ -4413,7 +4510,7 @@ Date:   Wed May 25 18:16:22 2011 +0200
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit dac624ad2b3a67ab93c11d8ee0a91b217fc1afe6
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Wed May 25 16:10:49 2011 +0200
 
     build: create object files following the sources' structure.
@@ -4488,7 +4585,7 @@ Date:   Tue May 17 08:08:08 2011 +0200
     to the list.
 
 commit 0c0e3e3df6af54777e47550e555e76c787f6f0a4
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Sat May 14 03:34:26 2011 +0200
 
     README: fix typos.
@@ -4496,7 +4593,7 @@ Date:   Sat May 14 03:34:26 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit d27b4e560ccf61b94f067156c6d5c1e3d3e5e1eb
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Sat May 14 03:30:15 2011 +0200
 
     build: install documentation as part of make install.
@@ -4504,7 +4601,7 @@ Date:   Sat May 14 03:30:15 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit 39afe69ad7d2258d4043044d1283bd6e311e48da
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Sat May 14 03:14:56 2011 +0200
 
     build: collapse all Makefile.am files into a single non-recursive one.
@@ -4517,7 +4614,7 @@ Date:   Sat May 14 03:14:56 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit 4005df66072ceac175ea71427deb16176262f197
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Sat May 14 03:00:02 2011 +0200
 
     build: sort building of tools, ensure that cross-pkg-config works.
@@ -4530,7 +4627,7 @@ Date:   Sat May 14 03:00:02 2011 +0200
     Signed-off-by: Christoph Brill <egore911@egore911.de>
 
 commit 4d4c4d0ff5a381a5d574845cf72673f9fee43734
-Author: Diego Elio Pettenò <flameeyes@gmail.com>
+Author: Diego Elio Pettenò  <flameeyes@gmail.com>
 Date:   Sat May 14 02:43:58 2011 +0200
 
     build: report a fatal error if XORG_DRIVER_CHECK_EXT is undefined.

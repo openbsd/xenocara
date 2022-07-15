@@ -296,8 +296,8 @@ struct _SynapticsPrivateRec {
     int prevFingers;            /* previous numFingers, for transition detection */
     int avg_width;              /* weighted average of previous fingerWidth values */
 #ifndef NO_DRIVER_SCALING
-    double horiz_coeff;         /* normalization factor for x coordintes */
-    double vert_coeff;          /* normalization factor for y coordintes */
+    double horiz_coeff;         /* normalization factor for x coordinates */
+    double vert_coeff;          /* normalization factor for y coordinates */
 #endif
 
     int minx, maxx, miny, maxy; /* min/max dimensions as detected */

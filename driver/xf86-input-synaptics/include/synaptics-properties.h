@@ -149,10 +149,10 @@
 /* 32 bit, 4 values, left, right, top, bottom */
 #define SYNAPTICS_PROP_AREA "Synaptics Area"
 
-/* 32 bit, 4 values, left, right, top, buttom */
+/* 32 bit, 4 values, left, right, top, bottom */
 #define SYNAPTICS_PROP_SOFTBUTTON_AREAS "Synaptics Soft Button Areas"
 
-/* 32 bit, 4 values, left, right, top, buttom */
+/* 32 bit, 4 values, left, right, top, bottom */
 #define SYNAPTICS_PROP_SECONDARY_SOFTBUTTON_AREAS "Synaptics Secondary Soft Button Areas"
 
 /* 32 Bit Integer, 2 values, horizontal hysteresis, vertical hysteresis */
