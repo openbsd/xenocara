@@ -69,7 +69,5 @@ This option prints the program version and exits.
 .SH "SEE ALSO"
 X(__miscmansuffix__), xwininfo(__appmansuffix__), xdpyinfo(__appmansuffix__), Xlib Programmers Manual, X Protocol
 Specification
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHOR
 Jim Fulton, MIT X Consortium

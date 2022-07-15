@@ -139,9 +139,12 @@ static void
 prologue(XEvent *eventp, const char *event_name)
 {
     XAnyEvent *e = (XAnyEvent *) eventp;
+    struct timespec ts;
 
+    clock_gettime(CLOCK_REALTIME, &ts);
     output(InitialNewLine | NewLine,
-           "%s event, serial %ld, synthetic %s, window 0x%lx,",
+           "%s %s event, serial %ld, synthetic %s, window 0x%lx,",
+	   ctime(&(ts.tv_sec)),
            event_name, e->serial, e->send_event ? Yes : No, e->window);
 }
 
@@ -420,7 +423,7 @@ do_KeymapNotify(XEvent *eventp)
         if (i == 16 && !single_line) {
             output(InitialNewLine | Indent, "       ");
         }
-        output(0, "%-3u ", (unsigned int) e->key_vector[i]);
+        output(0, "%-3u ", (unsigned char) e->key_vector[i]);
     }
     output_new_line();
 }

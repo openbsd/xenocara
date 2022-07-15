@@ -1,3 +1,57 @@
+commit 19e473aa6b1fbd01bb8c7206c06aacf5e789d758
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jul 12 09:58:53 2022 -0700
+
+    xev 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 26b84c02c547bb233dc7a273cb3745eef2aadadd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:56:12 2022 -0700
+
+    man page: remove out-of-date reference to X(7)
+    
+    The X(7) man page doesn't list any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eedd0fed999e515618816ca831b8de3b3011c993
+Author: Goblin <xorg-nospam@uukgoblin.net>
+Date:   Fri Feb 18 22:20:07 2022 +0000
+
+    xev: fix KeymapNotify event printing
+    
+    When xev prints the KeymapNotify event (after the user brings the xev window
+    into focus), it incorrectly displays unsigned char values >= 128. For
+    instance, 128 is printed as 42949667168.
+    
+    This can be seen for instance by holding the '6' key (which has the
+    keycode 15) and then bringing the xev window into focus. Observe the
+    KeymapNotify event, the second number after "keys: " will be 42949667168.
+    If you instead hold the '5' key (which has the keycode 14), you'll see
+    64 there, as expected.
+    
+    No-one seems to have noticed since at least the last millenium ;-)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad23b1e9f4463017f76534300925aa08c055df48
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 11:46:26 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 126ef9076e51beb1897321025220dd1828568caf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 11:46:13 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit b798a62cb701050381ed8b05c2fb7204357a7241
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Fri Jul 17 15:07:14 2020 -0700
@@ -690,7 +744,7 @@ Date:   Wed Jul 20 19:31:52 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 275174c66316b789f96ec23974de50499ea3c5a2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 19:58:25 2005 +0000
 
     Build system for xev
