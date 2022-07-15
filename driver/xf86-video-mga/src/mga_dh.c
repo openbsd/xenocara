@@ -229,7 +229,7 @@ void MGAEnableSecondOutPut(ScrnInfoPtr pScrn, xMODEINFO *pModeInfo)
 
     /*--- Disable Pixel clock oscillations On Crtc1 */
     OUTREG( MGAREG_C2CTL, ulC2CTL | MGAREG_C2CTL_PIXCLKDIS_MASK);
-    /*--- Have to wait minimum time (2 acces will be ok) */
+    /*--- Have to wait minimum time (2 access will be ok) */
     (void) INREG( MGAREG_Status);
     (void) INREG( MGAREG_Status);
     

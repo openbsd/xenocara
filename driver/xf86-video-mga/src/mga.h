@@ -387,7 +387,7 @@ typedef enum {
 } mga_host_t;
 
 /**
- * Card information derrived from BIOS PInS data.
+ * Card information derived from BIOS PInS data.
  */
 struct mga_bios_values {
     /**
@@ -430,7 +430,7 @@ struct mga_bios_values {
 
 
 /**
- * Attributes that of an MGA device that can be derrived purely from its
+ * Attributes that of an MGA device that can be derived purely from its
  * PCI ID.
  */
 struct mga_device_attributes {

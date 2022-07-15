@@ -216,7 +216,7 @@ static void MGASwapContextShared( ScreenPtr pScreen )
  * This is really only called from validate/postvalidate as we
  * override the dri lock/unlock.  Want to remove validate/postvalidate
  * processing, but need to remove all client-side use of drawable lock
- * first (otherwise there is noone recover when a client dies holding
+ * first (otherwise there is no one recover when a client dies holding
  * the drawable lock).
  *
  * What does this mean?

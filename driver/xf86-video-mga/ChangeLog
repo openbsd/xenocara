@@ -1,3 +1,67 @@
+commit 37bf1be0fbaed7578f91485a00d37db3f1c84fe3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 10 17:11:22 2022 -0700
+
+    xf86-video-mga 2.0.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 638653561df767b052e372821ffd51c457591202
+Author: Raphael Isemann <teemperor@gmail.com>
+Date:   Wed Apr 13 12:14:46 2022 +0200
+
+    Fix uninitialized read in MGAEnableSecondOutPut
+    
+    `MGAGRestore` allocated `ModeInfo` without initializing its memory and then
+    passes it into `MGAEnableSecondOutPut` via `MGAEnableSecondOutPut(pScrn, &ModeInfo);`.
+    
+    `MGAEnableSecondOutPut` then reads the unitialized memory in the line
+    `if ( !(pModeInfo->flSignalMode & POS_HSYNC) )`.
+    
+    This patch just zeroes the memory to prevent those branches to be randomly
+    taken.
+    
+    Signed-off-by: Raphael Isemann <teemperor@gmail.com>
+
+commit a6ab1e08ee8c5a6dfaebe8fc331bd0811ab8d13f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 13:06:47 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e4dbef654bd31f5706b4b860f6b34c7e5e5f440
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 13:05:35 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f74f0504156f2504294cdd9c7f068ab4745a5c4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 12:57:58 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f227f2f286123a9ca64b567783825a2c18b87971
+Author: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date:   Sat May 4 20:43:26 2019 +0200
+
+    configure.ac: fix cross-compilation
+    
+    AC_CHECK_FILE can't be used when cross-compiling
+    
+    [Retrieved from:
+    https://git.buildroot.net/buildroot/tree/package/x11r7/xdriver_xf86-video-mga/0001-misc-fixes.patch]
+    Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
 commit 924c310dfecbfb916f0e81c03f1142a401bed056
 Author: Kevin Brace <kevinbrace@gmx.com>
 Date:   Fri Dec 7 16:43:46 2018 -0800
@@ -434,8 +498,8 @@ Date:   Thu Mar 13 18:25:56 2014 -0400
     
     I've had a Xserver lockup in the mga driver, examining it with gdb showed
     this obviously broken loop:
-    	count = INREG(MGAREG_VCOUNT) + 2;
-    	while(INREG(MGAREG_VCOUNT) < count);
+            count = INREG(MGAREG_VCOUNT) + 2;
+            while(INREG(MGAREG_VCOUNT) < count);
     
     It reads the line counter and waits until the counter advances by two. The
     cause of the lockup is this - if the kernel reschedules the Xorg process
@@ -824,28 +888,28 @@ Date:   Thu Sep 15 10:29:11 2011 -0500
     Delete support for MGA's proprietary HAL: unifdef USEMGAHAL.
     
     This patch produced with:
-    	for f in `git grep -Fwl USEMGAHAL`; do
-    		unifdef -B -UUSEMGAHAL $f | sponge $f
-    	done
+            for f in `git grep -Fwl USEMGAHAL`; do
+                    unifdef -B -UUSEMGAHAL $f | sponge $f
+            done
     
     Adam Jackson wrote:
     
-    	Hey, so, remember back in the dark ages when dualhead was this
-    	insanely wild differentiating feature?  Matrox thought it was so
-    	special, in fact, that they hid most of the implementation of it
-    	(and a bunch of other stuff) in a binary-only blob called the
-    	HALlib.  As you'd expect it was pretty much a cut-and-paste of
-    	the relevant Windows code, and then some open glue to keep it
-    	working; clientlx.c is that glue.
+            Hey, so, remember back in the dark ages when dualhead was this
+            insanely wild differentiating feature?  Matrox thought it was so
+            special, in fact, that they hid most of the implementation of it
+            (and a bunch of other stuff) in a binary-only blob called the
+            HALlib.  As you'd expect it was pretty much a cut-and-paste of
+            the relevant Windows code, and then some open glue to keep it
+            working; clientlx.c is that glue.
     
-    	I guess the theory was that if you don't tell people which
-    	registers to duplicate to implement a second pipe in their own
-    	hardware, they won't figure it out?  A pretty eyeroll-worthy
-    	idea even at the time, and definitely not something we should be
-    	condoning anymore.
+            I guess the theory was that if you don't tell people which
+            registers to duplicate to implement a second pipe in their own
+            hardware, they won't figure it out?  A pretty eyeroll-worthy
+            idea even at the time, and definitely not something we should be
+            condoning anymore.
     
-    	Kill it with fire, but while you're at it, untangle the hideous
-    	mess of MGA_HAL() macros too.
+            Kill it with fire, but while you're at it, untangle the hideous
+            mess of MGA_HAL() macros too.
     
     Signed-off-by: Jamey Sharp <jamey@minilop.net>
     Cc: Adam Jackson <ajax@redhat.com>
@@ -858,21 +922,21 @@ Date:   Tue Sep 13 16:01:57 2011 -0500
     
     Adam Jackson wrote:
     
-    	Hey, so, remember back in the dark ages when dualhead was this
-    	insanely wild differentiating feature?  Matrox thought it was so
-    	special, in fact, that they hid most of the implementation of it
-    	(and a bunch of other stuff) in a binary-only blob called the
-    	HALlib.  As you'd expect it was pretty much a cut-and-paste of
-    	the relevant Windows code, and then some open glue to keep it
-    	working; clientlx.c is that glue.
+            Hey, so, remember back in the dark ages when dualhead was this
+            insanely wild differentiating feature?  Matrox thought it was so
+            special, in fact, that they hid most of the implementation of it
+            (and a bunch of other stuff) in a binary-only blob called the
+            HALlib.  As you'd expect it was pretty much a cut-and-paste of
+            the relevant Windows code, and then some open glue to keep it
+            working; clientlx.c is that glue.
     
-    	I guess the theory was that if you don't tell people which
-    	registers to duplicate to implement a second pipe in their own
-    	hardware, they won't figure it out?  A pretty eyeroll-worthy
-    	idea even at the time, and definitely not something we should be
-    	condoning anymore.
+            I guess the theory was that if you don't tell people which
+            registers to duplicate to implement a second pipe in their own
+            hardware, they won't figure it out?  A pretty eyeroll-worthy
+            idea even at the time, and definitely not something we should be
+            condoning anymore.
     
-    	Kill it with fire ...
+            Kill it with fire ...
     
     Signed-off-by: Jamey Sharp <jamey@minilop.net>
     Reviewed-by: Jeremy Huddleston <jeremyhu@apple.com>
@@ -1850,7 +1914,7 @@ Date:   Mon Dec 11 15:06:03 2006 -0800
     
     Conflicts:
     
-    	src/mga_macros.h
+            src/mga_macros.h
 
 commit 4bcfca9bcf4a2be8d49a700b1a0d529f4e5ea412
 Author: Tilman Sauerbeck <tilman@code-monkey.de>
@@ -2645,7 +2709,7 @@ Date:   Mon Oct 17 00:09:03 2005 +0000
     Use sed & cpp to substitute variables in driver man pages
 
 commit 52497dac4be07bb5a4ca1a73ec6198851173b6c4
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Sep 27 20:53:19 2005 +0000
 
     Update build system for apm, chips, cirrus, glint, i740, mga, neomagic,
@@ -2742,13 +2806,13 @@ Date:   Fri Jul 29 21:22:43 2005 +0000
     - Update modular Xorg version
 
 commit 73d19fde3b2c78693298b60252e1a67e28cb708a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 28 15:48:19 2005 +0000
 
     Add missing backslash, patch from Donnie Berkholz
 
 commit 3e06876c193d945f2df0c2521a2c80ec73ce5cb8
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 21:23:29 2005 +0000
 
     Add xf86driproto to dependencies for drivers with DRI support. Patch from
@@ -2761,7 +2825,7 @@ Date:   Wed Jul 27 07:38:14 2005 +0000
     Include binding.h to fix make distcheck
 
 commit a5f5f658a9875ea2dfb01200305dab54ce4115ac
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 26 18:29:39 2005 +0000
 
     symlink.sh: add binding.h from mga/HALlib add nsc/gfx add nsc/panel
@@ -2769,7 +2833,7 @@ Date:   Tue Jul 26 18:29:39 2005 +0000
         include of cfb8_32.h modularizevideodriver.sh: fix typo
 
 commit efca764ce95094531baf14daf6e5e538cc1e9210
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 26 01:18:43 2005 +0000
 
     "Build system for `basename $PWD | sed s/xf86-video-//`"
@@ -2924,7 +2988,7 @@ Date:   Mon Aug 16 09:13:14 2004 +0000
         console.
 
 commit f29f2239d31232e152744321c447035ede658ce2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Aug 13 18:24:08 2004 +0000
 
     Fri Aug 13 19:53:10 2004 Soeren Sandmann <sandmann@redhat.com>

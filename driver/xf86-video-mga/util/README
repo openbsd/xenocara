@@ -12,7 +12,7 @@ usage:		stormdwg hexval
 hexval will then be decomposed into it's constituent parts and displayed in human
 readable format. 
 
-BUGS:		none known except that it needs to kept upto date if the storms
+BUGS:		none known except that it needs to kept up to date if the storms
 		spec is changed
 
 NOTE:		This is not by itself a very usable utility. 

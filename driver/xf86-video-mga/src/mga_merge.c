@@ -37,7 +37,7 @@ StrToRanges(range* r, const char* s) {
                 break;
             case '-':
             case ' ': case 0:
-                if(strnum == NULL) break; /*is extra seperator */
+                if(strnum == NULL) break; /*is extra separator */
                 if(strnum != NULL) sscanf(strnum,"%f",&num);
                 if(gotdash) /*if wasn't singlet: correct. */
                     r[rangenum-1].hi = num;
@@ -59,7 +59,7 @@ StrToRanges(range* r, const char* s) {
 }            
 
 
-/* Copys mode i, links the result to dest, and returns it.
+/* Copies mode i, links the result to dest, and returns it.
  * Links i and j in Private record.
  * if dest is NULL, return value is copy of i linked to itself.
  */
@@ -190,7 +190,7 @@ GenerateModeList(ScrnInfoPtr pScrn, const char* str,
                 strmode = str+1; /* number starts on next char */
                 gotdash |= (*str == '-' || *str == ',');
                 
-                if(*str != 0) break; /* if end of string, we wont get a chance to catch a char and run the
+                if(*str != 0) break; /* if end of string, we won't get a chance to catch a char and run the
                                         default case. do it now */
                 
             default:
@@ -220,7 +220,7 @@ GenerateModeList(ScrnInfoPtr pScrn, const char* str,
 }
     
 
-/* second CRTC init funcitons. Used to check monitor timings and refreshes. 
+/* second CRTC init functions. Used to check monitor timings and refreshes.
  * this function looses lots of maintainability points due to redundancy, 
  * but it still was the cleanest and least-intrusive way I found. */
 
@@ -257,7 +257,7 @@ MGAPreInitMergedFB(ScrnInfoPtr pScrn1, int flags)
     pMga->device = pMga1->device;
     
     if (flags & PROBE_DETECT) {
-	MGAProbeDDC(pScrn, pMga->pEnt->index); /*FIXME make shure this probes second monitor */
+	MGAProbeDDC(pScrn, pMga->pEnt->index); /*FIXME make sure this probes second monitor */
 	return TRUE;
     }
 
@@ -703,8 +703,8 @@ MGAMergePointerMoved(SCRN_ARG_TYPE arg, int x, int y)
   out.y1 = pScrn->frameY1+1;
 
   /* 
-   * specify inner sliding window. beeing outsize both frames, and inside 
-   * the outer cliping window, causes corresponding frame to slide
+   * specify inner sliding window. being outsize both frames, and inside
+   * the outer clipping window, causes corresponding frame to slide
    */
   in1 = out;
   in2 = out;
@@ -849,7 +849,7 @@ MGAAdjustMergeFrames(ADJUST_FRAME_ARGS_DECL) {
             BOUND(pScrn2->frameY0,y,y + VMax - MDMPTR(pScrn1)->Monitor2->VDisplay);
             break;
     }
-    /* sanity checks. Make shure were not out of bounds */
+    /* sanity checks. Make sure were not out of bounds */
     BOUND(pMga->M1frameX0,0,pScrn1->virtualX -MDMPTR(pScrn1)->Monitor1->HDisplay);
     BOUND(pMga->M1frameY0,0,pScrn1->virtualY -MDMPTR(pScrn1)->Monitor1->VDisplay);
     BOUND(pScrn2->frameX0,0,pScrn2->virtualX -MDMPTR(pScrn1)->Monitor2->HDisplay);

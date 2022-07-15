@@ -94,7 +94,7 @@ static __inline__ CARD32 get_u32( const CARD8 * data )
 /**
  * Parse version 0x01XX of the BIOS PInS structure.
  * 
- * Version 0x01XX of the BIOS PInS structure is only found in Millenium cards.
+ * Version 0x01XX of the BIOS PInS structure is only found in Millennium cards.
  *
  * \todo
  * There used to be an "OverclockMem" option that would scale the memory clock
@@ -140,7 +140,7 @@ static void mga_parse_bios_ver_1( struct mga_bios_values * bios,
 /**
  * Parse version 0x02XX of the BIOS PInS structure.
  * 
- * Version 0x02XX of the BIOS PInS structure is only found in Millenium II
+ * Version 0x02XX of the BIOS PInS structure is only found in Millennium II
  * and Mystique cards.
  */
 static void mga_parse_bios_ver_2( struct mga_bios_values * bios, 

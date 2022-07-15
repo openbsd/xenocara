@@ -535,7 +535,7 @@ static PciChipsets MGAPciChipsets[] = {
 /*
  * This contains the functions needed by the server after loading the
  * driver module.  It must be supplied, and gets added the driver list by
- * the Module Setup funtion in the dynamic case.  In the static case a
+ * the Module Setup function in the dynamic case.  In the static case a
  * reference to this is compiled in, and this requires that the name of
  * this DriverRec be an upper-case version of the driver name.
  */
@@ -755,7 +755,7 @@ MGAPciProbe(DriverPtr drv, int entity_num, struct pci_device * dev,
 
 	/*
 	 * For cards that can do dual head per entity, mark the entity
-	 * as sharable. 
+	 * as shareable.
 	 */
 	if (pMga->chip_attribs->dual_head_possible) {
 	    MGAEntPtr pMgaEnt = NULL;
@@ -894,7 +894,7 @@ MGAProbe(DriverPtr drv, int flags)
 
 	    /*
 	     * For cards that can do dual head per entity, mark the entity
-	     * as sharable. 
+	     * as shareable.
 	     */
 	    pEnt = xf86GetEntityInfo(usedChips[i]);
 
@@ -1672,7 +1672,7 @@ MGAPreInit(ScrnInfoPtr pScrn, int flags)
             pScrn->AdjustFrame = MGAAdjustFrameCrtc2;
 	    /*
 	     * Fail initialization of second head if we are in MergeFB mode,
-	     * since we do it ourselfs.
+	     * since we do it ourselves.
              */
             if(pMgaEnt->pScrn_1 && MGAPTR(pMgaEnt->pScrn_1)->MergedFB) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -2950,13 +2950,13 @@ MGAModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     /* 
      This function optimize the Priority Request control
      Higher HiPriLvl will reduce drawing performance
-     We need to give enough bandwith to crtc to avoid visual artifact
+     We need to give enough bandwidth to crtc to avoid visual artifact
     */
 	if (pMga->is_G200SE) 
     {
         if (pMga->reg_1e24 >= 0x02)
         {
-            /* Calulate CRTC Priority value */
+            /* Calculate CRTC Priority value */
             CARD8  ucHiPriLvl;
             CARD32 ulBitsPerPixel;
             CARD32 ulMemoryBandwidth;
@@ -3050,7 +3050,7 @@ void MGARestoreSecondCrtc(ScrnInfoPtr pScrn)
             /* Do this branch if 
              * SecondOutput 
              * and not Unshared Primary 
-             * and not Merged Mode (usualy means Unshared Primary) 
+             * and not Merged Mode (usually means Unshared Primary)
              */
             CARD8 ucXDispCtrl = inMGAdac(MGA1064_DISP_CTL);
             

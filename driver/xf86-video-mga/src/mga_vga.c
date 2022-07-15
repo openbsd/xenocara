@@ -360,14 +360,14 @@ MGAG200SEHWProtect(ScrnInfoPtr pScrn, Bool on)
       hwp->enablePalette(hwp);
     } else {
       /*
-       * Reenable sequencer, then turn on screen.
+       * Re-enable sequencer, then turn on screen.
        */
   
       tmp = hwp->readSeq(hwp, 0x01);
 
       MGAWAITVSYNC();
       MGAWAITBUSY();
-      hwp->writeSeq(hwp, 0x01, tmp & ~0x20);    /* reenable display */
+      hwp->writeSeq(hwp, 0x01, tmp & ~0x20);    /* re-enable display */
       usleep(20000);
       vgaHWSeqReset(hwp, FALSE);        /* clear synchronousreset */
 

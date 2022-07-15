@@ -230,7 +230,7 @@ Offset  Type      Description
                            0 = default output is secondary connector
                            1 = default output is primary connector
                   12-14    Secondary modes (see below)
-                  15       Primary hardware dectect
+                  15       Primary hardware detect
                            0 = hardware detection is off
                            1 = use hardware detection to determine main output
                            

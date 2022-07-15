@@ -23,7 +23,7 @@
 #ifndef _MGAREGS_H_
 #define _MGAREGS_H_
 
-/*************** (START) AUTOMATICLY GENERATED REGISTER FILE *****************/
+/*************** (START) AUTOMATICALLY GENERATED REGISTER FILE ***************/
 /*
  * Generated on Sat Nov 20 21:25:36 CST 1999
  */
@@ -924,7 +924,7 @@
 
 
 
-/**************** (END) AUTOMATICLY GENERATED REGISTER FILE ******************/
+/**************** (END) AUTOMATICALLY GENERATED REGISTER FILE ****************/
 
 #endif 	/* _MGAREGS_H_ */
 

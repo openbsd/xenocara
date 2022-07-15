@@ -679,7 +679,7 @@ MGA3026Init(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	  pReg->Option &= ~0x1000;
 
 	/* must always have the pci retries on but rely on 
-	   polling to keep them from occuring */
+	   polling to keep them from occurring */
 	pReg->Option &= ~0x20000000;
 
 	pVga->MiscOutReg |= 0x0C; 

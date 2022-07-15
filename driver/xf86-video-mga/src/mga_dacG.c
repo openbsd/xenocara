@@ -1324,7 +1324,7 @@ MGAGInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
 	MGA_NOT_HAL(
 	/* must always have the pci retries on but rely on 
-	   polling to keep them from occuring */
+	   polling to keep them from occurring */
 	pReg->Option &= ~0x20000000;
 
 	switch(pLayout->bitsPerPixel)
@@ -1754,6 +1754,7 @@ MGA_NOT_HAL(
 	} else {
 	   /* Second Crtc */
 	   xMODEINFO ModeInfo;
+	   memset( &ModeInfo, 0, sizeof(ModeInfo) );
 
 MGA_NOT_HAL(
 	   /* Enable Dual Head */

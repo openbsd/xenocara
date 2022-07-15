@@ -23,7 +23,7 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-mga],
-        [2.0.0],
+        [2.0.1],
         [https://gitlab.freedesktop.org/xorg/driver/xf86-video-mga/issues],
         [xf86-video-mga])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -38,8 +38,7 @@ XORG_DEFAULT_OPTIONS
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_DISABLE_STATIC
@@ -77,12 +76,18 @@ sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
 # Checks for libraries.
 
 if test "x$DRI" != xno; then
-        AC_CHECK_FILE([${sdkdir}/dri.h],
-                      [have_dri_h="yes"], [have_dri_h="no"])
-        AC_CHECK_FILE([${sdkdir}/sarea.h],
-                      [have_sarea_h="yes"], [have_sarea_h="no"])
-        AC_CHECK_FILE([${sdkdir}/dristruct.h],
-                      [have_dristruct_h="yes"], [have_dristruct_h="no"])
+        if test "$cross_compiling" = no; then
+               AC_CHECK_FILE([${sdkdir}/dri.h],
+                             [have_dri_h="yes"], [have_dri_h="no"])
+               AC_CHECK_FILE([${sdkdir}/sarea.h],
+                             [have_sarea_h="yes"], [have_sarea_h="no"])
+               AC_CHECK_FILE([${sdkdir}/dristruct.h],
+                             [have_dristruct_h="yes"], [have_dristruct_h="no"])
+        else
+               have_dri_h="yes"
+               have_sarea_h="yes"
+               have_dristruct_h="yes"
+        fi
 fi
 
 AC_MSG_CHECKING([whether to include DRI support])
