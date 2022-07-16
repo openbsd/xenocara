@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.40 2022/02/07 18:38:44 kettenis Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.41 2022/07/16 21:14:40 kettenis Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -885,14 +885,14 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 			   strerror(errno));
 		return FALSE;
 	}
-	fPtr->fbmem = wsfb_mmap(len, 0, fPtr->fd);
+	fPtr->fbmem = wsfb_mmap(len + fPtr->info.offset, 0, fPtr->fd);
 
 	if (fPtr->fbmem == NULL) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "wsfb_mmap: %s\n", strerror(errno));
 		return FALSE;
 	}
-	fPtr->fbmem_len = len;
+	fPtr->fbmem_len = len + fPtr->info.offset;
 
 	WsfbSave(pScrn);
 	pScrn->vtSema = TRUE;
@@ -923,15 +923,7 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 		pScrn->PointerMoved = WsfbPointerMoved;
 	}
 
-	fPtr->fbstart = fPtr->fbmem;
-
-	/*
-	 * LUNA's framebuffer seems to have 64 dot (8 byte) offset.
-	 * This might be able to be changed in kernel lunafb driver,
-	 * but current setting was pulled from 4.4BSD-Lite2/luna68k.
-	 */
-	if (fPtr->wstype == WSDISPLAY_TYPE_LUNA)
-		fPtr->fbstart += 8;
+	fPtr->fbstart = fPtr->fbmem + fPtr->info.offset;
 
 	if (fPtr->shadowFB) {
 		fPtr->shadow = calloc(1, pScrn->virtualX * pScrn->virtualY *
@@ -1112,7 +1104,7 @@ WsfbWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 			return NULL;
 		fPtr->linebytes = *size;
 	}
-	return ((CARD8 *)fPtr->fbmem + row *fPtr->linebytes + offset);
+	return ((CARD8 *)fPtr->fbstart + row *fPtr->linebytes + offset);
 }
 
 static void
