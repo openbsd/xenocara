@@ -47,7 +47,8 @@ Don't draw the wire frames.
 Typically used only when -faces is used.
 .TP
 .B -sleep \fIn\fP
-Sleep n seconds between each move of the object.
+Sleep n seconds between each move of the object (the default value is 0.01,
+ie 10ms).
 .TP
 .B -obj \fIobject\fP
 Specify what object to draw.

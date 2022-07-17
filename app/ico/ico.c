@@ -238,7 +238,7 @@ static const char *delta_geom = NULL;	/* -delta: amount by which to move object 
 static Polyinfo *poly;		/* -obj: the poly to draw */
 static int dsync = 0;		/* -dsync */
 static int xsync = 0;		/* -sync */
-static int msleepcount = 0;	/* -sleep value in milliseconds*/
+static int msleepcount = 10;	/* -sleep value in milliseconds*/
 #ifdef MULTITHREAD
 static int thread_count;
 #ifdef XMUTEX_INITIALIZER
