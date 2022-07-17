@@ -3964,7 +3964,6 @@
 ./usr/X11R6/share/xcb/bigreq.xml
 ./usr/X11R6/share/xcb/composite.xml
 ./usr/X11R6/share/xcb/damage.xml
-./usr/X11R6/share/xcb/dbe.xml
 ./usr/X11R6/share/xcb/dpms.xml
 ./usr/X11R6/share/xcb/dri2.xml
 ./usr/X11R6/share/xcb/dri3.xml
