@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxcb],[1.14],
+AC_INIT([libxcb],[1.15],
         [https://gitlab.freedesktop.org/xorg/lib/libxcb/issues],
         [libxcb])
 AC_CONFIG_AUX_DIR([build-aux])
@@ -36,7 +36,7 @@ if test x"$HAVE_DOT" = xno; then
     AC_MSG_WARN([dot not found - doxygen targets will be skipped])
 fi
 
-PKG_CHECK_MODULES(CHECK, [check >= 0.9.4], [HAVE_CHECK=yes], [HAVE_CHECK=no])
+PKG_CHECK_MODULES(CHECK, [check >= 0.9.6], [HAVE_CHECK=yes], [HAVE_CHECK=no])
 AM_CONDITIONAL(HAVE_CHECK, test x$HAVE_CHECK = xyes)
 
 XSLTPROC=no

@@ -51,7 +51,11 @@ extern "C" {
  * @file xcb.h
  */
 
+#ifdef __GNUC__
 #define XCB_PACKED __attribute__((__packed__))
+#else
+#define XCB_PACKED
+#endif
 
 /**
  * @defgroup XCB_Core_API XCB Core API
@@ -591,7 +595,7 @@ xcb_connection_t *xcb_connect_to_display_with_auth_info(const char *display, xcb
 /**
  * @brief Allocates an XID for a new object.
  * @param c The connection.
- * @return A newly allocated XID.
+ * @return A newly allocated XID, or -1 on failure.
  *
  * Allocates an XID for a new object. Typically used just prior to
  * various object creation functions, such as xcb_create_window.

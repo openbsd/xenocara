@@ -649,39 +649,42 @@ def _c_helper_resolve_field_names (prefix):
 
     return all_fields
 
+
+def get_expr_field_names(expr):
+    """
+    returns a list of field names referenced in an expression
+    """
+    if expr.op is None or expr.op == 'calculate_len':
+        if expr.lenfield_name is not None:
+            return [expr.lenfield_name]
+        # constant value expr
+        return []
+
+    if expr.op == '~':
+        return get_expr_field_names(expr.rhs)
+    if expr.op == 'popcount':
+        return get_expr_field_names(expr.rhs)
+    if expr.op == 'sumof':
+        # sumof expr references another list,
+        # we need that list's length field here
+        field = None
+        for f in expr.lenfield_parent.fields:
+            if f.field_name == expr.lenfield_name:
+                field = f
+                break
+        if field is None:
+            raise Exception("list field '%s' referenced by sumof not found" % expr.lenfield_name)
+        # referenced list + its length field
+        return [expr.lenfield_name] + get_expr_field_names(field.type.expr)
+    if expr.op == 'enumref':
+        return []
+    return get_expr_field_names(expr.lhs) + get_expr_field_names(expr.rhs)
+
+
 def get_expr_fields(self):
     """
     get the Fields referenced by switch or list expression
     """
-    def get_expr_field_names(expr):
-        if expr.op is None or expr.op == 'calculate_len':
-            if expr.lenfield_name is not None:
-                return [expr.lenfield_name]
-            else:
-                # constant value expr
-                return []
-        else:
-            if expr.op == '~':
-                return get_expr_field_names(expr.rhs)
-            elif expr.op == 'popcount':
-                return get_expr_field_names(expr.rhs)
-            elif expr.op == 'sumof':
-                # sumof expr references another list,
-                # we need that list's length field here
-                field = None
-                for f in expr.lenfield_parent.fields:
-                    if f.field_name == expr.lenfield_name:
-                        field = f
-                        break
-                if field is None:
-                    raise Exception("list field '%s' referenced by sumof not found" % expr.lenfield_name)
-                # referenced list + its length field
-                return [expr.lenfield_name] + get_expr_field_names(field.type.expr)
-            elif expr.op == 'enumref':
-                return []
-            else:
-                return get_expr_field_names(expr.lhs) + get_expr_field_names(expr.rhs)
-    # get_expr_field_names()
 
     # resolve the field names with the parent structure(s)
     unresolved_fields_names = get_expr_field_names(self.expr)
@@ -963,18 +966,15 @@ def _c_get_additional_type_params(type):
         param_fields, wire_fields, params = get_serialize_params('sizeof', type)
         return params[1:]
 
-def _c_serialize_helper_list_field(context, self, field,
-                                   code_lines, temp_vars,
-                                   space, prefix):
+
+def _c_get_field_mapping_for_expr(self, expr, prefix):
     """
-    helper function to cope with lists of variable length
+    helper function to get field mapping of a particular expression.
     """
-    expr = field.type.expr
-    prefix_str = _c_helper_fieldaccess_expr(prefix)
     param_fields, wire_fields, params = get_serialize_params('sizeof', self)
     param_names = [p[2] for p in params]
 
-    expr_fields_names = [f.field_name for f in get_expr_fields(field.type)]
+    expr_fields_names = get_expr_field_names(expr)
     resolved = [x for x in expr_fields_names if x in param_names]
     unresolved = [x for x in expr_fields_names if x not in param_names]
 
@@ -993,6 +993,21 @@ def _c_serialize_helper_list_field(context, self, field,
         unresolved = [x for x in unresolved if x not in field_mapping]
         if len(unresolved)>0:
             raise Exception('could not resolve the length fields required for list %s' % field.c_field_name)
+
+    return field_mapping
+
+
+def _c_serialize_helper_list_field(context, self, field,
+                                   code_lines, temp_vars,
+                                   space, prefix):
+    """
+    helper function to cope with lists of variable length
+    """
+    expr = field.type.expr
+    prefix_str = _c_helper_fieldaccess_expr(prefix)
+
+    field_mapping = _c_get_field_mapping_for_expr(self, field.type.expr, prefix)
+
     if expr.op == 'calculate_len':
         list_length = field.type.expr.lenfield_name
     else:
@@ -1402,6 +1417,16 @@ def _c_serialize(context, self):
 
     elif 'sizeof' == context:
         param_names = [p[2] for p in params]
+        if self.length_expr is not None:
+            _c('    const %s *_aux = (%s *)_buffer;', self.c_type, self.c_type)
+            prefix = [('_aux', '->', self)]
+
+            field_mapping = _c_get_field_mapping_for_expr(self, self.length_expr, prefix)
+
+            _c('    return %s;', _c_accessor_get_expr(self.length_expr, field_mapping))
+            _c('}')
+            _c_pre.redirect_end()
+            return
         if self.is_switch:
             # switch: call _unpack()
             _c('    %s _aux;', self.c_type)
@@ -2586,9 +2611,10 @@ def _c_reply_fds(self, name):
     _h(' * @param c      The connection')
     _h(' * @param reply  The reply')
     _h(' *')
-    _h(' * Returns the array of reply fds of the request asked by')
+    _h(' * Returns a pointer to the array of reply fds of the reply.')
     _h(' *')
-    _h(' * The returned value must be freed by the caller using free().')
+    _h(' * The returned value points into the reply and must not be free().')
+    _h(' * The fds are not managed by xcb. You must close() them before freeing the reply.')
     _h(' */')
     _c('')
     _hc('int *')

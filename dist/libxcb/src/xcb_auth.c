@@ -31,8 +31,6 @@
 
 #include <assert.h>
 #include <X11/Xauth.h>
-#include <sys/param.h>
-#include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
 
@@ -49,6 +47,8 @@
 #endif
 #include "xcb_windefs.h"
 #else
+#include <sys/param.h>
+#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -134,6 +134,7 @@ static Xauth *get_authptr(struct sockaddr *sockname, int display)
         }
         addr += 12;
         /* if v4-mapped, fall through. */
+        XCB_ALLOW_FALLTHRU
 #endif
     case AF_INET:
         if(!addr)
@@ -270,10 +271,17 @@ static int compute_auth(xcb_auth_info_t *info, Xauth *authptr, struct sockaddr *
    to the value returned by either getpeername() or getsockname()
    (according to POSIX, applications should not assume a particular
    length for `sockaddr_un.sun_path') */
+#ifdef _WIN32
+static struct sockaddr *get_peer_sock_name(int(_stdcall *socket_func)(SOCKET,
+    struct sockaddr *,
+    socklen_t *),
+    int fd)
+#else
 static struct sockaddr *get_peer_sock_name(int (*socket_func)(int,
                                                               struct sockaddr *,
                                                               socklen_t *),
                                            int fd)
+#endif
 {
     socklen_t socknamelen = sizeof(struct sockaddr) + INITIAL_SOCKNAME_SLACK;
     socklen_t actual_socknamelen = socknamelen;

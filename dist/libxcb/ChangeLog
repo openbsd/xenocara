@@ -1,3 +1,308 @@
+commit c2c4a2cd1947e559718acdba19ef6e7db731dbeb
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue May 3 15:09:54 2022 -0700
+
+    libxcb 1.15
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit ddafdba11f6919e6fcf977c09c78b06f94de47aa
+Author: Hodong <hodong@yozmos.com>
+Date:   Sat Jan 15 02:32:04 2022 +0900
+
+    Fix a memory leak
+    
+    Signed-off-by: Hodong <hodong@yozmos.com>
+
+commit 43fbf03e549bf6da8d1d8522e0ceddc4d49c37c6
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Thu Sep 23 16:46:32 2021 -0400
+
+    Fix integer overflows in xcb_in.c
+    
+    This fixes an integer overflow security vulnerability in xcb_in.c, which
+    may allow for memory corruption.
+
+commit 233d7b7f1f03ef18bf3955eb1f20421e745d22f0
+Author: Thomas Anderson <thomasanderson@google.com>
+Date:   Wed Dec 2 00:25:42 2020 +0000
+
+    Fix hang in xcb_request_check()
+    
+    This fixes https://gitlab.freedesktop.org/xorg/lib/libxcb/-/issues/53
+    
+    The issue was that libxcb expected to get a reply based on the request_expected
+    variable, but a reply would never arrive because the request was never actually
+    written.  To resolve this, a separate request_expected_written variable is
+    added.
+
+commit dc2811874729ee83fa2aef110f60808c450f9a5a
+Author: Ran Benita <ran@unusedvar.com>
+Date:   Tue Nov 17 23:18:53 2020 +0200
+
+    Avoid request counter truncation in replies map after 2**32 requests
+    
+    The c->in request counters are uint64_t, and can realistically go over
+    2**32 over a lifetime of a client. The c->in->replies map however uses
+    unsigned int keys and the passed request numbers are silently truncated.
+    
+    I haven't analyzed in depth what happens what it wraps around but it's
+    probably nothing good.
+    
+    The only user of the xcb_list.c map code is c->in->replies, so just
+    change it to use uint64_t keys.
+    
+    Reviewed-by: Uli Schlachter <psychon@znc.in>
+    Signed-off-by: Ran Benita <ran@unusedvar.com>
+
+commit 26396bf156cfa00ecd655ec6a5f2f46626d674c0
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Tue Feb 2 12:15:10 2021 +0100
+
+    Add newline when printing auth/connection failure string to stderr
+    
+    The reason strings returned by the server don't all include a newline,
+    so make sure we add one to avoid confusing clients.  Xlib used to do
+    this before it delegated that work to libxcb.
+    
+    Fixes #34
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit a503167f751ba77e6819df568b7f5042d2baa9c9
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Sat May 22 21:43:22 2021 +0200
+
+    Improve/fix docs for reply fds functions
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libxcb/-/issues/56
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+
+commit 3c76c0579ffa521af41f78ee937b1337581da985
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Fri Jul 30 22:58:47 2021 +0300
+
+    c_client.py: Implement handling of <length> element
+    
+    Signed-off-by: Povilas Kanapickas <povilas@radix.lt>
+
+commit bdc3f21a5205293852bbaa173f43389cbf66f52b
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Fri Jul 30 22:58:46 2021 +0300
+
+    c_client: Extract _c_get_field_mapping_for_expr()
+
+commit 068af21cb376eb824fa1dee29a6539feadb93587
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Fri Jul 30 22:58:45 2021 +0300
+
+    c_client.py: Use get_expr_field_names directly to resolve list fields
+    
+    Using get_expr_fields() is only needed in case we are doing things that
+    can span multiple types easily, e.g. when deciding what data to pass via
+    function parameters and so on.
+    
+    In _c_serialize_helper_list_field() we are building function body, so
+    acquiring field names via get_expr_field_names() is enough.
+    
+    Signed-off-by: Povilas Kanapickas <povilas@radix.lt>
+
+commit 4d678b162bf8a3b10e5bdf76df2be63d33c23381
+Author: Povilas Kanapickas <povilas@radix.lt>
+Date:   Fri Jul 30 22:58:44 2021 +0300
+
+    c_client.py: Extract get_expr_field_names()
+    
+    Signed-off-by: Povilas Kanapickas <povilas@radix.lt>
+
+commit 21414e7c447f18224c577ed5e32bd5d6e45c44f9
+Author: Peter Harris <pharris@opentext.com>
+Date:   Mon Feb 1 19:45:28 2021 -0500
+
+    Fix writev emulation on Windows
+    
+    There are at least two bugs in the previous implementation:
+    
+    - If an early iovec is partially written, there can be a gap of missing
+      data (as a later iovec will be started before the early iovec is
+      completed).
+    - If a late iovec returns WSAEWOULDBLOCK, *vector and *count are not
+      updated, leading to a re-send of the entire request.
+    
+    Move the *vector update into the send() loop to update piecemeal as
+    individual iovecs are sent.
+    
+    Example program that demonstrates the issue (this program should run
+    forever after these bugs have been fixed):
+    
+    #include <stdio.h>
+    #include <stdlib.h>
+    #include "xcb.h"
+    
+    // Non-cryptographic random number generator from http://burtleburtle.net/bob/rand/smallprng.html
+    // because Microsoft's random number generators either have a too small RAND_MAX or are too slow
+    typedef struct ranctx { uint32_t a; uint32_t b; uint32_t c; uint32_t d; } ranctx;
+    
+    static uint32_t ranval(ranctx *x);
+    static void raninit(ranctx *x, uint32_t seed);
+    
+    
+    #define MAX_PROP_LEN (128 * 1024)
+    
+    int main(int argc, char *argv[]) {
+        uint32_t seed = 0x12345678;
+        if (argc > 1) {
+            seed = strtoul(argv[1], NULL, 0);
+        }
+        ranctx ran;
+        raninit(&ran, seed);
+    
+        xcb_connection_t *c = xcb_connect(NULL, NULL);
+        if (!c || xcb_connection_has_error(c)) {
+            printf("Cannot connect to $DISPLAY\n");
+            return 1;
+        }
+        const xcb_setup_t *setup = xcb_get_setup(c);
+        char *buf = malloc(MAX_PROP_LEN + 8); // plus a bit of slack so we can run random values off the end
+        if (!buf) {
+            printf("oom\n");
+            return 1;
+        }
+        for (uint32_t i=0; i < (MAX_PROP_LEN + 3) / 4; i++) {
+            ((uint32_t *)buf)[i] = ranval(&ran);
+        }
+    
+        xcb_window_t win = xcb_generate_id(c);
+        xcb_create_window(c, 0, win, xcb_setup_roots_iterator(setup).data[0].root, 0, 0, 1, 1, 0,
+                XCB_WINDOW_CLASS_INPUT_ONLY, 0, 0, NULL);
+        printf("Created window 0x%X\n", win);
+    
+        for (;;) {
+            xcb_flush(c);
+            xcb_generic_event_t *ev = xcb_poll_for_event(c);
+            if (ev) {
+                if (ev->response_type == 0) {
+                    xcb_generic_error_t *err = (xcb_generic_error_t *)ev;
+                    printf("Unexpected X Error %d\n", err->error_code);
+                    printf("   Sequence %d\n", err->sequence);
+                    printf("   Resource ID 0x%X\n", err->resource_id);
+                    printf("   Opcode: %d.%d\n", err->major_code, err->minor_code);
+                    return 1;
+                }
+                printf("Unexpected X Event %d\n", ev->response_type);
+                return 1;
+            }
+    
+            uint32_t siz = ranval(&ran) % MAX_PROP_LEN + 1;
+            xcb_change_property(c, XCB_PROP_MODE_REPLACE, win, XCB_ATOM_STRING, XCB_ATOM_STRING, 8, siz, buf);
+        }
+    
+        return 0;
+    }
+    
+    
+    #define rot(x,k) (((x)<<(k))|((x)>>(32-(k))))
+    static uint32_t ranval(ranctx *x) {
+        uint32_t e = x->a - rot(x->b, 27);
+        x->a = x->b ^ rot(x->c, 17);
+        x->b = x->c + x->d;
+        x->c = x->d + e;
+        x->d = e + x->a;
+        return x->d;
+    }
+    
+    static void raninit(ranctx *x, uint32_t seed) {
+        uint32_t i;
+        x->a = 0xf1ea5eed, x->b = x->c = x->d = seed;
+        for (i = 0; i<20; ++i) {
+            (void)ranval(x);
+        }
+    }
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit 4b0d9d3868aad8d5f4266821e9eda586e6c2bfa7
+Author: Peter Harris <pharris@opentext.com>
+Date:   Mon Feb 1 17:43:52 2021 -0500
+
+    Fix build on Windows
+    
+    Notable changes: Protect include of unistd.h (and other POSIX headers).
+    Use SOCKET (which is larger than int) and closesocket (because close is
+    not compatible) for sockets. Use <stdint.h>'s intptr_t instead of the
+    non-portable ssize_t.
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+
+commit cd0fba98a2d0867d505ff1a7ca8d7a7c757acfa2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 1 18:36:17 2021 -0700
+
+    xcb_auth: Quiet -Wimplicit-fallthrough warning in get_authptr()
+    
+    xcb_auth.c:135:14: warning: this statement may fall through [-Wimplicit-fallthrough=]
+             addr += 12;
+             ~~~~~^~~~~
+    xcb_auth.c:138:5: note: here
+         case AF_INET:
+         ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ef8655987b9862cdddb72223c9f259a860d5777
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Mon Feb 1 19:23:02 2021 +0100
+
+    Increment libtool version info for libxcb-dri3
+    
+    Somewhat belatedly given the last update was in xcb-proto 1.13 in 2017...
+    
+    Quoting @smcv from https://bugs.debian.org/921069:
+    >>>
+    libxcb-dri3 version 1.13 appears to have added new symbols without increasing
+    the minor ABI version in its -version-info. This will break anything that
+    compares libraries by their version info to decide which one is newer.
+    
+    The Steam Runtime uses libraries' major/minor/micro ABI version info (in this
+    case 0.0.0) to decide whether to use the system copy of a library or the copy
+    in the Steam Runtime, depending on which one is newer (#921026). We can
+    work around this by adding a versioned dependency on libxcb-dri3-0 and
+    deleting the copy from the Steam Runtime, but this isn't a particularly
+    scalable solution.
+    >>>
+
+commit 4cbcac4eca967abfbff7cf1ea473777c5e8c375c
+Author: Ran Benita <ran@unusedvar.com>
+Date:   Tue Nov 17 23:45:14 2020 +0200
+
+    gitignore: add files generated by make check
+    
+    Signed-off-by: Ran Benita <ran@unusedvar.com>
+
+commit f01f3c378eb0168fbb055c7be1c2d08a7acd3752
+Author: Ran Benita <ran@unusedvar.com>
+Date:   Tue Nov 17 23:43:06 2020 +0200
+
+    tests: don't use deprecated fail_unless check API
+    
+    It causes errors like this when running make check:
+    
+    check_public.c:40:24: error: too many arguments for format [-Werror=format-extra-args]
+       40 |   fail_unless(success, "unexpected parse failure %sfor '%s'", test_string[test_type], name);
+    
+    Closes: https://gitlab.freedesktop.org/xorg/lib/libxcb/-/issues/49
+    Tested-by: Matt Turner <mattst88@gmail.com>
+    Signed-off-by: Ran Benita <ran@unusedvar.com>
+
+commit 704e0a91b1dece9a4cce7cfe8beaeb86a5e14267
+Author: Eduardo Sánchez Muñoz <esm@eduardosm.net>
+Date:   Mon Mar 2 18:59:45 2020 +0100
+
+    Use the 'present' field to properly check that the XC-MISC
+    extension is available in xcb_generate_id.
+    
+    Also document the returned value when xcb_generate_id fails.
+
 commit 4b40b44cb6d088b6ffa2fb5cf3ad8f12da588cef
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Feb 22 12:10:53 2020 -0800

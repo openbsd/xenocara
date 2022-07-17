@@ -36,12 +36,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
-#include <unistd.h>
 #include <string.h>
 
 #ifdef _WIN32
 #include "xcb_windefs.h"
 #else
+#include <unistd.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -415,7 +415,11 @@ static int _xcb_open_tcp(const char *host, char *protocol, const unsigned short 
             if(_xcb_do_connect(fd, (struct sockaddr*)&_s, sizeof(_s)) >= 0)
                 break;
 
+#ifdef _WIN32
+            closesocket(fd);
+#else
             close(fd);
+#endif
             fd = -1;
             ++_c;
         }

@@ -1076,7 +1076,7 @@ _LT_EOF
 	  _lt_dar_allow_undefined='$wl-undefined ${wl}dynamic_lookup' ;;
 	10.[[012]][[,.]]*)
 	  _lt_dar_allow_undefined='$wl-flat_namespace $wl-undefined ${wl}suppress' ;;
-	10.*)
+	10.*|11.*)
 	  _lt_dar_allow_undefined='$wl-undefined ${wl}dynamic_lookup' ;;
       esac
     ;;
