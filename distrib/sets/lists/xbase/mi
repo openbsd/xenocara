@@ -323,7 +323,7 @@
 ./usr/X11R6/lib/libxcb-dri2.a
 ./usr/X11R6/lib/libxcb-dri2.so.1.1
 ./usr/X11R6/lib/libxcb-dri3.a
-./usr/X11R6/lib/libxcb-dri3.so.0.1
+./usr/X11R6/lib/libxcb-dri3.so.0.2
 ./usr/X11R6/lib/libxcb-ewmh.a
 ./usr/X11R6/lib/libxcb-ewmh.la
 ./usr/X11R6/lib/libxcb-ewmh.so.2.0
@@ -365,11 +365,11 @@
 ./usr/X11R6/lib/libxcb-xf86dri.a
 ./usr/X11R6/lib/libxcb-xf86dri.so.2.0
 ./usr/X11R6/lib/libxcb-xfixes.a
-./usr/X11R6/lib/libxcb-xfixes.so.1.2
+./usr/X11R6/lib/libxcb-xfixes.so.2.0
 ./usr/X11R6/lib/libxcb-xinerama.a
 ./usr/X11R6/lib/libxcb-xinerama.so.1.0
 ./usr/X11R6/lib/libxcb-xinput.a
-./usr/X11R6/lib/libxcb-xinput.so.0.0
+./usr/X11R6/lib/libxcb-xinput.so.0.1
 ./usr/X11R6/lib/libxcb-xkb.a
 ./usr/X11R6/lib/libxcb-xkb.so.0.1
 ./usr/X11R6/lib/libxcb-xrm.a
