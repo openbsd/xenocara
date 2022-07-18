@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2018/07/19 11:58:46 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.9 2022/07/18 06:21:45 matthieu Exp $
 
 PKGCONFIG=	xcb-proto.pc
 
@@ -8,6 +8,7 @@ FILES= \
 	bigreq.xml \
 	composite.xml \
 	damage.xml \
+	dbe.xml \
 	dpms.xml \
 	dri2.xml \
 	dri3.xml \
