@@ -1,4 +1,4 @@
-/*	$OpenBSD: wsudl_driver.c,v 1.13 2019/08/08 12:04:36 matthieu Exp $ */
+/*	$OpenBSD: wsudl_driver.c,v 1.14 2022/07/21 18:21:06 kettenis Exp $ */
 
 /*
  * Copyright (c) 2009 Marcus Glocker <mglocker@openbsd.org>
@@ -573,14 +573,14 @@ WsudlScreenInit(SCREEN_INIT_ARGS_DECL)
 	}
 
 	/* memory map framebuffer from kernel driver */
-        fPtr->fbmem = mmap(NULL, pScrn->videoRam,
+        fPtr->fbmem = mmap(NULL, pScrn->videoRam + fPtr->info.offset,
             PROT_READ | PROT_WRITE, MAP_SHARED, fPtr->fd, 0);
         if (fPtr->fbmem == MAP_FAILED) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		    "mmap failed: %s\n", strerror(errno));
 		return (FALSE);
 	}
-	fPtr->fbmem_len = pScrn->videoRam;
+	fPtr->fbmem_len = pScrn->videoRam + fPtr->info.offset;
 
 	/* TODO: save colormap with WsudlSave()?  maybe not needed for us */
 	pScrn->vtSema = TRUE;
@@ -600,7 +600,7 @@ WsudlScreenInit(SCREEN_INIT_ARGS_DECL)
 	if (!miSetPixmapDepths())
 		return (FALSE);
 
-	fPtr->fbstart = fPtr->fbmem;
+	fPtr->fbstart = fPtr->fbmem + fPtr->info.offset;
 
 	r = fbScreenInit(pScreen, fPtr->fbstart,
 	    pScrn->virtualX,
