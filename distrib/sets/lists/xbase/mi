@@ -304,7 +304,7 @@
 ./usr/X11R6/lib/libfontenc.la
 ./usr/X11R6/lib/libfontenc.so.4.0
 ./usr/X11R6/lib/libfreetype.a
-./usr/X11R6/lib/libfreetype.so.30.1
+./usr/X11R6/lib/libfreetype.so.30.2
 ./usr/X11R6/lib/libpciaccess.a
 ./usr/X11R6/lib/libpciaccess.la
 ./usr/X11R6/lib/libpciaccess.so.2.0
