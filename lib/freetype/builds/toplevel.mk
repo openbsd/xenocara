@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 1996-2021 by
+# Copyright (C) 1996-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -226,6 +226,7 @@ patch := $(firstword $(patch))
 # else
   version := $(major).$(minor).$(patch)
   winversion := $(major)$(minor)$(patch)
+  version_tag := VER-$(major)-$(minor)-$(patch)
 # endif
 
 
@@ -282,6 +283,10 @@ dist:
 CONFIG_GUESS = ~/git/config/config.guess
 CONFIG_SUB   = ~/git/config/config.sub
 
+# We also use this repository to access the gnulib script that converts git
+# commit messages to a ChangeLog file.
+CHANGELOG_SCRIPT = ~/git/config/gitlog-to-changelog
+
 
 # Don't say `make do-dist'.  Always use `make dist' instead.
 #
@@ -298,6 +303,14 @@ do-dist: distclean refdoc
 
 	cp $(CONFIG_GUESS) builds/unix
 	cp $(CONFIG_SUB) builds/unix
+
+	@# Generate `ChangeLog' file with commits since release 2.11.0
+	@# (when we stopped creating this file manually).
+	$(CHANGELOG_SCRIPT) \
+	  --format='%B%n' \
+	  --no-cluster \
+	  -- VER-2-11-0..$(version_tag) \
+	> ChangeLog
 
 	@# Remove intermediate files created by the `refdoc' target.
 	rm -rf docs/markdown

@@ -1,6 +1,6 @@
 #! /bin/sh
 #
-# Copyright (C) 2000-2021 by
+# Copyright (C) 2000-2022 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -44,7 +44,7 @@ else
   version=%ft_version%
 
   cflags="-I${SYSROOT}$includedir/freetype2"
-  dynamic_libs="%LIBSSTATIC_CONFIG%"
+  dynamic_libs="-lfreetype"
   static_libs="%LIBSSTATIC_CONFIG%"
   if test "${SYSROOT}$libdir" != "/usr/lib"   &&
      test "${SYSROOT}$libdir" != "/usr/lib64" ; then

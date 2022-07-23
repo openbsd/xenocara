@@ -4,7 +4,7 @@
  *
  *   Signed Distance Field renderer interface (body).
  *
- * Copyright (C) 2020-2021 by
+ * Copyright (C) 2020-2022 by
  * David Turner, Robert Wilhelm, and Werner Lemberg.
  *
  * Written by Anuj Verma.
@@ -298,8 +298,9 @@
       goto Exit;
     }
 
+    /* nothing to render */
     if ( !bitmap->rows || !bitmap->pitch )
-      goto Exit;
+      return FT_Err_Ok;
 
     /* the padding will simply be equal to the `spread' */
     x_pad = sdf_module->spread;
@@ -350,6 +351,10 @@
     error = render->raster_render( render->raster,
                                    (const FT_Raster_Params*)&params );
 
+    /* transform the outline back to the original state */
+    if ( x_shift || y_shift )
+      FT_Outline_Translate( outline, -x_shift, -y_shift );
+
   Exit:
     if ( !error )
     {
@@ -361,9 +366,6 @@
       FT_FREE( bitmap->buffer );
       slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
     }
-
-    if ( x_shift || y_shift )
-      FT_Outline_Translate( outline, -x_shift, -y_shift );
 
     return error;
   }
@@ -506,8 +508,20 @@
       goto Exit;
     }
 
-    if ( !bitmap->rows || !bitmap->pitch )
+    /* Do not generate SDF if the bitmap is not owned by the       */
+    /* glyph: it might be that the source buffer is already freed. */
+    if ( !( slot->internal->flags & FT_GLYPH_OWN_BITMAP ) )
+    {
+      FT_ERROR(( "ft_bsdf_render: can't generate SDF from"
+                 " unowned source bitmap\n" ));
+
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
+    }
+
+    /* nothing to render */
+    if ( !bitmap->rows || !bitmap->pitch )
+      return FT_Err_Ok;
 
     FT_Bitmap_New( &target );
 
