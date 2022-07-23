@@ -1,3 +1,193 @@
+commit 3a30ada60c5217ada37b143b541c8e6f6284c7fa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jun 8 17:30:14 2022 -0700
+
+    libX11 1.8.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70f7403fd3bf362fc50b8de4a2e26300f757c68e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 3 14:45:05 2022 -0700
+
+    configure.ac: Fix --enable-thread-safety-constructor
+    
+    Prior to this, --enable-thread-safety-constructor would disable it,
+    while --disable worked as expected, and no option left it enabled as
+    expected by default.  This also fixes the --help text to be displayed.
+    
+    Fixes: afcdb6fb0045c6186aa83d9298f327a7ec1b2cb9
+    Reported-by: @igor.v.kovalenko
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit d0da5a1e0fb214ff911ecff86d35f6673ff70023
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Fri Apr 29 11:27:44 2022 -0400
+
+    libX11 1.8
+    
+    Minor number bump to reflect the thread safety default change.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit afcdb6fb0045c6186aa83d9298f327a7ec1b2cb9
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Mar 22 18:24:29 2022 -0400
+
+    global: call XInitThreads() from the library's constructor
+    
+    There is really no point in not being thread safe, I measured, all you
+    can see happen is noop performance gets like twice as slow and you have
+    thread safety bugs. And we're using xcb as the transport which means we
+    should expect threads in our clients anyway. Just do it.
+    
+    This assumes your compiler understands __attribute__((constructor)). If
+    this is not your compiler, you can disable this with the appropriate
+    configure flag, but be aware you're asking for bugs.
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 1ab48f3cc966751d86e434808180beb2dc76c4fa
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Apr 24 15:06:45 2022 +0200
+
+    docs: add release notes for versions 1.7.3, 1.7.4, and 1.7.5
+    
+    They were forgotten when those releases were made.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 35d1513bc7fdd3ac6f5807feb601efc34ac19163
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 13:04:23 2022 -0700
+
+    XkbOpenDisplay: Add _Xconst qualifier to display name argument
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c88ceaad4aaa0439e5cba13c1f5737ad54566e0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 12:59:39 2022 -0700
+
+    XKBgeom.h: Add _Xconst qualifier to char * arguments in functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ce4425826074b12a58ced432f9d6fb346474737
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 16 12:20:51 2022 -0700
+
+    XKBgeom.h: Remove XKB_IN_SERVER section
+    
+    The Xserver made its own copy of this file in 2008, and the API's are
+    no longer the same between the server and client forks.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be8c01946ab1a1d4b79fdc5358541d630f14dc0a
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Wed Apr 20 09:29:09 2022 +0200
+
+    lcCT: use the correct index for checking the second byte
+    
+    (Not that it will make any difference, as the checking of these
+    high bits looks like an excess of precaution.)
+    
+    This fixes issue #134.
+    
+    Reported-by: Rafał Mikrut
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 488b156fe2cc8aca6946a49236ec7b7698fceda4
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Fri Feb 25 16:35:46 2022 +0100
+
+    nls: make the Ethiopian compose sequences actually work
+    
+    In the Ethiopian keyboard layout, the dead vowel keys do not produce <e>
+    and <u> and so on, but instead produce <U+FE69> and <U+FE75> and so on,
+    so the compose sequences should use those latter code points.
+    
+    Also, include the basic compose sequences from en_US.UTF-8/Compose,
+    so that, when switching to a different layout in the Ethiopian locale,
+    all the usual compose sequences work too.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit e6f98a3dbd82928e10adaf9d034dc574af1de6e5
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Mon Apr 18 17:24:55 2022 +0200
+
+    nls: add Multi-key sequences for abovedot, diaeresis, and ogonek
+    
+    These accents by themselves could only be produced when one had a
+    dead key for them, not with the help of the Multi key.
+    
+    [Note that the sequences <dead_acute> <space> for apostrophe (')
+    and <dead_diaeresis> <space> for double quote (") are anomalies,
+    as normally <dead_accent> <space> produces the accent itself.]
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit d323704e7c57f9ac7fdfea3dc9fa73bf943e72d3
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Mon Apr 18 16:57:35 2022 +0200
+
+    nls: remove eight pointless self-producing compose sequences
+    
+    Compose sequences are meant to produce certain symbols by combining
+    certain different symbols, not to produce a symbol with the help of
+    the symbol itself.
+    
+    This fixes issue #59.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 3b62c0322c112c03597d850197dbce22d1830bb7
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Fri Feb 25 14:12:02 2022 +0100
+
+    nls: remove misplaced sequences from Ethiopian and Greek compose files
+    
+    The Khmer digraphs and Arabic ligatures have nothing to do with
+    Amharic or Greek.
+    
+    (Also rewrap a comment and correct two others.)
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 479af78f2e5caaf9b98a35ae5ff4ccdd2f040289
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Fri Feb 25 14:05:35 2022 +0100
+
+    nls: remove redundant Khmer digraphs, already defined in included file
+    
+    This fixes issue #160.
+    
+    Reported-by: Mike Fabian
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 6d7d08726f4b0c517041842b27cd7e66e8f371eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 10 14:51:55 2022 -0700
+
+    XkbUpdateKeyTypeVirtualMods: always initialize mask
+    
+    XkbVirtualModsToReal should only fail to set mask if the server does
+    not support XKB, but it still made Oracle Parfait complain:
+    
+    Error: Uninitialised memory
+       Uninitialised memory variable [uninitialised-mem-var] (CWE 457):
+          Possible access to uninitialised memory referenced by variable 'mask'
+            at line 863 of lib/libX11/src/xkb/XKBMisc.c in function 'XkbUpdateKeyTypeVirtualMods'.
+            Path in callee avoiding write at line 862
+              mask allocated at line 860
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9ac6859c20be2fc5e70c2908de60c6e466ec04e1
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sun Apr 3 10:15:30 2022 -0700
@@ -2202,7 +2392,7 @@ Date:   Fri Jun 7 23:35:33 2019 +0200
     Tested-by: Jean-Philippe Mengual <jpmengual@hypra.fr>
 
 commit 99a2cf1aa0b58391078d5d3edf0a7dab18c7745d
-Author: Tapani Pälli <tapani.palli@intel.com>
+Author: Tapani Pälli  <tapani.palli@intel.com>
 Date:   Mon May 13 08:29:49 2019 +0300
 
     Protect colormap add/removal with display lock
@@ -2228,7 +2418,7 @@ Date:   Wed Mar 13 13:12:20 2019 +0000
     Windows.
 
 commit 87c77a1e6d7034536e9d25ce24a667ebf53486a7
-Author: Matthias Dieter Wallnöfer <matthias.wallnoefer@lugbz.org>
+Author: Matthias Dieter Wallnöfer  <matthias.wallnoefer@lugbz.org>
 Date:   Mon Mar 11 14:19:52 2019 +0000
 
     locale.alias.pre - add the de_IT locale
@@ -2236,7 +2426,7 @@ Date:   Mon Mar 11 14:19:52 2019 +0000
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 568f77f414072506bbe48646637c872987c97e63
-Author: Matthias Dieter Wallnöfer <matthias.wallnoefer@lugbz.org>
+Author: Matthias Dieter Wallnöfer  <matthias.wallnoefer@lugbz.org>
 Date:   Mon Mar 11 14:17:10 2019 +0000
 
     locale.dir.pre - add the de_IT locale
@@ -2244,7 +2434,7 @@ Date:   Mon Mar 11 14:17:10 2019 +0000
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 38c0c92feaef7dc4a72920b1dd79872e6578086c
-Author: Matthias Dieter Wallnöfer <matthias.wallnoefer@lugbz.org>
+Author: Matthias Dieter Wallnöfer  <matthias.wallnoefer@lugbz.org>
 Date:   Mon Mar 11 14:12:07 2019 +0000
 
     compose.dir.pre - add de_IT locale
@@ -2252,7 +2442,7 @@ Date:   Mon Mar 11 14:12:07 2019 +0000
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 49f835611ba6ab82e68b7b851507931c142db7a5
-Author: Matthias Dieter Wallnöfer <matthias.wallnoefer@lugbz.org>
+Author: Matthias Dieter Wallnöfer  <matthias.wallnoefer@lugbz.org>
 Date:   Tue Jan 29 15:34:34 2019 +0000
 
     Update locale.alias.pre - introduce the de_LI aliases (equivalent to de_CH)
@@ -2260,7 +2450,7 @@ Date:   Tue Jan 29 15:34:34 2019 +0000
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit ed669234d0cd5933618aa5fd2da697b59845b9be
-Author: Matthias Dieter Wallnöfer <matthias.wallnoefer@lugbz.org>
+Author: Matthias Dieter Wallnöfer  <matthias.wallnoefer@lugbz.org>
 Date:   Tue Jan 29 15:28:18 2019 +0000
 
     locale.dir.pre - fix the de_LI latin15 locale
@@ -2582,7 +2772,7 @@ Date:   Tue Oct 9 10:26:05 2018 -0400
     Signed-off-by: Matt Turner <mattst88@gmail.com>
 
 commit 823a0f8a820247b6c1e092f679b49cbdc2ea5c95
-Author: Michel Dänzer <michel.daenzer@amd.com>
+Author: Michel Dänzer  <michel.daenzer@amd.com>
 Date:   Fri Sep 28 17:24:17 2018 +0200
 
     poll_for_event: Allow using xcb_poll_for_queued_event
@@ -2594,7 +2784,7 @@ Date:   Fri Sep 28 17:24:17 2018 +0200
     Reviewed-by: Uli Schlachter <psychon@znc.in>
 
 commit 406afe4b0f1b655c0db19bbc9a0c48da9a46acf5
-Author: Michel Dänzer <michel.daenzer@amd.com>
+Author: Michel Dänzer  <michel.daenzer@amd.com>
 Date:   Tue Sep 25 17:10:58 2018 +0200
 
     poll_for_response: Call poll_for_event again if xcb_poll_for_reply fails
@@ -3123,7 +3313,7 @@ Date:   Fri Feb 10 18:48:18 2017 +0500
     Signed-off-by: Mihail Konev <k.mvc@ya.ru>
 
 commit 23d9623c661694aba8cf1e8f277dffa7a86cf065
-Author: Petr Písař <petr.pisar@atlas.cz>
+Author: Petr Písař < <petr.pisar@atlas.cz>
 Date:   Sun Oct 30 12:49:11 2016 +0100
 
     Revert cs_CZ.UTF-8 XLC_LOCALE to en_US.UTF-8
@@ -6619,6 +6809,9 @@ Date:   Mon Feb 18 01:25:34 2013 +0000
     Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
+Notes:
+    CVE-2013-7439
+
 commit 3cdb6c3a1646f670afa03d424ec12ac418181d1e
 Author: Quentin Glidic <sardemff7+git@sardemff7.net>
 Date:   Tue Jan 15 21:07:17 2013 +0000
@@ -7613,7 +7806,7 @@ Date:   Sun Feb 12 19:01:43 2012 -0800
     Signed-off-by: Jeremy Huddleston <jeremyhu@apple.com>
 
 commit f180e043f55531933bedfa6e0ff36a00a9ec07f3
-Author: Frédéric Boiteux <fboiteux@calistel.com>
+Author: Frédéric Boiteux < <fboiteux@calistel.com>
 Date:   Wed Nov 30 12:47:31 2011 +0000
 
     Compositions with the dead greek symbol
@@ -9193,7 +9386,7 @@ Date:   Mon Mar 14 14:45:35 2011 -0700
     Signed-off-by: Jamey Sharp <jamey@minilop.net>
 
 commit 690f8bffd48a4e7e74298360ddd0431dc95dcd3f
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Tue Jan 18 15:58:20 2011 +0200
 
     xkb: XkbPropertyPtr determined allocation success from wrong variables
@@ -9209,7 +9402,7 @@ Date:   Tue Jan 18 15:58:20 2011 +0200
     Reviewed-by: Alan Coopersmith <alan.coopersmith at oracle.com>
 
 commit 6a4d027284e7bb5dd458157947bbb1ff580ad071
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 10 16:37:22 2011 +0200
 
     keyBind: Use Xcalloc to initialize allocated _XKeytrans
@@ -9222,7 +9415,7 @@ Date:   Mon Jan 10 16:37:22 2011 +0200
     Reviewed-by: Alan Coopersmith <alan.coopersmith at oracle.com>
 
 commit b993d73bb3214ecc24646f5427c8003b816c6921
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 10 16:22:45 2011 +0200
 
     im/ximcp: release modifiermap before returning
@@ -9334,7 +9527,7 @@ Date:   Fri Feb 11 14:20:24 2011 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 502d414118c97d35a44f8e295709682022876331
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Thu Feb 3 17:08:57 2011 +0200
 
     xcms/cmsProp: don't deal with uninitialized values, fail instead
@@ -9408,7 +9601,7 @@ Date:   Wed Feb 2 08:56:00 2011 -0800
     Reviewed-by: Julien Cristau <jcristau@debian.org>
 
 commit 450e17422c0e374d25c643f343ea268cec68da38
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:01:57 2011 +0200
 
     XlibInt: Use strncpy+zero termination instead of strcpy to enforce buffer size
@@ -9438,7 +9631,7 @@ Date:   Mon Jan 31 14:02:13 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 03f81ad8fb9783986cf9b17661dd31e95c396681
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:16 2011 +0200
 
     xlibi18n/lcFile: Removed superfluous check for NULL target_dir
@@ -9453,7 +9646,7 @@ Date:   Mon Jan 31 14:02:16 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 1346b9ea3b3882201ff8c3ee462ff4b0d4edf639
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:15 2011 +0200
 
     ximcp/imLckup: Handle negative return value from _Xlcwctomb
@@ -9474,7 +9667,7 @@ Date:   Mon Jan 31 14:02:15 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 79a5c86e020f08cc108184298a72e2777036de39
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:14 2011 +0200
 
     ximcp/imTrX: Handle failing XGetWindowProperty
@@ -9506,7 +9699,7 @@ Date:   Mon Jan 31 14:02:12 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 2b16a7e683e355c9746290b2cee2fd0dd2bf342a
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:10 2011 +0200
 
     GetProp: Zero-initialized error so its resourceID field is initialized
@@ -9546,7 +9739,7 @@ Date:   Mon Jan 31 14:02:08 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit be3e6c205d94dedc1cdebf5d17b987f0f828377a
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:06 2011 +0200
 
     Xrm: Handle the extremely unlikely situation of fstat failing
@@ -9559,7 +9752,7 @@ Date:   Mon Jan 31 14:02:06 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 3fae16c64d6ef76fd4a25a54c7f7de76596457db
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:05 2011 +0200
 
     Xrm: NEWTABLE had a memory leak after a memory allocation error
@@ -9575,7 +9768,7 @@ Date:   Mon Jan 31 14:02:05 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 7110ac653349a23c80c365f11f6270dc27c8975a
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:03 2011 +0200
 
     ImUtil: Handle a memory leak in one early return branch
@@ -9590,7 +9783,7 @@ Date:   Mon Jan 31 14:02:03 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit d695f5da9f5b778e54b6987d9177048e32818c4d
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:02:01 2011 +0200
 
     ximcp/imRm: Handle leaking colormap_ret
@@ -9605,7 +9798,7 @@ Date:   Mon Jan 31 14:02:01 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit f9eda19d08c1ea0973dfe0bc10a2519d6fd26cc7
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:01:59 2011 +0200
 
     ximcp/imRmAttr: Handle leaking missing_list
@@ -9620,7 +9813,7 @@ Date:   Mon Jan 31 14:01:59 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 3183269e0979c9dbce9d55d9e03937897dc9fb3b
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:01:58 2011 +0200
 
     ximcp/imRmAttr: Handle leaking colormap_ret
@@ -9634,7 +9827,7 @@ Date:   Mon Jan 31 14:01:58 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit f66a032a937030f2d9baa81744d36dc585bb085c
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:01:56 2011 +0200
 
     xlibi18n/lcGeneric: Initialize uninitialized local variable
@@ -9647,7 +9840,7 @@ Date:   Mon Jan 31 14:01:56 2011 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit d0266e06d38110ec908ca28379014eff743630b7
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 31 14:01:54 2011 +0200
 
     xcmx/cmxColNm: Removed unused assignments to pBuf (in two functions)
@@ -9694,7 +9887,7 @@ Date:   Mon Jan 31 14:50:19 2011 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit e994ab227ed28655565c3193e63733630105e7f9
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Tue Jan 18 12:49:48 2011 +0200
 
     Comparing array against NULL is not useful "&xkb->server->vmods != NULL"
@@ -9705,7 +9898,7 @@ Date:   Tue Jan 18 12:49:48 2011 +0200
     Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
 
 commit 4115f051e62f9b098efce691e070d44f09f30f1c
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Wed Jan 12 15:51:11 2011 +0200
 
     Variable "entry" tracked as NULL was dereferenced.
@@ -9717,7 +9910,7 @@ Date:   Wed Jan 12 15:51:11 2011 +0200
     Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
 
 commit 0edb76d1d5fdca5a2543332699be2e72386dab24
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Thu Jan 27 09:54:00 2011 +0200
 
     Dereferencing possibly NULL "str" in call to function "memcpy" (Deref assumed on the basis of 'nonnull' parameter attribute.)
@@ -9729,7 +9922,7 @@ Date:   Thu Jan 27 09:54:00 2011 +0200
     Signed-off-by: Erkki Seppälä <erkki.seppala@vincit.fi>
 
 commit 59da8a211ef723909d0530c0331d541db8e63378
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Jan 10 16:17:47 2011 +0200
 
     Using freed pointer "e"
@@ -11574,7 +11767,7 @@ Date:   Tue Jan 26 19:41:08 2010 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit eb289b34bfc9978eef724e0f268975938334c06c
-Author: Kristian Høgsberg <krh@bitplanet.net>
+Author: Kristian Høgsberg  <krh@bitplanet.net>
 Date:   Thu Jan 21 13:39:17 2010 -0500
 
     XErrorDB: Add new DRI2 request names
@@ -12880,7 +13073,7 @@ Date:   Sat Feb 21 14:48:42 2009 -0500
     Signed-off-by: Chris Ball <cjb@laptop.org>
 
 commit da6bbca07c796c69172a649405474f03bee66754
-Author: Emilio Jesús Gallego Arias <egallego@babel.ls.fi.upm.es>
+Author: Emilio Jesús Gallego Arias  <egallego@babel.ls.fi.upm.es>
 Date:   Sat Feb 21 20:17:23 2009 +0100
 
     xcb_io: Avoid datatype overflow on AMD64 and friends.
@@ -13561,7 +13754,7 @@ Date:   Wed Sep 17 10:43:52 2008 -0400
     Bug #17616: Fix an XCB leak when the client has a non-fatal error handler.
 
 commit db0b85db29699be6bf7e78dede655d59ba926dfc
-Author: Rafael Ávila de Espíndola <rafael.espindola@gmail.com>
+Author: Rafael Ávila de Espíndola < <rafael.espindola@gmail.com>
 Date:   Sun Sep 14 19:15:26 2008 -0400
 
     Fix problem with <dead_acute> <c> in pt_BR.UTF-8
@@ -13967,7 +14160,7 @@ Date:   Thu Feb 28 20:17:41 2008 -0800
     Man page typo fixes
 
 commit 1a1a42a3ca1dfaf42f1094936b71c140fc030fcb
-Author: Søren Sandmann Pedersen <sandmann@redhat.com>
+Author: Søren Sandmann Pedersen  <sandmann@redhat.com>
 Date:   Sun Feb 24 20:03:35 2008 -0500
 
     XIM: Fix a hand when switching input context.
@@ -14197,7 +14390,7 @@ Date:   Fri Aug 31 17:30:33 2007 -0700
     Bug #2081: Note the range limitation of XSetScreenSaver arguments.
 
 commit 31540f1438ec63faf37044f2fd654b335ddf80f0
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Wed Aug 29 19:50:57 2007 -0400
 
     Add GLX 1.4 requests and errors.
@@ -15052,7 +15245,7 @@ Date:   Wed Nov 8 12:17:41 2006 -0800
     This fixes an XCB locking assertion failure, particularly with emacs.
 
 commit e494ecaac1ec8a22bd9a85f800fca74d02e9d358
-Author: Diego 'Flameeyes' Pettenò <flameeyes@gentoo.org>
+Author: Diego 'Flameeyes' Pettenò  <flameeyes@gentoo.org>
 Date:   Tue Nov 7 09:32:00 2006 -0800
 
     Add xcb-xlib dependency to x11.pc when built against XCB.
@@ -16339,7 +16532,7 @@ Date:   Fri Oct 7 15:00:00 2005 +0000
     Add missing dist tarball files
 
 commit 440399b470c97b159a530602fff11c315aca8d97
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Oct 5 18:27:10 2005 +0000
 
     Add el_GR.UTF-8 compose file
@@ -16394,7 +16587,7 @@ Date:   Fri Sep 2 23:00:30 2005 +0000
     Issue an error if XTRANS macros were not found when generating configure from configure.ac to flag errors early, instead of when people wonder why libX11 can't talk to an Xserver because it has no transports defined
 
 commit 3eb9f2d693af89d04e2fd92492c8205dce332c9c
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Thu Sep 1 19:24:13 2005 +0000
 
     Use $(X11_LOCALEDATADIR) instead of @X11_LOCALEDATADIR@ so this install destination can be overridden at make install time.
@@ -16675,7 +16868,7 @@ Date:   Fri Jul 1 22:13:35 2005 +0000
     Added if not already present.
 
 commit c162d60ad8f124563f94a2a266de59373936266c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 22:46:31 2005 +0000
 
     Apply these patches from Theo van Klaveren:
@@ -16800,7 +16993,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit cd4657c175dbab6aaca36f18a0ca92c95b5567dd
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue May 17 22:32:09 2005 +0000
 
     - Check for xproto as its CFLAGS are needed in the .pc file
@@ -16822,7 +17015,7 @@ Date:   Mon May 16 22:35:27 2005 +0000
     Remove the entries from the xlibs tree, as they are not relevant here.
 
 commit 8bd3aea84ce54b8b76a898f3ae00e2b499c14a5e
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon May 16 21:48:36 2005 +0000
 
     Mon May 16 17:48:03 2005 Søren Sandmann <sandmann@redhat.com>
@@ -16836,7 +17029,7 @@ Date:   Mon May 16 21:27:35 2005 +0000
     Remove the entries from the xlibs tree, as they are not relevant here.
 
 commit 7eee605e3aeed549d1053325a03027c5e8cbf71b
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri May 13 22:53:36 2005 +0000
 
     - For now put xtrans in X11/Xtrans/X11, since libX11 is looking for it in <X11/...>
@@ -16970,7 +17163,7 @@ Date:   Mon Nov 15 13:29:56 2004 +0000
     Bugzilla #1864, http://freedesktop.org/bugzilla/show_bug.cgi?id=1864 Initialize pointer to NULL to avoid freeing random memory
 
 commit 436108cd6c84053698e5ca629096f59b34f50c2a
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Thu Nov 11 15:37:01 2004 +0000
 
     Fix #1818
@@ -17028,7 +17221,7 @@ Date:   Wed Oct 13 07:38:00 2004 +0000
     Use attributes instead of pragmas for weak symbols on gcc 2.95 as well. Using pragmas may result in the symbols being undefined with big -O. (FreeBSD ports/69708, Masakazu HIGAKI <higamasa@dream.com>)
 
 commit d80237db627bf71ad5615ff4ba05e6ab436aa740
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Oct 8 22:57:56 2004 +0000
 
     Fri Oct 8 18:53:11 2004 Soeren Sandmann <sandmann@redhat.com>
@@ -17114,7 +17307,7 @@ Date:   Tue Jul 27 06:06:05 2004 +0000
     - remove unused file.
 
 commit 6e884b12911eedfb003e90a3829ce66f7fc9cf2d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 20 17:48:09 2004 +0000
 
     Tue Jul 20 19:38:06 2004 Soeren Sandmann <sandmann@daimi.au.dk>

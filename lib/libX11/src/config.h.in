@@ -189,6 +189,9 @@
 #endif
 
 
+/* Call XInitThreads() from the library constructor */
+#undef USE_THREAD_SAFETY_CONSTRUCTOR
+
 /* Version number of package */
 #undef VERSION
 
