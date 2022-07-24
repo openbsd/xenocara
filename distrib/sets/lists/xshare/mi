@@ -623,6 +623,7 @@
 ./usr/X11R6/include/freetype2/freetype/fttrigon.h
 ./usr/X11R6/include/freetype2/freetype/fttypes.h
 ./usr/X11R6/include/freetype2/freetype/ftwinfnt.h
+./usr/X11R6/include/freetype2/freetype/otsvg.h
 ./usr/X11R6/include/freetype2/freetype/t1tables.h
 ./usr/X11R6/include/freetype2/freetype/ttnameid.h
 ./usr/X11R6/include/freetype2/freetype/tttables.h
@@ -3578,6 +3579,8 @@
 ./usr/X11R6/share/doc
 ./usr/X11R6/share/doc/fontconfig
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel.pdf
+./usr/X11R6/share/doc/fontconfig/fontconfig-devel.txt
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcatomiccreate.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcatomicdeletenew.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcatomicdestroy.html
@@ -3772,8 +3775,6 @@
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/fcvaluesave.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/x19.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-devel/x31.html
-./usr/X11R6/share/doc/fontconfig/fontconfig-devel.pdf
-./usr/X11R6/share/doc/fontconfig/fontconfig-devel.txt
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.html
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.pdf
 ./usr/X11R6/share/doc/fontconfig/fontconfig-user.txt
