@@ -2943,7 +2943,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    }
 	    if ((env = getenv("XDG_CONFIG_HOME"))) {
 		char xdgfile[PATH_MAX];
-		
+
 		if (snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig",
 			     env) <= sizeof(xdgfile))
 		    if (unveil(xdgfile, "r") == -1)
@@ -2955,7 +2955,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    }
 	    if ((env = getenv("XDG_DATA_HOME"))) {
 		char xdgfile[PATH_MAX];
-		
+
 		if (snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig",
 			     env) <= sizeof(xdgfile))
 		    if (unveil(xdgfile, "r") == -1)
@@ -2967,7 +2967,7 @@ main(int argc, char *argv[]ENVP_ARG)
 	    }
 	    if ((env = getenv("XDG_CACHE_HOME"))) {
 		char xdgfile[PATH_MAX];
-		
+
 		if (snprintf(xdgfile, sizeof xdgfile, "%s/fontconfig",
 			     env) <= sizeof(xdgfile))
 		    if (unveil(xdgfile, "r") == -1)
