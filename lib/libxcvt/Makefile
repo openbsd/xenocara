@@ -1,10 +1,10 @@
-# $OpenBSD: Makefile,v 1.2 2021/10/27 16:24:02 matthieu Exp $
+# $OpenBSD: Makefile,v 1.3 2022/08/07 07:29:26 matthieu Exp $
 
 SUBDIR=	 lib cvt
 
 INCS=	libxcvt.h libxcvt_mode.h
 
-PACKAGE_VERSION= 	0.1.1
+PACKAGE_VERSION= 	0.1.2
 PKGCONFIG=              libxcvt.pc
 
 obj: _xenocara_obj

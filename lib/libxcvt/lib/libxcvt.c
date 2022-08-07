@@ -292,7 +292,8 @@ libxcvt_gen_mode_info(int hdisplay, int vdisplay, float vrefresh, bool reduced, 
         mode_info->mode_flags |= LIBXCVT_MODE_FLAG_INTERLACE;
 
     /* FWXGA hack adapted from hw/xfree86/modes/xf86EdidModes.c, because you can't say 1366 */
-    if (mode_info->hdisplay == 1366 && mode_info->vdisplay == 768) {
+    if (mode_info->hdisplay == 1360 && mode_info->vdisplay == 768) {
+         mode_info->hdisplay = 1366;
          mode_info->hsync_start--;
          mode_info->hsync_end--;
     }
