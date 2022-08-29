@@ -1278,17 +1278,15 @@ checkPasswd(char *buffer)
 
 #ifdef USE_PRIVSEP
 	char	*pass;
-	char	*style;
 
 	/* buffer can be in the form style:pass */
 	if ((pass = strchr(buffer, ':')) != NULL) {
-	    *pass++ = '\0';
-	    style = buffer;
-	} else {
-	    pass = buffer;
-	    style = NULL;
+		*pass++ = '\0';
+		if (priv_pw_check(user, pass, buffer))
+			return True;
+		*--pass = ':';
 	}
-	return priv_pw_check(user, pass, style);
+	return priv_pw_check(user, buffer, NULL);
 #elif defined(BSD_AUTH)
 	char       *pass;
 	char       *style;
