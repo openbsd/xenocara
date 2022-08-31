@@ -87,6 +87,7 @@ install_headers(
     'XvMC.h',
     'XvMCproto.h',
     'Xvproto.h',
+    'xwaylandproto.h',
     subdir : 'X11/extensions'
 )
 

@@ -330,6 +330,13 @@ xinerama_HEADERS = \
 xineramaprotopkgconfigdir = $(datadir)/pkgconfig
 xineramaprotopkgconfig_DATA = xineramaproto.pc
 
+xwaylandprotodir = $(includedir)/X11/extensions
+xwaylandproto_HEADERS = \
+	include/X11/extensions/xwaylandproto.h
+
+xwaylandprotopkgconfigdir = $(datadir)/pkgconfig
+xwaylandprotopkgconfig_DATA = xwaylandproto.pc
+
 if LEGACY
 XCalibrateincludedir = $(includedir)/X11/extensions
 XCalibrateinclude_HEADERS = \
@@ -434,7 +441,8 @@ dist_doc_DATA = \
 	randrproto.txt \
 	renderproto.txt \
 	resproto.txt \
-	xv-protocol-v2.txt
+	xv-protocol-v2.txt \
+	xwaylandproto.txt
 
 EXTRA_DIST = \
     COPYING-applewmproto \
@@ -473,6 +481,7 @@ EXTRA_DIST = \
     COPYING-xf86rushproto \
     COPYING-xf86vidmodeproto \
     COPYING-xineramaproto \
+    COPYING-xwaylandproto \
     README.md \
     autogen.sh \
     include/GL/internal/meson.build \

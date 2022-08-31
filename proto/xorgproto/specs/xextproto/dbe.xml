@@ -900,18 +900,22 @@ syntactic conventions and data types established there.
 3                            unused
 </literallayout>
 
+<para>VISINFO</para>
 <literallayout class="monospaced">
-VISINFO
 4     VISUALID                visual
 1     CARD8                   depth
 1     CARD8                   perflevel
 2                             unused
+</literallayout>
 
-SCREENVISINFO
+<para>SCREENVISINFO</para>
+<literallayout class="monospaced">
 4     CARD32                  n, number in list
 8n    LISTofVISINFO           n VISINFOs
+</literallayout>
 
-BUFFER_ATTRIBUTES
+<para>BUFFER_ATTRIBUTES</para>
+<literallayout class="monospaced">
 4     WINDOW                 window
 </literallayout>
 </sect1>
@@ -933,8 +937,8 @@ BUFFER_ATTRIBUTES
 <sect1 id='Request'>
 <title>Request</title>
 
+<para><function>DBEGetVersion</function></para>
 <literallayout class="monospaced">
-DBEGetVersion
 1     CARD8                  major-opcode
 1     0                      minor-opcode
 2     2                      request length
@@ -1005,7 +1009,7 @@ DBEGetVersion
 1     1                       Reply
 1                             unused
 2     CARD16                  sequence number
-4     CARD32                  reply length
+4     CARD32                  j, reply length
 4     CARD32                  m, number of SCREENVISINFOs in list
 20                            unused
 4j    LISTofSCREENVISINFO     m SCREENVISINFOs

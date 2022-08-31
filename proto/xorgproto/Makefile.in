@@ -88,11 +88,12 @@ DIST_COMMON = $(am__XCalibrateinclude_HEADERS_DIST) \
 	$(srcdir)/xf86miscproto.pc.in $(srcdir)/xf86rushproto.pc.in \
 	$(srcdir)/xf86vidmodeproto.pc.in $(srcdir)/xineramaproto.pc.in \
 	$(srcdir)/xproto.pc.in $(srcdir)/xproxymngproto.pc.in \
-	$(top_srcdir)/configure $(top_srcdir)/include/X11/Xpoll.h.in \
-	$(xcmisc_HEADERS) $(xext_HEADERS) $(xf86bigfont_HEADERS) \
-	$(xf86dga_HEADERS) $(xf86dri_HEADERS) $(xf86vidmode_HEADERS) \
-	$(xinerama_HEADERS) $(xproto_HEADERS) AUTHORS INSTALL compile \
-	config.guess config.sub install-sh missing
+	$(srcdir)/xwaylandproto.pc.in $(top_srcdir)/configure \
+	$(top_srcdir)/include/X11/Xpoll.h.in $(xcmisc_HEADERS) \
+	$(xext_HEADERS) $(xf86bigfont_HEADERS) $(xf86dga_HEADERS) \
+	$(xf86dri_HEADERS) $(xf86vidmode_HEADERS) $(xinerama_HEADERS) \
+	$(xproto_HEADERS) $(xwaylandproto_HEADERS) AUTHORS INSTALL \
+	compile config.guess config.sub install-sh missing
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -110,7 +111,7 @@ CONFIG_CLEAN_FILES = applewmproto.pc bigreqsproto.pc compositeproto.pc \
 	xcalibrateproto.pc xcmiscproto.pc xextproto.pc \
 	xf86bigfontproto.pc xf86dgaproto.pc xf86driproto.pc \
 	xf86miscproto.pc xf86rushproto.pc xf86vidmodeproto.pc \
-	xineramaproto.pc xproto.pc xproxymngproto.pc
+	xineramaproto.pc xproto.pc xproxymngproto.pc xwaylandproto.pc
 CONFIG_CLEAN_VPATH_FILES =
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -196,6 +197,7 @@ am__installdirs = "$(DESTDIR)$(applewmprotopkgconfigdir)" \
 	"$(DESTDIR)$(xf86rushprotopkgconfigdir)" \
 	"$(DESTDIR)$(xf86vidmodeprotopkgconfigdir)" \
 	"$(DESTDIR)$(xineramaprotopkgconfigdir)" \
+	"$(DESTDIR)$(xwaylandprotopkgconfigdir)" \
 	"$(DESTDIR)$(XCalibrateincludedir)" "$(DESTDIR)$(applewmdir)" \
 	"$(DESTDIR)$(bigreqsdir)" "$(DESTDIR)$(compatdir)" \
 	"$(DESTDIR)$(compositedir)" "$(DESTDIR)$(damagedir)" \
@@ -215,7 +217,8 @@ am__installdirs = "$(DESTDIR)$(applewmprotopkgconfigdir)" \
 	"$(DESTDIR)$(xf86dgadir)" "$(DESTDIR)$(xf86dridir)" \
 	"$(DESTDIR)$(xf86miscdir)" "$(DESTDIR)$(xf86rushdir)" \
 	"$(DESTDIR)$(xf86vidmodedir)" "$(DESTDIR)$(xineramadir)" \
-	"$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)"
+	"$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)" \
+	"$(DESTDIR)$(xwaylandprotodir)"
 DATA = $(applewmprotopkgconfig_DATA) $(bigreqsprotopkgconfig_DATA) \
 	$(calibrateprotopkgconfig_DATA) \
 	$(compositeprotopkgconfig_DATA) $(damageprotopkgconfig_DATA) \
@@ -237,7 +240,7 @@ DATA = $(applewmprotopkgconfig_DATA) $(bigreqsprotopkgconfig_DATA) \
 	$(xf86dgaprotopkgconfig_DATA) $(xf86driprotopkgconfig_DATA) \
 	$(xf86miscprotopkgconfig_DATA) $(xf86rushprotopkgconfig_DATA) \
 	$(xf86vidmodeprotopkgconfig_DATA) \
-	$(xineramaprotopkgconfig_DATA)
+	$(xineramaprotopkgconfig_DATA) $(xwaylandprotopkgconfig_DATA)
 am__XCalibrateinclude_HEADERS_DIST =  \
 	include/X11/extensions/xcalibrateproto.h \
 	include/X11/extensions/xcalibratewire.h
@@ -292,7 +295,8 @@ HEADERS = $(XCalibrateinclude_HEADERS) $(applewm_HEADERS) \
 	$(xcmisc_HEADERS) $(xext_HEADERS) $(xf86bigfont_HEADERS) \
 	$(xf86dga_HEADERS) $(xf86dri_HEADERS) $(xf86misc_HEADERS) \
 	$(xf86rush_HEADERS) $(xf86vidmode_HEADERS) $(xinerama_HEADERS) \
-	$(xproto_HEADERS) $(xproxymng_HEADERS)
+	$(xproto_HEADERS) $(xproxymng_HEADERS) \
+	$(xwaylandproto_HEADERS)
 ETAGS = etags
 CTAGS = ctags
 CSCOPE = cscope
@@ -311,9 +315,9 @@ am__remove_distdir = \
       || { sleep 5 && rm -rf "$(distdir)"; }; \
   else :; fi
 am__post_remove_distdir = $(am__remove_distdir)
-DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
+DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.xz
 GZIP_ENV = --best
-DIST_TARGETS = dist-bzip2 dist-gzip
+DIST_TARGETS = dist-xz dist-gzip
 distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
@@ -737,6 +741,12 @@ xinerama_HEADERS = \
 
 xineramaprotopkgconfigdir = $(datadir)/pkgconfig
 xineramaprotopkgconfig_DATA = xineramaproto.pc
+xwaylandprotodir = $(includedir)/X11/extensions
+xwaylandproto_HEADERS = \
+	include/X11/extensions/xwaylandproto.h
+
+xwaylandprotopkgconfigdir = $(datadir)/pkgconfig
+xwaylandprotopkgconfig_DATA = xwaylandproto.pc
 @LEGACY_TRUE@XCalibrateincludedir = $(includedir)/X11/extensions
 @LEGACY_TRUE@XCalibrateinclude_HEADERS = \
 @LEGACY_TRUE@	include/X11/extensions/xcalibrateproto.h \
@@ -828,7 +838,8 @@ dist_doc_DATA = \
 	randrproto.txt \
 	renderproto.txt \
 	resproto.txt \
-	xv-protocol-v2.txt
+	xv-protocol-v2.txt \
+	xwaylandproto.txt
 
 EXTRA_DIST = \
     COPYING-applewmproto \
@@ -867,6 +878,7 @@ EXTRA_DIST = \
     COPYING-xf86rushproto \
     COPYING-xf86vidmodeproto \
     COPYING-xineramaproto \
+    COPYING-xwaylandproto \
     README.md \
     autogen.sh \
     include/GL/internal/meson.build \
@@ -1005,6 +1017,8 @@ xineramaproto.pc: $(top_builddir)/config.status $(srcdir)/xineramaproto.pc.in
 xproto.pc: $(top_builddir)/config.status $(srcdir)/xproto.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 xproxymngproto.pc: $(top_builddir)/config.status $(srcdir)/xproxymngproto.pc.in
+	cd $(top_builddir) && $(SHELL) ./config.status $@
+xwaylandproto.pc: $(top_builddir)/config.status $(srcdir)/xwaylandproto.pc.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 install-applewmprotopkgconfigDATA: $(applewmprotopkgconfig_DATA)
 	@$(NORMAL_INSTALL)
@@ -1846,6 +1860,27 @@ uninstall-xineramaprotopkgconfigDATA:
 	@list='$(xineramaprotopkgconfig_DATA)'; test -n "$(xineramaprotopkgconfigdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(xineramaprotopkgconfigdir)'; $(am__uninstall_files_from_dir)
+install-xwaylandprotopkgconfigDATA: $(xwaylandprotopkgconfig_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(xwaylandprotopkgconfig_DATA)'; test -n "$(xwaylandprotopkgconfigdir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(xwaylandprotopkgconfigdir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(xwaylandprotopkgconfigdir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(xwaylandprotopkgconfigdir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(xwaylandprotopkgconfigdir)" || exit $$?; \
+	done
+
+uninstall-xwaylandprotopkgconfigDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(xwaylandprotopkgconfig_DATA)'; test -n "$(xwaylandprotopkgconfigdir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(xwaylandprotopkgconfigdir)'; $(am__uninstall_files_from_dir)
 install-XCalibrateincludeHEADERS: $(XCalibrateinclude_HEADERS)
 	@$(NORMAL_INSTALL)
 	@list='$(XCalibrateinclude_HEADERS)'; test -n "$(XCalibrateincludedir)" || list=; \
@@ -2686,6 +2721,27 @@ uninstall-xproxymngHEADERS:
 	@list='$(xproxymng_HEADERS)'; test -n "$(xproxymngdir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(xproxymngdir)'; $(am__uninstall_files_from_dir)
+install-xwaylandprotoHEADERS: $(xwaylandproto_HEADERS)
+	@$(NORMAL_INSTALL)
+	@list='$(xwaylandproto_HEADERS)'; test -n "$(xwaylandprotodir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(xwaylandprotodir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(xwaylandprotodir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_HEADER) $$files '$(DESTDIR)$(xwaylandprotodir)'"; \
+	  $(INSTALL_HEADER) $$files "$(DESTDIR)$(xwaylandprotodir)" || exit $$?; \
+	done
+
+uninstall-xwaylandprotoHEADERS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(xwaylandproto_HEADERS)'; test -n "$(xwaylandprotodir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(xwaylandprotodir)'; $(am__uninstall_files_from_dir)
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \
@@ -2898,6 +2954,7 @@ distdir: $(DISTFILES)
 dist-gzip: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
 	$(am__post_remove_distdir)
+
 dist-bzip2: distdir
 	tardir=$(distdir) && $(am__tar) | BZIP2=$${BZIP2--9} bzip2 -c >$(distdir).tar.bz2
 	$(am__post_remove_distdir)
@@ -2905,7 +2962,6 @@ dist-bzip2: distdir
 dist-lzip: distdir
 	tardir=$(distdir) && $(am__tar) | lzip -c $${LZIP_OPT--9} >$(distdir).tar.lz
 	$(am__post_remove_distdir)
-
 dist-xz: distdir
 	tardir=$(distdir) && $(am__tar) | XZ_OPT=$${XZ_OPT--e} xz -c >$(distdir).tar.xz
 	$(am__post_remove_distdir)
@@ -3016,7 +3072,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA) $(HEADERS)
 installdirs:
-	for dir in "$(DESTDIR)$(applewmprotopkgconfigdir)" "$(DESTDIR)$(bigreqsprotopkgconfigdir)" "$(DESTDIR)$(calibrateprotopkgconfigdir)" "$(DESTDIR)$(compositeprotopkgconfigdir)" "$(DESTDIR)$(damageprotopkgconfigdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(dmxprotopkgconfigdir)" "$(DESTDIR)$(dpmsprotopkgconfigdir)" "$(DESTDIR)$(dri2protopkgconfigdir)" "$(DESTDIR)$(dri3protopkgconfigdir)" "$(DESTDIR)$(evieprotopkgconfigdir)" "$(DESTDIR)$(fixesprotopkgconfigdir)" "$(DESTDIR)$(fontcacheprotopkgconfigdir)" "$(DESTDIR)$(fontsprotopkgconfigdir)" "$(DESTDIR)$(glprotopkgconfigdir)" "$(DESTDIR)$(inputprotopkgconfigdir)" "$(DESTDIR)$(kbprotopkgconfigdir)" "$(DESTDIR)$(lg3dprotopkgconfigdir)" "$(DESTDIR)$(miscmandir)" "$(DESTDIR)$(pmprotopkgconfigdir)" "$(DESTDIR)$(presentprotopkgconfigdir)" "$(DESTDIR)$(printprotopkgconfigdir)" "$(DESTDIR)$(randrprotopkgconfigdir)" "$(DESTDIR)$(recordprotopkgconfigdir)" "$(DESTDIR)$(renderprotopkgconfigdir)" "$(DESTDIR)$(resourceprotopkgconfigdir)" "$(DESTDIR)$(scrnsaverprotopkgconfigdir)" "$(DESTDIR)$(trapprotopkgconfigdir)" "$(DESTDIR)$(videoprotopkgconfigdir)" "$(DESTDIR)$(windowswmprotopkgconfigdir)" "$(DESTDIR)$(x11protopkgconfigdir)" "$(DESTDIR)$(xcmiscprotopkgconfigdir)" "$(DESTDIR)$(xextprotopkgconfigdir)" "$(DESTDIR)$(xf86bigfontprotopkgconfigdir)" "$(DESTDIR)$(xf86dgaprotopkgconfigdir)" "$(DESTDIR)$(xf86driprotopkgconfigdir)" "$(DESTDIR)$(xf86miscprotopkgconfigdir)" "$(DESTDIR)$(xf86rushprotopkgconfigdir)" "$(DESTDIR)$(xf86vidmodeprotopkgconfigdir)" "$(DESTDIR)$(xineramaprotopkgconfigdir)" "$(DESTDIR)$(XCalibrateincludedir)" "$(DESTDIR)$(applewmdir)" "$(DESTDIR)$(bigreqsdir)" "$(DESTDIR)$(compatdir)" "$(DESTDIR)$(compositedir)" "$(DESTDIR)$(damagedir)" "$(DESTDIR)$(dmxdir)" "$(DESTDIR)$(dri2dir)" "$(DESTDIR)$(dri3dir)" "$(DESTDIR)$(eviedir)" "$(DESTDIR)$(fixesdir)" "$(DESTDIR)$(fontcachedir)" "$(DESTDIR)$(fontsdir)" "$(DESTDIR)$(gldir)" "$(DESTDIR)$(glinternaldir)" "$(DESTDIR)$(inputdir)" "$(DESTDIR)$(kbdir)" "$(DESTDIR)$(lg3ddir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(presentdir)" "$(DESTDIR)$(printdir)" "$(DESTDIR)$(randrdir)" "$(DESTDIR)$(recorddir)" "$(DESTDIR)$(renderdir)" "$(DESTDIR)$(resourcedir)" "$(DESTDIR)$(scrnsaverdir)" "$(DESTDIR)$(trapdir)" "$(DESTDIR)$(videodir)" "$(DESTDIR)$(windowswmdir)" "$(DESTDIR)$(xcmiscdir)" "$(DESTDIR)$(xextdir)" "$(DESTDIR)$(xf86bigfontdir)" "$(DESTDIR)$(xf86dgadir)" "$(DESTDIR)$(xf86dridir)" "$(DESTDIR)$(xf86miscdir)" "$(DESTDIR)$(xf86rushdir)" "$(DESTDIR)$(xf86vidmodedir)" "$(DESTDIR)$(xineramadir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)"; do \
+	for dir in "$(DESTDIR)$(applewmprotopkgconfigdir)" "$(DESTDIR)$(bigreqsprotopkgconfigdir)" "$(DESTDIR)$(calibrateprotopkgconfigdir)" "$(DESTDIR)$(compositeprotopkgconfigdir)" "$(DESTDIR)$(damageprotopkgconfigdir)" "$(DESTDIR)$(docdir)" "$(DESTDIR)$(dmxprotopkgconfigdir)" "$(DESTDIR)$(dpmsprotopkgconfigdir)" "$(DESTDIR)$(dri2protopkgconfigdir)" "$(DESTDIR)$(dri3protopkgconfigdir)" "$(DESTDIR)$(evieprotopkgconfigdir)" "$(DESTDIR)$(fixesprotopkgconfigdir)" "$(DESTDIR)$(fontcacheprotopkgconfigdir)" "$(DESTDIR)$(fontsprotopkgconfigdir)" "$(DESTDIR)$(glprotopkgconfigdir)" "$(DESTDIR)$(inputprotopkgconfigdir)" "$(DESTDIR)$(kbprotopkgconfigdir)" "$(DESTDIR)$(lg3dprotopkgconfigdir)" "$(DESTDIR)$(miscmandir)" "$(DESTDIR)$(pmprotopkgconfigdir)" "$(DESTDIR)$(presentprotopkgconfigdir)" "$(DESTDIR)$(printprotopkgconfigdir)" "$(DESTDIR)$(randrprotopkgconfigdir)" "$(DESTDIR)$(recordprotopkgconfigdir)" "$(DESTDIR)$(renderprotopkgconfigdir)" "$(DESTDIR)$(resourceprotopkgconfigdir)" "$(DESTDIR)$(scrnsaverprotopkgconfigdir)" "$(DESTDIR)$(trapprotopkgconfigdir)" "$(DESTDIR)$(videoprotopkgconfigdir)" "$(DESTDIR)$(windowswmprotopkgconfigdir)" "$(DESTDIR)$(x11protopkgconfigdir)" "$(DESTDIR)$(xcmiscprotopkgconfigdir)" "$(DESTDIR)$(xextprotopkgconfigdir)" "$(DESTDIR)$(xf86bigfontprotopkgconfigdir)" "$(DESTDIR)$(xf86dgaprotopkgconfigdir)" "$(DESTDIR)$(xf86driprotopkgconfigdir)" "$(DESTDIR)$(xf86miscprotopkgconfigdir)" "$(DESTDIR)$(xf86rushprotopkgconfigdir)" "$(DESTDIR)$(xf86vidmodeprotopkgconfigdir)" "$(DESTDIR)$(xineramaprotopkgconfigdir)" "$(DESTDIR)$(xwaylandprotopkgconfigdir)" "$(DESTDIR)$(XCalibrateincludedir)" "$(DESTDIR)$(applewmdir)" "$(DESTDIR)$(bigreqsdir)" "$(DESTDIR)$(compatdir)" "$(DESTDIR)$(compositedir)" "$(DESTDIR)$(damagedir)" "$(DESTDIR)$(dmxdir)" "$(DESTDIR)$(dri2dir)" "$(DESTDIR)$(dri3dir)" "$(DESTDIR)$(eviedir)" "$(DESTDIR)$(fixesdir)" "$(DESTDIR)$(fontcachedir)" "$(DESTDIR)$(fontsdir)" "$(DESTDIR)$(gldir)" "$(DESTDIR)$(glinternaldir)" "$(DESTDIR)$(inputdir)" "$(DESTDIR)$(kbdir)" "$(DESTDIR)$(lg3ddir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(presentdir)" "$(DESTDIR)$(printdir)" "$(DESTDIR)$(randrdir)" "$(DESTDIR)$(recorddir)" "$(DESTDIR)$(renderdir)" "$(DESTDIR)$(resourcedir)" "$(DESTDIR)$(scrnsaverdir)" "$(DESTDIR)$(trapdir)" "$(DESTDIR)$(videodir)" "$(DESTDIR)$(windowswmdir)" "$(DESTDIR)$(xcmiscdir)" "$(DESTDIR)$(xextdir)" "$(DESTDIR)$(xf86bigfontdir)" "$(DESTDIR)$(xf86dgadir)" "$(DESTDIR)$(xf86dridir)" "$(DESTDIR)$(xf86miscdir)" "$(DESTDIR)$(xf86rushdir)" "$(DESTDIR)$(xf86vidmodedir)" "$(DESTDIR)$(xineramadir)" "$(DESTDIR)$(xprotodir)" "$(DESTDIR)$(xproxymngdir)" "$(DESTDIR)$(xwaylandprotodir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -3111,7 +3167,8 @@ install-data-am: install-XCalibrateincludeHEADERS \
 	install-xf86rushprotopkgconfigDATA install-xf86vidmodeHEADERS \
 	install-xf86vidmodeprotopkgconfigDATA install-xineramaHEADERS \
 	install-xineramaprotopkgconfigDATA install-xprotoHEADERS \
-	install-xproxymngHEADERS
+	install-xproxymngHEADERS install-xwaylandprotoHEADERS \
+	install-xwaylandprotopkgconfigDATA
 
 install-dvi: install-dvi-am
 
@@ -3200,7 +3257,9 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-xf86vidmodeHEADERS \
 	uninstall-xf86vidmodeprotopkgconfigDATA \
 	uninstall-xineramaHEADERS uninstall-xineramaprotopkgconfigDATA \
-	uninstall-xprotoHEADERS uninstall-xproxymngHEADERS
+	uninstall-xprotoHEADERS uninstall-xproxymngHEADERS \
+	uninstall-xwaylandprotoHEADERS \
+	uninstall-xwaylandprotopkgconfigDATA
 
 .MAKE: check-am install-am install-strip
 
@@ -3254,10 +3313,12 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	install-xf86rushprotopkgconfigDATA install-xf86vidmodeHEADERS \
 	install-xf86vidmodeprotopkgconfigDATA install-xineramaHEADERS \
 	install-xineramaprotopkgconfigDATA install-xprotoHEADERS \
-	install-xproxymngHEADERS installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic pdf pdf-am ps ps-am tags \
-	uninstall uninstall-XCalibrateincludeHEADERS uninstall-am \
+	install-xproxymngHEADERS install-xwaylandprotoHEADERS \
+	install-xwaylandprotopkgconfigDATA installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic pdf \
+	pdf-am ps ps-am tags uninstall \
+	uninstall-XCalibrateincludeHEADERS uninstall-am \
 	uninstall-applewmHEADERS uninstall-applewmprotopkgconfigDATA \
 	uninstall-bigreqsHEADERS uninstall-bigreqsprotopkgconfigDATA \
 	uninstall-calibrateprotopkgconfigDATA uninstall-compatHEADERS \
@@ -3300,7 +3361,9 @@ uninstall-am: uninstall-XCalibrateincludeHEADERS \
 	uninstall-xf86vidmodeHEADERS \
 	uninstall-xf86vidmodeprotopkgconfigDATA \
 	uninstall-xineramaHEADERS uninstall-xineramaprotopkgconfigDATA \
-	uninstall-xprotoHEADERS uninstall-xproxymngHEADERS
+	uninstall-xprotoHEADERS uninstall-xproxymngHEADERS \
+	uninstall-xwaylandprotoHEADERS \
+	uninstall-xwaylandprotopkgconfigDATA
 
 
 @APPLEWM_TRUE@.man.$(MISC_MAN_SUFFIX): man

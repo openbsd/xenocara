@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 # keep version in sync with configure.ac
-project('xorgproto', 'c', license : 'MIT', version : '2022.1')
+project('xorgproto', 'c', license : 'MIT', version : '2022.2')
 cc = meson.get_compiler('c')
 
 pcs = [
@@ -51,6 +51,7 @@ pcs = [
         'xf86vidmodeproto',
         'xineramaproto',
         'xproto',
+        'xwaylandproto',
 ]
 
 pc_data = configuration_data()
@@ -78,7 +79,8 @@ docs = files('compositeproto.txt',
              'randrproto.txt',
              'renderproto.txt',
              'resproto.txt',
-             'xv-protocol-v2.txt')
+             'xv-protocol-v2.txt',
+             'xwaylandproto.txt')
 install_data(docs,
              install_dir: get_option('datadir') / 'doc' / 'xorgproto')
 

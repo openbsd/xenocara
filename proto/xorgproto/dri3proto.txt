@@ -1,6 +1,6 @@
 			  The DRI3 Extension
-			     Version 1.2
-			      2018-02-28
+			     Version 1.3
+			      2021-11-30
 
 			    Keith Packard
 			  keithp@keithp.com
@@ -34,6 +34,7 @@ Kristian Høgsberg <krh@bitplanet.net>
 James Jones <jajones@nvidia.com>
 Arthur Huillet <arthur.huillet@free.fr>
 Louis-Francis Ratté-Boulianne <lfrb@collabora.com>
+Austin Shafer <ashafer@nvidia.com>
 
 			     ❄ ❄ ❄  ❄  ❄ ❄ ❄ 
 
@@ -371,6 +372,28 @@ The name of this extension is "DRI3"
 	For information on synchronization of buffer access between
 	the client and the X server, please see section 12.
 
+┌───
+    DRI3SetDRMDeviceInUse
+	window: WINDOW
+	drmMajor: CARD32
+	drmMinor: CARD32
+└───
+	Errors: Window
+
+	This request provides a hint to the server about the device
+	in use by this window. This is used to provide
+	DRI3GetSupportedModifiers with a hint of what device to
+	return modifiers for in the window_modifiers return value.
+	Using this hint allows for device-specific modifiers to
+	be returned by DRI3GetSupportedModifiers, for example
+	when an application is renderoffloaded and eligible for
+	direct scanout.
+
+	This is only a hint, and may or may not be reflected in
+	the modifier list returned.
+
+	If the window specified was not found, a Window error will
+	be returned.
 
 			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
@@ -390,6 +413,8 @@ The DRI3 extension is adapted from the DRI2 extension.
 
 	1.2: Add GetSupportedModifiers,
 	     PixmapFromBuffers, and BuffersFromPixmap requests.
+
+	1.3: Add SetDRMDeviceInUse
 
 			     ❄ ❄ ❄  ❄  ❄ ❄ ❄
 
@@ -666,6 +691,16 @@ A.2 Protocol Requests
 	0	ListOfFD		buffer[nfd]
 	4	ListOfCARD32		strides[nfd]
 	4	ListOfCARD32		offsets[nfd]
+└───
+
+┌───
+    DRI3SetDRMDeviceInUse
+	1	CARD8			major opcode
+	1	10			DRI3 opcode
+	2	4			length
+	4	Window			window
+	4	CARD32			drmMajor
+	4	CARD32			drmMinor
 └───
 
 A.3 Protocol Events
