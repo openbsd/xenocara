@@ -419,6 +419,7 @@
 ./usr/X11R6/include/X11/extensions/xtestext1const.h
 ./usr/X11R6/include/X11/extensions/xtestext1proto.h
 ./usr/X11R6/include/X11/extensions/xtestproto.h
+./usr/X11R6/include/X11/extensions/xwaylandproto.h
 ./usr/X11R6/include/X11/fonts
 ./usr/X11R6/include/X11/fonts/FS.h
 ./usr/X11R6/include/X11/fonts/FSproto.h
@@ -765,6 +766,7 @@
 ./usr/X11R6/lib/pkgconfig/xtst.pc
 ./usr/X11R6/lib/pkgconfig/xv.pc
 ./usr/X11R6/lib/pkgconfig/xvmc.pc
+./usr/X11R6/lib/pkgconfig/xwaylandproto.pc
 ./usr/X11R6/lib/pkgconfig/xxf86dga.pc
 ./usr/X11R6/lib/pkgconfig/xxf86vm.pc
 ./usr/X11R6/man/man1/FvwmAuto.1
@@ -3954,6 +3956,7 @@
 ./usr/X11R6/share/doc/xorgproto/xextproto/tog-cup.xml
 ./usr/X11R6/share/doc/xorgproto/xextproto/xtest.xml
 ./usr/X11R6/share/doc/xorgproto/xv-protocol-v2.txt
+./usr/X11R6/share/doc/xorgproto/xwaylandproto.txt
 ./usr/X11R6/share/doc/xtrans
 ./usr/X11R6/share/doc/xtrans/xtrans.xml
 ./usr/X11R6/share/mk
