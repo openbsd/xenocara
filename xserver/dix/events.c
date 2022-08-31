@@ -467,6 +467,20 @@ WindowXI2MaskIsset(DeviceIntPtr dev, WindowPtr win, xEvent *ev)
     return xi2mask_isset(inputMasks->xi2mask, dev, evtype);
 }
 
+/**
+ * When processing events we operate on InternalEvent pointers. They may actually refer to a
+ * an instance of DeviceEvent, GestureEvent or any other event that comprises the InternalEvent
+ * union. This works well in practice because we always look into event type before doing anything,
+ * except in the case of copying the event. Any copying of InternalEvent should use this function
+ * instead of doing *dst_event = *src_event whenever it's not clear whether source event actually
+ * points to full InternalEvent instance.
+ */
+void
+CopyPartialInternalEvent(InternalEvent* dst_event, const InternalEvent* src_event)
+{
+    memcpy(dst_event, src_event, src_event->any.length);
+}
+
 Mask
 GetEventMask(DeviceIntPtr dev, xEvent *event, InputClients * other)
 {
@@ -1491,16 +1505,13 @@ UpdateTouchesForGrab(DeviceIntPtr mouse)
             CLIENT_BITS(listener->listener) == grab->resource) {
             if (grab->grabtype == CORE || grab->grabtype == XI ||
                 !xi2mask_isset(grab->xi2mask, mouse, XI_TouchBegin)) {
+                /*  Note that the grab will override any current listeners and if these listeners
+                    already received touch events then this is the place to send touch end event
+                    to complete the touch sequence.
 
-                if (listener->type == TOUCH_LISTENER_REGULAR &&
-                    listener->state != TOUCH_LISTENER_AWAITING_BEGIN &&
-                    listener->state != TOUCH_LISTENER_HAS_END) {
-                    /* if the listener already got any events relating to the touch, we must send
-                       a touch end because the grab overrides the previous listener and won't
-                       itself send any touch events.
-                    */
-                    TouchEmitTouchEnd(mouse, ti, 0, listener->listener);
-                }
+                    Unfortunately GTK3 menu widget implementation relies on not getting touch end
+                    event, so we can't fix the current behavior.
+                */
                 listener->type = TOUCH_LISTENER_POINTER_GRAB;
             } else {
                 listener->type = TOUCH_LISTENER_GRAB;
@@ -3873,7 +3884,7 @@ void ActivateGrabNoDelivery(DeviceIntPtr dev, GrabPtr grab,
 
     if (grabinfo->sync.state == FROZEN_NO_EVENT)
         grabinfo->sync.state = FROZEN_WITH_EVENT;
-    *grabinfo->sync.event = *real_event;
+    CopyPartialInternalEvent(grabinfo->sync.event, real_event);
 }
 
 static BOOL
@@ -4455,7 +4466,7 @@ FreezeThisEventIfNeededForSyncGrab(DeviceIntPtr thisDev, InternalEvent *event)
     case FREEZE_NEXT_EVENT:
         grabinfo->sync.state = FROZEN_WITH_EVENT;
         FreezeThaw(thisDev, TRUE);
-        *grabinfo->sync.event = *event;
+        CopyPartialInternalEvent(grabinfo->sync.event, event);
         break;
     }
 }

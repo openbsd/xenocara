@@ -88,8 +88,10 @@ libxpbproxy_la_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
 	$(OBJCFLAGS) $(libxpbproxy_la_LDFLAGS) $(LDFLAGS) -o $@
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am__xpbproxy_SOURCES_DIST = app-main.m
-@STANDALONE_XPBPROXY_TRUE@am_xpbproxy_OBJECTS = app-main.$(OBJEXT)
+am__xpbproxy_SOURCES_DIST = app-main.m \
+	../NSUserDefaults+XQuartzDefaults.m
+@STANDALONE_XPBPROXY_TRUE@am_xpbproxy_OBJECTS = app-main.$(OBJEXT) \
+@STANDALONE_XPBPROXY_TRUE@	NSUserDefaults+XQuartzDefaults.$(OBJEXT)
 xpbproxy_OBJECTS = $(am_xpbproxy_OBJECTS)
 @STANDALONE_XPBPROXY_TRUE@xpbproxy_DEPENDENCIES = libxpbproxy.la
 xpbproxy_LINK = $(LIBTOOL) $(AM_V_lt) $(AM_LIBTOOLFLAGS) \
@@ -480,8 +482,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-AM_CPPFLAGS = -DBUNDLE_ID_PREFIX=\"$(BUNDLE_ID_PREFIX)\" \
-	$(am__append_1)
+AM_CPPFLAGS = -I.. $(am__append_1)
 AM_CFLAGS = $(XPBPROXY_CFLAGS)
 AM_OBJCFLAGS = $(XPBPROXY_CFLAGS)
 noinst_LTLIBRARIES = libxpbproxy.la
@@ -492,7 +493,7 @@ libxpbproxy_la_SOURCES = \
 	x-selection.m
 
 libxpbproxy_la_LDFLAGS = $(XPBPROXY_LIBS)
-@STANDALONE_XPBPROXY_TRUE@xpbproxy_SOURCES = app-main.m
+@STANDALONE_XPBPROXY_TRUE@xpbproxy_SOURCES = app-main.m ../NSUserDefaults+XQuartzDefaults.m
 @STANDALONE_XPBPROXY_TRUE@xpbproxy_LDADD = libxpbproxy.la
 @STANDALONE_XPBPROXY_TRUE@xpbproxy_LDFLAGS = -Wl,-framework,Cocoa
 EXTRA_DIST = \
@@ -602,6 +603,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NSUserDefaults+XQuartzDefaults.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/app-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/main.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/trick_autotools.Plo@am__quote@
@@ -649,6 +651,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(AM_V_OBJC)source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepOBJC_FALSE@	DEPDIR=$(DEPDIR) $(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepOBJC_FALSE@	$(AM_V_OBJC@am__nodep@)$(LTOBJCCOMPILE) -c -o $@ $<
+
+NSUserDefaults+XQuartzDefaults.o: ../NSUserDefaults+XQuartzDefaults.m
+@am__fastdepOBJC_TRUE@	$(AM_V_OBJC)$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_OBJCFLAGS) $(OBJCFLAGS) -MT NSUserDefaults+XQuartzDefaults.o -MD -MP -MF $(DEPDIR)/NSUserDefaults+XQuartzDefaults.Tpo -c -o NSUserDefaults+XQuartzDefaults.o `test -f '../NSUserDefaults+XQuartzDefaults.m' || echo '$(srcdir)/'`../NSUserDefaults+XQuartzDefaults.m
+@am__fastdepOBJC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/NSUserDefaults+XQuartzDefaults.Tpo $(DEPDIR)/NSUserDefaults+XQuartzDefaults.Po
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(AM_V_OBJC)source='../NSUserDefaults+XQuartzDefaults.m' object='NSUserDefaults+XQuartzDefaults.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	DEPDIR=$(DEPDIR) $(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(AM_V_OBJC@am__nodep@)$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_OBJCFLAGS) $(OBJCFLAGS) -c -o NSUserDefaults+XQuartzDefaults.o `test -f '../NSUserDefaults+XQuartzDefaults.m' || echo '$(srcdir)/'`../NSUserDefaults+XQuartzDefaults.m
+
+NSUserDefaults+XQuartzDefaults.obj: ../NSUserDefaults+XQuartzDefaults.m
+@am__fastdepOBJC_TRUE@	$(AM_V_OBJC)$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_OBJCFLAGS) $(OBJCFLAGS) -MT NSUserDefaults+XQuartzDefaults.obj -MD -MP -MF $(DEPDIR)/NSUserDefaults+XQuartzDefaults.Tpo -c -o NSUserDefaults+XQuartzDefaults.obj `if test -f '../NSUserDefaults+XQuartzDefaults.m'; then $(CYGPATH_W) '../NSUserDefaults+XQuartzDefaults.m'; else $(CYGPATH_W) '$(srcdir)/../NSUserDefaults+XQuartzDefaults.m'; fi`
+@am__fastdepOBJC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/NSUserDefaults+XQuartzDefaults.Tpo $(DEPDIR)/NSUserDefaults+XQuartzDefaults.Po
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	$(AM_V_OBJC)source='../NSUserDefaults+XQuartzDefaults.m' object='NSUserDefaults+XQuartzDefaults.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepOBJC_FALSE@	DEPDIR=$(DEPDIR) $(OBJCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepOBJC_FALSE@	$(AM_V_OBJC@am__nodep@)$(OBJC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_OBJCFLAGS) $(OBJCFLAGS) -c -o NSUserDefaults+XQuartzDefaults.obj `if test -f '../NSUserDefaults+XQuartzDefaults.m'; then $(CYGPATH_W) '../NSUserDefaults+XQuartzDefaults.m'; else $(CYGPATH_W) '$(srcdir)/../NSUserDefaults+XQuartzDefaults.m'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

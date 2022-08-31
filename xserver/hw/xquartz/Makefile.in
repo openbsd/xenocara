@@ -74,7 +74,8 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libXquartz_la_DEPENDENCIES =  \
 	$(top_builddir)/pseudoramiX/libPseudoramiX.la
-am_libXquartz_la_OBJECTS = miinitext.lo X11Application.lo \
+am_libXquartz_la_OBJECTS = miinitext.lo \
+	NSUserDefaults+XQuartzDefaults.lo X11Application.lo \
 	X11Controller.lo applewm.lo darwin.lo darwinEvents.lo \
 	darwinXinput.lo keysym2ucs.lo quartz.lo quartzKeyboard.lo \
 	quartzStartup.lo quartzRandR.lo
@@ -510,6 +511,7 @@ AM_CFLAGS = $(DIX_CFLAGS)
 AM_OBJCFLAGS = $(DIX_CFLAGS)
 AM_CPPFLAGS = \
 	-DXSERVER_VERSION=\"$(VERSION)\" \
+	-DBUNDLE_ID_PREFIX=\"$(BUNDLE_ID_PREFIX)\" \
 	-DUSE_NEW_CLUT \
 	-DXFree86Server \
 	-I$(top_srcdir)/miext/rootless \
@@ -523,6 +525,7 @@ DIST_SUBDIRS = bundle . GL xpr pbproxy mach-startup man
 libXquartz_la_SOURCES = \
 	$(top_srcdir)/mi/miinitext.c \
 	$(top_srcdir)/mi/miinitext.h \
+	NSUserDefaults+XQuartzDefaults.m \
 	X11Application.m \
 	X11Controller.m \
 	applewm.c \
@@ -537,6 +540,7 @@ libXquartz_la_SOURCES = \
 
 libXquartz_la_LIBADD = $(top_builddir)/pseudoramiX/libPseudoramiX.la
 EXTRA_DIST = \
+	NSUserDefaults+XQuartzDefaults.h \
 	X11Application.h \
 	X11Controller.h \
 	applewmExt.h \
@@ -604,6 +608,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/NSUserDefaults+XQuartzDefaults.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/X11Application.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/X11Controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/applewm.Plo@am__quote@

@@ -98,35 +98,7 @@ am__can_run_installinfo = \
     n|no|NO) false;; \
     *) (install-info --version) >/dev/null 2>&1;; \
   esac
-am__vpath_adj_setup = srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`;
-am__vpath_adj = case $$p in \
-    $(srcdir)/*) f=`echo "$$p" | sed "s|^$$srcdirstrip/||"`;; \
-    *) f=$$p;; \
-  esac;
-am__strip_dir = f=`echo $$p | sed -e 's|^.*/||'`;
-am__install_max = 40
-am__nobase_strip_setup = \
-  srcdirstrip=`echo "$(srcdir)" | sed 's/[].[^$$\\*|]/\\\\&/g'`
-am__nobase_strip = \
-  for p in $$list; do echo "$$p"; done | sed -e "s|$$srcdirstrip/||"
-am__nobase_list = $(am__nobase_strip_setup); \
-  for p in $$list; do echo "$$p $$p"; done | \
-  sed "s| $$srcdirstrip/| |;"' / .*\//!s/ .*/ ./; s,\( .*\)/[^/]*$$,\1,' | \
-  $(AWK) 'BEGIN { files["."] = "" } { files[$$2] = files[$$2] " " $$1; \
-    if (++n[$$2] == $(am__install_max)) \
-      { print $$2, files[$$2]; n[$$2] = 0; files[$$2] = "" } } \
-    END { for (dir in files) print dir, files[dir] }'
-am__base_list = \
-  sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
-  sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__uninstall_files_from_dir = { \
-  test -z "$$files" \
-    || { test ! -d "$$dir" && test ! -f "$$dir" && test ! -r "$$dir"; } \
-    || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
-         $(am__cd) "$$dir" && rm -f $$files; }; \
-  }
-am__installdirs = "$(DESTDIR)$(resourcedir)"
-DATA = $(noinst_DATA) $(resource_DATA)
+DATA = $(noinst_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -472,9 +444,8 @@ CPP_FILES_FLAGS =  \
 noinst_PRE = Info.plist.cpp
 noinst_DATA = $(noinst_PRE:plist.cpp=plist)
 CLEANFILES = $(noinst_DATA)
-resourcedir = $(libdir)/X11/xserver
-resource_DATA = Xquartz.plist
 EXTRA_DIST = \
+	chown-bundle.sh \
 	mk_bundke.sh \
 	X11.sh \
 	Info.plist.cpp \
@@ -629,7 +600,8 @@ EXTRA_DIST = \
 	Resources/zh_TW.lproj/Localizable.strings \
 	Resources/zh_TW.lproj/locversion.plist \
 	Resources/zh_TW.lproj/main.nib/designable.nib \
-	Resources/zh_TW.lproj/main.nib/keyedobjects.nib
+	Resources/zh_TW.lproj/main.nib/keyedobjects.nib \
+	Resources/zh_TW.lproj/main.nib/keyedobjects-110000.nib
 
 all: all-am
 
@@ -672,27 +644,6 @@ mostlyclean-libtool:
 
 clean-libtool:
 	-rm -rf .libs _libs
-install-resourceDATA: $(resource_DATA)
-	@$(NORMAL_INSTALL)
-	@list='$(resource_DATA)'; test -n "$(resourcedir)" || list=; \
-	if test -n "$$list"; then \
-	  echo " $(MKDIR_P) '$(DESTDIR)$(resourcedir)'"; \
-	  $(MKDIR_P) "$(DESTDIR)$(resourcedir)" || exit 1; \
-	fi; \
-	for p in $$list; do \
-	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
-	  echo "$$d$$p"; \
-	done | $(am__base_list) | \
-	while read files; do \
-	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(resourcedir)'"; \
-	  $(INSTALL_DATA) $$files "$(DESTDIR)$(resourcedir)" || exit $$?; \
-	done
-
-uninstall-resourceDATA:
-	@$(NORMAL_UNINSTALL)
-	@list='$(resource_DATA)'; test -n "$(resourcedir)" || list=; \
-	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
-	dir='$(DESTDIR)$(resourcedir)'; $(am__uninstall_files_from_dir)
 tags: TAGS
 TAGS:
 
@@ -736,9 +687,6 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(resourcedir)"; do \
-	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -790,7 +738,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-resourceDATA
+install-data-am:
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) install-data-hook
 install-dvi: install-dvi-am
@@ -835,7 +783,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-resourceDATA
+uninstall-am:
 	@$(NORMAL_INSTALL)
 	$(MAKE) $(AM_MAKEFLAGS) uninstall-hook
 .MAKE: install-am install-data-am install-strip uninstall-am
@@ -847,11 +795,10 @@ uninstall-am: uninstall-resourceDATA
 	install-dvi-am install-exec install-exec-am install-html \
 	install-html-am install-info install-info-am install-man \
 	install-pdf install-pdf-am install-ps install-ps-am \
-	install-resourceDATA install-strip installcheck \
-	installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-generic \
-	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
-	uninstall-hook uninstall-resourceDATA
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-hook
 
 
 .cpp:
@@ -864,7 +811,6 @@ uninstall-hook:
 	$(RM) -rf $(DESTDIR)$(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/Resources
 	$(RM) -rf $(DESTDIR)$(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/Info.plist
 	$(RM) -rf $(DESTDIR)$(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/PkgInfo
-	Resources/zh_TW.lproj/main.nib/keyedobjects-110000.nib
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

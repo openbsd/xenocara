@@ -23,10 +23,8 @@ noinst_DATA = $(noinst_PRE:plist.cpp=plist)
 
 CLEANFILES = $(noinst_DATA)
 
-resourcedir=$(libdir)/X11/xserver
-resource_DATA = Xquartz.plist
-
 EXTRA_DIST = \
+	chown-bundle.sh \
 	mk_bundke.sh \
 	X11.sh \
 	Info.plist.cpp \
@@ -181,5 +179,5 @@ EXTRA_DIST = \
 	Resources/zh_TW.lproj/Localizable.strings \
 	Resources/zh_TW.lproj/locversion.plist \
 	Resources/zh_TW.lproj/main.nib/designable.nib \
-	Resources/zh_TW.lproj/main.nib/keyedobjects.nib
+	Resources/zh_TW.lproj/main.nib/keyedobjects.nib \
 	Resources/zh_TW.lproj/main.nib/keyedobjects-110000.nib
