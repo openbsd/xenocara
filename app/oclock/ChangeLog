@@ -1,3 +1,85 @@
+commit a2ca36a770cac1684dc5e39d9b777b1b02c69114
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 30 17:21:34 2022 -0700
+
+    oclock 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f6a658deeac58d170c3fef1d785d723a6d830119
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 13 16:25:03 2022 -0700
+
+    Add cast to clear -Wsign-compare warning
+    
+    oclock.c: In function ‘quit’:
+    oclock.c:157:27: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      event->xclient.data.l[0] != wm_delete_window) {
+                               ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d55831ae7d1c27a6f4851449b830c248b693bfe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 13 16:17:55 2022 -0700
+
+    Declare bitmap data as const
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88045db6c44a118e96d1f76e7ba4e636d47101fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:22:28 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 90ab5ae4e0e045360a8f7d9082f2b19ee2fdfe9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:22:25 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ab1c0a7dff405435405f8e481266c73d0ec4c94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 15:57:39 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b081873f3bb18d1c130b2d59d0757f8fee499a2b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 8 18:38:58 2019 -0700
+
+    Pass -D_CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears up 16 of 47 gcc -Wdiscarded-qualifiers warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb90875f2b64cbd7bcde4a6a5ed1c927c8068767
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:55:56 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 973fb5113e0b0ac2d5a816412765ac0eec930592
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:31:00 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2d1d5f1b86db9010b807fcf625d2c6fa1d9b5493
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Mar 6 23:03:29 2018 -0800
@@ -491,7 +573,7 @@ Date:   Sun Jul 17 20:11:01 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit f9b186fdd589267fc8d448ffc5da6d775afe01f2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:22:52 2005 +0000
 
     Add buildsystem for oclock

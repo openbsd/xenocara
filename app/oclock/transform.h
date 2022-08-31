@@ -29,7 +29,7 @@ from The Open Group.
 
 /*
  * header file for transformed coordinate system.  No rotations
- * supported, as elipses cannot be rotated in X.
+ * supported, as ellipses cannot be rotated in X.
  */
 
 typedef struct _transform {

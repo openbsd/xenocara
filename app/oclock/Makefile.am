@@ -23,6 +23,7 @@ SUBDIRS = man
 bin_PROGRAMS = oclock
 
 AM_CFLAGS = $(OCLOCK_CFLAGS) $(CWARNFLAGS)
+AM_CPPFLAGS = -D_CONST_X_STRING
 oclock_LDADD = $(OCLOCK_LIBS) -lm
 
 oclock_SOURCES =	\
@@ -42,7 +43,7 @@ appdefaultdir = @appdefaultdir@
 dist_appdefault_DATA = \
         app-defaults/Clock-color
 
-EXTRA_DIST = oclock.bit oclmask.bit
+EXTRA_DIST = oclock.bit oclmask.bit README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

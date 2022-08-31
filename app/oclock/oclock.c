@@ -123,13 +123,13 @@ main(int argc, char *argv[])
     XtSetArg (arg[i], XtNiconPixmap,
 	      XCreateBitmapFromData (XtDisplay(toplevel),
 				     XtScreen(toplevel)->root,
-				     (char *)oclock_bits,
+				     (const char *)oclock_bits,
 				     oclock_width, oclock_height));
     i++;
     XtSetArg (arg[i], XtNiconMask,
 	      XCreateBitmapFromData (XtDisplay(toplevel),
 				     XtScreen(toplevel)->root,
-				     (char *)oclmask_bits,
+				     (const char *)oclmask_bits,
 				     oclmask_width, oclmask_height));
     i++;
     XtSetValues (toplevel, arg, i);
@@ -154,7 +154,7 @@ static void quit(Widget w, XEvent *event, String *params, Cardinal *num_params)
     Arg arg;
 
     if (event->type == ClientMessage &&
-	event->xclient.data.l[0] != wm_delete_window) {
+	(Atom)event->xclient.data.l[0] != wm_delete_window) {
 #ifdef XKB
 	XkbStdBell(XtDisplay(w), XtWindow(w), 0, XkbBI_BadValue);
 #else

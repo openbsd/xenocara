@@ -323,7 +323,7 @@ static void Resize (Widget widget)
     } else
     {
     	/*
-     	 * reconfigure the widget to split the availible
+	 * reconfigure the widget to split the available
      	 * space between the window and the border
      	 */
 
