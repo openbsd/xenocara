@@ -75,8 +75,8 @@ FontFileNameCheck (const char *name)
 {
 #ifndef NCD
 #if defined(WIN32)
-    /* OS/2 uses D:/... as a path name for fonts, so accept this as a valid
-     * path if it starts with a letter and a colon. Same applies for WIN32
+    /* WIN32 uses D:/... as a path name for fonts, so accept this as a valid
+     * path if it starts with a letter and a colon.
      */
     if (isalpha(*name) && name[1]==':')
         return TRUE;

@@ -197,7 +197,7 @@ pcfGetCompressedMetric(FontFilePtr file, CARD32 format, xCharInfo *metric)
 }
 
 /*
- * Position the file to the begining of the specified table
+ * Position the file to the beginning of the specified table
  * in the font file
  */
 static Bool

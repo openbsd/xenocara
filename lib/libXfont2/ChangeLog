@@ -1,3 +1,84 @@
+commit d54aaf2483df6a1f98fadc09004157e657b7f73e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 16:22:15 2022 -0700
+
+    libXfont2 2.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit efb287223612e9225e5089bed76e348c236b15f0
+Author: Peter Harris <pharris@opentext.com>
+Date:   Thu Mar 25 15:56:31 2021 -0400
+
+    Fix buffer overrun in FontFileMakeDir on WIN32
+    
+    When dirName is "" (eg. when called by BuiltinReadDirectory),
+    FontFileMakeDir would read after the string when WIN32 is defined.
+    
+    Fix the overrun issue by checking the location of the found :
+    before adding two.
+    
+    Signed-off-by: Peter Harris <pharris@opentext.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c8fdf6e35bed077a5614b4094770e668c96b9e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jun 21 17:37:32 2022 -0700
+
+    Fix comments to reflect removal of OS/2 support
+    
+    Commit 6c29007756301 removed OS/2 support from the code,
+    but missed updating the comments to match.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e3d94c867741319bf75b47266176cf677218641
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Mon Jun 20 23:32:52 2022 -0700
+
+    Correct fsCreateACReq length
+    
+    Regressed-in: 6972ea08ee5b2ef1cfbdc2fcaf14f06bbd391561
+    Fixes: https://gitlab.freedesktop.org/xorg/lib/libxfont/-/issues/13
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 5cb3b8809b9f141a2cf8a4e00a8387c75dc6bc10
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 20 12:30:41 2022 -0700
+
+    configure: Use pkg-config to handle zlib dependency if possible
+    
+    Preserves fallback for systems like darwin without zlib.pc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12bed78985af1da2d1f4954a3491ee497a878b23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 6 14:37:42 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f83ea5e953c6904578a458e2c2bc2e1d5ae3cb47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 6 14:14:21 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6aee4c9a41a95a0509f654beca27009671731b3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 6 14:10:16 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3a4f68284c5aeea77789af1fe395cac35efc8562
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Aug 1 17:36:43 2021 -0700

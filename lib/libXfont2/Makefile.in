@@ -193,8 +193,8 @@ am__DEPENDENCIES_1 =
 LIBOBJDIR = src/util/
 @XFONT_FREETYPE_TRUE@am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
 libXfont2_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) $(LTLIBOBJS) \
-	$(am__DEPENDENCIES_2)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
+	$(am__DEPENDENCIES_1) $(LTLIBOBJS) $(am__DEPENDENCIES_2)
 am__libXfont2_la_SOURCES_DIST = src/stubs/atom.c \
 	src/stubs/libxfontstubs.c src/util/fontaccel.c \
 	src/util/fontnames.c src/util/fontutil.c src/util/fontxlfd.c \
@@ -374,9 +374,9 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
+DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.xz
 GZIP_ENV = --best
-DIST_TARGETS = dist-bzip2 dist-gzip
+DIST_TARGETS = dist-xz dist-gzip
 distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
@@ -479,7 +479,10 @@ XORG_MAN_PAGE = @XORG_MAN_PAGE@
 XORG_SGML_PATH = @XORG_SGML_PATH@
 XSL_STYLESHEET = @XSL_STYLESHEET@
 X_GZIP_FONT_COMPRESSION = @X_GZIP_FONT_COMPRESSION@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 Z_LIBS = @Z_LIBS@
+Z_REQUIRES = @Z_REQUIRES@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -571,8 +574,8 @@ libXfont2_la_SOURCES = src/stubs/atom.c src/stubs/libxfontstubs.c \
 	$(am__append_9) $(am__append_10) $(am__append_11) \
 	$(am__append_12)
 libXfont2_la_LDFLAGS = -version-number 2:0:0 -no-undefined
-libXfont2_la_LIBADD = $(Z_LIBS) $(MATH_LIBS) $(XFONT_LIBS) \
-	$(LTLIBOBJS) $(am__append_4)
+libXfont2_la_LIBADD = $(ZLIB_LIBS) $(Z_LIBS) $(MATH_LIBS) \
+	$(XFONT_LIBS) $(LTLIBOBJS) $(am__append_4)
 
 # Test utilities
 EXTRA_DIST = src/builtins/buildfont README.md test/utils/README
@@ -1203,6 +1206,7 @@ distdir: $(DISTFILES)
 dist-gzip: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
 	$(am__post_remove_distdir)
+
 dist-bzip2: distdir
 	tardir=$(distdir) && $(am__tar) | BZIP2=$${BZIP2--9} bzip2 -c >$(distdir).tar.bz2
 	$(am__post_remove_distdir)
@@ -1210,7 +1214,6 @@ dist-bzip2: distdir
 dist-lzip: distdir
 	tardir=$(distdir) && $(am__tar) | lzip -c $${LZIP_OPT--9} >$(distdir).tar.lz
 	$(am__post_remove_distdir)
-
 dist-xz: distdir
 	tardir=$(distdir) && $(am__tar) | XZ_OPT=$${XZ_OPT--e} xz -c >$(distdir).tar.xz
 	$(am__post_remove_distdir)

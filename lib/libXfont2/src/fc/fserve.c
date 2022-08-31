@@ -179,7 +179,7 @@ fs_fd_handler(int fd, void *data);
  * the font server, and a block record to be stored in the fpe's list
  * of outstanding requests.  the FS block handler also sticks the
  * proper set of fd's into the select mask.  when data is ready to be
- * read in, the FS wakup handler will be hit.  this will read the
+ * read in, the FS wakeup handler will be hit.  this will read the
  * data off the wire into the proper block record, and then signal the
  * client that caused the block so that it can restart.  it will then
  * call the access function again, which will realize that the data has
@@ -536,7 +536,7 @@ conn_stop_listening(FSFpePtr conn)
 
 /*
  * When a request is aborted due to a font server failure,
- * signal any depending clients to restart their dependant
+ * signal any depending clients to restart their dependent
  * requests
  */
 static void
@@ -2857,7 +2857,7 @@ _fs_client_access (FSFpePtr conn, pointer client, Bool sync)
 	    authorizations = padding;
 	    authlen = 4;
 	}
-	crac.length = (sizeof (fsCreateACReq) + authlen) >> 2;
+	crac.length = (sizeof (fsCreateACReq) + authlen + 3) >> 2;
 	crac.acid = cur->acid;
 	_fs_add_req_log(conn, FS_CreateAC);
 	_fs_write(conn, (char *) &crac, sizeof (fsCreateACReq));

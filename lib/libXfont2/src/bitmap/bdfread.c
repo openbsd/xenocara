@@ -677,7 +677,7 @@ bdfReadProperties(FontFilePtr file, FontPtr pFont, bdfFileState *pState)
 
 	case 2:
 	    /*
-	     * Possibilites include: valid quoted string with no white space
+	     * Possibilities include: valid quoted string with no white space
 	     * valid integer value invalid value
 	     */
 	    if (secondbuf[0] == '"') {
@@ -698,7 +698,7 @@ bdfReadProperties(FontFilePtr file, FontPtr pFont, bdfFileState *pState)
 
 	case 3:
 	    /*
-	     * Possibilites include: valid quoted string with some white space
+	     * Possibilities include: valid quoted string with some white space
 	     * invalid value (reject even if second string is integer)
 	     */
 	    if (secondbuf[0] == '"') {

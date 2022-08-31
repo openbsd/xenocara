@@ -94,7 +94,7 @@ static CharInfoRec noSuchChar = { /* metrics */{0,0,0,0,0,0},
 				  /* bits */   NULL };
 #endif
 
-/* The propery names for all the XLFD properties. */
+/* The property names for all the XLFD properties. */
 
 static const char *xlfd_props[] = {
     "FOUNDRY",
@@ -1562,7 +1562,7 @@ FreeTypeUnloadXFont(FontPtr pFont)
 /* Add the font properties, including the Font name, the XLFD
    properties, some strings from the font, and various typographical
    data.  We only provide data readily available in the tables in the
-   font for now, altough FIGURE_WIDTH would be a good idea as it is
+   font for now, although FIGURE_WIDTH would be a good idea as it is
    used by Xaw. */
 
 static int
@@ -2413,7 +2413,7 @@ FreeTypeSetUpTTCap( char *fileName, FontScalablePtr vals,
 	    goto quit;
 	}
     }
-    /* doube striking */
+    /* double striking */
     if (SPropRecValList_search_record(&listPropRecVal,
                                       &contRecValue,
                                       "DoubleStrike")) {

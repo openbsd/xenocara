@@ -52,7 +52,7 @@ configure script takes various options to enable or disable them:
 
 - Font services:
 
-  * xfs font servers - allows retreiving fonts as a client of an xfs server.  
+  * xfs font servers - allows retrieving fonts as a client of an xfs server.
     Enabled by default, disable via --disable-fc (font client).
 
     If enabled, you can also use the standard libxtrans flags to
@@ -74,7 +74,7 @@ Xorg mailing list:
 
   https://lists.x.org/mailman/listinfo/xorg
 
-The master development code repository can be found at:
+The primary development code repository can be found at:
 
   https://gitlab.freedesktop.org/xorg/lib/libXfont
 

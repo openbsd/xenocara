@@ -112,11 +112,12 @@ FontFileMakeDir(const char *dirName, int size)
     const char		*attrib;
     int			attriblen;
 
-#if !defined(WIN32)
     attrib = strchr(dirName, ':');
-#else
-    /* OS/2 uses the colon in the drive letter descriptor, skip this */
-    attrib = strchr(dirName+2, ':');
+#if defined(WIN32)
+    if (attrib && attrib - dirName == 1) {
+	/* WIN32 uses the colon in the drive letter descriptor, skip this */
+	attrib = strchr(dirName + 2, ':');
+    }
 #endif
     if (attrib) {
 	dirlen = attrib - dirName;
