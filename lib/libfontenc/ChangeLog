@@ -1,3 +1,92 @@
+commit c8f8ce35a5eafe8ca0d1ed3dfdd098fe0943b99c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 30 16:51:28 2022 -0700
+
+    libfontenc 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7f8c9af5773c3c73a635308054872b49c5bbe94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 30 08:21:01 2022 -0700
+
+    include config.h before system headers
+    
+    Makes sure any defines needed to expose functions like reallocarray()
+    are present on platforms that need them (_GNU_SOURCE, _OPENBSD_SOURCE,
+    __EXTENSIONS__, etc.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 26ae989526a2c931d15a4c4ae2e84ab627bc0009
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 14:59:03 2022 -0700
+
+    libfontenc 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be77631bbc5fee12c9028f9ffd577dc1066231b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 13:00:37 2022 -0700
+
+    configure: Use AC_USE_SYSTEM_EXTENSIONS to set GNU_SOURCE & other defines
+    
+    Ensures reallocarray is visible in system headers if available.
+    (See libxext#4.)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1aeb6a2d1673c1ae23763f55f09fb18d8e188fe0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 8 11:24:31 2022 -0700
+
+    Convert code to use Xmallocarray() & Xreallocarray()
+    
+    Provides automatic integer overflow checking in allocation size calculations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ff95c472abe8eb8fe1ccda5cd40d99407f1f9a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 8 11:14:11 2022 -0700
+
+    Import reallocarray() from libX11 (originally from OpenBSD)
+    
+    Wrapper for realloc() that checks for overflow when multiplying
+    arguments together, so we don't have to add overflow checks to
+    every single call.  For documentation on usage, see:
+    http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man3/calloc.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6a3bd1365798783f3fa5552d4ab061d5636d15a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 8 10:18:42 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 256ff55667e70b4cdb91d0dc10636ec6c1b9d598
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 8 10:15:47 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91b7c7d02ddb2ddce39648270f5cb91fac7d978e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 8 10:14:39 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2baea13978759d1a011fc6d739465893b554d30a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 19 17:31:57 2019 -0800
@@ -727,7 +816,7 @@ Date:   Wed Jul 13 16:51:34 2005 +0000
     Update INCLUDES to find <X11/fonts/fontenc.h>
 
 commit 85094af610ba990c6bc2377eff1f6f31dffd48e2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 21:05:28 2005 +0000
 
     Remove encodings build system from libfontenc
@@ -764,27 +853,27 @@ Date:   Thu Jun 30 13:21:11 2005 +0000
     Check for zlib
 
 commit 092271385632708fb5dd53dca3dcfc3ead06ef6c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:40:27 2005 +0000
 
     modularizeapp.sh: initialize LAST to "" symlink.sh: Add bitmaps for oclock,
         and an extra textfile for pclcomp
 
 commit 21e552451c095c5668a57765c2eb941750e00ecd
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 14:48:02 2005 +0000
 
     Add generation of encodings.dir
 
 commit a18d9ec0c4bfa36460d5e3eba1c5fb8a90086500
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 14:17:12 2005 +0000
 
     Add encodings to fontenc build system, plus various fixes to make it
         distcheck.
 
 commit bcdcaebcd2127f4e7e1c368f341a781b4cf8af6b
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 16:09:14 2005 +0000
 
     - Remove fontenc from Xfont

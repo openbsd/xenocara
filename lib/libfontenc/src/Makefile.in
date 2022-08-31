@@ -53,7 +53,7 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = src
 DIST_COMMON = $(libfontencinclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/depcomp
+	$(srcdir)/Makefile.in $(top_srcdir)/depcomp reallocarray.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -92,7 +92,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" \
 	"$(DESTDIR)$(libfontencincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libfontenc_la_DEPENDENCIES =
+libfontenc_la_DEPENDENCIES = $(LTLIBOBJS)
 am_libfontenc_la_OBJECTS = encparse.lo fontenc.lo
 libfontenc_la_OBJECTS = $(am_libfontenc_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
@@ -282,6 +282,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -294,7 +295,8 @@ lib_LTLIBRARIES = libfontenc.la
 libfontenc_la_SOURCES = \
          encparse.c \
          fontenc.c \
-	 fontencI.h
+         fontencI.h \
+         reallocarray.h
 
 AM_CFLAGS = \
 	$(FONTENC_CFLAGS) \
@@ -303,7 +305,7 @@ AM_CFLAGS = \
 FONTENCDIR = @ENCODINGSDIR@
 FONTENCDEFS = -DFONT_ENCODINGS_DIRECTORY=\"$(FONTENCDIR)/encodings.dir\"
 AM_CPPFLAGS = -I$(top_srcdir)/include $(FONTENCDEFS)
-libfontenc_la_LIBADD = @FONTENC_LIBS@
+libfontenc_la_LIBADD = $(LTLIBOBJS) @FONTENC_LIBS@
 libfontenc_la_LDFLAGS = -version-number 1:0:0 -no-undefined
 libfontencincludedir = $(includedir)/X11/fonts
 libfontencinclude_HEADERS = \
@@ -389,6 +391,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/reallocarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/encparse.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/fontenc.Plo@am__quote@
 
@@ -579,7 +582,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -625,7 +628,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

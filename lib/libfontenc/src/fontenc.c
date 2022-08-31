@@ -22,6 +22,10 @@ THE SOFTWARE.
 
 /* Backend-independent encoding code */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <string.h>
 #include <strings.h>
 #include <stdlib.h>
@@ -33,6 +37,7 @@ THE SOFTWARE.
 
 #include <X11/fonts/fontenc.h>
 #include "fontencI.h"
+#include "reallocarray.h"
 
 /* Functions local to this file */
 
@@ -808,7 +813,7 @@ FontEncLoad(const char *encoding_name, const char *filename)
                 for (alias = encoding->aliases; *alias; alias++)
                     numaliases++;
             }
-            new_aliases = malloc((numaliases + 2) * sizeof(char *));
+            new_aliases = Xmallocarray(numaliases + 2, sizeof(char *));
             if (new_aliases == NULL) {
                 free(new_name);
                 return NULL;
