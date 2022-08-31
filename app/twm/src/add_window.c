@@ -51,7 +51,7 @@ in this Software without prior written authorization from The Open Group.
 
 /**********************************************************************
  *
- * Add a new window, put the titlbar and other stuff around
+ * Add a new window, put the titlebar and other stuff around
  * the window
  *
  * 31-Mar-88 Tom LaStrange        Initial Version.
@@ -147,11 +147,9 @@ TwmWindow *
 AddWindow(Window w, int iconm, IconMgr *iconp)
 {
     TwmWindow *tmp_win;         /* new twm window structure */
-    int stat;
     XEvent event;
     unsigned long valuemask;    /* mask for create windows */
     XSetWindowAttributes attributes;    /* attributes for create windows */
-    int width, height;          /* tmp variable */
     int ask_user;               /* don't know where to put the window */
     int gravx, gravy;           /* gravity signs for positioning */
     int namelen;
@@ -172,9 +170,7 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
     /* allocate space for the twm window */
     tmp_win = calloc(1, sizeof(TwmWindow));
     if (tmp_win == NULL) {
-        fprintf(stderr,
-                "%s: Unable to allocate memory to manage window ID %lx.\n",
-                ProgramName, w);
+        twmWarning("Unable to allocate memory to manage window ID %lx.", w);
         return NULL;
     }
     tmp_win->w = w;
@@ -289,11 +285,13 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
                                                   &tmp_win->class);
     if (tmp_win->auto_raise)
         Scr->NumAutoRaises++;
-    tmp_win->iconify_by_unmapping = Scr->IconifyByUnmapping;
     if (Scr->IconifyByUnmapping) {
         tmp_win->iconify_by_unmapping = iconm ? FALSE :
             !short_lookup LookInList(Scr->DontIconify, tmp_win->full_name,
                                      &tmp_win->class);
+    }
+    else {
+        tmp_win->iconify_by_unmapping = Scr->IconifyByUnmapping;
     }
     tmp_win->iconify_by_unmapping |=
         short_lookup LookInList(Scr->IconifyByUn, tmp_win->full_name,
@@ -402,10 +400,21 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
      */
     if (HandlingEvents && ask_user && !restoredFromPrevSession) {
         if (Scr->RandomPlacement) {     /* just stick it somewhere */
-            if ((PlaceX + tmp_win->attr.width) > Scr->MyDisplayWidth)
-                PlaceX = 50;
-            if ((PlaceY + tmp_win->attr.height) > Scr->MyDisplayHeight)
-                PlaceY = 50;
+            /* Avoid putting the new window off-screen */
+            if ((PlaceX + tmp_win->attr.width) > Scr->MyDisplayWidth) {
+                PlaceX = Scr->MyDisplayWidth - tmp_win->attr.width;
+                if (PlaceX < 0)
+                    PlaceX = 0;
+                if (PlaceX > 50)
+                    PlaceX = 50;
+            }
+            if ((PlaceY + tmp_win->attr.height) > Scr->MyDisplayHeight) {
+                PlaceY = Scr->MyDisplayHeight - tmp_win->attr.height;
+                if (PlaceY < 0)
+                    PlaceY = 0;
+                if (PlaceY > 50)
+                    PlaceY = 50;
+            }
 
             tmp_win->attr.x = PlaceX;
             tmp_win->attr.y = PlaceY;
@@ -416,11 +425,14 @@ AddWindow(Window w, int iconm, IconMgr *iconp)
             if (!(tmp_win->wmhints && tmp_win->wmhints->flags & StateHint &&
                   tmp_win->wmhints->initial_state == IconicState)) {
                 Bool firsttime = True;
+                int height, width;
 
                 /* better wait until all the mouse buttons have been
                  * released.
                  */
                 while (TRUE) {
+                    int stat;
+
                     XUngrabServer(dpy);
                     XSync(dpy, 0);
                     XGrabServer(dpy);
@@ -1290,8 +1302,7 @@ CreateWindowTitlebarButtons(TwmWindow *tmp_win)
     if (nb > 0) {
         tmp_win->titlebuttons = malloc((size_t) nb * sizeof(TBWindow));
         if (!tmp_win->titlebuttons) {
-            fprintf(stderr, "%s:  unable to allocate %d titlebuttons\n",
-                    ProgramName, nb);
+            twmWarning("unable to allocate %d titlebuttons", nb);
         }
         else {
             TBWindow *tbw;
@@ -1483,9 +1494,9 @@ FetchWmColormapWindows(TwmWindow *tmp)
                 malloc(sizeof(Window) * (size_t) (number_cmap_windows + 1));
 
             if (!new_cmap_windows) {
-                fprintf(stderr,
-                        "%s:  unable to allocate %d element colormap window array\n",
-                        ProgramName, number_cmap_windows + 1);
+                twmWarning
+                    ("unable to allocate %d element colormap window array",
+                     number_cmap_windows + 1);
                 goto done;
             }
             new_cmap_windows[0] = tmp->w;       /* add to front */
@@ -1521,10 +1532,11 @@ FetchWmColormapWindows(TwmWindow *tmp)
                 if (j == tmp->cmaps.number_cwins) {
                     if (XFindContext(dpy, cmap_windows[i], ColormapContext,
                                      (XPointer *) &cwins[i]) == XCNOENT) {
-                        if ((cwins[i] = CreateColormapWindow(cmap_windows[i],
-                                                             (Bool) tmp->cmaps.
-                                                             number_cwins == 0,
-                                                             True)) == NULL) {
+                        if ((cwins[i] =
+                             CreateColormapWindow(cmap_windows[i],
+                                                  (tmp->cmaps.number_cwins == 0
+                                                   ? True
+                                                   : False), True)) == NULL) {
                             int k;
 
                             for (k = i + 1; k < number_cmap_windows; k++)

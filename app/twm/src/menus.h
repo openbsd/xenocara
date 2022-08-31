@@ -60,6 +60,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _MENUS_
 #define _MENUS_
 
+#include "twm.h"
+
 #define TWM_ROOT        "bLoB_GoOp"     /* my private root menu */
 #define TWM_WINDOWS     "TwmWindows"    /* for f.menu "TwmWindows" */
 

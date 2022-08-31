@@ -62,12 +62,13 @@ in this Software without prior written authorization from The Open Group.
 #include <stdio.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <stdarg.h>
+
 #include "twm.h"
 #include "iconmgr.h"
 #include "add_window.h"
 #include "gc.h"
 #include "parse.h"
-#include "version.h"
 #include "menus.h"
 #include "events.h"
 #include "util.h"
@@ -75,6 +76,7 @@ in this Software without prior written authorization from The Open Group.
 #include "screen.h"
 #include "parse.h"
 #include "session.h"
+
 #include <X11/Xproto.h>
 #include <X11/Xatom.h>
 #include <X11/SM/SMlib.h>
@@ -115,9 +117,9 @@ ScreenInfo **ScreenList;        /* structures for each screen */
 ScreenInfo *Scr = NULL;         /* the cur and prev screens */
 int PreviousScreen;             /* last screen that we were on */
 int FirstScreen;                /* TRUE ==> first screen of display */
-static Bool PrintErrorMessages = False; /* controls error messages */
+int message_level = 1;          /* controls error messages */
 static int RedirectError;       /* TRUE ==> another window manager running */
-static int TwmErrorHandler(Display *dpy, XErrorEvent *event);   /* for settting RedirectError */
+static int TwmErrorHandler(Display *dpy, XErrorEvent *event);   /* for setting RedirectError */
 static int CatchRedirectError(Display *dpy, XErrorEvent *event);        /* for everything else */
 static void sigHandler(int);
 char Info[INFO_LINES][INFO_SIZE];       /* info strings to print */
@@ -181,33 +183,31 @@ static char *atom_names[11] = {
 #ifdef XPRINT
 /* |hasExtension()| and |IsPrintScreen()| have been stolen from
  * xc/programs/xdpyinfo/xdpyinfo.c */
-static
-    Bool
-hasExtension(Display *dpy, char *extname)
+static Bool
+hasExtension(Display *dpy2, char *extname)
 {
     int num_extensions, i;
     char **extensions;
 
-    extensions = XListExtensions(dpy, &num_extensions);
+    extensions = XListExtensions(dpy2, &num_extensions);
     for (i = 0; i < num_extensions &&
          (strcmp(extensions[i], extname) != 0); i++);
     XFreeExtensionList(extensions);
     return i != num_extensions;
 }
 
-static
-    Bool
+static Bool
 IsPrintScreen(Screen *s)
 {
-    Display *dpy = XDisplayOfScreen(s);
-    int i;
+    Display *dpy2 = XDisplayOfScreen(s);
 
     /* Check whether this is a screen of a print DDX */
-    if (hasExtension(dpy, XP_PRINTNAME)) {
+    if (hasExtension(dpy2, XP_PRINTNAME)) {
         Screen **pscreens;
         int pscrcount;
+        int i;
 
-        pscreens = XpQueryScreens(dpy, &pscrcount);
+        pscreens = XpQueryScreens(dpy2, &pscrcount);
         for (i = 0; (i < pscrcount) && pscreens; i++) {
             if (s == pscreens[i]) {
                 return True;
@@ -218,6 +218,31 @@ IsPrintScreen(Screen *s)
     return False;
 }
 #endif                          /* XPRINT */
+
+static void
+usage(void)
+{
+    fprintf(stderr, "usage:  %s [-display dpy] [-f file] [-s] [-q] [-v] [-V]"
+#ifdef XPRINT
+            " [-noprint]"
+#endif                          /* XPRINT */
+            " [-clientId id] [-restore file]\n", ProgramName);
+    exit(EXIT_FAILURE);
+}
+
+static Bool
+brief_opt(const char *param, const char *option)
+{
+    size_t have = strlen(++param);
+    size_t want = strlen(option);
+    Bool result = False;
+
+    if (have <= want) {
+        if (!strncmp(param, option, have))
+            result = True;
+    }
+    return result;
+}
 
 /***********************************************************************
  *
@@ -249,57 +274,62 @@ main(int argc, char *argv[])
     for (i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
             switch (argv[i][1]) {
+            case 'V':
+                printf("%s %s\n", APP_NAME, APP_VERSION);
+                exit(EXIT_SUCCESS);
             case 'd':          /* -display dpy */
-                if (strcmp(&argv[i][1], "display"))
-                    goto usage;
+                if (!brief_opt(argv[i], "display"))
+                    usage();
                 if (++i >= argc)
-                    goto usage;
+                    usage();
                 display_name = argv[i];
                 continue;
             case 's':          /* -single */
+                if (!brief_opt(argv[i], "single"))
+                    usage();
                 MultiScreen = FALSE;
                 continue;
 #ifdef XPRINT
             case 'n':          /* -noprint */
-                if (strcmp(&argv[i][1], "noprint"))
-                    goto usage;
+                if (!brief_opt(argv[i], "noprint"))
+                    usage();
                 NoPrintscreens = True;
                 continue;
 #endif                          /* XPRINT */
             case 'f':          /* -file twmrcfilename */
+                if (!brief_opt(argv[i], "file"))
+                    usage();
                 if (++i >= argc)
-                    goto usage;
+                    usage();
                 InitFile = argv[i];
                 continue;
             case 'v':          /* -verbose */
-                PrintErrorMessages = True;
+                if (!brief_opt(argv[i], "verbose"))
+                    usage();
+                message_level++;
                 continue;
             case 'c':          /* -clientId */
-                if (strcmp(&argv[i][1], "clientId"))
-                    goto usage;
+                if (!brief_opt(argv[i], "clientId"))
+                    usage();
                 if (++i >= argc)
-                    goto usage;
+                    usage();
                 client_id = argv[i];
                 continue;
             case 'r':          /* -restore */
-                if (strcmp(&argv[i][1], "restore"))
-                    goto usage;
+                if (!brief_opt(argv[i], "restore"))
+                    usage();
                 if (++i >= argc)
-                    goto usage;
+                    usage();
                 restore_filename = argv[i];
                 continue;
             case 'q':          /* -quiet */
-                PrintErrorMessages = False;
+                if (!brief_opt(argv[i], "quiet"))
+                    usage();
+                --message_level;
                 continue;
             }
         }
- usage:
-        fprintf(stderr, "usage:  %s [-display dpy] [-f file] [-s] [-q] [-v]"
-#ifdef XPRINT
-                " [-noprint]"
-#endif                          /* XPRINT */
-                " [-clientId id] [-restore file]\n", ProgramName);
-        exit(1);
+        usage();
     }
 
     loc = setlocale(LC_ALL, "");
@@ -350,16 +380,11 @@ main(int argc, char *argv[])
 
     if (!(dpy = XtOpenDisplay(appContext, display_name, "twm", "twm",
                               NULL, 0, &zero, NULL))) {
-        fprintf(stderr, "%s:  unable to open display \"%s\"\n",
-                ProgramName, XDisplayName(display_name));
-        exit(1);
+        twmError("unable to open display \"%s\"", XDisplayName(display_name));
     }
 
     if (fcntl(ConnectionNumber(dpy), F_SETFD, 1) == -1) {
-        fprintf(stderr,
-                "%s:  unable to mark display connection as close-on-exec\n",
-                ProgramName);
-        exit(1);
+        twmError("unable to mark display connection as close-on-exec");
     }
 
     if (restore_filename)
@@ -396,10 +421,7 @@ main(int argc, char *argv[])
     /* for simplicity, always allocate NumScreens ScreenInfo struct pointers */
     ScreenList = calloc((size_t) NumScreens, sizeof(ScreenInfo *));
     if (ScreenList == NULL) {
-        fprintf(stderr,
-                "%s: Unable to allocate memory for screen list, exiting.\n",
-                ProgramName);
-        exit(1);
+        twmError("Unable to allocate memory for screen list, exiting");
     }
     numManaged = 0;
     PreviousScreen = DefaultScreen(dpy);
@@ -409,8 +431,7 @@ main(int argc, char *argv[])
         /* Ignore print screens to avoid that users accidentally warp on a
          * print screen (which are not visible on video displays) */
         if ((!NoPrintscreens) && IsPrintScreen(XScreenOfDisplay(dpy, scrnum))) {
-            fprintf(stderr, "%s:  skipping print screen %d\n",
-                    ProgramName, scrnum);
+            twmWarning("skipping print screen %d", scrnum);
             continue;
         }
 #endif                          /* XPRINT */
@@ -428,12 +449,13 @@ main(int argc, char *argv[])
         XSetErrorHandler(TwmErrorHandler);
 
         if (RedirectError) {
-            fprintf(stderr, "%s:  another window manager is already running.",
-                    ProgramName);
-            if (MultiScreen && NumScreens > 0)
-                fprintf(stderr, " on screen %d?\n", scrnum);
-            else
-                fprintf(stderr, "?\n");
+            if (MultiScreen && NumScreens > 0) {
+                twmWarning("another window manager is already running."
+                           " on screen %d?\n", scrnum);
+            }
+            else {
+                twmWarning("another window manager is already running.");
+            }
             continue;
         }
 
@@ -442,9 +464,9 @@ main(int argc, char *argv[])
         /* Note:  ScreenInfo struct is calloc'ed to initialize to zero. */
         Scr = ScreenList[scrnum] = calloc(1, sizeof(ScreenInfo));
         if (Scr == NULL) {
-            fprintf(stderr,
-                    "%s: unable to allocate memory for ScreenInfo structure for screen %d.\n",
-                    ProgramName, scrnum);
+            twmWarning
+                ("unable to allocate memory for ScreenInfo structure for screen %d.",
+                 scrnum);
             continue;
         }
 
@@ -575,7 +597,7 @@ main(int argc, char *argv[])
 
         /* Parse it once for each screen. */
         ParseTwmrc(InitFile);
-        assign_var_savecolor(); /* storeing pixels for twmrc "entities" */
+        assign_var_savecolor(); /* storing pixels for twmrc "entities" */
         if (Scr->SqueezeTitle == -1)
             Scr->SqueezeTitle = FALSE;
         if (!Scr->HaveFonts)
@@ -677,10 +699,11 @@ main(int argc, char *argv[])
     }                           /* for */
 
     if (numManaged == 0) {
-        if (MultiScreen && NumScreens > 0)
-            fprintf(stderr, "%s:  unable to find any unmanaged %sscreens.\n",
-                    ProgramName, NoPrintscreens ? "" : "video ");
-        exit(1);
+        if (MultiScreen && NumScreens > 0) {
+            twmError("unable to find any unmanaged %sscreens.\n",
+                     NoPrintscreens ? "" : "video ");
+        }
+        exit(EXIT_FAILURE);
     }
 
     (void) ConnectToSessionManager(client_id);
@@ -689,7 +712,7 @@ main(int argc, char *argv[])
     HandlingEvents = TRUE;
     InitEvents();
     HandleEvents();
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /**
@@ -860,11 +883,12 @@ void
 RestoreWithdrawnLocation(TwmWindow *tmp)
 {
     int gravx, gravy;
-    unsigned int bw, mask;
+    unsigned int bw;
     XWindowChanges xwc;
 
     if (XGetGeometry(dpy, tmp->w, &JunkRoot, &xwc.x, &xwc.y,
                      &JunkWidth, &JunkHeight, &bw, &JunkDepth)) {
+        unsigned mask;
 
         GetGravityOffsets(tmp, &gravx, &gravy);
         if (gravy < 0)
@@ -945,7 +969,7 @@ Done(XtPointer client_data _X_UNUSED, XtSignalId *si2 _X_UNUSED)
         Reborder(CurrentTime);
         XCloseDisplay(dpy);
     }
-    exit(0);
+    exit(EXIT_SUCCESS);
 }
 
 /*
@@ -963,7 +987,7 @@ TwmErrorHandler(Display *dpy2, XErrorEvent *event)
     LastErrorEvent = *event;
     ErrorOccurred = True;
 
-    if (PrintErrorMessages &&   /* don't be too obnoxious */
+    if ((message_level > 1) &&  /* don't be too obnoxious */
         event->error_code != BadWindow &&       /* watch for dead puppies */
         (event->request_code != X_GetGeometry &&        /* of all styles */
          event->error_code != BadDrawable))
@@ -978,4 +1002,59 @@ CatchRedirectError(Display *dpy2 _X_UNUSED, XErrorEvent *event)
     LastErrorEvent = *event;
     ErrorOccurred = True;
     return 0;
+}
+
+void
+twmError(const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    fprintf(stderr, "%s: error: ", ProgramName);
+    vfprintf(stderr, format, ap);
+    fputc('\n', stderr);
+    va_end(ap);
+    exit(EXIT_FAILURE);
+}
+
+void
+twmWarning(const char *format, ...)
+{
+    if (message_level > 0) {
+        va_list ap;
+
+        va_start(ap, format);
+        fprintf(stderr, "%s: warning: ", ProgramName);
+        vfprintf(stderr, format, ap);
+        fputc('\n', stderr);
+        va_end(ap);
+    }
+}
+
+void
+twmVerbose(const char *format, ...)
+{
+    if (message_level > 1) {
+        va_list ap;
+
+        va_start(ap, format);
+        fprintf(stderr, "%s: warning: ", ProgramName);
+        vfprintf(stderr, format, ap);
+        fputc('\n', stderr);
+        va_end(ap);
+    }
+}
+
+void
+twmMessage(const char *format, ...)
+{
+    va_list ap;
+
+    va_start(ap, format);
+    printf("%s: ", ProgramName);
+    vprintf(format, ap);
+    putc('\n', stdout);
+    va_end(ap);
+
+    fflush(stdout);
 }

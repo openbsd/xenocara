@@ -34,6 +34,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef ICONS_H
 #define ICONS_H
 
+#include "twm.h"
+
 typedef struct IconRegion {
     struct IconRegion *next;
     int x, y, w, h;

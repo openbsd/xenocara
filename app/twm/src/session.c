@@ -274,7 +274,7 @@ WriteWinConfigEntry(FILE *configFile, TwmWindow *theWindow,
                     char *clientId, char *windowRole)
 {
     char **wm_command;
-    int wm_command_count, i;
+    int wm_command_count;
 
     if (!write_counted_string(configFile, clientId))
         return 0;
@@ -311,6 +311,8 @@ WriteWinConfigEntry(FILE *configFile, TwmWindow *theWindow,
                 return 0;
         }
         else {
+            int i;
+
             if (!write_byte(configFile, (unsigned char) wm_command_count))
                 return 0;
             for (i = 0; i < wm_command_count; i++)
@@ -574,12 +576,14 @@ GetWindowConfig(TwmWindow *theWindow,
                          */
 
                         char **wm_command = NULL;
-                        int wm_command_count = 0, i;
+                        int wm_command_count = 0;
 
                         XGetCommand(dpy, theWindow->w,
                                     &wm_command, &wm_command_count);
 
                         if (wm_command_count == ptr->wm_command_count) {
+                            int i;
+
                             for (i = 0; i < wm_command_count; i++)
                                 if (strcmp(wm_command[i],
                                            ptr->wm_command[i]) != 0)

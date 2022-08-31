@@ -60,6 +60,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _UTIL_
 #define _UTIL_
 
+#include "twm.h"
+
 extern void MoveOutline(Window root, int x, int y, int width, int height,
                         int bw, int th);
 extern void Zoom(Window wf, Window wt);

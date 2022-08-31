@@ -1,4 +1,5 @@
 %{
+
 /*****************************************************************************/
 /*
 
@@ -56,12 +57,14 @@ in this Software without prior written authorization from The Open Group.
  *
  * .twmrc lex file
  *
- * 12-Nov-87 Thomas E. LaStrange		File created
+ * 12-Nov-87 Thomas E. LaStrange                File created
  *
  ***********************************************************************/
 /* $XFree86: xc/programs/twm/lex.l,v 3.13 2001/08/27 21:11:39 dawes Exp $ */
 
-/* #include <stdio.h> */		/* lex already includes stdio.h */
+#define YY_NO_INPUT	/* we have our own! */
+
+/* #include <stdio.h> */ /* lex already includes stdio.h */
 #include "twm.h"
 #include "gram.h"
 #include "list.h"
@@ -72,75 +75,81 @@ int yylineno;
 
 #undef YY_INPUT
 #define YY_INPUT(buf,result,size) ((result) = doinput((buf),(size)))
-static int doinput (char *buf, int size)
+static int
+doinput(char *buf, int size)
 {
-	int c;
+    int c;
 
-	if (size == 0)
-		return (0);
+    if (size == 0)
+        return (0);
 
-	if ((c = (*twmInputFunc)()) <= 0)
-		return (0);
+    if ((c = (*twmInputFunc) ()) <= 0)
+        return (0);
 
-	buf[0] = (char)c;
-	return (1);
+    buf[0] = (char) c;
+    if (c == '\n')
+        ++yylineno;
+    return (1);
 }
 #define YY_NO_UNPUT
 #endif
 
 %}
 
-string				\"([^"]|\\.)*\"
-number				[0-9]+
+string                          \"([^"]|\\.)*\"
+number                          [0-9]+
 %%
-"{"				{ return (LB); }
-"}"				{ return (RB); }
-"("				{ return (LP); }
-")"				{ return (RP); }
-"="				{ return (EQUALS); }
-":"				{ return (COLON); }
-"+"				{ return PLUS; }
-"-"				{ return MINUS; }
-"|"				{ return OR; }
+"{"                             { return (LB); }
+"}"                             { return (RB); }
+"("                             { return (LP); }
+")"                             { return (RP); }
+"="                             { return (EQUALS); }
+":"                             { return (COLON); }
+"+"                             { return PLUS; }
+"-"                             { return MINUS; }
+"|"                             { return OR; }
 
-[a-zA-Z\.]+			{ int token = parse_keyword ((char *)yytext,
-							     &yylval.num);
-				  if (token == ERRORTOKEN) {
-				      twmrc_error_prefix();
-				      fprintf (stderr,
-				       "ignoring unknown keyword:  %s\n",
-					       yytext);
-				      ParseError = 1;
-				  } else
-				    return token;
-				}
+[a-zA-Z\.]+                     { int token = parse_keyword ((char *)yytext,
+                                                             &yylval.num);
+                                  if (token == ERRORTOKEN) {
+                                      parseWarning (
+                                           "ignoring unknown keyword: %s",
+                                           yytext);
+                                      ParseError = 1;
+                                  } else
+                                    return token;
+                                }
 
-"!"				{ yylval.num = F_EXEC; return FSKEYWORD; }
-"^"				{ yylval.num = F_CUT; return FSKEYWORD; }
+"!"                             { yylval.num = F_EXEC; return FSKEYWORD; }
+"^"                             { yylval.num = F_CUT; return FSKEYWORD; }
 
-{string}			{ yylval.ptr = (char *)yytext; return STRING; }
-{number}			{ (void)sscanf((char *)yytext, "%d", &yylval.num);
-				  return (NUMBER);
-				}
-\#[^\n]*\n			{;}
-[\r\n\t ]			{;}
-.				{
-				  twmrc_error_prefix();
-				  fprintf (stderr,
-					   "ignoring character \"%s\"\n",
-					   yytext);
-				  ParseError = 1;
-				}
+{string}                        { yylval.ptr = (char *)yytext; return STRING; }
+{number}                        { (void)sscanf((char *)yytext, "%d", &yylval.num);
+                                  return (NUMBER);
+                                }
+\#[^\n]*\n                      {;}
+[\r\n\t ]                       {;}
+.                               {
+                                  parseWarning (
+                                       "ignoring character \"%s\"",
+                                       yytext);
+                                  ParseError = 1;
+                                }
 %%
+
 #ifndef yywrap
-int yywrap() { return(1);}
+int
+yywrap()
+{
+    return (1);
+}
 #endif
 
 #undef unput
 #undef input
 #undef output
 #undef feof
-#define unput(c)	twmUnput(c)
-#define input()		(*twmInputFunc)()
-#define output(c)	TwmOutput(c)
-#define feof()		(1)
+#define unput(c)        twmUnput(c)
+#define input()         (*twmInputFunc)()
+#define output(c)       TwmOutput(c)
+#define feof()          (1)

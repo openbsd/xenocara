@@ -58,14 +58,17 @@ in this Software without prior written authorization from The Open Group.
  ***********************************************************************/
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <X11/Xos.h>
 #include <X11/Xmu/CharSet.h>
+
 #include "twm.h"
 #include "screen.h"
 #include "menus.h"
 #include "util.h"
 #include "gram.h"
 #include "parse.h"
+
 #include <X11/Xatom.h>
 #include <X11/extensions/sync.h>
 
@@ -82,8 +85,6 @@ static unsigned char overflowbuff[20];  /* really only need one */
 static int overflowlen;
 static unsigned char **stringListSource, *currentString;
 
-static int doparse(int (*ifunc) (void), const char *srctypename,
-                   const char *srcname);
 static int twmFileInput(void);
 static int twmStringListInput(void);
 static int ParseUsePPosition(char *s);
@@ -94,6 +95,9 @@ extern int yylineno;
 int ConstrainedMoveTime = 400;  /* milliseconds, event times */
 
 int (*twmInputFunc) (void);
+
+static const char *twmInputFile;
+static const char *twmInputType;
 
 /**
  * parse the .twmrc file
@@ -108,6 +112,8 @@ doparse(int (*ifunc) (void), const char *srctypename, const char *srcname)
     yylineno = 1;
     ParseError = FALSE;
     twmInputFunc = ifunc;
+    twmInputFile = srcname;
+    twmInputType = srctypename;
     overflowlen = 0;
 
     yyparse();
@@ -146,11 +152,12 @@ doparse(int (*ifunc) (void), const char *srctypename, const char *srcname)
                        &Scr->PointerForeground, &Scr->PointerBackground);
     }
     if (ParseError) {
-        fprintf(stderr, "%s:  errors found in twm %s",
-                ProgramName, srctypename);
-        if (srcname)
-            fprintf(stderr, " \"%s\"", srcname);
-        fprintf(stderr, "\n");
+        if (srcname) {
+            twmWarning("errors found in twm %s \"%s\"", srctypename, srcname);
+        }
+        else {
+            twmWarning("errors found in twm %s", srctypename);
+        }
     }
     return (ParseError ? 0 : 1);
 }
@@ -206,9 +213,8 @@ ParseTwmrc(char *filename)
         int status;
 
         if (filename && cp != filename) {
-            fprintf(stderr,
-                    "%s:  unable to open twmrc file %s, using %s instead\n",
-                    ProgramName, filename, cp);
+            twmWarning("unable to open twmrc file %s, using %s instead",
+                       filename, cp);
         }
         status = doparse(twmFileInput, "file", cp);
         fclose(twmrc);
@@ -216,9 +222,8 @@ ParseTwmrc(char *filename)
     }
     else {
         if (filename) {
-            fprintf(stderr,
-                    "%s:  unable to open twmrc file %s, using built-in defaults instead\n",
-                    ProgramName, filename);
+            twmWarning("unable to open twmrc file %s,"
+                       " using built-in defaults instead", filename);
         }
         return ParseStringList(defTwmrc);
     }
@@ -285,8 +290,7 @@ twmUnput(int c)
         overflowbuff[overflowlen++] = (unsigned char) c;
     }
     else {
-        twmrc_error_prefix();
-        fprintf(stderr, "unable to unput character (%d)\n", c);
+        parseWarning("unable to unput character (%d)", c);
     }
 }
 
@@ -749,9 +753,7 @@ do_string_keyword(int keyword, char *s)
         int ppos = ParseUsePPosition(s);
 
         if (ppos < 0) {
-            twmrc_error_prefix();
-            fprintf(stderr,
-                    "ignoring invalid UsePPosition argument \"%s\"\n", s);
+            parseWarning("ignoring invalid UsePPosition argument \"%s\"", s);
         }
         else {
             Scr->UsePPosition = (short) ppos;
@@ -800,13 +802,11 @@ do_string_keyword(int keyword, char *s)
                                       &JunkHeight);
         if ((JunkMask & (WidthValue | HeightValue)) !=
             (WidthValue | HeightValue)) {
-            twmrc_error_prefix();
-            fprintf(stderr, "bad MaxWindowSize \"%s\"\n", s);
+            parseWarning("bad MaxWindowSize \"%s\"", s);
             return 0;
         }
         if (JunkWidth <= 0 || JunkHeight <= 0) {
-            twmrc_error_prefix();
-            fprintf(stderr, "MaxWindowSize \"%s\" must be positive\n", s);
+            parseWarning("MaxWindowSize \"%s\" must be positive", s);
             return 0;
         }
         Scr->MaxWindowWidth = (int) JunkWidth;
@@ -983,19 +983,20 @@ do_color_keyword(int keyword, int colormode, char *s)
 static void
 put_pixel_on_root(Pixel pixel)
 {
-    int i, addPixel = 1;
+    int addPixel = 1;
     Atom pixelAtom, retAtom;
     int retFormat;
     unsigned long nPixels, retAfter;
     unsigned char *retProp;
-    Pixel *pixelProp;
 
     pixelAtom = XInternAtom(dpy, "_MIT_PRIORITY_COLORS", True);
     if (XGetWindowProperty(dpy, Scr->Root, pixelAtom, 0, 8192,
                            False, XA_CARDINAL, &retAtom,
                            &retFormat, &nPixels, &retAfter,
                            &retProp) == Success) {
-        pixelProp = (Pixel *) retProp;
+        int i;
+        Pixel *pixelProp = (Pixel *) retProp;
+
         for (i = 0; (unsigned long) i < nPixels; i++)
             if (pixel == pixelProp[i])
                 addPixel = 0;
@@ -1134,20 +1135,16 @@ do_squeeze_entry(name_list ** list, char *name, int justify, int num, int denom)
     int absnum = (num < 0 ? -num : num);
 
     if (denom < 0) {
-        twmrc_error_prefix();
-        fprintf(stderr, "negative SqueezeTitle denominator %d\n", denom);
+        parseWarning("negative SqueezeTitle denominator %d", denom);
         return;
     }
     if (absnum > denom && denom != 0) {
-        twmrc_error_prefix();
-        fprintf(stderr, "SqueezeTitle fraction %d/%d outside window\n",
-                num, denom);
+        parseWarning("SqueezeTitle fraction %d/%d outside window", num, denom);
         return;
     }
     if (denom == 1) {
-        twmrc_error_prefix();
-        fprintf(stderr, "useless SqueezeTitle faction %d/%d, assuming 0/0\n",
-                num, denom);
+        parseWarning("useless SqueezeTitle faction %d/%d, assuming 0/0",
+                     num, denom);
         num = 0;
         denom = 0;
     }
@@ -1158,14 +1155,33 @@ do_squeeze_entry(name_list ** list, char *name, int justify, int num, int denom)
         sinfo = malloc(sizeof(SqueezeInfo));
 
         if (!sinfo) {
-            twmrc_error_prefix();
-            fprintf(stderr, "unable to allocate %ld bytes for squeeze info\n",
-                    (unsigned long) sizeof(SqueezeInfo));
+            parseWarning("unable to allocate %lu bytes for squeeze info",
+                         (unsigned long) sizeof(SqueezeInfo));
             return;
         }
         sinfo->justify = justify;
         sinfo->num = num;
         sinfo->denom = denom;
         AddToList(list, name, (char *) sinfo);
+    }
+}
+
+void
+parseWarning(const char *format, ...)
+{
+    if (message_level > 0) {
+        va_list ap;
+
+        va_start(ap, format);
+        if (twmInputFile != NULL) {
+            fprintf(stderr, "%s: line %d: ", twmInputFile, yylineno);
+        }
+        else {
+            fprintf(stderr, "%s[%s]: line %d: ", ProgramName, twmInputType,
+                    yylineno);
+        }
+        vfprintf(stderr, format, ap);
+        fputc('\n', stderr);
+        va_end(ap);
     }
 }

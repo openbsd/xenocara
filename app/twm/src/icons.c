@@ -25,7 +25,7 @@ in this Software without prior written authorization from The Open Group.
 
 /**********************************************************************
  *
- * Icon releated routines
+ * Icon related routines
  *
  * 10-Apr-89 Tom LaStrange        Initial Version.
  *
@@ -323,10 +323,11 @@ FreeIconEntries(IconRegion *ir)
 void
 FreeIconRegions(void)
 {
-    IconRegion *ir, *tmp;
+    IconRegion *ir;
 
     for (ir = Scr->FirstRegion; ir != NULL;) {
-        tmp = ir;
+        IconRegion *tmp = ir;
+
         FreeIconEntries(ir);
         ir = ir->next;
         free(tmp);
@@ -344,7 +345,6 @@ CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y)
     XSetWindowAttributes attributes;    /* attributes for create windows */
     Pixmap pm = None;           /* tmp pixmap variable */
     int final_x, final_y;
-    int x;
 
     FB(tmp_win->iconc.fore, tmp_win->iconc.back);
 
@@ -536,6 +536,7 @@ CreateIconWindow(TwmWindow *tmp_win, int def_x, int def_y)
     if (pm != None &&
         (!(tmp_win->wmhints && tmp_win->wmhints->flags & IconWindowHint))) {
         int y;
+        int x;
 
         y = 0;
         if (tmp_win->icon_w_width == tmp_win->icon_width)

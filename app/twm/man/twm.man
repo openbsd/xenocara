@@ -43,8 +43,7 @@
 .SH NAME
 twm \- Tab Window Manager for the X Window System
 .SH SYNTAX
-\fBtwm \fP[ \fB\-display\fP \fIdpy\fP ] [ \fB\-s\fP ]
-[ \fB\-f\fP \fIinitfile\fP ] [ \fB\-v\fP ]
+\fBtwm \fP[ \fIoptions\fP ]
 .SH DESCRIPTION
 \fITwm\fP is a window manager for the X Window System.
 It provides
@@ -56,8 +55,8 @@ key and pointer button bindings.
 This program is usually started by the user's session manager or
 startup script.
 When used
-from \fIxdm(__appmansuffix__)\fP
-or \fIxinit(__appmansuffix__)\fP without a session manager,
+from \fBxdm\fP(__appmansuffix__)
+or \fBxinit\fP(__appmansuffix__) without a session manager,
 \fItwm\fP is frequently executed in the foreground
 as the last client.
 When run this way, exiting \fItwm\fP causes the
@@ -92,7 +91,7 @@ Just
 clicking in the title or highlight region raises the window without moving it.
 .PP
 When new windows are created, \fItwm\fP will honor any size and location
-information requested by the user (usually through \fI-geometry\fP
+information requested by the user (usually through \fI\-geometry\fP
 command line argument or resources for the individual applications).
 Otherwise, an outline of the window's default size, its titlebar, and lines
 dividing the
@@ -108,46 +107,74 @@ Clicking pointer Button3 (usually the right pointer button)
 will give the window its current position but attempt to make it long enough
 to touch the bottom the screen.
 .SH OPTIONS
-\fITwm\fP accepts the following command line options:
-.PP
+\fITwm\fP accepts several command line options,
+which may be abbreviated, e.g.,
+\*(``\fB\-d\fP\*('' for
+\*(``\fB\-display\fP\*(''
+(but upper/lower-case are different):
+.TP 8
+.B \-clientId \fIID\fP
+Each time \fItwm\fP starts, it calls
+\fBSmcOpenConnection\fP
+to establish a new session.
+It can be told to restart from a previous session by giving the previous
+session's client-identifier.
 .TP 8
 .B \-display \fIdpy\fP
-This option specifies the X server to use.
+Specify the X server to use.
 .TP 8
-.B \-s
-This option indicates that only the default screen (as specified by
+.B \-file \fIfilename\fP
+Specify the name of the startup file to use.
+By default,
+\fItwm\fP will look in the user's home directory for files
+named \fI.twmrc.num\fP (where \fInum\fP is a screen number) or \fI.twmrc\fP.
+.TP 8
+.B \-quiet
+Tells \fItwm\fP that it should not print error messages when
+it receives unexpected X Error events.
+.IP
+Besides X Error events, \fItwm\fP also reports its own warnings.
+The \fB\-quiet\fP option suppresses those.
+.TP 8
+.B \-restore \fIfilename\fP
+When \fItwm\fP's session is stopped, it attempts to save the current
+window configuration.
+Use this option to tell \fItwm\fP to read this file for that information
+when starting (or restarting) a session.
+.TP 8
+.B \-single
+Tells \fItwm\fP that only the default screen (as specified by
 \fB\-display\fP or by the \fBDISPLAY\fP environment variable) should be
 managed.
 By default, \fItwm\fP will attempt to manage
 all screens on the display.
 .TP 8
-.B \-f \fIfilename\fP
-This option specifies the name of the startup file to use.
-By default,
-\fItwm\fP will look in the user's home directory for files
-named \fI.twmrc.num\fP (where \fInum\fP is a screen number) or \fI.twmrc\fP.
-.TP 8
-.B \-v
-This option indicates that \fItwm\fP should print error messages whenever
-an unexpected X Error event is received.
+.B \-verbose
+Tells \fItwm\fP that it should print error messages whenever
+it receives an unexpected X Error event.
 This can be useful when debugging
 applications but can be distracting in regular use.
+.IP
+The \fB\-verbose\fP and \fB\-quiet\fP options increment and decrement
+the message level, cancelling each other.
+.TP 8
+.B \-V
+Tell \fItwm\fP to print its version to the standard output, and exit.
 .SH CUSTOMIZATION
-.PP
 Much of \fItwm\fP's appearance and behavior can be controlled by providing
 a startup file in one of the following locations (searched in order for
 each screen being managed when \fItwm\fP begins):
 .TP 8
-.B "$HOME/.twmrc.\fIscreennumber\fP"
-The \fIscreennumber\fP is a small positive number (e.g.
-0, 1, etc.)
-representing the screen number (e.g., the last number in the DISPLAY environment
+.B $HOME/.twmrc.\fIscreennumber\fP
+The \fIscreennumber\fP is a small positive number (e.g., 0, 1, etc.)
+representing the screen number
+(e.g., the last number in the DISPLAY environment
 variable \fIhost:displaynum.screennum\fP) that would be used to contact that
 screen of the display.
 This is intended for displays with multiple screens of
 differing visual types.
 .TP 8
-.B "$HOME/.twmrc"
+.B $HOME/.twmrc
 This is the usual name for an individual user's startup file.
 .TP 8
 .B __datadir__/X11/twm/system.twmrc
@@ -161,11 +188,11 @@ If no startup files are found, \fItwm\fP will use the built-in defaults
 described above.
 The only resource used by \fItwm\fP is
 \fIbitmapFilePath\fP for a colon-separated list of directories to search
-when looking for bitmap files (for more information, see the \fIAthena
-Widgets\fP manual and \fIxrdb(__appmansuffix__)\fP).
+when looking for bitmap files (for more information,
+see the \fIAthena Widgets\fP manual and \fBxrdb\fP(__appmansuffix__)).
 .PP
 \fITwm\fP startup files are logically broken up into three types of
-specifications:  \fIVariables\fP, \fIBindings\fP, \fIMenus\fP.
+specifications: \fIVariables\fP, \fIBindings\fP, \fIMenus\fP.
 The
 \fIVariables\fP section must come first and is used to describe the
 fonts, colors, cursors, border widths, icon and window placement, highlighting,
@@ -185,7 +212,6 @@ A pound sign (#) outside
 of a string causes the remainder of the line in which the character appears to
 be treated as a comment.
 .SH VARIABLES
-.PP
 Many of the aspects of \fItwm\fP's user interface are controlled by variables
 that may be set in the user's startup file.
 Some of the options are
@@ -227,7 +253,7 @@ prepend the user's directory
 tilde (~).
 If, instead, the first character is a colon (:), the name is
 assumed to refer to one of the internal bitmaps that are used to
-create the default titlebars symbols:  \fB:xlogo\fP
+create the default titlebars symbols: \fB:xlogo\fP
 or \fB:delete\fP (both refer to the X logo),
 \fB:dot\fP or \fB:iconify\fP (both refer to the dot),
 \fB:resize\fP (the nested squares used by the resize button),
@@ -290,7 +316,7 @@ and may only be given within a
 \fBGrayscale\fP or
 \fBMonochrome\fP list.
 The optional \fIwincolorlist\fP allows per-window colors to be specified.
-The default  is "white".
+The default is "white".
 .IP "\fBBorderTileForeground\fP \fIstring\fP [{ \fIwincolorlist\fP }]" 8
 This variable specifies the default foreground color in the gray pattern
 used in unhighlighted borders (only
@@ -395,7 +421,7 @@ from bitmap files, the following syntax is used instead:
 .Ee
 .IP
 The \fIimage\fP and \fImask\fP strings specify the names of files containing
-the glyph image and mask in \fIbitmap(__appmansuffix__)\fP form.
+the glyph image and mask in \fBbitmap\fP(__appmansuffix__) form.
 The bitmap files are located in the same manner as icon bitmap files.
 The following example shows the default cursor definitions:
 .RS 5
@@ -439,7 +465,7 @@ as icons while other windows are handled by the icon manager.
 This variable indicates that windows should not be allowed to be moved off the
 screen.
 It can be overridden by the \fBf.forcemove\fP function.
-.IP "\fBDontSqueezeTitle\fP [{ \fIwin-list\fP }] " 8
+.IP "\fBDontSqueezeTitle\fP [{ \fIwin-list\fP }]" 8
 This variable indicates that titlebars should not be squeezed to their
 minimum size as described under \fBSqueezeTitle\fP below.
 If the optional window list is supplied, only those windows will be
@@ -483,7 +509,7 @@ icon windows.
 The default is 2.
 .IP "\fBIconDirectory\fP \fIstring\fP" 8
 This variable specifies the directory that should be searched if
-if a bitmap file cannot be found in any of the directories
+a bitmap file cannot be found in any of the directories
 in the \fBbitmapFilePath\fP resource.
 .IP "\fBIconFont\fP \fIstring\fP" 8
 This variable specifies the font to be used to display icon names within
@@ -782,7 +808,7 @@ If the optional \fIwin-list\fP is given, only requests on
 those windows will be ignored.
 This is typically used to prevent applications
 from relentlessly popping themselves to the front of the window stack.
-.IP "\fBNoTitle\fP [{ \fIwin-list\fP }] " 8
+.IP "\fBNoTitle\fP [{ \fIwin-list\fP }]" 8
 This variable indicates that windows should not have titlebars.
 If the
 optional \fIwin-list\fP is given, only those windows will not have titlebars.
@@ -888,7 +914,7 @@ It can always be brought up using the
 This variable indicates that entries in the icon manager should be
 sorted alphabetically rather than by simply appending new windows to
 the end.
-.IP "\fBSqueezeTitle\fP [{ \fIsqueeze-list\fP }] " 8
+.IP "\fBSqueezeTitle\fP [{ \fIsqueeze-list\fP }]" 8
 This variable indicates that \fItwm\fP should attempt to use the SHAPE
 extension to make titlebars occupy only as much screen space as they need,
 rather than extending all the way across the top of the window.
@@ -909,7 +935,7 @@ the numerator is positive, and right to left if negative.
 A denominator
 of 0 indicates that the numerator should be measured in pixels.
 For
-convenience, the ratio 0/0 is the same as 1/2 for \fBcenter\fP and -1/1
+convenience, the ratio 0/0 is the same as 1/2 for \fBcenter\fP and \-1/1
 for \fBright\fP.
 For example:
 .RS 5
@@ -927,13 +953,13 @@ For example:
 .IP
 The \fBDontSqueezeTitle\fP list can be used to turn off squeezing on
 certain titles.
-.IP "\fBStartIconified\fP [{ \fIwin-list\fP }] " 8
+.IP "\fBStartIconified\fP [{ \fIwin-list\fP }]" 8
 This variable indicates that client windows should initially be left as
 icons until explicitly deiconified by the user.
 If the optional \fIwin-list\fP
 is given, only those windows will be started iconic.
 This is useful for
-programs that do not support an \fI-iconic\fP command line option or
+programs that do not support an \fI\-iconic\fP command line option or
 resource.
 .IP "\fBTitleBackground\fP \fIstring\fP [{ \fIwin-list\fP }]" 8
 This variable specifies the background color used in titlebars,
@@ -973,7 +999,7 @@ in the \fBIcons\fP list.
 This variable specifies whether or not \fItwm\fP should honor
 program-requested locations (given by the \fBPPosition\fP flag in the
 WM_NORMAL_HINTS property) in the absence of a user-specified position.
-The argument \fIstring\fP may have one of three values:  \fB"off"\fP
+The argument \fIstring\fP may have one of three values: \fB"off"\fP
 (the default)
 indicating that \fItwm\fP
 should ignore the program-supplied position,
@@ -1003,7 +1029,7 @@ This variable specifies the value to use when drawing window outlines for
 moving and resizing.
 This should be set to a value that will result in a
 variety of
-of distinguishable colors when exclusive-or'ed with the contents of the
+distinguishable colors when exclusive-or'ed with the contents of the
 user's typical screen.
 Setting this variable to 1 often gives nice results
 if adjacent colors in the default colormap are distinct.
@@ -1032,7 +1058,6 @@ from the \fBTwmWindows\fP menu.
 If this variable is not set, the window
 will be deiconified and raised.
 .SH BINDINGS
-.PP
 After the desired variables have been set, functions may be attached
 titlebuttons and key and pointer buttons.
 Titlebuttons may be added
@@ -1054,7 +1079,7 @@ or
 \fBRightTitleButton\fP "\fIbitmapname\fP" = \fIfunction\fP
 .Ee
 .LP
-The \fIbitmapname\fP may refer to one of the  built-in bitmaps
+The \fIbitmapname\fP may refer to one of the built-in bitmaps
 (which are scaled to match \fBTitleFont\fP) by using the appropriate
 colon-prefixed name described above.
 .PP
@@ -1202,7 +1227,7 @@ WM_DELETE_WINDOW messages, the keyboard bell will be rung indicating that
 the user should choose an alternative method.
 Note this is very different
 from \fBf.destroy\fP.
-The intent here is to delete a single window,  not
+The intent here is to delete a single window, not
 necessarily the entire application.
 .IP "\fBf.deltastop\fP" 8
 This function allows a user-defined function to be aborted if the pointer has
@@ -1216,7 +1241,7 @@ This should only be used as a last
 resort for shutting down runaway clients.
 See also \fBf.delete\fP.
 .IP "\fBf.downiconmgr\fI" 8
-This function warps the pointer to the next row in the current icon manger,
+This function warps the pointer to the next row in the current icon manager,
 wrapping to the beginning of the next column if necessary.
 .IP "\fBf.exec\fP \fIstring\fP" 8
 This function passes the argument \fIstring\fP to /bin/sh for execution.
@@ -1408,7 +1433,6 @@ selected window is refreshed.
 This function is similar to the \fBf.fullzoom\fP function, except that
 the only the height of the selected window is changed.
 .SH MENUS
-.PP
 Functions may be grouped and interactively selected using pop-up
 (when bound to a pointer button) or pull-down (when associated
 with a titlebutton) menus.
@@ -1469,7 +1493,7 @@ left of the name when the window is iconified.
 By default, clicking on an
 entry in the icon manager performs \fBf.iconify\fP.
 To change the actions taken in the icon manager, use the
-the \fBiconmgr\fP context when specifying button and keyboard bindings.
+\fBiconmgr\fP context when specifying button and keyboard bindings.
 .PP
 Moving the pointer into the icon manager also directs keyboard focus to
 the indicated window (setting the focus explicitly or else sending synthetic
@@ -1492,7 +1516,6 @@ If \fBIconifyByUnmapping\fP is on and windows are listed in
 they may be lost if they are iconified and no bindings to
 \fBf.menu "TwmWindows"\fP or \fBf.warpto\fP are setup.
 .SH FILES
-.PP
 .nf
 .I $HOME/.twmrc.<screen number>
 .I $HOME/.twmrc
@@ -1508,10 +1531,10 @@ This variable is used as the prefix for files that begin with a tilde and
 for locating the \fItwm\fP startup file.
 .SH "SEE ALSO"
 .PP
-X(__miscmansuffix__),
-Xserver(__appmansuffix__),
-xdm(__appmansuffix__),
-xrdb(__appmansuffix__)
+\fBX\fP(__miscmansuffix__),
+\fBXserver\fP(__appmansuffix__),
+\fBxdm\fP(__appmansuffix__),
+\fBxrdb\fP(__appmansuffix__)
 .SH AUTHORS
 Tom LaStrange, Solbourne Computer; Jim Fulton, MIT X Consortium;
 Steve Pitschke, Stardent Computer; Keith Packard, MIT X Consortium;

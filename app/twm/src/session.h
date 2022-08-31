@@ -25,6 +25,9 @@
  */
 #ifndef _SESSION_H
 #define _SESSION_H
+
+#include "twm.h"
+
 #include <X11/SM/SMlib.h>
 
 extern void ConnectToSessionManager(char *previous_id);

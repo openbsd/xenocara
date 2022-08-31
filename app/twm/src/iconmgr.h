@@ -34,6 +34,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _ICONMGR_
 #define _ICONMGR_
 
+#include "twm.h"
+
 typedef struct WList {
     struct WList *next;
     struct WList *prev;

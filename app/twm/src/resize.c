@@ -608,7 +608,7 @@ ConstrainSize(TwmWindow *tmp_win, int *widthp, int *heightp)
 #define makemult(a,b) ((b==1) ? (a) : (((int)((a)/(b))) * (b)) )
 #define _min(a,b) (((a) < (b)) ? (a) : (b))
 
-    int minWidth, minHeight, maxWidth, maxHeight, xinc, yinc, delta;
+    int minWidth, minHeight, maxWidth, maxHeight, xinc, yinc;
     int baseWidth, baseHeight;
     int dwidth = *widthp, dheight = *heightp;
 
@@ -694,6 +694,8 @@ ConstrainSize(TwmWindow *tmp_win, int *widthp, int *heightp)
      */
 
     if (tmp_win->hints.flags & PAspect) {
+        int delta;
+
         if (minAspectX * dheight > minAspectY * dwidth) {
             delta = makemult(minAspectX * dheight / minAspectY - dwidth, xinc);
             if (dwidth + delta <= maxWidth)
@@ -914,7 +916,6 @@ fullzoom(TwmWindow *tmp_win, int flag)
     Window junkRoot;
     unsigned int junkbw, junkDepth;
     int basex, basey;
-    int frame_bw_times_2;
 
     XGetGeometry(dpy, (Drawable) tmp_win->frame, &junkRoot,
                  &dragx, &dragy, (unsigned int *) &dragWidth,
@@ -931,6 +932,8 @@ fullzoom(TwmWindow *tmp_win, int flag)
         tmp_win->zoomed = ZOOM_NONE;
     }
     else {
+        int frame_bw_times_2;
+
         if (tmp_win->zoomed == ZOOM_NONE) {
             tmp_win->save_frame_x = dragx;
             tmp_win->save_frame_y = dragy;
@@ -1120,7 +1123,7 @@ SetFrameShape(TwmWindow *tmp)
  *
  * Dimensions and Positions:
  *
- *     frame orgin                 (0, 0)
+ *     frame origin                (0, 0)
  *     frame upper left border     (-tmp->frame_bw, -tmp->frame_bw)
  *     frame size w/o border       tmp->frame_width , tmp->frame_height
  *     frame/title border width    tmp->frame_bw

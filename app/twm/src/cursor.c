@@ -133,15 +133,13 @@ NewFontCursor(Cursor *cp, const char *str)
          i++) {
         if (strcmp(str, cursor_names[i].name) == 0) {
             if (cursor_names[i].cursor == None)
-                cursor_names[i].cursor = XCreateFontCursor(dpy,
-                                                           cursor_names[i].
-                                                           shape);
+                cursor_names[i].cursor =
+                    XCreateFontCursor(dpy, cursor_names[i].shape);
             *cp = cursor_names[i].cursor;
             return;
         }
     }
-    fprintf(stderr, "%s:  unable to find font cursor \"%s\"\n",
-            ProgramName, str);
+    twmWarning("unable to find font cursor \"%s\"", str);
 }
 
 void
@@ -164,9 +162,8 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask)
     XGetGeometry(dpy, spm, &JunkRoot, &sx, &sy, &sw, &sh, &JunkBW, &JunkDepth);
     XGetGeometry(dpy, mpm, &JunkRoot, &mx, &my, &mw, &mh, &JunkBW, &JunkDepth);
     if (sw != mw || sh != mh) {
-        fprintf(stderr,
-                "%s:  cursor bitmaps \"%s\" and \"%s\" not the same size\n",
-                ProgramName, source, mask);
+        twmWarning("cursor bitmaps \"%s\" and \"%s\" not the same size\n",
+                   source, mask);
         return;
     }
     *cp = XCreatePixmapCursor(dpy, spm, mpm, &Scr->PointerForeground,

@@ -92,9 +92,8 @@ AddToList(name_list ** list_head, char *name, char *ptr)
 
     nptr = malloc(sizeof(name_list));
     if (nptr == NULL) {
-        twmrc_error_prefix();
-        fprintf(stderr, "unable to allocate %ld bytes for name_list\n",
-                (unsigned long) sizeof(name_list));
+        parseWarning("unable to allocate %lu bytes for name_list",
+                     (unsigned long) sizeof(name_list));
         Done(NULL, NULL);
     }
 

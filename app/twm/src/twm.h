@@ -55,11 +55,12 @@ from The Open Group.
  * twm include file
  *
  * 28-Oct-87 Thomas E. LaStrange        File created
- * 10-Oct-90 David M. Sternlicht        Storeing saved colors on root
+ * 10-Oct-90 David M. Sternlicht        Storing saved colors on root
  ***********************************************************************/
 
 #ifndef _TWM_
 #define _TWM_
+/* *INDENT-OFF* */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -72,6 +73,18 @@ from The Open Group.
 #include <X11/Xfuncs.h>
 #include <X11/StringDefs.h>
 #include <X11/Intrinsic.h>
+
+#ifndef GCC_PRINTFLIKE
+#if defined(GCC_PRINTF) && !defined(printf)
+#define GCC_PRINTFLIKE(fmt,var) __attribute__((format(printf,fmt,var)))
+#else
+#define GCC_PRINTFLIKE(fmt,var) /*nothing*/
+#endif
+#endif
+
+#ifndef GCC_NORETURN
+#define GCC_NORETURN _X_NORETURN
+#endif
 
 #ifndef WithdrawnState
 #define WithdrawnState 0
@@ -93,7 +106,7 @@ typedef void (*SigProc) (int);  /* type of function returned by signal() */
 
 #define MAX_BUTTONS     16      /* max mouse buttons supported */
 
-/* info stings defines */
+/* info strings defines */
 #define INFO_LINES 30
 #define INFO_SIZE 200
 
@@ -152,7 +165,7 @@ typedef struct ColorPair {
 
 typedef struct _TitleButton {
     struct _TitleButton *next;  /* next link in chain */
-    const char *name;           /* bitmap name in case of deferal */
+    const char *name;           /* bitmap name in case of deferral */
     Pixmap bitmap;              /* image to display in button */
     int srcx, srcy;             /* from where to start copying */
     unsigned int width, height; /* size of pixmap */
@@ -231,7 +244,7 @@ typedef struct TwmWindow {
     int title_x;
     int title_y;
     int icon_x;                 /* icon text x coordinate */
-    int icon_y;                 /* icon text y coordiante */
+    int icon_y;                 /* icon text y coordinate */
     int icon_w_width;           /* width of the icon window */
     int icon_w_height;          /* height of the icon window */
     int icon_width;             /* width of the icon bitmap */
@@ -335,8 +348,7 @@ extern void CreateFonts(void);
 extern void RestoreWithdrawnLocation(TwmWindow *tmp);
 extern void Reborder(Time time);
 extern void
-Done(XtPointer, XtSignalId *)
-    _X_NORETURN;
+Done(XtPointer, XtSignalId *) _X_NORETURN;
 extern void
 ComputeCommonTitleOffsets(void);
 extern void
@@ -392,6 +404,11 @@ NewBitmapCursor(Cursor *cp, char *source, char *mask);
 extern Pixmap
 CreateMenuIcon(int height, unsigned int *widthp, unsigned int *heightp);
 
+extern void twmError(const char *, ...) GCC_PRINTFLIKE(1,2) GCC_NORETURN;
+extern void twmWarning(const char *, ...) GCC_PRINTFLIKE(1,2);
+extern void twmVerbose(const char *, ...) GCC_PRINTFLIKE(1,2);
+extern void twmMessage(const char *, ...) GCC_PRINTFLIKE(1,2);
+
 extern Bool ErrorOccurred;
 extern XErrorEvent LastErrorEvent;
 
@@ -401,16 +418,16 @@ extern Bool RestartPreviousState;
 extern Bool
 GetWMState(Window w, int *statep, Window *iwp);
 
-extern void
-twmrc_error_prefix(void);
-
 extern int
 yyparse(void);
 extern int
 yylex(void);
 
+extern void parseWarning(const char *, ...) GCC_PRINTFLIKE(1,2);
+
 extern Atom TwmAtoms[];
 
+extern int message_level;
 extern Bool use_fontset;
 
 extern int ShapeEventBase;
@@ -433,4 +450,5 @@ extern int XrandrErrorBase;
 #define _XA_WM_CLIENT_LEADER            TwmAtoms[9]
 #define _XA_WM_WINDOW_ROLE              TwmAtoms[10]
 
+/* *INDENT-ON* */
 #endif                          /* _TWM_ */

@@ -133,7 +133,7 @@ void
 InitMenus(void)
 {
     int i, j, k;
-    FuncKey *key, *tmp;
+    FuncKey *key;
 
     for (i = 0; i < MAX_BUTTONS + 1; i++)
         for (j = 0; j < NUM_CONTEXTS; j++)
@@ -147,8 +147,9 @@ InitMenus(void)
 
     if (FirstScreen) {
         for (key = Scr->FuncKeyRoot.next; key != NULL;) {
+            FuncKey *tmp = key;
+
             free(key->name);
-            tmp = key;
             key = key->next;
             free(tmp);
         }
@@ -215,9 +216,8 @@ CreateTitleButton(const char *name, int func, const char *action,
     TitleButton *tb = malloc(sizeof(TitleButton));
 
     if (!tb) {
-        fprintf(stderr,
-                "%s:  unable to allocate %ld bytes for title button\n",
-                ProgramName, (unsigned long) sizeof(TitleButton));
+        twmWarning("unable to allocate %lu bytes for title button",
+                   (unsigned long) sizeof(TitleButton));
         return 0;
     }
 
@@ -306,11 +306,11 @@ InitTitlebarButtons(void)
         /* insert extra buttons */
         if (!CreateTitleButton(TBPM_ICONIFY, F_ICONIFY, "", (MenuRoot *) NULL,
                                False, False)) {
-            fprintf(stderr, "%s:  unable to add iconify button\n", ProgramName);
+            twmWarning("unable to add iconify button");
         }
         if (!CreateTitleButton(TBPM_RESIZE, F_RESIZE, "", (MenuRoot *) NULL,
                                True, True)) {
-            fprintf(stderr, "%s:  unable to add resize button\n", ProgramName);
+            twmWarning("unable to add resize button");
         }
         AddDefaultBindings();
     }
@@ -325,9 +325,7 @@ InitTitlebarButtons(void)
         if (!tb->bitmap) {
             tb->bitmap = FindBitmap(TBPM_QUESTION, &tb->width, &tb->height);
             if (!tb->bitmap) {  /* cannot happen (see util.c) */
-                fprintf(stderr,
-                        "%s:  unable to add titlebar button \"%s\"\n",
-                        ProgramName, tb->name);
+                twmWarning("unable to add titlebar button \"%s\"", tb->name);
             }
         }
 
@@ -366,7 +364,6 @@ PaintEntry(MenuRoot *mr, MenuItem *mi, int exposure)
     text_y = y_offset + Scr->MenuFont.y;
 
     if (mi->func != F_TITLE) {
-        int x, y;
 
         if (mi->state) {
             XSetForeground(dpy, Scr->NormalGC, mi->hi_back);
@@ -401,6 +398,8 @@ PaintEntry(MenuRoot *mr, MenuItem *mi, int exposure)
         }
 
         if (mi->func == F_MENU) {
+            int x, y;
+
             /* create the pull right pixmap if needed */
             if (Scr->pullPm == None) {
                 Scr->pullPm = CreateMenuIcon(Scr->MenuFont.height,
@@ -414,8 +413,6 @@ PaintEntry(MenuRoot *mr, MenuItem *mi, int exposure)
         }
     }
     else {
-        int y;
-
         XSetForeground(dpy, Scr->NormalGC, mi->back);
 
         /* fill the rectangle with the title background color */
@@ -423,6 +420,8 @@ PaintEntry(MenuRoot *mr, MenuItem *mi, int exposure)
                        (unsigned) mr->width, (unsigned) Scr->EntryHeight);
 
         {
+            int y;
+
             XSetForeground(dpy, Scr->NormalGC, mi->fore);
             /* now draw the dividing lines */
             if (y_offset)
@@ -508,7 +507,7 @@ UpdateMenu(void)
         XQueryPointer(dpy, ActiveMenu->w, &JunkRoot, &JunkChild,
                       &x_root, &y_root, &x, &y, &JunkMask);
 
-        /* if we haven't recieved the enter notify yet, wait */
+        /* if we haven't received the enter notify yet, wait */
         if (!ActiveMenu->entered)
             continue;
 
@@ -658,8 +657,8 @@ AddToMenu(MenuRoot *menu, const char *item, const char *action,
     int width;
 
 #ifdef DEBUG_MENUS
-    fprintf(stderr, "adding menu item=\"%s\", action=%s, sub=%d, f=%d\n",
-            item, action, sub, func);
+    fprintf(stderr, "adding menu item=\"%s\", action=%s, sub=%p, f=%d\n",
+            item, action ? action : "<null>", sub, func);
 #endif
 
     tmp = malloc(sizeof(MenuItem));
@@ -731,18 +730,17 @@ MakeMenu(MenuRoot *mr)
     XColor f1, f2, f3;
     XColor b1, b2, b3;
     XColor save_fore, save_back;
-    int num, i;
-    int fred, fgreen, fblue;
-    int bred, bgreen, bblue;
-    int width;
-    unsigned long valuemask;
+    int i;
     XSetWindowAttributes attributes;
     Colormap cmap = Scr->TwmRoot.cmaps.cwins[0]->colormap->c;
 
     Scr->EntryHeight = Scr->MenuFont.height + 4;
 
-    /* lets first size the window accordingly */
+    /* let's first size the window accordingly */
     if (mr->mapped == NEVER_MAPPED) {
+        int width;
+        unsigned long valuemask;
+
         if (mr->pull == TRUE) {
             mr->width = (short) (mr->width + (16 + 10));
         }
@@ -837,7 +835,12 @@ MakeMenu(MenuRoot *mr)
         return;
 
     start = mr->first;
+
     while (TRUE) {
+        int num;
+        int fred, fgreen, fblue;
+        int bred, bgreen, bblue;
+
         for (; start != NULL; start = start->next) {
             if (start->user_colors)
                 break;
@@ -915,10 +918,8 @@ MakeMenu(MenuRoot *mr)
 Bool
 PopUpMenu(MenuRoot *menu, int x, int y, Bool center)
 {
-    int WindowNameCount;
     TwmWindow **WindowNames;
     TwmWindow *tmp_win2, *tmp_win3;
-    int i;
     int (*compar) (const char *, const char *) =
         (Scr->CaseSensitive ? strcmp : XmuCompareISOLatin1);
 
@@ -929,6 +930,7 @@ PopUpMenu(MenuRoot *menu, int x, int y, Bool center)
 
     if (menu == Scr->Windows) {
         TwmWindow *tmp_win;
+        int WindowNameCount;
 
         /* this is the twm windows menu,  let's go ahead and build it */
 
@@ -945,10 +947,14 @@ PopUpMenu(MenuRoot *menu, int x, int y, Bool center)
         for (tmp_win = Scr->TwmRoot.next, WindowNameCount = 0;
              tmp_win != NULL; tmp_win = tmp_win->next)
             WindowNameCount++;
+
         if (WindowNameCount != 0) {
+            int i;
+
             WindowNames =
                 malloc(sizeof(TwmWindow *) * (size_t) WindowNameCount);
             WindowNames[0] = Scr->TwmRoot.next;
+
             for (tmp_win = Scr->TwmRoot.next->next, WindowNameCount = 1;
                  tmp_win != NULL; tmp_win = tmp_win->next, WindowNameCount++) {
                 tmp_win2 = tmp_win;
@@ -1285,7 +1291,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
         if (smcConn)
             SmcCloseConnection(smcConn, 0, NULL);
         execvp(*Argv, Argv);
-        fprintf(stderr, "%s:  unable to restart:  %s\n", ProgramName, *Argv);
+        twmWarning("unable to restart:  %s", *Argv);
         break;
     }
 
@@ -1687,7 +1693,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                 }
 
                 if (ConstMoveDir != MOVE_NONE) {
-                    int xl, yt, xr, yb, w2, h;
+                    int xl, yt, w2, h;
 
                     xl = ConstMoveX;
                     yt = ConstMoveY;
@@ -1695,8 +1701,8 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                     h = (int) ((unsigned) DragHeight + 2 * JunkBW);
 
                     if (Scr->DontMoveOff && MoveFunction != F_FORCEMOVE) {
-                        xr = xl + w2;
-                        yb = yt + h;
+                        int xr = xl + w2;
+                        int yb = yt + h;
 
                         if (xl < 0)
                             xl = 0;
@@ -1719,7 +1725,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                 }
             }
             else if (DragWindow != None) {
-                int xl, yt, xr, yb, w2, h;
+                int xl, yt, w2, h;
 
                 if (!menuFromFrameOrWindowOrTitlebar) {
                     xl = (int) ((unsigned) eventp->xmotion.x_root -
@@ -1735,8 +1741,8 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                 h = (int) ((unsigned) DragHeight + 2 * JunkBW);
 
                 if (Scr->DontMoveOff && MoveFunction != F_FORCEMOVE) {
-                    xr = xl + w2;
-                    yb = yt + h;
+                    int xr = xl + w2;
+                    int yb = yt + h;
 
                     if (xl < 0)
                         xl = 0;
@@ -1773,8 +1779,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
         MenuItem *mitem;
 
         if ((mroot = FindMenuRoot(action)) == NULL) {
-            fprintf(stderr, "%s: couldn't find function \"%s\"\n",
-                    ProgramName, action);
+            twmWarning("couldn't find function \"%s\"", action);
             return TRUE;
         }
 
@@ -1943,9 +1948,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                         close(fd);
                     }
                     else {
-                        fprintf(stderr,
-                                "%s:  unable to open cut file \"%s\"\n",
-                                ProgramName, tmp);
+                        twmWarning("unable to open cut file \"%s\"", tmp);
                     }
                     free(ptr);
                 }
@@ -1955,7 +1958,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
             }
         }
         else {
-            fprintf(stderr, "%s:  cut buffer is empty\n", ProgramName);
+            twmWarning("cut buffer is empty");
         }
         break;
 
@@ -1994,7 +1997,6 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
     case F_WARPNEXT:
     {
         register TwmWindow *t;
-        static TwmWindow *savedwarp = NULL;
         TwmWindow *of, *l, *n;
         int c = 0;
 
@@ -2019,9 +2021,12 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
             if (t == of)
                 c++;
 
-        if (bwin(t) || c >= 2)
+        if (bwin(t) || c >= 2) {
             Bell(XkbBI_MinorError, 0, None);
+        }
         else {
+            static TwmWindow *savedwarp = NULL;
+
             if (of && of == savedwarp) {
                 Iconify(of, 0, 0);
                 savedwarp = NULL;
@@ -2132,13 +2137,12 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
                 close(fd);
             }
             else {
-                fprintf(stderr, "%s:  unable to open file \"%s\"\n",
-                        ProgramName, ptr);
+                twmWarning("unable to open file \"%s\"", ptr);
             }
             free(ptr);
         }
         else {
-            fprintf(stderr, "%s: error expanding filename\n", ProgramName);
+            twmWarning("error expanding filename");
         }
         break;
 
@@ -2194,7 +2198,7 @@ ExecuteFunction(int func, const char *action, Window w, TwmWindow *tmp_win,
         break;
     case F_STARTWM:
         execlp("/bin/sh", "sh", "-c", action, (void *) NULL);
-        fprintf(stderr, "%s:  unable to start:  %s\n", ProgramName, *Argv);
+        twmWarning("unable to start:  %s", *Argv);
         break;
 
     }
@@ -2281,21 +2285,33 @@ NeedToDefer(MenuRoot *root)
     return FALSE;
 }
 
+/*
+ * We cannot safely free a value passed to putenv, but we can cache the most
+ * recent value, reducing the memory leaks.
+ */
+#define cache_env(saved) \
+    if (saved == NULL || strcmp(saved, update)) { \
+        saved = update; \
+    } else { \
+        free(update); \
+        update = saved; \
+    }
+
 static void
 Execute(const char *s)
 {
-    /* FIXME: is all this stuff needed?  There could be security problems here. */
-    static char buf[256];
-    char *ds = DisplayString(dpy);
-    char *colon, *dot1;
-    char oldDisplay[256];
-    char *doisplay;
-    int restorevar = 0;
+    static const char display_eqls[] = "DISPLAY=";
+    static char *main_display;
+    static char *exec_display;
 
-    oldDisplay[0] = '\0';
-    doisplay = getenv("DISPLAY");
-    if (doisplay)
-        strlcpy(oldDisplay, doisplay, sizeof(oldDisplay));
+    char *ds = DisplayString(dpy);
+    char *colon;
+    char *oldDisplay = NULL;
+    char *value;
+    Bool restorevar = False;
+
+    value = getenv("DISPLAY");
+    oldDisplay = strdup(value ? value : "");
 
     /*
      * Build a display string using the current screen number, so that
@@ -2305,23 +2321,40 @@ Execute(const char *s)
      */
     colon = strrchr(ds, ':');
     if (colon) {                /* if host[:]:dpy */
-        strlcpy(buf, "DISPLAY=", sizeof(buf));
-        strlcat(buf, ds, sizeof(buf));
-        colon = buf + 8 + (colon - ds); /* use version in buf */
-        dot1 = strchr(colon, '.');      /* first period after colon */
-        if (!dot1)
-            dot1 = colon + strlen(colon);       /* if not there, append */
-        (void) sprintf(dot1, ".%d", Scr->screen);
-        putenv(buf);
-        restorevar = 1;
+        size_t need = sizeof(display_eqls) + strlen(ds) + 10;
+        char *update = malloc(need);
+
+        if (update != NULL) {
+            char *dot1;
+
+            strlcpy(update, display_eqls, need);
+            strlcat(update, ds, need);
+            colon = strrchr(update, ':');
+            dot1 = strchr(colon, '.');  /* first period after colon */
+            if (dot1 == NULL)
+                dot1 = colon + strlen(colon);   /* if not there, append */
+            (void) sprintf(dot1, ".%d", Scr->screen);
+            cache_env(exec_display);
+            if (strcmp(update, oldDisplay)) {
+                putenv(update);
+                restorevar = True;
+            }
+        }
     }
 
     (void) system(s);
 
-    if (restorevar) {           /* why bother? */
-        (void) snprintf(buf, sizeof(buf), "DISPLAY=%s", oldDisplay);
-        putenv(buf);
+    if (restorevar) {
+        size_t need = sizeof(display_eqls) + strlen(oldDisplay);
+        char *update = malloc(need);
+
+        if (update != NULL) {
+            (void) snprintf(update, need, "%s%s", display_eqls, oldDisplay);
+            cache_env(main_display);
+            putenv(update);
+        }
     }
+    free(oldDisplay);
 }
 
 /**
@@ -2502,7 +2535,7 @@ Iconify(TwmWindow *tmp_win, int def_x, int def_y)
 static void
 Identify(TwmWindow *t)
 {
-    int i, n, twidth, width, height;
+    int i, n, width, height;
     int x, y;
     unsigned int wwidth, wheight, bw, depth;
     Window junk;
@@ -2525,9 +2558,9 @@ Identify(TwmWindow *t)
                  "Class.res_class  = \"%s\"", t->class.res_class);
         Info[n++][0] = '\0';
         snprintf(Info[n++], INFO_SIZE,
-                 "Geometry/root    = %dx%d+%d+%d", wwidth, wheight, x, y);
-        snprintf(Info[n++], INFO_SIZE, "Border width     = %d", bw);
-        snprintf(Info[n++], INFO_SIZE, "Depth            = %d", depth);
+                 "Geometry/root    = %ux%u+%d+%d", wwidth, wheight, x, y);
+        snprintf(Info[n++], INFO_SIZE, "Border width     = %u", bw);
+        snprintf(Info[n++], INFO_SIZE, "Depth            = %u", depth);
         if (HasSync) {
             int priority;
 
@@ -2543,8 +2576,9 @@ Identify(TwmWindow *t)
     height = n * (Scr->DefaultFont.height + 2);
     width = 1;
     for (i = 0; i < n; i++) {
-        twidth = MyFont_TextWidth(&Scr->DefaultFont, Info[i],
-                                  (int) strlen(Info[i]));
+        int twidth = MyFont_TextWidth(&Scr->DefaultFont, Info[i],
+                                      (int) strlen(Info[i]));
+
         if (twidth > width)
             width = twidth;
     }
@@ -2634,8 +2668,7 @@ WarpToScreen(int n, int inc)
                 n += inc;
                 continue;
             }
-            fprintf(stderr, "%s:  unable to warp to unmanaged screen %d\n",
-                    ProgramName, n);
+            twmWarning("unable to warp to unmanaged screen %d", n);
             Bell(XkbBI_MinorError, 0, None);
             return;
         }
@@ -2658,7 +2691,6 @@ WarpToScreen(int n, int inc)
 static void
 BumpWindowColormap(TwmWindow *tmp, int inc)
 {
-    int i, j, previously_installed;
     ColormapWindow **cwins;
 
     if (!tmp)
@@ -2668,6 +2700,9 @@ BumpWindowColormap(TwmWindow *tmp, int inc)
         cwins =
             malloc(sizeof(ColormapWindow *) * (size_t) tmp->cmaps.number_cwins);
         if (cwins) {
+            int i;
+            int previously_installed;
+
             /* SUPPRESS 560 */
             if ((previously_installed = (Scr->cmapInfo.cmaps == &tmp->cmaps &&
                                          tmp->cmaps.number_cwins))) {
@@ -2676,7 +2711,8 @@ BumpWindowColormap(TwmWindow *tmp, int inc)
             }
 
             for (i = 0; i < tmp->cmaps.number_cwins; i++) {
-                j = i - inc;
+                int j = i - inc;
+
                 if (j >= tmp->cmaps.number_cwins)
                     j -= tmp->cmaps.number_cwins;
                 else if (j < 0)

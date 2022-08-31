@@ -86,7 +86,7 @@ XEvent Event;                   /* the current event */
 static TwmWindow *Tmp_win;      /* the current twm window */
 
 /** Used in HandleEnterNotify to remove border highlight from a window
- * that has not recieved a LeaveNotify event because of a pointer grab
+ * that has not received a LeaveNotify event because of a pointer grab
  */
 static TwmWindow *UnHighLight_win = NULL;
 
@@ -380,9 +380,8 @@ void
 HandleColormapNotify(void)
 {
     XColormapEvent *cevent = (XColormapEvent *) &Event;
-    ColormapWindow *cwin, **cwins;
+    ColormapWindow *cwin;
     TwmColormap *cmap;
-    int lost, won, n, number_cwins;
     XPointer context_data;
 
     if (XFindContext(dpy, cevent->window, ColormapContext, &context_data) == 0)
@@ -430,6 +429,9 @@ HandleColormapNotify(void)
         }
 
         if (cevent->serial >= Scr->cmapInfo.first_req) {
+            ColormapWindow **cwins;
+            int lost, won, n, number_cwins;
+
             number_cwins = Scr->cmapInfo.cmaps->number_cwins;
 
             /*
@@ -537,7 +539,7 @@ HandleVisibilityNotify(void)
         return;
 
     /*
-     * when Saber complains about retreiving an <int> from an <unsigned int>
+     * when Saber complains about retrieving an <int> from an <unsigned int>
      * just type "touch vevent->state" and "cont"
      */
     cmap = cwin->colormap;
@@ -698,13 +700,14 @@ free_window_names(TwmWindow *tmp, Bool nukefull, Bool nukename, Bool nukeicon)
 void
 free_cwins(TwmWindow *tmp)
 {
-    int i;
-    TwmColormap *cmap;
-
     if (tmp->cmaps.number_cwins) {
+        int i;
+
         for (i = 0; i < tmp->cmaps.number_cwins; i++) {
+
             if (--tmp->cmaps.cwins[i]->refcnt == 0) {
-                cmap = tmp->cmaps.cwins[i]->colormap;
+                TwmColormap *cmap = tmp->cmaps.cwins[i]->colormap;
+
                 if (--cmap->refcnt == 0) {
                     XDeleteContext(dpy, cmap->c, ColormapContext);
                     free(cmap);
@@ -714,6 +717,7 @@ free_cwins(TwmWindow *tmp)
             }
         }
         free(tmp->cmaps.cwins);
+
         if (tmp->cmaps.number_cwins > 1) {
             free(tmp->cmaps.scoreboard);
             tmp->cmaps.scoreboard = NULL;
@@ -729,7 +733,6 @@ void
 HandlePropertyNotify(void)
 {
     char *name = NULL;
-    unsigned long valuemask;    /* mask for create windows */
     XSetWindowAttributes attributes;    /* attributes for create windows */
     Pixmap pm;
 
@@ -894,6 +897,8 @@ HandlePropertyNotify(void)
 
         if (Tmp_win->icon_w && !Tmp_win->forced && Tmp_win->wmhints &&
             (Tmp_win->wmhints->flags & IconPixmapHint)) {
+            unsigned long valuemask;    /* mask for create windows */
+
             if (!XGetGeometry(dpy, Tmp_win->wmhints->icon_pixmap, &JunkRoot,
                               &JunkX, &JunkY,
                               (unsigned int *) &Tmp_win->icon_width,
@@ -1167,7 +1172,6 @@ remove_window_from_ring(TwmWindow *tmp)
 void
 HandleDestroyNotify(void)
 {
-    int i;
 
     /*
      * Warning, this is also called by HandleUnmapNotify; if it ever needs to
@@ -1198,7 +1202,10 @@ HandleDestroyNotify(void)
             XDeleteContext(dpy, Tmp_win->hilite_w, TwmContext);
             XDeleteContext(dpy, Tmp_win->hilite_w, ScreenContext);
         }
+
         if (Tmp_win->titlebuttons) {
+            int i;
+
             for (i = 0; i < nb; i++) {
                 XDeleteContext(dpy, Tmp_win->titlebuttons[i].window,
                                TwmContext);
@@ -1279,7 +1286,6 @@ void
 HandleMapRequest(void)
 {
     XPointer context_data;
-    int zoom_save;
 
     Event.xany.window = Event.xmaprequest.window;
     if (XFindContext(dpy, Event.xany.window, TwmContext, &context_data) == 0)
@@ -1309,6 +1315,7 @@ HandleMapRequest(void)
     if ((!Tmp_win->icon) &&
         Tmp_win->wmhints && (Tmp_win->wmhints->flags & StateHint)) {
         int state;
+        int zoom_save;
         Window icon;
 
         /* use WM_STATE if enabled */
@@ -1484,7 +1491,6 @@ HandleMotionNotify(void)
 void
 HandleButtonRelease(void)
 {
-    int xl, xr, yt, yb, w, h;
     unsigned mask;
     XPointer context_data;
 
@@ -1496,6 +1502,9 @@ HandleButtonRelease(void)
         }
 
     if (DragWindow != None) {
+        int xl, yt;
+        int w, h;
+
         MoveOutline(Scr->Root, 0, 0, 0, 0, 0, 0);
 
         if (XFindContext(dpy, DragWindow, TwmContext, &context_data) == 0)
@@ -1529,8 +1538,8 @@ HandleButtonRelease(void)
         }
 
         if (Scr->DontMoveOff && MoveFunction != F_FORCEMOVE) {
-            xr = xl + w;
-            yb = yt + h;
+            int xr = xl + w;
+            int yb = yt + h;
 
             if (xl < 0)
                 xl = 0;
@@ -1603,7 +1612,7 @@ HandleButtonRelease(void)
             Context = C_NO_CONTEXT;
             ButtonWindow = NULL;
 
-            /* if we are not executing a defered command, then take down the
+            /* if we are not executing a deferred command, then take down the
              * menu
              */
             if (RootFunction == 0) {
@@ -2218,7 +2227,6 @@ void
 HandleConfigureRequest(void)
 {
     XWindowChanges xwc;
-    unsigned long xwcm;
     int x, y, width, height, bw;
     int gravx, gravy;
     XConfigureRequestEvent *cre = &Event.xconfigurerequest;
@@ -2258,6 +2266,8 @@ HandleConfigureRequest(void)
      * to configuration requests for windows which have never been mapped.
      */
     if (!Tmp_win || Tmp_win->icon_w == cre->window) {
+        unsigned long xwcm;
+
         xwcm = cre->value_mask &
             (CWX | CWY | CWWidth | CWHeight | CWBorderWidth);
         xwc.x = cre->x;
@@ -2420,10 +2430,12 @@ ScreenInfo *
 FindScreenInfo(Window w)
 {
     XWindowAttributes attr;
-    int scrnum;
 
     attr.screen = NULL;
+
     if (XGetWindowAttributes(dpy, w, &attr)) {
+        int scrnum;
+
         for (scrnum = 0; scrnum < NumScreens; scrnum++) {
             if (ScreenList[scrnum] != NULL &&
                 (ScreenOfDisplay(dpy, ScreenList[scrnum]->screen) ==

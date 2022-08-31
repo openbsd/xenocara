@@ -28,6 +28,9 @@ rcdir = ${datadir}/X11/twm
 dist_rc_DATA = system.twmrc
 
 AM_CPPFLAGS =							\
+	-DAPP_NAME=\"twm\"					\
+	-DAPP_CLASS=\"twm\"					\
+	-DAPP_VERSION=\"$(VERSION)\"				\
 	-DXVENDORNAME=\"The\ X.Org\ Foundation\"		\
 	-DXORG_RELEASE=\"Release\ $(VERSION)\"			\
 	-DSYSTEM_INIT_FILE=\"${rcdir}/system.twmrc\"

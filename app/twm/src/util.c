@@ -259,11 +259,9 @@ ExpandFilename(const char *name)
 
     newname = malloc((size_t) HomeLen + strlen(name) + 2);
     if (!newname) {
-        fprintf(stderr,
-                "%s:  unable to allocate %ld bytes to expand filename %s/%s\n",
-                ProgramName,
-                (unsigned long) HomeLen + (unsigned long) strlen(name) + 2,
-                Home, &name[1]);
+        twmWarning("unable to allocate %lu bytes to expand filename %s/%s",
+                   (unsigned long) HomeLen + (unsigned long) strlen(name) + 2,
+                   Home, &name[1]);
     }
     else {
         (void) sprintf(newname, "%s/%s", Home, &name[1]);
@@ -331,8 +329,7 @@ FindBitmap(const char *name, unsigned *widthp, unsigned *heightp)
             if (XmuCompareISOLatin1(pmtab[i].name, name) == 0)
                 return (*pmtab[i].proc) (widthp, heightp);
         }
-        fprintf(stderr, "%s:  no such built-in bitmap \"%s\"\n",
-                ProgramName, name);
+        twmWarning("no such built-in bitmap \"%s\"", name);
         return None;
     }
 
@@ -357,9 +354,8 @@ FindBitmap(const char *name, unsigned *widthp, unsigned *heightp)
          */
         bigname = malloc(strlen(name) + strlen(Scr->IconDirectory) + 2);
         if (!bigname) {
-            fprintf(stderr,
-                    "%s:  unable to allocate memory for \"%s/%s\"\n",
-                    ProgramName, Scr->IconDirectory, name);
+            twmWarning("unable to allocate memory for \"%s/%s\"",
+                       Scr->IconDirectory, name);
             return None;
         }
         (void) sprintf(bigname, "%s/%s", Scr->IconDirectory, name);
@@ -370,8 +366,7 @@ FindBitmap(const char *name, unsigned *widthp, unsigned *heightp)
     }
     free(bigname);
     if (pm == None) {
-        fprintf(stderr, "%s:  unable to find bitmap \"%s\"\n",
-                ProgramName, name);
+        twmWarning("unable to find bitmap \"%s\"", name);
     }
 
     return pm;
@@ -398,8 +393,8 @@ InsertRGBColormap(Atom a, XStandardColormap *maps, int nmaps, Bool replace)
     if (!sc) {                  /* no existing, allocate new */
         sc = malloc(sizeof(StdCmap));
         if (!sc) {
-            fprintf(stderr, "%s:  unable to allocate %ld bytes for StdCmap\n",
-                    ProgramName, (unsigned long) sizeof(StdCmap));
+            twmWarning("unable to allocate %lu bytes for StdCmap",
+                       (unsigned long) sizeof(StdCmap));
             return;
         }
         replace = False;
@@ -501,8 +496,7 @@ GetColor(int kind, Pixel *what, const char *name)
         if (name[0] != '#')
             stat = XParseColor(dpy, cmap, name, &color);
         if (!stat) {
-            fprintf(stderr, "%s:  invalid color name \"%s\"\n",
-                    ProgramName, name);
+            twmWarning("invalid color name \"%s\"", name);
             return;
         }
 
@@ -545,8 +539,7 @@ GetColor(int kind, Pixel *what, const char *name)
                             stdcmap->blue_mult));
         }
         else {
-            fprintf(stderr, "%s:  unable to allocate color \"%s\"\n",
-                    ProgramName, name);
+            twmWarning("unable to allocate color \"%s\"", name);
             return;
         }
     }
@@ -569,7 +562,7 @@ GetColorValue(int kind, XColor *what, const char *name)
         return;
 
     if (!XLookupColor(dpy, cmap, name, what, &junkcolor)) {
-        fprintf(stderr, "%s:  invalid color name \"%s\"\n", ProgramName, name);
+        twmWarning("invalid color name \"%s\"", name);
     }
     else {
         what->pixel = AllPlanes;
@@ -585,12 +578,13 @@ FindFontSet(MyFont *font, const char *fontname)
     XFontSetExtents *font_extents;
     XFontStruct **xfonts;
     char **font_names;
-    register int i;
-    int ascent;
-    int descent;
-    int fnum;
 
     if (use_fontset) {
+        int ascent;
+        int descent;
+        int fnum;
+        register int i;
+
         if (font->fontset != NULL) {
             XFreeFontSet(dpy, font->fontset);
         }
@@ -601,9 +595,13 @@ FindFontSet(MyFont *font, const char *fontname)
                                             &def_string_return)) == NULL) {
             return False;
         }
-        for (i = 0; i < missing_charset_count_return; i++) {
-            printf("%s: warning: font for charset %s is lacking.\n",
-                   ProgramName, missing_charset_list_return[i]);
+        if (missing_charset_count_return) {
+            twmVerbose("%d fonts are missing from fontset",
+                       missing_charset_count_return);
+            for (i = 0; i < missing_charset_count_return; i++) {
+                twmVerbose("font for charset %s is lacking.",
+                           missing_charset_list_return[i]);
+            }
         }
 
         font_extents = XExtentsOfFontSet(font->fontset);
@@ -619,6 +617,9 @@ FindFontSet(MyFont *font, const char *fontname)
         font->y = ascent;
         font->ascent = ascent;
         font->descent = descent;
+        twmMessage("created fontset with %d fonts (%d missing) for \"%s\"",
+                   fnum, missing_charset_count_return,
+                   fontname ? fontname : "NULL");
         return True;
     }
 
@@ -648,10 +649,10 @@ FindFontSet(MyFont *font, const char *fontname)
 void
 GetFont(MyFont *font)
 {
-    const char *deffontname = "fixed";
 
     if (!FindFontSet(font, font->name)) {
         const char *what = "fonts";
+        const char *deffontname = "fixed";
 
         if (use_fontset) {
             what = "fontsets";
@@ -660,9 +661,8 @@ GetFont(MyFont *font)
             deffontname = Scr->DefaultFont.name;
         }
         if (!FindFontSet(font, deffontname)) {
-            fprintf(stderr, "%s:  unable to open %s \"%s\" or \"%s\"\n",
-                    ProgramName, what, font->name, deffontname);
-            exit(1);
+            twmError("unable to open %s \"%s\" or \"%s\"",
+                     what, font->name, deffontname);
         }
     }
 }
@@ -729,23 +729,38 @@ I18N_FetchName(Display *dpy2, Window w, char **winname)
 {
     int status;
     XTextProperty text_prop;
-    char **list;
-    int num;
+    int rc = 0;
+
+    *winname = NULL;
 
     status = XGetWMName(dpy2, w, &text_prop);
-    if (!status || !text_prop.value || !text_prop.nitems) {
-        *winname = NULL;
-        return 0;
+    if (status && text_prop.value && text_prop.nitems) {
+        char **list = NULL;
+        int num;
+
+        status = XmbTextPropertyToTextList(dpy2, &text_prop, &list, &num);
+        if (status >= Success && num && list && *list) {
+            XFree(text_prop.value);
+            *winname = strdup(*list);
+            XFreeStringList(list);
+            rc = 1;
+        }
+        else {
+            char *value = NULL;
+
+            /*
+             * If the system's locale support is broken (e.g., missing useful
+             * parts), the preceding Xmb call may fail.
+             */
+            if (XFetchName(dpy2, w, &value) && value != NULL) {
+                *winname = strdup(value);
+                XFree(value);
+                rc = 1;
+            }
+        }
     }
-    status = XmbTextPropertyToTextList(dpy2, &text_prop, &list, &num);
-    if (status < Success || !num || !*list) {
-        *winname = NULL;
-        return 0;
-    }
-    XFree(text_prop.value);
-    *winname = (char *) strdup(*list);
-    XFreeStringList(list);
-    return 1;
+
+    return rc;
 }
 
 Status
@@ -779,11 +794,11 @@ SetFocus(TwmWindow *tmp_win, Time time)
 
 #ifdef TRACE
     if (tmp_win) {
-        printf("Focusing on window \"%s\"\n", tmp_win->full_name);
+        twmMessage("Focusing on window \"%s\"", tmp_win->full_name);
     }
     else {
-        printf("Unfocusing; Scr->Focus was \"%s\"\n",
-               Scr->Focus ? Scr->Focus->full_name : "(nil)");
+        twmMessage("Unfocusing; Scr->Focus was \"%s\"",
+                   Scr->Focus ? Scr->Focus->full_name : "(nil)");
     }
 #endif
 
@@ -952,15 +967,6 @@ Pixmap
 CreateMenuIcon(int height, unsigned *widthp, unsigned *heightp)
 {
     int h, w;
-    int ih, iw;
-    int ix, iy;
-    int mh, mw;
-    int tw, th;
-    int lw, lh;
-    int lx, ly;
-    int lines, dly;
-    int off;
-    int bw;
 
     h = height;
     w = h * 7 / 8;
@@ -973,6 +979,15 @@ CreateMenuIcon(int height, unsigned *widthp, unsigned *heightp)
     if (Scr->tbpm.menu == None) {
         Pixmap pix;
         GC gc;
+        int ih, iw;
+        int ix, iy;
+        int mh, mw;
+        int tw, th;
+        int lw, lh;
+        int lx, ly;
+        int lines, dly;
+        int off;
+        int bw;
 
         pix = Scr->tbpm.menu =
             XCreatePixmap(dpy, Scr->Root, (unsigned) w, (unsigned) h, 1);

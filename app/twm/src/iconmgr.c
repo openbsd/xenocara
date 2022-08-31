@@ -57,7 +57,6 @@ void
 CreateIconManagers(void)
 {
     IconMgr *p;
-    int mask;
     char str[100];
     char str1[100];
     Pixel background;
@@ -74,9 +73,9 @@ CreateIconManagers(void)
     }
 
     for (p = &Scr->iconmgr; p != NULL; p = p->next) {
-        mask = XParseGeometry(p->geometry, &JunkX, &JunkY,
-                              (unsigned int *) &p->width,
-                              (unsigned int *) &p->height);
+        int mask = XParseGeometry(p->geometry, &JunkX, &JunkY,
+                                  (unsigned int *) &p->width,
+                                  (unsigned int *) &p->height);
 
         if (mask & XNegative)
             JunkX = Scr->MyDisplayWidth - p->width -
@@ -129,7 +128,7 @@ AllocateIconManager(char *name, char *icon_name, char *geom, int columns)
 #ifdef DEBUG_ICONMGR
     fprintf(stderr, "AllocateIconManager\n");
     fprintf(stderr, "  name=\"%s\" icon_name=\"%s\", geom=\"%s\", col=%d\n",
-            name, icon_name, geom, columns);
+            name, icon_name ? icon_name : "<null>", geom, columns);
 #endif
 
     if (Scr->NoIconManagers)
@@ -250,9 +249,8 @@ MoveIconManager(int dir)
     }
 
     if (!got_it) {
-        fprintf(stderr,
-                "%s:  unable to find window (%d, %d) in icon manager\n",
-                ProgramName, new_row, new_col);
+        twmWarning("unable to find window (%d, %d) in icon manager",
+                   new_row, new_col);
         return;
     }
 
@@ -290,8 +288,6 @@ JumpIconManager(int dir)
 {
     IconMgr *ip, *tmp_ip = NULL;
     int got_it = FALSE;
-    ScreenInfo *sp;
-    int screen;
 
     if (!Active)
         return;
@@ -309,8 +305,11 @@ JumpIconManager(int dir)
     if (!got_it) {
         int origscreen = ip->scr->screen;
         int inc = (dir == F_NEXTICONMGR ? 1 : -1);
+        int screen;
 
         for (screen = origscreen + inc;; screen += inc) {
+            ScreenInfo *sp;
+
             if (screen >= NumScreens)
                 screen = 0;
             else if (screen < 0)
@@ -587,7 +586,7 @@ DrawIconManagerBorder(WList *tmp)
 /**
  * sort The Dude
  *
- *  \param ip a pointer to the icon manager struture
+ *  \param ip a pointer to the icon manager structure
  */
 void
 SortIconManager(IconMgr *ip)
@@ -623,13 +622,12 @@ SortIconManager(IconMgr *ip)
  * pack the icon manager windows following
  *              an addition or deletion
  *
- *  \param ip a pointer to the icon manager struture
+ *  \param ip a pointer to the icon manager structure
  */
 void
 PackIconManager(IconMgr *ip)
 {
     int newwidth, i, row, col, maxcol, colinc, rowinc, wheight, wwidth;
-    int new_x, new_y;
     int savewidth;
     WList *tmp;
 
@@ -645,7 +643,10 @@ PackIconManager(IconMgr *ip)
     row = 0;
     col = ip->columns;
     maxcol = 0;
+
     for (i = 0, tmp = ip->first; tmp != NULL; i++, tmp = tmp->next) {
+        int new_x, new_y;
+
         tmp->me = i;
         if (++col >= ip->columns) {
             col = 0;

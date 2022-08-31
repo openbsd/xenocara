@@ -89,7 +89,7 @@ typedef struct ScreenInfo {
     MenuRoot *Windows;          /* the TwmWindows menu */
 
     TwmWindow *Ring;            /* one of the windows in window ring */
-    TwmWindow *RingLeader;      /* current winodw in ring */
+    TwmWindow *RingLeader;      /* current window in ring */
 
     MouseButton Mouse[MAX_BUTTONS + 1][NUM_CONTEXTS][MOD_SIZE];
     MouseButton DefaultFunction;

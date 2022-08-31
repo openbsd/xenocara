@@ -60,6 +60,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef _RESIZE_
 #define _RESIZE_
 
+#include "twm.h"
+
 extern void AddEndResize(TwmWindow *tmp_win);
 extern void AddStartResize(TwmWindow *tmp_win, int x, int y, int w, int h);
 extern void ConstrainSize(TwmWindow *tmp_win, int *widthp, int *heightp);
