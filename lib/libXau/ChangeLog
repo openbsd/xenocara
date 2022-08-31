@@ -1,3 +1,90 @@
+commit 4fbefa02d6c842401ff79065d364edd7087a12a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 16:01:41 2022 -0700
+
+    libXau 1.0.10
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83f33926d43f6ae4cf9734e3aedbef23fb0d6b74
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 10:06:05 2022 -0700
+
+    XauReadAuth: move failure handling code to a common code block
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3db78d0fa60e07a4ffda61a19849ad30623f70cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 9 11:00:50 2022 -0700
+
+    Remove unnnecessary casts from malloc() and free() calls
+    
+    These are not needed in C89 and later.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7f43a321e59b998e731b36039b744138a2d5b776
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 9 10:54:58 2022 -0700
+
+    Autest.c: Fix -Wdiscarded-qualifiers warnings
+    
+    Autest.c: In function ‘main’:
+    Autest.c:38:21: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+       38 |     char    *name = "XAU-TEST-1";
+          |                     ^~~~~~~~~~~~
+    Autest.c:39:21: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+       39 |     char    *data = "Do not begin the test until instructed to do so.";
+          |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Autest.c:57:23: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+       57 |     test_data.address = "";
+          |                       ^
+    Autest.c:59:22: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+       59 |     test_data.number = "";
+          |                      ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b98078c15874c12dfd4e01594ef9277897ade1df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 9 10:50:11 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d824fa5517cf445dc1e204f05ee2098c254f2bdb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 9 10:48:33 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8928883477ff32cbbb97ee0e871324812e3b5c96
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Jul 3 11:52:44 2022 +0200
+
+    Use explicit_bzero if available
+    
+    Optimizing compilers may remove the bzero call because it is followed
+    by free. The function explicit_bzero avoids this optimization. Use it
+    if it is available.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+
+commit 19b13bf20de5b15ab87fb4019ec910ef3216129f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 9 10:20:45 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d9443b2c57b512cfb250b35707378654d86c7dea
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Feb 10 14:42:30 2019 -0800
@@ -900,7 +987,7 @@ Date:   Sat May 14 07:46:48 2005 +0000
         source can reference them with <X11/...>.
 
 commit 56a655e717c5de6d91c890fdc6f9b0469ad1dd1a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 11 22:44:53 2005 +0000
 
     lib/Xau:
@@ -918,7 +1005,7 @@ Date:   Wed May 11 22:44:53 2005 +0000
     - New script that adds #include <config.h> to files
 
 commit 60177d823918d9ef7575da27870796c1285a2032
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon May 9 22:04:21 2005 +0000
 
     Add Xau library to lib/ and symlink.sh

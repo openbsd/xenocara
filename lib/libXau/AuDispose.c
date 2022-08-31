@@ -38,10 +38,14 @@ XauDisposeAuth (Xauth *auth)
 	free (auth->number);
 	free (auth->name);
 	if (auth->data) {
+#ifdef HAVE_EXPLICIT_BZERO
+	    (void) explicit_bzero (auth->data, auth->data_length);
+#else
 	    (void) bzero (auth->data, auth->data_length);
+#endif
 	    (void) free (auth->data);
 	}
-	free ((char *) auth);
+	free (auth);
     }
     return;
 }

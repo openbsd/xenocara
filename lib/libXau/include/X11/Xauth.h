@@ -141,7 +141,7 @@ _XFUNCPROTOEND
 /* Return values from XauLockAuth */
 
 # define LOCK_SUCCESS	0	/* lock succeeded */
-# define LOCK_ERROR	1	/* lock unexpectely failed, check errno */
+# define LOCK_ERROR	1	/* lock unexpectedly failed, check errno */
 # define LOCK_TIMEOUT	2	/* lock failed, timeouts expired */
 
 #endif /* _XAUTH_STRUCT_ONLY */

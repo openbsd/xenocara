@@ -22,14 +22,14 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXau], [1.0.9],
-	[https://gitlab.freedesktop.org/xorg/lib/libXau/issues], [libXau])
+AC_INIT([libXau], [1.0.10],
+	[https://gitlab.freedesktop.org/xorg/lib/libxau/-/issues], [libXau])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_LIBTOOL_WIN32_DLL
@@ -45,9 +45,9 @@ XORG_DEFAULT_OPTIONS
 AC_PROG_LN_S
 
 # Checks for library functions.
-AC_CHECK_FUNCS([pathconf])
+AC_CHECK_FUNCS([explicit_bzero pathconf])
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XAU, xproto)
 
 AC_ARG_ENABLE(xthreads,
