@@ -94,7 +94,3 @@ Pyramids and tetrahedrons with filled faces do not display correctly.
 A separate color cell is allocated for each name in the -colors list, even
 when the same name may be specified twice.  Color allocation fails in
 TrueColor displays and option \fI-faces\fP does not work well.
-.SH COPYRIGHT
-Copyright 1994 X Consortium
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.

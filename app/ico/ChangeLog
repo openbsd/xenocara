@@ -1,3 +1,118 @@
+commit 3737d77a549d94043e0fbdb5f30562973da66fa8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 30 17:13:18 2022 -0700
+
+    ico 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c125d8bac5b1629e36069c13a13919e542dc3a9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 13 16:04:06 2022 -0700
+
+    Add cast to clear -Wsign-compare warning
+    
+    ico.c: In function ‘do_ico_window’:
+    ico.c:1084:30: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+        if (xev.xclient.data.l[0] == wm_delete_window)
+                                  ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fc54ce8a6f248e465a518f807dd5e51657b6e535
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 13 15:59:06 2022 -0700
+
+    Rename global "poly" to fix gcc -Wshadow warnings
+    
+    ico.c: In function ‘initPoly’:
+    ico.c:472:45: warning: declaration of ‘poly’ shadows a global declaration [-Wshadow]
+     initPoly(struct closure *closure, Polyinfo *poly, int icoW, int icoH)
+                                                 ^~~~
+    ico.c:238:18: note: shadowed declaration is here
+     static Polyinfo *poly;  /* -obj: the poly to draw */
+                      ^~~~
+    ico.c: In function ‘drawPoly’:
+    ico.c:567:45: warning: declaration of ‘poly’ shadows a global declaration [-Wshadow]
+     drawPoly(struct closure *closure, Polyinfo *poly, GC gc,
+                                                 ^~~~
+    ico.c:238:18: note: shadowed declaration is here
+     static Polyinfo *poly;  /* -obj: the poly to draw */
+                      ^~~~
+    ico.c: In function ‘giveObjHelp’:
+    ico.c:1137:13: warning: declaration of ‘poly’ shadows a global declaration [-Wshadow]
+       Polyinfo *poly = polygons+i;
+                 ^~~~
+    ico.c:238:18: note: shadowed declaration is here
+     static Polyinfo *poly;  /* -obj: the poly to draw */
+                      ^~~~
+    ico.c: In function ‘findpoly’:
+    ico.c:1152:13: warning: declaration of ‘poly’ shadows a global declaration [-Wshadow]
+       Polyinfo *poly = polygons+i;
+                 ^~~~
+    ico.c:238:18: note: shadowed declaration is here
+     static Polyinfo *poly;  /* -obj: the poly to draw */
+                      ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e5fe5ae18c3f6eae93cd1521645717295ce2c23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 13 15:56:22 2022 -0700
+
+    Apply scope reduction suggestions from cppcheck
+    
+    [ico.c:587]: (style) The scope of the variable 'pxvz' can be reduced.
+    [ico.c:730]: (style) The scope of the variable 't' can be reduced.
+    [ico.c:1132]: (style) The scope of the variable 'poly' can be reduced.
+    [ico.c:1149]: (style) The scope of the variable 'poly' can be reduced.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd5040cdec7770501619393021eeffeb591e73f6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 11:51:12 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fa65d638319f6c10abde4a637e596872ff159c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 15:48:28 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d46e6314e03009ae3519f69aaf5773b095822f34
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 15:48:26 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4635817dde85c6a6197857b8bf09d47dbb3fed93
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:47:57 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7aa38ed59eff2519138af7aa3b3b8a8e1270e408
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:01:30 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e2a3e08d7a93738a88fdc889517f85d17371b626
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 22:26:48 2018 -0800
@@ -556,7 +671,7 @@ Date:   Wed Jul 20 19:31:48 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 9e0555e9d980217dd20d1f7385ff47514675629c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:00:13 2005 +0000
 
     Check in build system for ico

@@ -235,7 +235,7 @@ static int dofaces = 0;		/* -faces */
 static int invert = 0;		/* -i */
 static const char *ico_geom = NULL;	/* -size: size of object in window */
 static const char *delta_geom = NULL;	/* -delta: amount by which to move object */
-static Polyinfo *poly;		/* -obj: the poly to draw */
+static Polyinfo *polyobj;	/* -obj: the poly to draw */
 static int dsync = 0;		/* -dsync */
 static int xsync = 0;		/* -sync */
 static int msleepcount = 10;	/* -sleep value in milliseconds*/
@@ -584,7 +584,6 @@ drawPoly(struct closure *closure, Polyinfo *poly, GC gc,
 	int facecolor;
 
 	int pcount;
-	double pxvz;
 	XPoint ppts[MAXEDGESPERPOLY];
 
 	/* Switch double-buffer and rotate vertices */
@@ -635,9 +634,10 @@ drawPoly(struct closure *closure, Polyinfo *poly, GC gc,
 		XSync(dpy, 0);
 
 	for (i = NF - 1; i >= 0; --i, pf += pcount) {
+		double pxvz = 0.0;
 
 		pcount = *pf++;	/* number of edges for this face */
-		pxvz = 0.0;
+
 		for (j=0; j<pcount; j++) {
 			p0 = pf[j];
 			pxvz += pxv[p0].z;
@@ -727,7 +727,7 @@ static void
 initDBufs(struct closure *closure, unsigned long fg, unsigned long bg,
           int planesperbuf)
 {
-	int i,j,jj,j0,j1,k,m,t;
+	int i,j,jj,j0,j1,k,m;
 	DBufInfo *b;
 	XColor bgcolor, fgcolor;
 
@@ -753,8 +753,9 @@ initDBufs(struct closure *closure, unsigned long fg, unsigned long bg,
 	    closure->pixels[0] = bg;
 	    closure->plane_masks[0] = fg ^ bg;
 	} else {
-	    t = XAllocColorCells(dpy,closure->cmap,0,
-		    closure->plane_masks,closure->totalplanes, closure->pixels,1);
+	    int t = XAllocColorCells(dpy, closure->cmap, 0,
+				     closure->plane_masks, closure->totalplanes,
+				     closure->pixels, 1);
 			    /* allocate color planes */
 	    if (t==0) {
 		    icoFatal("can't allocate enough color planes");
@@ -1024,7 +1025,7 @@ do_ico_window(void *ptr)
 
 	icodeltax2 = icoDeltaX * 2;
 	icodeltay2 = icoDeltaY * 2;
-	initPoly(closure, poly, icoW, icoH);
+	initPoly(closure, polyobj, icoW, icoH);
 
 	while (do_it) {
 		int prevX;
@@ -1083,7 +1084,7 @@ do_ico_window(void *ptr)
 #ifdef DEBUG
 			printf("thread %x message\n", xthread_self());
 #endif
-			if (xev.xclient.data.l[0] == wm_delete_window)
+			if ((Atom) xev.xclient.data.l[0] == wm_delete_window)
 			    do_it = False;
 			else
 			    XBell (dpy, 0);
@@ -1107,7 +1108,7 @@ do_ico_window(void *ptr)
 			icodeltay2 = icoDeltaY * 2;
 		}
 
-		drawPoly(closure, poly, closure->gcontext,
+		drawPoly(closure, polyobj, closure->gcontext,
 			 icoX, icoY, icoW, icoH, prevX, prevY);
 	}
 	XDestroyWindow(dpy, closure->win);
@@ -1132,12 +1133,12 @@ static void
 giveObjHelp(void)
 {
 	unsigned int i;
-	Polyinfo *poly;
 
 	printf("%-16s%-12s  #Vert.  #Edges  #Faces  %-16s\n",
 		"Name", "ShortName", "Dual");
 	for (i=0; i<NumberPolygons; i++) {
-		poly = polygons+i;
+		Polyinfo *poly = polygons+i;
+
 		printf("%-16s%-12s%6d%8d%8d    %-16s\n",
 			poly->longname, poly->shortname,
 			poly->numverts, poly->numedges, poly->numfaces,
@@ -1149,10 +1150,10 @@ static Polyinfo *
 findpoly(const char *name)
 {
 	unsigned int i;
-        Polyinfo *poly;
 
 	for (i=0; i<NumberPolygons; i++) {
-		poly = polygons+i;
+		Polyinfo *poly = polygons+i;
+
 		if (strcmp(name,poly->longname)==0 || strcmp(name,poly->shortname)==0)
 			return poly;
 	}
@@ -1175,7 +1176,7 @@ int main(int argc, const char **argv)
 
 	/* Process arguments: */
 
-	poly = findpoly("icosahedron");	/* default */
+	polyobj = findpoly("icosahedron");	/* default */
 
 	for (argv++, argc--; argc > 0; argv++, argc--) {
 		if (!strcmp (*argv, "-display")) {
@@ -1271,7 +1272,7 @@ int main(int argc, const char **argv)
 		} else if (!strcmp (*argv, "-obj")) {
 			if (argc < 2)
 				icoFatal("missing argument for %s", *argv);
-			poly = findpoly(*++argv); argc--;
+			polyobj = findpoly(*++argv); argc--;
 		} else if (!strcmp(*argv, "-dsync"))
 			dsync = 1;
 		else if (!strncmp(*argv, "-sync",  5)) 
