@@ -23,8 +23,8 @@ dnl  Process this file with autoconf to create configure.
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xorg-docs],
-        [1.7.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.7.2],
+        [https://gitlab.freedesktop.org/xorg/doc/xorg-docs/issues],
         [xorg-docs])
 AC_CONFIG_SRCDIR([Makefile.am])
 
@@ -53,7 +53,6 @@ AC_CONFIG_FILES([Makefile
 		 specs/Makefile
 		 specs/CTEXT/Makefile
 		 specs/ICCCM/Makefile
-		 specs/Xext/Makefile
 		 specs/XLFD/Makefile
 		 specs/Xserver/Makefile])
 AC_OUTPUT

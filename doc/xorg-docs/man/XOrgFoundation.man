@@ -27,14 +27,15 @@ XOrgFoundation \- X.Org Foundation information
 Release 6.7 and later of X Version 11 is brought to you by the
 X.Org Foundation.
 .SH DESCRIPTION
-The X.Org Foundation is an independent, not-for-profit 501(c)(3) charity
+The X.Org Foundation is a member project of Software in the Public Interest
+(SPI), an independent, not-for-profit 501(c)(3) charity
 corporation.  It was formed in 2004 as the successor to the X.Org Group at
 The Open Group. The purpose of the X.Org Foundation is to foster the
 development, evolution, and maintenance of the X Window System, a
 comprehensive set of vendor-neutral, system-architecture neutral,
 network-transparent windowing and user interface standards. Membership
 in the X.Org Foundation is free and open to anyone. The X.Org Foundation
-hosts a public git repository of the source code on freedesktop.org.
+hosts public git repositories of the source code on freedesktop.org.
 .PP
 The X Window System was created in the mid-1980s at the Massachusetts
 Institute of Technology.  In 1988, MIT formed a member-funded consortium to
@@ -48,10 +49,12 @@ to the X Window System were assigned to The Open Group (then known as the
 Open Software Foundation).
 .PP
 .SH "ADDRESSES"
-The X.Org Foundation's web site is http://www.x.org/
+The X.Org Foundation's web site is https://www.x.org/
+.SH "ADDRESSES"
+SPI's web site is https://spi-inc.org/
 .PP
 The X.Org Foundation's public ftp site is ftp://ftp.x.org/
 .PP
-Information about the X.Org Foundation git repository is on the
-X.Org web site at http://www.x.org/wiki/Development/git
+The X.Org Foundation's public source repositories are at
+https://gitlab.freedesktop.org/xorg
 .fi

@@ -31,7 +31,7 @@ of view. It covers basic configuration syntax and gives also a few examples.
       <para>
 This version covers Xorg server versions 1.8 and later, used with the
 data files from the <ulink
-url="http://www.freedesktop.org/wiki/Software/XKeyboardConfig"
+url="https://www.freedesktop.org/wiki/Software/XKeyboardConfig"
 >xkeyboard-config</ulink> project.
       </para>
 
@@ -118,7 +118,7 @@ files of rules to be used for keyboard mapping composition
     <para>
 The rules file used depends on your system.  The rules files commonly
 used with Xorg are provided by the <ulink
-url="http://www.freedesktop.org/wiki/Software/XKeyboardConfig"
+url="https://www.freedesktop.org/wiki/Software/XKeyboardConfig"
 >xkeyboard-config</ulink> project.
 On Linux systems, the <filename>evdev</filename> rules are most
 commonly used, on other systems the <filename>base</filename> rules

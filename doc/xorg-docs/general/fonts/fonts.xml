@@ -86,7 +86,7 @@ system to access newly-installed fonts.
 
 <para>
 Xft has no configuration mechanism itself, it relies upon the
-<ulink url="http://www.fontconfig.org/">fontconfig</ulink>
+<ulink url="https://www.fontconfig.org/">fontconfig</ulink>
 library to configure and customise fonts.  That library is
 not specific to the X Window system, and does not rely on any
 particular font output mechanism.
@@ -135,6 +135,7 @@ $ su -c fc-cache
 <para>
 Fontconfig's behaviour is controlled by a set of configuration
 files: a standard configuration file, <quote><filename>/etc/fonts/fonts.conf</filename></quote>,
+the files in a standard configuration directory, <quote><filename>/etc/fonts/conf.d/</filename></quote>,
 a host-specific configuration file, <quote><filename>/etc/fonts/local.conf</filename></quote>,
 and a user-specific file called <quote><filename>.fonts.conf</filename></quote> in the user's
 home directory (this can be overridden with the
@@ -861,7 +862,7 @@ to TrueType and Type1 font programs and implemented the grid-fitting
 For more information, please contact
 <email>design@bigelowandholmes.com</email> or
 <email>info@urwpp.de</email>, or consult
-<ulink url="http://www.urwpp.de">the URW++ web site</ulink>.
+<ulink url="https://www.urwpp.de/">the URW++ web site</ulink>.
 </para>
 
 <para>
@@ -1516,7 +1517,7 @@ url="mkfontdir.1.html"
 <para>
 The <emphasis remap="it">FreeType</emphasis> backend (formerly <emphasis remap="it">xfsft</emphasis>)
 is a backend based on version 2 of the FreeType library (see <ulink
-url="http://www.freetype.org/"
+url="https://www.freetype.org/"
 >the FreeType web site</ulink
 >) and has
 the X-TT functionalities for CJKV support provided by the After X-TT
@@ -1811,10 +1812,7 @@ standard <quote><literal remap="tt">fixed</literal></quote> and <quote><literal 
 <title>Unicode</title>
 
 <para>
-Unicode (<ulink
-url="http://www.unicode.org"
->http://www.unicode.org</ulink
->) is a coded character
+Unicode (<ulink url="https://www.unicode.org/" />) is a coded character
 set with the goal of uniquely identifying all characters for all
 scripts, current and historical.  While Unicode was explicitly not
 designed as a glyph encoding scheme, it is often possible to use it as
@@ -1894,7 +1892,7 @@ of information about digital fonts.
 <para>
 Xft and Fontconfig are described on
 <ulink
-url="http://www.fontconfig.org"
+url="https://www.fontconfig.org"
 >the Fontconfig site</ulink
 >.
 </para>
@@ -1933,12 +1931,12 @@ url="http://x-tt.sourceforge.jp/"
 
 <para>
 While the <ulink
-url="http://www.unicode.org"
+url="https://www.unicode.org/"
 >Unicode consortium site</ulink
 >
 may be of interest,  you are more likely to find what you need in
 Markus Kuhn's <ulink
-url="http://www.cl.cam.ac.uk/~mgk25/unicode.html"
+url="https://www.cl.cam.ac.uk/~mgk25/unicode.html"
 >UTF-8 and Unicode FAQ</ulink
 >.
 </para>

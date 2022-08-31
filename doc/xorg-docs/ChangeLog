@@ -1,3 +1,284 @@
+commit cd4a375968a85e3c96b5bc2217b8a4143fa1707a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 17:18:21 2022 -0700
+
+    xorg-docs 1.7.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50ff7534e827585ba70f978f85a8e567ab4c8aed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 14:05:55 2022 -0800
+
+    registry: address updates for Oracle contacts
+    
+    Drop paper mail addresses that are no longer correct & never used
+    Update Sun/Oracle contact from Stuart to Niveditha & myself
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47b07a56b44bb8c12cea4a338720f5aa347d812f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 14:04:55 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c6744270a155104184360c8b63be2345121adab
+Author: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+Date:   Thu Jan 28 09:54:16 2021 -0800
+
+    Update AppleWM and XQuartz maintainers
+    
+    Signed-off-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit c2900e727242bad74123ec59c36d03bdd49ce9bf
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 16 18:13:19 2019 -0400
+
+    assign maintainer for Xaw, twm
+
+commit 1c1cf18a52a1806a638eccedf678dea8bdada5ea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jun 24 16:29:57 2019 -0700
+
+    Update Versions doc to better reflect current releases
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4b950363c3b3d43c5a2e6eb4eb4273292f630a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 23 15:43:01 2019 -0700
+
+    platforms/Solaris: Drop obsolete notes on apeture drivers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 75ed93c7aabf904587d25abd29895d037cf0dd3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 23 13:13:20 2019 -0700
+
+    Drop LBX algortihm specs
+    
+    X.Org dropped LBX support a decade ago, we don't need to keep the
+    spec in our current doc collection any more.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a79d244a8e07d8ab962c13c49e7cca5c33b15fff
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Apr 22 04:48:27 2019 -0400
+
+    fix typo
+
+commit de5b06ff708e30978f6ce1bf7ab4c3a1448d467b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Apr 21 18:48:02 2019 -0400
+
+    assign libxt maintainer
+
+commit 59a4a97a4cea328d94a183fdd18dab0866c2f50b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Mar 3 10:35:32 2019 -0800
+
+    MAINTAINERS: disclaim maintenance of xdm
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d1ff7e2b96f9ae6d9548496bffd4eab9b47eb2e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 24 12:50:03 2019 -0800
+
+    The Katamari is dead!  Long live the Katamari!
+    
+    I come not to praise the Katamari, but to bury it...
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 606e019df1674f92cd9cfe08592c07c8d010ce1b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 16:32:58 2019 -0800
+
+    Update README.xml & XOrgFoundation.man to reflect SPI merger
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/doc/xorg-docs/issues/2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Bryce Harrington <bryce@bryceharrington.org>
+
+commit 813b9c32130fea0ebccc21c7161a55299a587f69
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 17 14:25:02 2018 -0800
+
+    Mass http -> https replacement where appropriate
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit ba29c13a59f3c22c3a444b42efb17ca227de9850
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 17 13:30:33 2018 -0800
+
+    Update MAINTAINERS for gitlab migration
+    
+    Replace dozens of links to wiki.x.org with gitlab project links
+    Change status to "Deactivated" for projects marked "Archived" in gitlab
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 45c64cbd68d4ca97d1d3e63d22133a2f9d33c884
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 17 11:37:01 2018 -0800
+
+    Update configure.ac for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit f1e595f150a369d3fbbe4aad75b265ae2f4a6878
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 17 11:36:17 2018 -0800
+
+    Update docs for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Adam Jackson <ajax@redhat.com>
+
+commit 80be2193862cdb9961cd6802f74110ea21cd9bf1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 23:39:43 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 32f09b0b8fefb9cd98d14165a22ab2ed14b0277a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 22 13:14:07 2018 -0700
+
+    Add conf.d to fontconfig configuration files list
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/doc/xorg-docs/issues/1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 34c00a29d2b99db1cc1f367489d2ac4e5d87cfef
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 20 14:53:54 2018 -0800
+
+    Update Solaris info in MAINTAINERS file
+
+commit 2ee2b7f0f0304879214f09d48c43c742894cf82e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 13 13:24:48 2017 -0700
+
+    Update Solaris URL in MAINTAINERS file
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Niveditha Rau <niveditha.rau@oracle.com>
+
+commit ebc0ba09cb2fe7d4fb1e223e274feec4879d8536
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:48 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 6177cf7e8156c6c0f65b603e898d842ea9c1c946
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5be837f3f57f5f06c82cc557d58c55d3bd5d73dc
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 299e213f14d8d1586eb5d47d974c4fcffc807679
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 27 19:27:49 2015 -0700
+
+    X.man: move XLOCAL documentation from Xorg(1) man page
+    
+    These settings affect clients, not server, so belong here, next to
+    the information about how to set $DISPLAY.
+    
+    Also updated to drop ISC and correct description of Unix domain sockets.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 9e48239436c256ff695cefea1433cdb2868667a9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 27 19:06:53 2015 -0700
+
+    X.man: document protocol/ syntax in display string
+    
+    See http://www.x.org/releases/X11R7.7/doc/libX11/libX11/libX11.html#Opening_the_Display
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit b0348bd9f9c79b87c93e2d71dba674ebcb31d8f7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 27 18:15:06 2015 -0700
+
+    X.man: update program lists/info for modern era
+    
+    We no longer have a monolithic X.Org distribution, nor a separate
+    user-contributed distribution from X.Org, but instead many OS distros.
+    
+    Also stop recommending so much abandonware, but do point out the programs
+    we've added over the years and still maintain.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit 02a513c7847ce37ba3bc1e6f2f5ed5a77062a60d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 27 17:49:44 2015 -0700
+
+    X.man: give pointers to specs & other docs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Jeremy Huddleston Sequoia <jeremyhu@apple.com>
+
+commit cdf00c1095f9e7dd26dccad3049442684768da62
+Author: Ingo Schwarze <schwarze@usta.de>
+Date:   Sun Aug 30 15:22:10 2015 +0200
+
+    remove bogus \/ escapes
+    
+    some X manuals use then escape sequence \/ when they want to render
+    a slash.  That's bad because \/ is not a slash but an italic
+    correction, never producing any output, having no effect at all in
+    terminal output, and only changing spacing in a minor way in typeset
+    output.
+    
+    Reviewed-by: Mark Kettenis <kettenis@openbsd.org>
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+
 commit 703974aee2f4e380076427b4b04da407b663ed2c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 30 23:09:58 2015 -0700
@@ -2637,7 +2918,7 @@ Date:   Mon May 12 17:46:58 2008 +0930
     
     Conflicts:
     
-    	specs/Xi/protocol.xml
+            specs/Xi/protocol.xml
 
 commit 4c4b977b3f53b14a33028160bc3b43b6f49bba3c
 Author: Peter Hutterer <peter@cs.unisa.edu.au>
@@ -3198,8 +3479,8 @@ Date:   Mon Oct 30 20:56:08 2006 -0500
     
     Conflicts:
     
-    	sgml/dps.sgml
-    	sgml/fonts.sgml
+            sgml/dps.sgml
+            sgml/fonts.sgml
 
 commit 34b795ce4b40d0c3a7283c5fcf54ac954ad590ff
 Author: David Nusinow <dnusinow@debian.org>
@@ -3739,7 +4020,7 @@ Date:   Fri Sep 3 16:18:22 2004 +0000
         Keith Packard).
 
 commit 719ac6c84480381069b74220fc93500e1ed2c453
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Aug 30 21:01:21 2004 +0000
 
     Update release notes

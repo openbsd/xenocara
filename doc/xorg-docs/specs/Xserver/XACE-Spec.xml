@@ -546,7 +546,7 @@
 		</row>
 		<row>
 		  <entry><literal>DixWriteAccess</literal></entry>
-		  <entry>The state of the device is being programatically manipulated.</entry>
+		  <entry>The state of the device is being programmatically manipulated.</entry>
 		  <entry>WarpPointer, XTestFakeInput, XiSendExtensionEvent</entry>
 		</row>
 		<row>

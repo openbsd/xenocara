@@ -15,19 +15,19 @@
  <authorgroup>
   <author>
     <firstname>David</firstname><surname>Holland</surname>
-      <affiliation><orgname><ulink url="http://www.xfree86.org/">XFree86
+      <affiliation><orgname><ulink url="https://www.xfree86.org/">XFree86
 	      Project</ulink></orgname></affiliation>
   </author>
 
   <author>
     <firstname>Marc</firstname><surname>Aurele La France</surname>
-      <affiliation><orgname><ulink url="http://www.xfree86.org/">XFree86
+      <affiliation><orgname><ulink url="https://www.xfree86.org/">XFree86
 	      Project</ulink></orgname></affiliation>
   </author>
 
   <author>
       <firstname>Alan</firstname><surname>Coopersmith</surname>
-      <affiliation><orgname><ulink url="http://www.oracle.com/">Oracle
+      <affiliation><orgname><ulink url="https://www.oracle.com/">Oracle
 	      Corp.</ulink></orgname></affiliation>
   </author>
  </authorgroup>
@@ -119,54 +119,12 @@ these programs must be found before any possible GNU versions.
 
 </sect1>
 
-<sect1 id='Notes_for_running_Xorg_on_Solaris'>
-<title>Notes for running Xorg on Solaris</title>
-
-<para>
-
-<orderedlist>
-<listitem>
-<para>
-Depending on the release or architecture of Solaris you are running, you might
-need to install an OS driver for an aperture device.
-</para>
-<para>
-Under Solaris x86 2.5 and later, there's a system driver
-(<filename class="devicefile">/dev/xsvc</filename>)
-that provides this functionality.
-It will be detected automatically by the server, so you don't need to install
-the aperture driver.
-</para>
-
-<para>
-For older Solaris x86 and for Solaris SPARC releases, the source for this
-driver is included in
-<filename>hw/xfree86/os-support/solaris/apSolaris.shar</filename>
-in the xserver source distribution.
-Building, and installing the driver is relatively straight forward. Please read
-its accompanying README file.
-</para>
-</listitem>
-<listitem>
-<para>
-Xqueue is <emphasis remap="bf">NOT</emphasis> supported under Solaris.
-</para>
-</listitem>
-
-</orderedlist>
-
-</para>
-
-</sect1>
-
-
 <sect1 id='Bug_Notification'>
 <title>Bug Notification</title>
 
 <para>
 Bug reports should be reported at
-<ulink url="http://bugs.freedesktop.org/"></ulink> using the
-xorg product or sent to <email>xorg@lists.freedesktop.org</email>.
+<ulink url="https://gitlab.freedesktop.org/xorg" />.
 </para>
 
 </sect1>

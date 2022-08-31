@@ -13,7 +13,7 @@ The XFree86 Project, Inc
 <corpauthor>
 Updated for X.Org by Keith Packard, Kevin E. Martin, and Alan Coopersmith
 </corpauthor>
-<pubdate>November 2010</pubdate>
+<pubdate>June 2019</pubdate>
 
 <abstract>
 
@@ -34,12 +34,9 @@ basic scheme is the same.  This document reflects the policy that X.Org uses.
 Starting with the X11R7.0 release, each module has its own version number.
 For those without a natural starting point, the version numbers started at
 1.0.   For instance, the X11R7.0 release included the xorg-server 1.0
-module.   As modules are released independently from the rest of the
-window system, the module version is the most accurate source of version
-information.   For instance, there are many X server releases in a year,
-but generally only one window system release, so an X server version number
-such as 1.7.7 is more informative than the X11R7.5 version for the window
-system <quote>katamari</quote> release.
+module.   As X.Org no longer produces the <quote>katamari</quote> releases
+of the entire window system (X11R7.x), the module version is the only
+accurate source of version information.
 </para>
 
 <para>
@@ -75,12 +72,6 @@ releases.
 </para>
 
 <para>
-The X.Org Foundation is planning to make full releases from the main
-development stream at regular intervals in the 6-12 month range.  The
-feature freezes for these releases will usually be 2-3 months before the
-release dates.  This general plan is a goal, not a binding commitment.
-The actual release intervals and dates will depend to a large degree on
-the resource available to X.Org.
 Update/bugfix releases will be made on an as-required basis,
 depending also on the availability of resources, and will generally be
 limited to serious bug and security fixes.  New features will not

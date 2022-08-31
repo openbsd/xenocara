@@ -1,4 +1,4 @@
-.\" t
+'\" t
 .\"
 .\" Copyright (c) 1994, 2004  The Open Group
 .\" Copyright \(co 2000  The XFree86 Project, Inc.
@@ -76,39 +76,53 @@ the \fIXlib - C Language X Interface\fP manual,
 the \fIX Window System Protocol\fP specification,
 the \fIX Toolkit Intrinsics - C Language Interface\fP manual,
 and various toolkit documents.
+.\" Use .UR macro from groff's man(7) if available, otherwise just
+.\" display URL as plain text for other processors.
+.if !d UR \{
+.de UR
+.RI < \\$1 >
+..
+.de UE
+.RI \\$1
+.. \}
+.\"
+Those manuals, specifications, & documents may be found in
+__datadir__/doc or on the X.Org Foundation website at
+.UR "https://www.x.org/releases/current/doc/"
+.UE .
 .PP
 The number of programs that use \fIX\fP is quite large.
-Programs provided in the core X.Org Foundation distribution include:
+Sample programs provided by the X.Org Foundation include:
 a terminal emulator, \fIxterm\fP;
 a window manager, \fItwm\fP;
+a compositing manager, \fIxcompmgr\fP;
 a display manager, \fIxdm\fP;
 a console redirect program, \fIxconsole\fP;
-a bitmap editor, \fIbitmap\fP;
+utilities for managing input and output devices, \fIxinput\fP and \fIxrandr\fP;
 resource listing/manipulation tools, \fIappres\fP, \fIeditres\fP;
 access control programs, \fIxauth\fP, \fIxhost\fP, and \fIiceauth\fP;
-user preference setting programs, \fIxrdb\fP, \fIxcmsdb\fP,
+user preference setting programs, \fItransset\fP, \fIxrdb\fP, \fIxcmsdb\fP,
 \fIxset\fP, \fIxsetroot\fP, \fIxstdcmap\fP, and \fIxmodmap\fP;
 clocks, \fIxclock\fP and \fIoclock\fP;
-a font displayer, \fIxfd\fP;
-utilities for listing information about fonts, windows, and displays,
-\fIxlsfonts\fP, \fIxwininfo\fP, \fIxlsclients\fP,
-\fIxdpyinfo\fP, \fIxlsatoms\fP, and \fIxprop\fP;
+font display utilities, \fIxfd\fP and \fIxfontsel\fP;
+utilities for listing information about displays, extensions, and resources,
+\fIxdpyinfo\fP, \fIxdriinfo\fP, \fIxvinfo\fP, \fIxwininfo\fP, \fIxlsclients\fP,
+\fIxprop\fP, \fIxlsatoms\fP, \fIxlsclients\fP, and \fIxlsfonts\fP;
 screen image manipulation utilities, \fIxwd\fP, \fIxwud\fP, and \fIxmag\fP;
 a performance measurement utility, \fIx11perf\fP;
 a font compiler, \fIbdftopcf\fP;
-a font server and related utilities, \fIxfs\fP, \fIfsinfo\fP, \fIfslsfonts\fP, \fIfstobdf\fP;
+a font server and related utilities, \fIxfs\fP, \fIxfsinfo\fP, \fIfslsfonts\fP, \fIfstobdf\fP;
 a display server and related utilities, \fIXserver\fP, \fIrgb\fP, \fImkfontdir\fP;
 a clipboard manager, \fIxclipboard\fP;
 keyboard description compiler and related utilities, \fIxkbcomp\fP, \fIsetxkbmap\fP
 \fIxkbprint\fP, \fIxkbbell\fP, \fIxkbevd\fP, \fIxkbvleds\fP, and \fIxkbwatch\fP;
 a utility to terminate clients, \fIxkill\fP;
-a firewall security proxy, \fIxfwp\fP;
 and a utility to cause part or all of the screen to be redrawn, \fIxrefresh\fP.
 .PP
 Many other utilities, window managers, games, toolkits, etc. are included
-as user-contributed software in the X.Org Foundation distribution, or are
+as packages in many operating system distributions, or are
 available on the Internet.
-See your site administrator for details.
+See your site administrator or distro package manager for details.
 .SH "STARTING UP"
 .PP
 There are two main ways of getting the X server and an initial set of
@@ -151,15 +165,34 @@ form:
 .RS
 \fIhostname:displaynumber.screennumber\fP
 .RE
+or
+.RS
+\fIprotocol/hostname:displaynumber.screennumber\fP
+.RE
 .sp
 This information is used by the application to determine how it should
 connect to the server and which screen it should use by default
 (on displays with multiple monitors):
 .TP 8
+.I protocol
+The \fIprotocol\fP specifies the protocol to use for communication.
+Exactly which protocols are supported is platform dependent, but most
+commonly supported ones are:
+.TS
+l l.
+tcp     TCP over IPv4 or IPv6
+inet    TCP over IPv4 only
+inet6   TCP over IPv6 only
+unix    UNIX Domain Sockets (same host only)
+local   Platform preferred local connection method
+.TE
+If the protocol is not specified, Xlib uses whatever it believes is the
+most efficient transport.
+.TP 8
 .I hostname
 The \fIhostname\fP specifies the name of the machine to which the display is
-physically connected.  If the hostname is not given, the most efficient way of
-communicating to a server on the same machine will be used.
+physically connected.  If the hostname is not given, a connection to a server
+on the same machine will be used.
 .TP 8
 .I displaynumber
 The phrase "display" is usually used to refer to a collection of monitors that
@@ -227,6 +260,55 @@ addresses, and IPv6 addresses are all allowed.  For example:
 \fIx.org:0\fP, \fIexpo:0\fP, \fI[::1]:0\fP,
 \fI198.112.45.11:0\fP, \fIbigmachine:1\fP, and \fIhydra:0.1\fP.
 .PP
+.SH "LOCAL CONNECTIONS"
+For operating systems that support local connections other than Unix
+Domain sockets (SVR3 and SVR4), there is a compiled-in list specifying
+the order in which local connections should be attempted.  This list
+can be overridden by the
+.I XLOCAL
+environment variable described below.  If the display name indicates a
+best-choice connection should be made (e.g.
+.BR :0.0 ),
+each connection mechanism is tried until a connection succeeds or no
+more mechanisms are available.
+.PP
+The
+.I XLOCAL
+environment variable should contain a list of one more
+more of the following:
+.PP
+.RS 8
+.nf
+NAMED
+PTS
+SCO
+UNIX
+.fi
+.RE
+.PP
+which represent SVR4 Named Streams pipe, Old-style USL Streams pipe,
+SCO XSight Streams pipe, and Unix domain sockets, respectively.  You can
+select a single mechanism (e.g.
+.IR XLOCAL=NAMED ),
+or an ordered list (e.g. \fIXLOCAL="NAMED:PTS:SCO"\fP).
+This variable overrides the compiled-in defaults.  For SVR4 it is
+recommended that
+.I NAMED
+be the first preference connection.  The default setting is
+platform-dependent.
+.PP
+To globally override the compiled-in defaults, you should define (and
+export if using
+.B sh
+or
+.BR ksh )
+.I XLOCAL
+globally.  If you use startx(1) or xinit(1), the definition should be
+at the top of your
+.I .xinitrc
+file.  If you use xdm(1), the definitions should be early on in the
+.I __projectroot__/lib/X11/xdm/Xsession
+script.
 .SH "ACCESS CONTROL"
 An X server can use several types of access control.  Mechanisms provided
 in Release 7 are:
@@ -357,12 +439,12 @@ to explicitly draw the window's region on the screen with the pointer, for
 example).
 .PP
 Since window managers are regular (albeit complex) client programs,
-a variety of different user interfaces can be built.  The X.Org Foundation distribution
-comes with a window manager named \fItwm\fP which supports overlapping windows,
+a variety of different user interfaces can be built.  The X.Org Foundation
+provides a window manager named \fItwm\fP which supports overlapping windows,
 popup menus, point-and-click or click-to-type input models, title bars, nice
 icons (and an icon manager for those who don't like separate icon windows).
 .PP
-See the user-contributed software in the X.Org Foundation distribution for other
+See your distro package manager for other
 popular window managers.
 .SH "FONT NAMES"
 Collections of characters for displaying text and symbols in X are known as
@@ -1199,16 +1281,15 @@ the appropriate instance name can be placed before the asterisk:
 .BR bdftopcf (__appmansuffix__),
 .BR bitmap (__appmansuffix__),
 .BR editres (__appmansuffix__),
-.BR fsinfo (__appmansuffix__),
 .BR fslsfonts (__appmansuffix__),
 .BR fstobdf (__appmansuffix__),
 .BR iceauth (__appmansuffix__),
-.BR imake (__appmansuffix__),
-.BR makedepend (__appmansuffix__),
 .BR mkfontdir (__appmansuffix__),
+.BR mkfontscale (__appmansuffix__),
 .BR oclock (__appmansuffix__),
 .BR resize (__appmansuffix__),
 .BR smproxy (__appmansuffix__),
+.BR transset (__appmansuffix__),
 .BR twm (__appmansuffix__),
 .BR x11perf (__appmansuffix__),
 .BR x11perfcomp (__appmansuffix__),
@@ -1216,12 +1297,16 @@ the appropriate instance name can be placed before the asterisk:
 .BR xclipboard (__appmansuffix__),
 .BR xclock (__appmansuffix__),
 .BR xcmsdb (__appmansuffix__),
+.BR xcompmgr (__appmansuffix__),
 .BR xconsole (__appmansuffix__),
 .BR xdm (__appmansuffix__),
 .BR xdpyinfo (__appmansuffix__),
+.BR xdriinfo (__appmansuffix__),
+.BR xev (__appmansuffix__),
 .BR xfd (__appmansuffix__),
+.BR xfontsel (__appmansuffix__),
 .BR xfs (__appmansuffix__),
-.BR xfwp (__appmansuffix__),
+.BR xfsinfo (__appmansuffix__),
 .BR xhost (__appmansuffix__),
 .BR xinit (__appmansuffix__),
 .BR xkbbell (__appmansuffix__),
@@ -1238,14 +1323,17 @@ the appropriate instance name can be placed before the asterisk:
 .BR xmag (__appmansuffix__),
 .BR xmodmap (__appmansuffix__),
 .BR xprop (__appmansuffix__),
+.BR xrandr (__appmansuffix__),
 .BR xrdb (__appmansuffix__),
 .BR xrefresh (__appmansuffix__),
-.BR xrx (__appmansuffix__),
+.BR xrestop (__appmansuffix__),
+.BR xscope (__appmansuffix__),
 .BR xset (__appmansuffix__),
 .BR xsetroot (__appmansuffix__),
 .BR xsm (__appmansuffix__),
 .BR xstdcmap (__appmansuffix__),
 .BR xterm (__appmansuffix__),
+.BR xvinfo (__appmansuffix__),
 .BR xwd (__appmansuffix__),
 .BR xwininfo (__appmansuffix__),
 .BR xwud (__appmansuffix__).
@@ -1255,10 +1343,17 @@ the appropriate instance name can be placed before the asterisk:
 .BR Xephyr (__appmansuffix__),
 .BR Xnest (__appmansuffix__),
 .BR Xvfb (__appmansuffix__),
+.PP
 .\" specifications
 .I "Xlib \- C Language X Interface\fR,\fP"
 and
 .I "X Toolkit Intrinsics \- C Language Interface"
+.PP
+Those specifications, and additional specifications & documentation for the
+X Window System may also be found in __datadir__/doc or on the X.Org Foundation
+website at
+.UR "http://www.x.org/releases/current/doc/"
+.UE .
 .SH TRADEMARKS
 .PP
 X Window System is a trademark of The Open Group.

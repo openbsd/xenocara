@@ -6,14 +6,6 @@ items, to aid in avoiding conflicts and to aid in sharing of such items.
 Requests to register items, or questions about registration, should be 
 addressed to
 	xregistry@x.org
-or to
-	The X.Org Foundation -- X11 Registry
-	c/o Alan Coopersmith
-	Oracle Corporation
-	M/S SCA17-3824
-	4170 Network Circle
-	Santa Clara, CA 95054
-	USA
 
 Electronic mail will be acknowledged upon receipt.
 Please allow up to 4 weeks for a formal response to registration and inquiries.
@@ -21,7 +13,7 @@ Please allow up to 4 weeks for a formal response to registration and inquiries.
 The registry is published as part of the X software distribution
 from The X.Org Foundation. The latest registry can be found at:
 
-	http://cgit.freedesktop.org/xorg/doc/xorg-docs/tree/registry
+	https://gitlab.freedesktop.org/xorg/doc/xorg-docs/blob/master/registry
 
 All registered items must have the postal address of someone responsible for
 the item, or a reference to a document describing the item and the postal
@@ -681,7 +673,7 @@ Name						Reference
 "HP-Hebrew8"					[36]
 	HPHEBREW8 8-bit character set
 "HP-Japanese15"					[36]
-	HPJAPAN15 15-bit characer set,
+	HPJAPAN15 15-bit character set,
 	modified from industry defacto
 	standard Shift-JIS
 "HP-Kana8"					[36]
@@ -1077,7 +1069,7 @@ REFERENCES
 [7]	The Open Group
 	Apex Plaza,Forbury Road,
 	Reading,Berks.RG1 1AX,England
-	http://www.opengroup.org/contacts/
+	https://www.opengroup.org/offices
 
 [8]	The X standards body maintaining X11 and related standards:
 	1988-1993 The MIT X Consortium
@@ -1088,22 +1080,14 @@ REFERENCES
 
 	The X.Org Foundation current contact information:
 
-	X.Org website:		http://www.x.org/
+	X.Org website:		https://www.x.org/
 
 	X.Org mailing lists: 	
-		http://www.x.org/wiki/XorgMailingLists
+		https://www.x.org/wiki/XorgMailingLists
 
 	X.Org Foundation Board of Directors:
-	    http://www.x.org/wiki/BoardOfDirectors
+	    https://www.x.org/wiki/BoardOfDirectors
 	    board@foundation.x.org
-
-	    Board Secretary:
-		Alan Coopersmith
-		Oracle Corporation
-		M/S SCA17-3824
-		4170 Network Circle
-		Santa Clara, CA 95054
-		USA
 
 [9]	PEX Protocol Specification
 	PEX Protocol Encoding
@@ -1330,13 +1314,11 @@ REFERENCES
 	MIT Station
 	Cambridge, MA 02139-0901
 
-[57]	(Previously David Rosenthal, Steve Swales, Sun Microsystems)
-	Stuart Kreitman
+[57]	(Previously David Rosenthal, Steve Swales, Stuart Kreitman,
+	 Sun Microsystems)
+	Alan Coopersmith, Niveditha Rau
 	Oracle Corporation
-	M/S SCA17-3856
-	4170 Network Circle
-	Santa Clara, CA 95054
-	stuart.kreitman@oracle.com
+	alan.coopersmith@oracle.com, niveditha.rau@oracle.com
 
 [58]	(Originally Murali V. Srinivasan)
 	See Reference [57]

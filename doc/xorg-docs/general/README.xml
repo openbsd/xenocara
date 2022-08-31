@@ -10,7 +10,7 @@
 
 <title>README for X11R&relvers;</title>
 
-<corpauthor><ulink url="http://www.x.org/wiki/XorgFoundation">
+<corpauthor><ulink url="https://www.x.org/wiki/XorgFoundation">
 The X.Org Foundation
 </ulink></corpauthor>
 
@@ -52,7 +52,7 @@ issues, fixes for driver bugs, and fixes that improve stability.
 <![ %minorrel [
 -->
 <para>
-X11R&relvers; is the &whichfullrel; release in the X11R&majorvers; series.
+X11R&relvers; was the &whichfullrel; release in the X11R&majorvers; series.
 </para>
 <!--
 ]]>
@@ -103,15 +103,17 @@ related documentation.
 
 <para>
 The X.Org Foundation X releases are produced by the X.Org Foundation.
-The X.Org Foundation has been formed as a Delaware corporation organized
-to operate as a scientific charity under IRS code 501(c)(3) chartered
+The X.Org Foundation is a member project of
+<ulink url="https://spi-inc.org/">Software in the Public Interest (SPI)</ulink>,
+which operates as a scientific charity under IRS code 501(c)(3).
+The X.Org Foundation is chartered
 to develop and execute effective strategies which provide world-wide
 stewardship of the X Window System technology and standards. Membership
 in the X.Org Foundation is free to all participants. Applications for
 Membership are now being accepted, and active participants in the
 further development of the X Window Technology are invited to complete a
 <ulink
-url="http://www.x.org/wiki/Membership"
+url="https://www.x.org/wiki/Membership"
 >membership application</ulink>.  The X11R&relvers; release has been
 produced by the many contributors to the X.Org community and members of
 the X.Org Foundation and includes code from the X Consortium, the Open
@@ -178,11 +180,11 @@ Attributions are included with documentation accompanying binaries.
 Most of these licenses are based on the MIT, X Consortium, or BSD
 (original and revised) licenses.  All of them are consistent with the
 <ulink
-url="http://www.opensource.org/docs/definition.php"
+url="https://www.opensource.org/docs/definition.php"
 >Open Source Definition</ulink
 >, and most are
 consistent with the Free Software Foundation's <ulink
-url="http://www.fsf.org/philosophy/free-sw.html"
+url="https://www.fsf.org/philosophy/free-sw.html"
 >Free Software Definition</ulink
 >.
 </para>
@@ -197,7 +199,7 @@ If you find any omissions in that document, please contact us with details at
 While the current licenses are all open source licenses, the
 X.Org Foundation is attempting, with time, to bring as much as
 possible of the code's licenses in the distribution into compliance with the
-<ulink url="http://www.debian.org/social_contract#guidelines"
+<ulink url="https://www.debian.org/social_contract#guidelines"
 >Debian Free Software Guidelines</ulink>.
 </para>
 
@@ -208,7 +210,7 @@ possible of the code's licenses in the distribution into compliance with the
 
 <para>
 The documentation for this release can be found online at the <ulink
-url="http://www.x.org/">X.Org web site</ulink>.
+url="https://www.x.org/">X.Org web site</ulink>.
 </para>
 
 <para>
@@ -218,7 +220,7 @@ Document</olink>.
 </para>
 
 <para>
-Additional information may be available at the <ulink url="http://wiki.x.org/"
+Additional information may be available at the <ulink url="https://wiki.x.org/"
 >X.Org Foundation Wiki</ulink>.
 </para>
 
@@ -229,10 +231,10 @@ Additional information may be available at the <ulink url="http://wiki.x.org/"
 
 <para>
 Current information about the X.Org Foundation public mailing lists is
-available on <ulink url="http://www.x.org/wiki/XorgMailingLists">the X.Org
+available on <ulink url="https://www.x.org/wiki/XorgMailingLists">the X.Org
 mailing list page</ulink> and related desktop
 technology mailing lists can be found on <ulink
-url="http://freedesktop.org/mailman/listinfo">Freedesktop.org's mailing list
+url="https://freedesktop.org/mailman/listinfo/">Freedesktop.org's mailing list
 page</ulink>.
 </para>
 
@@ -243,13 +245,12 @@ page</ulink>.
 
 <para>
 If you have any new work or enhancements/bug fixes for existing work,
-please send them as git format patches to
-<email>xorg-devel@lists.freedesktop.org</email> or to our
-<ulink url="https://bugs.freedesktop.org/">bug tracking system</ulink>
-using the xorg component.  This will help ensure that they are included
+please submit them via
+<ulink url="https://gitlab.freedesktop.org/xorg">the gitlab.freedesktop.org code management system</ulink>.
+This will help ensure that they are included
 in future releases.   More details on patch submission and review
 process are available on the
-<ulink url="http://www.x.org/wiki/Development/Documentation/SubmittingPatches">
+<ulink url="https://www.x.org/wiki/Development/Documentation/SubmittingPatches">
 SubmittingPatches</ulink> page of the X.Org wiki.
 </para>
 
@@ -261,7 +262,7 @@ SubmittingPatches</ulink> page of the X.Org wiki.
 <!--
 <![ %snapshot; [
 <para>
-X11R&relvers; can be found from the <ulink url="http://wiki.x.org">X.Org
+X11R&relvers; can be found from the <ulink url="https://wiki.x.org">X.Org
 Foundation wiki</ulink>, and at mirrors of this server.
 </para>
 ]]>
@@ -271,7 +272,7 @@ Foundation wiki</ulink>, and at mirrors of this server.
 <para>
 Information about X11R&relvers; can be found from the
 <ulink
-url="http://wiki.x.org"
+url="https://wiki.x.org"
 >X.Org Foundation wiki</ulink>, and at
 mirrors of this server.
 </para>
@@ -283,17 +284,17 @@ mirrors of this server.
 <title>X11R&relvers;</title>
 
 <para>
-This is the &whichfullrel; release of the new modular source code tree.  The
-source code has been split into nine logical modules: app, data, doc,
+X11R&relvers; was the &whichfullrel; release of the modular source code tree.
+The source code has been split into nine logical modules: app, data, doc,
 driver, font, lib. proto, util and xserver.  Each of these modules
 contain one or more packages that can be configured, built and installed
-separately.  Please see an X11R&relvers; release site for a complete
+separately.  Please see an X.Org release site for a complete
 list of the tarballs.
 </para>
 
 <para>
 For information on how to build the modular tree packages see the <ulink
-url="http://wiki.x.org/wiki/ModularDevelopersGuide"
+url="https://wiki.x.org/wiki/ModularDevelopersGuide"
 >Modular Developer's Guide</ulink
 >.  This guide also
 contains information for developers who want to help improve the modular
@@ -309,7 +310,7 @@ build system and modular code base.
 The X source code for this and all releases/snapshots as well as
 development versions can also be accessed via the Freedesktop.org git
 repository.  It's also possible to browse the <ulink
-url="http://cgit.freedesktop.org/xorg/"
+url="https://gitlab.freedesktop.org/xorg/"
 >freedesktop git repository</ulink
 >.
 </para>
@@ -327,8 +328,8 @@ To check out the latest development version, don't specify any tag.
 
 <para>
 Bugs should be reported to freedesktop.org's <ulink
-url="https://bugs.freedesktop.org/">bug tracking system</ulink>
-using the xorg component.  Before
+url="https://gitlab.freedesktop.org/xorg/">code management system</ulink>.
+Before
 reporting bugs, please check the server log file, which can be found at
 <filename>/var/log/Xorg.0.log</filename> on most platforms.  If you can't
 resolve the problem yourself, send the entire log file with your bug report but

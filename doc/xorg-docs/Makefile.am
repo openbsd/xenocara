@@ -26,6 +26,7 @@ dist_doc_DATA = MAINTAINERS
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 EXTRA_DIST = \
+	README.md \
 	misc/xlogo.epsi \
 	misc/xlogo.svg \
 	registry \

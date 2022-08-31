@@ -73,7 +73,7 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(dist_doc_DATA) \
+DIST_COMMON = $(am__configure_deps) $(dist_doc_DATA) \
 	$(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	$(top_srcdir)/configure ChangeLog INSTALL compile config.guess \
 	config.sub install-sh missing
@@ -309,6 +309,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -321,6 +322,7 @@ SUBDIRS = man
 dist_doc_DATA = MAINTAINERS
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 EXTRA_DIST = \
+	README.md \
 	misc/xlogo.epsi \
 	misc/xlogo.svg \
 	registry \

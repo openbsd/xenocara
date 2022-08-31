@@ -34,10 +34,10 @@ contact us with details at <email>xorg@lists.freedesktop.org</email>.
 <para>
 Most of these licenses are based on the MIT, X Consortium, or BSD
 (original and revised) licenses.  All of them are consistent with the
-<ulink url="http://www.opensource.org/docs/definition.php"
+<ulink url="https://www.opensource.org/docs/definition.php"
 >Open Source Definition</ulink>, and most are
 consistent with the Free Software Foundation's <ulink
-url="http://www.fsf.org/philosophy/free-sw.html">Free Software
+url="https://www.fsf.org/philosophy/free-sw.html">Free Software
 Definition</ulink>.
 </para>
 
@@ -45,7 +45,7 @@ Definition</ulink>.
 While the current licenses are all open source licenses, the
 X.Org Foundation is attempting, over time, to bring as much as
 possible of the code's licenses in the distribution into compliance with the
-<ulink url="http://www.debian.org/social_contract#guidelines"
+<ulink url="https://www.debian.org/social_contract#guidelines"
 >Debian Free Software Guidelines</ulink>.
 </para>
 
@@ -59,7 +59,7 @@ The X.Org Foundation has chosen the following format of the MIT
 License as the preferred format for code included in the X Window System
 distribution.   This is a slight variant of the common MIT license
 form published by the Open Source Initiative at
-<ulink url="http://www.opensource.org/licenses/mit-license.php"></ulink>.
+<ulink url="https://www.opensource.org/licenses/mit-license.php"></ulink>.
 </para>
 
 <blockquote>

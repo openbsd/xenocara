@@ -38,7 +38,7 @@ keyboard layout. Unlike other documents this guide accents the keymap developer'
     <para>
 The developer of a new layout should read the xkb
 protocol specification (<ulink
-url="http://www.x.org/docs/XKB/XKBproto.pdf"
+url="https://www.x.org/docs/XKB/XKBproto.pdf"
 >The X Keyboard Extension: Protocol Specification</ulink
 >) at least
 to clarify for himself some xkb-specific terms used in this document
@@ -355,7 +355,7 @@ want to use on of four predefined latin alphabet layouts.
 
 <!--
     TODO: more details
-    TODO: something similiar for phonetic layouts
+    TODO: something similar for phonetic layouts
     TODO: what are pc/pc layouts good for???
 -->
 
