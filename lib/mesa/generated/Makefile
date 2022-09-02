@@ -318,12 +318,12 @@ all:
 	    --device-prefix sqtt \
 	    --device-prefix metro_exodus
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
-	    --api-version 1.2 \
+	    --api-version 1.3 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --lib-path ${X11BASE}/lib/libvulkan_radeon.so \
 	    --out src/amd/vulkan/radeon_icd.json
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
-	    --api-version 1.2 \
+	    --api-version 1.3 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --lib-path ${X11BASE}/lib/libvulkan_intel.so \
 	    --out src/intel/vulkan/intel_icd.json
