@@ -52,7 +52,7 @@ struct intel_perf_query_info;
 
 #define INTEL_PERF_INVALID_CTX_ID (0xffffffff)
 
-enum intel_perf_counter_type {
+enum PACKED intel_perf_counter_type {
    INTEL_PERF_COUNTER_TYPE_EVENT,
    INTEL_PERF_COUNTER_TYPE_DURATION_NORM,
    INTEL_PERF_COUNTER_TYPE_DURATION_RAW,
@@ -61,7 +61,7 @@ enum intel_perf_counter_type {
    INTEL_PERF_COUNTER_TYPE_TIMESTAMP,
 };
 
-enum intel_perf_counter_data_type {
+enum PACKED intel_perf_counter_data_type {
    INTEL_PERF_COUNTER_DATA_TYPE_BOOL32,
    INTEL_PERF_COUNTER_DATA_TYPE_UINT32,
    INTEL_PERF_COUNTER_DATA_TYPE_UINT64,
@@ -69,7 +69,7 @@ enum intel_perf_counter_data_type {
    INTEL_PERF_COUNTER_DATA_TYPE_DOUBLE,
 };
 
-enum intel_perf_counter_units {
+enum PACKED intel_perf_counter_units {
    /* size */
    INTEL_PERF_COUNTER_UNITS_BYTES,
 
@@ -167,6 +167,11 @@ struct intel_perf_query_result {
     * Timestamp of the query.
     */
    uint64_t begin_timestamp;
+
+   /**
+    * Timestamp of the query.
+    */
+   uint64_t end_timestamp;
 
    /**
     * Whether the query was interrupted by another workload (aka preemption).
@@ -453,6 +458,11 @@ void intel_perf_query_result_accumulate(struct intel_perf_query_result *result,
                                         const struct intel_device_info *devinfo,
                                         const uint32_t *start,
                                         const uint32_t *end);
+
+/** Read the timestamp value in a report.
+ */
+uint64_t intel_perf_report_timestamp(const struct intel_perf_query_info *query,
+                                     const uint32_t *report);
 
 /** Accumulate the delta between 2 snapshots of OA perf registers (layout
  * should match description specified through intel_perf_query_register_layout).

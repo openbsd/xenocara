@@ -31,12 +31,10 @@
 #include "pan_util.h"
 #include "util/format/u_format.h"
 
-static void
-panfrost_blitter_save(
-        struct panfrost_context *ctx,
-        struct blitter_context *blitter,
-        bool render_cond)
+void
+panfrost_blitter_save(struct panfrost_context *ctx, bool render_cond)
 {
+        struct blitter_context *blitter = ctx->blitter;
 
         util_blitter_save_vertex_buffer_slot(blitter, ctx->vertex_buffers);
         util_blitter_save_vertex_elements(blitter, ctx->vertex);
@@ -49,7 +47,7 @@ panfrost_blitter_save(
         util_blitter_save_depth_stencil_alpha(blitter, ctx->depth_stencil);
         util_blitter_save_stencil_ref(blitter, &ctx->stencil_ref);
         util_blitter_save_so_targets(blitter, 0, NULL);
-        util_blitter_save_sample_mask(blitter, ctx->sample_mask);
+        util_blitter_save_sample_mask(blitter, ctx->sample_mask, ctx->min_samples);
 
         util_blitter_save_framebuffer(blitter, &ctx->pipe_framebuffer);
         util_blitter_save_fragment_sampler_states(blitter,
@@ -82,6 +80,6 @@ panfrost_blit(struct pipe_context *pipe,
         if (!util_blitter_is_blit_supported(ctx->blitter, info))
                 unreachable("Unsupported blit\n");
 
-        panfrost_blitter_save(ctx, ctx->blitter, info->render_condition_enable);
+        panfrost_blitter_save(ctx, info->render_condition_enable);
         util_blitter_blit(ctx->blitter, info);
 }

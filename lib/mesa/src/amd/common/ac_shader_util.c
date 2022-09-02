@@ -270,11 +270,13 @@ enum ac_image_dim ac_get_image_dim(enum chip_class chip_class, enum glsl_sampler
 
 unsigned ac_get_fs_input_vgpr_cnt(const struct ac_shader_config *config,
                                   signed char *face_vgpr_index_ptr,
-                                  signed char *ancillary_vgpr_index_ptr)
+                                  signed char *ancillary_vgpr_index_ptr,
+                                  signed char *sample_coverage_vgpr_index_ptr)
 {
    unsigned num_input_vgprs = 0;
    signed char face_vgpr_index = -1;
    signed char ancillary_vgpr_index = -1;
+   signed char sample_coverage_vgpr_index = -1;
 
    if (G_0286CC_PERSP_SAMPLE_ENA(config->spi_ps_input_addr))
       num_input_vgprs += 2;
@@ -308,8 +310,10 @@ unsigned ac_get_fs_input_vgpr_cnt(const struct ac_shader_config *config,
       ancillary_vgpr_index = num_input_vgprs;
       num_input_vgprs += 1;
    }
-   if (G_0286CC_SAMPLE_COVERAGE_ENA(config->spi_ps_input_addr))
+   if (G_0286CC_SAMPLE_COVERAGE_ENA(config->spi_ps_input_addr)) {
+      sample_coverage_vgpr_index = num_input_vgprs;
       num_input_vgprs += 1;
+   }
    if (G_0286CC_POS_FIXED_PT_ENA(config->spi_ps_input_addr))
       num_input_vgprs += 1;
 
@@ -317,6 +321,8 @@ unsigned ac_get_fs_input_vgpr_cnt(const struct ac_shader_config *config,
       *face_vgpr_index_ptr = face_vgpr_index;
    if (ancillary_vgpr_index_ptr)
       *ancillary_vgpr_index_ptr = ancillary_vgpr_index;
+   if (sample_coverage_vgpr_index_ptr)
+      *sample_coverage_vgpr_index_ptr = sample_coverage_vgpr_index;
 
    return num_input_vgprs;
 }
@@ -580,4 +586,60 @@ unsigned ac_compute_ngg_workgroup_size(unsigned es_verts, unsigned gs_inst_prims
    unsigned workgroup_size = MAX4(max_vtx_in, max_vtx_out, max_prim_in, max_prim_out);
 
    return CLAMP(workgroup_size, 1, 256);
+}
+
+void ac_set_reg_cu_en(void *cs, unsigned reg_offset, uint32_t value, uint32_t clear_mask,
+                      unsigned value_shift, const struct radeon_info *info,
+                      void set_sh_reg(void*, unsigned, uint32_t))
+{
+   /* Register field position and mask. */
+   uint32_t cu_en_mask = ~clear_mask;
+   unsigned cu_en_shift = ffs(cu_en_mask) - 1;
+   /* The value being set. */
+   uint32_t cu_en = (value & cu_en_mask) >> cu_en_shift;
+
+   /* AND the field by spi_cu_en. */
+   uint32_t spi_cu_en = info->spi_cu_en >> value_shift;
+   uint32_t new_value = (value & ~cu_en_mask) |
+                        (((cu_en & spi_cu_en) << cu_en_shift) & cu_en_mask);
+
+   set_sh_reg(cs, reg_offset, new_value);
+}
+
+/* Return the register value and tune bytes_per_wave to increase scratch performance. */
+void ac_get_scratch_tmpring_size(const struct radeon_info *info, unsigned max_scratch_waves,
+                                 unsigned bytes_per_wave, unsigned *max_seen_bytes_per_wave,
+                                 uint32_t *tmpring_size)
+{
+   /* SPI_TMPRING_SIZE and COMPUTE_TMPRING_SIZE are essentially scratch buffer descriptors.
+    * WAVES means NUM_RECORDS. WAVESIZE is the size of each element, meaning STRIDE.
+    * Thus, WAVESIZE must be constant while the scratch buffer is being used by the GPU.
+    *
+    * If you want to increase WAVESIZE without waiting for idle, you need to allocate a new
+    * scratch buffer and use it instead. This will result in multiple scratch buffers being
+    * used at the same time, each with a different WAVESIZE.
+    *
+    * If you want to decrease WAVESIZE, you don't have to. There is no advantage in decreasing
+    * WAVESIZE after it's been increased.
+    *
+    * Shaders with SCRATCH_EN=0 don't allocate scratch space.
+    */
+   const unsigned size_shift = 10;
+   const unsigned min_size_per_wave = BITFIELD_BIT(size_shift);
+
+   /* The LLVM shader backend should be reporting aligned scratch_sizes. */
+   assert((bytes_per_wave & BITFIELD_MASK(size_shift)) == 0 &&
+          "scratch size per wave should be aligned");
+
+   /* Add 1 scratch item to make the number of items odd. This should improve scratch
+    * performance by more randomly distributing scratch waves among memory channels.
+    */
+   if (bytes_per_wave)
+      bytes_per_wave |= min_size_per_wave;
+
+   *max_seen_bytes_per_wave = MAX2(*max_seen_bytes_per_wave, bytes_per_wave);
+
+   /* TODO: We could decrease WAVES to make the whole buffer fit into the infinity cache. */
+   *tmpring_size = S_0286E8_WAVES(max_scratch_waves) |
+                   S_0286E8_WAVESIZE(*max_seen_bytes_per_wave >> size_shift);
 }

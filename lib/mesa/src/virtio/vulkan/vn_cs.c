@@ -8,6 +8,46 @@
 #include "vn_instance.h"
 #include "vn_renderer.h"
 
+struct vn_cs_renderer_protocol_info _vn_cs_renderer_protocol_info = {
+   .mutex = _SIMPLE_MTX_INITIALIZER_NP,
+};
+
+static void
+vn_cs_renderer_protocol_info_init_once(struct vn_instance *instance)
+{
+   const struct vn_renderer_info *renderer_info = &instance->renderer->info;
+   /* assume renderer protocol supports all extensions if bit 0 is not set */
+   const bool support_all_exts =
+      !vn_info_extension_mask_test(renderer_info->vk_extension_mask, 0);
+
+   _vn_cs_renderer_protocol_info.api_version = renderer_info->vk_xml_version;
+
+   STATIC_ASSERT(sizeof(renderer_info->vk_extension_mask) >=
+                 sizeof(_vn_cs_renderer_protocol_info.extension_bitset));
+
+   for (uint32_t i = 1; i <= VN_INFO_EXTENSION_MAX_NUMBER; i++) {
+      /* use protocl helper to ensure mask decoding matches encoding */
+      if (support_all_exts ||
+          vn_info_extension_mask_test(renderer_info->vk_extension_mask, i))
+         BITSET_SET(_vn_cs_renderer_protocol_info.extension_bitset, i);
+   }
+}
+
+void
+vn_cs_renderer_protocol_info_init(struct vn_instance *instance)
+{
+   simple_mtx_lock(&_vn_cs_renderer_protocol_info.mutex);
+   if (_vn_cs_renderer_protocol_info.init_once) {
+      simple_mtx_unlock(&_vn_cs_renderer_protocol_info.mutex);
+      return;
+   }
+
+   vn_cs_renderer_protocol_info_init_once(instance);
+
+   _vn_cs_renderer_protocol_info.init_once = true;
+   simple_mtx_unlock(&_vn_cs_renderer_protocol_info.mutex);
+}
+
 static void
 vn_cs_encoder_sanity_check(struct vn_cs_encoder *enc)
 {
@@ -70,6 +110,23 @@ vn_cs_encoder_commit_buffer(struct vn_cs_encoder *enc)
 static void
 vn_cs_encoder_gc_buffers(struct vn_cs_encoder *enc)
 {
+   /* when the shmem pool is used, no need to cache the shmem in cs */
+   if (enc->storage_type == VN_CS_ENCODER_STORAGE_SHMEM_POOL) {
+      for (uint32_t i = 0; i < enc->buffer_count; i++) {
+         vn_renderer_shmem_unref(enc->instance->renderer,
+                                 enc->buffers[i].shmem);
+      }
+
+      enc->buffer_count = 0;
+      enc->total_committed_size = 0;
+      enc->current_buffer_size = 0;
+
+      enc->cur = NULL;
+      enc->end = NULL;
+
+      return;
+   }
+
    /* free all but the current buffer */
    assert(enc->buffer_count);
    struct vn_cs_encoder_buffer *cur_buf =
@@ -88,20 +145,24 @@ vn_cs_encoder_gc_buffers(struct vn_cs_encoder *enc)
 }
 
 void
-vn_cs_encoder_init_indirect(struct vn_cs_encoder *enc,
-                            struct vn_instance *instance,
-                            size_t min_size)
+vn_cs_encoder_init(struct vn_cs_encoder *enc,
+                   struct vn_instance *instance,
+                   enum vn_cs_encoder_storage_type storage_type,
+                   size_t min_size)
 {
+   /* VN_CS_ENCODER_INITIALIZER* should be used instead */
+   assert(storage_type != VN_CS_ENCODER_STORAGE_POINTER);
+
    memset(enc, 0, sizeof(*enc));
    enc->instance = instance;
+   enc->storage_type = storage_type;
    enc->min_buffer_size = min_size;
-   enc->indirect = true;
 }
 
 void
 vn_cs_encoder_fini(struct vn_cs_encoder *enc)
 {
-   if (unlikely(!enc->indirect))
+   if (unlikely(enc->storage_type == VN_CS_ENCODER_STORAGE_POINTER))
       return;
 
    for (uint32_t i = 0; i < enc->buffer_count; i++)
@@ -163,7 +224,8 @@ vn_cs_encoder_grow_buffer_array(struct vn_cs_encoder *enc)
 bool
 vn_cs_encoder_reserve_internal(struct vn_cs_encoder *enc, size_t size)
 {
-   if (unlikely(!enc->indirect))
+   VN_TRACE_FUNC();
+   if (unlikely(enc->storage_type == VN_CS_ENCODER_STORAGE_POINTER))
       return false;
 
    if (enc->buffer_count >= enc->buffer_max) {
@@ -176,35 +238,55 @@ vn_cs_encoder_reserve_internal(struct vn_cs_encoder *enc, size_t size)
    if (likely(enc->buffer_count)) {
       vn_cs_encoder_commit_buffer(enc);
 
-      /* TODO better strategy to grow buffer size */
-      const struct vn_cs_encoder_buffer *cur_buf =
-         &enc->buffers[enc->buffer_count - 1];
-      if (cur_buf->offset)
-         buf_size = next_buffer_size(0, enc->current_buffer_size, size);
+      if (enc->storage_type == VN_CS_ENCODER_STORAGE_SHMEM_ARRAY) {
+         /* if the current buffer is reused from the last vn_cs_encoder_reset
+          * (i.e., offset != 0), do not double the size
+          *
+          * TODO better strategy to grow buffer size
+          */
+         const struct vn_cs_encoder_buffer *cur_buf =
+            &enc->buffers[enc->buffer_count - 1];
+         if (cur_buf->offset)
+            buf_size = next_buffer_size(0, enc->current_buffer_size, size);
+      }
    }
 
    if (!buf_size) {
+      /* double the size */
       buf_size = next_buffer_size(enc->current_buffer_size,
                                   enc->min_buffer_size, size);
       if (!buf_size)
          return false;
    }
 
-   struct vn_renderer_shmem *shmem =
-      vn_renderer_shmem_create(enc->instance->renderer, buf_size);
+   struct vn_renderer_shmem *shmem;
+   size_t buf_offset;
+   if (enc->storage_type == VN_CS_ENCODER_STORAGE_SHMEM_ARRAY) {
+      shmem = vn_renderer_shmem_create(enc->instance->renderer, buf_size);
+      buf_offset = 0;
+   } else {
+      assert(enc->storage_type == VN_CS_ENCODER_STORAGE_SHMEM_POOL);
+      shmem =
+         vn_instance_cs_shmem_alloc(enc->instance, buf_size, &buf_offset);
+   }
    if (!shmem)
       return false;
 
-   uint32_t roundtrip;
-   VkResult result = vn_instance_submit_roundtrip(enc->instance, &roundtrip);
-   if (result != VK_SUCCESS) {
-      vn_renderer_shmem_unref(enc->instance->renderer, shmem);
-      return false;
+   if (unlikely(!enc->instance->renderer->info.supports_blob_id_0)) {
+      uint32_t roundtrip;
+      VkResult result =
+         vn_instance_submit_roundtrip(enc->instance, &roundtrip);
+      if (result != VK_SUCCESS) {
+         vn_renderer_shmem_unref(enc->instance->renderer, shmem);
+         return false;
+      }
+
+      enc->current_buffer_roundtrip = roundtrip;
    }
 
-   vn_cs_encoder_add_buffer(enc, shmem, 0, shmem->mmap_ptr, buf_size);
+   vn_cs_encoder_add_buffer(enc, shmem, buf_offset,
+                            shmem->mmap_ptr + buf_offset, buf_size);
    enc->current_buffer_size = buf_size;
-   enc->current_buffer_roundtrip = roundtrip;
 
    vn_cs_encoder_sanity_check(enc);
 

@@ -34,10 +34,6 @@ traces:
     expectations:
       - device: gl-radeonsi-stoney
         checksum: 4ceea12000bb5995b915228d2d4b49c7
-  - path: gputest/pixmark-piano.trace
-    expectations:
-      - device: gl-radeonsi-stoney
-        checksum: 86ebe6ff8038975de8724fa9536edb7e
   - path: gputest/triangle.trace
     expectations:
       - device: gl-radeonsi-stoney
@@ -218,6 +214,18 @@ traces:
     expectations:
       - device: gl-radeonsi-stoney
         checksum: 743ce9c218b87404cfe615ed7951d5b8
+  - path: paraview/pv-manyspheres.trace
+    expectations:
+      - device: gl-radeonsi-stoney
+        checksum: 7728082892aa81ee74484b1ed239db74
+  - path: paraview/pv-waveletcontour.trace
+    expectations:
+      - device: gl-radeonsi-stoney
+        checksum: c49b01d08b9716cd3408173d2dd1c9ef
+  - path: paraview/pv-waveletvolume.trace
+    expectations:
+      - device: gl-radeonsi-stoney
+        checksum: 491d0572ab0bcbcbc9827521597b3787
   - path: humus/VolumetricFogging2.trace
     expectations:
       - device: gl-radeonsi-stoney

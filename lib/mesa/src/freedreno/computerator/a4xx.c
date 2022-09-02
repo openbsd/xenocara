@@ -135,10 +135,10 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
 
    OUT_PKT0(ring, REG_A4XX_HLSQ_CL_CONTROL_0, 2);
    OUT_RING(ring, A4XX_HLSQ_CL_CONTROL_0_WGIDCONSTID(work_group_id) |
-                     A4XX_HLSQ_CL_CONTROL_0_UNK12CONSTID(regid(63, 0)) |
+                     A4XX_HLSQ_CL_CONTROL_0_KERNELDIMCONSTID(regid(63, 0)) |
                      A4XX_HLSQ_CL_CONTROL_0_LOCALIDREGID(local_invocation_id));
    OUT_RING(ring, A4XX_HLSQ_CL_CONTROL_1_UNK0CONSTID(regid(63, 0)) |
-                     A4XX_HLSQ_CL_CONTROL_1_UNK12CONSTID(regid(63, 0)));
+                     A4XX_HLSQ_CL_CONTROL_1_WORKGROUPSIZECONSTID(regid(63, 0)));
 
    OUT_PKT0(ring, REG_A4XX_HLSQ_CL_KERNEL_CONST, 1);
    OUT_RING(ring, A4XX_HLSQ_CL_KERNEL_CONST_UNK0CONSTID(regid(63, 0)) |
@@ -341,7 +341,8 @@ a4xx_init(struct fd_device *dev, const struct fd_dev_id *dev_id)
       .emit_grid = a4xx_emit_grid,
    };
 
-   a4xx_backend->compiler = ir3_compiler_create(dev, dev_id, false);
+   a4xx_backend->compiler = ir3_compiler_create(dev, dev_id,
+                                                &(struct ir3_compiler_options) {});
    a4xx_backend->dev = dev;
 
    return &a4xx_backend->base;

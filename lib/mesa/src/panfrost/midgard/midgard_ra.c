@@ -350,6 +350,44 @@ mir_compute_interference(
 
         mir_foreach_block(ctx, _blk) {
                 midgard_block *blk = (midgard_block *) _blk;
+
+                /* The scalar and vector units run in parallel. We need to make
+                 * sure they don't write to same portion of the register file
+                 * otherwise the result is undefined. Add interferences to
+                 * avoid this situation.
+                 */
+                util_dynarray_foreach(&blk->bundles, midgard_bundle, bundle) {
+                        midgard_instruction *instrs[2][4];
+                        unsigned instr_count[2] = { 0, 0 };
+
+                        for (unsigned i = 0; i < bundle->instruction_count; i++) {
+                                if (bundle->instructions[i]->unit == UNIT_VMUL ||
+                                    bundle->instructions[i]->unit == UNIT_SADD)
+                                        instrs[0][instr_count[0]++] = bundle->instructions[i];
+                                else
+                                        instrs[1][instr_count[1]++] = bundle->instructions[i];
+                        }
+
+                        for (unsigned i = 0; i < ARRAY_SIZE(instr_count); i++) {
+                                for (unsigned j = 0; j < instr_count[i]; j++) {
+                                        midgard_instruction *ins_a = instrs[i][j];
+
+                                        if (ins_a->dest >= ctx->temp_count) continue;
+
+                                        for (unsigned k = j + 1; k < instr_count[i]; k++) {
+                                                midgard_instruction *ins_b = instrs[i][k];
+
+                                                if (ins_b->dest >= ctx->temp_count) continue;
+
+                                                lcra_add_node_interference(l, ins_b->dest,
+                                                                           mir_bytemask(ins_b),
+                                                                           ins_a->dest,
+                                                                           mir_bytemask(ins_a));
+                                        }
+                                }
+                        }
+                }
+
                 uint16_t *live = mem_dup(_blk->live_out, ctx->temp_count * sizeof(uint16_t));
 
                 mir_foreach_instr_in_block_rev(blk, ins) {
@@ -466,7 +504,7 @@ allocate_registers(compiler_context *ctx, bool *spilled)
                                 unsigned s = ins->src[v];
 
                                 if (s < ctx->temp_count)
-                                        min_alignment[s] = 3;
+                                        min_alignment[s] = MAX2(3, min_alignment[s]);
                         }
                 }
 
@@ -476,7 +514,7 @@ allocate_registers(compiler_context *ctx, bool *spilled)
                                 unsigned size = nir_alu_type_get_type_size(ins->src_types[v]);
 
                                 if (s < ctx->temp_count)
-                                        min_alignment[s] = (size == 64) ? 3 : 2;
+                                        min_alignment[s] = MAX2((size == 64) ? 3 : 2, min_alignment[s]);
                         }
                 }
 
@@ -499,13 +537,14 @@ allocate_registers(compiler_context *ctx, bool *spilled)
                 found_class[dest] = MAX2(found_class[dest], bytes);
 
                 min_alignment[dest] =
-                        (size == 16) ? 1 : /* (1 << 1) = 2-byte */
-                        (size == 32) ? 2 : /* (1 << 2) = 4-byte */
-                        (size == 64) ? 3 : /* (1 << 3) = 8-byte */
-                        3; /* 8-bit todo */
+                        MAX2(min_alignment[dest],
+                             (size == 16) ? 1 : /* (1 << 1) = 2-byte */
+                             (size == 32) ? 2 : /* (1 << 2) = 4-byte */
+                             (size == 64) ? 3 : /* (1 << 3) = 8-byte */
+                             3); /* 8-bit todo */
 
                 /* We can't cross xy/zw boundaries. TODO: vec8 can */
-                if (size == 16)
+                if (size == 16 && min_alignment[dest] != 4)
                         min_bound[dest] = 8;
 
                 mir_foreach_src(ins, s) {
@@ -743,7 +782,7 @@ install_registers_instr(
                         struct phys_reg dst = index_to_reg(ctx, l, ins->dest, dest_shift);
 
                         ins->dest = SSA_FIXED_REGISTER(dst.reg);
-                        offset_swizzle(ins->swizzle[0], 0, 2, 2, dst.offset);
+                        offset_swizzle(ins->swizzle[0], 0, 2, dest_shift, dst.offset);
                         mir_set_bytemask(ins, mir_bytemask(ins) << dst.offset);
                 }
 
@@ -883,6 +922,11 @@ mir_spill_register(
                 if (is_special_w)
                         spill_slot = spill_index++;
 
+                unsigned last_id = ~0;
+                unsigned last_fill = ~0;
+                unsigned last_spill_index = ~0;
+                midgard_instruction *last_spill = NULL;
+
                 mir_foreach_block(ctx, _block) {
                 midgard_block *block = (midgard_block *) _block;
                 mir_foreach_instr_in_block_safe(block, ins) {
@@ -905,12 +949,19 @@ mir_spill_register(
 
                                 mir_insert_instruction_after_scheduled(ctx, block, ins, st);
                         } else {
-                                unsigned dest = spill_index++;
+                                unsigned bundle = ins->bundle_id;
+                                unsigned dest = (bundle == last_id)? last_spill_index : spill_index++;
 
-                                if (write_count > 1 && mir_bytemask(ins) != 0xF) {
+                                unsigned bytemask = mir_bytemask(ins);
+                                unsigned write_mask = mir_from_bytemask(mir_round_bytemask_up(
+                                                                           bytemask, 32), 32);
+
+                                if (write_count > 1 && bytemask != 0xFFFF && bundle != last_fill) {
                                         midgard_instruction read =
                                                 v_load_store_scratch(dest, spill_slot, false, 0xF);
                                         mir_insert_instruction_before_scheduled(ctx, block, ins, read);
+                                        write_mask = 0xF;
+                                        last_fill = bundle;
                                 }
 
                                 ins->dest = dest;
@@ -922,7 +973,7 @@ mir_spill_register(
                                  * of the spilt instruction need to be direct */
                                 midgard_instruction *it = ins;
                                 while ((it = list_first_entry(&it->link, midgard_instruction, link))
-                                       && (it->bundle_id == ins->bundle_id)) {
+                                       && (it->bundle_id == bundle)) {
 
                                         if (!mir_has_arg(it, spill_node)) continue;
 
@@ -937,9 +988,15 @@ mir_spill_register(
                                 if (move)
                                         dest = spill_index++;
 
-                                midgard_instruction st =
-                                        v_load_store_scratch(dest, spill_slot, true, ins->mask);
-                                mir_insert_instruction_after_scheduled(ctx, block, ins, st);
+                                if (last_id == bundle) {
+                                        last_spill->mask |= write_mask;
+                                        u_foreach_bit(c, write_mask)
+                                                last_spill->swizzle[0][c] = c;
+                                } else {
+                                        midgard_instruction st =
+                                                v_load_store_scratch(dest, spill_slot, true, write_mask);
+                                        last_spill = mir_insert_instruction_after_scheduled(ctx, block, ins, st);
+                                }
 
                                 if (move) {
                                         midgard_instruction mv = v_mov(ins->dest, dest);
@@ -947,6 +1004,9 @@ mir_spill_register(
 
                                         mir_insert_instruction_after_scheduled(ctx, block, ins, mv);
                                 }
+
+                                last_id = bundle;
+                                last_spill_index = ins->dest;
                         }
 
                         if (!is_special)

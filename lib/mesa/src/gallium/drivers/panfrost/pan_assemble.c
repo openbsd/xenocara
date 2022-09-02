@@ -30,7 +30,6 @@
 #include "pan_context.h"
 #include "pan_shader.h"
 #include "pan_util.h"
-#include "panfrost-quirks.h"
 
 #include "compiler/nir/nir.h"
 #include "nir/tgsi_to_nir.h"
@@ -87,9 +86,11 @@ panfrost_shader_compile(struct pipe_screen *pscreen,
 
 
         /* Don't upload RSD for fragment shaders since they need draw-time
-         * merging for e.g. depth/stencil/alpha */
-        bool upload = stage != MESA_SHADER_FRAGMENT;
-        screen->vtbl.prepare_rsd(state, desc_pool, upload);
+         * merging for e.g. depth/stencil/alpha. RSDs are replaced by simpler
+         * shader program descriptors on Valhall, which can be preuploaded even
+         * for fragment shaders. */
+        bool upload = !(stage == MESA_SHADER_FRAGMENT && dev->arch <= 7);
+        screen->vtbl.prepare_shader(state, desc_pool, upload);
 
         panfrost_analyze_sysvals(state);
 

@@ -27,6 +27,7 @@
 
 #include "util/list.h"
 #include "util/slab.h"
+#include "util/u_debug.h"
 
 #include "pipe/p_context.h"
 #include "pipe/p_state.h"
@@ -49,6 +50,9 @@ struct lima_fs_compiled_shader {
    struct {
       int shader_size;
       int stack_size;
+      int frag_color0_reg;
+      int frag_color1_reg;
+      int frag_depth_reg;
       bool uses_discard;
    } state;
 };
@@ -209,6 +213,8 @@ struct lima_context {
 
    struct lima_context_framebuffer framebuffer;
    struct lima_context_viewport_state viewport;
+   /* input for PLBU_CMD_VIEWPORT_* */
+   struct lima_context_viewport_state ext_viewport;
    struct pipe_scissor_state scissor;
    struct pipe_scissor_state clipped_scissor;
    struct lima_vs_compiled_shader *vs;
@@ -270,7 +276,7 @@ struct lima_context {
 
    int id;
 
-   struct pipe_debug_callback debug;
+   struct util_debug_callback debug;
 
    unsigned index_offset;
    struct lima_resource *index_res;

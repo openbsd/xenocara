@@ -1,2 +1,10 @@
-dEQP-GLES31.functional.shaders.opaque_type_indexing.sampler.const_literal.geometry.isampler2darray
-dEQP-GLES31.functional.shaders.opaque_type_indexing.sampler.const_literal.geometry.isampler3d
+# threading bugs
+glx@glx-multithread-clearbuffer
+glx@glx-multithread-shader-compile
+glx@glx-multithread-texture
+
+# Sometimes crashes, less so since moving to the google runners
+spec@arb_sync@sync_api
+
+spec@!opengl 1.1@read-front clear-front-first
+spec@ext_framebuffer_blit@fbo-sys-sub-blit

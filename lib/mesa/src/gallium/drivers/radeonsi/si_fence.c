@@ -88,8 +88,23 @@ void si_cp_release_mem(struct si_context *ctx, struct radeon_cmdbuf *cs, unsigne
       if (ctx->chip_class == GFX9 && !compute_ib && query_type != PIPE_QUERY_OCCLUSION_COUNTER &&
           query_type != PIPE_QUERY_OCCLUSION_PREDICATE &&
           query_type != PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE) {
-         struct si_resource *scratch = unlikely(ctx->ws->cs_is_secure(&ctx->gfx_cs)) ?
-            ctx->eop_bug_scratch_tmz : ctx->eop_bug_scratch;
+         struct si_screen *sscreen = ctx->screen;
+         struct si_resource *scratch;
+
+         if (!ctx->ws->cs_is_secure(&ctx->gfx_cs)) {
+            scratch = ctx->eop_bug_scratch;
+         } else {
+            assert(ctx->screen->info.has_tmz_support);
+            if (!ctx->eop_bug_scratch_tmz)
+               ctx->eop_bug_scratch_tmz =
+                  si_aligned_buffer_create(&sscreen->b,
+                                           PIPE_RESOURCE_FLAG_ENCRYPTED |
+                                           SI_RESOURCE_FLAG_DRIVER_INTERNAL,
+                                           PIPE_USAGE_DEFAULT,
+                                           16 * sscreen->info.max_render_backends, 256);
+
+            scratch = ctx->eop_bug_scratch_tmz;
+         }
 
          assert(16 * ctx->screen->info.max_render_backends <= scratch->b.b.width0);
          radeon_emit(PKT3(PKT3_EVENT_WRITE, 2, 0));
@@ -97,8 +112,8 @@ void si_cp_release_mem(struct si_context *ctx, struct radeon_cmdbuf *cs, unsigne
          radeon_emit(scratch->gpu_address);
          radeon_emit(scratch->gpu_address >> 32);
 
-         radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, scratch, RADEON_USAGE_WRITE,
-                                   RADEON_PRIO_QUERY);
+         radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, scratch,
+                                   RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
       }
 
       radeon_emit(PKT3(PKT3_RELEASE_MEM, ctx->chip_class >= GFX9 ? 6 : 5, 0));
@@ -126,8 +141,8 @@ void si_cp_release_mem(struct si_context *ctx, struct radeon_cmdbuf *cs, unsigne
          radeon_emit(0); /* immediate data */
          radeon_emit(0); /* unused */
 
-         radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, scratch, RADEON_USAGE_WRITE,
-                                   RADEON_PRIO_QUERY);
+         radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, scratch,
+                                   RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
       }
 
       radeon_emit(PKT3(PKT3_EVENT_WRITE_EOP, 4, 0));
@@ -141,7 +156,7 @@ void si_cp_release_mem(struct si_context *ctx, struct radeon_cmdbuf *cs, unsigne
    radeon_end();
 
    if (buf) {
-      radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, buf, RADEON_USAGE_WRITE, RADEON_PRIO_QUERY);
+      radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, buf, RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
    }
 }
 
@@ -254,7 +269,7 @@ static void si_fine_fence_set(struct si_context *ctx, struct si_fine_fence *fine
    } else if (flags & PIPE_FLUSH_BOTTOM_OF_PIPE) {
       uint64_t fence_va = fine->buf->gpu_address + fine->offset;
 
-      radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, fine->buf, RADEON_USAGE_WRITE, RADEON_PRIO_QUERY);
+      radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, fine->buf, RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
       si_cp_release_mem(ctx, &ctx->gfx_cs, V_028A90_BOTTOM_OF_PIPE_TS, 0, EOP_DST_SEL_MEM,
                         EOP_INT_SEL_NONE, EOP_DATA_SEL_VALUE_32BIT, NULL, fence_va, 0x80000000,
                         PIPE_QUERY_GPU_FINISHED);
@@ -545,7 +560,7 @@ static void si_fence_server_signal(struct pipe_context *ctx, struct pipe_fence_h
       si_add_syncobj_signal(sctx, sfence->gfx);
 
    /**
-    * The spec does not require a flush here. We insert a flush
+    * The spec requires a flush here. We insert a flush
     * because syncobj based signals are not directly placed into
     * the command stream. Instead the signal happens when the
     * submission associated with the syncobj finishes execution.

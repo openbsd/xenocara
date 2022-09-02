@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Raspberry Pi
+ * Copyright © 2021 Raspberry Pi Ltd
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -33,5 +33,10 @@ v3d_csd_choose_workgroups_per_supergroup(struct v3d_device_info *devinfo,
                                          uint32_t threads,
                                          uint32_t num_wgs,
                                          uint32_t wg_size);
+
+void
+v3d_choose_tile_size(uint32_t color_attachment_count, uint32_t max_color_bpp,
+                     bool msaa, bool double_buffer,
+                     uint32_t *width, uint32_t *height);
 
 #endif

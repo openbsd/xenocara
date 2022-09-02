@@ -560,7 +560,7 @@ static bool r600_query_hw_prepare_buffer(struct r600_common_screen *rscreen,
 
 static void r600_query_hw_get_result_resource(struct r600_common_context *rctx,
                                               struct r600_query *rquery,
-                                              bool wait,
+                                              enum pipe_query_flags flags,
                                               enum pipe_query_value_type result_type,
                                               int index,
                                               struct pipe_resource *resource,
@@ -766,7 +766,7 @@ static void r600_query_hw_do_emit_start(struct r600_common_context *ctx,
 	default:
 		assert(0);
 	}
-	r600_emit_reloc(ctx, &ctx->gfx, query->buffer.buf, RADEON_USAGE_WRITE,
+	r600_emit_reloc(ctx, &ctx->gfx, query->buffer.buf, RADEON_USAGE_WRITE |
 			RADEON_PRIO_QUERY);
 }
 
@@ -859,7 +859,7 @@ static void r600_query_hw_do_emit_stop(struct r600_common_context *ctx,
 	default:
 		assert(0);
 	}
-	r600_emit_reloc(ctx, &ctx->gfx, query->buffer.buf, RADEON_USAGE_WRITE,
+	r600_emit_reloc(ctx, &ctx->gfx, query->buffer.buf, RADEON_USAGE_WRITE |
 			RADEON_PRIO_QUERY);
 
 	if (fence_va)
@@ -905,7 +905,7 @@ static void emit_set_predicate(struct r600_common_context *ctx,
 	radeon_emit(cs, PKT3(PKT3_SET_PREDICATION, 1, 0));
 	radeon_emit(cs, va);
 	radeon_emit(cs, op | ((va >> 32) & 0xFF));
-	r600_emit_reloc(ctx, &ctx->gfx, buf, RADEON_USAGE_READ,
+	r600_emit_reloc(ctx, &ctx->gfx, buf, RADEON_USAGE_READ |
 			RADEON_PRIO_QUERY);
 }
 
@@ -1307,7 +1307,7 @@ static bool r600_get_query_result(struct pipe_context *ctx,
 
 static void r600_get_query_result_resource(struct pipe_context *ctx,
                                            struct pipe_query *query,
-                                           bool wait,
+                                           enum pipe_query_flags flags,
                                            enum pipe_query_value_type result_type,
                                            int index,
                                            struct pipe_resource *resource,
@@ -1316,7 +1316,7 @@ static void r600_get_query_result_resource(struct pipe_context *ctx,
 	struct r600_common_context *rctx = (struct r600_common_context *)ctx;
 	struct r600_query *rquery = (struct r600_query *)query;
 
-	rquery->ops->get_result_resource(rctx, rquery, wait, result_type, index,
+	rquery->ops->get_result_resource(rctx, rquery, flags, result_type, index,
 	                                 resource, offset);
 }
 
@@ -1599,7 +1599,7 @@ static void r600_restore_qbo_state(struct r600_common_context *rctx,
 
 static void r600_query_hw_get_result_resource(struct r600_common_context *rctx,
                                               struct r600_query *rquery,
-                                              bool wait,
+                                              enum pipe_query_flags flags,
                                               enum pipe_query_value_type result_type,
                                               int index,
                                               struct pipe_resource *resource,
@@ -1728,7 +1728,7 @@ static void r600_query_hw_get_result_resource(struct r600_common_context *rctx,
 
 		rctx->b.set_shader_buffers(&rctx->b, PIPE_SHADER_COMPUTE, 0, 3, ssbo, ~0);
 
-		if (wait && qbuf == &query->buffer) {
+		if ((flags & PIPE_QUERY_WAIT) && qbuf == &query->buffer) {
 			uint64_t va;
 
 			/* Wait for result availability. Wait only for readiness
@@ -1904,7 +1904,7 @@ void r600_query_fix_enabled_rb_mask(struct r600_common_screen *rscreen)
 		radeon_emit(cs, buffer->gpu_address >> 32);
 
 		r600_emit_reloc(ctx, &ctx->gfx, buffer,
-                                RADEON_USAGE_WRITE, RADEON_PRIO_QUERY);
+                                RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
 
 		/* analyze results */
 		results = r600_buffer_map_sync_with_rings(ctx, buffer, PIPE_MAP_READ);

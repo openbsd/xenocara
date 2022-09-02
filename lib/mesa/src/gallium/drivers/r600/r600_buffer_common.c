@@ -33,7 +33,7 @@
 
 bool r600_rings_is_buffer_referenced(struct r600_common_context *ctx,
 				     struct pb_buffer *buf,
-				     enum radeon_bo_usage usage)
+				     unsigned usage)
 {
 	if (ctx->ws->cs_is_buffer_referenced(&ctx->gfx.cs, buf, usage)) {
 		return true;
@@ -49,7 +49,7 @@ void *r600_buffer_map_sync_with_rings(struct r600_common_context *ctx,
                                       struct r600_resource *resource,
                                       unsigned usage)
 {
-	enum radeon_bo_usage rusage = RADEON_USAGE_READWRITE;
+	unsigned rusage = RADEON_USAGE_READWRITE;
 	bool busy = false;
 
 	assert(!(resource->flags & RADEON_FLAG_SPARSE));
@@ -310,18 +310,13 @@ static void *r600_buffer_get_transfer(struct pipe_context *ctx,
 	struct r600_transfer *transfer;
 
 	if (usage & TC_TRANSFER_MAP_THREADED_UNSYNC)
-		transfer = slab_alloc(&rctx->pool_transfers_unsync);
+		transfer = slab_zalloc(&rctx->pool_transfers_unsync);
 	else
-		transfer = slab_alloc(&rctx->pool_transfers);
+		transfer = slab_zalloc(&rctx->pool_transfers);
 
-	transfer->b.b.resource = NULL;
 	pipe_resource_reference(&transfer->b.b.resource, resource);
-	transfer->b.b.level = 0;
 	transfer->b.b.usage = usage;
 	transfer->b.b.box = *box;
-	transfer->b.b.stride = 0;
-	transfer->b.b.layer_stride = 0;
-	transfer->b.staging = NULL;
 	transfer->b.b.offset = offset;
 	transfer->staging = staging;
 	*ptransfer = &transfer->b.b;
@@ -584,7 +579,7 @@ r600_alloc_buffer_struct(struct pipe_screen *screen,
 	pipe_reference_init(&rbuffer->b.b.reference, 1);
 	rbuffer->b.b.screen = screen;
 
-	threaded_resource_init(&rbuffer->b.b);
+	threaded_resource_init(&rbuffer->b.b, false);
 
 	rbuffer->buf = NULL;
 	rbuffer->bind_history = 0;

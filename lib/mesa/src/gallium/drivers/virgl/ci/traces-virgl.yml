@@ -9,7 +9,7 @@ traces:
   - path: glmark2/jellyfish.trace
     expectations:
       - device: gl-virgl
-        checksum: 48a2ad1162bf92301cedbe53edf52a6b
+        checksum: 1873b70a28539825879b530477cf6d27
   - path: glxgears/glxgears-2.trace
     expectations:
       - device: gl-virgl
@@ -228,10 +228,25 @@ traces:
     expectations:
       - device: gl-virgl
         checksum: 0702a66c415cfc13d5bae8bec08402cf
+  # host crashes with
+  # "src/mesa/main/arrayobj.c:800:_mesa_update_vao_derived_arrays: Assertion
+  # `attrib->_EffRelativeOffset < binding->Stride' failed. running these.
+  # - path: paraview/pv-manyspheres.trace
+  #   expectations:
+  #     - device: gl-virgl
+  #       checksum: b740377ea4bbb3becd304d1696a55247
+  # - path: paraview/pv-waveletcontour.trace
+  #   expectations:
+  #    - device: gl-virgl
+  #       checksum: db43c733f3f3d5253e263838e58d9111
+  - path: paraview/pv-waveletvolume.trace
+    expectations:
+      - device: gl-virgl
+        checksum: f4af4067b37c00861fa5911e4c0a6629
   - path: supertuxkart/supertuxkart-mansion-egl-gles.trace
     expectations:
       - device: gl-virgl
-        checksum: 156c26de2cefe1973b1593e6b22f7edb
+        checksum: 5e4e0cedd57bedf3eb7f127489a46b12
   - path: xonotic/xonotic-keybench-high.trace
     expectations:
       - device: gl-virgl
@@ -252,7 +267,7 @@ traces:
   - path: valve/portal-2.trace
     expectations:
       - device: gl-virgl
-        checksum: 9f7fecf8df89e105a4d2b4a61468b427
+        checksum: 7489a8412ee2bca45431d208e0006a3e
 # Piglit crashes when trying to run this one
 #  - path: supertuxkart/supertuxkart-antediluvian-abyss.rdc
 #    expectations:

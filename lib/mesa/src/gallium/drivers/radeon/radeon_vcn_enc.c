@@ -207,6 +207,80 @@ static void radeon_vcn_enc_get_param(struct radeon_encoder *enc, struct pipe_pic
          enc->enc_pic.rc_session_init.rate_control_method = RENCODE_RATE_CONTROL_METHOD_NONE;
       }
    }
+
+   if (picture->output_format == PIPE_FORMAT_NONE)
+      picture->output_format = PIPE_FORMAT_NV12;
+
+   if (picture->input_format != picture->output_format) {
+      switch (picture->input_format) {
+      case PIPE_FORMAT_P010:
+         enc->enc_pic.input_format.input_color_volume = 0;
+         enc->enc_pic.input_format.input_color_range = 0;
+         enc->enc_pic.input_format.input_chroma_subsampling = RENCODE_CHROMA_SUBSAMPLING_4_2_0;
+         enc->enc_pic.input_format.input_chroma_location = 0;
+         enc->enc_pic.input_format.input_color_bit_depth = RENCODE_COLOR_BIT_DEPTH_10_BIT;
+         enc->enc_pic.input_format.input_color_packing_format = RENCODE_COLOR_PACKING_FORMAT_P010;
+         break;
+      case PIPE_FORMAT_NV12:
+         enc->enc_pic.input_format.input_color_volume = 0;
+         enc->enc_pic.input_format.input_color_range = 0;
+         enc->enc_pic.input_format.input_chroma_subsampling = RENCODE_CHROMA_SUBSAMPLING_4_2_0;
+         enc->enc_pic.input_format.input_chroma_location = 0;
+         enc->enc_pic.input_format.input_color_bit_depth = RENCODE_COLOR_BIT_DEPTH_8_BIT;
+         enc->enc_pic.input_format.input_color_packing_format = RENCODE_COLOR_PACKING_FORMAT_NV12;
+         break;
+      case PIPE_FORMAT_B8G8R8X8_UNORM: // RGB
+      case PIPE_FORMAT_B8G8R8A8_UNORM:
+         enc->enc_pic.input_format.input_color_volume = 0;
+         enc->enc_pic.input_format.input_color_range = 0;
+         enc->enc_pic.input_format.input_chroma_subsampling = RENCODE_CHROMA_SUBSAMPLING_4_4_4;
+         enc->enc_pic.input_format.input_chroma_location = 0;
+         enc->enc_pic.input_format.input_color_bit_depth = RENCODE_COLOR_BIT_DEPTH_8_BIT;
+         enc->enc_pic.input_format.input_color_packing_format = RENCODE_COLOR_PACKING_FORMAT_A8R8G8B8;
+         break;
+      case PIPE_FORMAT_R8G8B8X8_UNORM:
+      case PIPE_FORMAT_R8G8B8A8_UNORM:
+         enc->enc_pic.input_format.input_color_volume = 0;
+         enc->enc_pic.input_format.input_color_range = 0;
+         enc->enc_pic.input_format.input_chroma_subsampling = RENCODE_CHROMA_SUBSAMPLING_4_4_4;
+         enc->enc_pic.input_format.input_chroma_location = 0;
+         enc->enc_pic.input_format.input_color_bit_depth = RENCODE_COLOR_BIT_DEPTH_8_BIT;
+         enc->enc_pic.input_format.input_color_packing_format = RENCODE_COLOR_PACKING_FORMAT_A8B8G8R8;
+         break;
+      default:
+         break;
+      }
+
+      switch(enc->enc_pic.input_format.input_color_packing_format) {
+         case RENCODE_COLOR_PACKING_FORMAT_NV12:
+         case RENCODE_COLOR_PACKING_FORMAT_P010:
+            enc->enc_pic.input_format.input_color_space = RENCODE_COLOR_SPACE_YUV;
+            break;
+         case RENCODE_COLOR_PACKING_FORMAT_A8R8G8B8:
+         case RENCODE_COLOR_PACKING_FORMAT_A8B8G8R8:
+            enc->enc_pic.input_format.input_color_space = RENCODE_COLOR_SPACE_RGB;
+            break;
+         default:
+            break;
+      }
+
+      switch (picture->output_format) {
+      case PIPE_FORMAT_P010:
+         enc->enc_pic.output_format.output_color_volume = 0;
+         enc->enc_pic.output_format.output_color_range = 0;
+         enc->enc_pic.output_format.output_chroma_location = 0;
+         enc->enc_pic.output_format.output_color_bit_depth = RENCODE_COLOR_BIT_DEPTH_10_BIT;
+         break;
+      case PIPE_FORMAT_NV12:
+         enc->enc_pic.output_format.output_color_volume = 0;
+         enc->enc_pic.output_format.output_color_range = 0;
+         enc->enc_pic.output_format.output_chroma_location = 0;
+         enc->enc_pic.output_format.output_color_bit_depth = RENCODE_COLOR_BIT_DEPTH_8_BIT;
+         break;
+      default:
+         break;
+      }
+   }
 }
 
 static void flush(struct radeon_encoder *enc)
@@ -297,8 +371,16 @@ static void radeon_enc_begin_frame(struct pipe_video_codec *encoder,
 
    radeon_vcn_enc_get_param(enc, picture);
 
-   enc->get_buffer(vid_buf->resources[0], &enc->handle, &enc->luma);
-   enc->get_buffer(vid_buf->resources[1], NULL, &enc->chroma);
+   if (source->buffer_format == PIPE_FORMAT_NV12 ||
+       source->buffer_format == PIPE_FORMAT_P010 ||
+       source->buffer_format == PIPE_FORMAT_P016) {
+      enc->get_buffer(vid_buf->resources[0], &enc->handle, &enc->luma);
+      enc->get_buffer(vid_buf->resources[1], NULL, &enc->chroma);
+   }
+   else {
+      enc->get_buffer(vid_buf->resources[0], &enc->handle, &enc->luma);
+      enc->chroma = NULL;
+   }
 
    enc->need_feedback = false;
 
@@ -364,6 +446,11 @@ static void radeon_enc_destroy(struct pipe_video_codec *encoder)
       si_vid_destroy_buffer(&fb);
    }
 
+   if (enc->efc) {
+      si_vid_destroy_buffer(enc->efc);
+      FREE(enc->efc);
+      enc->efc = NULL;
+   }
    si_vid_destroy_buffer(&enc->cpb);
    enc->ws->cs_destroy(&enc->cs);
    FREE(enc);
@@ -387,6 +474,39 @@ static void radeon_enc_get_feedback(struct pipe_video_codec *encoder, void *feed
 
    si_vid_destroy_buffer(fb);
    FREE(fb);
+}
+
+static int setup_dpb(struct radeon_encoder *enc, enum pipe_format buffer_format)
+{
+   uint32_t aligned_width = align(enc->base.width, 16);
+   uint32_t aligned_height = align(enc->base.height, 16);
+   uint32_t rec_luma_pitch = align(aligned_width, enc->alignment);
+
+   int luma_size = rec_luma_pitch * align(aligned_height, enc->alignment);
+   if (buffer_format == PIPE_FORMAT_P010)
+      luma_size *= 2;
+   int chroma_size = align(luma_size / 2, enc->alignment);
+   int offset = 0;
+
+   uint32_t num_reconstructed_pictures = enc->base.max_references + 1;
+   assert(num_reconstructed_pictures <= RENCODE_MAX_NUM_RECONSTRUCTED_PICTURES);
+
+   int i;
+   for (i = 0; i < num_reconstructed_pictures; i++) {
+      enc->enc_pic.ctx_buf.reconstructed_pictures[i].luma_offset = offset;
+      offset += luma_size;
+      enc->enc_pic.ctx_buf.reconstructed_pictures[i].chroma_offset = offset;
+      offset += chroma_size;
+   }
+   for (; i < RENCODE_MAX_NUM_RECONSTRUCTED_PICTURES; i++) {
+      enc->enc_pic.ctx_buf.reconstructed_pictures[i].luma_offset = 0;
+      enc->enc_pic.ctx_buf.reconstructed_pictures[i].chroma_offset = 0;
+   }
+
+   enc->enc_pic.ctx_buf.num_reconstructed_pictures = num_reconstructed_pictures;
+   enc->dpb_size = offset;
+
+   return offset;
 }
 
 struct pipe_video_codec *radeon_create_encoder(struct pipe_context *context,
@@ -454,6 +574,8 @@ struct pipe_video_codec *radeon_create_encoder(struct pipe_context *context,
    cpb_size = cpb_size * enc->cpb_num;
    tmp_buf->destroy(tmp_buf);
 
+   cpb_size += setup_dpb(enc, templat.buffer_format);
+
    if (!si_vid_create_buffer(enc->screen, &enc->cpb, cpb_size, PIPE_USAGE_DEFAULT)) {
       RVID_ERR("Can't create CPB buffer.\n");
       goto error;
@@ -478,9 +600,9 @@ error:
 }
 
 void radeon_enc_add_buffer(struct radeon_encoder *enc, struct pb_buffer *buf,
-                           enum radeon_bo_usage usage, enum radeon_bo_domain domain, signed offset)
+                           unsigned usage, enum radeon_bo_domain domain, signed offset)
 {
-   enc->ws->cs_add_buffer(&enc->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED, domain, 0);
+   enc->ws->cs_add_buffer(&enc->cs, buf, usage | RADEON_USAGE_SYNCHRONIZED, domain);
    uint64_t addr;
    addr = enc->ws->buffer_get_virtual_address(buf);
    addr = addr + offset;

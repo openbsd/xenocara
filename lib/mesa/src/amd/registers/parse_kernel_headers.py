@@ -676,10 +676,16 @@ def generate_json(gfx_version, amd_headers_path):
             if not old_gen and r.group('mm') == 'mm':
                 continue
         else:
-            assert name == r.group('name')[:-9]
+            if name != r.group('name')[:-9]:
+                print('Warning: "{0}" not preceded by {1} but by {2}'.format(r.group('name'), r.group('name')[:-9], name))
+                continue
             idx = int(r.group('value'))
             assert idx < len(base_offsets)
             offset += int(base_offsets[idx], 0) * 4
+
+        # Remove the _UMD suffix because it was mistakenly added to indicate it's for a User-Mode Driver
+        if name[-4:] == '_UMD':
+            name = name[:-4]
 
         # Only accept writeable registers and debug registers
         if register_filter(gfx_version, name, offset, offset in added_offsets):

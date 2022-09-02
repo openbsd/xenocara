@@ -190,6 +190,13 @@ blorp_alloc_binding_table(struct blorp_batch *blorp_batch,
    }
 }
 
+static uint32_t
+blorp_binding_table_offset_to_pointer(struct blorp_batch *batch,
+                                      uint32_t offset)
+{
+   return offset;
+}
+
 static void *
 blorp_alloc_vertex_buffer(struct blorp_batch *blorp_batch,
                           uint32_t size,
@@ -401,12 +408,18 @@ blorp_measure_start(struct blorp_batch *blorp_batch,
 {
 }
 
+static void
+blorp_measure_end(struct blorp_batch *blorp_batch,
+                  const struct blorp_params *params)
+{
+}
+
 void
 genX(crocus_init_blorp)(struct crocus_context *ice)
 {
    struct crocus_screen *screen = (struct crocus_screen *)ice->ctx.screen;
 
-   blorp_init(&ice->blorp, ice, &screen->isl_dev);
+   blorp_init(&ice->blorp, ice, &screen->isl_dev, NULL);
    ice->blorp.compiler = screen->compiler;
    ice->blorp.lookup_shader = crocus_blorp_lookup_shader;
    ice->blorp.upload_shader = crocus_blorp_upload_shader;

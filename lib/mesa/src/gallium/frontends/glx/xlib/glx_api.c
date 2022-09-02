@@ -40,6 +40,7 @@
 
 #include "xm_api.h"
 #include "main/errors.h"
+#include "main/config.h"
 #include "util/u_math.h"
 #include "util/u_memory.h"
 
@@ -278,7 +279,7 @@ save_glx_visual( Display *dpy, XVisualInfo *vinfo,
 /**
  * Return the default number of bits for the Z buffer.
  * If defined, use the MESA_GLX_DEPTH_BITS env var value.
- * Otherwise, use the DEFAULT_SOFTWARE_DEPTH_BITS constant.
+ * Otherwise, use 24.
  * XXX probably do the same thing for stencil, accum, etc.
  */
 static GLint

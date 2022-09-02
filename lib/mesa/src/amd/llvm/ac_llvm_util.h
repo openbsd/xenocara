@@ -63,8 +63,7 @@ enum ac_target_machine_options
 {
    AC_TM_SUPPORTS_SPILL       = 1 << 0,
    AC_TM_CHECK_IR             = 1 << 1,
-   AC_TM_ENABLE_GLOBAL_ISEL   = 1 << 2,
-   AC_TM_CREATE_LOW_OPT       = 1 << 3,
+   AC_TM_CREATE_LOW_OPT       = 1 << 2,
 };
 
 enum ac_float_mode
@@ -118,8 +117,6 @@ static inline unsigned ac_get_load_intr_attribs(bool can_speculate)
    return can_speculate ? AC_FUNC_ATTR_READNONE : AC_FUNC_ATTR_READONLY;
 }
 
-unsigned ac_count_scratch_private_memory(LLVMValueRef function);
-
 LLVMTargetLibraryInfoRef ac_create_target_library_info(const char *triple);
 void ac_dispose_target_library_info(LLVMTargetLibraryInfoRef library_info);
 PUBLIC void ac_init_shared_llvm_once(void); /* Do not use directly, use ac_init_llvm_once */
@@ -134,7 +131,6 @@ void ac_destroy_llvm_passes(struct ac_compiler_passes *p);
 bool ac_compile_module_to_elf(struct ac_compiler_passes *p, LLVMModuleRef module,
                               char **pelf_buffer, size_t *pelf_size);
 void ac_llvm_add_barrier_noop_pass(LLVMPassManagerRef passmgr);
-void ac_enable_global_isel(LLVMTargetMachineRef tm);
 
 static inline bool ac_has_vec3_support(enum chip_class chip, bool use_format)
 {

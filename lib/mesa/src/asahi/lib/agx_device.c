@@ -322,10 +322,6 @@ agx_open_device(void *memctx, struct agx_device *dev)
    dev->memctx = memctx;
    util_sparse_array_init(&dev->bo_map, sizeof(struct agx_bo), 512);
 
-   /* XXX: why do BO ids below 6 mess things up..? */
-   for (unsigned i = 0; i < 6; ++i)
-      agx_bo_alloc(dev, 4096, AGX_MEMORY_TYPE_FRAMEBUFFER);
-
    dev->queue = agx_create_command_queue(dev);
    dev->cmdbuf = agx_shmem_alloc(dev, 0x4000, true); // length becomes kernelCommandDataSize
    dev->memmap = agx_shmem_alloc(dev, 0x4000, false);
@@ -430,7 +426,7 @@ agx_create_command_queue(struct agx_device *dev)
       };
 
       ASSERTED kern_return_t ret = IOConnectCallScalarMethod(dev->fd,
-                          0x29,
+                          0x31,
                           scalars, 2, NULL, NULL);
 
       assert(ret == 0);
@@ -458,8 +454,6 @@ agx_submit_cmdbuf(struct agx_device *dev, unsigned cmdbuf, unsigned mappings, ui
       .unk2 = 0x0,
       .unk3 = 0x1,
    };
-
-   assert(sizeof(req) == 40);
 
    ASSERTED kern_return_t ret = IOConnectCallMethod(dev->fd,
                                            AGX_SELECTOR_SUBMIT_COMMAND_BUFFERS,

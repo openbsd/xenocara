@@ -34,6 +34,7 @@
 #include "util/u_string.h"
 
 #include "nir/tgsi_to_nir.h"
+#include "nir_serialize.h"
 
 #include "freedreno_context.h"
 #include "freedreno_util.h"
@@ -60,7 +61,7 @@ struct ir3_shader_state {
 /**
  * Should initial variants be compiled synchronously?
  *
- * The only case where pipe_debug_message() is used in the initial-variants
+ * The only case where util_debug_message() is used in the initial-variants
  * path is with FD_MESA_DEBUG=shaderdb.  So if either debug is disabled (ie.
  * debug.debug_message==NULL), or shaderdb stats are not enabled, we can
  * compile the initial shader variant asynchronously.
@@ -74,17 +75,17 @@ initial_variants_synchronous(struct fd_context *ctx)
 
 static void
 dump_shader_info(struct ir3_shader_variant *v,
-                 struct pipe_debug_callback *debug)
+                 struct util_debug_callback *debug)
 {
    if (!FD_DBG(SHADERDB))
       return;
 
-   pipe_debug_message(
+   util_debug_message(
       debug, SHADER_INFO,
       "%s shader: %u inst, %u nops, %u non-nops, %u mov, %u cov, "
       "%u dwords, %u last-baryf, %u half, %u full, %u constlen, "
       "%u cat0, %u cat1, %u cat2, %u cat3, %u cat4, %u cat5, %u cat6, %u cat7, "
-      "%u stp, %u ldp, %u sstall, %u (ss), %u (sy), %d waves, %d max_sun, "
+      "%u stp, %u ldp, %u sstall, %u (ss), %u systall, %u (sy), %d waves, "
       "%d loops\n",
       ir3_shader_stage(v), v->info.instrs_count, v->info.nops_count,
       v->info.instrs_count - v->info.nops_count, v->info.mov_count,
@@ -95,7 +96,7 @@ dump_shader_info(struct ir3_shader_variant *v,
       v->info.instrs_per_cat[4], v->info.instrs_per_cat[5],
       v->info.instrs_per_cat[6], v->info.instrs_per_cat[7],
       v->info.stp_count, v->info.ldp_count, v->info.sstall,
-      v->info.ss, v->info.sy, v->info.max_waves, v->max_sun, v->loops);
+      v->info.ss, v->info.systall, v->info.sy, v->info.max_waves, v->loops);
 }
 
 static void
@@ -107,18 +108,18 @@ upload_shader_variant(struct ir3_shader_variant *v)
    assert(!v->bo);
 
    v->bo =
-      fd_bo_new(compiler->dev, v->info.size, 0,
+      fd_bo_new(compiler->dev, v->info.size, FD_BO_NOMAP,
                 "%s:%s", ir3_shader_stage(v), info->name);
 
    /* Always include shaders in kernel crash dumps. */
    fd_bo_mark_for_dump(v->bo);
 
-   memcpy(fd_bo_map(v->bo), v->bin, v->info.size);
+   fd_bo_upload(v->bo, v->bin, v->info.size);
 }
 
 struct ir3_shader_variant *
 ir3_shader_variant(struct ir3_shader *shader, struct ir3_shader_key key,
-                   bool binning_pass, struct pipe_debug_callback *debug)
+                   bool binning_pass, struct util_debug_callback *debug)
 {
    struct ir3_shader_variant *v;
    bool created = false;
@@ -175,7 +176,7 @@ copy_stream_out(struct ir3_stream_output_info *i,
 
 static void
 create_initial_variants(struct ir3_shader_state *hwcso,
-                        struct pipe_debug_callback *debug)
+                        struct util_debug_callback *debug)
 {
    struct ir3_shader *shader = hwcso->shader;
    struct ir3_compiler *compiler = shader->compiler;
@@ -192,7 +193,7 @@ create_initial_variants(struct ir3_shader_state *hwcso,
 
    switch (nir->info.stage) {
    case MESA_SHADER_TESS_EVAL:
-      key.tessellation = ir3_tess_mode(nir->info.tess.primitive_mode);
+      key.tessellation = ir3_tess_mode(nir->info.tess._primitive_mode);
       break;
 
    case MESA_SHADER_TESS_CTRL:
@@ -245,7 +246,7 @@ static void
 create_initial_variants_async(void *job, void *gdata, int thread_index)
 {
    struct ir3_shader_state *hwcso = job;
-   struct pipe_debug_callback debug = {};
+   struct util_debug_callback debug = {};
 
    create_initial_variants(hwcso, &debug);
 }
@@ -255,7 +256,7 @@ create_initial_compute_variants_async(void *job, void *gdata, int thread_index)
 {
    struct ir3_shader_state *hwcso = job;
    struct ir3_shader *shader = hwcso->shader;
-   struct pipe_debug_callback debug = {};
+   struct util_debug_callback debug = {};
    static struct ir3_shader_key key; /* static is implicitly zeroed */
 
    ir3_shader_variant(shader, key, false, &debug);
@@ -288,6 +289,16 @@ ir3_shader_compute_state_create(struct pipe_context *pctx,
    if (cso->ir_type == PIPE_SHADER_IR_NIR) {
       /* we take ownership of the reference: */
       nir = (nir_shader *)cso->prog;
+   } else if (cso->ir_type == PIPE_SHADER_IR_NIR_SERIALIZED) {
+      const nir_shader_compiler_options *options =
+            ir3_get_compiler_options(compiler);
+      const struct pipe_binary_program_header *hdr = cso->prog;
+      struct blob_reader reader;
+
+      blob_reader_init(&reader, hdr->blob, hdr->num_bytes);
+      nir = nir_deserialize(NULL, options, &reader);
+
+      ir3_finalize_nir(compiler, nir);
    } else {
       debug_assert(cso->ir_type == PIPE_SHADER_IR_TGSI);
       if (ir3_shader_debug & IR3_DBG_DISASM) {
@@ -296,7 +307,17 @@ ir3_shader_compute_state_create(struct pipe_context *pctx,
       nir = tgsi_to_nir(cso->prog, pctx->screen, false);
    }
 
-   struct ir3_shader *shader = ir3_shader_from_nir(compiler, nir, 0, NULL);
+   struct ir3_shader *shader =
+      ir3_shader_from_nir(compiler, nir, &(struct ir3_shader_options){
+                              /* TODO: force to single on a6xx with legacy
+                               * ballot extension that uses 64-bit masks
+                               */
+                              .api_wavesize = IR3_SINGLE_OR_DOUBLE,
+                              .real_wavesize = IR3_SINGLE_OR_DOUBLE,
+                          }, NULL);
+   shader->cs.req_input_mem = align(cso->req_input_mem, 4) / 4;     /* byte->dword */
+   shader->cs.req_local_mem = cso->req_local_mem;
+
    struct ir3_shader_state *hwcso = calloc(1, sizeof(*hwcso));
 
    util_queue_fence_init(&hwcso->ready);
@@ -353,7 +374,15 @@ ir3_shader_state_create(struct pipe_context *pctx,
    struct ir3_stream_output_info stream_output = {};
    copy_stream_out(&stream_output, &cso->stream_output);
 
-   hwcso->shader = ir3_shader_from_nir(compiler, nir, 0, &stream_output);
+   hwcso->shader =
+      ir3_shader_from_nir(compiler, nir, &(struct ir3_shader_options){
+                              /* TODO: force to single on a6xx with legacy
+                               * ballot extension that uses 64-bit masks
+                               */
+                              .api_wavesize = IR3_SINGLE_OR_DOUBLE,
+                              .real_wavesize = IR3_SINGLE_OR_DOUBLE,
+                          },
+                          &stream_output);
 
    /*
     * Create initial variants to avoid draw-time stalls.  This is
@@ -519,7 +548,8 @@ ir3_screen_init(struct pipe_screen *pscreen)
 {
    struct fd_screen *screen = fd_screen(pscreen);
 
-   screen->compiler = ir3_compiler_create(screen->dev, screen->dev_id, false);
+   screen->compiler = ir3_compiler_create(screen->dev, screen->dev_id,
+                                          &(struct ir3_compiler_options) {});
 
    /* TODO do we want to limit things to # of fast cores, or just limit
     * based on total # of both big and little cores.  The little cores
@@ -559,9 +589,9 @@ ir3_update_max_tf_vtx(struct fd_context *ctx,
    uint32_t maxvtxcnt = 0x7fffffff;
 
    if (v->shader->stream_output.num_outputs == 0)
-      ctx->streamout.max_tf_vtx = 0;
+      maxvtxcnt = 0;
    if (so->num_targets == 0)
-      ctx->streamout.max_tf_vtx = 0;
+      maxvtxcnt = 0;
 
    /* offset to write to is:
     *

@@ -25,6 +25,7 @@
 #include "compiler/nir/nir.h"
 
 #include "util/u_debug.h"
+#include "util/u_prim.h"
 
 #include "codegen/nv50_ir.h"
 #include "codegen/nv50_ir_from_common.h"
@@ -64,11 +65,15 @@ function_temp_type_info(const struct glsl_type *type, unsigned *size, unsigned *
 {
    assert(glsl_type_is_vector_or_scalar(type));
 
-   unsigned comp_size = glsl_type_is_boolean(type) ? 4 : glsl_get_bit_size(type) / 8;
-   unsigned length = glsl_get_vector_elements(type);
+   if (glsl_type_is_scalar(type)) {
+      glsl_get_natural_size_align_bytes(type, size, align);
+   } else {
+      unsigned comp_size = glsl_type_is_boolean(type) ? 4 : glsl_get_bit_size(type) / 8;
+      unsigned length = glsl_get_vector_elements(type);
 
-   *size = comp_size * length;
-   *align = 0x10;
+      *size = comp_size * length;
+      *align = 0x10;
+   }
 }
 
 class Converter : public ConverterCommon
@@ -1023,7 +1028,6 @@ bool Converter::assignSlots() {
       int slot = var->data.location;
       uint16_t slots = calcSlots(type, prog->getType(), nir->info, true, var);
       uint32_t vary = var->data.driver_location;
-
       assert(vary + slots <= PIPE_MAX_SHADER_INPUTS);
 
       switch(prog->getType()) {
@@ -1312,7 +1316,7 @@ Converter::parseNIR()
          BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_SAMPLE_POS);
       info_out->prop.fp.usesDiscard = nir->info.fs.uses_discard || nir->info.fs.uses_demote;
       info_out->prop.fp.usesSampleMaskIn =
-         !BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_SAMPLE_MASK_IN);
+         BITSET_TEST(nir->info.system_values_read, SYSTEM_VALUE_SAMPLE_MASK_IN);
       break;
    case Program::TYPE_GEOMETRY:
       info_out->prop.gp.instanceCount = nir->info.gs.invocations;
@@ -1321,10 +1325,7 @@ Converter::parseNIR()
       break;
    case Program::TYPE_TESSELLATION_CONTROL:
    case Program::TYPE_TESSELLATION_EVAL:
-      if (nir->info.tess.primitive_mode == GL_ISOLINES)
-         info_out->prop.tp.domain = GL_LINES;
-      else
-         info_out->prop.tp.domain = nir->info.tess.primitive_mode;
+      info_out->prop.tp.domain = u_tess_prim_from_shader(nir->info.tess._primitive_mode);
       info_out->prop.tp.outputPatchSize = nir->info.tess.tcs_vertices_out;
       info_out->prop.tp.outputPrim =
          nir->info.tess.point_mode ? PIPE_PRIM_POINTS : PIPE_PRIM_TRIANGLES;
@@ -2297,6 +2298,8 @@ Converter::visit(nir_intrinsic_instr *insn)
       DataType sType = getSType(insn->src[0], false, false);
       Value *indirectOffset;
       uint32_t offset = getIndirect(&insn->src[1], 0, indirectOffset);
+      if (indirectOffset)
+         indirectOffset = mkOp1v(OP_MOV, TYPE_U32, getSSA(4, FILE_ADDRESS), indirectOffset);
 
       for (uint8_t i = 0u; i < nir_intrinsic_src_components(insn, 0); ++i) {
          if (!((1u << i) & nir_intrinsic_write_mask(insn)))
@@ -2313,6 +2316,8 @@ Converter::visit(nir_intrinsic_instr *insn)
       LValues &newDefs = convert(&insn->dest);
       Value *indirectOffset;
       uint32_t offset = getIndirect(&insn->src[0], 0, indirectOffset);
+      if (indirectOffset)
+         indirectOffset = mkOp1v(OP_MOV, TYPE_U32, getSSA(4, FILE_ADDRESS), indirectOffset);
 
       for (uint8_t i = 0u; i < dest_components; ++i)
          loadFrom(getFile(op), 0, dType, newDefs[i], offset, i, indirectOffset);
@@ -3106,6 +3111,36 @@ Converter::visit(nir_tex_instr *insn)
    return true;
 }
 
+/* nouveau's RA doesn't track the liveness of exported registers in the fragment
+ * shader, so we need all the store_outputs to appear at the end of the shader
+ * with no other instructions that might generate a temp value in between them.
+ */
+static void
+nv_nir_move_stores_to_end(nir_shader *s)
+{
+   nir_function_impl *impl = nir_shader_get_entrypoint(s);
+   nir_block *block = nir_impl_last_block(impl);
+   nir_instr *first_store = NULL;
+
+   nir_foreach_instr_safe(instr, block) {
+      if (instr == first_store)
+         break;
+      if (instr->type != nir_instr_type_intrinsic)
+         continue;
+      nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+      if (intrin->intrinsic == nir_intrinsic_store_output) {
+         nir_instr_remove(instr);
+         nir_instr_insert(nir_after_block(block), instr);
+
+         if (!first_store)
+            first_store = instr;
+      }
+   }
+   nir_metadata_preserve(impl,
+                         nir_metadata_block_index |
+                         nir_metadata_dominance);
+}
+
 bool
 Converter::run()
 {
@@ -3164,7 +3199,19 @@ Converter::run()
       NIR_PASS(progress, nir, nir_copy_prop);
       NIR_PASS(progress, nir, nir_opt_dce);
       NIR_PASS(progress, nir, nir_opt_dead_cf);
+      NIR_PASS(progress, nir, nir_lower_64bit_phis);
    } while (progress);
+
+   nir_move_options move_options =
+      (nir_move_options)(nir_move_const_undef |
+                         nir_move_load_ubo |
+                         nir_move_load_uniform |
+                         nir_move_load_input);
+   NIR_PASS_V(nir, nir_opt_sink, move_options);
+   NIR_PASS_V(nir, nir_opt_move, move_options);
+
+   if (nir->info.stage == MESA_SHADER_FRAGMENT)
+      NIR_PASS_V(nir, nv_nir_move_stores_to_end);
 
    NIR_PASS_V(nir, nir_lower_bool_to_int32);
    NIR_PASS_V(nir, nir_convert_from_ssa, true);
@@ -3281,8 +3328,8 @@ nvir_nir_shader_compiler_options(int chipset)
    op.lower_base_vertex = false;
    op.lower_helper_invocation = false;
    op.optimize_sample_mask_in = false;
-   op.lower_cs_local_index_from_id = true;
-   op.lower_cs_local_id_from_index = false;
+   op.lower_cs_local_index_to_id = true;
+   op.lower_cs_local_id_to_index = false;
    op.lower_device_index_to_zero = false; // TODO
    op.lower_wpos_pntc = false; // TODO
    op.lower_hadd = true; // TODO
@@ -3325,6 +3372,8 @@ nvir_nir_shader_compiler_options(int chipset)
    return op;
 }
 
+static const nir_shader_compiler_options g80_nir_shader_compiler_options =
+nvir_nir_shader_compiler_options(NVISA_G80_CHIPSET);
 static const nir_shader_compiler_options gf100_nir_shader_compiler_options =
 nvir_nir_shader_compiler_options(NVISA_GF100_CHIPSET);
 static const nir_shader_compiler_options gm107_nir_shader_compiler_options =
@@ -3339,5 +3388,7 @@ nv50_ir_nir_shader_compiler_options(int chipset)
       return &gv100_nir_shader_compiler_options;
    if (chipset >= NVISA_GM107_CHIPSET)
       return &gm107_nir_shader_compiler_options;
-   return &gf100_nir_shader_compiler_options;
+   if (chipset >= NVISA_GF100_CHIPSET)
+      return &gf100_nir_shader_compiler_options;
+   return &g80_nir_shader_compiler_options;
 }

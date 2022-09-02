@@ -196,15 +196,15 @@ static void si_begin_gfx_cs_debug(struct si_context *ctx)
    si_trace_emit(ctx);
 
    radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, ctx->current_saved_cs->trace_buf,
-                             RADEON_USAGE_READWRITE, RADEON_PRIO_TRACE);
+                             RADEON_USAGE_READWRITE | RADEON_PRIO_FENCE_TRACE);
 }
 
 static void si_add_gds_to_buffer_list(struct si_context *sctx)
 {
    if (sctx->gds) {
-      sctx->ws->cs_add_buffer(&sctx->gfx_cs, sctx->gds, RADEON_USAGE_READWRITE, 0, 0);
+      sctx->ws->cs_add_buffer(&sctx->gfx_cs, sctx->gds, RADEON_USAGE_READWRITE, 0);
       if (sctx->gds_oa) {
-         sctx->ws->cs_add_buffer(&sctx->gfx_cs, sctx->gds_oa, RADEON_USAGE_READWRITE, 0, 0);
+         sctx->ws->cs_add_buffer(&sctx->gfx_cs, sctx->gds_oa, RADEON_USAGE_READWRITE, 0);
       }
    }
 }
@@ -387,12 +387,11 @@ void si_begin_new_gfx_cs(struct si_context *ctx, bool first_cs)
 
    if (ctx->border_color_buffer) {
       radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, ctx->border_color_buffer,
-                                RADEON_USAGE_READ, RADEON_PRIO_BORDER_COLORS);
+                                RADEON_USAGE_READ | RADEON_PRIO_BORDER_COLORS);
    }
    if (ctx->shadowed_regs) {
       radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, ctx->shadowed_regs,
-                                RADEON_USAGE_READWRITE,
-                                RADEON_PRIO_DESCRIPTORS);
+                                RADEON_USAGE_READWRITE | RADEON_PRIO_DESCRIPTORS);
    }
 
    si_add_all_descriptors_to_bo_list(ctx);
@@ -410,7 +409,7 @@ void si_begin_new_gfx_cs(struct si_context *ctx, bool first_cs)
    if (ctx->tess_rings) {
       radeon_add_to_buffer_list(ctx, &ctx->gfx_cs,
                                 unlikely(is_secure) ? si_resource(ctx->tess_rings_tmz) : si_resource(ctx->tess_rings),
-                                RADEON_USAGE_READWRITE, RADEON_PRIO_SHADER_RINGS);
+                                RADEON_USAGE_READWRITE | RADEON_PRIO_SHADER_RINGS);
    }
 
    /* set all valid group as dirty so they get reemited on
@@ -504,7 +503,6 @@ void si_begin_new_gfx_cs(struct si_context *ctx, bool first_cs)
       ctx->last_tes_sh_base = -1;
       ctx->last_num_tcs_input_cp = -1;
       ctx->last_ls_hs_config = -1; /* impossible value */
-      ctx->last_binning_enabled = -1;
 
       if (has_clear_state) {
          si_set_tracked_regs_to_clear_state(ctx);
@@ -593,6 +591,27 @@ void si_emit_surface_sync(struct si_context *sctx, struct radeon_cmdbuf *cs, uns
     * is busy. */
    if (!compute_ib)
       sctx->context_roll = true;
+}
+
+static struct si_resource* si_get_wait_mem_scratch_bo(struct si_context *ctx, bool is_secure)
+{
+   struct si_screen *sscreen = ctx->screen;
+
+   if (likely(!is_secure)) {
+      return ctx->wait_mem_scratch;
+   } else {
+      assert(sscreen->info.has_tmz_support);
+      if (!ctx->wait_mem_scratch_tmz)
+         ctx->wait_mem_scratch_tmz =
+            si_aligned_buffer_create(&sscreen->b,
+                                     PIPE_RESOURCE_FLAG_UNMAPPABLE |
+                                     SI_RESOURCE_FLAG_DRIVER_INTERNAL |
+                                     PIPE_RESOURCE_FLAG_ENCRYPTED,
+                                     PIPE_USAGE_DEFAULT, 8,
+                                     sscreen->info.tcc_cache_line_size);
+
+      return ctx->wait_mem_scratch_tmz;
+   }
 }
 
 void gfx10_emit_cache_flush(struct si_context *ctx, struct radeon_cmdbuf *cs)
@@ -703,8 +722,8 @@ void gfx10_emit_cache_flush(struct si_context *ctx, struct radeon_cmdbuf *cs)
    radeon_end();
 
    if (cb_db_event) {
-      struct si_resource* wait_mem_scratch = unlikely(ctx->ws->cs_is_secure(cs)) ?
-        ctx->wait_mem_scratch_tmz : ctx->wait_mem_scratch;
+      struct si_resource* wait_mem_scratch =
+        si_get_wait_mem_scratch_bo(ctx, ctx->ws->cs_is_secure(cs));
       /* CB/DB flush and invalidate (or possibly just a wait for a
        * meta flush) via RELEASE_MEM.
        *
@@ -919,7 +938,7 @@ void si_emit_cache_flush(struct si_context *sctx, struct radeon_cmdbuf *cs)
        * All operations that invalidate L2 also seem to invalidate
        * metadata. Volatile (VOL) and WC flushes are not listed here.
        *
-       * TC    | TC_WB         = writeback & invalidate L2 & L1
+       * TC    | TC_WB         = writeback & invalidate L2
        * TC    | TC_WB | TC_NC = writeback & invalidate L2 for MTYPE == NC
        *         TC_WB | TC_NC = writeback L2 for MTYPE == NC
        * TC            | TC_NC = invalidate L2 for MTYPE == NC
@@ -938,13 +957,14 @@ void si_emit_cache_flush(struct si_context *sctx, struct radeon_cmdbuf *cs)
          tc_flags = EVENT_TC_ACTION_ENA | EVENT_TC_WB_ACTION_ENA;
 
          /* Clear the flags. */
-         flags &= ~(SI_CONTEXT_INV_L2 | SI_CONTEXT_WB_L2 | SI_CONTEXT_INV_VCACHE);
+         flags &= ~(SI_CONTEXT_INV_L2 | SI_CONTEXT_WB_L2);
          sctx->num_L2_invalidates++;
       }
 
       /* Do the flush (enqueue the event and wait for it). */
-      struct si_resource* wait_mem_scratch = unlikely(sctx->ws->cs_is_secure(cs)) ?
-        sctx->wait_mem_scratch_tmz : sctx->wait_mem_scratch;
+      struct si_resource* wait_mem_scratch =
+        si_get_wait_mem_scratch_bo(sctx, sctx->ws->cs_is_secure(cs));
+
       va = wait_mem_scratch->gpu_address;
       sctx->wait_mem_number++;
 

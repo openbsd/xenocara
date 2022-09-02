@@ -27,6 +27,7 @@
 #ifndef IR3_COMPILER_H_
 #define IR3_COMPILER_H_
 
+#include "compiler/nir/nir.h"
 #include "util/disk_cache.h"
 #include "util/log.h"
 
@@ -45,9 +46,8 @@ struct ir3_compiler {
 
    struct disk_cache *disk_cache;
 
-   /* If true, UBO accesses are assumed to be bounds-checked as defined by
-    * VK_EXT_robustness2 and optimizations may have to be more conservative.
-    */
+   struct nir_shader_compiler_options nir_options;
+
    bool robust_ubo_access;
 
    /*
@@ -159,12 +159,51 @@ struct ir3_compiler {
 
    /* True if 16-bit descriptors are used for both 16-bit and 32-bit access. */
    bool storage_16bit;
+
+   /* True if getfiberid, getlast.w8, brcst.active, and quad_shuffle
+    * instructions are supported which are necessary to support
+    * subgroup quad and arithmetic operations.
+    */
+   bool has_getfiberid;
+
+   /* MAX_COMPUTE_VARIABLE_GROUP_INVOCATIONS_ARB */
+   uint32_t max_variable_workgroup_size;
+
+   bool has_dp2acc;
+   bool has_dp4acc;
+
+   /* Type to use for 1b nir bools: */
+   type_t bool_type;
+
+   /* Whether compute invocation params are passed in via shared regfile or
+    * constbuf. a5xx+ has the shared regfile.
+    */
+   bool has_shared_regfile;
+
+   /* True if preamble instructions (shps, shpe, etc.) are supported */
+   bool has_preamble;
+
+   bool push_ubo_with_preamble;
+};
+
+struct ir3_compiler_options {
+   /* If true, UBO accesses are assumed to be bounds-checked as defined by
+    * VK_EXT_robustness2 and optimizations may have to be more conservative.
+    */
+   bool robust_ubo_access;
+
+   /* If true, promote UBOs (except for constant data) to constants using ldc.k
+    * in the preamble. The driver should ignore everything in ubo_state except
+    * for the constant data UBO, which is excluded because the command pushing
+    * constants for it can be pre-baked when compiling the shader.
+    */
+   bool push_ubo_with_preamble;
 };
 
 void ir3_compiler_destroy(struct ir3_compiler *compiler);
 struct ir3_compiler *ir3_compiler_create(struct fd_device *dev,
                                          const struct fd_dev_id *dev_id,
-                                         bool robust_ubo_access);
+                                         const struct ir3_compiler_options *options);
 
 void ir3_disk_cache_init(struct ir3_compiler *compiler);
 void ir3_disk_cache_init_shader_key(struct ir3_compiler *compiler,
@@ -173,6 +212,9 @@ bool ir3_disk_cache_retrieve(struct ir3_compiler *compiler,
                              struct ir3_shader_variant *v);
 void ir3_disk_cache_store(struct ir3_compiler *compiler,
                           struct ir3_shader_variant *v);
+
+const nir_shader_compiler_options *
+ir3_get_compiler_options(struct ir3_compiler *compiler);
 
 int ir3_compile_shader_nir(struct ir3_compiler *compiler,
                            struct ir3_shader_variant *so);
@@ -198,6 +240,7 @@ enum ir3_shader_debug {
    IR3_DBG_NOFP16 = BITFIELD_BIT(10),
    IR3_DBG_NOCACHE = BITFIELD_BIT(11),
    IR3_DBG_SPILLALL = BITFIELD_BIT(12),
+   IR3_DBG_NOPREAMBLE = BITFIELD_BIT(13),
 
    /* DEBUG-only options: */
    IR3_DBG_SCHEDMSGS = BITFIELD_BIT(20),
@@ -228,6 +271,7 @@ shader_debug_enabled(gl_shader_stage type)
    case MESA_SHADER_FRAGMENT:
       return !!(ir3_shader_debug & IR3_DBG_SHADER_FS);
    case MESA_SHADER_COMPUTE:
+   case MESA_SHADER_KERNEL:
       return !!(ir3_shader_debug & IR3_DBG_SHADER_CS);
    default:
       debug_assert(0);

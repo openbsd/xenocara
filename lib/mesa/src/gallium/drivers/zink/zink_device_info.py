@@ -65,8 +65,13 @@ EXTENSIONS = [
     Extension("VK_KHR_maintenance3"),
     Extension("VK_KHR_external_memory"),
     Extension("VK_KHR_external_memory_fd"),
+    Extension("VK_KHR_external_semaphore_fd"),
+    Extension("VK_KHR_synchronization2",
+              alias="sync2",
+              features=True),
     Extension("VK_EXT_external_memory_dma_buf"),
     Extension("VK_EXT_queue_family_foreign"),
+    Extension("VK_KHR_swapchain_mutable_format"),
     Extension("VK_EXT_provoking_vertex",
        alias="pv",
        features=True,
@@ -75,7 +80,9 @@ EXTENSIONS = [
     Extension("VK_EXT_shader_viewport_index_layer"),
     Extension("VK_KHR_get_memory_requirements2"),
     Extension("VK_EXT_post_depth_coverage"),
+    Extension("VK_EXT_depth_clip_control", alias="clip_control", features=True),
     Extension("VK_EXT_shader_subgroup_ballot"),
+    Extension("VK_EXT_shader_atomic_float", alias="atomic_float", features=True),
     Extension("VK_KHR_8bit_storage",
               alias="storage_8bit",
               features=True,
@@ -84,6 +91,9 @@ EXTENSIONS = [
               alias="storage_16bit",
               features=True,
               conditions=["$feats.storageBuffer16BitAccess"]),
+    Extension("VK_EXT_image_2d_view_of_3d",
+              alias="view2d",
+              features=True),
     Extension("VK_KHR_driver_properties",
         alias="driver",
         properties=True),
@@ -115,6 +125,8 @@ EXTENSIONS = [
         alias="index_uint8",
         features=True,
         conditions=["$feats.indexTypeUint8"]),
+    Extension("VK_KHR_image_format_list"),
+    Extension("VK_KHR_sampler_ycbcr_conversion"),
     Extension("VK_KHR_imageless_framebuffer",
         alias="imgless",
         features=True,
@@ -169,6 +181,7 @@ EXTENSIONS = [
         features=True,
         guard=True),
     Extension("VK_KHR_timeline_semaphore", alias="timeline", features=True),
+    Extension("VK_EXT_color_write_enable", alias="cwrite", features=True),
     Extension("VK_EXT_4444_formats",
         alias="format_4444",
         features=True),
@@ -228,6 +241,7 @@ REPLACEMENTS = {
     "ROBUSTNESS2": "ROBUSTNESS_2",
     "PROPERTIES_PROPERTIES": "PROPERTIES",
     "EXTENDED_DYNAMIC_STATE2": "EXTENDED_DYNAMIC_STATE_2",
+    "SYNCHRONIZATION2": "SYNCHRONIZATION_2",
 }
 
 
@@ -285,6 +299,7 @@ struct zink_device_info {
 %endfor
 
    VkPhysicalDeviceMemoryProperties mem_props;
+   VkPhysicalDeviceIDProperties deviceid_props;
 
 %for ext in extensions:
 <%helpers:guard ext="${ext}">
@@ -343,11 +358,15 @@ zink_get_physical_device_info(struct zink_screen *screen)
    vkGetPhysicalDeviceMemoryProperties(screen->pdev, &info->mem_props);
 
    // enumerate device supported extensions
-   if (vkEnumerateDeviceExtensionProperties(screen->pdev, NULL, &num_extensions, NULL) == VK_SUCCESS) {
+   if (vkEnumerateDeviceExtensionProperties(screen->pdev, NULL, &num_extensions, NULL) != VK_SUCCESS) {
+      mesa_loge("ZINK: vkEnumerateDeviceExtensionProperties failed");
+   } else {
       if (num_extensions > 0) {
          VkExtensionProperties *extensions = MALLOC(sizeof(VkExtensionProperties) * num_extensions);
          if (!extensions) goto fail;
-         vkEnumerateDeviceExtensionProperties(screen->pdev, NULL, &num_extensions, extensions);
+         if (vkEnumerateDeviceExtensionProperties(screen->pdev, NULL, &num_extensions, extensions) != VK_SUCCESS) {
+            mesa_loge("ZINK: vkEnumerateDeviceExtensionProperties failed");
+         }
 
          for (uint32_t i = 0; i < num_extensions; ++i) {
          %for ext in extensions:
@@ -432,6 +451,12 @@ zink_get_physical_device_info(struct zink_screen *screen)
 </%helpers:guard>
 %endif
 %endfor
+
+      if (screen->vk_version < VK_MAKE_VERSION(1,2,0) && screen->instance_info.have_KHR_external_memory_capabilities) {
+         info->deviceid_props.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES;
+         info->deviceid_props.pNext = props.pNext;
+         props.pNext = &info->deviceid_props;
+      }
 
       // note: setting up local VkPhysicalDeviceProperties2.
       screen->vk.GetPhysicalDeviceProperties2(screen->pdev, &props);
@@ -584,7 +609,6 @@ if __name__ == "__main__":
             if not (entry.properties_struct and ext.physical_device_struct("Properties") == entry.properties_struct):
                 error_count += 1
                 print("The extension {} does not provide a properties struct.".format(ext.name))
-                print(entry.properties_struct, ext.physical_device_struct("Properties"))
 
         if entry.promoted_in:
             ext.core_since = Version((*entry.promoted_in, 0))

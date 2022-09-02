@@ -111,7 +111,7 @@ traces:
       # - device: freedreno-a530
       #   checksum: 2a53e6086588f4675ae3dcda9f26603b
       - device: freedreno-a630
-        checksum: 7038fe16ec1483ca1f475c563afcee84
+        checksum: 730692659fbb9eefa44d6b1a2df2fa8e
   - path: behdad-glyphy/glyphy.trace
     expectations:
       - device: freedreno-a306
@@ -532,19 +532,34 @@ traces:
 #    expectations:
 #      - device: freedreno-a630
 #        checksum: 9571117bf4eab6fe29b12f6c3d42d865
+  - path: paraview/pv-manyspheres.trace
+    expectations:
+      # a306/a530 would need higher GL version to run
+      - device: freedreno-a630
+        checksum: 5567434cd44c5deda19e7a9619e1c8fd
+  - path: paraview/pv-waveletcontour.trace
+    expectations:
+      # a306/a530 would need higher GL version to run
+      - device: freedreno-a630
+        checksum: 5ce2fde8189c8ef6665994fa9bed4cfc
+  - path: paraview/pv-waveletvolume.trace
+    expectations:
+      # a306/a530 would need higher GL version to run
+      - device: freedreno-a630
+        checksum: dd05d3e98eb93c0e520c1359de18e9fb
   - path: pathfinder/canvas_moire.trace
     expectations:
-      # a306/a630 would need higher GL version to run
+      # a306/a530 would need higher GL version to run
       - device: freedreno-a630
         checksum: 0e32ca8fc815a7250f38a07faeafb21b
   - path: pathfinder/canvas_text_v2.trace
     expectations:
-      # a306/a630 would need higher GL version to run
+      # a306/a530 would need higher GL version to run
       - device: freedreno-a630
         checksum: c163253b33a93577600e2f1c0571737c
   - path: pathfinder/demo.trace
     expectations:
-      # a306/a630 would need higher GL version to run
+      # a306/a530 would need higher GL version to run
       - device: freedreno-a630
         checksum: f6661ed4de9e0a444c6338ebd0cd3768
 #  Throws "Invalid state in _mesa_program_state_string" and

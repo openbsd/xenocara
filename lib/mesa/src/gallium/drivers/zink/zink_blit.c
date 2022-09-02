@@ -1,4 +1,5 @@
 #include "zink_context.h"
+#include "zink_kopper.h"
 #include "zink_helpers.h"
 #include "zink_query.h"
 #include "zink_resource.h"
@@ -21,7 +22,7 @@ apply_dst_clears(struct zink_context *ctx, const struct pipe_blit_info *info, bo
 }
 
 static bool
-blit_resolve(struct zink_context *ctx, const struct pipe_blit_info *info)
+blit_resolve(struct zink_context *ctx, const struct pipe_blit_info *info, bool *needs_present_readback)
 {
    if (util_format_get_mask(info->dst.format) != info->mask ||
        util_format_get_mask(info->src.format) != info->mask ||
@@ -52,6 +53,9 @@ blit_resolve(struct zink_context *ctx, const struct pipe_blit_info *info)
 
    apply_dst_clears(ctx, info, false);
    zink_fb_clears_apply_region(ctx, info->src.resource, zink_rect_from_box(&info->src.box));
+
+   if (src->obj->dt)
+      *needs_present_readback = zink_kopper_acquire_readback(ctx, src);
 
    struct zink_batch *batch = &ctx->batch;
    zink_batch_no_rp(ctx);
@@ -113,7 +117,7 @@ get_resource_features(struct zink_screen *screen, struct zink_resource *res)
 }
 
 static bool
-blit_native(struct zink_context *ctx, const struct pipe_blit_info *info)
+blit_native(struct zink_context *ctx, const struct pipe_blit_info *info, bool *needs_present_readback)
 {
    if (util_format_get_mask(info->dst.format) != info->mask ||
        util_format_get_mask(info->src.format) != info->mask ||
@@ -159,6 +163,9 @@ blit_native(struct zink_context *ctx, const struct pipe_blit_info *info)
    apply_dst_clears(ctx, info, false);
    zink_fb_clears_apply_region(ctx, info->src.resource, zink_rect_from_box(&info->src.box));
 
+   if (src->obj->dt)
+      *needs_present_readback = zink_kopper_acquire_readback(ctx, src);
+
    struct zink_batch *batch = &ctx->batch;
    zink_batch_no_rp(ctx);
    zink_batch_reference_resource_rw(batch, src, false);
@@ -176,7 +183,10 @@ blit_native(struct zink_context *ctx, const struct pipe_blit_info *info)
    region.srcOffsets[1].x = info->src.box.x + info->src.box.width;
    region.srcOffsets[1].y = info->src.box.y + info->src.box.height;
 
-   switch (src->base.b.target) {
+   enum pipe_texture_target src_target = src->base.b.target;
+   if (src->need_2D)
+      src_target = src_target == PIPE_TEXTURE_1D ? PIPE_TEXTURE_2D : PIPE_TEXTURE_2D_ARRAY;
+   switch (src_target) {
    case PIPE_TEXTURE_CUBE:
    case PIPE_TEXTURE_CUBE_ARRAY:
    case PIPE_TEXTURE_2D_ARRAY:
@@ -211,7 +221,10 @@ blit_native(struct zink_context *ctx, const struct pipe_blit_info *info)
    assert(region.dstOffsets[0].x != region.dstOffsets[1].x);
    assert(region.dstOffsets[0].y != region.dstOffsets[1].y);
 
-   switch (dst->base.b.target) {
+   enum pipe_texture_target dst_target = dst->base.b.target;
+   if (dst->need_2D)
+      dst_target = dst_target == PIPE_TEXTURE_1D ? PIPE_TEXTURE_2D : PIPE_TEXTURE_2D_ARRAY;
+   switch (dst_target) {
    case PIPE_TEXTURE_CUBE:
    case PIPE_TEXTURE_CUBE_ARRAY:
    case PIPE_TEXTURE_2D_ARRAY:
@@ -246,6 +259,25 @@ blit_native(struct zink_context *ctx, const struct pipe_blit_info *info)
    return true;
 }
 
+static bool
+try_copy_region(struct pipe_context *pctx, const struct pipe_blit_info *info)
+{
+   struct zink_context *ctx = zink_context(pctx);
+   struct zink_resource *src = zink_resource(info->src.resource);
+   struct zink_resource *dst = zink_resource(info->dst.resource);
+   /* if we're copying between resources with matching aspects then we can probably just copy_region */
+   if (src->aspect != dst->aspect)
+      return false;
+   struct pipe_blit_info new_info = *info;
+
+   if (src->aspect & VK_IMAGE_ASPECT_STENCIL_BIT &&
+       new_info.render_condition_enable &&
+       !ctx->render_condition_active)
+      new_info.render_condition_enable = false;
+
+   return util_try_blit_via_copy_region(pctx, &new_info, ctx->render_condition_active);
+}
+
 void
 zink_blit(struct pipe_context *pctx,
           const struct pipe_blit_info *info)
@@ -258,6 +290,14 @@ zink_blit(struct pipe_context *pctx,
        unlikely(!zink_screen(pctx->screen)->info.have_EXT_conditional_rendering && !zink_check_conditional_render(ctx)))
       return;
 
+   struct zink_resource *src = zink_resource(info->src.resource);
+   struct zink_resource *dst = zink_resource(info->dst.resource);
+   bool needs_present_readback = false;
+   if (zink_is_swapchain(dst)) {
+      if (!zink_kopper_acquire(ctx, dst, UINT64_MAX))
+         return;
+   }
+
    if (src_desc == dst_desc ||
        src_desc->nr_channels != 4 || src_desc->layout != UTIL_FORMAT_LAYOUT_PLAIN ||
        (src_desc->nr_channels == 4 && src_desc->channel[3].type != UTIL_FORMAT_TYPE_VOID)) {
@@ -266,34 +306,28 @@ zink_blit(struct pipe_context *pctx,
        */
       if (info->src.resource->nr_samples > 1 &&
           info->dst.resource->nr_samples <= 1) {
-         if (blit_resolve(ctx, info))
-            return;
+         if (blit_resolve(ctx, info, &needs_present_readback))
+            goto end;
       } else {
-         if (blit_native(ctx, info))
-            return;
+         if (try_copy_region(pctx, info))
+            goto end;
+         if (blit_native(ctx, info, &needs_present_readback))
+            goto end;
       }
    }
 
-   struct zink_resource *src = zink_resource(info->src.resource);
-   struct zink_resource *dst = zink_resource(info->dst.resource);
-   /* if we're copying between resources with matching aspects then we can probably just copy_region */
-   if (src->aspect == dst->aspect) {
-      struct pipe_blit_info new_info = *info;
 
-      if (src->aspect & VK_IMAGE_ASPECT_STENCIL_BIT &&
-          new_info.render_condition_enable &&
-          !ctx->render_condition_active)
-         new_info.render_condition_enable = false;
-
-      if (util_try_blit_via_copy_region(pctx, &new_info))
-         return;
-   }
 
    if (!util_blitter_is_blit_supported(ctx->blitter, info)) {
       debug_printf("blit unsupported %s -> %s\n",
               util_format_short_name(info->src.resource->format),
               util_format_short_name(info->dst.resource->format));
-      return;
+      goto end;
+   }
+
+   if (src->obj->dt) {
+      zink_fb_clears_apply_region(ctx, info->src.resource, zink_rect_from_box(&info->src.box));
+      needs_present_readback = zink_kopper_acquire_readback(ctx, src);
    }
 
    /* this is discard_only because we're about to start a renderpass that will
@@ -307,6 +341,9 @@ zink_blit(struct pipe_context *pctx,
    zink_blit_begin(ctx, ZINK_BLIT_SAVE_FB | ZINK_BLIT_SAVE_FS | ZINK_BLIT_SAVE_TEXTURES);
 
    util_blitter_blit(ctx->blitter, info);
+end:
+   if (needs_present_readback)
+      zink_kopper_present_readback(ctx, src);
 }
 
 /* similar to radeonsi */
@@ -329,7 +366,7 @@ zink_blit_begin(struct zink_context *ctx, enum zink_blit_flags flags)
       util_blitter_save_blend(ctx->blitter, ctx->gfx_pipeline_state.blend_state);
       util_blitter_save_depth_stencil_alpha(ctx->blitter, ctx->dsa_state);
       util_blitter_save_stencil_ref(ctx->blitter, &ctx->stencil_ref);
-      util_blitter_save_sample_mask(ctx->blitter, ctx->gfx_pipeline_state.sample_mask);
+      util_blitter_save_sample_mask(ctx->blitter, ctx->gfx_pipeline_state.sample_mask, 0);
       util_blitter_save_scissor(ctx->blitter, ctx->vp_state.scissor_states);
       /* also util_blitter_save_window_rectangles when we have that? */
 

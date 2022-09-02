@@ -34,6 +34,7 @@
 #include "tr_dump.h"
 #include "tr_dump_defines.h"
 #include "tr_dump_state.h"
+#include "tr_util.h"
 
 
 void trace_dump_resource_template(const struct pipe_resource *templat)
@@ -48,7 +49,10 @@ void trace_dump_resource_template(const struct pipe_resource *templat)
 
    trace_dump_struct_begin("pipe_resource");
 
-   trace_dump_member(int, templat, target);
+   trace_dump_member_begin("target");
+   trace_dump_enum(tr_util_pipe_texture_target_name(templat->target));
+   trace_dump_member_end();
+
    trace_dump_member(format, templat, format);
 
    trace_dump_member_begin("width");
@@ -132,6 +136,8 @@ void trace_dump_rasterizer_state(const struct pipe_rasterizer_state *state)
    trace_dump_member(bool, state, point_quad_rasterization);
    trace_dump_member(bool, state, point_size_per_vertex);
    trace_dump_member(bool, state, multisample);
+   trace_dump_member(bool, state, no_ms_sample_mask_out);
+   trace_dump_member(bool, state, force_persample_interp);
    trace_dump_member(bool, state, line_smooth);
    trace_dump_member(bool, state, line_stipple_enable);
    trace_dump_member(bool, state, line_last_pixel);
@@ -554,6 +560,10 @@ void trace_dump_sampler_view_template(const struct pipe_sampler_view *state,
    trace_dump_member(format, state, format);
    trace_dump_member(ptr, state, texture);
 
+   trace_dump_member_begin("target");
+   trace_dump_enum(tr_util_pipe_texture_target_name(target));
+   trace_dump_member_end();
+
    trace_dump_member_begin("u");
    trace_dump_struct_begin(""); /* anonymous */
    if (target == PIPE_BUFFER) {
@@ -608,6 +618,10 @@ void trace_dump_surface_template(const struct pipe_surface *state,
    trace_dump_member(ptr, state, texture);
    trace_dump_member(uint, state, width);
    trace_dump_member(uint, state, height);
+
+   trace_dump_member_begin("target");
+   trace_dump_enum(tr_util_pipe_texture_target_name(target));
+   trace_dump_member_end();
 
    trace_dump_member_begin("u");
    trace_dump_struct_begin(""); /* anonymous */
@@ -758,7 +772,7 @@ void trace_dump_image_view(const struct pipe_image_view *state)
 
    trace_dump_struct_begin("pipe_image_view");
    trace_dump_member(ptr, state, resource);
-   trace_dump_member(uint, state, format);
+   trace_dump_member(format, state, format);
    trace_dump_member(uint, state, access);
 
    trace_dump_member_begin("u");
@@ -936,7 +950,7 @@ void trace_dump_blit_info(const struct pipe_blit_info *info)
 }
 
 void
-trace_dump_query_result(unsigned query_type,
+trace_dump_query_result(unsigned query_type, unsigned index,
                         const union pipe_query_result *result)
 {
    if (!trace_dumping_enabled_locked())
@@ -991,6 +1005,46 @@ trace_dump_query_result(unsigned query_type,
       trace_dump_member(uint, &result->pipeline_statistics, hs_invocations);
       trace_dump_member(uint, &result->pipeline_statistics, ds_invocations);
       trace_dump_member(uint, &result->pipeline_statistics, cs_invocations);
+      trace_dump_struct_end();
+      break;
+
+   case PIPE_QUERY_PIPELINE_STATISTICS_SINGLE:
+      trace_dump_struct_begin("pipe_query_data_pipeline_statistics");
+      switch (index) {
+      case PIPE_STAT_QUERY_IA_VERTICES:
+         trace_dump_member(uint, &result->pipeline_statistics, ia_vertices);
+         break;
+      case PIPE_STAT_QUERY_IA_PRIMITIVES:
+         trace_dump_member(uint, &result->pipeline_statistics, ia_primitives);
+         break;
+      case PIPE_STAT_QUERY_VS_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, vs_invocations);
+         break;
+      case PIPE_STAT_QUERY_GS_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, gs_invocations);
+         break;
+      case PIPE_STAT_QUERY_GS_PRIMITIVES:
+         trace_dump_member(uint, &result->pipeline_statistics, gs_primitives);
+         break;
+      case PIPE_STAT_QUERY_C_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, c_invocations);
+         break;
+      case PIPE_STAT_QUERY_C_PRIMITIVES:
+         trace_dump_member(uint, &result->pipeline_statistics, c_primitives);
+         break;
+      case PIPE_STAT_QUERY_PS_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, ps_invocations);
+         break;
+      case PIPE_STAT_QUERY_HS_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, hs_invocations);
+         break;
+      case PIPE_STAT_QUERY_DS_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, ds_invocations);
+         break;
+      case PIPE_STAT_QUERY_CS_INVOCATIONS:
+         trace_dump_member(uint, &result->pipeline_statistics, cs_invocations);
+         break;
+      }
       trace_dump_struct_end();
       break;
 

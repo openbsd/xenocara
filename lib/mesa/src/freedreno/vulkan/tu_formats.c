@@ -60,7 +60,7 @@ tu6_format_vtx_supported(VkFormat vk_format)
  * for VK RGB formats yet, and we'd have to switch all consumers of that
  * function at once.
  */
-static enum pipe_format
+enum pipe_format
 tu_vk_format_to_pipe_format(VkFormat vk_format)
 {
    switch (vk_format) {
@@ -69,18 +69,17 @@ tu_vk_format_to_pipe_format(VkFormat vk_format)
    case VK_FORMAT_B8G8R8G8_422_UNORM: /* UYVY */
       return PIPE_FORMAT_G8R8_B8R8_UNORM;
    case VK_FORMAT_G8_B8R8_2PLANE_420_UNORM:
-      return PIPE_FORMAT_R8_G8B8_420_UNORM;
+      return PIPE_FORMAT_G8_B8R8_420_UNORM;
    case VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM:
-      return PIPE_FORMAT_R8_G8_B8_420_UNORM;
+      return PIPE_FORMAT_G8_B8_R8_420_UNORM;
    default:
       return vk_format_to_pipe_format(vk_format);
    }
 }
 
 static struct tu_native_format
-tu6_format_color_unchecked(VkFormat vk_format, enum a6xx_tile_mode tile_mode)
+tu6_format_color_unchecked(enum pipe_format format, enum a6xx_tile_mode tile_mode)
 {
-   enum pipe_format format = tu_vk_format_to_pipe_format(vk_format);
    struct tu_native_format fmt = {
       .fmt = fd6_color_format(format, tile_mode),
       .swap = fd6_color_swap(format, tile_mode),
@@ -100,23 +99,22 @@ tu6_format_color_unchecked(VkFormat vk_format, enum a6xx_tile_mode tile_mode)
 }
 
 bool
-tu6_format_color_supported(VkFormat vk_format)
+tu6_format_color_supported(enum pipe_format format)
 {
-   return tu6_format_color_unchecked(vk_format, TILE6_LINEAR).fmt != FMT6_NONE;
+   return tu6_format_color_unchecked(format, TILE6_LINEAR).fmt != FMT6_NONE;
 }
 
 struct tu_native_format
-tu6_format_color(VkFormat vk_format, enum a6xx_tile_mode tile_mode)
+tu6_format_color(enum pipe_format format, enum a6xx_tile_mode tile_mode)
 {
-   struct tu_native_format fmt = tu6_format_color_unchecked(vk_format, tile_mode);
+   struct tu_native_format fmt = tu6_format_color_unchecked(format, tile_mode);
    assert(fmt.fmt != FMT6_NONE);
    return fmt;
 }
 
 static struct tu_native_format
-tu6_format_texture_unchecked(VkFormat vk_format, enum a6xx_tile_mode tile_mode)
+tu6_format_texture_unchecked(enum pipe_format format, enum a6xx_tile_mode tile_mode)
 {
-   enum pipe_format format = tu_vk_format_to_pipe_format(vk_format);
    struct tu_native_format fmt = {
       .fmt = fd6_texture_format(format, tile_mode),
       .swap = fd6_texture_swap(format, tile_mode),
@@ -148,32 +146,32 @@ tu6_format_texture_unchecked(VkFormat vk_format, enum a6xx_tile_mode tile_mode)
 }
 
 struct tu_native_format
-tu6_format_texture(VkFormat vk_format, enum a6xx_tile_mode tile_mode)
+tu6_format_texture(enum pipe_format format, enum a6xx_tile_mode tile_mode)
 {
-   struct tu_native_format fmt = tu6_format_texture_unchecked(vk_format, tile_mode);
+   struct tu_native_format fmt = tu6_format_texture_unchecked(format, tile_mode);
    assert(fmt.fmt != FMT6_NONE);
    return fmt;
 }
 
 bool
-tu6_format_texture_supported(VkFormat vk_format)
+tu6_format_texture_supported(enum pipe_format format)
 {
-   return tu6_format_texture_unchecked(vk_format, TILE6_LINEAR).fmt != FMT6_NONE;
+   return tu6_format_texture_unchecked(format, TILE6_LINEAR).fmt != FMT6_NONE;
 }
 
 static void
 tu_physical_device_get_format_properties(
    struct tu_physical_device *physical_device,
    VkFormat vk_format,
-   VkFormatProperties *out_properties)
+   VkFormatProperties3 *out_properties)
 {
-   VkFormatFeatureFlags linear = 0, optimal = 0, buffer = 0;
+   VkFormatFeatureFlags2 linear = 0, optimal = 0, buffer = 0;
    enum pipe_format format = tu_vk_format_to_pipe_format(vk_format);
    const struct util_format_description *desc = util_format_description(format);
 
    bool supported_vtx = tu6_format_vtx_supported(vk_format);
-   bool supported_color = tu6_format_color_supported(vk_format);
-   bool supported_tex = tu6_format_texture_supported(vk_format);
+   bool supported_color = tu6_format_color_supported(format);
+   bool supported_tex = tu6_format_texture_supported(format);
 
    if (format == PIPE_FORMAT_NONE ||
        !(supported_vtx || supported_color || supported_tex)) {
@@ -214,20 +212,14 @@ tu_physical_device_get_format_properties(
    if (supported_color) {
       assert(supported_tex);
       optimal |= VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT |
-                 VK_FORMAT_FEATURE_BLIT_DST_BIT;
+                 VK_FORMAT_FEATURE_BLIT_DST_BIT |
+                 VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT |
+                 VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT |
+                 VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT_KHR;
 
-      /* IBO's don't have a swap field at all, so swapped formats can't be
-       * supported, even with linear images.
-       *
-       * TODO: See if setting the swap field from the tex descriptor works,
-       * after we enable shaderStorageImageReadWithoutFormat and there are
-       * tests for these formats.
-       */
-      struct tu_native_format tex = tu6_format_texture(vk_format, TILE6_LINEAR);
-      if (tex.swap == WZYX && tex.fmt != FMT6_1_5_5_5_UNORM) {
-         optimal |= VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT;
-         buffer |= VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT;
-      }
+      buffer |= VK_FORMAT_FEATURE_STORAGE_TEXEL_BUFFER_BIT |
+                VK_FORMAT_FEATURE_2_STORAGE_READ_WITHOUT_FORMAT_BIT |
+                VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT_KHR;
 
       /* TODO: The blob also exposes these for R16G16_UINT/R16G16_SINT, but we
        * don't have any tests for those.
@@ -254,16 +246,18 @@ tu_physical_device_get_format_properties(
    if (tu6_pipe2depth(vk_format) != (enum a6xx_depth_format)~0)
       optimal |= VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT;
 
+   if (!tiling_possible(vk_format) &&
+       /* We don't actually support tiling for this format, but we need to
+        * fake it as it's required by VK_KHR_sampler_ycbcr_conversion.
+        */
+       vk_format != VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM) {
+      optimal = 0;
+   }
+
    if (vk_format == VK_FORMAT_G8B8G8R8_422_UNORM ||
        vk_format == VK_FORMAT_B8G8R8G8_422_UNORM ||
        vk_format == VK_FORMAT_G8_B8R8_2PLANE_420_UNORM ||
        vk_format == VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM) {
-      /* no tiling for special UBWC formats
-       * TODO: NV12 can be UBWC but has a special UBWC format for accessing the Y plane aspect
-       * for 3plane, tiling/UBWC might be supported, but the blob doesn't use tiling
-       */
-      optimal = 0;
-
       /* Disable buffer texturing of subsampled (422) and planar YUV textures.
        * The subsampling requirement comes from "If format is a block-compressed
        * format, then bufferFeatures must not support any features for the
@@ -273,6 +267,22 @@ tu_physical_device_get_format_properties(
        */
       buffer = 0;
    }
+
+   /* All our depth formats support shadow comparisons. */
+   if (vk_format_has_depth(vk_format) && (optimal & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)) {
+      optimal |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT;
+      linear |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT;
+   }
+
+   /* From the Vulkan 1.3.205 spec, section 19.3 "43.3. Required Format Support":
+    *
+    *    Mandatory format support: depth/stencil with VkImageType
+    *    VK_IMAGE_TYPE_2D
+    *    [...]
+    *    bufferFeatures must not support any features for these formats
+    */
+   if (vk_format_is_depth_or_stencil(vk_format))
+      buffer = 0;
 
    /* D32_SFLOAT_S8_UINT is tiled as two images, so no linear format
     * blob enables some linear features, but its not useful, so don't bother.
@@ -294,28 +304,46 @@ tu_GetPhysicalDeviceFormatProperties2(
 {
    TU_FROM_HANDLE(tu_physical_device, physical_device, physicalDevice);
 
+   VkFormatProperties3 local_props3;
+   VkFormatProperties3 *props3 =
+      vk_find_struct(pFormatProperties->pNext, FORMAT_PROPERTIES_3);
+   if (!props3)
+      props3 = &local_props3;
+
    tu_physical_device_get_format_properties(
-      physical_device, format, &pFormatProperties->formatProperties);
+      physical_device, format, props3);
+
+   pFormatProperties->formatProperties = (VkFormatProperties) {
+      .linearTilingFeatures = props3->linearTilingFeatures,
+      .optimalTilingFeatures = props3->optimalTilingFeatures,
+      .bufferFeatures = props3->bufferFeatures,
+   };
 
    VkDrmFormatModifierPropertiesListEXT *list =
       vk_find_struct(pFormatProperties->pNext, DRM_FORMAT_MODIFIER_PROPERTIES_LIST_EXT);
    if (list) {
-      VK_OUTARRAY_MAKE(out, list->pDrmFormatModifierProperties,
-                       &list->drmFormatModifierCount);
+      VK_OUTARRAY_MAKE_TYPED(VkDrmFormatModifierPropertiesEXT, out,
+                             list->pDrmFormatModifierProperties,
+                             &list->drmFormatModifierCount);
 
       if (pFormatProperties->formatProperties.linearTilingFeatures) {
-         vk_outarray_append(&out, mod_props) {
+         vk_outarray_append_typed(VkDrmFormatModifierPropertiesEXT, &out, mod_props) {
             mod_props->drmFormatModifier = DRM_FORMAT_MOD_LINEAR;
             mod_props->drmFormatModifierPlaneCount = 1;
+            mod_props->drmFormatModifierTilingFeatures =
+               pFormatProperties->formatProperties.linearTilingFeatures;
          }
       }
 
       /* note: ubwc_possible() argument values to be ignored except for format */
       if (pFormatProperties->formatProperties.optimalTilingFeatures &&
+          tiling_possible(format) &&
           ubwc_possible(format, VK_IMAGE_TYPE_2D, 0, 0, physical_device->info, VK_SAMPLE_COUNT_1_BIT)) {
-         vk_outarray_append(&out, mod_props) {
+         vk_outarray_append_typed(VkDrmFormatModifierPropertiesEXT, &out, mod_props) {
             mod_props->drmFormatModifier = DRM_FORMAT_MOD_QCOM_COMPRESSED;
             mod_props->drmFormatModifierPlaneCount = 1;
+            mod_props->drmFormatModifierTilingFeatures =
+               pFormatProperties->formatProperties.optimalTilingFeatures;
          }
       }
    }
@@ -328,7 +356,7 @@ tu_get_image_format_properties(
    VkImageFormatProperties *pImageFormatProperties,
    VkFormatFeatureFlags *p_feature_flags)
 {
-   VkFormatProperties format_props;
+   VkFormatProperties3 format_props;
    VkFormatFeatureFlags format_feature_flags;
    VkExtent3D maxExtent;
    uint32_t maxMipLevels;
@@ -352,7 +380,8 @@ tu_get_image_format_properties(
          /* falling back to linear/non-UBWC isn't possible with explicit modifier */
 
          /* formats which don't support tiling */
-         if (!format_props.optimalTilingFeatures)
+         if (!format_props.optimalTilingFeatures ||
+             !tiling_possible(info->format))
             return VK_ERROR_FORMAT_NOT_SUPPORTED;
 
          /* for mutable formats, its very unlikely to be possible to use UBWC */
@@ -426,25 +455,43 @@ tu_get_image_format_properties(
        */
    }
 
-   if (info->usage & VK_IMAGE_USAGE_SAMPLED_BIT) {
+   /* From the Vulkan 1.3.206 spec:
+    *
+    * "VK_IMAGE_CREATE_EXTENDED_USAGE_BIT specifies that the image can be
+    * created with usage flags that are not supported for the format the image
+    * is created with but are supported for at least one format a VkImageView
+    * created from the image can have."
+    *
+    * This means we should relax checks that only depend on the
+    * format_feature_flags, to allow the user to create images that may be
+    * e.g. reinterpreted as storage when the original format doesn't allow it.
+    * The user will have to check against the format features anyway.
+    * Otherwise we'd unnecessarily disallow it.
+    */
+
+   VkImageUsageFlags image_usage = info->usage;
+   if (info->flags & VK_IMAGE_CREATE_EXTENDED_USAGE_BIT)
+      image_usage = 0;
+
+   if (image_usage & VK_IMAGE_USAGE_SAMPLED_BIT) {
       if (!(format_feature_flags & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT)) {
          goto unsupported;
       }
    }
 
-   if (info->usage & VK_IMAGE_USAGE_STORAGE_BIT) {
+   if (image_usage & VK_IMAGE_USAGE_STORAGE_BIT) {
       if (!(format_feature_flags & VK_FORMAT_FEATURE_STORAGE_IMAGE_BIT)) {
          goto unsupported;
       }
    }
 
-   if (info->usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
+   if (image_usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) {
       if (!(format_feature_flags & VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)) {
          goto unsupported;
       }
    }
 
-   if (info->usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+   if (image_usage & VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) {
       if (!(format_feature_flags &
             VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) {
          goto unsupported;

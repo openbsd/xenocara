@@ -37,8 +37,10 @@
 #include "util/simple_mtx.h"
 #include "util/u_queue.h"
 #include "util/u_live_shader_cache.h"
+#include "util/u_vertex_state_cache.h"
 #include "pipebuffer/pb_cache.h"
 #include "pipebuffer/pb_slab.h"
+
 #include <vulkan/vulkan.h>
 
 extern uint32_t zink_debug;
@@ -60,6 +62,9 @@ enum zink_descriptor_type;
 #define ZINK_DEBUG_VALIDATION 0x8
 
 #define NUM_SLAB_ALLOCATORS 3
+#define MIN_SLAB_ORDER 8
+
+#define ZINK_CONTEXT_COPY_ONLY (1<<30)
 
 enum zink_descriptor_mode {
    ZINK_DESCRIPTOR_MODE_AUTO,
@@ -76,17 +81,21 @@ struct zink_modifier_prop {
 struct zink_screen {
    struct pipe_screen base;
    bool threaded;
+   bool is_cpu;
    uint32_t curr_batch; //the current batch id
    uint32_t last_finished; //this is racy but ultimately doesn't matter
    VkSemaphore sem;
    VkSemaphore prev_sem;
+   VkFence fence;
    struct util_queue flush_queue;
+   struct zink_context *copy_context;
 
    unsigned buffer_rebind_counter;
 
+   struct hash_table dts;
+   simple_mtx_t dt_lock;
+
    bool device_lost;
-   struct sw_winsys *winsys;
-   int drm_fd;
 
    struct hash_table framebuffer_cache;
    simple_mtx_t framebuffer_mtx;
@@ -107,6 +116,7 @@ struct zink_screen {
       uint32_t next_bo_unique_id;
    } pb;
    uint8_t heap_map[VK_MAX_MEMORY_TYPES];
+   VkMemoryPropertyFlags heap_flags[VK_MAX_MEMORY_TYPES];
    bool resizable_bar;
 
    uint64_t total_video_mem;
@@ -119,17 +129,23 @@ struct zink_screen {
    VkPhysicalDevice pdev;
    uint32_t vk_version, spirv_version;
    struct util_idalloc_mt buffer_ids;
+   struct util_vertex_state_cache vertex_state_cache;
 
    struct zink_device_info info;
    struct nir_shader_compiler_options nir_options;
 
    bool have_X8_D24_UNORM_PACK32;
    bool have_D24_UNORM_S8_UINT;
+   bool have_D32_SFLOAT_S8_UINT;
    bool have_triangle_fans;
+   bool need_2D_zs;
+   bool need_2D_sparse;
+   bool faked_e5sparse; //drivers may not expose R9G9B9E5 but cts requires it
 
    uint32_t gfx_queue;
    uint32_t max_queues;
    uint32_t timestamp_valid_bits;
+   unsigned max_fences;
    VkDevice dev;
    VkQueue queue; //gfx+compute
    VkQueue thread_queue; //gfx+compute
@@ -138,13 +154,10 @@ struct zink_screen {
 
    uint32_t cur_custom_border_color_samplers;
 
-   bool needs_mesa_wsi;
-   bool needs_mesa_flush_wsi;
-
    struct vk_dispatch_table vk;
 
    bool (*descriptor_program_init)(struct zink_context *ctx, struct zink_program *pg);
-   void (*descriptor_program_deinit)(struct zink_screen *screen, struct zink_program *pg);
+   void (*descriptor_program_deinit)(struct zink_context *ctx, struct zink_program *pg);
    void (*descriptors_update)(struct zink_context *ctx, bool is_compute);
    void (*context_update_descriptor_states)(struct zink_context *ctx, bool is_compute);
    void (*context_invalidate_descriptor_state)(struct zink_context *ctx, enum pipe_shader_type shader,
@@ -170,8 +183,13 @@ struct zink_screen {
    } null_descriptor_hashes;
 
    VkExtent2D maxSampleLocationGridSize[5];
-};
 
+   struct {
+      bool color_write_missing;
+      bool depth_clip_control_missing;
+      bool implicit_sync;
+   } driver_workarounds;
+};
 
 /* update last_finished to account for batch_id wrapping */
 static inline void
@@ -220,6 +238,7 @@ zink_screen_handle_vkresult(struct zink_screen *screen, VkResult ret)
       break;
    case VK_ERROR_DEVICE_LOST:
       screen->device_lost = true;
+      mesa_loge("zink: DEVICE LOST!\n");
       FALLTHROUGH;
    default:
       success = false;
@@ -269,13 +288,12 @@ zink_screen_init_descriptor_funcs(struct zink_screen *screen, bool fallback);
 void
 zink_stub_function_not_loaded(void);
 
-#define warn_missing_feature(feat) \
+#define warn_missing_feature(warned, feat) \
    do { \
-      static bool warned = false; \
       if (!warned) { \
-         fprintf(stderr, "WARNING: Incorrect rendering will happen, " \
+         mesa_logw("WARNING: Incorrect rendering will happen " \
                          "because the Vulkan device doesn't support " \
-                         "the %s feature\n", feat); \
+                         "the '%s' feature\n", feat); \
          warned = true; \
       } \
    } while (0)

@@ -54,7 +54,6 @@ static void rewrite_source(struct radeon_compiler * c,
 
 	for(unsigned int phase = 0; phase < split.NumPhases; ++phase) {
 		struct rc_instruction * mov = rc_insert_new_instruction(c, inst->Prev);
-		unsigned int phase_refmask;
 		unsigned int masked_negate;
 
 		mov->U.I.Opcode = RC_OPCODE_MOV;
@@ -64,15 +63,10 @@ static void rewrite_source(struct radeon_compiler * c,
 		mov->U.I.SrcReg[0] = inst->U.I.SrcReg[src];
 		mov->U.I.PreSub = inst->U.I.PreSub;
 
-		phase_refmask = 0;
 		for(unsigned int chan = 0; chan < 4; ++chan) {
 			if (!GET_BIT(split.Phase[phase], chan))
 				SET_SWZ(mov->U.I.SrcReg[0].Swizzle, chan, RC_SWIZZLE_UNUSED);
-			else
-				phase_refmask |= 1 << GET_SWZ(mov->U.I.SrcReg[0].Swizzle, chan);
 		}
-
-		phase_refmask &= RC_MASK_XYZW;
 
 		masked_negate = split.Phase[phase] & mov->U.I.SrcReg[0].Negate;
 		if (masked_negate == 0)
@@ -103,6 +97,7 @@ static unsigned try_rewrite_constant(struct radeon_compiler *c,
 {
 	unsigned new_swizzle, chan, swz0, swz1, swz2, swz3, found_swizzle, swz;
 	unsigned all_inline = 0;
+	bool w_inline_constant = false;
 	float imms[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
 	if (!rc_src_reg_is_immediate(c, reg->File, reg->Index)) {
@@ -327,7 +322,9 @@ static unsigned try_rewrite_constant(struct radeon_compiler *c,
 	swz3 = GET_SWZ(reg->Swizzle, 3);
 
 	/* We can skip this if the swizzle in channel w is an inline constant. */
-	if (swz3 <= RC_SWIZZLE_W) {
+	if (is_swizzle_inline_constant(swz3)) {
+		w_inline_constant = true;
+	} else {
 		for (chan = 0; chan < 3; chan++) {
 			unsigned old_swz = GET_SWZ(reg->Swizzle, chan);
 			unsigned new_swz = GET_SWZ(new_swizzle, chan);
@@ -378,11 +375,14 @@ static unsigned try_rewrite_constant(struct radeon_compiler *c,
 		 *
 		 * Swizzles with a value > RC_SWIZZLE_W are inline constants.
 		 */
-		if (chan == 3 && old_swz > RC_SWIZZLE_W) {
+		if (chan == 3 && w_inline_constant) {
 			continue;
 		}
 
-		assert(new_swz <= RC_SWIZZLE_W);
+		if (new_swz > RC_SWIZZLE_W) {
+			rc_error(c, "Bad swizzle in try_rewrite_constant()");
+			new_swz = RC_SWIZZLE_X;
+		}
 
 		switch (old_swz) {
 		case RC_SWIZZLE_ZERO:
@@ -415,7 +415,7 @@ static unsigned try_rewrite_constant(struct radeon_compiler *c,
 	 * ONE, ZERO, HALF).
 	 */
 	reg->File = RC_FILE_CONSTANT;
-	reg->Negate = 0;
+	reg->Negate = w_inline_constant ? reg->Negate & (1 << 3) : 0;
 	return 1;
 }
 

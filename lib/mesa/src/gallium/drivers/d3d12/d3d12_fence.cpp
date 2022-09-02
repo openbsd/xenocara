@@ -28,6 +28,9 @@
 
 #include "util/u_memory.h"
 
+constexpr uint64_t NsPerMs = 1000000;
+constexpr uint64_t MaxTimeoutInNs = (uint64_t)UINT_MAX * NsPerMs;
+
 #ifdef _WIN32
 static void
 close_event(HANDLE event, int fd)
@@ -46,7 +49,7 @@ create_event(int *fd)
 static bool
 wait_event(HANDLE event, int event_fd, uint64_t timeout_ns)
 {
-   DWORD timeout_ms = (timeout_ns == PIPE_TIMEOUT_INFINITE) ? INFINITE : timeout_ns / 1000000;
+   DWORD timeout_ms = (timeout_ns == PIPE_TIMEOUT_INFINITE || timeout_ns > MaxTimeoutInNs) ? INFINITE : timeout_ns / NsPerMs;
    return WaitForSingleObject(event, timeout_ms) == WAIT_OBJECT_0;
 }
 #else
@@ -71,7 +74,7 @@ create_event(int *fd)
 static bool
 wait_event(HANDLE event, int event_fd, uint64_t timeout_ns)
 {
-   int timeout_ms = (timeout_ns == PIPE_TIMEOUT_INFINITE) ? -1 : timeout_ns / 1000000;
+   int timeout_ms = (timeout_ns == PIPE_TIMEOUT_INFINITE || timeout_ns > MaxTimeoutInNs) ? -1 : timeout_ns / NsPerMs;
    return sync_wait(event_fd, timeout_ms) == 0;
 }
 #endif
@@ -84,7 +87,7 @@ destroy_fence(struct d3d12_fence *fence)
 }
 
 struct d3d12_fence *
-d3d12_create_fence(struct d3d12_screen *screen, struct d3d12_context *ctx)
+d3d12_create_fence(struct d3d12_screen *screen)
 {
    struct d3d12_fence *ret = CALLOC_STRUCT(d3d12_fence);
    if (!ret) {
@@ -92,12 +95,12 @@ d3d12_create_fence(struct d3d12_screen *screen, struct d3d12_context *ctx)
       return NULL;
    }
 
-   ret->cmdqueue_fence = ctx->cmdqueue_fence;
-   ret->value = ++ctx->fence_value;
+   ret->cmdqueue_fence = screen->fence;
+   ret->value = ++screen->fence_value;
    ret->event = create_event(&ret->event_fd);
-   if (FAILED(ctx->cmdqueue_fence->SetEventOnCompletion(ret->value, ret->event)))
+   if (FAILED(screen->fence->SetEventOnCompletion(ret->value, ret->event)))
       goto fail;
-   if (FAILED(screen->cmdqueue->Signal(ctx->cmdqueue_fence, ret->value)))
+   if (FAILED(screen->cmdqueue->Signal(screen->fence, ret->value)))
       goto fail;
 
    pipe_reference_init(&ret->reference, 1);
@@ -145,6 +148,7 @@ fence_finish(struct pipe_screen *pscreen, struct pipe_context *pctx,
 {
    bool ret = d3d12_fence_finish(d3d12_fence(pfence), timeout_ns);
    if (ret && pctx) {
+      pctx = threaded_context_unwrap_sync(pctx);
       struct d3d12_context *ctx = d3d12_context(pctx);
       d3d12_foreach_submitted_batch(ctx, batch)
          d3d12_reset_batch(ctx, batch, 0);

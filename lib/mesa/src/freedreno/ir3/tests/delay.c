@@ -61,6 +61,11 @@ static const struct test {
       mov.f32f32 r0.z, c0.z
       mad.f32 r0.x, r0.x, r0.y, r0.z
    ),
+   TEST(0,
+      mov.f32f32 r0.x, c0.x
+      rcp r0.x, r0.y
+      add.f r0.x, r0.x, c0.x
+   ),
    TEST(2,
       mov.f32f32 r0.x, c0.x
       mov.f32f32 r0.y, c0.y
@@ -150,7 +155,7 @@ main(int argc, char **argv)
          .gpu_id = 630,
    };
 
-   c = ir3_compiler_create(NULL, &dev_id, false);
+   c = ir3_compiler_create(NULL, &dev_id, &(struct ir3_compiler_options){});
 
    for (int i = 0; i < ARRAY_SIZE(tests); i++) {
       const struct test *test = &tests[i];
@@ -178,7 +183,7 @@ main(int argc, char **argv)
        */
       list_delinit(&last->node);
 
-      unsigned n = ir3_delay_calc_exact(block, last, true);
+      unsigned n = ir3_delay_calc(block, last, true);
 
       if (n != test->expected_delay) {
          printf("%d: FAIL: Expected delay %u, but got %u, for:\n%s\n", i,

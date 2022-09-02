@@ -494,17 +494,6 @@
     <value name="U16" value="5"/>
   </enum>
 
-  <enum name="Message Type">
-    <value name="Disabled" value="0"/>
-    <value name="LD_VAR" value="1"/>
-    <value name="VAR_TEX" value="2"/>
-  </enum>
-
-  <enum name="Message Preload Register Format">
-    <value name="F32" value="0"/>
-    <value name="F16" value="1"/>
-  </enum>
-
   <enum name="Blend Mode">
     <value name="Shader" value="0"/>
     <value name="Opaque" value="1"/>
@@ -601,8 +590,8 @@
   </struct>
 
   <struct name="Draw" size="32" align="64">
-    <field name="Four Components Per Vertex" size="1" start="0:0" type="bool"/>
-    <field name="Draw Descriptor Is 64b" size="1" start="0:1" type="bool"/>
+    <field name="Four Components Per Vertex" size="1" start="0:0" type="bool" default="true"/>
+    <field name="Draw Descriptor Is 64b" size="1" start="0:1" type="bool" default="true"/>
     <field name="Occlusion query" size="2" start="0:3" type="Occlusion Mode" default="Disabled"/>
     <field name="Front face CCW" size="1" start="0:5" type="bool"/>
     <field name="Cull front face" size="1" start="0:6" type="bool"/>
@@ -628,7 +617,6 @@
     <field name="Viewport" size="64" start="24:0" type="address"/>
     <field name="Occlusion" size="64" start="26:0" type="address"/>
     <field name="Thread Storage" size="64" start="28:0" type="address"/>
-    <field name="FBD" size="64" start="28:0" type="address"/>
   </struct>
 
   <struct name="Surface" align="8">
@@ -690,16 +678,10 @@
     <field name="Depth" size="16" start="7:0" type="uint" modifier="minus(1)" default="1"/>
   </struct>
 
-  <enum name="Shader Register Allocation">
-    <value name="64 Per Thread" value="0"/>
-    <value name="32 Per Thread" value="2"/>
-  </enum>
-
   <struct name="Renderer Properties" size="1">
     <field name="Uniform buffer count" size="8" start="0" type="uint"/>
     <field name="Depth source" size="2" start="8" type="Depth Source" default="Minimum"/>
     <field name="Shader contains barrier" size="1" start="11" type="bool"/>
-    <field name="Shader register allocation" size="2" start="12" type="Shader Register Allocation"/>
     <field name="Shader modifies coverage" size="1" start="16" type="bool"/>
     <field name="Allow forward pixel to kill" size="1" start="19" type="bool"/>
     <field name="Allow forward pixel to be killed" size="1" start="20" type="bool"/>
@@ -786,8 +768,8 @@
     <field name="Alpha-to-coverage Invert" size="1" start="18" type="bool"/>
     <field name="Alpha test compare function" size="3" start="21" type="Func"/>
     <field name="Force seamless cubemaps" size="1" start="26" type="bool"/>
-    <field name="Depth Range 1" size="1" start="28" type="bool"/>
-    <field name="Depth Range 2" size="1" start="29" type="bool"/>
+    <field name="Front-facing depth bias" size="1" start="28" type="bool"/>
+    <field name="Back-facing depth bias" size="1" start="29" type="bool"/>
     <field name="Single-sampled lines" size="1" start="30" type="bool"/>
     <field name="Point snap" size="1" start="31" type="bool"/>
   </struct>
@@ -799,26 +781,6 @@
     <field name="Stencil Fail" size="3" start="19" type="Stencil Op"/>
     <field name="Depth Fail" size="3" start="22" type="Stencil Op"/>
     <field name="Depth Pass" size="3" start="25" type="Stencil Op"/>
-  </struct>
-
-  <struct name="LD_VAR Preload" size="1" no-direct-packing="true">
-    <field name="Varying Index" size="5" start="4" type="uint"/>
-    <field name="Register Format" size="2" start="9" type="Message Preload Register Format"/>
-    <field name="Num Components" size="2" start="11" type="uint" modifier="minus(1)" default="1"/>
-  </struct>
-
-  <struct name="VAR_TEX Preload" size="1" no-direct-packing="true">
-    <field name="Varying Index" size="3" start="4" type="uint"/>
-    <field name="Sampler Index" size="2" start="7" type="uint"/>
-    <field name="Register Format" size="2" start="9" type="Message Preload Register Format"/>
-    <field name="Skip" size="1" start="14" type="bool"/>
-    <field name="Zero LOD" size="1" start="15" type="bool"/>
-  </struct>
-
-  <struct name="Message Preload" size="1">
-    <field name="Type" size="4" start="0" type="Message Type"/>
-    <field name="LD_VAR" size="16" start="0" type="LD_VAR Preload"/>
-    <field name="VAR_TEX" size="16" start="0" type="VAR_TEX Preload"/>
   </struct>
 
   <struct name="Renderer State" align="64" size="16">
@@ -1024,6 +986,8 @@
     <field name="Z Preload Enable" size="1" start="12:19" type="bool"/>
     <field name="Z Unload Enable" size="1" start="12:20" type="bool"/>
     <field name="Has ZS CRC Extension" size="1" start="12:21" type="bool"/>
+    <field name="Empty Tile Read Enable" size="1" start="12:28" type="bool"/>
+    <field name="Empty Tile Write Enable" size="1" start="12:29" type="bool"/>
     <field name="CRC Read Enable" size="1" start="12:30" type="bool"/>
     <field name="CRC Write Enable" size="1" start="12:31" type="bool"/>
     <field name="Z Clear" size="32" start="13:0" type="float"/>

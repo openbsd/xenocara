@@ -25,7 +25,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "util/u_debug.h"
+#include "pipe/p_state.h"
 #include "radeon_dataflow.h"
 #include "radeon_program.h"
 #include "radeon_program_pair.h"
@@ -134,98 +137,79 @@ void rc_calculate_inputs_outputs(struct radeon_compiler * c)
 }
 
 /**
- * Rewrite the program such that everything that source the given input
- * register will source new_input instead.
- */
-void rc_move_input(struct radeon_compiler * c, unsigned input, struct rc_src_register new_input)
-{
-	struct rc_instruction * inst;
-
-	c->Program.InputsRead &= ~(1U << input);
-
-	for(inst = c->Program.Instructions.Next; inst != &c->Program.Instructions; inst = inst->Next) {
-		const struct rc_opcode_info * opcode = rc_get_opcode_info(inst->U.I.Opcode);
-		unsigned i;
-
-		for(i = 0; i < opcode->NumSrcRegs; ++i) {
-			if (inst->U.I.SrcReg[i].File == RC_FILE_INPUT && inst->U.I.SrcReg[i].Index == input) {
-				inst->U.I.SrcReg[i].File = new_input.File;
-				inst->U.I.SrcReg[i].Index = new_input.Index;
-				inst->U.I.SrcReg[i].Swizzle = combine_swizzles(new_input.Swizzle, inst->U.I.SrcReg[i].Swizzle);
-				if (!inst->U.I.SrcReg[i].Abs) {
-					inst->U.I.SrcReg[i].Negate ^= new_input.Negate;
-					inst->U.I.SrcReg[i].Abs = new_input.Abs;
-				}
-
-				c->Program.InputsRead |= 1U << new_input.Index;
-			}
-		}
-	}
-}
-
-
-/**
- * Rewrite the program such that everything that writes into the given
- * output register will instead write to new_output. The new_output
- * writemask is honoured.
- */
-void rc_move_output(struct radeon_compiler * c, unsigned output, unsigned new_output, unsigned writemask)
-{
-	struct rc_instruction * inst;
-
-	c->Program.OutputsWritten &= ~(1U << output);
-
-	for(inst = c->Program.Instructions.Next; inst != &c->Program.Instructions; inst = inst->Next) {
-		const struct rc_opcode_info * opcode = rc_get_opcode_info(inst->U.I.Opcode);
-
-		if (opcode->HasDstReg) {
-			if (inst->U.I.DstReg.File == RC_FILE_OUTPUT && inst->U.I.DstReg.Index == output) {
-				inst->U.I.DstReg.Index = new_output;
-				inst->U.I.DstReg.WriteMask &= writemask;
-
-				c->Program.OutputsWritten |= 1U << new_output;
-			}
-		}
-	}
-}
-
-
-/**
  * Rewrite the program such that a given output is duplicated.
  */
 void rc_copy_output(struct radeon_compiler * c, unsigned output, unsigned dup_output)
 {
 	unsigned tempreg = rc_find_free_temporary(c);
 	struct rc_instruction * inst;
+	struct rc_instruction * insert_pos = c->Program.Instructions.Prev;
+	struct rc_instruction * last_write_inst = NULL;
+	unsigned branch_depth = 0;
+	unsigned loop_depth = 0;
+	bool emit_after_control_flow = false;
+	unsigned num_writes = 0;
 
 	for(inst = c->Program.Instructions.Next; inst != &c->Program.Instructions; inst = inst->Next) {
 		const struct rc_opcode_info * opcode = rc_get_opcode_info(inst->U.I.Opcode);
 
+		if (inst->U.I.Opcode == RC_OPCODE_BGNLOOP)
+			loop_depth++;
+		if (inst->U.I.Opcode == RC_OPCODE_IF)
+			branch_depth++;
+		if ((inst->U.I.Opcode == RC_OPCODE_ENDLOOP && loop_depth--) ||
+		    (inst->U.I.Opcode == RC_OPCODE_ENDIF && branch_depth--))
+			if (emit_after_control_flow && loop_depth == 0 && branch_depth == 0) {
+				insert_pos = inst;
+				emit_after_control_flow = false;
+			}
+
 		if (opcode->HasDstReg) {
 			if (inst->U.I.DstReg.File == RC_FILE_OUTPUT && inst->U.I.DstReg.Index == output) {
+				num_writes++;
 				inst->U.I.DstReg.File = RC_FILE_TEMPORARY;
 				inst->U.I.DstReg.Index = tempreg;
+				insert_pos = inst;
+				last_write_inst = inst;
+				if (loop_depth != 0 && branch_depth != 0)
+					emit_after_control_flow = true;
 			}
 		}
 	}
 
-	inst = rc_insert_new_instruction(c, c->Program.Instructions.Prev);
-	inst->U.I.Opcode = RC_OPCODE_MOV;
-	inst->U.I.DstReg.File = RC_FILE_OUTPUT;
-	inst->U.I.DstReg.Index = output;
+	/* If there is only a single write, just duplicate the whole instruction instead.
+	 * We can do this even when the single write was is a control flow.
+	 */
+	if (num_writes == 1) {
+		last_write_inst->U.I.DstReg.File = RC_FILE_OUTPUT;
+		last_write_inst->U.I.DstReg.Index = output;
 
-	inst->U.I.SrcReg[0].File = RC_FILE_TEMPORARY;
-	inst->U.I.SrcReg[0].Index = tempreg;
-	inst->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
+		inst = rc_insert_new_instruction(c, last_write_inst);
+		struct rc_instruction * prev = inst->Prev;
+		struct rc_instruction * next = inst->Next;
+		memcpy(inst, last_write_inst, sizeof(struct rc_instruction));
+		inst->Prev = prev;
+		inst->Next = next;
+		inst->U.I.DstReg.Index = dup_output;
+	} else {
+		inst = rc_insert_new_instruction(c, insert_pos);
+		inst->U.I.Opcode = RC_OPCODE_MOV;
+		inst->U.I.DstReg.File = RC_FILE_OUTPUT;
+		inst->U.I.DstReg.Index = output;
 
-	inst = rc_insert_new_instruction(c, c->Program.Instructions.Prev);
-	inst->U.I.Opcode = RC_OPCODE_MOV;
-	inst->U.I.DstReg.File = RC_FILE_OUTPUT;
-	inst->U.I.DstReg.Index = dup_output;
+		inst->U.I.SrcReg[0].File = RC_FILE_TEMPORARY;
+		inst->U.I.SrcReg[0].Index = tempreg;
+		inst->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
 
-	inst->U.I.SrcReg[0].File = RC_FILE_TEMPORARY;
-	inst->U.I.SrcReg[0].Index = tempreg;
-	inst->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
+		inst = rc_insert_new_instruction(c, inst);
+		inst->U.I.Opcode = RC_OPCODE_MOV;
+		inst->U.I.DstReg.File = RC_FILE_OUTPUT;
+		inst->U.I.DstReg.Index = dup_output;
+
+		inst->U.I.SrcReg[0].File = RC_FILE_TEMPORARY;
+		inst->U.I.SrcReg[0].Index = tempreg;
+		inst->U.I.SrcReg[0].Swizzle = RC_SWIZZLE_XYZW;
+	}
 
 	c->Program.OutputsWritten |= 1U << dup_output;
 }
@@ -364,6 +348,8 @@ static void reg_count_callback(void * userdata, struct rc_instruction * inst,
 		(int)index > s->num_temp_regs ? s->num_temp_regs = index : 0;
 	if (file == RC_FILE_INLINE)
 		s->num_inline_literals++;
+	if (file == RC_FILE_CONSTANT)
+		s->num_consts = MAX2(s->num_consts, index + 1);
 }
 
 void rc_get_stats(struct radeon_compiler *c, struct rc_program_stats *s)
@@ -402,8 +388,16 @@ void rc_get_stats(struct radeon_compiler *c, struct rc_program_stats *s)
 			}
 			info = rc_get_opcode_info(tmp->U.P.RGB.Opcode);
 		}
-		if (info->IsFlowControl)
+		if (info->IsFlowControl) {
 			s->num_fc_insts++;
+			if (info->Opcode == RC_OPCODE_BGNLOOP)
+				s->num_loops++;
+		}
+		/* VS flow control was already translated to the predicate instructions */
+		if (c->type == RC_VERTEX_PROGRAM)
+			if (strstr(info->Name, "PRED") != NULL)
+				s->num_pred_insts++;
+
 		if (info->HasTexture)
 			s->num_tex_insts++;
 		s->num_insts++;
@@ -417,40 +411,17 @@ static void print_stats(struct radeon_compiler * c)
 {
 	struct rc_program_stats s;
 
-	if (c->initial_num_insts <= 5)
-		return;
-
 	rc_get_stats(c, &s);
 
-	switch (c->type) {
-	case RC_VERTEX_PROGRAM:
-		fprintf(stderr,"~~~~~~~~~ VERTEX PROGRAM ~~~~~~~~\n"
-			       "~%4u Instructions\n"
-			       "~%4u Flow Control Instructions\n"
-			       "~%4u Temporary Registers\n"
-			       "~~~~~~~~~~~~~~ END ~~~~~~~~~~~~~~\n",
-			       s.num_insts, s.num_fc_insts, s.num_temp_regs);
-		break;
-
-	case RC_FRAGMENT_PROGRAM:
-		fprintf(stderr,"~~~~~~~~ FRAGMENT PROGRAM ~~~~~~~\n"
-			       "~%4u Instructions\n"
-			       "~%4u Vector Instructions (RGB)\n"
-			       "~%4u Scalar Instructions (Alpha)\n"
-			       "~%4u Flow Control Instructions\n"
-			       "~%4u Texture Instructions\n"
-			       "~%4u Presub Operations\n"
-			       "~%4u OMOD Operations\n"
-			       "~%4u Temporary Registers\n"
-			       "~%4u Inline Literals\n"
-			       "~~~~~~~~~~~~~~ END ~~~~~~~~~~~~~~\n",
-			       s.num_insts, s.num_rgb_insts, s.num_alpha_insts,
-			       s.num_fc_insts, s.num_tex_insts, s.num_presub_ops,
-			       s.num_omod_ops, s.num_temp_regs, s.num_inline_literals);
-		break;
-	default:
-		assert(0);
-	}
+	/* Note that we print some dummy values for instruction categories that
+	 * only the FS has, becasue shader-db's report.py wants all shaders to
+	 * have the same set.
+	 */
+	util_debug_message(c->debug, SHADER_INFO, "%s shader: %u inst, %u vinst, %u sinst, %u predicate, %u flowcontrol, %u loops, %u tex, %u presub, %u omod, %u temps, %u consts, %u lits",
+	                   c->type == RC_VERTEX_PROGRAM ? "VS" : "FS",
+	                   s.num_insts, s.num_rgb_insts, s.num_alpha_insts, s.num_pred_insts,
+	                   s.num_fc_insts, s.num_loops, s.num_tex_insts, s.num_presub_ops,
+	                   s.num_omod_ops, s.num_temp_regs, s.num_consts, s.num_inline_literals);
 }
 
 static const char *shader_name[RC_NUM_PROGRAM_TYPES] = {
@@ -458,14 +429,14 @@ static const char *shader_name[RC_NUM_PROGRAM_TYPES] = {
 	"Fragment Program"
 };
 
-void rc_run_compiler_passes(struct radeon_compiler *c, struct radeon_compiler_pass *list)
+bool rc_run_compiler_passes(struct radeon_compiler *c, struct radeon_compiler_pass *list)
 {
 	for (unsigned i = 0; list[i].name; i++) {
 		if (list[i].predicate) {
 			list[i].run(c, list[i].user);
 
 			if (c->Error)
-				return;
+				return false;
 
 			if ((c->Debug & RC_DBG_LOG) && list[i].dump) {
 				fprintf(stderr, "%s: after '%s'\n", shader_name[c->type], list[i].name);
@@ -473,25 +444,20 @@ void rc_run_compiler_passes(struct radeon_compiler *c, struct radeon_compiler_pa
 			}
 		}
 	}
+	return true;
 }
 
 /* Executes a list of compiler passes given in the parameter 'list'. */
 void rc_run_compiler(struct radeon_compiler *c, struct radeon_compiler_pass *list)
 {
-	struct rc_program_stats s;
-
-	rc_get_stats(c, &s);
-	c->initial_num_insts = s.num_insts;
-
 	if (c->Debug & RC_DBG_LOG) {
 		fprintf(stderr, "%s: before compilation\n", shader_name[c->type]);
 		rc_print_program(&c->Program);
 	}
 
-	rc_run_compiler_passes(c, list);
-
-	if (c->Debug & RC_DBG_STATS)
+	if(rc_run_compiler_passes(c, list)) {
 		print_stats(c);
+	}
 }
 
 void rc_validate_final_shader(struct radeon_compiler *c, void *user)

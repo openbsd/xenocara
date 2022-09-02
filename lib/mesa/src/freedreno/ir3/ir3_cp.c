@@ -276,10 +276,13 @@ try_swap_mad_two_srcs(struct ir3_instruction *instr, unsigned new_flags)
    if (!is_mad(instr->opc))
       return false;
 
-   /* NOTE: pre-swap first two src's before valid_flags(),
-    * which might try to dereference the n'th src:
+   /* If we've already tried, nothing more to gain.. we will only
+    * have previously swapped if the original 2nd src was const or
+    * immed.  So swapping back won't improve anything and could
+    * result in an infinite "progress" loop.
     */
-   swap(instr->srcs[0], instr->srcs[1]);
+   if (instr->cat3.swapped)
+      return false;
 
    /* cat3 doesn't encode immediate, but we can lower immediate
     * to const if that helps:
@@ -288,6 +291,19 @@ try_swap_mad_two_srcs(struct ir3_instruction *instr, unsigned new_flags)
       new_flags &= ~IR3_REG_IMMED;
       new_flags |= IR3_REG_CONST;
    }
+
+   /* If the reason we couldn't fold without swapping is something
+    * other than const source, then swapping won't help:
+    */
+   if (!(new_flags & IR3_REG_CONST))
+      return false;
+
+   instr->cat3.swapped = true;
+
+   /* NOTE: pre-swap first two src's before valid_flags(),
+    * which might try to dereference the n'th src:
+    */
+   swap(instr->srcs[0], instr->srcs[1]);
 
    bool valid_swap =
       /* can we propagate mov if we move 2nd src to first? */
@@ -406,6 +422,11 @@ reg_cp(struct ir3_cp_ctx *ctx, struct ir3_instruction *instr,
           */
          if ((src_reg->flags & IR3_REG_RELATIV) &&
              conflicts(instr->address, reg->def->instr->address))
+            return false;
+
+         /* These macros expand to a mov in an if statement */
+         if ((src_reg->flags & IR3_REG_RELATIV) &&
+             is_subgroup_cond_mov_macro(instr))
             return false;
 
          /* This seems to be a hw bug, or something where the timings
@@ -632,7 +653,8 @@ instr_cp(struct ir3_cp_ctx *ctx, struct ir3_instruction *instr)
       struct ir3_register *samp = samp_tex->srcs[0];
       struct ir3_register *tex = samp_tex->srcs[1];
 
-      if ((samp->flags & IR3_REG_IMMED) && (tex->flags & IR3_REG_IMMED)) {
+      if ((samp->flags & IR3_REG_IMMED) && (tex->flags & IR3_REG_IMMED) &&
+          (samp->iim_val < 16) && (tex->iim_val < 16)) {
          instr->flags &= ~IR3_INSTR_S2EN;
          instr->cat5.samp = samp->iim_val;
          instr->cat5.tex = tex->iim_val;

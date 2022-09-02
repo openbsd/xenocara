@@ -601,17 +601,6 @@ vn_encode_VkViewport(struct vn_cs_encoder *enc, const VkViewport *val)
     vn_encode_float(enc, &val->maxDepth);
 }
 
-static inline void
-vn_decode_VkViewport(struct vn_cs_decoder *dec, VkViewport *val)
-{
-    vn_decode_float(dec, &val->x);
-    vn_decode_float(dec, &val->y);
-    vn_decode_float(dec, &val->width);
-    vn_decode_float(dec, &val->height);
-    vn_decode_float(dec, &val->minDepth);
-    vn_decode_float(dec, &val->maxDepth);
-}
-
 /* struct VkOffset2D */
 
 static inline size_t
@@ -733,6 +722,67 @@ vn_encode_VkRect2D_partial(struct vn_cs_encoder *enc, const VkRect2D *val)
 {
     vn_encode_VkOffset2D_partial(enc, &val->offset);
     vn_encode_VkExtent2D_partial(enc, &val->extent);
+}
+
+/* union VkClearColorValue */
+
+static inline size_t
+vn_sizeof_VkClearColorValue_tag(const VkClearColorValue *val, uint32_t tag)
+{
+    size_t size = vn_sizeof_uint32_t(&tag);
+    switch (tag) {
+    case 0:
+        size += vn_sizeof_array_size(4);
+    size += vn_sizeof_float_array(val->float32, 4);
+        break;
+    case 1:
+        size += vn_sizeof_array_size(4);
+    size += vn_sizeof_int32_t_array(val->int32, 4);
+        break;
+    case 2:
+        size += vn_sizeof_array_size(4);
+    size += vn_sizeof_uint32_t_array(val->uint32, 4);
+        break;
+    default:
+        assert(false);
+        break;
+    }
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkClearColorValue(const VkClearColorValue *val)
+{
+    return vn_sizeof_VkClearColorValue_tag(val, 2);
+}
+
+static inline void
+vn_encode_VkClearColorValue_tag(struct vn_cs_encoder *enc, const VkClearColorValue *val, uint32_t tag)
+{
+    vn_encode_uint32_t(enc, &tag);
+    switch (tag) {
+    case 0:
+        vn_encode_array_size(enc, 4);
+    vn_encode_float_array(enc, val->float32, 4);
+        break;
+    case 1:
+        vn_encode_array_size(enc, 4);
+    vn_encode_int32_t_array(enc, val->int32, 4);
+        break;
+    case 2:
+        vn_encode_array_size(enc, 4);
+    vn_encode_uint32_t_array(enc, val->uint32, 4);
+        break;
+    default:
+        assert(false);
+        break;
+    }
+}
+
+static inline void
+vn_encode_VkClearColorValue(struct vn_cs_encoder *enc, const VkClearColorValue *val)
+{
+    vn_encode_VkClearColorValue_tag(enc, val, 2); /* union with default tag */
 }
 
 /* struct VkMemoryDedicatedRequirements chain */
@@ -908,6 +958,8 @@ vn_decode_VkMemoryRequirements2_pnext(struct vn_cs_decoder *dec, const void *val
         assert(pnext);
         if (pnext->sType == stype)
             break;
+
+        pnext = pnext->pNext;
     }
 
     switch ((int32_t)pnext->sType) {
@@ -1022,6 +1074,65 @@ vn_encode_VkMemoryRequirements2_partial(struct vn_cs_encoder *enc, const VkMemor
     vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_MEMORY_REQUIREMENTS_2 });
     vn_encode_VkMemoryRequirements2_pnext_partial(enc, val->pNext);
     vn_encode_VkMemoryRequirements2_self_partial(enc, val);
+}
+
+/* struct VkMemoryBarrier2 chain */
+
+static inline size_t
+vn_sizeof_VkMemoryBarrier2_pnext(const void *val)
+{
+    /* no known/supported struct */
+    return vn_sizeof_simple_pointer(NULL);
+}
+
+static inline size_t
+vn_sizeof_VkMemoryBarrier2_self(const VkMemoryBarrier2 *val)
+{
+    size_t size = 0;
+    /* skip val->{sType,pNext} */
+    size += vn_sizeof_VkFlags64(&val->srcStageMask);
+    size += vn_sizeof_VkFlags64(&val->srcAccessMask);
+    size += vn_sizeof_VkFlags64(&val->dstStageMask);
+    size += vn_sizeof_VkFlags64(&val->dstAccessMask);
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkMemoryBarrier2(const VkMemoryBarrier2 *val)
+{
+    size_t size = 0;
+
+    size += vn_sizeof_VkStructureType(&val->sType);
+    size += vn_sizeof_VkMemoryBarrier2_pnext(val->pNext);
+    size += vn_sizeof_VkMemoryBarrier2_self(val);
+
+    return size;
+}
+
+static inline void
+vn_encode_VkMemoryBarrier2_pnext(struct vn_cs_encoder *enc, const void *val)
+{
+    /* no known/supported struct */
+    vn_encode_simple_pointer(enc, NULL);
+}
+
+static inline void
+vn_encode_VkMemoryBarrier2_self(struct vn_cs_encoder *enc, const VkMemoryBarrier2 *val)
+{
+    /* skip val->{sType,pNext} */
+    vn_encode_VkFlags64(enc, &val->srcStageMask);
+    vn_encode_VkFlags64(enc, &val->srcAccessMask);
+    vn_encode_VkFlags64(enc, &val->dstStageMask);
+    vn_encode_VkFlags64(enc, &val->dstAccessMask);
+}
+
+static inline void
+vn_encode_VkMemoryBarrier2(struct vn_cs_encoder *enc, const VkMemoryBarrier2 *val)
+{
+    assert(val->sType == VK_STRUCTURE_TYPE_MEMORY_BARRIER_2);
+    vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_MEMORY_BARRIER_2 });
+    vn_encode_VkMemoryBarrier2_pnext(enc, val->pNext);
+    vn_encode_VkMemoryBarrier2_self(enc, val);
 }
 
 #endif /* VN_PROTOCOL_DRIVER_STRUCTS_H */

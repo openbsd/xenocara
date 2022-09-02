@@ -1,5 +1,5 @@
 /*
- * Copyright © 2021 Raspberry Pi
+ * Copyright © 2021 Raspberry Pi Ltd
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -25,8 +25,6 @@
 #include "broadcom/common/v3d_macros.h"
 #include "broadcom/cle/v3dx_pack.h"
 #include "broadcom/compiler/v3d_compiler.h"
-
-#include "vk_format_info.h"
 
 /*
  * This method translates pipe_swizzle to the swizzle values used at the
@@ -100,6 +98,8 @@ pack_texture_shader_state_helper(struct v3dv_device *device,
       tex.swizzle_b = translate_swizzle(image_view->swizzle[2]);
       tex.swizzle_a = translate_swizzle(image_view->swizzle[3]);
 
+      tex.reverse_standard_border_color = image_view->channel_reverse;
+
       tex.texture_type = image_view->format->tex_type;
 
       if (image->vk.image_type == VK_IMAGE_TYPE_3D) {
@@ -132,7 +132,7 @@ pack_texture_shader_state_helper(struct v3dv_device *device,
 
       tex.array_stride_64_byte_aligned = image->cube_map_stride / 64;
 
-      tex.srgb = vk_format_is_srgb(image_view->vk.format);
+      tex.srgb = vk_format_is_srgb(image_view->vk.view_format);
 
       /* At this point we don't have the job. That's the reason the first
        * parameter is NULL, to avoid a crash when cl_pack_emit_reloc tries to

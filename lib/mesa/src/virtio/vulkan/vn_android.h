@@ -40,6 +40,9 @@ vn_android_get_drm_format_modifier_info(
    const VkPhysicalDeviceImageFormatInfo2 *format_info,
    VkPhysicalDeviceImageDrmFormatModifierInfoEXT *out_info);
 
+const VkFormat *
+vn_android_format_to_view_formats(VkFormat format, uint32_t *out_count);
+
 uint64_t
 vn_android_get_ahb_usage(const VkImageUsageFlags usage,
                          const VkImageCreateFlags flags);
@@ -55,7 +58,8 @@ vn_android_device_import_ahb(struct vn_device *dev,
                              struct vn_device_memory *mem,
                              const VkMemoryAllocateInfo *alloc_info,
                              const VkAllocationCallbacks *alloc,
-                             struct AHardwareBuffer *ahb);
+                             struct AHardwareBuffer *ahb,
+                             bool internal_ahb);
 
 VkResult
 vn_android_device_allocate_ahb(struct vn_device *dev,
@@ -76,7 +80,8 @@ vn_android_buffer_from_ahb(struct vn_device *dev,
                            struct vn_buffer **out_buf);
 
 VkResult
-vn_android_init_ahb_buffer_memory_type_bits(struct vn_device *dev);
+vn_android_get_ahb_buffer_memory_type_bits(struct vn_device *dev,
+                                           uint32_t *out_mem_type_bits);
 
 #else
 
@@ -104,6 +109,13 @@ vn_android_get_drm_format_modifier_info(
    return false;
 }
 
+static inline const VkFormat *
+vn_android_format_to_view_formats(UNUSED VkFormat format,
+                                  UNUSED uint32_t *out_count)
+{
+   return NULL;
+}
+
 static inline uint64_t
 vn_android_get_ahb_usage(UNUSED const VkImageUsageFlags usage,
                          UNUSED const VkImageCreateFlags flags)
@@ -125,7 +137,8 @@ vn_android_device_import_ahb(UNUSED struct vn_device *dev,
                              UNUSED struct vn_device_memory *mem,
                              UNUSED const VkMemoryAllocateInfo *alloc_info,
                              UNUSED const VkAllocationCallbacks *alloc,
-                             UNUSED struct AHardwareBuffer *ahb)
+                             UNUSED struct AHardwareBuffer *ahb,
+                             UNUSED bool internal_ahb)
 {
    return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
@@ -161,7 +174,8 @@ vn_android_buffer_from_ahb(UNUSED struct vn_device *dev,
 }
 
 static inline VkResult
-vn_android_init_ahb_buffer_memory_type_bits(UNUSED struct vn_device *dev)
+vn_android_get_ahb_buffer_memory_type_bits(UNUSED struct vn_device *dev,
+                                           UNUSED uint32_t *out_mem_type_bits)
 {
    return VK_ERROR_FEATURE_NOT_PRESENT;
 }

@@ -25,7 +25,7 @@
 
 /**
  * \file u_async_debug.h
- * Provides a helper implementation of pipe_debug_callback which allows debug
+ * Provides a helper implementation of util_debug_callback which allows debug
  * messages from non-application threads to be passed back to the application
  * thread.
  */
@@ -37,14 +37,18 @@
 #include "util/u_debug.h"
 #include "util/simple_mtx.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct util_debug_message {
    unsigned *id;
-   enum pipe_debug_type type;
+   enum util_debug_type type;
    char *msg;
 };
 
 struct util_async_debug_callback {
-   struct pipe_debug_callback base;
+   struct util_debug_callback base;
 
    simple_mtx_t lock;
    unsigned count;
@@ -59,16 +63,20 @@ u_async_debug_cleanup(struct util_async_debug_callback *adbg);
 
 void
 _u_async_debug_drain(struct util_async_debug_callback *adbg,
-                     struct pipe_debug_callback *dst);
+                     struct util_debug_callback *dst);
 
 static inline void
 u_async_debug_drain(struct util_async_debug_callback *adbg,
-                    struct pipe_debug_callback *dst)
+                    struct util_debug_callback *dst)
 {
    /* Read the count without taking the lock to avoid atomics in the fast path.
     * We'll re-read the count after taking the lock. */
    if (adbg->count)
       _u_async_debug_drain(adbg, dst);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* UTIL_ASYNC_DEBUG_H */

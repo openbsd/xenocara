@@ -52,7 +52,6 @@ struct virgl_resource_metadata
 
 struct virgl_resource {
    struct pipe_resource b;
-   uint16_t clean_mask;
    struct virgl_hw_res *hw_res;
    struct virgl_resource_metadata metadata;
 
@@ -68,6 +67,10 @@ struct virgl_resource {
     */
    unsigned bind_history;
    uint32_t blob_mem;
+
+   uint16_t clean_mask;
+   uint16_t use_staging : 1;
+   uint16_t reserved : 15;
 };
 
 struct virgl_transfer {
@@ -86,6 +89,8 @@ struct virgl_transfer {
    struct virgl_hw_res *copy_src_hw_res;
    /* The offset in the copy source resource to copy data from. */
    uint32_t copy_src_offset;
+   /* copy transfers can be performed to and from host */
+   uint32_t direction;
 };
 
 void virgl_resource_destroy(struct pipe_screen *screen,

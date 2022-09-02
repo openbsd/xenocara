@@ -68,17 +68,11 @@ Core Mesa environment variables
 :envvar:`MESA_LOG_FILE`
    specifies a file name for logging all errors, warnings, etc., rather
    than stderr
-:envvar:`MESA_TEX_PROG`
-   if set, implement conventional texture environment modes with fragment
-   programs (intended for developers only)
-:envvar:`MESA_TNL_PROG`
-   if set, implement conventional vertex transformation operations with
-   vertex programs (intended for developers only). Setting this variable
-   automatically sets the :envvar:`MESA_TEX_PROG` variable as well.
 :envvar:`MESA_EXTENSION_OVERRIDE`
    can be used to enable/disable extensions. A value such as
    ``GL_EXT_foo -GL_EXT_bar`` will enable the ``GL_EXT_foo`` extension
-   and disable the ``GL_EXT_bar`` extension.
+   and disable the ``GL_EXT_bar`` extension. Note that this will override
+   extensions override configured using driconf.
 :envvar:`MESA_EXTENSION_MAX_YEAR`
    The ``GL_EXTENSIONS`` string returned by Mesa is sorted by extension
    year. If this variable is set to year X, only extensions defined on
@@ -142,13 +136,13 @@ Core Mesa environment variables
    integers, such as ``130``. Mesa will not really implement all the
    features of the given language version if it's higher than what's
    normally reported. (for developers only)
-:envvar:`MESA_GLSL_CACHE_DISABLE`
-   if set to ``true``, disables the GLSL shader cache. If set to
-   ``false``, enables the GLSL shader cache when it is disabled by
+:envvar:`MESA_SHADER_CACHE_DISABLE`
+   if set to ``true``, disables the on-disk shader cache. If set to
+   ``false``, enables the on-disk shader cache when it is disabled by
    default.
-:envvar:`MESA_GLSL_CACHE_MAX_SIZE`
+:envvar:`MESA_SHADER_CACHE_MAX_SIZE`
    if set, determines the maximum size of the on-disk cache of compiled
-   GLSL programs. Should be set to a number optionally followed by
+   shader programs. Should be set to a number optionally followed by
    ``K``, ``M``, or ``G`` to specify a size in kilobytes, megabytes, or
    gigabytes. By default, gigabytes will be assumed. And if unset, a
    maximum size of 1GB will be used.
@@ -160,9 +154,9 @@ Core Mesa environment variables
       you may end up with a 1GB cache for x86_64 and another 1GB cache for
       i386.
 
-:envvar:`MESA_GLSL_CACHE_DIR`
+:envvar:`MESA_SHADER_CACHE_DIR`
    if set, determines the directory to be used for the on-disk cache of
-   compiled GLSL programs. If this variable is not set, then the cache
+   compiled shader programs. If this variable is not set, then the cache
    will be stored in ``$XDG_CACHE_HOME/mesa_shader_cache`` (if that
    variable is set), or else within ``.cache/mesa_shader_cache`` within
    the user's home directory.
@@ -188,6 +182,14 @@ Core Mesa environment variables
    overrides the WSI present mode clients specify in
    ``VkSwapchainCreateInfoKHR::presentMode``. Values can be ``fifo``,
    ``relaxed``, ``mailbox`` or ``immediate``.
+:envvar:`MESA_VK_ABORT_ON_DEVICE_LOSS`
+   causes the Vulkan driver to call abort() immediately after detecting a
+   lost device.  This is extremely useful when testing as it prevents the
+   test suite from continuing on with a lost device.
+:envvar:`MESA_VK_ENABLE_SUBMIT_THREAD`
+   for Vulkan drivers which support real timeline semaphores, this forces
+   them to use a submit thread from the beginning, regardless of whether or
+   not they ever see a wait-before-signal condition.
 :envvar:`MESA_LOADER_DRIVER_OVERRIDE`
    chooses a different driver binary such as ``etnaviv`` or ``zink``.
 
@@ -198,15 +200,11 @@ The following are only applicable for drivers that uses NIR, as they
 modify the behavior for the common ``NIR_PASS`` and ``NIR_PASS_V`` macros,
 that wrap calls to NIR lowering/optimizations.
 
-:envvar:`NIR_PRINT`
-   If defined, the resulting NIR shader will be printed out at each
-   successful NIR lowering/optimization call.
-:envvar:`NIR_TEST_CLONE`
-   If defined, cloning a NIR shader would be tested at each successful
-   NIR lowering/optimization call.
-:envvar:`NIR_TEST_SERIALIZE`
-   If defined, serialize and deserialize a NIR shader would be tested at
-   each successful NIR lowering/optimization call.
+:envvar:`NIR_DEBUG`
+   a comma-separated list of debug options to apply to NIR
+   shaders. Use `NIR_DEBUG=help` to print a list of available options.
+:envvar:`NIR_SKIP`
+   a comma-separated list of optimization/lowering passes to skip.
 
 Mesa Xlib driver environment variables
 --------------------------------------
@@ -219,18 +217,27 @@ the :doc:`Xlib software driver page <xlibdriver>` for details.
 :envvar:`MESA_BACK_BUFFER`
    specifies how to implement the back color buffer, either ``pixmap``
    or ``ximage``
-:envvar:`MESA_GAMMA`
-   gamma correction coefficients for red, green, blue channels
 :envvar:`MESA_XSYNC`
    enable synchronous X behavior (for debugging only)
-:envvar:`MESA_GLX_FORCE_CI`
-   if set, force GLX to treat 8 BPP visuals as CI visuals
 :envvar:`MESA_GLX_FORCE_ALPHA`
    if set, forces RGB windows to have an alpha channel.
 :envvar:`MESA_GLX_DEPTH_BITS`
    specifies default number of bits for depth buffer.
 :envvar:`MESA_GLX_ALPHA_BITS`
    specifies default number of bits for alpha channel.
+
+Mesa WGL driver environment variables
+-------------------------------------
+
+The following are only applicable to the Mesa WGL driver, which is in use
+on Windows.
+
+:envvar:`WGL_FORCE_MSAA`
+   if set to a positive value, specifies the number of MSAA samples to
+   force when choosing the display configuration.
+:envvar:`WGL_DISABLE_ERROR_DIALOGS`
+   if set to 1, true or yes, disables Win32 error dialogs. Useful for
+   automated test-runs.
 
 Intel driver environment variables
 ----------------------------------------------------
@@ -244,8 +251,6 @@ Intel driver environment variables
 
    ``ann``
       annotate IR in assembly dumps
-   ``aub``
-      dump batches into an AUB trace for use with simulation tools
    ``bat``
       emit batch information
    ``blit``
@@ -254,6 +259,8 @@ Intel driver environment variables
       emit messages about the blorp operations (blits & clears)
    ``buf``
       emit messages about buffer objects
+   ``bt``
+      emit messages binding tables
    ``clip``
       emit messages about the clip unit (for old gens, includes the CLIP
       program)
@@ -264,10 +271,8 @@ Intel driver environment variables
    ``do32``
       generate compute shader SIMD32 programs even if workgroup size
       doesn't exceed the SIMD16 limit
-   ``dri``
-      emit messages about the DRI interface
-   ``fbo``
-      emit messages about framebuffers
+   ``fall``
+      emit messages about performance issues (same as ``perf``)
    ``fs``
       dump shader assembly for fragment shaders
    ``gs``
@@ -276,64 +281,73 @@ Intel driver environment variables
       print instruction hex dump with the disassembly
    ``l3``
       emit messages about the new L3 state during transitions
-   ``miptree``
-      emit messages about miptrees
+   ``mesh``
+      dump shader assembly for mesh shaders
    ``no8``
       don't generate SIMD8 fragment shader
    ``no16``
       suppress generation of 16-wide fragment shaders. useful for
       debugging broken shaders
+   ``no32``
+      suppress generation of 32-wide fragment shaders. useful for
+      debugging broken shaders
+   ``no-oaconfig``
+      disable HW performance metric configuration, and anything
+      related to i915-perf (useful when running on simulation)
    ``nocompact``
       disable instruction compaction
    ``nodualobj``
       suppress generation of dual-object geometry shader code
    ``nofc``
       disable fast clears
-   ``norbc``
-      disable single sampled render buffer compression
+   ``noccs``
+      disable lossless color compression
    ``optimizer``
       dump shader assembly to files at each optimization pass and
       iteration that make progress
+   ``pc``
+      emit messages about PIPE_CONTROL instruction usage
    ``perf``
       emit messages about performance issues
    ``perfmon``
       emit messages about ``AMD_performance_monitor``
-   ``pix``
-      emit messages about pixel operations
-   ``prim``
-      emit messages about drawing primitives
    ``reemit``
       mark all state dirty on each draw call
+   ``rt``
+      dump shader assembly for ray tracing shaders
    ``sf``
       emit messages about the strips & fans unit (for old gens, includes
       the SF program)
-   ``shader_time``
-      record how much GPU time is spent in each shader
+   ``soft64``
+      enable implementation of software 64bit floating point support
    ``spill_fs``
       force spilling of all registers in the scalar backend (useful to
       debug spilling code)
    ``spill_vec4``
       force spilling of all registers in the vec4 backend (useful to
       debug spilling code)
-   ``state``
-      emit messages about state flag tracking
    ``submit``
       emit batchbuffer usage statistics
    ``sync``
       after sending each batch, emit a message and wait for that batch
       to finish rendering
+   ``task``
+      dump shader assembly for task shaders
    ``tcs``
       dump shader assembly for tessellation control shaders
+   ``tcs8``
+      force usage of 8-patches tessellation control shaders (only
+      for gfx 9-11)
    ``tes``
       dump shader assembly for tessellation evaluation shaders
    ``tex``
       emit messages about textures.
    ``urb``
       emit messages about URB setup
-   ``vert``
-      emit messages about vertex assembly
    ``vs``
       dump shader assembly for vertex shaders
+   ``wm``
+      dump shader assembly for fragment shaders (same as ``fs``)
 
 :envvar:`INTEL_MEASURE`
    Collects GPU timestamps over common intervals, and generates a CSV report
@@ -413,12 +427,6 @@ Intel driver environment variables
    assembly.
 
 
-Radeon driver environment variables (radeon, r200, and r300g)
--------------------------------------------------------------
-
-:envvar:`RADEON_NO_TCL`
-   if set, disable hardware-accelerated Transform/Clip/Lighting.
-
 DRI environment variables
 -------------------------
 
@@ -458,8 +466,7 @@ Gallium environment variables
    files.
 :envvar:`GALLIUM_DRIVER`
    useful in combination with :envvar:`LIBGL_ALWAYS_SOFTWARE`=`true` for
-   choosing one of the software renderers ``softpipe``, ``llvmpipe`` or
-   ``swr``.
+   choosing one of the software renderers ``softpipe`` or ``llvmpipe``.
 :envvar:`GALLIUM_LOG_FILE`
    specifies a file for logging all errors, warnings, etc. rather than
    stderr.
@@ -581,30 +588,19 @@ VC4 driver environment variables
 --------------------------------
 
 :envvar:`VC4_DEBUG`
-   a comma-separated list of named flags, which do various things:
+   a comma-separated list of named flags, which do various things. Use
+   `VC4_DEBUG=help` to print a list of available options.
 
-   ``cl``
-      dump command list during creation
-   ``qpu``
-      dump generated QPU instructions
-   ``qir``
-      dump QPU IR during program compile
-   ``nir``
-      dump NIR during program compile
-   ``tgsi``
-      dump TGSI during program compile
-   ``shaderdb``
-      dump program compile information for shader-db analysis
-   ``perf``
-      print during performance-related events
-   ``norast``
-      skip actual hardware execution of commands
-   ``always_flush``
-      flush after each draw call
-   ``always_sync``
-      wait for finish after each flush
-   ``dump``
-      write a GPU command stream trace file (VC4 simulator only)
+
+V3D/V3DV driver environment variables
+-------------------------------------
+
+:envvar:`V3D_DEBUG`
+    a comma-separated list of debug options. Use `V3D_DEBUG=help` to
+    print a list of available options.
+
+
+.. _radv env-vars:
 
 RADV driver environment variables
 ---------------------------------
@@ -678,6 +674,8 @@ RADV driver environment variables
       dump shader statistics
    ``spirv``
       dump SPIR-V
+   ``splitfma``
+      split application-provided fused multiply-add in geometry stages
    ``startup``
       display info at startup
    ``syncshaders``
@@ -688,12 +686,16 @@ RADV driver environment variables
       initialize all memory allocated in VRAM as zero
 
 :envvar:`RADV_FORCE_FAMILY`
-   create a null device to compile shaders without a AMD GPU (e.g. vega10)
+   create a null device to compile shaders without a AMD GPU (e.g. VEGA10)
 
 :envvar:`RADV_FORCE_VRS`
    allow to force per-pipeline vertex VRS rates on GFX10.3+. This is only
    forced for pipelines that don't explicitely use VRS or flat shading.
-   The supported values are 2x2, 1x2 and 2x1. Only for testing purposes.
+   The supported values are 2x2, 1x2, 2x1 and 1x1. Only for testing purposes.
+
+:envvar:`RADV_FORCE_VRS_CONFIG_FILE`
+   similar to `RADV_FORCE_VRS` but allow to configure from a file. If present,
+   this supersedes `RADV_FORCE_VRS`.
 
 :envvar:`RADV_PERFTEST`
    a comma-separated list of named flags, which do various things:
@@ -713,6 +715,8 @@ RADV driver environment variables
       enable local BOs
    ``nosam``
       disable optimizations that get enabled when all VRAM is CPU visible.
+   ``nv_ms``
+      enable unofficial experimental support for NV_mesh_shader.
    ``pswave32``
       enable wave32 for pixel shaders (GFX10+)
    ``nggc``
@@ -721,9 +725,30 @@ RADV driver environment variables
       enable rt extensions whose implementation is still experimental.
    ``sam``
       enable optimizations to move more driver internal objects to VRAM.
+   ``rtwave64``
+      enable wave64 for ray tracing shaders (GFX10+)
 
 :envvar:`RADV_TEX_ANISO`
    force anisotropy filter (up to 16)
+
+:envvar:`RADV_THREAD_TRACE`
+   enable frame based SQTT/RGP captures (eg. `export RADV_THREAD_TRACE=100`
+   will capture the frame #100)
+
+:envvar:`RADV_THREAD_TRACE_BUFFER_SIZE`
+   set the SQTT/RGP buffer size in bytes (default value is 32MiB, the buffer is
+   automatically resized if too small)
+
+:envvar:`RADV_THREAD_TRACE_CACHE_COUNTERS`
+   enable/disable SQTT/RGP cache counters on GFX10+ (disabled by default)
+
+:envvar:`RADV_THREAD_TRACE_INSTRUCTION_TIMING`
+   enable/disable SQTT/RGP instruction timing (enabled by default)
+
+:envvar:`RADV_THREAD_TRACE_TRIGGER`
+   enable trigger file based SQTT/RGP captures (eg.
+   `export RADV_THREAD_TRACE_TRIGGER=/tmp/radv_sqtt_trigger` and then
+   `touch /tmp/radv_sqtt_trigger` to capture a frame)
 
 :envvar:`ACO_DEBUG`
    a comma-separated list of named flags, which do various things:
@@ -751,13 +776,24 @@ RADV driver environment variables
 radeonsi driver environment variables
 -------------------------------------
 
+:envvar:`radeonsi_no_infinite_interp`
+   Kill PS with infinite interp coeff (might fix hangs)
+
+:envvar:`radeonsi_clamp_div_by_zero`
+   Clamp div by zero (x / 0 becomes FLT_MAX instead of NaN) (might fix rendering corruptions)
+
+:envvar:`radeonsi_zerovram`
+   Clear all allocated memory to 0 before usage (might fix rendering corruptions)
+
 :envvar:`AMD_DEBUG`
    a comma-separated list of named flags, which do various things:
 
    ``nodcc``
       Disable DCC.
    ``nodccclear``
-      Disable DCC fast clear.
+      Disable DCC fast clear
+   ``nodisplaydcc``
+      disable Delta Color Compression (DCC) on displayable images
    ``nodccmsaa``
       Disable DCC for MSAA
    ``nodpbb``
@@ -800,8 +836,6 @@ radeonsi driver environment variables
       Don't print disassembled shaders
    ``preoptir``
       Print the LLVM IR before initial optimizations
-   ``gisel``
-      Enable LLVM global instruction selector.
    ``w32ge``
       Use Wave32 for vertex, tessellation, and geometry shaders.
    ``w32ps``
@@ -973,6 +1007,63 @@ r600 driver environment variables
       Log texture ops
    ``trans``
       Log generic translation messages
+
+r300 driver environment variables
+---------------------------------
+
+:envvar:`RADEON_DEBUG`
+   a comma-separated list of named flags, which do various things:
+
+   ``info``
+      Print hardware info (printed by default on debug builds
+   ``fp``
+      Log fragment program compilation
+   ``vp``
+      Log vertex program compilation
+   ``draw``
+      Log draw calls
+   ``swtcl``
+      Log SWTCL-specific info
+   ``rsblock``
+      Log rasterizer registers
+   ``psc``
+      Log vertex stream registers
+   ``tex``
+      Log basic info about textures
+   ``texalloc``
+      Log texture mipmap tree info
+   ``rs``
+      Log rasterizer
+   ``fb``
+      Log framebuffer
+   ``cbzb``
+      Log fast color clear info
+   ``hyperz``
+      Log HyperZ info
+   ``scissor``
+      Log scissor info
+   ``msaa``
+      Log MSAA resources
+   ``anisohq``
+      Use high quality anisotropic filtering
+   ``notiling``
+      Disable tiling
+   ``noimmd``
+      Disable immediate mode
+   ``noopt``
+      Disable shader optimizations
+   ``nocbzb``
+      Disable fast color clear
+   ``nozmask``
+      Disable zbuffer compression
+   ``nohiz``
+      Disable hierarchical zbuffer
+   ``nocmask``
+      Disable AA compression and fast AA clear
+   ``use_tgsi``
+      Request TGSI shaders from the state tracker
+   ``notcl``
+      Disable hardware accelerated Transform/Clip/Lighting
 
 Other Gallium drivers have their own environment variables. These may
 change frequently so the source code should be consulted for details.

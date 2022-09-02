@@ -35,13 +35,13 @@
 
 bool ir3_nir_apply_trig_workarounds(nir_shader *shader);
 bool ir3_nir_lower_imul(nir_shader *shader);
-bool ir3_nir_lower_tg4_to_tex(nir_shader *shader);
 bool ir3_nir_lower_io_offsets(nir_shader *shader);
 bool ir3_nir_lower_load_barycentric_at_sample(nir_shader *shader);
 bool ir3_nir_lower_load_barycentric_at_offset(nir_shader *shader);
 bool ir3_nir_move_varying_inputs(nir_shader *shader);
 int ir3_nir_coord_offset(nir_ssa_def *ssa);
 bool ir3_nir_lower_tex_prefetch(nir_shader *shader);
+bool ir3_nir_lower_wide_load_store(nir_shader *shader);
 
 void ir3_nir_lower_to_explicit_output(nir_shader *shader,
                                       struct ir3_shader_variant *v,
@@ -54,12 +54,17 @@ void ir3_nir_lower_tess_eval(nir_shader *shader, struct ir3_shader_variant *v,
                              unsigned topology);
 void ir3_nir_lower_gs(nir_shader *shader);
 
-const nir_shader_compiler_options *
-ir3_get_compiler_options(struct ir3_compiler *compiler);
+/*
+ * 64b related lowering:
+ */
+bool ir3_nir_lower_64b_intrinsics(nir_shader *shader);
+bool ir3_nir_lower_64b_undef(nir_shader *shader);
+bool ir3_nir_lower_64b_global(nir_shader *shader);
+
 void ir3_optimize_loop(struct ir3_compiler *compiler, nir_shader *s);
 void ir3_nir_lower_io_to_temporaries(nir_shader *s);
 void ir3_finalize_nir(struct ir3_compiler *compiler, nir_shader *s);
-void ir3_nir_post_finalize(struct ir3_compiler *compiler, nir_shader *s);
+void ir3_nir_post_finalize(struct ir3_shader *shader);
 void ir3_nir_lower_variant(struct ir3_shader_variant *so, nir_shader *s);
 
 void ir3_setup_const_state(nir_shader *nir, struct ir3_shader_variant *v,
@@ -68,6 +73,8 @@ bool ir3_nir_lower_load_constant(nir_shader *nir, struct ir3_shader_variant *v);
 void ir3_nir_analyze_ubo_ranges(nir_shader *nir, struct ir3_shader_variant *v);
 bool ir3_nir_lower_ubo_loads(nir_shader *nir, struct ir3_shader_variant *v);
 bool ir3_nir_fixup_load_uniform(nir_shader *nir);
+bool ir3_nir_opt_preamble(nir_shader *nir, struct ir3_shader_variant *v);
+bool ir3_nir_lower_preamble(nir_shader *nir, struct ir3_shader_variant *v);
 
 nir_ssa_def *ir3_nir_try_propagate_bit_shift(nir_builder *b,
                                              nir_ssa_def *offset,
@@ -87,6 +94,40 @@ ir3_bindless_resource(nir_src src)
       return NULL;
 
    return intrin;
+}
+
+static inline bool
+is_intrinsic_store(nir_intrinsic_op op)
+{
+   switch (op) {
+   case nir_intrinsic_store_output:
+   case nir_intrinsic_store_scratch:
+   case nir_intrinsic_store_ssbo:
+   case nir_intrinsic_store_shared:
+   case nir_intrinsic_store_global:
+   case nir_intrinsic_store_global_ir3:
+      return true;
+   default:
+      return false;
+   }
+}
+
+static inline bool
+is_intrinsic_load(nir_intrinsic_op op)
+{
+   switch (op) {
+   case nir_intrinsic_load_input:
+   case nir_intrinsic_load_scratch:
+   case nir_intrinsic_load_uniform:
+   case nir_intrinsic_load_ssbo:
+   case nir_intrinsic_load_ubo:
+   case nir_intrinsic_load_shared:
+   case nir_intrinsic_load_global:
+   case nir_intrinsic_load_global_ir3:
+      return true;
+   default:
+      return false;
+   }
 }
 
 #endif /* IR3_NIR_H_ */

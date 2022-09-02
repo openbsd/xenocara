@@ -47,11 +47,12 @@ mkdir -p artifacts/
 tar -cf artifacts/install.tar install
 cp -Rp .gitlab-ci/common artifacts/ci-common
 cp -Rp .gitlab-ci/lava artifacts/
+cp -Rp .gitlab-ci/valve artifacts/
 
 if [ -n "$MINIO_ARTIFACT_NAME" ]; then
     # Pass needed files to the test stage
     MINIO_ARTIFACT_NAME="$MINIO_ARTIFACT_NAME.tar.gz"
     gzip -c artifacts/install.tar > ${MINIO_ARTIFACT_NAME}
-    ci-fairy minio login $CI_JOB_JWT
+    ci-fairy minio login --token-file "${CI_JOB_JWT_FILE}"
     ci-fairy minio cp ${MINIO_ARTIFACT_NAME} minio://${PIPELINE_ARTIFACTS_BASE}/${MINIO_ARTIFACT_NAME}
 fi

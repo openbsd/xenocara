@@ -396,8 +396,7 @@ static void constant_folding(struct radeon_compiler * c, struct rc_instruction *
 		}
 
 		/* don't make the swizzle worse */
-		if (!c->SwizzleCaps->IsNative(inst->U.I.Opcode, newsrc) &&
-		    c->SwizzleCaps->IsNative(inst->U.I.Opcode, inst->U.I.SrcReg[src]))
+		if (!c->SwizzleCaps->IsNative(inst->U.I.Opcode, newsrc))
 			continue;
 
 		inst->U.I.SrcReg[src] = newsrc;
@@ -498,14 +497,18 @@ static int presub_helper(
 	return 1;
 }
 
-/* This function assumes that inst_add->U.I.SrcReg[0] and
- * inst_add->U.I.SrcReg[1] aren't both negative. */
 static void presub_replace_add(
 	struct rc_instruction * inst_add,
 	struct rc_instruction * inst_reader,
 	unsigned int src_index)
 {
 	rc_presubtract_op presub_opcode;
+
+	/* This function assumes that inst_add->U.I.SrcReg[0] and
+	 * inst_add->U.I.SrcReg[1] aren't both negative.
+	 */
+	assert(!(inst_add->U.I.SrcReg[1].Negate && inst_add->U.I.SrcReg[0].Negate));
+
 	if (inst_add->U.I.SrcReg[1].Negate || inst_add->U.I.SrcReg[0].Negate)
 		presub_opcode = RC_PRESUB_SUB;
 	else
@@ -886,7 +889,6 @@ static int peephole(struct radeon_compiler * c, struct rc_instruction * inst)
 void rc_optimize(struct radeon_compiler * c, void *user)
 {
 	struct rc_instruction * inst = c->Program.Instructions.Next;
-	struct rc_list * var_list;
 	while(inst != &c->Program.Instructions) {
 		struct rc_instruction * cur = inst;
 		inst = inst->Next;
@@ -907,12 +909,15 @@ void rc_optimize(struct radeon_compiler * c, void *user)
 	}
 
 	inst = c->Program.Instructions.Next;
+	struct rc_list * var_list = NULL;
 	while(inst != &c->Program.Instructions) {
 		struct rc_instruction * cur = inst;
 		inst = inst->Next;
 		if (cur->U.I.Opcode == RC_OPCODE_MUL) {
-			var_list = rc_get_variables(c);
-			peephole_mul_omod(c, cur, var_list);
+			if (!var_list)
+				var_list = rc_get_variables(c);
+			if (peephole_mul_omod(c, cur, var_list))
+				var_list = NULL;
 		}
 	}
 }

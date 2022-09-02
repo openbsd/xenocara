@@ -154,7 +154,7 @@ blorp_alloc_binding_table(struct blorp_batch *blorp_batch,
                           unsigned num_entries,
                           unsigned state_size,
                           unsigned state_alignment,
-                          uint32_t *bt_offset,
+                          uint32_t *out_bt_offset,
                           uint32_t *surface_offsets,
                           void **surface_maps)
 {
@@ -162,19 +162,32 @@ blorp_alloc_binding_table(struct blorp_batch *blorp_batch,
    struct iris_binder *binder = &ice->state.binder;
    struct iris_batch *batch = blorp_batch->driver_batch;
 
-   *bt_offset = iris_binder_reserve(ice, num_entries * sizeof(uint32_t));
-   uint32_t *bt_map = binder->map + *bt_offset;
+   unsigned bt_offset =
+      iris_binder_reserve(ice, num_entries * sizeof(uint32_t));
+   uint32_t *bt_map = binder->map + bt_offset;
+
+   uint32_t surf_base_offset = GFX_VER < 11 ? binder->bo->address : 0;
+
+   *out_bt_offset = bt_offset;
 
    for (unsigned i = 0; i < num_entries; i++) {
       surface_maps[i] = stream_state(batch, ice->state.surface_uploader,
                                      state_size, state_alignment,
                                      &surface_offsets[i], NULL);
-      bt_map[i] = surface_offsets[i] - (uint32_t) binder->bo->address;
+      bt_map[i] = surface_offsets[i] - surf_base_offset;
    }
 
    iris_use_pinned_bo(batch, binder->bo, false, IRIS_DOMAIN_NONE);
 
-   batch->screen->vtbl.update_surface_base_address(batch, binder);
+   batch->screen->vtbl.update_binder_address(batch, binder);
+}
+
+static uint32_t
+blorp_binding_table_offset_to_pointer(struct blorp_batch *batch,
+                                      uint32_t offset)
+{
+   /* See IRIS_BT_OFFSET_SHIFT in iris_state.c */
+   return offset >> ((GFX_VER >= 11 && GFX_VERx10 < 125) ? 3 : 0);
 }
 
 static void *
@@ -195,6 +208,7 @@ blorp_alloc_vertex_buffer(struct blorp_batch *blorp_batch,
       .offset = offset,
       .mocs = iris_mocs(bo, &batch->screen->isl_dev,
                         ISL_SURF_USAGE_VERTEX_BUFFER_BIT),
+      .local_hint = iris_bo_likely_local(bo),
    };
 
    return map;
@@ -242,6 +256,8 @@ blorp_get_workaround_address(struct blorp_batch *blorp_batch)
    return (struct blorp_address) {
       .buffer = batch->screen->workaround_address.bo,
       .offset = batch->screen->workaround_address.offset,
+      .local_hint =
+         iris_bo_likely_local(batch->screen->workaround_address.bo),
    };
 }
 
@@ -263,8 +279,8 @@ blorp_get_l3_config(struct blorp_batch *blorp_batch)
 }
 
 static void
-iris_blorp_exec(struct blorp_batch *blorp_batch,
-                const struct blorp_params *params)
+iris_blorp_exec_render(struct blorp_batch *blorp_batch,
+                       const struct blorp_params *params)
 {
    struct iris_context *ice = blorp_batch->blorp->driver_ctx;
    struct iris_batch *batch = blorp_batch->driver_batch;
@@ -309,6 +325,13 @@ iris_blorp_exec(struct blorp_batch *blorp_batch,
       genX(emit_hashing_mode)(ice, batch, params->x1 - params->x0,
                               params->y1 - params->y0, scale);
    }
+
+#if GFX_VERx10 == 125
+   iris_use_pinned_bo(batch, iris_resource_bo(ice->state.pixel_hashing_tables),
+                      false, IRIS_DOMAIN_NONE);
+#else
+   assert(!ice->state.pixel_hashing_tables);
+#endif
 
 #if GFX_VER >= 12
    genX(invalidate_aux_map_state)(batch);
@@ -377,7 +400,7 @@ iris_blorp_exec(struct blorp_batch *blorp_batch,
 
    if (params->src.enabled)
       iris_bo_bump_seqno(params->src.addr.buffer, batch->next_seqno,
-                         IRIS_DOMAIN_OTHER_READ);
+                         IRIS_DOMAIN_SAMPLER_READ);
    if (params->dst.enabled)
       iris_bo_bump_seqno(params->dst.addr.buffer, batch->next_seqno,
                          IRIS_DOMAIN_RENDER_WRITE);
@@ -390,11 +413,47 @@ iris_blorp_exec(struct blorp_batch *blorp_batch,
 }
 
 static void
+iris_blorp_exec_blitter(struct blorp_batch *blorp_batch,
+                        const struct blorp_params *params)
+{
+   struct iris_batch *batch = blorp_batch->driver_batch;
+
+   /* Around the length of a XY_BLOCK_COPY_BLT and MI_FLUSH_DW */
+   iris_require_command_space(batch, 108);
+
+   iris_handle_always_flush_cache(batch);
+
+   blorp_exec(blorp_batch, params);
+
+   iris_handle_always_flush_cache(batch);
+
+   if (params->src.enabled) {
+      iris_bo_bump_seqno(params->src.addr.buffer, batch->next_seqno,
+                         IRIS_DOMAIN_OTHER_READ);
+   }
+
+   iris_bo_bump_seqno(params->dst.addr.buffer, batch->next_seqno,
+                      IRIS_DOMAIN_OTHER_WRITE);
+}
+
+static void
+iris_blorp_exec(struct blorp_batch *blorp_batch,
+                const struct blorp_params *params)
+{
+   if (blorp_batch->flags & BLORP_BATCH_USE_BLITTER)
+      iris_blorp_exec_blitter(blorp_batch, params);
+   else
+      iris_blorp_exec_render(blorp_batch, params);
+}
+
+static void
 blorp_measure_start(struct blorp_batch *blorp_batch,
                     const struct blorp_params *params)
 {
    struct iris_context *ice = blorp_batch->blorp->driver_ctx;
    struct iris_batch *batch = blorp_batch->driver_batch;
+
+   trace_intel_begin_blorp(&batch->trace, batch);
 
    if (batch->measure == NULL)
       return;
@@ -402,12 +461,28 @@ blorp_measure_start(struct blorp_batch *blorp_batch,
    iris_measure_snapshot(ice, batch, params->snapshot_type, NULL, NULL, NULL);
 }
 
+
+static void
+blorp_measure_end(struct blorp_batch *blorp_batch,
+                    const struct blorp_params *params)
+{
+   struct iris_batch *batch = blorp_batch->driver_batch;
+
+   trace_intel_end_blorp(&batch->trace, batch,
+                         params->x1 - params->x0,
+                         params->y1 - params->y0,
+                         params->hiz_op,
+                         params->fast_clear_op,
+                         params->shader_type,
+                         params->shader_pipeline);
+}
+
 void
 genX(init_blorp)(struct iris_context *ice)
 {
    struct iris_screen *screen = (struct iris_screen *)ice->ctx.screen;
 
-   blorp_init(&ice->blorp, ice, &screen->isl_dev);
+   blorp_init(&ice->blorp, ice, &screen->isl_dev, NULL);
    ice->blorp.compiler = screen->compiler;
    ice->blorp.lookup_shader = iris_blorp_lookup_shader;
    ice->blorp.upload_shader = iris_blorp_upload_shader;

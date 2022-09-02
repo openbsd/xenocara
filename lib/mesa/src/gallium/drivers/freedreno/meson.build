@@ -118,6 +118,8 @@ files_libfreedreno = files(
   'a3xx/fd3_zsa.h',
   'a4xx/fd4_blend.c',
   'a4xx/fd4_blend.h',
+  'a4xx/fd4_compute.c',
+  'a4xx/fd4_compute.h',
   'a4xx/fd4_context.c',
   'a4xx/fd4_context.h',
   'a4xx/fd4_draw.c',
@@ -128,6 +130,8 @@ files_libfreedreno = files(
   'a4xx/fd4_format.h',
   'a4xx/fd4_gmem.c',
   'a4xx/fd4_gmem.h',
+  'a4xx/fd4_image.c',
+  'a4xx/fd4_image.h',
   'a4xx/fd4_program.c',
   'a4xx/fd4_program.h',
   'a4xx/fd4_query.c',
@@ -295,7 +299,7 @@ driver_freedreno = declare_dependency(
 
 ir3_compiler = executable(
   'ir3_compiler',
-  'ir3/ir3_cmdline.c',
+  ['ir3/ir3_cmdline.c', freedreno_xml_header_files],
   include_directories : freedreno_includes,
   dependencies : [
     idep_nir,

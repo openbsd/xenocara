@@ -64,18 +64,16 @@ The integer capabilities:
 * ``PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS``: The maximum number of texture array
   layers supported. If 0, the array textures are not supported at all and
   the ARRAY texture targets are invalid.
-* ``PIPE_CAP_TGSI_FS_COORD_ORIGIN_UPPER_LEFT``: Whether the TGSI property
-  FS_COORD_ORIGIN with value UPPER_LEFT is supported.
-* ``PIPE_CAP_TGSI_FS_COORD_ORIGIN_LOWER_LEFT``: Whether the TGSI property
-  FS_COORD_ORIGIN with value LOWER_LEFT is supported.
-* ``PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_HALF_INTEGER``: Whether the TGSI
-  property FS_COORD_PIXEL_CENTER with value HALF_INTEGER is supported.
-* ``PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER``: Whether the TGSI
-  property FS_COORD_PIXEL_CENTER with value INTEGER is supported.
+* ``PIPE_CAP_FS_COORD_ORIGIN_UPPER_LEFT``: Whether the upper-left origin
+  fragment convention is supported.
+* ``PIPE_CAP_FS_COORD_ORIGIN_LOWER_LEFT``: Whether the lower-left origin
+  fragment convention is supported.
+* ``PIPE_CAP_FS_COORD_PIXEL_CENTER_HALF_INTEGER``: Whether the half-integer
+  pixel-center fragment convention is supported.
+* ``PIPE_CAP_FS_COORD_PIXEL_CENTER_INTEGER``: Whether the integer
+  pixel-center fragment convention is supported.
 * ``PIPE_CAP_DEPTH_CLIP_DISABLE``: Whether the driver is capable of disabling
-  depth clipping (=1) (through pipe_rasterizer_state) or supports lowering
-  depth_clamp in the client shader code (=2), for this the driver must
-  currently use TGSI.
+  depth clipping (through pipe_rasterizer_state).
 * ``PIPE_CAP_DEPTH_CLIP_DISABLE_SEPARATE``: Whether the driver is capable of
   disabling depth clipping (through pipe_rasterizer_state) separately for
   the near and far plane. If not, depth_clip_near and depth_clip_far will be
@@ -85,8 +83,8 @@ The integer capabilities:
   clipping. If not, depth_clamp will be the inverse of depth_clip_far.
 * ``PIPE_CAP_SHADER_STENCIL_EXPORT``: Whether a stencil reference value can be
   written from a fragment shader.
-* ``PIPE_CAP_TGSI_INSTANCEID``: Whether TGSI_SEMANTIC_INSTANCEID is supported
-  in the vertex shader.
+* ``PIPE_CAP_VS_INSTANCEID``: Whether ``SYSTEM_VALUE_INSTANCE_ID`` is
+  supported in the vertex shader.
 * ``PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR``: Whether the driver supports
   per-instance vertex attribs.
 * ``PIPE_CAP_FRAGMENT_COLOR_CLAMPED``: Whether fragment color clamping is
@@ -139,6 +137,12 @@ The integer capabilities:
 * ``PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY``: This CAP describes
   a hw limitation.  If true, pipe_vertex_element::src_offset must always be
   aligned to 4.  If false, there are no restrictions on src_offset.
+* ``PIPE_CAP_VERTEX_ATTRIB_ELEMENT_ALIGNED_ONLY``: This CAP describes
+  a hw limitation.  If true, the sum of
+  ``pipe_vertex_element::src_offset + pipe_vertex_buffer::buffer_offset + pipe_vertex_buffer::stride``
+  must always be aligned to the component size for the vertex attributes
+  which access that buffer.  If false, there are no restrictions on these values.
+  This CAP cannot be used with any other alignment-requiring CAPs.
 * ``PIPE_CAP_COMPUTE``: Whether the implementation supports the
   compute entry points defined in pipe_context and pipe_screen.
 * ``PIPE_CAP_CONSTANT_BUFFER_OFFSET_ALIGNMENT``: Describes the required
@@ -171,10 +175,13 @@ The integer capabilities:
 * ``PIPE_CAP_TEXTURE_BUFFER_SAMPLER``: Whether a sampler should still
   be used for PIPE_BUFFER resources (normally a sampler is only used
   if the texture target is PIPE_TEXTURE_*).
-* ``PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER``: Whether it is preferable
-  to use a blit to implement a texture transfer which needs format conversions
+* ``PIPE_CAP_TEXTURE_TRANSFER_MODES``: The ``pipe_texture_transfer_mode`` modes
+  that are supported for implementing a texture transfer which needs format conversions
   and swizzling in gallium frontends. Generally, all hardware drivers with
-  dedicated memory should return 1 and all software rasterizers should return 0.
+  dedicated memory should return PIPE_TEXTURE_TRANSFER_BLIT and all software rasterizers
+  should return PIPE_TEXTURE_TRANSFER_DEFAULT. PIPE_TEXTURE_TRANSFER_COMPUTE requires drivers
+  to support 8bit and 16bit shader storage buffer writes and to implement
+  pipe_screen::is_compute_copy_faster.
 * ``PIPE_CAP_QUERY_PIPELINE_STATISTICS``: Whether PIPE_QUERY_PIPELINE_STATISTICS
   is supported.
 * ``PIPE_CAP_TEXTURE_BORDER_COLOR_QUIRK``: Bitmask indicating whether special
@@ -199,10 +206,9 @@ The integer capabilities:
 * ``PIPE_CAP_MIXED_FRAMEBUFFER_SIZES``: Whether it is allowed to have
   different sizes for fb color/zs attachments. This controls whether
   ARB_framebuffer_object is provided.
-* ``PIPE_CAP_TGSI_VS_LAYER_VIEWPORT``: Whether ``TGSI_SEMANTIC_LAYER`` and
-  ``TGSI_SEMANTIC_VIEWPORT_INDEX`` are supported as vertex shader
-  outputs. Note that the viewport will only be used if multiple viewports are
-  exposed.
+* ``PIPE_CAP_VS_LAYER_VIEWPORT``: Whether ``VARYING_SLOT_LAYER`` and
+  ``VARYING_SLOT_VIEWPORT`` are supported as vertex shader outputs. Note that
+  the viewport will only be used if multiple viewports are exposed.
 * ``PIPE_CAP_MAX_GEOMETRY_OUTPUT_VERTICES``: The maximum number of vertices
   output by a single invocation of a geometry shader.
 * ``PIPE_CAP_MAX_GEOMETRY_TOTAL_OUTPUT_COMPONENTS``: The maximum number of
@@ -229,9 +235,8 @@ The integer capabilities:
   implemented.
 * ``PIPE_CAP_TEXTURE_GATHER_OFFSETS``: Whether the ``TG4`` instruction can
   accept 4 offsets.
-* ``PIPE_CAP_TGSI_VS_WINDOW_SPACE_POSITION``: Whether
-  TGSI_PROPERTY_VS_WINDOW_SPACE_POSITION is supported, which disables clipping
-  and viewport transformation.
+* ``PIPE_CAP_VS_WINDOW_SPACE_POSITION``: Whether window-space position is
+  supported, which disables clipping and viewport transformation.
 * ``PIPE_CAP_MAX_VERTEX_STREAMS``: The maximum number of vertex streams
   supported by the geometry shader. If stream-out is supported, this should be
   at least 1. If stream-out is not supported, this should be 0.
@@ -243,7 +248,7 @@ The integer capabilities:
 * ``PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS``: Whether the driver supports
   taking the number of indirect draws from a separate parameter
   buffer, see pipe_draw_indirect_info::indirect_draw_count.
-* ``PIPE_CAP_TGSI_FS_FINE_DERIVATIVE``: Whether the fragment shader supports
+* ``PIPE_CAP_FS_FINE_DERIVATIVE``: Whether the fragment shader supports
   the FINE versions of DDX/DDY.
 * ``PIPE_CAP_VENDOR_ID``: The vendor ID of the underlying hardware. If it's
   not available one should return 0xFFFFFFFF.
@@ -299,7 +304,7 @@ The integer capabilities:
 * ``PIPE_CAP_DEPTH_BOUNDS_TEST``: Whether bounds_test, bounds_min, and
   bounds_max states of pipe_depth_stencil_alpha_state behave according
   to the GL_EXT_depth_bounds_test specification.
-* ``PIPE_CAP_TGSI_TXQS``: Whether the `TXQS` opcode is supported
+* ``PIPE_CAP_TEXTURE_QUERY_SAMPLES``: Whether the `TXQS` opcode is supported
 * ``PIPE_CAP_FORCE_PERSAMPLE_INTERP``: If the driver can force per-sample
   interpolation for all fragment shader inputs if
   pipe_rasterizer_state::force_persample_interp is set. This is only used
@@ -321,13 +326,13 @@ The integer capabilities:
 * ``PIPE_CAP_DRAW_PARAMETERS``: Whether ``TGSI_SEMANTIC_BASEVERTEX``,
   ``TGSI_SEMANTIC_BASEINSTANCE``, and ``TGSI_SEMANTIC_DRAWID`` are
   supported in vertex shaders.
-* ``PIPE_CAP_TGSI_PACK_HALF_FLOAT``: Whether the ``UP2H`` and ``PK2H``
-  TGSI opcodes are supported.
-* ``PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL``: If gallium frontends should use
-  a system value for the POSITION fragment shader input.
-* ``PIPE_CAP_TGSI_FS_POINT_IS_SYSVAL``: If gallium frontends should use
-  a system value for the POINT fragment shader input.
-* ``PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL``: If gallium frontends should use
+* ``PIPE_CAP_SHADER_PACK_HALF_FLOAT``: Whether packed 16-bit float
+  packing/unpacking opcodes are supported.
+* ``PIPE_CAP_FS_POSITION_IS_SYSVAL``: If gallium frontends should use a
+  system value for the POSITION fragment shader input.
+* ``PIPE_CAP_FS_POINT_IS_SYSVAL``: If gallium frontends should use a system
+  value for the POINT fragment shader input.
+* ``PIPE_CAP_FS_FACE_IS_INTEGER_SYSVAL``: If gallium frontends should use
   a system value for the FACE fragment shader input.
   Also, the FACE system value is integer, not float.
 * ``PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT``: Describes the required
@@ -367,9 +372,13 @@ The integer capabilities:
   and accesses to unbound resources.
 * ``PIPE_CAP_CULL_DISTANCE``: Whether the driver supports the arb_cull_distance
   extension and thus implements proper support for culling planes.
+* ``PIPE_CAP_CULL_DISTANCE_NOCOMBINE``: Whether the driver wants to skip
+  running the `nir_lower_clip_cull_distance_arrays` pass in order to get
+  VARYING_SLOT_CULL_DIST0 slot variables.
 * ``PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES``: Whether primitive restart is
   supported for patch primitives.
-* ``PIPE_CAP_TGSI_VOTE``: Whether the ``VOTE_*`` ops can be used in shaders.
+* ``PIPE_CAP_SHADER_GROUP_VOTE``: Whether the ``VOTE_*`` ops can be used in
+  shaders.
 * ``PIPE_CAP_MAX_WINDOW_RECTANGLES``: The maxium number of window rectangles
   supported in ``set_window_rectangles``.
 * ``PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED``: If true, the driver implements support
@@ -384,7 +393,7 @@ The integer capabilities:
   32-bit. If set to off, that means that a B5G6R5 + Z24 or RGBA8 + Z16
   combination will require a driver fallback, and should not be
   advertised in the GLX/EGL config list.
-* ``PIPE_CAP_TGSI_ARRAY_COMPONENTS``: If true, the driver interprets the
+* ``PIPE_CAP_SHADER_ARRAY_COMPONENTS``: If true, the driver interprets the
   UsageMask of input and output declarations and allows declaring arrays
   in overlapping ranges. The components must be a contiguous range, e.g. a
   UsageMask of  xy or yzw is allowed, but xz or yw isn't. Declarations with
@@ -399,7 +408,7 @@ The integer capabilities:
 * ``PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS``: Whether interleaved stream
   output mode is able to interleave across buffers. This is required for
   ARB_transform_feedback3.
-* ``PIPE_CAP_TGSI_CAN_READ_OUTPUTS``: Whether every TGSI shader stage can read
+* ``PIPE_CAP_SHADER_CAN_READ_OUTPUTS``: Whether every TGSI shader stage can read
   from the output file.
 * ``PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY``: Tell the GLSL compiler to use
   the minimum amount of optimizations just to be able to do all the linking
@@ -419,7 +428,7 @@ The integer capabilities:
   operations are supported.
 * ``PIPE_CAP_TGSI_TEX_TXF_LZ``: Whether TEX_LZ and TXF_LZ opcodes are
   supported.
-* ``PIPE_CAP_TGSI_CLOCK``: Whether the CLOCK opcode is supported.
+* ``PIPE_CAP_SHADER_CLOCK``: Whether the CLOCK opcode is supported.
 * ``PIPE_CAP_POLYGON_MODE_FILL_RECTANGLE``: Whether the
   PIPE_POLYGON_MODE_FILL_RECTANGLE mode is supported for
   ``pipe_rasterizer_state::fill_front`` and
@@ -427,10 +436,10 @@ The integer capabilities:
 * ``PIPE_CAP_SPARSE_BUFFER_PAGE_SIZE``: The page size of sparse buffers in
   bytes, or 0 if sparse buffers are not supported. The page size must be at
   most 64KB.
-* ``PIPE_CAP_TGSI_BALLOT``: Whether the BALLOT and READ_* opcodes as well as
+* ``PIPE_CAP_SHADER_BALLOT``: Whether the BALLOT and READ_* opcodes as well as
   the SUBGROUP_* semantics are supported.
-* ``PIPE_CAP_TGSI_TES_LAYER_VIEWPORT``: Whether ``TGSI_SEMANTIC_LAYER`` and
-  ``TGSI_SEMANTIC_VIEWPORT_INDEX`` are supported as tessellation evaluation
+* ``PIPE_CAP_TES_LAYER_VIEWPORT``: Whether ``VARYING_SLOT_LAYER`` and
+  ``VARYING_SLOT_VIEWPORT`` are supported as tessellation evaluation
   shader outputs.
 * ``PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX``: Whether a buffer with just
   PIPE_BIND_CONSTANT_BUFFER can be legally passed to set_vertex_buffers.
@@ -449,8 +458,6 @@ The integer capabilities:
 * ``PIPE_CAP_MEMOBJ``: Whether operations on memory objects are supported.
 * ``PIPE_CAP_LOAD_CONSTBUF``: True if the driver supports ``TGSI_OPCODE_LOAD`` use
   with constant buffers.
-* ``PIPE_CAP_TGSI_ANY_REG_AS_ADDRESS``: Any TGSI register can be used as
-  an address for indirect register indexing.
 * ``PIPE_CAP_TILE_RASTER_ORDER``: Whether the driver supports
   GL_MESA_tile_raster_order, using the tile_raster_order_* fields in
   pipe_rasterizer_state.
@@ -528,8 +535,8 @@ The integer capabilities:
 * ``PIPE_CAP_SURFACE_SAMPLE_COUNT``: Whether the driver
   supports pipe_surface overrides of resource nr_samples. If set, will
   enable EXT_multisampled_render_to_texture.
-* ``PIPE_CAP_TGSI_ATOMFADD``: Atomic floating point adds are supported on
-  images, buffers, and shared memory.
+* ``PIPE_CAP_IMAGE_ATOMIC_FLOAT_ADD``: Atomic floating point adds are
+  supported on images, buffers, and shared memory.
 * ``PIPE_CAP_RGB_OVERRIDE_DST_ALPHA_BLEND``: True if the driver needs blend state to use zero/one instead of destination alpha for RGB/XRGB formats.
 * ``PIPE_CAP_GLSL_TESS_LEVELS_AS_INPUTS``: True if the driver wants TESSINNER and TESSOUTER to be inputs (rather than system values) for tessellation evaluation shaders.
 * ``PIPE_CAP_DEST_SURFACE_SRGB_CONTROL``: Indicates whether the drivers
@@ -548,6 +555,7 @@ The integer capabilities:
   A driver might rely on the input mapping that was defined with the original
   GLSL code.
 * ``PIPE_CAP_IMAGE_LOAD_FORMATTED``: True if a format for image loads does not need to be specified in the shader IR
+* ``PIPE_CAP_IMAGE_STORE_FORMATTED``: True if a format for image stores does not need to be specified in the shader IR
 * ``PIPE_CAP_THROTTLE``: Whether or not gallium frontends should throttle pipe_context
   execution. 0 = throttling is disabled.
 * ``PIPE_CAP_DMABUF``: Whether Linux DMABUF handles are supported by
@@ -571,7 +579,8 @@ The integer capabilities:
 * ``PIPE_CAP_TEXTURE_SHADOW_LOD``: True if the driver supports shadow sampler
   types with texture functions having interaction with LOD of texture lookup.
 * ``PIPE_CAP_SHADER_SAMPLES_IDENTICAL``: True if the driver supports a shader query to tell whether all samples of a multisampled surface are definitely identical.
-* ``PIPE_CAP_TGSI_ATOMINC_WRAP``: Atomic increment/decrement + wrap around are supported.
+* ``PIPE_CAP_IMAGE_ATOMIC_INC_WRAP``: Atomic increment/decrement + wrap around
+  are supported.
 * ``PIPE_CAP_PREFER_IMM_ARRAYS_AS_CONSTBUF``: True if gallium frontends should
   turn arrays whose contents can be deduced at compile time into constant
   buffer loads, or false if the driver can handle such arrays itself in a more
@@ -594,7 +603,7 @@ The integer capabilities:
     that backfacing primitives should use the back-side color as the FS input
     color.  If unset, mesa/st will lower it to gl_FrontFacing reads in the
     fragment shader.
-* ``PIPE_CAP_CLIP_PLANES``: Driver supports user-defined clip-planes.
+* ``PIPE_CAP_CLIP_PLANES``: Driver supports user-defined clip-planes. 0 denotes none, 1 denotes MAX_CLIP_PLANES. > 1 overrides MAX.
 * ``PIPE_CAP_MAX_VERTEX_BUFFERS``: Number of supported vertex buffers.
 * ``PIPE_CAP_OPENCL_INTEGER_FUNCTIONS``: Driver supports extended OpenCL-style integer functions.  This includes averge, saturating additiong, saturating subtraction, absolute difference, count leading zeros, and count trailing zeros.
 * ``PIPE_CAP_INTEGER_MULTIPLY_32X16``: Driver supports integer multiplication between a 32-bit integer and a 16-bit integer.  If the second operand is 32-bits, the upper 16-bits are ignored, and the low 16-bits are possibly sign extended as necessary.
@@ -623,6 +632,13 @@ The integer capabilities:
 * ``PIPE_CAP_SUPPORTED_PRIM_MODES_WITH_RESTART``: A bitmask of the ``pipe_prim_type`` enum values that the driver can natively support for primitive restart. Only useful if ``PIPE_CAP_PRIMITIVE_RESTART`` is also exported.
 * ``PIPE_CAP_PREFER_BACK_BUFFER_REUSE``: Only applies to DRI_PRIME. If 1, the driver prefers that DRI3 tries to use the same back buffer each frame. If 0, this means DRI3 will at least use 2 back buffers and ping-pong between them to allow the tiled->linear copy to run in parallel.
 * ``PIPE_CAP_DRAW_VERTEX_STATE``: Driver supports `pipe_screen::create_vertex_state/vertex_state_destroy` and `pipe_context::draw_vertex_state`. Only used by display lists and designed to serve vbo_save.
+* ``PIPE_CAP_PREFER_POT_ALIGNED_VARYINGS``: Driver prefers varyings to be aligned to power of two in a slot. If this cap is enabled, vec4 varying will be placed in .xyzw components of the varying slot, vec3 in .xyz and vec2 in .xy or .zw
+* ``PIPE_CAP_MAX_SPARSE_TEXTURE_SIZE``: Maximum 1D/2D/rectangle texture image dimension for a sparse texture.
+* ``PIPE_CAP_MAX_SPARSE_3D_TEXTURE_SIZE``: Maximum 3D texture image dimension for a sparse texture.
+* ``PIPE_CAP_MAX_SPARSE_ARRAY_TEXTURE_LAYERS``: Maximum number of layers in a sparse array texture.
+* ``PIPE_CAP_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS``: TRUE if there are no restrictions on the allocation of mipmaps in sparse textures and FALSE otherwise. See SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS_ARB description in ARB_sparse_texture extension spec.
+* ``PIPE_CAP_QUERY_SPARSE_TEXTURE_RESIDENCY``: TRUE if shader sparse texture sample instruction could also return the residency information.
+* ``PIPE_CAP_CLAMP_SPARSE_TEXTURE_LOD``: TRUE if shader sparse texture sample instruction support clamp the minimal lod to prevent read from un-committed pages.
 
 .. _pipe_capf:
 
@@ -631,10 +647,16 @@ PIPE_CAPF_*
 
 The floating-point capabilities are:
 
+* ``PIPE_CAPF_MIN_LINE_WIDTH``: The minimum width of a regular line.
+* ``PIPE_CAPF_MIN_LINE_WIDTH_AA``: The minimum width of a smoothed line.
 * ``PIPE_CAPF_MAX_LINE_WIDTH``: The maximum width of a regular line.
 * ``PIPE_CAPF_MAX_LINE_WIDTH_AA``: The maximum width of a smoothed line.
-* ``PIPE_CAPF_MAX_POINT_WIDTH``: The maximum width and height of a point.
-* ``PIPE_CAPF_MAX_POINT_WIDTH_AA``: The maximum width and height of a smoothed point.
+* ``PIPE_CAPF_LINE_WIDTH_GRANULARITY``: The line width is rounded to a multiple of this number.
+* ``PIPE_CAPF_MIN_POINT_SIZE``: The minimum width and height of a point.
+* ``PIPE_CAPF_MIN_POINT_SIZE_AA``: The minimum width and height of a smoothed point.
+* ``PIPE_CAPF_MAX_POINT_SIZE``: The maximum width and height of a point.
+* ``PIPE_CAPF_MAX_POINT_SIZE_AA``: The maximum width and height of a smoothed point.
+* ``PIPE_CAPF_POINT_SIZE_GRANULARITY``: The point size is rounded to a multiple of this number.
 * ``PIPE_CAPF_MAX_TEXTURE_ANISOTROPY``: The maximum level of anisotropy that can be
   applied to anisotropically filtered textures.
 * ``PIPE_CAPF_MAX_TEXTURE_LOD_BIAS``: The maximum :term:`LOD` bias that may be applied

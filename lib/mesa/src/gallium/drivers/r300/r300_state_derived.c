@@ -54,7 +54,7 @@ static void r300_draw_emit_attrib(struct r300_context* r300,
                                   enum attrib_emit emit,
                                   int index)
 {
-    struct r300_vertex_shader* vs = r300->vs_state.state;
+    struct r300_vertex_shader_code* vs = r300_vs(r300)->shader;
     struct tgsi_shader_info* info = &vs->info;
     int output;
 
@@ -66,7 +66,7 @@ static void r300_draw_emit_attrib(struct r300_context* r300,
 
 static void r300_draw_emit_all_attribs(struct r300_context* r300)
 {
-    struct r300_vertex_shader* vs = r300->vs_state.state;
+    struct r300_vertex_shader_code* vs = r300_vs(r300)->shader;
     struct r300_shader_semantics* vs_outputs = &vs->outputs;
     int i, gen_count;
 
@@ -102,7 +102,7 @@ static void r300_draw_emit_all_attribs(struct r300_context* r300)
     gen_count = 0;
     for (i = 0; i < ATTR_GENERIC_COUNT && gen_count < 8; i++) {
         if (vs_outputs->generic[i] != ATTR_UNUSED &&
-            !(r300->sprite_coord_enable & (1U << i))) {
+            (!(r300->sprite_coord_enable & (1U << i)) || !r300->is_point)) {
             r300_draw_emit_attrib(r300, EMIT_4F, vs_outputs->generic[i]);
             gen_count++;
         }
@@ -303,7 +303,7 @@ static void r500_rs_tex_write(struct r300_rs_block* rs, int id, int fp_offset)
  * and error. */
 static void r300_update_rs_block(struct r300_context *r300)
 {
-    struct r300_vertex_shader *vs = r300->vs_state.state;
+    struct r300_vertex_shader_code *vs = r300_vs(r300)->shader;
     struct r300_shader_semantics *vs_outputs = &vs->outputs;
     struct r300_shader_semantics *fs_inputs = &r300_fs(r300)->shader->inputs;
     struct r300_rs_block rs = {0};
@@ -441,7 +441,7 @@ static void r300_update_rs_block(struct r300_context *r300)
 	for (i = 0; i < ATTR_GENERIC_COUNT && col_count < 2; i++) {
 	    /* Cannot use color varyings for sprite coords. */
 	    if (fs_inputs->generic[i] != ATTR_UNUSED &&
-		(r300->sprite_coord_enable & (1U << i))) {
+		(r300->sprite_coord_enable & (1U << i)) && r300->is_point) {
 		break;
 	    }
 
@@ -486,7 +486,7 @@ static void r300_update_rs_block(struct r300_context *r300)
 	boolean sprite_coord = false;
 
 	if (fs_inputs->generic[i] != ATTR_UNUSED) {
-	    sprite_coord = !!(r300->sprite_coord_enable & (1 << i));
+	    sprite_coord = !!(r300->sprite_coord_enable & (1 << i)) && r300->is_point;
 	}
 
         if (vs_outputs->generic[i] != ATTR_UNUSED || sprite_coord) {
@@ -625,7 +625,7 @@ static void r300_update_rs_block(struct r300_context *r300)
     rs.inst_count = count - 1;
 
     /* set the GB enable flags */
-    if (r300->sprite_coord_enable)
+    if (r300->sprite_coord_enable && r300->is_point)
 	stuffing_enable |= R300_GB_POINT_STUFF_ENABLE;
 
     rs.gb_enable = stuffing_enable;
@@ -881,7 +881,7 @@ static void r300_merge_textures_and_samplers(struct r300_context* r300)
                                                   view->swizzle, FALSE);
                 } else {
                     texstate->format.format1 |=
-                        r300_get_swizzle_combined(depth_swizzle, 0, FALSE);
+                        r300_get_swizzle_combined(depth_swizzle, NULL, FALSE);
                 }
             }
 
@@ -1034,10 +1034,14 @@ static void r300_validate_fragment_shader(struct r300_context *r300)
     struct pipe_framebuffer_state *fb = r300->fb_state.state;
 
     if (r300->fs.state && r300->fs_status != FRAGMENT_SHADER_VALID) {
+        struct r300_fragment_program_external_state state;
+        memset(&state, 0, sizeof(state));
+        r300_fragment_program_get_external_state(r300, &state);
+
         /* Pick the fragment shader based on external states.
          * Then mark the state dirty if the fragment shader is either dirty
          * or the function r300_pick_fragment_shader changed the shader. */
-        if (r300_pick_fragment_shader(r300) ||
+        if (r300_pick_fragment_shader(r300, r300_fs(r300), &state) ||
             r300->fs_status == FRAGMENT_SHADER_DIRTY) {
             /* Mark the state atom as dirty. */
             r300_mark_fs_code_dirty(r300);
@@ -1057,6 +1061,41 @@ static void r300_validate_fragment_shader(struct r300_context *r300)
     }
 }
 
+static void r300_pick_vertex_shader(struct r300_context *r300)
+{
+    struct r300_vertex_shader_code *ptr;
+    struct r300_vertex_shader *vs = r300_vs(r300);
+
+    if (r300->vs_state.state) {
+        bool wpos = r300_fs(r300)->shader->inputs.wpos != ATTR_UNUSED;
+
+        if (!vs->first) {
+            /* Build the vertex shader for the first time. */
+            vs->first = vs->shader = CALLOC_STRUCT(r300_vertex_shader_code);
+            vs->first->wpos = wpos;
+            r300_translate_vertex_shader(r300, vs);
+            r300_mark_atom_dirty(r300, &r300->rs_block_state);
+            return;
+        }
+        /* Pick the vertex shader based on whether we need wpos */
+        if (vs->first->wpos != wpos) {
+            if (vs->first->next && vs->first->next->wpos == wpos) {
+                ptr = vs->first->next;
+                vs->first->next = NULL;
+                ptr->next = vs->first;
+                vs->first = vs->shader = ptr;
+            } else {
+                ptr = CALLOC_STRUCT(r300_vertex_shader_code);
+                ptr->next = vs->first;
+                vs->first = vs->shader = ptr;
+                vs->shader->wpos = wpos;
+                r300_translate_vertex_shader(r300, vs);
+            }
+            r300_mark_atom_dirty(r300, &r300->rs_block_state);
+        }
+    }
+}
+
 void r300_update_derived_state(struct r300_context* r300)
 {
     if (r300->textures_state.dirty) {
@@ -1065,6 +1104,8 @@ void r300_update_derived_state(struct r300_context* r300)
     }
 
     r300_validate_fragment_shader(r300);
+    if (r300->screen->caps.has_tcl)
+        r300_pick_vertex_shader(r300);
 
     if (r300->rs_block_state.dirty) {
         r300_update_rs_block(r300);

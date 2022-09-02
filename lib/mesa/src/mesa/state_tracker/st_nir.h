@@ -46,8 +46,6 @@ char *st_finalize_nir(struct st_context *st, struct gl_program *prog,
                       struct nir_shader *nir, bool finalize_by_driver,
                       bool is_before_variants);
 
-void st_nir_opts(struct nir_shader *nir);
-
 bool
 st_link_nir(struct gl_context *ctx,
             struct gl_shader_program *shader_program);
@@ -74,7 +72,8 @@ st_nir_make_passthrough_shader(struct st_context *st,
                                unsigned *output_locations,
                                unsigned *interpolation_modes,
                                unsigned sysval_mask);
-
+void
+st_nir_add_point_size(struct nir_shader *nir);
 #ifdef __cplusplus
 }
 #endif

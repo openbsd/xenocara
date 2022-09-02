@@ -241,7 +241,6 @@ GENX(pan_shader_compile)(nir_shader *s,
                                           info->fs.outputs_read;
 
                 info->fs.can_discard = s->info.fs.uses_discard;
-                info->fs.helper_invocations = s->info.fs.needs_quad_helper_invocations;
                 info->fs.early_fragment_tests = s->info.fs.early_fragment_tests;
 
                 /* List of reasons we need to execute frag shaders when things
@@ -266,6 +265,11 @@ GENX(pan_shader_compile)(nir_shader *s,
                         !info->fs.can_discard &&
                         !info->fs.outputs_read;
 
+                /* Requires the same hardware guarantees, so grouped as one bit
+                 * in the hardware.
+                 */
+                info->contains_barrier |= s->info.fs.needs_quad_helper_invocations;
+
                 info->fs.reads_frag_coord =
                         (s->info.inputs_read & (1 << VARYING_SLOT_POS)) ||
                         BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_FRAG_COORD);
@@ -274,14 +278,6 @@ GENX(pan_shader_compile)(nir_shader *s,
                 info->fs.reads_face =
                         (s->info.inputs_read & (1 << VARYING_SLOT_FACE)) ||
                         BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_FRONT_FACE);
-                info->fs.reads_sample_id =
-                        BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_SAMPLE_ID);
-                info->fs.reads_sample_pos =
-                        BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_SAMPLE_POS);
-                info->fs.reads_sample_mask_in =
-                        BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_SAMPLE_MASK_IN);
-                info->fs.reads_helper_invocation =
-                        BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_HELPER_INVOCATION);
                 collect_varyings(s, nir_var_shader_in, info->varyings.input,
                                  &info->varyings.input_count);
                 break;

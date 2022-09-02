@@ -50,12 +50,18 @@ class CrosServoRun:
             target=self.iter_feed_queue, daemon=True, args=(self.cpu_ser.lines(),))
         self.iter_feed_cpu.start()
 
+    def close(self):
+        self.ec_ser.close()
+        self.cpu_ser.close()
+        self.iter_feed_ec.join()
+        self.iter_feed_cpu.join()
+
     # Feed lines from our serial queues into the merged queue, marking when our
     # input is done.
     def iter_feed_queue(self, it):
         for i in it:
             self.serial_queue.put(i)
-        self.serial_queue.put(sentinel)
+        self.serial_queue.put(self.sentinel)
 
     # Return the next line from the queue, counting how many threads have
     # terminated and joining when done
@@ -150,6 +156,10 @@ class CrosServoRun:
                     "Detected spontaneous reboot, restarting run...")
                 return 2
 
+            if re.search("arm-smmu 5040000.iommu: TLB sync timed out -- SMMU may be deadlocked", line):
+                self.print_error("Detected cheza MMU fail, restarting run...")
+                return 2
+
             result = re.search("hwci: mesa: (\S*)", line)
             if result:
                 if result.group(1) == "pass":
@@ -178,6 +188,8 @@ def main():
 
     # power down the CPU on the device
     servo.ec_write("power off\n")
+
+    servo.close()
 
     sys.exit(retval)
 

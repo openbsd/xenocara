@@ -111,19 +111,8 @@ struct lvp_image *
 lvp_swapchain_get_image(VkSwapchainKHR swapchain,
                         uint32_t index)
 {
-   uint32_t n_images = index + 1;
-   VkImage *images = malloc(sizeof(*images) * n_images);
-   VkResult result = wsi_common_get_images(swapchain, &n_images, images);
-
-   if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-      free(images);
-      return NULL;
-   }
-
-   LVP_FROM_HANDLE(lvp_image, image, images[index]);
-   free(images);
-
-   return image;
+   VkImage image = wsi_common_get_image(swapchain, index);
+   return lvp_image_from_handle(image);
 }
 
 static VkResult
@@ -189,18 +178,11 @@ lvp_CreateImageView(VkDevice _device,
    LVP_FROM_HANDLE(lvp_image, image, pCreateInfo->image);
    struct lvp_image_view *view;
 
-   view = vk_alloc2(&device->vk.alloc, pAllocator, sizeof(*view), 8,
-                     VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   view = vk_image_view_create(&device->vk, pCreateInfo, pAllocator, sizeof(*view));
    if (view == NULL)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   vk_object_base_init(&device->vk, &view->base,
-                       VK_OBJECT_TYPE_IMAGE_VIEW);
-   view->view_type = pCreateInfo->viewType;
-   view->format = pCreateInfo->format;
-   view->pformat = lvp_vk_format_to_pipe_format(pCreateInfo->format);
-   view->components = pCreateInfo->components;
-   view->subresourceRange = pCreateInfo->subresourceRange;
+   view->pformat = lvp_vk_format_to_pipe_format(view->vk.format);
    view->image = image;
    view->surface = NULL;
    *pView = lvp_image_view_to_handle(view);
@@ -219,8 +201,7 @@ lvp_DestroyImageView(VkDevice _device, VkImageView _iview,
      return;
 
    pipe_surface_reference(&iview->surface, NULL);
-   vk_object_base_finish(&iview->base);
-   vk_free2(&device->vk.alloc, pAllocator, iview);
+   vk_image_view_destroy(&device->vk, pAllocator, &iview->vk);
 }
 
 VKAPI_ATTR void VKAPI_CALL lvp_GetImageSubresourceLayout(

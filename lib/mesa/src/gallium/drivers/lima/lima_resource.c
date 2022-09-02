@@ -657,11 +657,10 @@ lima_transfer_map(struct pipe_context *pctx,
    if (!lima_bo_map(bo))
       return NULL;
 
-   trans = slab_alloc(&ctx->transfer_pool);
+   trans = slab_zalloc(&ctx->transfer_pool);
    if (!trans)
       return NULL;
 
-   memset(trans, 0, sizeof(*trans));
    ptrans = &trans->base;
 
    pipe_resource_reference(&ptrans->resource, pres);
@@ -848,7 +847,7 @@ lima_blit(struct pipe_context *pctx, const struct pipe_blit_info *blit_info)
    struct lima_context *ctx = lima_context(pctx);
    struct pipe_blit_info info = *blit_info;
 
-   if (util_try_blit_via_copy_region(pctx, &info)) {
+   if (util_try_blit_via_copy_region(pctx, &info, false)) {
       return; /* done */
    }
 

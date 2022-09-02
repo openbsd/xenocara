@@ -37,7 +37,7 @@ zink_destroy_framebuffer(struct zink_screen *screen,
                          struct zink_framebuffer *fb)
 {
    hash_table_foreach(&fb->objects, he) {
-#if defined(_WIN64) || defined(__x86_64__)
+#if VK_USE_64_BIT_PTR_DEFINES
       VKSCR(DestroyFramebuffer)(screen->dev, he->data, NULL);
 #else
       VkFramebuffer *ptr = he->data;
@@ -60,7 +60,7 @@ zink_init_framebuffer_imageless(struct zink_screen *screen, struct zink_framebuf
 
    struct hash_entry *he = _mesa_hash_table_search_pre_hashed(&fb->objects, hash, rp);
    if (he) {
-#if defined(_WIN64) || defined(__x86_64__)
+#if VK_USE_64_BIT_PTR_DEFINES
       ret = (VkFramebuffer)he->data;
 #else
       VkFramebuffer *ptr = he->data;
@@ -90,7 +90,7 @@ zink_init_framebuffer_imageless(struct zink_screen *screen, struct zink_framebuf
 
    if (VKSCR(CreateFramebuffer)(screen->dev, &fci, NULL, &ret) != VK_SUCCESS)
       return;
-#if defined(_WIN64) || defined(__x86_64__)
+#if VK_USE_64_BIT_PTR_DEFINES
    _mesa_hash_table_insert_pre_hashed(&fb->objects, hash, rp, ret);
 #else
    VkFramebuffer *ptr = ralloc(fb, VkFramebuffer);
@@ -112,8 +112,8 @@ populate_attachment_info(VkFramebufferAttachmentImageInfo *att, struct zink_surf
    att->sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_ATTACHMENT_IMAGE_INFO;
    att->pNext = NULL;
    memcpy(&att->flags, &info->flags, offsetof(struct zink_surface_info, format));
-   att->viewFormatCount = 1;
-   att->pViewFormats = &info->format;
+   att->viewFormatCount = 1 + !!info->format[1];
+   att->pViewFormats = info->format;
 }
 
 static struct zink_framebuffer *
@@ -137,17 +137,25 @@ fail:
    return NULL;
 }
 
+bool
+zink_use_dummy_attachments(const struct zink_context *ctx)
+{
+   return ctx->disable_color_writes && zink_screen(ctx->base.screen)->driver_workarounds.color_write_missing;
+}
+
 struct zink_framebuffer *
 zink_get_framebuffer_imageless(struct zink_context *ctx)
 {
    assert(zink_screen(ctx->base.screen)->info.have_KHR_imageless_framebuffer);
 
    struct zink_framebuffer_state state;
+   state.num_attachments = ctx->fb_state.nr_cbufs;
+
    const unsigned cresolve_offset = ctx->fb_state.nr_cbufs + !!ctx->fb_state.zsbuf;
    unsigned num_resolves = 0;
    for (int i = 0; i < ctx->fb_state.nr_cbufs; i++) {
       struct pipe_surface *psurf = ctx->fb_state.cbufs[i];
-      if (!psurf)
+      if (!psurf || zink_use_dummy_attachments(ctx))
          psurf = ctx->dummy_surface[util_logbase2_ceil(ctx->gfx_pipeline_state.rast_samples+1)];
       struct zink_surface *surface = zink_csurface(psurf);
       struct zink_surface *transient = zink_transient_surface(psurf);
@@ -160,7 +168,6 @@ zink_get_framebuffer_imageless(struct zink_context *ctx)
       }
    }
 
-   state.num_attachments = ctx->fb_state.nr_cbufs;
    const unsigned zsresolve_offset = cresolve_offset + num_resolves;
    if (ctx->fb_state.zsbuf) {
       struct pipe_surface *psurf = ctx->fb_state.zsbuf;
@@ -181,7 +188,7 @@ zink_get_framebuffer_imageless(struct zink_context *ctx)
    state.num_attachments += num_resolves;
    state.width = MAX2(ctx->fb_state.width, 1);
    state.height = MAX2(ctx->fb_state.height, 1);
-   state.layers = MAX2(util_framebuffer_get_num_layers(&ctx->fb_state), 1) - 1;
+   state.layers = MAX2(zink_framebuffer_get_num_layers(&ctx->fb_state), 1) - 1;
    state.samples = ctx->fb_state.samples - 1;
 
    struct zink_framebuffer *fb;
@@ -299,24 +306,26 @@ zink_get_framebuffer(struct zink_context *ctx)
    unsigned num_resolves = 0;
 
    struct zink_framebuffer_state state = {0};
-   for (int i = 0; i < ctx->fb_state.nr_cbufs; i++) {
-      struct pipe_surface *psurf = ctx->fb_state.cbufs[i];
-      if (psurf) {
-         struct zink_surface *surf = zink_csurface(psurf);
-         struct zink_surface *transient = zink_transient_surface(psurf);
-         if (transient) {
-            state.attachments[i] = transient->image_view;
-            state.attachments[cresolve_offset + i] = surf->image_view;
-            attachments[cresolve_offset + i] = psurf;
-            psurf = &transient->base;
-            num_resolves++;
+   if (!zink_use_dummy_attachments(ctx)) {
+      for (int i = 0; i < ctx->fb_state.nr_cbufs; i++) {
+         struct pipe_surface *psurf = ctx->fb_state.cbufs[i];
+         if (psurf) {
+            struct zink_surface *surf = zink_csurface(psurf);
+            struct zink_surface *transient = zink_transient_surface(psurf);
+            if (transient) {
+               state.attachments[i] = transient->image_view;
+               state.attachments[cresolve_offset + i] = surf->image_view;
+               attachments[cresolve_offset + i] = psurf;
+               psurf = &transient->base;
+               num_resolves++;
+            } else {
+               state.attachments[i] = surf->image_view;
+            }
          } else {
-            state.attachments[i] = surf->image_view;
+            state.attachments[i] = VK_NULL_HANDLE;
          }
-      } else {
-         state.attachments[i] = VK_NULL_HANDLE;
+         attachments[i] = psurf;
       }
-      attachments[i] = psurf;
    }
 
    state.num_attachments = ctx->fb_state.nr_cbufs;
@@ -368,4 +377,27 @@ zink_get_framebuffer(struct zink_context *ctx)
    simple_mtx_unlock(&screen->framebuffer_mtx);
 
    return fb;
+}
+
+/* same as u_framebuffer_get_num_layers, but clamp to lowest layer count */
+unsigned
+zink_framebuffer_get_num_layers(const struct pipe_framebuffer_state *fb)
+{
+   unsigned i, num_layers = UINT32_MAX;
+   if (!(fb->nr_cbufs || fb->zsbuf))
+      return MAX2(fb->layers, 1);
+
+   for (i = 0; i < fb->nr_cbufs; i++) {
+      if (fb->cbufs[i]) {
+         unsigned num = fb->cbufs[i]->u.tex.last_layer -
+         fb->cbufs[i]->u.tex.first_layer + 1;
+         num_layers = MIN2(num_layers, num);
+      }
+   }
+   if (fb->zsbuf) {
+      unsigned num = fb->zsbuf->u.tex.last_layer -
+      fb->zsbuf->u.tex.first_layer + 1;
+      num_layers = MIN2(num_layers, num);
+   }
+   return MAX2(num_layers, 1);
 }

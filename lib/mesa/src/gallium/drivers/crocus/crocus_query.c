@@ -516,6 +516,7 @@ crocus_destroy_query(struct pipe_context *ctx, struct pipe_query *p_query)
       crocus_syncobj_reference(screen, &query->syncobj, NULL);
       screen->base.fence_reference(ctx->screen, &query->fence, NULL);
    }
+   pipe_resource_reference(&query->query_state_ref.res, NULL);
    free(query);
 }
 
@@ -542,6 +543,8 @@ crocus_begin_query(struct pipe_context *ctx, struct pipe_query *query)
                   size, size, &q->query_state_ref.offset,
                   &q->query_state_ref.res, &ptr);
 
+   if (!q->query_state_ref.res)
+      return false;
    if (!crocus_resource_bo(q->query_state_ref.res))
       return false;
 
@@ -699,7 +702,7 @@ crocus_get_query_result(struct pipe_context *ctx,
 static void
 crocus_get_query_result_resource(struct pipe_context *ctx,
                                  struct pipe_query *query,
-                                 bool wait,
+                                 enum pipe_query_flags flags,
                                  enum pipe_query_value_type result_type,
                                  int index,
                                  struct pipe_resource *p_res,
@@ -759,7 +762,7 @@ crocus_get_query_result_resource(struct pipe_context *ctx,
    }
 
 #if GFX_VERx10 >= 75
-   bool predicated = !wait && !q->stalled;
+   bool predicated = !(flags & PIPE_QUERY_WAIT) && !q->stalled;
 
    struct mi_builder b;
    mi_builder_init(&b, &batch->screen->devinfo, batch);

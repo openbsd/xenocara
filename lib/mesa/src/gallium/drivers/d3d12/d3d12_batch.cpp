@@ -25,6 +25,7 @@
 #include "d3d12_context.h"
 #include "d3d12_fence.h"
 #include "d3d12_query.h"
+#include "d3d12_residency.h"
 #include "d3d12_resource.h"
 #include "d3d12_screen.h"
 #include "d3d12_surface.h"
@@ -40,8 +41,8 @@ d3d12_init_batch(struct d3d12_context *ctx, struct d3d12_batch *batch)
 {
    struct d3d12_screen *screen = d3d12_screen(ctx->base.screen);
 
-   batch->bos = _mesa_set_create(NULL, _mesa_hash_pointer,
-                                 _mesa_key_pointer_equal);
+   batch->bos = _mesa_hash_table_create(NULL, _mesa_hash_pointer,
+                                        _mesa_key_pointer_equal);
    batch->sampler_views = _mesa_set_create(NULL, _mesa_hash_pointer,
                                            _mesa_key_pointer_equal);
    batch->surfaces = _mesa_set_create(NULL, _mesa_hash_pointer,
@@ -79,7 +80,7 @@ d3d12_init_batch(struct d3d12_context *ctx, struct d3d12_batch *batch)
 }
 
 static void
-delete_bo(set_entry *entry)
+delete_bo(hash_entry *entry)
 {
    struct d3d12_bo *bo = (struct d3d12_bo *)entry->key;
    d3d12_bo_unreference(bo);
@@ -119,7 +120,7 @@ d3d12_reset_batch(struct d3d12_context *ctx, struct d3d12_batch *batch, uint64_t
       d3d12_fence_reference(&batch->fence, NULL);
    }
 
-   _mesa_set_clear(batch->bos, delete_bo);
+   _mesa_hash_table_clear(batch->bos, delete_bo);
    _mesa_set_clear(batch->sampler_views, delete_sampler_view);
    _mesa_set_clear(batch->surfaces, delete_surface);
    _mesa_set_clear(batch->objects, delete_object);
@@ -136,6 +137,7 @@ d3d12_reset_batch(struct d3d12_context *ctx, struct d3d12_batch *batch, uint64_t
       return false;
    }
    batch->has_errors = false;
+   batch->pending_memory_barrier = false;
    return true;
 }
 
@@ -146,7 +148,7 @@ d3d12_destroy_batch(struct d3d12_context *ctx, struct d3d12_batch *batch)
    batch->cmdalloc->Release();
    d3d12_descriptor_heap_free(batch->sampler_heap);
    d3d12_descriptor_heap_free(batch->view_heap);
-   _mesa_set_destroy(batch->bos, NULL);
+   _mesa_hash_table_destroy(batch->bos, NULL);
    _mesa_set_destroy(batch->sampler_views, NULL);
    _mesa_set_destroy(batch->surfaces, NULL);
    _mesa_set_destroy(batch->objects, NULL);
@@ -181,11 +183,15 @@ d3d12_start_batch(struct d3d12_context *ctx, struct d3d12_batch *batch)
 
    ctx->cmdlist->SetDescriptorHeaps(2, heaps);
    ctx->cmdlist_dirty = ~0;
-   for (int i = 0; i < D3D12_GFX_SHADER_STAGES; ++i)
+   for (int i = 0; i < PIPE_SHADER_TYPES; ++i)
       ctx->shader_dirty[i] = ~0;
 
    if (!ctx->queries_disabled)
       d3d12_resume_queries(ctx);
+   if (ctx->current_predication)
+      d3d12_enable_predication(ctx);
+
+   batch->submit_id = ++ctx->submit_id;
 }
 
 void
@@ -202,26 +208,48 @@ d3d12_end_batch(struct d3d12_context *ctx, struct d3d12_batch *batch)
       return;
    }
 
+   mtx_lock(&screen->submit_mutex);
+
+   d3d12_process_batch_residency(screen, batch);
+
    ID3D12CommandList* cmdlists[] = { ctx->cmdlist };
    screen->cmdqueue->ExecuteCommandLists(1, cmdlists);
-   batch->fence = d3d12_create_fence(screen, ctx);
+   batch->fence = d3d12_create_fence(screen);
+
+   mtx_unlock(&screen->submit_mutex);
 }
+
+enum batch_bo_reference_state
+{
+   batch_bo_reference_read = (1 << 0),
+   batch_bo_reference_written = (1 << 1),
+};
 
 bool
 d3d12_batch_has_references(struct d3d12_batch *batch,
-                           struct d3d12_bo *bo)
+                           struct d3d12_bo *bo,
+                           bool want_to_write)
 {
-   return (_mesa_set_search(batch->bos, bo) != NULL);
+   hash_entry *entry = _mesa_hash_table_search(batch->bos, bo);
+   if (entry == NULL)
+      return false;
+   bool resource_was_written = ((batch_bo_reference_state)(size_t)entry->data & batch_bo_reference_written) != 0;
+   return want_to_write || resource_was_written;
 }
 
 void
 d3d12_batch_reference_resource(struct d3d12_batch *batch,
-                               struct d3d12_resource *res)
+                               struct d3d12_resource *res,
+                               bool write)
 {
-   bool found = false;
-   _mesa_set_search_and_add(batch->bos, res->bo, &found);
-   if (!found)
+   hash_entry *entry = _mesa_hash_table_search(batch->bos, res->bo);
+   if (entry == NULL) {
       d3d12_bo_reference(res->bo);
+      entry = _mesa_hash_table_insert(batch->bos, res->bo, NULL);
+   }
+   size_t new_data = write ? batch_bo_reference_written : batch_bo_reference_read;
+   size_t old_data = (size_t)entry->data;
+   entry->data = (void*)(old_data | new_data);
 }
 
 void
@@ -232,6 +260,8 @@ d3d12_batch_reference_sampler_view(struct d3d12_batch *batch,
    if (!entry) {
       entry = _mesa_set_add(batch->sampler_views, sv);
       pipe_reference(NULL, &sv->base.reference);
+
+      d3d12_batch_reference_resource(batch, d3d12_resource(sv->base.texture), false);
    }
 }
 
@@ -239,7 +269,7 @@ void
 d3d12_batch_reference_surface_texture(struct d3d12_batch *batch,
                                       struct d3d12_surface *surf)
 {
-   d3d12_batch_reference_resource(batch, d3d12_resource(surf->base.texture));
+   d3d12_batch_reference_resource(batch, d3d12_resource(surf->base.texture), true);
 }
 
 void

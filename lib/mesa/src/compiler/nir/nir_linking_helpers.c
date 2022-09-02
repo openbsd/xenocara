@@ -47,6 +47,7 @@ get_variable_io_mask(nir_variable *var, gl_shader_stage stage)
    assert(var->data.mode == nir_var_shader_in ||
           var->data.mode == nir_var_shader_out);
    assert(var->data.location >= 0);
+   assert(location < 64);
 
    const struct glsl_type *type = var->type;
    if (nir_is_arrayed_io(var, stage) || var->data.per_view) {
@@ -55,7 +56,7 @@ get_variable_io_mask(nir_variable *var, gl_shader_stage stage)
    }
 
    unsigned slots = glsl_count_attribute_slots(type, false);
-   return ((1ull << slots) - 1) << location;
+   return BITFIELD64_MASK(slots) << location;
 }
 
 static bool
@@ -147,7 +148,8 @@ nir_remove_unused_io_vars(nir_shader *shader,
          used = used_by_other_stage;
 
       if (var->data.location < VARYING_SLOT_VAR0 && var->data.location >= 0)
-         continue;
+         if (shader->info.stage != MESA_SHADER_MESH || var->data.location != VARYING_SLOT_PRIMITIVE_ID)
+            continue;
 
       if (var->data.always_active_io)
          continue;
@@ -232,6 +234,8 @@ static uint8_t
 get_interp_type(nir_variable *var, const struct glsl_type *type,
                 bool default_to_smooth_interp)
 {
+   if (var->data.per_primitive)
+      return INTERP_MODE_NONE;
    if (glsl_type_is_integer(type))
       return INTERP_MODE_FLAT;
    else if (var->data.interpolation != INTERP_MODE_NONE)
@@ -276,6 +280,7 @@ struct assigned_comps
    uint8_t interp_loc;
    bool is_32bit;
    bool is_mediump;
+   bool is_per_primitive;
 };
 
 /* Packing arrays and dual slot varyings is difficult so to avoid complex
@@ -305,7 +310,8 @@ get_unmoveable_components_masks(nir_shader *shader,
          /* If we can pack this varying then don't mark the components as
           * used.
           */
-         if (is_packing_supported_for_type(type))
+         if (is_packing_supported_for_type(type) &&
+             !var->data.always_active_io)
             continue;
 
          unsigned location = var->data.location - VARYING_SLOT_VAR0;
@@ -347,6 +353,7 @@ get_unmoveable_components_masks(nir_shader *shader,
             comps[location + i].is_mediump =
                var->data.precision == GLSL_PRECISION_MEDIUM ||
                var->data.precision == GLSL_PRECISION_LOW;
+            comps[location + i].is_per_primitive = var->data.per_primitive;
          }
       }
    }
@@ -465,6 +472,7 @@ struct varying_component {
    uint8_t interp_loc;
    bool is_32bit;
    bool is_patch;
+   bool is_per_primitive;
    bool is_mediump;
    bool is_intra_stage_only;
    bool initialised;
@@ -479,6 +487,12 @@ cmp_varying_component(const void *comp1_v, const void *comp2_v)
    /* We want patches to be order at the end of the array */
    if (comp1->is_patch != comp2->is_patch)
       return comp1->is_patch ? 1 : -1;
+
+   /* Sort per-primitive outputs after per-vertex ones to allow
+    * better compaction when they are mixed in the shader's source.
+    */
+   if (comp1->is_per_primitive != comp2->is_per_primitive)
+      return comp1->is_per_primitive ? 1 : -1;
 
    /* We want to try to group together TCS outputs that are only read by other
     * TCS invocations and not consumed by the follow stage.
@@ -600,6 +614,7 @@ gather_varying_component_info(nir_shader *producer, nir_shader *consumer,
             vc_info->interp_loc = get_interp_loc(in_var);
             vc_info->is_32bit = glsl_type_is_32bit(type);
             vc_info->is_patch = in_var->data.patch;
+            vc_info->is_per_primitive = in_var->data.per_primitive;
             vc_info->is_mediump = !producer->options->linker_ignore_precision &&
                (in_var->data.precision == GLSL_PRECISION_MEDIUM ||
                 in_var->data.precision == GLSL_PRECISION_LOW);
@@ -665,6 +680,7 @@ gather_varying_component_info(nir_shader *producer, nir_shader *consumer,
                vc_info->interp_loc = get_interp_loc(out_var);
                vc_info->is_32bit = glsl_type_is_32bit(type);
                vc_info->is_patch = out_var->data.patch;
+               vc_info->is_per_primitive = out_var->data.per_primitive;
                vc_info->is_mediump = !producer->options->linker_ignore_precision &&
                   (out_var->data.precision == GLSL_PRECISION_MEDIUM ||
                    out_var->data.precision == GLSL_PRECISION_LOW);
@@ -749,6 +765,12 @@ assign_remap_locations(struct varying_loc (*remap)[4],
    for (; tmp_cursor < max_location; tmp_cursor++) {
 
       if (assigned_comps[tmp_cursor].comps) {
+         /* Don't pack per-primitive and per-vertex varyings together. */
+         if (assigned_comps[tmp_cursor].is_per_primitive != info->is_per_primitive) {
+            tmp_comp = 0;
+            continue;
+         }
+
          /* We can only pack varyings with matching precision. */
          if (assigned_comps[tmp_cursor].is_mediump != info->is_mediump) {
             tmp_comp = 0;
@@ -802,6 +824,7 @@ assign_remap_locations(struct varying_loc (*remap)[4],
       assigned_comps[tmp_cursor].interp_loc = info->interp_loc;
       assigned_comps[tmp_cursor].is_32bit = info->is_32bit;
       assigned_comps[tmp_cursor].is_mediump = info->is_mediump;
+      assigned_comps[tmp_cursor].is_per_primitive = info->is_per_primitive;
 
       /* Assign remap location */
       remap[location][info->var->data.location_frac].component = tmp_comp++;
@@ -935,14 +958,14 @@ nir_compact_varyings(nir_shader *producer, nir_shader *consumer,
 void
 nir_link_xfb_varyings(nir_shader *producer, nir_shader *consumer)
 {
-   nir_variable *input_vars[MAX_VARYING] = { 0 };
+   nir_variable *input_vars[MAX_VARYING][4] = { 0 };
 
    nir_foreach_shader_in_variable(var, consumer) {
       if (var->data.location >= VARYING_SLOT_VAR0 &&
           var->data.location - VARYING_SLOT_VAR0 < MAX_VARYING) {
 
          unsigned location = var->data.location - VARYING_SLOT_VAR0;
-         input_vars[location] = var;
+         input_vars[location][var->data.location_frac] = var;
       }
    }
 
@@ -954,8 +977,8 @@ nir_link_xfb_varyings(nir_shader *producer, nir_shader *consumer)
             continue;
 
          unsigned location = var->data.location - VARYING_SLOT_VAR0;
-         if (input_vars[location]) {
-            input_vars[location]->data.always_active_io = true;
+         if (input_vars[location][var->data.location_frac]) {
+            input_vars[location][var->data.location_frac]->data.always_active_io = true;
          }
       }
    }
@@ -1352,25 +1375,39 @@ nir_link_opt_varyings(nir_shader *producer, nir_shader *consumer)
       if (!can_replace_varying(out_var))
          continue;
 
-      nir_ssa_scalar uni_scalar;
       nir_ssa_def *ssa = intr->src[1].ssa;
       if (ssa->parent_instr->type == nir_instr_type_load_const) {
          progress |= replace_varying_input_by_constant_load(consumer, intr);
-      } else if (is_direct_uniform_load(ssa, &uni_scalar)) {
-         progress |= replace_varying_input_by_uniform_load(consumer, intr,
-                                                           &uni_scalar);
-      } else {
-         struct hash_entry *entry =
-               _mesa_hash_table_search(varying_values, ssa);
-         if (entry) {
-            progress |= replace_duplicate_input(consumer,
-                                                (nir_variable *) entry->data,
-                                                intr);
+         continue;
+      }
+
+      nir_ssa_scalar uni_scalar;
+      if (is_direct_uniform_load(ssa, &uni_scalar)) {
+         if (consumer->options->lower_varying_from_uniform) {
+            progress |= replace_varying_input_by_uniform_load(consumer, intr,
+                                                              &uni_scalar);
+            continue;
          } else {
             nir_variable *in_var = get_matching_input_var(consumer, out_var);
-            if (in_var) {
-               _mesa_hash_table_insert(varying_values, ssa, in_var);
+            /* The varying is loaded from same uniform, so no need to do any
+             * interpolation. Mark it as flat explicitly.
+             */
+            if (in_var && in_var->data.interpolation <= INTERP_MODE_NOPERSPECTIVE) {
+               in_var->data.interpolation = INTERP_MODE_FLAT;
+               out_var->data.interpolation = INTERP_MODE_FLAT;
             }
+         }
+      }
+
+      struct hash_entry *entry = _mesa_hash_table_search(varying_values, ssa);
+      if (entry) {
+         progress |= replace_duplicate_input(consumer,
+                                             (nir_variable *) entry->data,
+                                             intr);
+      } else {
+         nir_variable *in_var = get_matching_input_var(consumer, out_var);
+         if (in_var) {
+            _mesa_hash_table_insert(varying_values, ssa, in_var);
          }
       }
    }
@@ -1386,7 +1423,19 @@ static void
 insert_sorted(struct exec_list *var_list, nir_variable *new_var)
 {
    nir_foreach_variable_in_list(var, var_list) {
-      if (var->data.location > new_var->data.location) {
+      /* Use the `per_primitive` bool to sort per-primitive variables
+       * to the end of the list, so they get the last driver locations
+       * by nir_assign_io_var_locations.
+       *
+       * This is done because AMD HW requires that per-primitive outputs
+       * are the last params.
+       * In the future we can add an option for this, if needed by other HW.
+       */
+      if (new_var->data.per_primitive < var->data.per_primitive ||
+          (new_var->data.per_primitive == var->data.per_primitive &&
+           (var->data.location > new_var->data.location ||
+            (var->data.location == new_var->data.location &&
+             var->data.location_frac > new_var->data.location_frac)))) {
          exec_node_insert_node_before(&var->node, &new_var->node);
          return;
       }
@@ -1416,7 +1465,8 @@ nir_assign_io_var_locations(nir_shader *shader, nir_variable_mode mode,
    struct exec_list io_vars;
    sort_varyings(shader, mode, &io_vars);
 
-   int UNUSED last_loc = 0;
+   int ASSERTED last_loc = 0;
+   bool ASSERTED last_per_prim = false;
    bool last_partial = false;
    nir_foreach_variable_in_list(var, &io_vars) {
       const struct glsl_type *type = var->type;
@@ -1510,10 +1560,13 @@ nir_assign_io_var_locations(nir_shader *shader, nir_variable_mode mode,
           * the current array we are processing.
           *
           * NOTE: The code below assumes the var list is ordered in ascending
-          * location order.
+          * location order, but per-vertex/per-primitive outputs may be
+          * grouped separately.
           */
-         assert(last_loc <= var->data.location);
+         assert(last_loc <= var->data.location ||
+                last_per_prim != var->data.per_primitive);
          last_loc = var->data.location;
+         last_per_prim = var->data.per_primitive;
          unsigned last_slot_location = driver_location + var_size;
          if (last_slot_location > location) {
             unsigned num_unallocated_slots = last_slot_location - location;

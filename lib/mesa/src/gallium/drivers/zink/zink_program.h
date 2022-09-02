@@ -68,6 +68,7 @@ struct zink_shader_module {
    VkShaderModule shader;
    uint32_t hash;
    bool default_variant;
+   bool has_nonseamless;
    uint8_t num_uniforms;
    uint8_t key_size;
    uint8_t key[0]; /* | key | uniforms | */
@@ -104,7 +105,7 @@ struct zink_gfx_program {
 
    struct zink_shader *last_vertex_stage;
 
-   struct list_head shader_cache[ZINK_SHADER_COUNT][2]; //normal, inline uniforms
+   struct list_head shader_cache[ZINK_SHADER_COUNT][2][2]; //normal, nonseamless cubes, inline uniforms
    unsigned inlined_variant_count[ZINK_SHADER_COUNT];
 
    struct zink_shader *shaders[ZINK_SHADER_COUNT];
@@ -116,7 +117,12 @@ struct zink_gfx_program {
 struct zink_compute_program {
    struct zink_program base;
 
-   struct zink_shader_module *module;
+   struct zink_shader_module *curr;
+
+   struct zink_shader_module *module; //base
+   struct list_head shader_cache[2]; //nonseamless cubes, inline uniforms
+   unsigned inlined_variant_count;
+
    struct zink_shader *shader;
    struct hash_table *pipelines;
 };
@@ -206,7 +212,7 @@ zink_create_gfx_program(struct zink_context *ctx,
                         unsigned vertices_per_patch);
 
 void
-zink_destroy_gfx_program(struct zink_screen *screen,
+zink_destroy_gfx_program(struct zink_context *ctx,
                          struct zink_gfx_program *prog);
 
 VkPipeline
@@ -225,7 +231,7 @@ void
 debug_describe_zink_gfx_program(char* buf, const struct zink_gfx_program *ptr);
 
 static inline bool
-zink_gfx_program_reference(struct zink_screen *screen,
+zink_gfx_program_reference(struct zink_context *ctx,
                            struct zink_gfx_program **dst,
                            struct zink_gfx_program *src)
 {
@@ -234,7 +240,7 @@ zink_gfx_program_reference(struct zink_screen *screen,
 
    if (pipe_reference_described(old_dst ? &old_dst->base.reference : NULL, &src->base.reference,
                                 (debug_reference_descriptor)debug_describe_zink_gfx_program)) {
-      zink_destroy_gfx_program(screen, old_dst);
+      zink_destroy_gfx_program(ctx, old_dst);
       ret = true;
    }
    if (dst) *dst = src;
@@ -244,14 +250,14 @@ zink_gfx_program_reference(struct zink_screen *screen,
 struct zink_compute_program *
 zink_create_compute_program(struct zink_context *ctx, struct zink_shader *shader);
 void
-zink_destroy_compute_program(struct zink_screen *screen,
-                         struct zink_compute_program *comp);
+zink_destroy_compute_program(struct zink_context *ctx,
+                             struct zink_compute_program *comp);
 
 void
 debug_describe_zink_compute_program(char* buf, const struct zink_compute_program *ptr);
 
 static inline bool
-zink_compute_program_reference(struct zink_screen *screen,
+zink_compute_program_reference(struct zink_context *ctx,
                            struct zink_compute_program **dst,
                            struct zink_compute_program *src)
 {
@@ -260,11 +266,28 @@ zink_compute_program_reference(struct zink_screen *screen,
 
    if (pipe_reference_described(old_dst ? &old_dst->base.reference : NULL, &src->base.reference,
                                 (debug_reference_descriptor)debug_describe_zink_compute_program)) {
-      zink_destroy_compute_program(screen, old_dst);
+      zink_destroy_compute_program(ctx, old_dst);
       ret = true;
    }
    if (dst) *dst = src;
    return ret;
+}
+
+static inline bool
+zink_program_reference(struct zink_context *ctx,
+                       struct zink_program **dst,
+                       struct zink_program *src)
+{
+   struct zink_program *pg = src ? src : dst ? *dst : NULL;
+   if (!pg)
+      return false;
+   if (pg->is_compute) {
+      struct zink_compute_program *comp = (struct zink_compute_program*)pg;
+      return zink_compute_program_reference(ctx, &comp, NULL);
+   } else {
+      struct zink_gfx_program *prog = (struct zink_gfx_program*)pg;
+      return zink_gfx_program_reference(ctx, &prog, NULL);
+   }
 }
 
 VkPipelineLayout
@@ -272,7 +295,8 @@ zink_pipeline_layout_create(struct zink_screen *screen, struct zink_program *pg,
 
 void
 zink_program_update_compute_pipeline_state(struct zink_context *ctx, struct zink_compute_program *comp, const uint block[3]);
-
+void
+zink_update_compute_program(struct zink_context *ctx);
 VkPipeline
 zink_get_compute_pipeline(struct zink_screen *screen,
                       struct zink_compute_program *comp,
@@ -295,6 +319,23 @@ static inline const struct zink_fs_key *
 zink_get_fs_key(struct zink_context *ctx)
 {
    return (const struct zink_fs_key *)&ctx->gfx_pipeline_state.shader_keys.key[PIPE_SHADER_FRAGMENT];
+}
+
+static inline bool
+zink_set_tcs_key_patches(struct zink_context *ctx, uint8_t patch_vertices)
+{
+   struct zink_tcs_key *tcs = (struct zink_tcs_key*)&ctx->gfx_pipeline_state.shader_keys.key[PIPE_SHADER_TESS_CTRL];
+   if (tcs->patch_vertices == patch_vertices)
+      return false;
+   ctx->dirty_shader_stages |= BITFIELD_BIT(PIPE_SHADER_TESS_CTRL);
+   tcs->patch_vertices = patch_vertices;
+   return true;
+}
+
+static inline const struct zink_tcs_key *
+zink_get_tcs_key(struct zink_context *ctx)
+{
+   return (const struct zink_tcs_key *)&ctx->gfx_pipeline_state.shader_keys.key[PIPE_SHADER_TESS_CTRL];
 }
 
 void
@@ -338,6 +379,9 @@ zink_set_fs_point_coord_key(struct zink_context *ctx)
       zink_set_fs_key(ctx)->coord_replace_yinvert = coord_replace_yinvert;
    }
 }
+
+bool
+zink_set_rasterizer_discard(struct zink_context *ctx, bool disable);
 
 #ifdef __cplusplus
 }

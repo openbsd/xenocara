@@ -323,12 +323,16 @@ vn_sizeof_VkImageCreateInfo_pnext(const void *val)
             size += vn_sizeof_VkImageFormatListCreateInfo_self((const VkImageFormatListCreateInfo *)pnext);
             return size;
         case VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_LIST_CREATE_INFO_EXT:
+            if (!vn_cs_renderer_protocol_has_extension(159 /* VK_EXT_image_drm_format_modifier */))
+                break;
             size += vn_sizeof_simple_pointer(pnext);
             size += vn_sizeof_VkStructureType(&pnext->sType);
             size += vn_sizeof_VkImageCreateInfo_pnext(pnext->pNext);
             size += vn_sizeof_VkImageDrmFormatModifierListCreateInfoEXT_self((const VkImageDrmFormatModifierListCreateInfoEXT *)pnext);
             return size;
         case VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_EXPLICIT_CREATE_INFO_EXT:
+            if (!vn_cs_renderer_protocol_has_extension(159 /* VK_EXT_image_drm_format_modifier */))
+                break;
             size += vn_sizeof_simple_pointer(pnext);
             size += vn_sizeof_VkStructureType(&pnext->sType);
             size += vn_sizeof_VkImageCreateInfo_pnext(pnext->pNext);
@@ -408,12 +412,16 @@ vn_encode_VkImageCreateInfo_pnext(struct vn_cs_encoder *enc, const void *val)
             vn_encode_VkImageFormatListCreateInfo_self(enc, (const VkImageFormatListCreateInfo *)pnext);
             return;
         case VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_LIST_CREATE_INFO_EXT:
+            if (!vn_cs_renderer_protocol_has_extension(159 /* VK_EXT_image_drm_format_modifier */))
+                break;
             vn_encode_simple_pointer(enc, pnext);
             vn_encode_VkStructureType(enc, &pnext->sType);
             vn_encode_VkImageCreateInfo_pnext(enc, pnext->pNext);
             vn_encode_VkImageDrmFormatModifierListCreateInfoEXT_self(enc, (const VkImageDrmFormatModifierListCreateInfoEXT *)pnext);
             return;
         case VK_STRUCTURE_TYPE_IMAGE_DRM_FORMAT_MODIFIER_EXPLICIT_CREATE_INFO_EXT:
+            if (!vn_cs_renderer_protocol_has_extension(159 /* VK_EXT_image_drm_format_modifier */))
+                break;
             vn_encode_simple_pointer(enc, pnext);
             vn_encode_VkStructureType(enc, &pnext->sType);
             vn_encode_VkImageCreateInfo_pnext(enc, pnext->pNext);
@@ -549,49 +557,6 @@ vn_encode_VkBindImageMemoryDeviceGroupInfo(struct vn_cs_encoder *enc, const VkBi
     vn_encode_VkBindImageMemoryDeviceGroupInfo_self(enc, val);
 }
 
-static inline void
-vn_decode_VkBindImageMemoryDeviceGroupInfo_pnext(struct vn_cs_decoder *dec, const void *val)
-{
-    /* no known/supported struct */
-    if (vn_decode_simple_pointer(dec))
-        assert(false);
-}
-
-static inline void
-vn_decode_VkBindImageMemoryDeviceGroupInfo_self(struct vn_cs_decoder *dec, VkBindImageMemoryDeviceGroupInfo *val)
-{
-    /* skip val->{sType,pNext} */
-    vn_decode_uint32_t(dec, &val->deviceIndexCount);
-    if (vn_peek_array_size(dec)) {
-        const size_t array_size = vn_decode_array_size(dec, val->deviceIndexCount);
-        vn_decode_uint32_t_array(dec, (uint32_t *)val->pDeviceIndices, array_size);
-    } else {
-        vn_decode_array_size_unchecked(dec);
-        val->pDeviceIndices = NULL;
-    }
-    vn_decode_uint32_t(dec, &val->splitInstanceBindRegionCount);
-    if (vn_peek_array_size(dec)) {
-        const uint32_t iter_count = vn_decode_array_size(dec, val->splitInstanceBindRegionCount);
-        for (uint32_t i = 0; i < iter_count; i++)
-            vn_decode_VkRect2D(dec, &((VkRect2D *)val->pSplitInstanceBindRegions)[i]);
-    } else {
-        vn_decode_array_size_unchecked(dec);
-        val->pSplitInstanceBindRegions = NULL;
-    }
-}
-
-static inline void
-vn_decode_VkBindImageMemoryDeviceGroupInfo(struct vn_cs_decoder *dec, VkBindImageMemoryDeviceGroupInfo *val)
-{
-    VkStructureType stype;
-    vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO);
-
-    assert(val->sType == stype);
-    vn_decode_VkBindImageMemoryDeviceGroupInfo_pnext(dec, val->pNext);
-    vn_decode_VkBindImageMemoryDeviceGroupInfo_self(dec, val);
-}
-
 /* struct VkBindImagePlaneMemoryInfo chain */
 
 static inline size_t
@@ -643,33 +608,6 @@ vn_encode_VkBindImagePlaneMemoryInfo(struct vn_cs_encoder *enc, const VkBindImag
     vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_BIND_IMAGE_PLANE_MEMORY_INFO });
     vn_encode_VkBindImagePlaneMemoryInfo_pnext(enc, val->pNext);
     vn_encode_VkBindImagePlaneMemoryInfo_self(enc, val);
-}
-
-static inline void
-vn_decode_VkBindImagePlaneMemoryInfo_pnext(struct vn_cs_decoder *dec, const void *val)
-{
-    /* no known/supported struct */
-    if (vn_decode_simple_pointer(dec))
-        assert(false);
-}
-
-static inline void
-vn_decode_VkBindImagePlaneMemoryInfo_self(struct vn_cs_decoder *dec, VkBindImagePlaneMemoryInfo *val)
-{
-    /* skip val->{sType,pNext} */
-    vn_decode_VkImageAspectFlagBits(dec, &val->planeAspect);
-}
-
-static inline void
-vn_decode_VkBindImagePlaneMemoryInfo(struct vn_cs_decoder *dec, VkBindImagePlaneMemoryInfo *val)
-{
-    VkStructureType stype;
-    vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_BIND_IMAGE_PLANE_MEMORY_INFO);
-
-    assert(val->sType == stype);
-    vn_decode_VkBindImagePlaneMemoryInfo_pnext(dec, val->pNext);
-    vn_decode_VkBindImagePlaneMemoryInfo_self(dec, val);
 }
 
 /* struct VkBindImageMemoryInfo chain */
@@ -772,58 +710,6 @@ vn_encode_VkBindImageMemoryInfo(struct vn_cs_encoder *enc, const VkBindImageMemo
     vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO });
     vn_encode_VkBindImageMemoryInfo_pnext(enc, val->pNext);
     vn_encode_VkBindImageMemoryInfo_self(enc, val);
-}
-
-static inline void
-vn_decode_VkBindImageMemoryInfo_pnext(struct vn_cs_decoder *dec, const void *val)
-{
-    VkBaseOutStructure *pnext = (VkBaseOutStructure *)val;
-    VkStructureType stype;
-
-    if (!vn_decode_simple_pointer(dec))
-        return;
-
-    vn_decode_VkStructureType(dec, &stype);
-    while (true) {
-        assert(pnext);
-        if (pnext->sType == stype)
-            break;
-    }
-
-    switch ((int32_t)pnext->sType) {
-    case VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_DEVICE_GROUP_INFO:
-        vn_decode_VkBindImageMemoryInfo_pnext(dec, pnext->pNext);
-        vn_decode_VkBindImageMemoryDeviceGroupInfo_self(dec, (VkBindImageMemoryDeviceGroupInfo *)pnext);
-        break;
-    case VK_STRUCTURE_TYPE_BIND_IMAGE_PLANE_MEMORY_INFO:
-        vn_decode_VkBindImageMemoryInfo_pnext(dec, pnext->pNext);
-        vn_decode_VkBindImagePlaneMemoryInfo_self(dec, (VkBindImagePlaneMemoryInfo *)pnext);
-        break;
-    default:
-        assert(false);
-        break;
-    }
-}
-
-static inline void
-vn_decode_VkBindImageMemoryInfo_self(struct vn_cs_decoder *dec, VkBindImageMemoryInfo *val)
-{
-    /* skip val->{sType,pNext} */
-    vn_decode_VkImage(dec, &val->image);
-    vn_decode_VkDeviceMemory(dec, &val->memory);
-    vn_decode_VkDeviceSize(dec, &val->memoryOffset);
-}
-
-static inline void
-vn_decode_VkBindImageMemoryInfo(struct vn_cs_decoder *dec, VkBindImageMemoryInfo *val)
-{
-    VkStructureType stype;
-    vn_decode_VkStructureType(dec, &stype);
-    assert(stype == VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO);
-
-    assert(val->sType == stype);
-    vn_decode_VkBindImageMemoryInfo_pnext(dec, val->pNext);
-    vn_decode_VkBindImageMemoryInfo_self(dec, val);
 }
 
 /* struct VkImagePlaneMemoryRequirementsInfo chain */
@@ -1124,6 +1010,64 @@ vn_encode_VkSparseImageMemoryRequirements2_partial(struct vn_cs_encoder *enc, co
     vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_SPARSE_IMAGE_MEMORY_REQUIREMENTS_2 });
     vn_encode_VkSparseImageMemoryRequirements2_pnext_partial(enc, val->pNext);
     vn_encode_VkSparseImageMemoryRequirements2_self_partial(enc, val);
+}
+
+/* struct VkDeviceImageMemoryRequirements chain */
+
+static inline size_t
+vn_sizeof_VkDeviceImageMemoryRequirements_pnext(const void *val)
+{
+    /* no known/supported struct */
+    return vn_sizeof_simple_pointer(NULL);
+}
+
+static inline size_t
+vn_sizeof_VkDeviceImageMemoryRequirements_self(const VkDeviceImageMemoryRequirements *val)
+{
+    size_t size = 0;
+    /* skip val->{sType,pNext} */
+    size += vn_sizeof_simple_pointer(val->pCreateInfo);
+    if (val->pCreateInfo)
+        size += vn_sizeof_VkImageCreateInfo(val->pCreateInfo);
+    size += vn_sizeof_VkImageAspectFlagBits(&val->planeAspect);
+    return size;
+}
+
+static inline size_t
+vn_sizeof_VkDeviceImageMemoryRequirements(const VkDeviceImageMemoryRequirements *val)
+{
+    size_t size = 0;
+
+    size += vn_sizeof_VkStructureType(&val->sType);
+    size += vn_sizeof_VkDeviceImageMemoryRequirements_pnext(val->pNext);
+    size += vn_sizeof_VkDeviceImageMemoryRequirements_self(val);
+
+    return size;
+}
+
+static inline void
+vn_encode_VkDeviceImageMemoryRequirements_pnext(struct vn_cs_encoder *enc, const void *val)
+{
+    /* no known/supported struct */
+    vn_encode_simple_pointer(enc, NULL);
+}
+
+static inline void
+vn_encode_VkDeviceImageMemoryRequirements_self(struct vn_cs_encoder *enc, const VkDeviceImageMemoryRequirements *val)
+{
+    /* skip val->{sType,pNext} */
+    if (vn_encode_simple_pointer(enc, val->pCreateInfo))
+        vn_encode_VkImageCreateInfo(enc, val->pCreateInfo);
+    vn_encode_VkImageAspectFlagBits(enc, &val->planeAspect);
+}
+
+static inline void
+vn_encode_VkDeviceImageMemoryRequirements(struct vn_cs_encoder *enc, const VkDeviceImageMemoryRequirements *val)
+{
+    assert(val->sType == VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS);
+    vn_encode_VkStructureType(enc, &(VkStructureType){ VK_STRUCTURE_TYPE_DEVICE_IMAGE_MEMORY_REQUIREMENTS });
+    vn_encode_VkDeviceImageMemoryRequirements_pnext(enc, val->pNext);
+    vn_encode_VkDeviceImageMemoryRequirements_self(enc, val);
 }
 
 /* struct VkImageDrmFormatModifierPropertiesEXT chain */
@@ -1838,6 +1782,155 @@ static inline void vn_decode_vkGetImageSparseMemoryRequirements2_reply(struct vn
     }
 }
 
+static inline size_t vn_sizeof_vkGetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageMemoryRequirements_EXT;
+    const VkFlags cmd_flags = 0;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type) + vn_sizeof_VkFlags(&cmd_flags);
+
+    cmd_size += vn_sizeof_VkDevice(&device);
+    cmd_size += vn_sizeof_simple_pointer(pInfo);
+    if (pInfo)
+        cmd_size += vn_sizeof_VkDeviceImageMemoryRequirements(pInfo);
+    cmd_size += vn_sizeof_simple_pointer(pMemoryRequirements);
+    if (pMemoryRequirements)
+        cmd_size += vn_sizeof_VkMemoryRequirements2_partial(pMemoryRequirements);
+
+    return cmd_size;
+}
+
+static inline void vn_encode_vkGetDeviceImageMemoryRequirements(struct vn_cs_encoder *enc, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageMemoryRequirements_EXT;
+
+    vn_encode_VkCommandTypeEXT(enc, &cmd_type);
+    vn_encode_VkFlags(enc, &cmd_flags);
+
+    vn_encode_VkDevice(enc, &device);
+    if (vn_encode_simple_pointer(enc, pInfo))
+        vn_encode_VkDeviceImageMemoryRequirements(enc, pInfo);
+    if (vn_encode_simple_pointer(enc, pMemoryRequirements))
+        vn_encode_VkMemoryRequirements2_partial(enc, pMemoryRequirements);
+}
+
+static inline size_t vn_sizeof_vkGetDeviceImageMemoryRequirements_reply(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageMemoryRequirements_EXT;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
+
+    /* skip device */
+    /* skip pInfo */
+    cmd_size += vn_sizeof_simple_pointer(pMemoryRequirements);
+    if (pMemoryRequirements)
+        cmd_size += vn_sizeof_VkMemoryRequirements2(pMemoryRequirements);
+
+    return cmd_size;
+}
+
+static inline void vn_decode_vkGetDeviceImageMemoryRequirements_reply(struct vn_cs_decoder *dec, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+{
+    VkCommandTypeEXT command_type;
+    vn_decode_VkCommandTypeEXT(dec, &command_type);
+    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceImageMemoryRequirements_EXT);
+
+    /* skip device */
+    /* skip pInfo */
+    if (vn_decode_simple_pointer(dec)) {
+        vn_decode_VkMemoryRequirements2(dec, pMemoryRequirements);
+    } else {
+        pMemoryRequirements = NULL;
+    }
+}
+
+static inline size_t vn_sizeof_vkGetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageSparseMemoryRequirements_EXT;
+    const VkFlags cmd_flags = 0;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type) + vn_sizeof_VkFlags(&cmd_flags);
+
+    cmd_size += vn_sizeof_VkDevice(&device);
+    cmd_size += vn_sizeof_simple_pointer(pInfo);
+    if (pInfo)
+        cmd_size += vn_sizeof_VkDeviceImageMemoryRequirements(pInfo);
+    cmd_size += vn_sizeof_simple_pointer(pSparseMemoryRequirementCount);
+    if (pSparseMemoryRequirementCount)
+        cmd_size += vn_sizeof_uint32_t(pSparseMemoryRequirementCount);
+    if (pSparseMemoryRequirements) {
+        cmd_size += vn_sizeof_array_size((pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0));
+        for (uint32_t i = 0; i < (pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0); i++)
+            cmd_size += vn_sizeof_VkSparseImageMemoryRequirements2_partial(&pSparseMemoryRequirements[i]);
+    } else {
+        cmd_size += vn_sizeof_array_size(0);
+    }
+
+    return cmd_size;
+}
+
+static inline void vn_encode_vkGetDeviceImageSparseMemoryRequirements(struct vn_cs_encoder *enc, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageSparseMemoryRequirements_EXT;
+
+    vn_encode_VkCommandTypeEXT(enc, &cmd_type);
+    vn_encode_VkFlags(enc, &cmd_flags);
+
+    vn_encode_VkDevice(enc, &device);
+    if (vn_encode_simple_pointer(enc, pInfo))
+        vn_encode_VkDeviceImageMemoryRequirements(enc, pInfo);
+    if (vn_encode_simple_pointer(enc, pSparseMemoryRequirementCount))
+        vn_encode_uint32_t(enc, pSparseMemoryRequirementCount);
+    if (pSparseMemoryRequirements) {
+        vn_encode_array_size(enc, (pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0));
+        for (uint32_t i = 0; i < (pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0); i++)
+            vn_encode_VkSparseImageMemoryRequirements2_partial(enc, &pSparseMemoryRequirements[i]);
+    } else {
+        vn_encode_array_size(enc, 0);
+    }
+}
+
+static inline size_t vn_sizeof_vkGetDeviceImageSparseMemoryRequirements_reply(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+    const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetDeviceImageSparseMemoryRequirements_EXT;
+    size_t cmd_size = vn_sizeof_VkCommandTypeEXT(&cmd_type);
+
+    /* skip device */
+    /* skip pInfo */
+    cmd_size += vn_sizeof_simple_pointer(pSparseMemoryRequirementCount);
+    if (pSparseMemoryRequirementCount)
+        cmd_size += vn_sizeof_uint32_t(pSparseMemoryRequirementCount);
+    if (pSparseMemoryRequirements) {
+        cmd_size += vn_sizeof_array_size((pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0));
+        for (uint32_t i = 0; i < (pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0); i++)
+            cmd_size += vn_sizeof_VkSparseImageMemoryRequirements2(&pSparseMemoryRequirements[i]);
+    } else {
+        cmd_size += vn_sizeof_array_size(0);
+    }
+
+    return cmd_size;
+}
+
+static inline void vn_decode_vkGetDeviceImageSparseMemoryRequirements_reply(struct vn_cs_decoder *dec, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+    VkCommandTypeEXT command_type;
+    vn_decode_VkCommandTypeEXT(dec, &command_type);
+    assert(command_type == VK_COMMAND_TYPE_vkGetDeviceImageSparseMemoryRequirements_EXT);
+
+    /* skip device */
+    /* skip pInfo */
+    if (vn_decode_simple_pointer(dec)) {
+        vn_decode_uint32_t(dec, pSparseMemoryRequirementCount);
+    } else {
+        pSparseMemoryRequirementCount = NULL;
+    }
+    if (vn_peek_array_size(dec)) {
+        const uint32_t iter_count = vn_decode_array_size(dec, (pSparseMemoryRequirementCount ? *pSparseMemoryRequirementCount : 0));
+        for (uint32_t i = 0; i < iter_count; i++)
+            vn_decode_VkSparseImageMemoryRequirements2(dec, &pSparseMemoryRequirements[i]);
+    } else {
+        vn_decode_array_size_unchecked(dec);
+        pSparseMemoryRequirements = NULL;
+    }
+}
+
 static inline size_t vn_sizeof_vkGetImageDrmFormatModifierPropertiesEXT(VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties)
 {
     const VkCommandTypeEXT cmd_type = VK_COMMAND_TYPE_vkGetImageDrmFormatModifierPropertiesEXT_EXT;
@@ -2090,6 +2183,48 @@ static inline void vn_submit_vkGetImageSparseMemoryRequirements2(struct vn_insta
     }
 }
 
+static inline void vn_submit_vkGetDeviceImageMemoryRequirements(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements, struct vn_instance_submit_command *submit)
+{
+    uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
+    void *cmd_data = local_cmd_data;
+    size_t cmd_size = vn_sizeof_vkGetDeviceImageMemoryRequirements(device, pInfo, pMemoryRequirements);
+    if (cmd_size > sizeof(local_cmd_data)) {
+        cmd_data = malloc(cmd_size);
+        if (!cmd_data)
+            cmd_size = 0;
+    }
+    const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetDeviceImageMemoryRequirements_reply(device, pInfo, pMemoryRequirements) : 0;
+
+    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    if (cmd_size) {
+        vn_encode_vkGetDeviceImageMemoryRequirements(enc, cmd_flags, device, pInfo, pMemoryRequirements);
+        vn_instance_submit_command(vn_instance, submit);
+        if (cmd_data != local_cmd_data)
+            free(cmd_data);
+    }
+}
+
+static inline void vn_submit_vkGetDeviceImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements, struct vn_instance_submit_command *submit)
+{
+    uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
+    void *cmd_data = local_cmd_data;
+    size_t cmd_size = vn_sizeof_vkGetDeviceImageSparseMemoryRequirements(device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
+    if (cmd_size > sizeof(local_cmd_data)) {
+        cmd_data = malloc(cmd_size);
+        if (!cmd_data)
+            cmd_size = 0;
+    }
+    const size_t reply_size = cmd_flags & VK_COMMAND_GENERATE_REPLY_BIT_EXT ? vn_sizeof_vkGetDeviceImageSparseMemoryRequirements_reply(device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements) : 0;
+
+    struct vn_cs_encoder *enc = vn_instance_submit_command_init(vn_instance, submit, cmd_data, cmd_size, reply_size);
+    if (cmd_size) {
+        vn_encode_vkGetDeviceImageSparseMemoryRequirements(enc, cmd_flags, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
+        vn_instance_submit_command(vn_instance, submit);
+        if (cmd_data != local_cmd_data)
+            free(cmd_data);
+    }
+}
+
 static inline void vn_submit_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_instance *vn_instance, VkCommandFlagsEXT cmd_flags, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties, struct vn_instance_submit_command *submit)
 {
     uint8_t local_cmd_data[VN_SUBMIT_LOCAL_CMD_SIZE];
@@ -2289,6 +2424,44 @@ static inline void vn_async_vkGetImageSparseMemoryRequirements2(struct vn_instan
 {
     struct vn_instance_submit_command submit;
     vn_submit_vkGetImageSparseMemoryRequirements2(vn_instance, 0, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+}
+
+static inline void vn_call_vkGetDeviceImageMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+{
+    VN_TRACE_FUNC();
+
+    struct vn_instance_submit_command submit;
+    vn_submit_vkGetDeviceImageMemoryRequirements(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    if (dec) {
+        vn_decode_vkGetDeviceImageMemoryRequirements_reply(dec, device, pInfo, pMemoryRequirements);
+        vn_instance_free_command_reply(vn_instance, &submit);
+    }
+}
+
+static inline void vn_async_vkGetDeviceImageMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements)
+{
+    struct vn_instance_submit_command submit;
+    vn_submit_vkGetDeviceImageMemoryRequirements(vn_instance, 0, device, pInfo, pMemoryRequirements, &submit);
+}
+
+static inline void vn_call_vkGetDeviceImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+    VN_TRACE_FUNC();
+
+    struct vn_instance_submit_command submit;
+    vn_submit_vkGetDeviceImageSparseMemoryRequirements(vn_instance, VK_COMMAND_GENERATE_REPLY_BIT_EXT, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
+    struct vn_cs_decoder *dec = vn_instance_get_command_reply(vn_instance, &submit);
+    if (dec) {
+        vn_decode_vkGetDeviceImageSparseMemoryRequirements_reply(dec, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements);
+        vn_instance_free_command_reply(vn_instance, &submit);
+    }
+}
+
+static inline void vn_async_vkGetDeviceImageSparseMemoryRequirements(struct vn_instance *vn_instance, VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements)
+{
+    struct vn_instance_submit_command submit;
+    vn_submit_vkGetDeviceImageSparseMemoryRequirements(vn_instance, 0, device, pInfo, pSparseMemoryRequirementCount, pSparseMemoryRequirements, &submit);
 }
 
 static inline VkResult vn_call_vkGetImageDrmFormatModifierPropertiesEXT(struct vn_instance *vn_instance, VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties)

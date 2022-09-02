@@ -52,7 +52,6 @@
 #include "decode.h"
 
 #include "pan_context.h"
-#include "panfrost-quirks.h"
 
 static const struct debug_named_value panfrost_debug_options[] = {
         {"perf",      PAN_DBG_PERF,     "Enable performance warnings"},
@@ -69,13 +68,14 @@ static const struct debug_named_value panfrost_debug_options[] = {
         {"indirect",  PAN_DBG_INDIRECT, "Use experimental compute kernel for indirect draws"},
         {"linear",    PAN_DBG_LINEAR,   "Force linear textures"},
         {"nocache",   PAN_DBG_NO_CACHE, "Disable BO cache"},
+        {"dump",      PAN_DBG_DUMP,     "Dump all graphics memory"},
         DEBUG_NAMED_VALUE_END
 };
 
 static const char *
 panfrost_get_name(struct pipe_screen *screen)
 {
-        return panfrost_model_name(pan_device(screen)->gpu_id);
+        return pan_device(screen)->model->name;
 }
 
 static const char *
@@ -98,8 +98,8 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
         /* Our GL 3.x implementation is WIP */
         bool is_gl3 = dev->debug & (PAN_DBG_GL3 | PAN_DBG_DEQP);
 
-        /* Don't expose MRT related CAPs on GPUs that don't implement them */
-        bool has_mrt = !(dev->quirks & MIDGARD_SFBD);
+        /* Native MRT is introduced with v5 */
+        bool has_mrt = (dev->arch >= 5);
 
         /* Only kernel drivers >= 1.1 can allocate HEAP BOs */
         bool has_heap = dev->kernel_version->version_major > 1 ||
@@ -133,28 +133,26 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
                 return 1;
 
         case PIPE_CAP_OCCLUSION_QUERY:
-        case PIPE_CAP_PRIMITIVE_RESTART:
         case PIPE_CAP_PRIMITIVE_RESTART_FIXED_INDEX:
                 return true;
 
         case PIPE_CAP_ANISOTROPIC_FILTER:
-                return !!(dev->quirks & HAS_ANISOTROPIC);
+                return dev->revision >= dev->model->min_rev_anisotropic;
 
         /* Compile side is done for Bifrost, Midgard TODO. Needs some kernel
          * work to turn on, since CYCLE_COUNT_START needs to be issued. In
          * kbase, userspace requests this via BASE_JD_REQ_PERMON. There is not
          * yet way to request this with mainline TODO */
-        case PIPE_CAP_TGSI_CLOCK:
+        case PIPE_CAP_SHADER_CLOCK:
                 return 0;
 
-        case PIPE_CAP_TGSI_INSTANCEID:
+        case PIPE_CAP_VS_INSTANCEID:
         case PIPE_CAP_TEXTURE_MULTISAMPLE:
         case PIPE_CAP_SURFACE_SAMPLE_COUNT:
                 return true;
 
         case PIPE_CAP_SAMPLER_VIEW_TARGET:
         case PIPE_CAP_TEXTURE_SWIZZLE:
-        case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
         case PIPE_CAP_TEXTURE_MIRROR_CLAMP_TO_EDGE:
         case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
         case PIPE_CAP_BLEND_EQUATION_SEPARATE:
@@ -165,7 +163,7 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
         case PIPE_CAP_UMA:
         case PIPE_CAP_TEXTURE_FLOAT_LINEAR:
         case PIPE_CAP_TEXTURE_HALF_FLOAT_LINEAR:
-        case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+        case PIPE_CAP_SHADER_ARRAY_COMPONENTS:
         case PIPE_CAP_CS_DERIVED_SYSTEM_VALUES_SUPPORTED:
         case PIPE_CAP_TEXTURE_BUFFER_OBJECTS:
         case PIPE_CAP_TEXTURE_BUFFER_SAMPLER:
@@ -224,21 +222,21 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
         case PIPE_CAP_MAX_TEXTURE_CUBE_LEVELS:
                 return MAX_MIP_LEVELS;
 
-        case PIPE_CAP_TGSI_FS_COORD_ORIGIN_LOWER_LEFT:
-        case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_INTEGER:
+        case PIPE_CAP_FS_COORD_ORIGIN_LOWER_LEFT:
+        case PIPE_CAP_FS_COORD_PIXEL_CENTER_INTEGER:
                 /* Hardware is upper left. Pixel center at (0.5, 0.5) */
                 return 0;
 
-        case PIPE_CAP_TGSI_FS_COORD_ORIGIN_UPPER_LEFT:
-        case PIPE_CAP_TGSI_FS_COORD_PIXEL_CENTER_HALF_INTEGER:
+        case PIPE_CAP_FS_COORD_ORIGIN_UPPER_LEFT:
+        case PIPE_CAP_FS_COORD_PIXEL_CENTER_HALF_INTEGER:
         case PIPE_CAP_TGSI_TEXCOORD:
                 return 1;
 
         /* We would prefer varyings on Midgard, but proper sysvals on Bifrost */
-        case PIPE_CAP_TGSI_FS_FACE_IS_INTEGER_SYSVAL:
-        case PIPE_CAP_TGSI_FS_POSITION_IS_SYSVAL:
-        case PIPE_CAP_TGSI_FS_POINT_IS_SYSVAL:
-                return pan_is_bifrost(dev);
+        case PIPE_CAP_FS_FACE_IS_INTEGER_SYSVAL:
+        case PIPE_CAP_FS_POSITION_IS_SYSVAL:
+        case PIPE_CAP_FS_POINT_IS_SYSVAL:
+                return dev->arch >= 6;
 
         case PIPE_CAP_SEAMLESS_CUBE_MAP:
         case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
@@ -247,7 +245,7 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
         case PIPE_CAP_MAX_VERTEX_ELEMENT_SRC_OFFSET:
                 return 0xffff;
 
-        case PIPE_CAP_PREFER_BLIT_BASED_TEXTURE_TRANSFER:
+        case PIPE_CAP_TEXTURE_TRANSFER_MODES:
                 return 0;
 
         case PIPE_CAP_ENDIANNESS:
@@ -285,8 +283,16 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
                 return MAX_VARYING;
 
         /* Removed in v6 (Bifrost) */
+        case PIPE_CAP_GL_CLAMP:
+        case PIPE_CAP_TEXTURE_MIRROR_CLAMP:
         case PIPE_CAP_ALPHA_TEST:
                 return dev->arch <= 5;
+
+        /* Removed in v9 (Valhall). PRIMTIIVE_RESTART_FIXED_INDEX is of course
+         * still supported as it is core GLES3.0 functionality
+         */
+        case PIPE_CAP_PRIMITIVE_RESTART:
+                return dev->arch <= 7;
 
         case PIPE_CAP_FLATSHADE:
         case PIPE_CAP_TWO_SIDED_COLOR:
@@ -322,6 +328,9 @@ panfrost_get_param(struct pipe_screen *screen, enum pipe_cap param)
 
                 return modes;
         }
+
+        case PIPE_CAP_IMAGE_STORE_FORMATTED:
+                return 1;
 
         default:
                 return u_pipe_screen_get_param_defaults(screen, param);
@@ -457,17 +466,21 @@ static float
 panfrost_get_paramf(struct pipe_screen *screen, enum pipe_capf param)
 {
         switch (param) {
+        case PIPE_CAPF_MIN_LINE_WIDTH:
+        case PIPE_CAPF_MIN_LINE_WIDTH_AA:
+        case PIPE_CAPF_MIN_POINT_SIZE:
+        case PIPE_CAPF_MIN_POINT_SIZE_AA:
+           return 1;
+
+        case PIPE_CAPF_POINT_SIZE_GRANULARITY:
+        case PIPE_CAPF_LINE_WIDTH_GRANULARITY:
+           return 0.0625;
+
         case PIPE_CAPF_MAX_LINE_WIDTH:
-
-        FALLTHROUGH;
         case PIPE_CAPF_MAX_LINE_WIDTH_AA:
-                return 255.0; /* arbitrary */
-
-        case PIPE_CAPF_MAX_POINT_WIDTH:
-
-        FALLTHROUGH;
-        case PIPE_CAPF_MAX_POINT_WIDTH_AA:
-                return 1024.0;
+        case PIPE_CAPF_MAX_POINT_SIZE:
+        case PIPE_CAPF_MAX_POINT_SIZE_AA:
+                return 4095.9375;
 
         case PIPE_CAPF_MAX_TEXTURE_ANISOTROPY:
                 return 16.0;
@@ -539,7 +552,7 @@ panfrost_is_format_supported( struct pipe_screen *screen,
                 return false;
 
         /* Z16 causes dEQP failures on t720 */
-        if (format == PIPE_FORMAT_Z16_UNORM && dev->quirks & MIDGARD_SFBD)
+        if (format == PIPE_FORMAT_Z16_UNORM && dev->arch <= 4)
                 return false;
 
         /* Check we support the format with the given bind */
@@ -842,20 +855,14 @@ panfrost_create_screen(int fd, struct renderonly *ro)
         if (dev->debug & PAN_DBG_NO_AFBC)
                 dev->has_afbc = false;
 
-        /* Check if we're loading against a supported GPU model. */
+        /* It's early days for Valhall support... disable AFBC for now to keep
+         * hardware bring-up simple
+         */
+        if (dev->arch >= 9)
+                dev->has_afbc = false;
 
-        switch (dev->gpu_id) {
-        case 0x720: /* T720 */
-        case 0x750: /* T760 */
-        case 0x820: /* T820 */
-        case 0x860: /* T860 */
-        case 0x6221: /* G72 */
-        case 0x7093: /* G31 */
-        case 0x7212: /* G52 */
-        case 0x7402: /* G52r1 */
-                break;
-        default:
-                /* Fail to load against untested models */
+        /* Bail early on unsupported hardware */
+        if (dev->model == NULL) {
                 debug_printf("panfrost: Unsupported model %X", dev->gpu_id);
                 panfrost_destroy_screen(&(screen->base));
                 return NULL;

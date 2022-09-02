@@ -14,6 +14,9 @@ struct vn_renderer_shmem {
    uint32_t res_id;
    size_t mmap_size; /* for internal use only (i.e., munmap) */
    void *mmap_ptr;
+
+   struct list_head cache_head;
+   int64_t cache_timestamp;
 };
 
 struct vn_renderer_bo {
@@ -53,6 +56,7 @@ struct vn_renderer_info {
    bool has_cache_management;
    bool has_external_sync;
    bool has_implicit_fencing;
+   bool has_guest_vram;
 
    uint32_t max_sync_queue_count;
 
@@ -61,6 +65,9 @@ struct vn_renderer_info {
    uint32_t vk_xml_version;
    uint32_t vk_ext_command_serialization_spec_version;
    uint32_t vk_mesa_venus_protocol_spec_version;
+   uint32_t supports_blob_id_0;
+   /* combined mask for vk_extension_mask1, 2,..., N */
+   uint32_t vk_extension_mask[32];
 };
 
 struct vn_renderer_submit_batch {
@@ -118,9 +125,6 @@ struct vn_renderer_wait {
 struct vn_renderer_ops {
    void (*destroy)(struct vn_renderer *renderer,
                    const VkAllocationCallbacks *alloc);
-
-   void (*get_info)(struct vn_renderer *renderer,
-                    struct vn_renderer_info *info);
 
    VkResult (*submit)(struct vn_renderer *renderer,
                       const struct vn_renderer_submit *submit);
@@ -212,6 +216,7 @@ struct vn_renderer_sync_ops {
 };
 
 struct vn_renderer {
+   struct vn_renderer_info info;
    struct vn_renderer_ops ops;
    struct vn_renderer_shmem_ops shmem_ops;
    struct vn_renderer_bo_ops bo_ops;
@@ -249,34 +254,11 @@ vn_renderer_destroy(struct vn_renderer *renderer,
    renderer->ops.destroy(renderer, alloc);
 }
 
-static inline void
-vn_renderer_get_info(struct vn_renderer *renderer,
-                     struct vn_renderer_info *info)
-{
-   renderer->ops.get_info(renderer, info);
-}
-
 static inline VkResult
 vn_renderer_submit(struct vn_renderer *renderer,
                    const struct vn_renderer_submit *submit)
 {
    return renderer->ops.submit(renderer, submit);
-}
-
-static inline VkResult
-vn_renderer_submit_simple(struct vn_renderer *renderer,
-                          const void *cs_data,
-                          size_t cs_size)
-{
-   const struct vn_renderer_submit submit = {
-      .batches =
-         &(const struct vn_renderer_submit_batch){
-            .cs_data = cs_data,
-            .cs_size = cs_size,
-         },
-      .batch_count = 1,
-   };
-   return vn_renderer_submit(renderer, &submit);
 }
 
 static inline VkResult
@@ -289,6 +271,7 @@ vn_renderer_wait(struct vn_renderer *renderer,
 static inline struct vn_renderer_shmem *
 vn_renderer_shmem_create(struct vn_renderer *renderer, size_t size)
 {
+   VN_TRACE_FUNC();
    struct vn_renderer_shmem *shmem =
       renderer->shmem_ops.create(renderer, size);
    if (shmem) {
@@ -463,45 +446,6 @@ vn_renderer_sync_write(struct vn_renderer *renderer,
                        uint64_t val)
 {
    return renderer->sync_ops.write(renderer, sync, val);
-}
-
-static inline VkResult
-vn_renderer_submit_simple_sync(struct vn_renderer *renderer,
-                               const void *cs_data,
-                               size_t cs_size)
-{
-   struct vn_renderer_sync *sync;
-   VkResult result =
-      vn_renderer_sync_create(renderer, 0, VN_RENDERER_SYNC_BINARY, &sync);
-   if (result != VK_SUCCESS)
-      return result;
-
-   const struct vn_renderer_submit submit = {
-      .batches =
-         &(const struct vn_renderer_submit_batch){
-            .cs_data = cs_data,
-            .cs_size = cs_size,
-            .sync_queue_cpu = true,
-            .syncs = &sync,
-            .sync_values = &(const uint64_t){ 1 },
-            .sync_count = 1,
-         },
-      .batch_count = 1,
-   };
-   const struct vn_renderer_wait wait = {
-      .timeout = UINT64_MAX,
-      .syncs = &sync,
-      .sync_values = &(const uint64_t){ 1 },
-      .sync_count = 1,
-   };
-
-   result = vn_renderer_submit(renderer, &submit);
-   if (result == VK_SUCCESS)
-      result = vn_renderer_wait(renderer, &wait);
-
-   vn_renderer_sync_destroy(renderer, sync);
-
-   return result;
 }
 
 #endif /* VN_RENDERER_H */

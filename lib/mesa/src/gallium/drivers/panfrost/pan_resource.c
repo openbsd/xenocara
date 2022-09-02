@@ -50,7 +50,6 @@
 #include "pan_util.h"
 #include "pan_tiling.h"
 #include "decode.h"
-#include "panfrost-quirks.h"
 
 static bool
 panfrost_should_checksum(const struct panfrost_device *dev, const struct panfrost_resource *pres);
@@ -135,23 +134,29 @@ panfrost_resource_get_handle(struct pipe_screen *pscreen,
                              unsigned usage)
 {
         struct panfrost_device *dev = pan_device(pscreen);
-        struct panfrost_resource *rsrc = (struct panfrost_resource *) pt;
-        struct renderonly_scanout *scanout = rsrc->scanout;
+        struct panfrost_resource *rsrc;
+        struct renderonly_scanout *scanout;
+        struct pipe_resource *cur = pt;
+
+        /* Even though panfrost doesn't support multi-planar formats, we
+         * can get here through GBM, which does. Walk the list of planes
+         * to find the right one.
+         */
+        for (int i = 0; i < handle->plane; i++) {
+                cur = cur->next;
+                if (!cur)
+                        return false;
+        }
+        rsrc = pan_resource(cur);
+        scanout = rsrc->scanout;
 
         handle->modifier = rsrc->image.layout.modifier;
         rsrc->modifier_constant = true;
 
-        if (handle->type == WINSYS_HANDLE_TYPE_SHARED) {
-                return false;
+        if (handle->type == WINSYS_HANDLE_TYPE_KMS && dev->ro) {
+                return renderonly_get_handle(scanout, handle);
         } else if (handle->type == WINSYS_HANDLE_TYPE_KMS) {
-                if (dev->ro) {
-                        return renderonly_get_handle(scanout, handle);
-                } else {
-                        handle->handle = rsrc->image.data.bo->gem_handle;
-                        handle->stride = rsrc->image.layout.slices[0].line_stride;
-                        handle->offset = rsrc->image.layout.slices[0].offset;
-                        return true;
-                }
+                handle->handle = rsrc->image.data.bo->gem_handle;
         } else if (handle->type == WINSYS_HANDLE_TYPE_FD) {
                 int fd = panfrost_bo_export(rsrc->image.data.bo);
 
@@ -159,12 +164,14 @@ panfrost_resource_get_handle(struct pipe_screen *pscreen,
                         return false;
 
                 handle->handle = fd;
-                handle->stride = rsrc->image.layout.slices[0].line_stride;
-                handle->offset = rsrc->image.layout.slices[0].offset;
-                return true;
+        } else {
+                /* Other handle types not supported */
+                return false;
         }
 
-        return false;
+        handle->stride = rsrc->image.layout.slices[0].line_stride;
+        handle->offset = rsrc->image.layout.slices[0].offset;
+        return true;
 }
 
 static bool
@@ -175,6 +182,8 @@ panfrost_resource_get_param(struct pipe_screen *pscreen,
                             unsigned usage, uint64_t *value)
 {
         struct panfrost_resource *rsrc = (struct panfrost_resource *) prsc;
+        struct pipe_resource *cur;
+        unsigned count;
 
         switch (param) {
         case PIPE_RESOURCE_PARAM_STRIDE:
@@ -185,6 +194,16 @@ panfrost_resource_get_param(struct pipe_screen *pscreen,
                 return true;
         case PIPE_RESOURCE_PARAM_MODIFIER:
                 *value = rsrc->image.layout.modifier;
+                return true;
+        case PIPE_RESOURCE_PARAM_NPLANES:
+                /* Panfrost doesn't directly support multi-planar formats,
+                 * but we should still handle this case for gbm users
+                 * that might want to use resources shared with panfrost
+                 * on video processing hardware that does.
+                 */
+                for (count = 0, cur = prsc; cur; cur = cur->next)
+                        count++;
+                *value = count;
                 return true;
         default:
                 return false;
@@ -532,8 +551,12 @@ panfrost_resource_set_damage_region(struct pipe_screen *screen,
         struct pipe_scissor_state *damage_extent = &pres->damage.extent;
         unsigned int i;
 
-        if (!pan_is_bifrost(dev) && !(dev->quirks & NO_TILE_ENABLE_MAP) &&
-            nrects > 1) {
+        /* Partial updates are implemented with a tile enable map only on v5.
+         * Later architectures have a more efficient method of implementing
+         * partial updates (frame shaders), while earlier architectures lack
+         * tile enable maps altogether.
+         */
+        if (dev->arch == 5 && nrects > 1) {
                 if (!pres->damage.tile_map.data) {
                         pres->damage.tile_map.stride =
                                 ALIGN_POT(DIV_ROUND_UP(res->width0, 32 * 8), 64);
@@ -1349,7 +1372,7 @@ panfrost_resource_screen_init(struct pipe_screen *pscreen)
         pscreen->resource_get_param = panfrost_resource_get_param;
         pscreen->transfer_helper = u_transfer_helper_create(&transfer_vtbl,
                                         true, false,
-                                        fake_rgtc, true);
+                                        fake_rgtc, true, false);
 }
 void
 panfrost_resource_screen_destroy(struct pipe_screen *pscreen)

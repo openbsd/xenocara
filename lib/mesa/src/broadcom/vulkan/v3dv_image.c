@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 Raspberry Pi
+ * Copyright © 2019 Raspberry Pi Ltd
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -26,7 +26,6 @@
 #include "drm-uapi/drm_fourcc.h"
 #include "util/format/u_format.h"
 #include "util/u_math.h"
-#include "vk_format_info.h"
 #include "vk_util.h"
 #include "vulkan/wsi/wsi_common.h"
 
@@ -258,7 +257,7 @@ create_image(struct v3dv_device *device,
    /* When using the simulator the WSI common code will see that our
     * driver wsi device doesn't match the display device and because of that
     * it will not attempt to present directly from the swapchain images,
-    * instead it will use the prime blit path (use_prime_blit flag in
+    * instead it will use the prime blit path (use_buffer_blit flag in
     * struct wsi_swapchain), where it copies the contents of the swapchain
     * images to a linear buffer with appropriate row stride for presentation.
     * As a result, on that path, swapchain images do not have any special
@@ -297,6 +296,27 @@ create_image(struct v3dv_device *device,
       tiling = VK_IMAGE_TILING_LINEAR;
    }
 
+#ifdef ANDROID
+   const VkNativeBufferANDROID *native_buffer =
+      vk_find_struct_const(pCreateInfo->pNext, NATIVE_BUFFER_ANDROID);
+
+   int native_buf_fd = -1;
+   int native_buf_stride = 0;
+   int native_buf_size = 0;
+
+   if (native_buffer != NULL) {
+      VkResult result = v3dv_gralloc_info(device, native_buffer, &native_buf_fd,
+                                          &native_buf_stride, &native_buf_size, &modifier);
+      if (result != VK_SUCCESS) {
+         vk_image_destroy(&device->vk, pAllocator, &image->vk);
+         return result;
+      }
+
+      if (modifier != DRM_FORMAT_MOD_BROADCOM_UIF)
+         tiling = VK_IMAGE_TILING_LINEAR;
+   }
+#endif
+
    const struct v3dv_format *format =
       v3dv_X(device, get_format)(pCreateInfo->format);
    v3dv_assert(format != NULL && format->supported);
@@ -320,6 +340,21 @@ create_image(struct v3dv_device *device,
    image->vk.create_flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT;
 
    v3d_setup_slices(image);
+
+#ifdef ANDROID
+   if (native_buffer != NULL) {
+      image->slices[0].stride = native_buf_stride;
+      image->slices[0].size = image->size = native_buf_size;
+
+      VkResult result = v3dv_import_native_buffer_fd(v3dv_device_to_handle(device),
+                                                     native_buf_fd, pAllocator,
+                                                     v3dv_image_to_handle(image));
+      if (result != VK_SUCCESS) {
+         vk_object_free(&device->vk, pAllocator, image);
+         return result;
+      }
+   }
+#endif
 
    *pImage = v3dv_image_to_handle(image);
 
@@ -436,6 +471,11 @@ v3dv_DestroyImage(VkDevice _device,
    if (image == NULL)
       return;
 
+#ifdef ANDROID
+   if (image->is_native_buffer_memory)
+      v3dv_FreeMemory(_device,  v3dv_device_memory_to_handle(image->mem), pAllocator);
+#endif
+
    vk_image_destroy(&device->vk, pAllocator, &image->vk);
 }
 
@@ -449,29 +489,6 @@ v3dv_image_type_to_view_type(VkImageType type)
    default:
       unreachable("Invalid image type");
    }
-}
-
-static enum pipe_swizzle
-vk_component_mapping_to_pipe_swizzle(VkComponentSwizzle swz)
-{
-   assert(swz != VK_COMPONENT_SWIZZLE_IDENTITY);
-
-   switch (swz) {
-   case VK_COMPONENT_SWIZZLE_ZERO:
-      return PIPE_SWIZZLE_0;
-   case VK_COMPONENT_SWIZZLE_ONE:
-      return PIPE_SWIZZLE_1;
-   case VK_COMPONENT_SWIZZLE_R:
-      return PIPE_SWIZZLE_X;
-   case VK_COMPONENT_SWIZZLE_G:
-      return PIPE_SWIZZLE_Y;
-   case VK_COMPONENT_SWIZZLE_B:
-      return PIPE_SWIZZLE_Z;
-   case VK_COMPONENT_SWIZZLE_A:
-      return PIPE_SWIZZLE_W;
-   default:
-      unreachable("Unknown VkComponentSwizzle");
-   };
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
@@ -515,23 +532,17 @@ v3dv_CreateImageView(VkDevice _device,
        * util_format_compose_swizzles. Would be good to check if it would be
        * better to reimplement the latter using vk component
        */
-      image_view_swizzle[0] =
-         vk_component_mapping_to_pipe_swizzle(iview->vk.swizzle.r);
-      image_view_swizzle[1] =
-         vk_component_mapping_to_pipe_swizzle(iview->vk.swizzle.g);
-      image_view_swizzle[2] =
-         vk_component_mapping_to_pipe_swizzle(iview->vk.swizzle.b);
-      image_view_swizzle[3] =
-         vk_component_mapping_to_pipe_swizzle(iview->vk.swizzle.a);
+      vk_component_mapping_to_pipe_swizzle(iview->vk.swizzle,
+                                           image_view_swizzle);
    }
 
-   iview->vk.format = format;
+   iview->vk.view_format = format;
    iview->format = v3dv_X(device, get_format)(format);
    assert(iview->format && iview->format->supported);
 
-   if (vk_format_is_depth_or_stencil(iview->vk.format)) {
+   if (vk_format_is_depth_or_stencil(iview->vk.view_format)) {
       iview->internal_type =
-         v3dv_X(device, get_internal_depth_type)(iview->vk.format);
+         v3dv_X(device, get_internal_depth_type)(iview->vk.view_format);
    } else {
       v3dv_X(device, get_internal_type_bpp_for_output_format)
          (iview->format->rt_type, &iview->internal_type, &iview->internal_bpp);
@@ -540,7 +551,9 @@ v3dv_CreateImageView(VkDevice _device,
    const uint8_t *format_swizzle = v3dv_get_format_swizzle(device, format);
    util_format_compose_swizzles(format_swizzle, image_view_swizzle,
                                 iview->swizzle);
-   iview->swap_rb = iview->swizzle[0] == PIPE_SWIZZLE_Z;
+
+   iview->swap_rb = v3dv_format_swizzle_needs_rb_swap(iview->swizzle);
+   iview->channel_reverse = v3dv_format_swizzle_needs_reverse(iview->swizzle);
 
    v3dv_X(device, pack_texture_shader_state)(device, iview);
 

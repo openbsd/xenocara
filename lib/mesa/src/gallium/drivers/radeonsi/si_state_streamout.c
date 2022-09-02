@@ -199,7 +199,7 @@ static void si_set_streamout_targets(struct pipe_context *ctx, unsigned num_targ
          }
 
          si_set_internal_shader_buffer(sctx, SI_VS_STREAMOUT_BUF0 + i, &sbuf);
-         si_resource(targets[i]->buffer)->bind_history |= PIPE_BIND_STREAM_OUTPUT;
+         si_resource(targets[i]->buffer)->bind_history |= SI_BIND_STREAMOUT_BUFFER;
       } else {
          si_set_internal_shader_buffer(sctx, SI_VS_STREAMOUT_BUF0 + i, NULL);
       }
@@ -234,8 +234,8 @@ static void gfx10_emit_streamout_begin(struct si_context *sctx)
       uint64_t va = 0;
 
       if (append) {
-         radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, t[i]->buf_filled_size, RADEON_USAGE_READ,
-                                   RADEON_PRIO_SO_FILLED_SIZE);
+         radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, t[i]->buf_filled_size,
+                                   RADEON_USAGE_READ | RADEON_PRIO_SO_FILLED_SIZE);
 
          va = t[i]->buf_filled_size->gpu_address + t[i]->buf_filled_size_offset;
       }
@@ -264,6 +264,7 @@ static void gfx10_emit_streamout_end(struct si_context *sctx)
 
       uint64_t va = t[i]->buf_filled_size->gpu_address + t[i]->buf_filled_size_offset;
 
+      /* TODO: PS_DONE doesn't ensure completion of VS if there are no PS waves. */
       si_cp_release_mem(sctx, &sctx->gfx_cs, V_028A90_PS_DONE, 0, EOP_DST_SEL_TC_L2,
                         EOP_INT_SEL_SEND_DATA_AFTER_WR_CONFIRM, EOP_DATA_SEL_GDS,
                         t[i]->buf_filled_size, va, EOP_DATA_GDS(i, 1), 0);
@@ -339,8 +340,8 @@ static void si_emit_streamout_begin(struct si_context *sctx)
          radeon_emit(va);                                             /* src address lo */
          radeon_emit(va >> 32);                                       /* src address hi */
 
-         radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, t[i]->buf_filled_size, RADEON_USAGE_READ,
-                                   RADEON_PRIO_SO_FILLED_SIZE);
+         radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, t[i]->buf_filled_size,
+                                   RADEON_USAGE_READ | RADEON_PRIO_SO_FILLED_SIZE);
       } else {
          /* Start from the beginning. */
          radeon_emit(PKT3(PKT3_STRMOUT_BUFFER_UPDATE, 4, 0));
@@ -386,8 +387,8 @@ void si_emit_streamout_end(struct si_context *sctx)
       radeon_emit(0);                                   /* unused */
       radeon_emit(0);                                   /* unused */
 
-      radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, t[i]->buf_filled_size, RADEON_USAGE_WRITE,
-                                RADEON_PRIO_SO_FILLED_SIZE);
+      radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, t[i]->buf_filled_size,
+                                RADEON_USAGE_WRITE | RADEON_PRIO_SO_FILLED_SIZE);
 
       /* Zero the buffer size. The counters (primitives generated,
        * primitives emitted) may be enabled even if there is not

@@ -17,6 +17,31 @@ export VK_ICD_FILENAMES=`pwd`/install/share/vulkan/icd.d/"$VK_DRIVER"_icd.${VK_C
 RESULTS=`pwd`/${PIGLIT_RESULTS_DIR:-results}
 mkdir -p $RESULTS
 
+# Ensure Mesa Shader Cache resides on tmpfs.
+SHADER_CACHE_HOME=${XDG_CACHE_HOME:-${HOME}/.cache}
+SHADER_CACHE_DIR=${MESA_SHADER_CACHE_DIR:-${SHADER_CACHE_HOME}/mesa_shader_cache}
+
+findmnt -n tmpfs ${SHADER_CACHE_HOME} || findmnt -n tmpfs ${SHADER_CACHE_DIR} || {
+    mkdir -p ${SHADER_CACHE_DIR}
+    mount -t tmpfs -o nosuid,nodev,size=2G,mode=1755 tmpfs ${SHADER_CACHE_DIR}
+}
+
+if [ "$GALLIUM_DRIVER" = "virpipe" ]; then
+    # deqp is to use virpipe, and virgl_test_server llvmpipe
+    export GALLIUM_DRIVER="$GALLIUM_DRIVER"
+
+    VTEST_ARGS="--use-egl-surfaceless"
+    if [ "$VIRGL_HOST_API" = "GLES" ]; then
+        VTEST_ARGS="$VTEST_ARGS --use-gles"
+    fi
+
+    GALLIUM_DRIVER=llvmpipe \
+    GALLIVM_PERF="nopt" \
+    virgl_test_server $VTEST_ARGS >$RESULTS/vtest-log.txt 2>&1 &
+
+    sleep 1
+fi
+
 if [ -n "$PIGLIT_FRACTION" -o -n "$CI_NODE_INDEX" ]; then
    FRACTION=`expr ${PIGLIT_FRACTION:-1} \* ${CI_NODE_TOTAL:-1}`
 PIGLIT_RUNNER_OPTIONS="$PIGLIT_RUNNER_OPTIONS --fraction $FRACTION"

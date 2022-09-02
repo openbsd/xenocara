@@ -36,9 +36,10 @@
 #include "util/simple_mtx.h"
 #include "pipe/p_defines.h"
 #include "pipebuffer/pb_slab.h"
+#include "intel/dev/intel_device_info.h"
 
 struct intel_device_info;
-struct pipe_debug_callback;
+struct util_debug_callback;
 struct isl_surf;
 struct iris_syncobj;
 
@@ -83,19 +84,18 @@ enum iris_memory_zone {
 /* Intentionally exclude single buffer "zones" */
 #define IRIS_MEMZONE_COUNT (IRIS_MEMZONE_OTHER + 1)
 
-#define IRIS_BINDER_SIZE (64 * 1024)
-#define IRIS_MAX_BINDERS 100
 #define IRIS_BINDLESS_SIZE (8 * 1024 * 1024)
+#define IRIS_BINDER_ZONE_SIZE ((1ull << 30) - IRIS_BINDLESS_SIZE)
 
 #define IRIS_MEMZONE_SHADER_START     (0ull * (1ull << 32))
 #define IRIS_MEMZONE_BINDER_START     (1ull * (1ull << 32))
-#define IRIS_MEMZONE_BINDLESS_START   (IRIS_MEMZONE_BINDER_START + IRIS_MAX_BINDERS * IRIS_BINDER_SIZE)
+#define IRIS_MEMZONE_BINDLESS_START   (IRIS_MEMZONE_BINDER_START + IRIS_BINDER_ZONE_SIZE)
 #define IRIS_MEMZONE_SURFACE_START    (IRIS_MEMZONE_BINDLESS_START + IRIS_BINDLESS_SIZE)
 #define IRIS_MEMZONE_DYNAMIC_START    (2ull * (1ull << 32))
 #define IRIS_MEMZONE_OTHER_START      (3ull * (1ull << 32))
 
 #define IRIS_BORDER_COLOR_POOL_ADDRESS IRIS_MEMZONE_DYNAMIC_START
-#define IRIS_BORDER_COLOR_POOL_SIZE (64 * 1024)
+#define IRIS_BORDER_COLOR_POOL_SIZE (64 * 4096)
 
 /**
  * Classification of the various incoherent caches of the GPU into a number of
@@ -112,7 +112,11 @@ enum iris_domain {
    IRIS_DOMAIN_OTHER_WRITE,
    /** Vertex cache. */
    IRIS_DOMAIN_VF_READ,
-   /** Any other read-only cache. */
+   /** Texture cache. */
+   IRIS_DOMAIN_SAMPLER_READ,
+   /** Pull-style shader constant loads. */
+   IRIS_DOMAIN_PULL_CONSTANT_READ,
+   /** Any other read-only cache, including reads from non-L3 clients. */
    IRIS_DOMAIN_OTHER_READ,
    /** Number of caching domains. */
    NUM_IRIS_DOMAINS,
@@ -126,8 +130,22 @@ enum iris_domain {
 static inline bool
 iris_domain_is_read_only(enum iris_domain access)
 {
-   return access == IRIS_DOMAIN_OTHER_READ ||
-          access == IRIS_DOMAIN_VF_READ;
+   return access >= IRIS_DOMAIN_VF_READ &&
+          access <= IRIS_DOMAIN_OTHER_READ;
+}
+
+static inline bool
+iris_domain_is_l3_coherent(const struct intel_device_info *devinfo,
+                           enum iris_domain access)
+{
+   /* VF reads are coherent with the L3 on Tigerlake+ because we set
+    * the "L3 Bypass Disable" bit in the vertex/index buffer packets.
+    */
+   if (access == IRIS_DOMAIN_VF_READ)
+      return devinfo->ver >= 12;
+
+   return access != IRIS_DOMAIN_OTHER_WRITE &&
+          access != IRIS_DOMAIN_OTHER_READ;
 }
 
 enum iris_mmap_mode {
@@ -137,7 +155,16 @@ enum iris_mmap_mode {
    IRIS_MMAP_WB, /**< Write-back mapping with CPU caches enabled */
 };
 
-#define IRIS_BATCH_COUNT 2
+enum iris_heap {
+   IRIS_HEAP_SYSTEM_MEMORY,
+   IRIS_HEAP_DEVICE_LOCAL,
+   IRIS_HEAP_DEVICE_LOCAL_PREFERRED,
+   IRIS_HEAP_MAX,
+};
+
+extern const char *iris_heap_to_string[];
+
+#define IRIS_BATCH_COUNT 3
 
 struct iris_bo_screen_deps {
    struct iris_syncobj *write_syncobjs[IRIS_BATCH_COUNT];
@@ -244,6 +271,9 @@ struct iris_bo {
          /** The mmap coherency mode selected at BO allocation time */
          enum iris_mmap_mode mmap_mode;
 
+         /** The heap selected at BO allocation time */
+         enum iris_heap heap;
+
          /** Was this buffer imported from an external client? */
          bool imported;
 
@@ -255,9 +285,6 @@ struct iris_bo {
 
          /** Boolean of whether this buffer points into user memory */
          bool userptr;
-
-         /** Boolean of whether this was allocated from local memory */
-         bool local;
       } real;
       struct {
          struct pb_slab_entry entry;
@@ -271,6 +298,7 @@ struct iris_bo {
 #define BO_ALLOC_SMEM        (1<<2)
 #define BO_ALLOC_SCANOUT     (1<<3)
 #define BO_ALLOC_NO_SUBALLOC (1<<4)
+#define BO_ALLOC_LMEM        (1<<5)
 
 /**
  * Allocate a buffer object.
@@ -322,7 +350,7 @@ void iris_bo_unreference(struct iris_bo *bo);
  * This function will block waiting for any existing execution on the
  * buffer to complete, first.  The resulting mapping is returned.
  */
-MUST_CHECK void *iris_bo_map(struct pipe_debug_callback *dbg,
+MUST_CHECK void *iris_bo_map(struct util_debug_callback *dbg,
                              struct iris_bo *bo, unsigned flags);
 
 /**
@@ -404,6 +432,23 @@ iris_bo_is_exported(const struct iris_bo *bo)
    return bo->real.exported;
 }
 
+/**
+ * True if the BO prefers to reside in device-local memory.
+ *
+ * We don't consider eviction here; this is meant to be a performance hint.
+ * It will return true for BOs allocated from the LMEM or LMEM+SMEM heaps,
+ * even if the buffer has been temporarily evicted to system memory.
+ */
+static inline bool
+iris_bo_likely_local(const struct iris_bo *bo)
+{
+   if (!bo)
+      return false;
+
+   bo = iris_get_backing_bo((struct iris_bo *) bo);
+   return bo->real.heap != IRIS_HEAP_SYSTEM_MEMORY;
+}
+
 static inline enum iris_mmap_mode
 iris_bo_mmap_mode(const struct iris_bo *bo)
 {
@@ -450,15 +495,19 @@ int iris_bo_wait(struct iris_bo *bo, int64_t timeout_ns);
 
 uint32_t iris_create_hw_context(struct iris_bufmgr *bufmgr);
 uint32_t iris_clone_hw_context(struct iris_bufmgr *bufmgr, uint32_t ctx_id);
+int iris_kernel_context_get_priority(struct iris_bufmgr *bufmgr, uint32_t ctx_id);
 
 #define IRIS_CONTEXT_LOW_PRIORITY    ((I915_CONTEXT_MIN_USER_PRIORITY-1)/2)
 #define IRIS_CONTEXT_MEDIUM_PRIORITY (I915_CONTEXT_DEFAULT_PRIORITY)
 #define IRIS_CONTEXT_HIGH_PRIORITY   ((I915_CONTEXT_MAX_USER_PRIORITY+1)/2)
 
+void iris_hw_context_set_unrecoverable(struct iris_bufmgr *bufmgr,
+                                       uint32_t ctx_id);
+void iris_hw_context_set_vm_id(struct iris_bufmgr *bufmgr, uint32_t ctx_id);
 int iris_hw_context_set_priority(struct iris_bufmgr *bufmgr,
                                  uint32_t ctx_id, int priority);
 
-void iris_destroy_hw_context(struct iris_bufmgr *bufmgr, uint32_t ctx_id);
+void iris_destroy_kernel_context(struct iris_bufmgr *bufmgr, uint32_t ctx_id);
 
 int iris_gem_get_tiling(struct iris_bo *bo, uint32_t *tiling);
 int iris_gem_set_tiling(struct iris_bo *bo, const struct isl_surf *surf);
@@ -522,5 +571,35 @@ enum iris_memory_zone iris_memzone_for_address(uint64_t address);
 int iris_bufmgr_create_screen_id(struct iris_bufmgr *bufmgr);
 
 simple_mtx_t *iris_bufmgr_get_bo_deps_lock(struct iris_bufmgr *bufmgr);
+
+/**
+ * A pool containing SAMPLER_BORDER_COLOR_STATE entries.
+ *
+ * See iris_border_color.c for more information.
+ */
+struct iris_border_color_pool {
+   struct iris_bo *bo;
+   void *map;
+   unsigned insert_point;
+
+   /** Map from border colors to offsets in the buffer. */
+   struct hash_table *ht;
+
+   /** Protects insert_point and the hash table. */
+   simple_mtx_t lock;
+};
+
+struct iris_border_color_pool *iris_bufmgr_get_border_color_pool(
+      struct iris_bufmgr *bufmgr);
+
+/* iris_border_color.c */
+void iris_init_border_color_pool(struct iris_bufmgr *bufmgr,
+                                 struct iris_border_color_pool *pool);
+void iris_destroy_border_color_pool(struct iris_border_color_pool *pool);
+uint32_t iris_upload_border_color(struct iris_border_color_pool *pool,
+                                  union pipe_color_union *color);
+
+uint64_t iris_bufmgr_vram_size(struct iris_bufmgr *bufmgr);
+uint64_t iris_bufmgr_sram_size(struct iris_bufmgr *bufmgr);
 
 #endif /* IRIS_BUFMGR_H */

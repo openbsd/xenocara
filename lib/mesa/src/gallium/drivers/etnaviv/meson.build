@@ -41,7 +41,6 @@ files_etnaviv = files(
   'etnaviv_compiler_nir_emit.c',
   'etnaviv_compiler_nir_liveness.c',
   'etnaviv_compiler_nir_ra.c',
-  'etnaviv_compiler_tgsi.c',
   'etnaviv_context.c',
   'etnaviv_context.h',
   'etnaviv_debug.h',
@@ -123,7 +122,7 @@ etnaviv_compiler = executable(
   link_with : [libgallium, libetnaviv, libetnaviv_drm],
   build_by_default : with_tools.contains('etnaviv'),
   install : with_tools.contains('etnaviv'),
-  dependencies : [idep_mesautil, dep_libdrm],
+  dependencies : [idep_mesautil, dep_libdrm, idep_nir],
 )
 
 driver_etnaviv = declare_dependency(
@@ -145,5 +144,6 @@ if with_tests
       dependencies : [idep_gtest, idep_nir],
     ),
     suite : ['compiler', 'etnaviv'],
+    protocol : gtest_test_protocol,
   )
 endif

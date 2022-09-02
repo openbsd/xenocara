@@ -30,6 +30,24 @@ virtio_icd = custom_target(
   install : true,
 )
 
+if meson.version().version_compare('>= 0.58')
+  _dev_icdname = 'virtio_devenv_icd.@0@.json'.format(host_machine.cpu())
+  custom_target(
+    'virtio_devenv_icd',
+    input : [vk_icd_gen, vk_api_xml],
+    output : _dev_icdname,
+    command : [
+      prog_python, '@INPUT0@',
+      '--api-version', '1.2', '--xml', '@INPUT1@',
+      '--lib-path', meson.current_build_dir() / 'libvulkan_virtio.so',
+      '--out', '@OUTPUT@',
+    ],
+    build_by_default : true,
+  )
+
+  devenv.append('VK_ICD_FILENAMES', meson.current_build_dir() / _dev_icdname)
+endif
+
 libvn_files = files(
   'vn_buffer.c',
   'vn_command_buffer.c',
@@ -47,6 +65,8 @@ libvn_files = files(
   'vn_queue.c',
   'vn_render_pass.c',
   'vn_ring.c',
+  'vn_renderer_internal.c',
+  'vn_renderer_util.c',
   'vn_renderer_virtgpu.c',
   'vn_renderer_vtest.c',
 )
@@ -56,6 +76,7 @@ vn_deps = [
   dep_thread,
   idep_mesautil,
   idep_vulkan_util,
+  idep_vulkan_runtime,
   idep_vulkan_wsi,
   idep_xmlconfig,
 ]

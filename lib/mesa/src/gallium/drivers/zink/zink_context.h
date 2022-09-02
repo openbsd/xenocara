@@ -50,6 +50,14 @@
 
 #include <vulkan/vulkan.h>
 
+#define GFX_SHADER_BITS (VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | \
+                         VK_PIPELINE_STAGE_TESSELLATION_CONTROL_SHADER_BIT | \
+                         VK_PIPELINE_STAGE_TESSELLATION_EVALUATION_SHADER_BIT | \
+                         VK_PIPELINE_STAGE_GEOMETRY_SHADER_BIT | \
+                         VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT)
+
+#define pipe_buffer_write "use tc_buffer_write to avoid breaking threaded context"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -78,6 +86,7 @@ struct zink_sampler_state {
    struct zink_descriptor_refs desc_set_refs;
    struct zink_batch_usage *batch_uses;
    bool custom_border_color;
+   bool nonseamless;
 };
 
 struct zink_buffer_view {
@@ -96,6 +105,7 @@ struct zink_sampler_view {
       struct zink_surface *image_view;
       struct zink_buffer_view *buffer_view;
    };
+   struct zink_surface *cube_array;
 };
 
 struct zink_image_view {
@@ -160,7 +170,12 @@ typedef void (*pipe_draw_vbo_func)(struct pipe_context *pipe,
                                    const struct pipe_draw_indirect_info *indirect,
                                    const struct pipe_draw_start_count_bias *draws,
                                    unsigned num_draws);
-
+typedef void (*pipe_draw_vertex_state_func)(struct pipe_context *ctx,
+                                            struct pipe_vertex_state *vstate,
+                                            uint32_t partial_velem_mask,
+                                            struct pipe_draw_vertex_state_info info,
+                                            const struct pipe_draw_start_count_bias *draws,
+                                            unsigned num_draws);
 typedef void (*pipe_launch_grid_func)(struct pipe_context *pipe, const struct pipe_grid_info *info);
 
 typedef enum {
@@ -171,17 +186,9 @@ typedef enum {
 typedef enum {
    ZINK_NO_DYNAMIC_STATE,
    ZINK_DYNAMIC_STATE,
-} zink_dynamic_state;
-
-typedef enum {
-   ZINK_NO_DYNAMIC_STATE2,
    ZINK_DYNAMIC_STATE2,
-} zink_dynamic_state2;
-
-typedef enum {
-   ZINK_NO_DYNAMIC_VERTEX_INPUT,
    ZINK_DYNAMIC_VERTEX_INPUT,
-} zink_dynamic_vertex_input;
+} zink_dynamic_state;
 
 struct zink_context {
    struct pipe_context base;
@@ -191,6 +198,7 @@ struct zink_context {
    struct blitter_context *blitter;
 
    pipe_draw_vbo_func draw_vbo[2]; //batch changed
+   pipe_draw_vertex_state_func draw_state[2]; //batch changed
    pipe_launch_grid_func launch_grid[2]; //batch changed
 
    struct pipe_device_reset_callback reset;
@@ -207,7 +215,6 @@ struct zink_context {
 
    unsigned shader_has_inlinable_uniforms_mask;
    unsigned inlinable_uniforms_valid_mask;
-   uint32_t compute_inlinable_uniforms[MAX_INLINABLE_UNIFORMS];
 
    struct pipe_constant_buffer ubos[PIPE_SHADER_TYPES][PIPE_MAX_CONSTANT_BUFFERS];
    struct pipe_shader_buffer ssbos[PIPE_SHADER_TYPES][PIPE_MAX_SHADER_BUFFERS];
@@ -224,6 +231,7 @@ struct zink_context {
    struct zink_depth_stencil_alpha_state *dsa_state;
 
    struct hash_table desc_set_layouts[ZINK_DESCRIPTOR_TYPES];
+   struct set desc_pool_keys[ZINK_DESCRIPTOR_TYPES];
    bool pipeline_changed[2]; //gfx, compute
 
    struct zink_shader *gfx_stages[ZINK_SHADER_COUNT];
@@ -252,6 +260,7 @@ struct zink_context {
    struct set render_pass_state_cache;
    struct hash_table *render_pass_cache;
    bool new_swapchain;
+   VkExtent2D swapchain_size;
    bool fb_changed;
    bool rp_changed;
 
@@ -260,11 +269,12 @@ struct zink_context {
    uint16_t clears_enabled;
    uint16_t rp_clears_enabled;
    uint16_t fbfetch_outputs;
+   struct zink_resource *needs_present;
 
    struct pipe_vertex_buffer vertex_buffers[PIPE_MAX_ATTRIBS];
    bool vertex_buffers_dirty;
 
-   void *sampler_states[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
+   struct zink_sampler_state *sampler_states[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
    struct pipe_sampler_view *sampler_views[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
 
    struct zink_viewport_state vp_state;
@@ -287,12 +297,19 @@ struct zink_context {
       float tess_levels[6];
    };
 
+   struct zink_vk_query *curr_xfb_queries[PIPE_MAX_VERTEX_STREAMS];
+
+   struct list_head query_pools;
    struct list_head suspended_queries;
    struct list_head primitives_generated_queries;
+   struct zink_query *vertices_query;
+   bool disable_color_writes;
+   bool primitives_generated_active;
    bool queries_disabled, render_condition_active;
    struct {
       struct zink_query *query;
       bool inverted;
+      bool active; //this is the internal vk state
    } render_condition;
 
    struct pipe_resource *dummy_vertex_buffer;
@@ -313,6 +330,8 @@ struct zink_context {
 
       VkDescriptorImageInfo textures[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
       VkBufferView tbos[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
+      uint32_t nonseamless[PIPE_SHADER_TYPES];
+      uint32_t cubes[PIPE_SHADER_TYPES];
       uint8_t num_samplers[PIPE_SHADER_TYPES];
       uint8_t num_sampler_views[PIPE_SHADER_TYPES];
 
@@ -350,8 +369,6 @@ struct zink_context {
    uint32_t num_so_targets;
    struct pipe_stream_output_target *so_targets[PIPE_MAX_SO_OUTPUTS];
    bool dirty_so_targets;
-   bool xfb_barrier;
-   bool first_frame_done;
    bool have_timelines;
 
    bool gfx_dirty;
@@ -363,6 +380,7 @@ struct zink_context {
    bool rast_state_changed : 1;
    bool dsa_state_changed : 1;
    bool stencil_ref_changed : 1;
+   bool rasterizer_discard_changed : 1;
 };
 
 static inline struct zink_context *
@@ -522,7 +540,10 @@ zink_resource_rebind(struct zink_context *ctx, struct zink_resource *res);
 
 void
 zink_rebind_framebuffer(struct zink_context *ctx, struct zink_resource *res);
-
+bool
+zink_use_dummy_attachments(const struct zink_context *ctx);
+void
+zink_set_color_write_enables(struct zink_context *ctx);
 void
 zink_copy_buffer(struct zink_context *ctx, struct zink_resource *dst, struct zink_resource *src,
                  unsigned dst_offset, unsigned src_offset, unsigned size);

@@ -145,7 +145,7 @@ static inline struct lp_image_static_state *
 lp_fs_variant_key_images(struct lp_fragment_shader_variant_key *key)
 {
    return (struct lp_image_static_state *)
-      &(lp_fs_variant_key_samplers(key)[key->nr_samplers]);
+      &(lp_fs_variant_key_samplers(key)[MAX2(key->nr_samplers, key->nr_sampler_views)]);
 }
 
 /** doubly-linked list item */
@@ -233,6 +233,8 @@ struct lp_fragment_shader
 };
 
 
+void
+llvmpipe_fs_analyse_nir(struct lp_fragment_shader *shader);
 void
 llvmpipe_fs_analyse(struct lp_fragment_shader *shader,
                     const struct tgsi_token *tokens);

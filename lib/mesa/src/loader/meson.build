@@ -40,26 +40,9 @@ loader_c_args = [
   '-DUSE_DRICONF',
   '-DDEFAULT_DRIVER_DIR="@0@"'.format(dri_search_path),
 ]
-
-_prefer_iris = get_option('prefer-iris')
-if _prefer_iris == 'auto'
-  _prefer_iris = amber ? 'false' : 'true'
-endif
-if _prefer_iris == 'true'
-  loader_c_args += ['-DPREFER_IRIS']
-endif
-
-_prefer_crocus = get_option('prefer-crocus')
-if _prefer_crocus == 'auto'
-  _prefer_crocus = 'false'
-endif
-if _prefer_crocus == 'true'
-  loader_c_args += ['-DPREFER_CROCUS']
-endif
-
 libloader = static_library(
   'loader',
-  ['loader_dri_helper.c', 'loader.c', 'pci_id_driver_map.c'],
+  ['loader_dri_helper.c', 'loader.c'],
   c_args : loader_c_args,
   gnu_symbol_visibility : 'hidden',
   include_directories : [inc_include, inc_src, inc_util],

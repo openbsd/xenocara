@@ -33,7 +33,6 @@ agx_build_reload_shader(struct agx_device *dev)
 {
    nir_builder b = nir_builder_init_simple_shader(MESA_SHADER_FRAGMENT,
          &agx_nir_options, "agx_reload");
-   b.shader->info.internal = true;
 
    nir_variable *out = nir_variable_create(b.shader, nir_var_shader_out,
          glsl_vector_type(GLSL_TYPE_FLOAT, 4), "output");
@@ -97,7 +96,7 @@ agx_blitter_save(struct agx_context *ctx, struct blitter_context *blitter,
    util_blitter_save_depth_stencil_alpha(blitter, &ctx->zs);
    util_blitter_save_stencil_ref(blitter, &ctx->stencil_ref);
    util_blitter_save_so_targets(blitter, 0, NULL);
-   util_blitter_save_sample_mask(blitter, ctx->sample_mask);
+   util_blitter_save_sample_mask(blitter, ctx->sample_mask, 0);
 
    util_blitter_save_framebuffer(blitter, &ctx->framebuffer);
    util_blitter_save_fragment_sampler_states(blitter,

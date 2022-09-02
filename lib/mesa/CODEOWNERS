@@ -98,6 +98,14 @@ meson.build @dbaker @eric
 /src/*/vulkan/*_wsi_display.c @keithp
 
 
+######
+# CI #
+######
+
+# Broadcom
+/src/broadcom/ci/ @jasuarez @chema
+
+
 ###########
 # Drivers #
 ###########
@@ -106,8 +114,18 @@ meson.build @dbaker @eric
 /src/asahi/ @alyssa
 /src/gallium/drivers/asahi/ @alyssa
 
+# Broadcom
+/src/broadcom/ @itoral @apinheiro
+/src/gallium/drivers/v3d/ @itoral @chema @jasuarez
+/src/gallium/drivers/vc4/ @itoral @chema @jasuarez
+
 # Freedreno
 /src/gallium/drivers/freedreno/ @robclark
+
+# Imagination
+/include/drm-uapi/pvr_drm.h @CreativeCylon @frankbinns @rajnesh-kanwal
+/src/imagination/ @CreativeCylon @frankbinns @rajnesh-kanwal
+/src/imagination/rogue/ @simon-perretta-img
 
 # Intel
 /include/drm-uapi/i915_drm.h @kwg @llandwerlin @jekstrand @idr
@@ -116,8 +134,6 @@ meson.build @dbaker @eric
 /src/gallium/winsys/iris/ @kwg @llandwerlin @jekstrand @idr
 /src/gallium/drivers/iris/ @kwg @llandwerlin @jekstrand @idr
 /src/gallium/drivers/i915/ @anholt
-/src/mesa/drivers/dri/i965/ @kwg @llandwerlin @jekstrand @idr
-/doxygen/i965.doxy @kwg @llandwerlin @jekstrand @idr
 
 # Microsoft
 /src/microsoft/ @jenatali
@@ -127,11 +143,6 @@ meson.build @dbaker @eric
 /src/panfrost/ @alyssa
 /src/panfrost/vulkan/ @bbrezillon
 /src/gallium/drivers/panfrost/ @alyssa
-
-# SWR
-/src/gallium/drivers/swr/ @jzielins @krzysztof.raszkowski
-/docs/gallium/drivers/openswr.rst @jzielins @krzysztof.raszkowski
-/docs/gallium/drivers/openswr/ @jzielins @krzysztof.raszkowski
 
 # VMware
 /src/gallium/drivers/svga/ @brianp @charmainel

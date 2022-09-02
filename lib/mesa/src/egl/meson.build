@@ -31,6 +31,8 @@ files_egl = files(
   'main/eglapi.c',
   'main/eglarray.c',
   'main/eglarray.h',
+  'main/eglconfigdebug.c',
+  'main/eglconfigdebug.h',
   'main/eglconfig.c',
   'main/eglconfig.h',
   'main/eglcontext.c',
@@ -165,7 +167,7 @@ else
   files_egl += [g_egldispatchstubs_h, g_egldispatchstubs_c]
   files_egl += files('main/eglglvnd.c', 'main/egldispatchstubs.c')
   glvnd_config = configuration_data()
-  glvnd_config.set('glvnd_vendor_name', glvnd_vendor_name)
+  glvnd_config.set('glvnd_vendor_name', get_option('glvnd-vendor-name'))
   configure_file(
     configuration: glvnd_config,
     input : 'main/50_mesa.json',

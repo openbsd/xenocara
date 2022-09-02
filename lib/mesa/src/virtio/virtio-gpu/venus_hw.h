@@ -32,6 +32,19 @@ struct virgl_renderer_capset_venus {
    uint32_t vk_xml_version;
    uint32_t vk_ext_command_serialization_spec_version;
    uint32_t vk_mesa_venus_protocol_spec_version;
+
+   /* TODO revisit this when we bump up wire_format_version to 1 */
+   uint32_t supports_blob_id_0;
+
+   /* Extension number N, where N is defined by the Vulkan spec, corresponds
+    * to bit [N / 32] & (1 << N % 32). The below mask1 covers the first 1023
+    * Vulkan extensions (numbered from 1 to 1023).
+    *
+    * Bit (mask1[0] & 0x1) is used for backward compatibility purpose. When
+    * that bit is set, the extension mask(s) are valid. Otherwise, all the
+    * extensions are assumed to be supported by the renderer side protocol.
+    */
+   uint32_t vk_extension_mask1[32];
 };
 #endif
 

@@ -2,47 +2,25 @@
 
 set -ex
 
-# Pull down repositories that crosvm depends on to cros checkout-like locations.
-CROS_ROOT=/
-THIRD_PARTY_ROOT=$CROS_ROOT/third_party
-mkdir -p $THIRD_PARTY_ROOT
-AOSP_EXTERNAL_ROOT=$CROS_ROOT/aosp/external
-mkdir -p $AOSP_EXTERNAL_ROOT
-PLATFORM2_ROOT=/platform2
+SCRIPT_DIR="$(pwd)"
 
-PLATFORM2_COMMIT=72e56e66ccf3d2ea48f5686bd1f772379c43628b
-git clone --single-branch --no-checkout https://chromium.googlesource.com/chromiumos/platform2 $PLATFORM2_ROOT
-pushd $PLATFORM2_ROOT
-git checkout $PLATFORM2_COMMIT
-popd
-
-# minijail does not exist in upstream linux distros.
-MINIJAIL_COMMIT=debdf5de5a0ae3b667bee2f8fb1f755b0b3f5a6c
-git clone --single-branch --no-checkout https://android.googlesource.com/platform/external/minijail $AOSP_EXTERNAL_ROOT/minijail
-pushd $AOSP_EXTERNAL_ROOT/minijail
-git checkout $MINIJAIL_COMMIT
-make
-cp libminijail.so /usr/lib/x86_64-linux-gnu/
-popd
-
-# Pull the cras library for audio access.
-ADHD_COMMIT=a1e0869b95c845c4fe6234a7b92fdfa6acc1e809
-git clone --single-branch --no-checkout https://chromium.googlesource.com/chromiumos/third_party/adhd $THIRD_PARTY_ROOT/adhd
-pushd $THIRD_PARTY_ROOT/adhd
-git checkout $ADHD_COMMIT
-popd
-
-# Pull vHost (dataplane for virtio backend drivers)
-VHOST_COMMIT=3091854e27242d09453004b011f701fa29c0b8e8
-git clone --single-branch --no-checkout https://chromium.googlesource.com/chromiumos/third_party/rust-vmm/vhost $THIRD_PARTY_ROOT/rust-vmm/vhost
-pushd $THIRD_PARTY_ROOT/rust-vmm/vhost
-git checkout $VHOST_COMMIT
-popd
-
-CROSVM_VERSION=e42a43d880b0364b55559dbeade3af174f929001
-git clone --single-branch --no-checkout https://chromium.googlesource.com/chromiumos/platform/crosvm /platform/crosvm
+CROSVM_VERSION=c7cd0e0114c8363b884ba56d8e12adee718dcc93
+git clone --single-branch -b main --no-checkout https://chromium.googlesource.com/chromiumos/platform/crosvm /platform/crosvm
 pushd /platform/crosvm
 git checkout "$CROSVM_VERSION"
+git submodule update --init
+# Apply all crosvm patches for Mesa CI
+cat "$SCRIPT_DIR"/.gitlab-ci/container/build-crosvm_*.patch |
+    patch -p1
+
+VIRGLRENDERER_VERSION=0564c9a0c2f584e004a7d4864aee3b8ec9692105
+rm -rf third_party/virglrenderer
+git clone --single-branch -b master --no-checkout https://gitlab.freedesktop.org/virgl/virglrenderer.git third_party/virglrenderer
+pushd third_party/virglrenderer
+git checkout "$VIRGLRENDERER_VERSION"
+meson build/ $EXTRA_MESON_ARGS
+ninja -C build install
+popd
 
 RUSTFLAGS='-L native=/usr/local/lib' cargo install \
   bindgen \
@@ -60,4 +38,4 @@ RUSTFLAGS='-L native=/usr/local/lib' cargo install \
 
 popd
 
-rm -rf $PLATFORM2_ROOT $AOSP_EXTERNAL_ROOT/minijail $THIRD_PARTY_ROOT/adhd $THIRD_PARTY_ROOT/rust-vmm /platform/crosvm
+rm -rf /platform/crosvm

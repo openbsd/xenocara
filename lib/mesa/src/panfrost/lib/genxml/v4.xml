@@ -524,8 +524,8 @@
   </struct>
 
   <struct name="Draw" size="30" align="64">
-    <field name="Four Components Per Vertex" size="1" start="0:0" type="bool"/>
-    <field name="Draw Descriptor Is 64b" size="1" start="0:1" type="bool"/>
+    <field name="Four Components Per Vertex" size="1" start="0:0" type="bool" default="true"/>
+    <field name="Draw Descriptor Is 64b" size="1" start="0:1" type="bool" default="true"/>
     <field name="Texture Descriptor Is 64b" size="1" start="0:2" type="bool" default="true"/>
     <field name="Occlusion query" size="2" start="0:3" type="Occlusion Mode" default="Disabled"/>
     <field name="Front face CCW" size="1" start="0:5" type="bool"/>
@@ -659,8 +659,8 @@
     <field name="sRGB" size="1" start="24" type="bool"/>
     <field name="Dither disable" size="1" start="25" type="bool"/>
     <field name="Force seamless cubemaps" size="1" start="26" type="bool"/>
-    <field name="Depth Range 1" size="1" start="28" type="bool"/>
-    <field name="Depth Range 2" size="1" start="29" type="bool"/>
+    <field name="Front-facing depth bias" size="1" start="28" type="bool"/>
+    <field name="Back-facing depth bias" size="1" start="29" type="bool"/>
     <field name="Single-sampled lines" size="1" start="30" type="bool"/>
     <field name="Point snap" size="1" start="31" type="bool"/>
   </struct>

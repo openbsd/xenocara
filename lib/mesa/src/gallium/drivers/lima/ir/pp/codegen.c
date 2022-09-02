@@ -91,8 +91,20 @@ static void ppir_codegen_encode_varying(ppir_node *node, void *code)
             f->imm.perspective = 1;
             break;
          case ppir_op_load_coords:
-            /* num_components == 3 implies cubemap as we don't support 3D textures */
-            f->imm.source_type = num_components == 3 ? 2 : 0;
+            if (load->sampler_dim == GLSL_SAMPLER_DIM_CUBE)
+               f->imm.source_type = 2;
+
+            switch (load->perspective) {
+            case ppir_perspective_none:
+               f->imm.perspective = 0;
+               break;
+            case ppir_perspective_z:
+               f->imm.perspective = 2;
+               break;
+            case ppir_perspective_w:
+               f->imm.perspective = 3;
+               break;
+            }
             break;
          default:
             break;
@@ -103,12 +115,22 @@ static void ppir_codegen_encode_varying(ppir_node *node, void *code)
       f->reg.mask = dest->write_mask << (index & 0x3);
 
       if (load->num_src) {
-         /* num_components == 3 implies cubemap as we don't support 3D textures */
-         if (num_components == 3) {
+         if (load->sampler_dim == GLSL_SAMPLER_DIM_CUBE) {
             f->reg.source_type = 2;
             f->reg.perspective = 1;
          } else {
             f->reg.source_type = 1;
+            switch (load->perspective) {
+            case ppir_perspective_none:
+               f->reg.perspective = 0;
+               break;
+            case ppir_perspective_z:
+               f->reg.perspective = 2;
+               break;
+            case ppir_perspective_w:
+               f->reg.perspective = 3;
+               break;
+            }
          }
          ppir_src *src = &load->src;
          index = ppir_target_get_src_reg_index(src);
@@ -134,9 +156,10 @@ static void ppir_codegen_encode_texld(ppir_node *node, void *code)
 
    switch (ldtex->sampler_dim) {
    case GLSL_SAMPLER_DIM_2D:
+   case GLSL_SAMPLER_DIM_3D:
    case GLSL_SAMPLER_DIM_RECT:
    case GLSL_SAMPLER_DIM_EXTERNAL:
-      f->type = ppir_codegen_sampler_type_2d;
+      f->type = ppir_codegen_sampler_type_generic;
       break;
    case GLSL_SAMPLER_DIM_CUBE:
       f->type = ppir_codegen_sampler_type_cube;
@@ -175,6 +198,22 @@ static void ppir_codegen_encode_uniform(ppir_node *node, void *code)
    }
 }
 
+static ppir_codegen_outmod ppir_codegen_get_outmod(ppir_outmod outmod)
+{
+   switch (outmod) {
+      case ppir_outmod_none:
+         return ppir_codegen_outmod_none;
+      case ppir_outmod_clamp_fraction:
+         return ppir_codegen_outmod_clamp_fraction;
+      case ppir_outmod_clamp_positive:
+         return ppir_codegen_outmod_clamp_positive;
+      case ppir_outmod_round:
+         return ppir_codegen_outmod_round;
+      default:
+         unreachable("invalid ppir_outmod");
+   }
+}
+
 static unsigned shift_to_op(int shift)
 {
    assert(shift >= -3 && shift <= 3);
@@ -194,7 +233,7 @@ static void ppir_codegen_encode_vec_mul(ppir_node *node, void *code)
       f->dest = index >> 2;
       f->mask = dest->write_mask << dest_shift;
    }
-   f->dest_modifier = dest->modifier;
+   f->dest_modifier = ppir_codegen_get_outmod(dest->modifier);
 
    switch (node->op) {
    case ppir_op_mul:
@@ -267,7 +306,7 @@ static void ppir_codegen_encode_scl_mul(ppir_node *node, void *code)
       f->dest = ppir_target_get_dest_reg_index(dest) + dest_component;
       f->output_en = true;
    }
-   f->dest_modifier = dest->modifier;
+   f->dest_modifier = ppir_codegen_get_outmod(dest->modifier);
 
    switch (node->op) {
    case ppir_op_mul:
@@ -333,7 +372,7 @@ static void ppir_codegen_encode_vec_add(ppir_node *node, void *code)
    int dest_shift = index & 0x3;
    f->dest = index >> 2;
    f->mask = dest->write_mask << dest_shift;
-   f->dest_modifier = dest->modifier;
+   f->dest_modifier = ppir_codegen_get_outmod(dest->modifier);
 
    switch (node->op) {
    case ppir_op_add:
@@ -423,7 +462,7 @@ static void ppir_codegen_encode_scl_add(ppir_node *node, void *code)
 
    f->dest = ppir_target_get_dest_reg_index(dest) + dest_component;
    f->output_en = true;
-   f->dest_modifier = dest->modifier;
+   f->dest_modifier = ppir_codegen_get_outmod(dest->modifier);
 
    switch (node->op) {
    case ppir_op_add:
@@ -509,7 +548,7 @@ static void ppir_codegen_encode_combine(ppir_node *node, void *code)
       int dest_component = ffs(dest->write_mask) - 1;
       assert(dest_component >= 0);
       f->scalar.dest = ppir_target_get_dest_reg_index(dest) + dest_component;
-      f->scalar.dest_modifier = dest->modifier;
+      f->scalar.dest_modifier = ppir_codegen_get_outmod(dest->modifier);
 
       ppir_src *src = alu->src;
       f->scalar.arg0_src = get_scl_reg_index(src, dest_component);
@@ -674,13 +713,13 @@ static int get_instr_encode_size(ppir_instr *instr)
 
 static void bitcopy(void *dst, int dst_offset, void *src, int src_size)
 {
-   int off1 = dst_offset & 0x1f;
-   uint32_t *cpy_dst = dst, *cpy_src = src;
+   unsigned char *cpy_dst = dst, *cpy_src = src;
+   int off1 = dst_offset & 0x07;
 
-   cpy_dst += (dst_offset >> 5);
+   cpy_dst += (dst_offset >> 3);
 
    if (off1) {
-      int off2 = 32 - off1;
+      int off2 = 0x08 - off1;
       int cpy_size = 0;
       while (1) {
          *cpy_dst |= *cpy_src << off1;
@@ -750,7 +789,7 @@ static int encode_instr(ppir_instr *instr, void *code, void *last_code)
    size = align_to_word(size) + 1;
 
    ctrl->count = size;
-   if (instr->is_end)
+   if (instr->stop)
       ctrl->stop = true;
 
    if (last_code) {
@@ -794,6 +833,11 @@ bool ppir_codegen_prog(ppir_compiler *comp)
          instr->offset = size;
          instr->encode_size = get_instr_encode_size(instr);
          size += instr->encode_size;
+      }
+      /* Set stop flag for the last instruction if block has stop flag */
+      if (block->stop) {
+         ppir_instr *instr = list_last_entry(&block->instr_list, ppir_instr, list);
+         instr->stop = true;
       }
    }
 

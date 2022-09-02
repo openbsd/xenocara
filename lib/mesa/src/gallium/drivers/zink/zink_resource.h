@@ -43,7 +43,9 @@ struct zink_bo;
 #include <vulkan/vulkan.h>
 
 #define ZINK_MAP_TEMPORARY (PIPE_MAP_DRV_PRV << 0)
+#define ZINK_BIND_DMABUF (1 << 29)
 #define ZINK_BIND_TRANSIENT (1 << 30) //transient fb attachment
+#define ZINK_BIND_VIDEO (1 << 31)
 
 struct mem_key {
    unsigned seen_count;
@@ -63,7 +65,7 @@ struct zink_resource_object {
    unsigned persistent_maps; //if nonzero, requires vkFlushMappedMemoryRanges during batch use
    struct zink_descriptor_refs desc_set_refs;
 
-   struct util_dynarray tmp;
+   VkBuffer storage_buffer;
 
    union {
       VkBuffer buffer;
@@ -75,13 +77,32 @@ struct zink_resource_object {
 
    bool storage_init; //layout was set for image
    bool transfer_dst;
+   bool render_target;
    bool is_buffer;
-   VkImageAspectFlags modifier_aspect;
+   bool exportable;
 
+   /* TODO: this should be a union */
    struct zink_bo *bo;
+   // struct {
+   void *dt;
+   uint32_t dt_idx;
+   uint32_t last_dt_idx;
+   VkSemaphore acquire;
+   VkSemaphore present;
+   bool acquired;
+   bool new_dt;
+   bool dt_has_data;
+   bool indefinite_acquire;
+   // }
+
+
    VkDeviceSize offset, size, alignment;
    VkImageCreateFlags vkflags;
    VkImageUsageFlags vkusage;
+   uint64_t modifier;
+   VkImageAspectFlags modifier_aspect;
+   VkSamplerYcbcrConversionKHR sampler_conversion;
+   unsigned plane_sizes[3];
 
    bool host_visible;
    bool coherent;
@@ -93,27 +114,29 @@ struct zink_resource {
    enum pipe_format internal_format:16;
 
    struct zink_resource_object *obj;
-   struct zink_resource_object *scanout_obj; //TODO: remove for wsi
-   bool scanout_obj_init;
    union {
       struct {
          struct util_range valid_buffer_range;
          uint32_t vbo_bind_mask : PIPE_MAX_ATTRIBS;
          uint8_t ubo_bind_count[2];
-         uint8_t so_bind_count;
+         uint8_t vbo_bind_count;
+         uint8_t so_bind_count; //not counted in all_binds
          bool so_valid;
          uint32_t ubo_bind_mask[PIPE_SHADER_TYPES];
          uint32_t ssbo_bind_mask[PIPE_SHADER_TYPES];
       };
       struct {
+         VkSparseImageMemoryRequirements sparse;
          VkFormat format;
          VkImageLayout layout;
          VkImageAspectFlags aspect;
          bool optimal_tiling;
-         uint8_t fb_binds;
+         bool need_2D;
+         uint8_t fb_binds; //not counted in all_binds
       };
    };
    uint32_t sampler_binds[PIPE_SHADER_TYPES];
+   uint32_t image_binds[PIPE_SHADER_TYPES];
    uint16_t image_bind_count[2]; //gfx, compute
    uint16_t write_bind_count[2]; //gfx, compute
    uint16_t bindless[2]; //tex, img
@@ -133,12 +156,13 @@ struct zink_resource {
       };
    };
 
+   bool swapchain;
    bool dmabuf_acquire;
-   struct sw_displaytarget *dt;
    unsigned dt_stride;
 
    uint8_t modifiers_count;
    uint64_t *modifiers;
+   enum pipe_format drm_format;
 };
 
 struct zink_transfer {
@@ -188,9 +212,6 @@ zink_resource_object_reference(struct zink_screen *screen,
    if (dst) *dst = src;
 }
 
-VkBuffer
-zink_resource_tmp_buffer(struct zink_screen *screen, struct zink_resource *res, unsigned offset_add, unsigned add_binds, unsigned *offset);
-
 bool
 zink_resource_object_init_storage(struct zink_context *ctx, struct zink_resource *res);
 
@@ -198,6 +219,12 @@ static inline bool
 zink_resource_has_binds(const struct zink_resource *res)
 {
    return res->all_binds > 0;
+}
+
+static inline bool
+zink_is_swapchain(const struct zink_resource *res)
+{
+   return res->swapchain;
 }
 
 #ifndef __cplusplus

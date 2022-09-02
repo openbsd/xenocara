@@ -85,8 +85,6 @@ files_r300 = files(
   'compiler/radeon_dataflow_swizzles.c',
   'compiler/radeon_emulate_branches.c',
   'compiler/radeon_emulate_branches.h',
-  'compiler/radeon_emulate_loops.c',
-  'compiler/radeon_emulate_loops.h',
   'compiler/radeon_inline_literals.c',
   'compiler/radeon_list.c',
   'compiler/radeon_list.h',
@@ -118,15 +116,27 @@ files_r300 = files(
   'compiler/radeon_vert_fc.c',
 )
 
+r300_nir_algebraic_c = custom_target(
+  'r300_nir_algebraic.c',
+  input : 'compiler/r300_nir_algebraic.py',
+  output : 'r300_nir_algebraic.c',
+  command : [
+    prog_python, '@INPUT@',
+    '-p', join_paths(meson.source_root(), 'src/compiler/nir/'),
+    '@OUTPUT@',
+  ],
+  depend_files : nir_algebraic_depends,
+)
+
 libr300 = static_library(
   'r300',
-  files_r300,
+  files_r300, r300_nir_algebraic_c,
   include_directories : [
     inc_src, inc_include, inc_gallium, inc_gallium_aux, inc_gallium_drivers,
     inc_mesa,
   ],
   gnu_symbol_visibility : 'hidden',
-  dependencies : [dep_libdrm_radeon, dep_llvm, idep_mesautil],
+  dependencies : [dep_libdrm_radeon, dep_llvm, idep_mesautil, idep_nir],
 )
 
 driver_r300 = declare_dependency(

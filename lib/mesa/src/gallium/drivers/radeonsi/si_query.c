@@ -638,7 +638,8 @@ static bool si_query_hw_prepare_buffer(struct si_context *sctx, struct si_query_
 }
 
 static void si_query_hw_get_result_resource(struct si_context *sctx, struct si_query *squery,
-                                            bool wait, enum pipe_query_value_type result_type,
+                                            enum pipe_query_flags flags,
+                                            enum pipe_query_value_type result_type,
                                             int index, struct pipe_resource *resource,
                                             unsigned offset);
 
@@ -808,8 +809,8 @@ static void si_query_hw_do_emit_start(struct si_context *sctx, struct si_query_h
    default:
       assert(0);
    }
-   radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, query->buffer.buf, RADEON_USAGE_WRITE,
-                             RADEON_PRIO_QUERY);
+   radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, query->buffer.buf,
+                             RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
 }
 
 static void si_query_hw_emit_start(struct si_context *sctx, struct si_query_hw *query)
@@ -889,8 +890,8 @@ static void si_query_hw_do_emit_stop(struct si_context *sctx, struct si_query_hw
    default:
       assert(0);
    }
-   radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, query->buffer.buf, RADEON_USAGE_WRITE,
-                             RADEON_PRIO_QUERY);
+   radeon_add_to_buffer_list(sctx, &sctx->gfx_cs, query->buffer.buf,
+                             RADEON_USAGE_WRITE | RADEON_PRIO_QUERY);
 
    if (fence_va) {
       si_cp_release_mem(sctx, cs, V_028A90_BOTTOM_OF_PIPE_TS, 0, EOP_DST_SEL_MEM, EOP_INT_SEL_NONE,
@@ -947,7 +948,7 @@ static void emit_set_predicate(struct si_context *ctx, struct si_resource *buf, 
    }
    radeon_end();
 
-   radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, buf, RADEON_USAGE_READ, RADEON_PRIO_QUERY);
+   radeon_add_to_buffer_list(ctx, &ctx->gfx_cs, buf, RADEON_USAGE_READ | RADEON_PRIO_QUERY);
 }
 
 static void si_emit_query_predication(struct si_context *ctx)
@@ -1372,13 +1373,13 @@ static bool si_get_query_result(struct pipe_context *ctx, struct pipe_query *que
 }
 
 static void si_get_query_result_resource(struct pipe_context *ctx, struct pipe_query *query,
-                                         bool wait, enum pipe_query_value_type result_type,
+                                         enum pipe_query_flags flags, enum pipe_query_value_type result_type,
                                          int index, struct pipe_resource *resource, unsigned offset)
 {
    struct si_context *sctx = (struct si_context *)ctx;
    struct si_query *squery = (struct si_query *)query;
 
-   squery->ops->get_result_resource(sctx, squery, wait, result_type, index, resource, offset);
+   squery->ops->get_result_resource(sctx, squery, flags, result_type, index, resource, offset);
 }
 
 static void si_query_hw_clear_result(struct si_query_hw *query, union pipe_query_result *result)
@@ -1423,7 +1424,8 @@ bool si_query_hw_get_result(struct si_context *sctx, struct si_query *squery, bo
 }
 
 static void si_query_hw_get_result_resource(struct si_context *sctx, struct si_query *squery,
-                                            bool wait, enum pipe_query_value_type result_type,
+                                            enum pipe_query_flags flags,
+                                            enum pipe_query_value_type result_type,
                                             int index, struct pipe_resource *resource,
                                             unsigned offset)
 {
@@ -1541,7 +1543,7 @@ static void si_query_hw_get_result_resource(struct si_context *sctx, struct si_q
          si_resource(resource)->TC_L2_dirty = true;
       }
 
-      if (wait && qbuf == &query->buffer) {
+      if ((flags & PIPE_QUERY_WAIT) && qbuf == &query->buffer) {
          uint64_t va;
 
          /* Wait for result availability. Wait only for readiness

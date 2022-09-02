@@ -78,6 +78,8 @@ struct ir3_info {
 
    /* estimate of number of cycles stalled on (ss) */
    uint16_t sstall;
+   /* estimate of number of cycles stalled on (sy) */
+   uint16_t systall;
 
    uint16_t last_baryf; /* instruction # of last varying fetch */
 
@@ -124,6 +126,8 @@ struct ir3_register {
       IR3_REG_BNOT = 0x400,
       /* (ei) flag, end-input?  Set on last bary, presumably to signal
        * that the shader needs no more input:
+       *
+       * Note: Has different meaning on other instructions like add.s/u
        */
       IR3_REG_EI = 0x2000,
       /* meta-flags, for intermediate stages of IR, ie.
@@ -148,6 +152,12 @@ struct ir3_register {
        * corner cases such as destinations of atomic instructions.
        */
       IR3_REG_UNUSED = 0x40000,
+
+      /* "Early-clobber" on a destination means that the destination is
+       * (potentially) written before any sources are read and therefore
+       * interferes with the sources of the instruction.
+       */
+      IR3_REG_EARLY_CLOBBER = 0x80000,
    } flags;
 
    unsigned name;
@@ -229,6 +239,22 @@ struct ir3_register {
       arr[arr##_count++] = __VA_ARGS__;                                        \
    } while (0)
 
+typedef enum {
+   REDUCE_OP_ADD_U,
+   REDUCE_OP_ADD_F,
+   REDUCE_OP_MUL_U,
+   REDUCE_OP_MUL_F,
+   REDUCE_OP_MIN_U,
+   REDUCE_OP_MIN_S,
+   REDUCE_OP_MIN_F,
+   REDUCE_OP_MAX_U,
+   REDUCE_OP_MAX_S,
+   REDUCE_OP_MAX_F,
+   REDUCE_OP_AND_B,
+   REDUCE_OP_OR_B,
+   REDUCE_OP_XOR_B,
+} reduce_op_t;
+
 struct ir3_instruction {
    struct ir3_block *block;
    opc_t opc;
@@ -280,19 +306,18 @@ struct ir3_instruction {
       IR3_INSTR_P = 0x080,
       IR3_INSTR_S = 0x100,
       IR3_INSTR_S2EN = 0x200,
-      IR3_INSTR_G = 0x400,
-      IR3_INSTR_SAT = 0x800,
+      IR3_INSTR_SAT = 0x400,
       /* (cat5/cat6) Bindless */
-      IR3_INSTR_B = 0x1000,
+      IR3_INSTR_B = 0x800,
       /* (cat5/cat6) nonuniform */
-      IR3_INSTR_NONUNIF = 0x02000,
+      IR3_INSTR_NONUNIF = 0x1000,
       /* (cat5-only) Get some parts of the encoding from a1.x */
-      IR3_INSTR_A1EN = 0x04000,
+      IR3_INSTR_A1EN = 0x02000,
       /* meta-flags, for intermediate stages of IR, ie.
        * before register assignment is done:
        */
-      IR3_INSTR_MARK = 0x08000,
-      IR3_INSTR_UNUSED = 0x10000,
+      IR3_INSTR_MARK = 0x04000,
+      IR3_INSTR_UNUSED = 0x08000,
    } flags;
    uint8_t repeat;
    uint8_t nop;
@@ -315,6 +340,7 @@ struct ir3_instruction {
       struct {
          type_t src_type, dst_type;
          round_t round;
+         reduce_op_t reduce_op;
       } cat1;
       struct {
          enum {
@@ -327,8 +353,20 @@ struct ir3_instruction {
          } condition;
       } cat2;
       struct {
+         enum {
+            IR3_SRC_UNSIGNED = 0,
+            IR3_SRC_MIXED = 1,
+         } signedness;
+         enum {
+            IR3_SRC_PACKED_LOW = 0,
+            IR3_SRC_PACKED_HIGH = 1,
+         } packed;
+         bool swapped;
+      } cat3;
+      struct {
          unsigned samp, tex;
          unsigned tex_base : 3;
+         unsigned cluster_size : 4;
          type_t type;
       } cat5;
       struct {
@@ -338,7 +376,7 @@ struct ir3_instruction {
           * handled.
           */
          int dst_offset;
-         int iim_val   : 3; /* for ldgb/stgb, # of components */
+         int iim_val;       /* for ldgb/stgb, # of components */
          unsigned d    : 3; /* for ldc, component offset */
          bool typed    : 1;
          unsigned base : 3;
@@ -444,6 +482,7 @@ struct ir3_instruction {
       IR3_BARRIER_ARRAY_W = 1 << 8,
       IR3_BARRIER_PRIVATE_R = 1 << 9,
       IR3_BARRIER_PRIVATE_W = 1 << 10,
+      IR3_BARRIER_CONST_W = 1 << 11,
    } barrier_class,
       barrier_conflict;
 
@@ -493,6 +532,11 @@ struct ir3 {
     */
    DECLARE_ARRAY(struct ir3_instruction *, astc_srgb);
 
+   /* Track tg4 instructions which need texture state patched in (for tg4
+    * swizzling workaround):
+    */
+   DECLARE_ARRAY(struct ir3_instruction *, tg4);
+
    /* List of blocks: */
    struct list_head block_list;
 
@@ -538,6 +582,7 @@ enum ir3_branch_type {
    IR3_BRANCH_ANY,    /* subgroupAny(condition) */
    IR3_BRANCH_ALL,    /* subgroupAll(condition) */
    IR3_BRANCH_GETONE, /* subgroupElect() */
+   IR3_BRANCH_SHPS,   /* preamble start */
 };
 
 struct ir3_block {
@@ -614,6 +659,19 @@ static inline struct ir3_block *
 ir3_start_block(struct ir3 *ir)
 {
    return list_first_entry(&ir->block_list, struct ir3_block, node);
+}
+
+static inline struct ir3_block *
+ir3_after_preamble(struct ir3 *ir)
+{
+   struct ir3_block *block = ir3_start_block(ir);
+   /* The preamble will have a usually-empty else branch, and we want to skip
+    * that to get to the block after the preamble.
+    */
+   if (block->brtype == IR3_BRANCH_SHPS)
+      return block->successors[1]->successors[0];
+   else
+      return block;
 }
 
 void ir3_block_add_predecessor(struct ir3_block *block, struct ir3_block *pred);
@@ -861,6 +919,24 @@ is_const_mov(struct ir3_instruction *instr)
 }
 
 static inline bool
+is_subgroup_cond_mov_macro(struct ir3_instruction *instr)
+{
+   switch (instr->opc) {
+   case OPC_BALLOT_MACRO:
+   case OPC_ANY_MACRO:
+   case OPC_ALL_MACRO:
+   case OPC_ELECT_MACRO:
+   case OPC_READ_COND_MACRO:
+   case OPC_READ_FIRST_MACRO:
+   case OPC_SWZ_SHARED_MACRO:
+   case OPC_SCAN_MACRO:
+      return true;
+   default:
+      return false;
+   }
+}
+
+static inline bool
 is_alu(struct ir3_instruction *instr)
 {
    return (1 <= opc_cat(instr->opc)) && (opc_cat(instr->opc) <= 3);
@@ -869,7 +945,7 @@ is_alu(struct ir3_instruction *instr)
 static inline bool
 is_sfu(struct ir3_instruction *instr)
 {
-   return (opc_cat(instr->opc) == 4);
+   return (opc_cat(instr->opc) == 4) || instr->opc == OPC_GETFIBERID;
 }
 
 static inline bool
@@ -887,7 +963,7 @@ is_tex_or_prefetch(struct ir3_instruction *instr)
 static inline bool
 is_mem(struct ir3_instruction *instr)
 {
-   return (opc_cat(instr->opc) == 6);
+   return (opc_cat(instr->opc) == 6) && instr->opc != OPC_GETFIBERID;
 }
 
 static inline bool
@@ -961,6 +1037,7 @@ is_input(struct ir3_instruction *instr)
    switch (instr->opc) {
    case OPC_LDLV:
    case OPC_BARY_F:
+   case OPC_FLAT_B:
       return true;
    default:
       return false;
@@ -1198,6 +1275,9 @@ half_type(type_t type)
    case TYPE_U16:
    case TYPE_S16:
       return type;
+   case TYPE_U8:
+   case TYPE_S8:
+      return type;
    default:
       assert(0);
       return ~0;
@@ -1210,8 +1290,10 @@ full_type(type_t type)
    switch (type) {
    case TYPE_F16:
       return TYPE_F32;
+   case TYPE_U8:
    case TYPE_U16:
       return TYPE_U32;
+   case TYPE_S8:
    case TYPE_S16:
       return TYPE_S32;
    case TYPE_F32:
@@ -1261,6 +1343,7 @@ ir3_cat2_int(opc_t opc)
    case OPC_GETBIT_B:
    case OPC_CBITS_B:
    case OPC_BARY_F:
+   case OPC_FLAT_B:
       return true;
 
    default:
@@ -1355,7 +1438,13 @@ ir3_cat3_absneg(opc_t opc)
    case OPC_SEL_B16:
    case OPC_SEL_B32:
 
-   case OPC_SHLG_B16:
+   case OPC_SHRM:
+   case OPC_SHLM:
+   case OPC_SHRG:
+   case OPC_SHLG:
+   case OPC_ANDG:
+   case OPC_WMM:
+   case OPC_WMM_ACCU:
 
    default:
       return 0;
@@ -1379,6 +1468,8 @@ ir3_output_conv_type(struct ir3_instruction *instr, bool *can_fold)
    case OPC_BARY_F:
    case OPC_MAD_F32:
    case OPC_MAD_F16:
+   case OPC_WMM:
+   case OPC_WMM_ACCU:
       return TYPE_F32;
 
    case OPC_ADD_U:
@@ -1395,6 +1486,11 @@ ir3_output_conv_type(struct ir3_instruction *instr, bool *can_fold)
    case OPC_SHR_B:
    case OPC_ASHR_B:
    case OPC_MAD_U24:
+   case OPC_SHRM:
+   case OPC_SHLM:
+   case OPC_SHRG:
+   case OPC_SHLG:
+   case OPC_ANDG:
    /* Comparison ops zero-extend/truncate their results, so consider them as
     * unsigned here.
     */
@@ -1452,6 +1548,10 @@ ir3_output_conv_src_type(struct ir3_instruction *instr, type_t base_type)
        * small improvement that NIR would hopefully handle for us anyway.
        */
       return TYPE_F32;
+
+   case OPC_FLAT_B:
+      /* Treat the input data as u32 if not interpolating. */
+      return TYPE_U32;
 
    default:
       return (instr->srcs[0]->flags & IR3_REG_HALF) ? half_type(base_type)
@@ -1619,14 +1719,117 @@ void ir3_print_instr_stream(struct log_stream *stream, struct ir3_instruction *i
 /* delay calculation: */
 int ir3_delayslots(struct ir3_instruction *assigner,
                    struct ir3_instruction *consumer, unsigned n, bool soft);
-unsigned ir3_delay_calc_prera(struct ir3_block *block,
-                              struct ir3_instruction *instr);
-unsigned ir3_delay_calc_postra(struct ir3_block *block,
-                               struct ir3_instruction *instr, bool soft,
-                               bool mergedregs);
-unsigned ir3_delay_calc_exact(struct ir3_block *block,
-                              struct ir3_instruction *instr, bool mergedregs);
-void ir3_remove_nops(struct ir3 *ir);
+unsigned ir3_delayslots_with_repeat(struct ir3_instruction *assigner,
+                                    struct ir3_instruction *consumer,
+                                    unsigned assigner_n, unsigned consumer_n);
+unsigned ir3_delay_calc(struct ir3_block *block,
+                        struct ir3_instruction *instr, bool mergedregs);
+
+/* estimated (ss)/(sy) delay calculation */
+
+static inline bool
+is_local_mem_load(struct ir3_instruction *instr)
+{
+   return instr->opc == OPC_LDL || instr->opc == OPC_LDLV ||
+      instr->opc == OPC_LDLW;
+}
+
+/* Does this instruction need (ss) to wait for its result? */
+static inline bool
+is_ss_producer(struct ir3_instruction *instr)
+{
+   foreach_dst (dst, instr) {
+      if (dst->flags & IR3_REG_SHARED)
+         return true;
+   }
+   return is_sfu(instr) || is_local_mem_load(instr);
+}
+
+/* The soft delay for approximating the cost of (ss). */
+static inline unsigned
+soft_ss_delay(struct ir3_instruction *instr)
+{
+   /* On a6xx, it takes the number of delay slots to get a SFU result back (ie.
+    * using nop's instead of (ss) is:
+    *
+    *     8 - single warp
+    *     9 - two warps
+    *    10 - four warps
+    *
+    * and so on. Not quite sure where it tapers out (ie. how many warps share an
+    * SFU unit). But 10 seems like a reasonable # to choose:
+    */
+   if (is_sfu(instr) || is_local_mem_load(instr))
+      return 10;
+
+   /* The blob adds 6 nops between shared producers and consumers, and before we
+    * used (ss) this was sufficient in most cases.
+    */
+   return 6;
+}
+
+static inline bool
+is_sy_producer(struct ir3_instruction *instr)
+{
+   return is_tex_or_prefetch(instr) ||
+      (is_load(instr) && !is_local_mem_load(instr)) ||
+      is_atomic(instr->opc);
+}
+
+static inline unsigned
+soft_sy_delay(struct ir3_instruction *instr, struct ir3 *shader)
+{
+   /* TODO: this is just an optimistic guess, we can do better post-RA.
+    */
+   bool double_wavesize =
+      shader->type == MESA_SHADER_FRAGMENT ||
+      shader->type == MESA_SHADER_COMPUTE;
+
+   unsigned components = reg_elems(instr->dsts[0]);
+
+   /* These numbers come from counting the number of delay slots to get
+    * cat5/cat6 results back using nops instead of (sy). Note that these numbers
+    * are with the result preloaded to cache by loading it before in the same
+    * shader - uncached results are much larger.
+    *
+    * Note: most ALU instructions can't complete at the full doubled rate, so
+    * they take 2 cycles. The only exception is fp16 instructions with no
+    * built-in conversions. Therefore divide the latency by 2.
+    *
+    * TODO: Handle this properly in the scheduler and remove this.
+    */
+   if (instr->opc == OPC_LDC) {
+      if (double_wavesize)
+         return (21 + 8 * components) / 2;
+      else
+         return 18 + 4 * components;
+   } else if (is_tex_or_prefetch(instr)) {
+      if (double_wavesize) {
+         switch (components) {
+         case 1: return 58 / 2;
+         case 2: return 60 / 2;
+         case 3: return 77 / 2;
+         case 4: return 79 / 2;
+         default: unreachable("bad number of components");
+         }
+      } else {
+         switch (components) {
+         case 1: return 51;
+         case 2: return 53;
+         case 3: return 62;
+         case 4: return 64;
+         default: unreachable("bad number of components");
+         }
+      }
+   } else {
+      /* TODO: measure other cat6 opcodes like ldg */
+      if (double_wavesize)
+         return (172 + components) / 2;
+      else
+         return 109 + components;
+   }
+}
+
 
 /* unreachable block elimination: */
 bool ir3_remove_unreachable(struct ir3 *ir);
@@ -1850,8 +2053,6 @@ ir3_NOP(struct ir3_block *block)
    return ir3_instr_create(block, OPC_NOP, 0, 0);
 }
 
-#define IR3_INSTR_0 0
-
 /* clang-format off */
 #define __INSTR0(flag, name, opc)                                              \
 static inline struct ir3_instruction *ir3_##name(struct ir3_block *block)      \
@@ -1883,21 +2084,23 @@ static inline struct ir3_instruction *ir3_##name(                              \
 #define INSTR1NODST(name) __INSTR1(0, 0, name, OPC_##name)
 
 /* clang-format off */
-#define __INSTR2(flag, name, opc)                                              \
+#define __INSTR2(flag, dst_count, name, opc)                                   \
 static inline struct ir3_instruction *ir3_##name(                              \
    struct ir3_block *block, struct ir3_instruction *a, unsigned aflags,        \
    struct ir3_instruction *b, unsigned bflags)                                 \
 {                                                                              \
-   struct ir3_instruction *instr = ir3_instr_create(block, opc, 1, 2);         \
-   __ssa_dst(instr);                                                           \
+   struct ir3_instruction *instr = ir3_instr_create(block, opc, dst_count, 2); \
+   for (unsigned i = 0; i < dst_count; i++)                                    \
+      __ssa_dst(instr);                                                        \
    __ssa_src(instr, a, aflags);                                                \
    __ssa_src(instr, b, bflags);                                                \
    instr->flags |= flag;                                                       \
    return instr;                                                               \
 }
 /* clang-format on */
-#define INSTR2F(f, name) __INSTR2(IR3_INSTR_##f, name##_##f, OPC_##name)
-#define INSTR2(name)     __INSTR2(0, name, OPC_##name)
+#define INSTR2F(f, name)   __INSTR2(IR3_INSTR_##f, 1, name##_##f, OPC_##name)
+#define INSTR2(name)       __INSTR2(0, 1, name, OPC_##name)
+#define INSTR2NODST(name)  __INSTR2(0, 0, name, OPC_##name)
 
 /* clang-format off */
 #define __INSTR3(flag, dst_count, name, opc)                                   \
@@ -2004,6 +2207,8 @@ INSTR1NODST(PREDT)
 INSTR0(PREDF)
 INSTR0(PREDE)
 INSTR0(GETONE)
+INSTR0(SHPS)
+INSTR0(SHPE)
 
 /* cat1 macros */
 INSTR1(ANY_MACRO)
@@ -2016,6 +2221,15 @@ ir3_ELECT_MACRO(struct ir3_block *block)
 {
    struct ir3_instruction *instr =
       ir3_instr_create(block, OPC_ELECT_MACRO, 1, 0);
+   __ssa_dst(instr);
+   return instr;
+}
+
+static inline struct ir3_instruction *
+ir3_SHPS_MACRO(struct ir3_block *block)
+{
+   struct ir3_instruction *instr =
+      ir3_instr_create(block, OPC_SHPS_MACRO, 1, 0);
    __ssa_dst(instr);
    return instr;
 }
@@ -2061,6 +2275,7 @@ INSTR2(SHL_B)
 INSTR2(SHR_B)
 INSTR2(ASHR_B)
 INSTR2(BARY_F)
+INSTR2(FLAT_B)
 INSTR2(MGEN_B)
 INSTR2(GETBIT_B)
 INSTR1(SETRM)
@@ -2077,6 +2292,8 @@ INSTR3(MAD_U24)
 INSTR3(MAD_S24)
 INSTR3(MAD_F16)
 INSTR3(MAD_F32)
+INSTR3(DP2ACC)
+INSTR3(DP4ACC)
 /* NOTE: SEL_B32 checks for zero vs nonzero */
 INSTR3(SEL_B16)
 INSTR3(SEL_B32)
@@ -2144,6 +2361,7 @@ ir3_SAM(struct ir3_block *block, opc_t opc, type_t type, unsigned wrmask,
 }
 
 /* cat6 instructions: */
+INSTR0(GETFIBERID)
 INSTR2(LDLV)
 INSTR3(LDG)
 INSTR3(LDL)
@@ -2167,22 +2385,39 @@ INSTR2(ATOMIC_AND)
 INSTR2(ATOMIC_OR)
 INSTR2(ATOMIC_XOR)
 INSTR2(LDC)
+INSTR2(QUAD_SHUFFLE_BRCST)
+INSTR1(QUAD_SHUFFLE_HORIZ)
+INSTR1(QUAD_SHUFFLE_VERT)
+INSTR1(QUAD_SHUFFLE_DIAG)
+INSTR2NODST(LDC_K)
+INSTR2NODST(STC)
 #if GPU >= 600
 INSTR3NODST(STIB);
 INSTR2(LDIB);
 INSTR5(LDG_A);
 INSTR6NODST(STG_A);
-INSTR3F(G, ATOMIC_ADD)
-INSTR3F(G, ATOMIC_SUB)
-INSTR3F(G, ATOMIC_XCHG)
-INSTR3F(G, ATOMIC_INC)
-INSTR3F(G, ATOMIC_DEC)
-INSTR3F(G, ATOMIC_CMPXCHG)
-INSTR3F(G, ATOMIC_MIN)
-INSTR3F(G, ATOMIC_MAX)
-INSTR3F(G, ATOMIC_AND)
-INSTR3F(G, ATOMIC_OR)
-INSTR3F(G, ATOMIC_XOR)
+INSTR2(ATOMIC_G_ADD)
+INSTR2(ATOMIC_G_SUB)
+INSTR2(ATOMIC_G_XCHG)
+INSTR2(ATOMIC_G_INC)
+INSTR2(ATOMIC_G_DEC)
+INSTR2(ATOMIC_G_CMPXCHG)
+INSTR2(ATOMIC_G_MIN)
+INSTR2(ATOMIC_G_MAX)
+INSTR2(ATOMIC_G_AND)
+INSTR2(ATOMIC_G_OR)
+INSTR2(ATOMIC_G_XOR)
+INSTR3(ATOMIC_B_ADD)
+INSTR3(ATOMIC_B_SUB)
+INSTR3(ATOMIC_B_XCHG)
+INSTR3(ATOMIC_B_INC)
+INSTR3(ATOMIC_B_DEC)
+INSTR3(ATOMIC_B_CMPXCHG)
+INSTR3(ATOMIC_B_MIN)
+INSTR3(ATOMIC_B_MAX)
+INSTR3(ATOMIC_B_AND)
+INSTR3(ATOMIC_B_OR)
+INSTR3(ATOMIC_B_XOR)
 #elif GPU >= 400
 INSTR3(LDGB)
 #if GPU >= 500
@@ -2190,17 +2425,17 @@ INSTR3(LDIB)
 #endif
 INSTR4NODST(STGB)
 INSTR4NODST(STIB)
-INSTR4F(G, ATOMIC_ADD)
-INSTR4F(G, ATOMIC_SUB)
-INSTR4F(G, ATOMIC_XCHG)
-INSTR4F(G, ATOMIC_INC)
-INSTR4F(G, ATOMIC_DEC)
-INSTR4F(G, ATOMIC_CMPXCHG)
-INSTR4F(G, ATOMIC_MIN)
-INSTR4F(G, ATOMIC_MAX)
-INSTR4F(G, ATOMIC_AND)
-INSTR4F(G, ATOMIC_OR)
-INSTR4F(G, ATOMIC_XOR)
+INSTR4(ATOMIC_S_ADD)
+INSTR4(ATOMIC_S_SUB)
+INSTR4(ATOMIC_S_XCHG)
+INSTR4(ATOMIC_S_INC)
+INSTR4(ATOMIC_S_DEC)
+INSTR4(ATOMIC_S_CMPXCHG)
+INSTR4(ATOMIC_S_MIN)
+INSTR4(ATOMIC_S_MAX)
+INSTR4(ATOMIC_S_AND)
+INSTR4(ATOMIC_S_OR)
+INSTR4(ATOMIC_S_XOR)
 #endif
 
 /* cat7 instructions: */
@@ -2314,6 +2549,21 @@ regmask_or(regmask_t *dst, regmask_t *a, regmask_t *b)
       dst->mask[i] = a->mask[i] | b->mask[i];
 }
 
+static inline void
+regmask_or_shared(regmask_t *dst, regmask_t *a, regmask_t *b)
+{
+   regmaskstate_t shared_mask;
+   BITSET_ZERO(shared_mask);
+
+   if (b->mergedregs) {
+      BITSET_SET_RANGE(shared_mask, 2 * 4 * 48, 2 * 4 * 56 - 1);
+   } else {
+      BITSET_SET_RANGE(shared_mask, 4 * 48, 4 * 56 - 1);
+   }
+
+   for (unsigned i = 0; i < ARRAY_SIZE(dst->mask); i++)
+      dst->mask[i] = a->mask[i] | (b->mask[i] & shared_mask[i]);
+}
 
 static inline void
 regmask_set(regmask_t *regmask, struct ir3_register *reg)
@@ -2326,6 +2576,20 @@ regmask_set(regmask_t *regmask, struct ir3_register *reg)
       for (unsigned mask = reg->wrmask, n = reg->num; mask; mask >>= 1, n++)
          if (mask & 1)
             __regmask_set(regmask, half, n);
+   }
+}
+
+static inline void
+regmask_clear(regmask_t *regmask, struct ir3_register *reg)
+{
+   bool half = reg->flags & IR3_REG_HALF;
+   if (reg->flags & IR3_REG_RELATIV) {
+      for (unsigned i = 0; i < reg->size; i++)
+         __regmask_clear(regmask, half, reg->array.base + i);
+   } else {
+      for (unsigned mask = reg->wrmask, n = reg->num; mask; mask >>= 1, n++)
+         if (mask & 1)
+            __regmask_clear(regmask, half, n);
    }
 }
 

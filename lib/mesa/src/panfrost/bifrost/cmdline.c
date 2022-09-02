@@ -27,6 +27,7 @@
 #include <getopt.h>
 #include <string.h>
 #include "disassemble.h"
+#include "valhall/disassemble.h"
 #include "compiler.h"
 
 #include "main/mtypes.h"
@@ -148,7 +149,7 @@ compile_shader(int stages, char **files)
         util_dynarray_init(&binary, NULL);
 
         for (unsigned i = 0; i < stages; ++i) {
-                nir[i] = glsl_to_nir(&local_ctx, prog, shader_types[i], &bifrost_nir_options);
+                nir[i] = glsl_to_nir(&local_ctx.Const, prog, shader_types[i], &bifrost_nir_options);
 
                 if (shader_types[i] == MESA_SHADER_VERTEX) {
                         nir_assign_var_locations(nir[i], nir_var_shader_in, &nir[i]->num_inputs,
@@ -232,6 +233,8 @@ disassemble(const char *filename)
 
         fclose(fp);
 
+        void *entrypoint = code;
+
         if (filesize && code[0] == BI_FOURCC('M', 'B', 'S', '2')) {
                 for (int i = 0; i < filesize / 4; ++i) {
                         if (code[i] != BI_FOURCC('O', 'B', 'J', 'C'))
@@ -240,11 +243,15 @@ disassemble(const char *filename)
                         unsigned size = code[i + 1];
                         unsigned offset = i + 2;
 
-                        disassemble_bifrost(stdout, (uint8_t*)(code + offset), size, verbose);
+                        entrypoint = code + offset;
+                        filesize = size;
                 }
-        } else {
-                disassemble_bifrost(stdout, (uint8_t*)code, filesize, verbose);
         }
+
+        if ((gpu_id >> 12) >= 9)
+                disassemble_valhall(stdout, entrypoint, filesize, verbose);
+        else
+                disassemble_bifrost(stdout, entrypoint, filesize, verbose);
 
         free(code);
 }

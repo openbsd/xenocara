@@ -38,12 +38,18 @@
 #define ZINK_WORKGROUP_SIZE_Y 2
 #define ZINK_WORKGROUP_SIZE_Z 3
 
+/* stop inlining shaders if they have >limit ssa vals after inlining:
+ * recompile time isn't worth the inline
+ */
+#define ZINK_ALWAYS_INLINE_LIMIT 1500
+
 struct pipe_screen;
 struct zink_context;
 struct zink_screen;
 struct zink_shader_key;
 struct zink_shader_module;
 struct zink_gfx_program;
+struct spirv_shader;
 
 struct nir_shader_compiler_options;
 struct nir_shader;
@@ -51,10 +57,13 @@ struct nir_shader;
 struct set;
 
 struct tgsi_token;
-struct zink_so_info {
+struct zink_shader_info {
    struct pipe_stream_output_info so_info;
    unsigned so_info_slots[PIPE_MAX_SO_OUTPUTS];
+   uint32_t so_propagate; //left shifted by 32
+   bool last_vertex;
    bool have_xfb;
+   bool have_sparse;
 };
 
 
@@ -72,7 +81,7 @@ struct zink_shader {
    struct nir_shader *nir;
    enum pipe_prim_type reduced_prim; // PIPE_PRIM_MAX for vs
 
-   struct zink_so_info streamout;
+   struct zink_shader_info sinfo;
 
    struct {
       int index;
@@ -85,6 +94,8 @@ struct zink_shader {
    uint32_t ubos_used; // bitfield of which ubo indices are used
    uint32_t ssbos_used; // bitfield of which ssbo indices are used
    bool bindless;
+   bool can_inline;
+   struct spirv_shader *spirv;
 
    simple_mtx_t lock;
    struct set *programs;
@@ -102,7 +113,8 @@ void
 zink_compiler_assign_io(nir_shader *producer, nir_shader *consumer);
 VkShaderModule
 zink_shader_compile(struct zink_screen *screen, struct zink_shader *zs, nir_shader *nir, const struct zink_shader_key *key);
-
+VkShaderModule
+zink_shader_spirv_compile(struct zink_screen *screen, struct zink_shader *zs, struct spirv_shader *spirv);
 struct zink_shader *
 zink_shader_create(struct zink_screen *screen, struct nir_shader *nir,
                  const struct pipe_stream_output_info *so_info);
@@ -113,6 +125,8 @@ zink_shader_finalize(struct pipe_screen *pscreen, void *nirptr);
 void
 zink_shader_free(struct zink_context *ctx, struct zink_shader *shader);
 
+VkShaderModule
+zink_shader_tcs_compile(struct zink_screen *screen, struct zink_shader *zs, unsigned patch_vertices);
 struct zink_shader *
 zink_shader_tcs_create(struct zink_screen *screen, struct zink_shader *vs, unsigned vertices_per_patch);
 

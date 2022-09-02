@@ -183,7 +183,8 @@ ir3_shader_assemble(struct ir3_shader_variant *v)
     * index.
     */
    v->pvtmem_per_wave = compiler->gen >= 6 && !info->multi_dword_ldp_stp &&
-                        v->type == MESA_SHADER_COMPUTE;
+                        ((v->type == MESA_SHADER_COMPUTE) ||
+                         (v->type == MESA_SHADER_KERNEL));
 
    fixup_regfootprint(v);
 
@@ -370,7 +371,7 @@ create_variant(struct ir3_shader *shader, const struct ir3_shader_key *key,
       return v;
 
    if (!shader->nir_finalized) {
-      ir3_nir_post_finalize(shader->compiler, shader->nir);
+      ir3_nir_post_finalize(shader);
 
       if (ir3_shader_debug & IR3_DBG_DISASM) {
          mesa_logi("dump nir%d: type=%d", shader->id, shader->type);
@@ -470,12 +471,13 @@ ir3_setup_used_key(struct ir3_shader *shader)
     * ucp_enables to determine whether to lower legacy clip planes to
     * gl_ClipDistance.
     */
-   if (info->stage != MESA_SHADER_FRAGMENT || !shader->compiler->has_clip_cull)
+   if (info->stage != MESA_SHADER_COMPUTE && (info->stage != MESA_SHADER_FRAGMENT || !shader->compiler->has_clip_cull))
       key->ucp_enables = 0xff;
 
    if (info->stage == MESA_SHADER_FRAGMENT) {
       key->fastc_srgb = ~0;
       key->fsamples = ~0;
+      memset(key->fsampler_swizzles, 0xff, sizeof(key->fsampler_swizzles));
 
       if (info->inputs_read & VARYING_BITS_COLOR) {
          key->rasterflat = true;
@@ -499,6 +501,10 @@ ir3_setup_used_key(struct ir3_shader *shader)
                                 SYSTEM_VALUE_BARYCENTRIC_PERSP_CENTROID) ||
                     BITSET_TEST(info->system_values_read,
                                 SYSTEM_VALUE_BARYCENTRIC_LINEAR_CENTROID)));
+   } else if (info->stage == MESA_SHADER_COMPUTE) {
+      key->fastc_srgb = ~0;
+      key->fsamples = ~0;
+      memset(key->fsampler_swizzles, 0xff, sizeof(key->fsampler_swizzles));
    } else {
       key->tessellation = ~0;
       key->has_gs = true;
@@ -506,6 +512,7 @@ ir3_setup_used_key(struct ir3_shader *shader)
       if (info->stage == MESA_SHADER_VERTEX) {
          key->vastc_srgb = ~0;
          key->vsamples = ~0;
+         memset(key->vsampler_swizzles, 0xff, sizeof(key->vsampler_swizzles));
       }
 
       if (info->stage == MESA_SHADER_TESS_CTRL)
@@ -582,7 +589,7 @@ ir3_trim_constlen(struct ir3_shader_variant **variants,
 
 struct ir3_shader *
 ir3_shader_from_nir(struct ir3_compiler *compiler, nir_shader *nir,
-                    unsigned reserved_user_consts,
+                    const struct ir3_shader_options *options,
                     struct ir3_stream_output_info *stream_output)
 {
    struct ir3_shader *shader = rzalloc_size(NULL, sizeof(*shader));
@@ -594,7 +601,9 @@ ir3_shader_from_nir(struct ir3_compiler *compiler, nir_shader *nir,
    if (stream_output)
       memcpy(&shader->stream_output, stream_output,
              sizeof(shader->stream_output));
-   shader->num_reserved_user_consts = reserved_user_consts;
+   shader->num_reserved_user_consts = options->reserved_user_consts;
+   shader->api_wavesize = options->api_wavesize;
+   shader->real_wavesize = options->real_wavesize;
    shader->nir = nir;
 
    ir3_disk_cache_init_shader_key(compiler, shader);
@@ -654,6 +663,49 @@ output_name(struct ir3_shader_variant *so, int i)
    }
 }
 
+static void
+dump_const_state(struct ir3_shader_variant *so, FILE *out)
+{
+   const struct ir3_const_state *cs = ir3_const_state(so);
+   const struct ir3_ubo_analysis_state *us = &cs->ubo_state;
+
+   fprintf(out, "; num_ubos:           %u\n", cs->num_ubos);
+   fprintf(out, "; num_driver_params:  %u\n", cs->num_driver_params);
+   fprintf(out, "; offsets:\n");
+   if (cs->offsets.ubo != ~0)
+      fprintf(out, ";   ubo:              c%u.x\n", cs->offsets.ubo);
+   if (cs->offsets.image_dims != ~0)
+      fprintf(out, ";   image_dims:       c%u.x\n", cs->offsets.image_dims);
+   if (cs->offsets.kernel_params != ~0)
+      fprintf(out, ";   kernel_params:    c%u.x\n", cs->offsets.kernel_params);
+   if (cs->offsets.driver_param != ~0)
+      fprintf(out, ";   driver_param:     c%u.x\n", cs->offsets.driver_param);
+   if (cs->offsets.tfbo != ~0)
+      fprintf(out, ";   tfbo:             c%u.x\n", cs->offsets.tfbo);
+   if (cs->offsets.primitive_param != ~0)
+      fprintf(out, ";   primitive_params: c%u.x\n", cs->offsets.primitive_param);
+   if (cs->offsets.primitive_map != ~0)
+      fprintf(out, ";   primitive_map:    c%u.x\n", cs->offsets.primitive_map);
+   fprintf(out, "; ubo_state:\n");
+   fprintf(out, ";   num_enabled:      %u\n", us->num_enabled);
+   for (unsigned i = 0; i < us->num_enabled; i++) {
+      const struct ir3_ubo_range *r = &us->range[i];
+
+      assert((r->offset % 16) == 0);
+
+      fprintf(out, ";   range[%u]:\n", i);
+      fprintf(out, ";     block:          %u\n", r->ubo.block);
+      if (r->ubo.bindless)
+         fprintf(out, ";     bindless_base:  %u\n", r->ubo.bindless_base);
+      fprintf(out, ";     offset:         c%u.x\n", r->offset/16);
+
+      unsigned size = r->end - r->start;
+      assert((size % 16) == 0);
+
+      fprintf(out, ";     size:           %u vec4 (%ub -> %ub)\n", (size/16), r->start, r->end);
+   }
+}
+
 void
 ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
 {
@@ -662,6 +714,8 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
    const char *type = ir3_shader_stage(so);
    uint8_t regid;
    unsigned i;
+
+   dump_const_state(so, out);
 
    foreach_input_n (instr, i, ir) {
       reg = instr->dsts[0];
@@ -744,9 +798,9 @@ ir3_shader_disasm(struct ir3_shader_variant *so, uint32_t *bin, FILE *out)
 
    fprintf(
       out,
-      "; %s prog %d/%d: %u sstall, %u (ss), %u (sy), %d max_sun, %d loops\n",
-      type, so->shader->id, so->id, so->info.sstall, so->info.ss, so->info.sy,
-      so->max_sun, so->loops);
+      "; %s prog %d/%d: %u sstall, %u (ss), %u systall, %u (sy), %d loops\n",
+      type, so->shader->id, so->id, so->info.sstall, so->info.ss,
+      so->info.systall, so->info.sy, so->loops);
 
    /* print shader type specific info: */
    switch (so->type) {
@@ -822,14 +876,16 @@ ir3_link_stream_out(struct ir3_shader_linkage *l,
          continue;
 
       for (idx = 0; idx < l->cnt; idx++) {
-         if (l->var[idx].regid == v->outputs[k].regid)
+         if (l->var[idx].slot == v->outputs[k].slot)
             break;
          nextloc = MAX2(nextloc, l->var[idx].loc + 4);
       }
 
       /* add if not already in linkage map: */
-      if (idx == l->cnt)
-         ir3_link_add(l, v->outputs[k].regid, compmask, nextloc);
+      if (idx == l->cnt) {
+         ir3_link_add(l, v->outputs[k].slot, v->outputs[k].regid,
+                      compmask, nextloc);
+      }
 
       /* expand component-mask if needed, ie streaming out all components
        * but frag shader doesn't consume all components:

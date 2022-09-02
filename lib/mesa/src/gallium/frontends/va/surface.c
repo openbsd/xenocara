@@ -902,8 +902,10 @@ vlVaCreateSurfaces2(VADriverContextP ctx, unsigned int format,
          if (attrib_list[i].value.type != VAGenericValueTypePointer)
             return VA_STATUS_ERROR_INVALID_PARAMETER;
          modifier_list = attrib_list[i].value.value.p;
-         modifiers = modifier_list->modifiers;
-         modifiers_count = modifier_list->num_modifiers;
+         if (modifier_list != NULL) {
+            modifiers = modifier_list->modifiers;
+            modifiers_count = modifier_list->num_modifiers;
+         }
          break;
 #endif
       case VASurfaceAttribUsageHint:
@@ -1233,6 +1235,7 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
       struct u_rect src_rect, dst_rect;
 
       surf->templat.interlaced = false;
+      surf->obsolete_buf = surf->buffer;
 
       ret = vlVaHandleSurfaceAllocate(drv, surf, &surf->templat, NULL, 0);
       if (ret != VA_STATUS_SUCCESS) {
@@ -1251,7 +1254,8 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
                                    VL_COMPOSITOR_WEAVE);
 
       interlaced->destroy(interlaced);
-   }
+   } else
+      surf->obsolete_buf = NULL;
 
    surfaces = surf->buffer->get_surfaces(surf->buffer);
 
@@ -1260,8 +1264,8 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
       usage |= PIPE_HANDLE_USAGE_FRAMEBUFFER_WRITE;
 
    desc->fourcc = PipeFormatToVaFourcc(surf->buffer->buffer_format);
-   desc->width  = surf->buffer->width;
-   desc->height = surf->buffer->height;
+   desc->width  = surf->templat.width;
+   desc->height = surf->templat.height;
 
    for (p = 0; p < VL_MAX_SURFACES; p++) {
       struct winsys_handle whandle;
@@ -1289,7 +1293,10 @@ vlVaExportSurfaceHandle(VADriverContextP ctx,
       }
 
       desc->objects[p].fd   = (int)whandle.handle;
-      desc->objects[p].size = 0;
+      /* As per VADRMPRIMESurfaceDescriptor documentation, size must be the
+       * "Total size of this object (may include regions which are not part
+       * of the surface)."" */
+      desc->objects[p].size = (uint32_t) whandle.size;
       desc->objects[p].drm_format_modifier = whandle.modifier;
 
       if (flags & VA_EXPORT_SURFACE_COMPOSED_LAYERS) {
