@@ -34,7 +34,7 @@
 #include "ir_optimization.h"
 #include "ir_builder.h"
 #include "compiler/glsl_types.h"
-#include "main/mtypes.h"
+#include "main/consts_exts.h"
 
 using namespace ir_builder;
 
@@ -398,7 +398,7 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
          return op_expr[0]->operands[0];
       }
 
-      if (!options->EmitNoPow && op_expr[0]->operation == ir_binop_mul) {
+      if (op_expr[0]->operation == ir_binop_mul) {
          for (int log2_pos = 0; log2_pos < 2; log2_pos++) {
             ir_expression *log2_expr =
                op_expr[0]->operands[log2_pos]->as_expression();
@@ -941,9 +941,6 @@ ir_algebraic_visitor::handle_expression(ir_expression *ir)
                                            neg(op_expr[0]->operands[0]));
       }
 
-      /* While ir_to_mesa.cpp will lower sqrt(x) to rcp(rsq(x)), it does so at
-       * its IR level, so we can always apply this transformation.
-       */
       if (op_expr[0] && op_expr[0]->operation == ir_unop_rsq)
          return sqrt(op_expr[0]->operands[0]);
 

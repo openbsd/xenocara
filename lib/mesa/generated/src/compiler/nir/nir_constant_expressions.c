@@ -30,6 +30,7 @@
 #include "util/double.h"
 #include "util/softfloat.h"
 #include "util/bigmath.h"
+#include "util/format/format_utils.h"
 #include "nir_constant_expressions.h"
 
 /**
@@ -28616,46 +28617,20 @@ evaluate_fdot16_replicated(nir_const_value *_dst_val,
             _mesa_half_to_float(_src[1][15].u16),
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = ((src0.p * src1.p) + (src0.o * src1.o) + (src0.n * src1.n) + (src0.m * src1.m) + (src0.l * src1.l) + (src0.k * src1.k) + (src0.j * src1.j) + (src0.i * src1.i) + (src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = ((src0.p * src1.p) + (src0.o * src1.o) + (src0.n * src1.n) + (src0.m * src1.m) + (src0.l * src1.l) + (src0.k * src1.k) + (src0.j * src1.j) + (src0.i * src1.i) + (src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -28702,30 +28677,16 @@ evaluate_fdot16_replicated(nir_const_value *_dst_val,
             _src[1][15].f32,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = ((src0.p * src1.p) + (src0.o * src1.o) + (src0.n * src1.n) + (src0.m * src1.m) + (src0.l * src1.l) + (src0.k * src1.k) + (src0.j * src1.j) + (src0.i * src1.i) + (src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.p * src1.p) + (src0.o * src1.o) + (src0.n * src1.n) + (src0.m * src1.m) + (src0.l * src1.l) + (src0.k * src1.k) + (src0.j * src1.j) + (src0.i * src1.i) + (src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -28772,30 +28733,16 @@ evaluate_fdot16_replicated(nir_const_value *_dst_val,
             _src[1][15].f64,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = ((src0.p * src1.p) + (src0.o * src1.o) + (src0.n * src1.n) + (src0.m * src1.m) + (src0.l * src1.l) + (src0.k * src1.k) + (src0.j * src1.j) + (src0.i * src1.i) + (src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.p * src1.p) + (src0.o * src1.o) + (src0.n * src1.n) + (src0.m * src1.m) + (src0.l * src1.l) + (src0.k * src1.k) + (src0.j * src1.j) + (src0.i * src1.i) + (src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -29037,46 +28984,20 @@ evaluate_fdot2_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = ((src0.y * src1.y) + (src0.x * src1.x));
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = ((src0.y * src1.y) + (src0.x * src1.x));
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -29123,30 +29044,16 @@ evaluate_fdot2_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = ((src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -29193,30 +29100,16 @@ evaluate_fdot2_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = ((src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -29458,46 +29351,20 @@ evaluate_fdot3_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = ((src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = ((src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -29544,30 +29411,16 @@ evaluate_fdot3_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = ((src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -29614,30 +29467,16 @@ evaluate_fdot3_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = ((src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -29879,46 +29718,20 @@ evaluate_fdot4_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = ((src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = ((src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -29965,30 +29778,16 @@ evaluate_fdot4_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = ((src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -30035,30 +29834,16 @@ evaluate_fdot4_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = ((src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -30300,46 +30085,20 @@ evaluate_fdot5_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = ((src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = ((src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -30386,30 +30145,16 @@ evaluate_fdot5_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = ((src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -30456,30 +30201,16 @@ evaluate_fdot5_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = ((src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -30721,46 +30452,20 @@ evaluate_fdot8_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = ((src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = ((src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -30807,30 +30512,16 @@ evaluate_fdot8_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = ((src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -30877,30 +30568,16 @@ evaluate_fdot8_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = ((src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
 
-         dst.x = dst.y = dst.z = dst.w = ((src0.h * src1.h) + (src0.g * src1.g) + (src0.f * src1.f) + (src0.e * src1.e) + (src0.w * src1.w) + (src0.z * src1.z) + (src0.y * src1.y) + (src0.x * src1.x));
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -31142,46 +30819,20 @@ evaluate_fdph_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float16_vec dst;
-
-         dst.x = dst.y = dst.z = dst.w = src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float16_t dst = src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w;
 
             if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtz(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
             } else {
-               _dst_val[0].u16 = _mesa_float_to_float16_rtne(dst.x);
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
             }
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 16);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
                }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtz(dst.y);
-            } else {
-               _dst_val[1].u16 = _mesa_float_to_float16_rtne(dst.y);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtz(dst.z);
-            } else {
-               _dst_val[2].u16 = _mesa_float_to_float16_rtne(dst.z);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 16);
-               }
-            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtz(dst.w);
-            } else {
-               _dst_val[3].u16 = _mesa_float_to_float16_rtne(dst.w);
-            }
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 16);
-               }
+      }
 
          break;
       }
@@ -31228,30 +30879,16 @@ evaluate_fdph_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float32_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float32_t dst = src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w;
 
-         dst.x = dst.y = dst.z = dst.w = src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w;
-
-            _dst_val[0].f32 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 32);
-               }
-            _dst_val[1].f32 = dst.y;
+            _dst_val[_i].f32 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 32);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
                }
-            _dst_val[2].f32 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 32);
-               }
-            _dst_val[3].f32 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 32);
-               }
+      }
 
          break;
       }
@@ -31298,30 +30935,16 @@ evaluate_fdph_replicated(nir_const_value *_dst_val,
          0,
       };
 
-      struct float64_vec dst;
+      for (unsigned _i = 0; _i < num_components; _i++) {
+                              
+            float64_t dst = src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w;
 
-         dst.x = dst.y = dst.z = dst.w = src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w;
-
-            _dst_val[0].f64 = dst.x;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[0], 64);
-               }
-            _dst_val[1].f64 = dst.y;
+            _dst_val[_i].f64 = dst;
 
                if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[1], 64);
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
                }
-            _dst_val[2].f64 = dst.z;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[2], 64);
-               }
-            _dst_val[3].f64 = dst.w;
-
-               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
-                  constant_denorm_flush_to_zero(&_dst_val[3], 64);
-               }
+      }
 
          break;
       }
@@ -31900,6 +31523,44 @@ if (nir_is_rounding_mode_rtz(execution_mode, bit_size)) {
       default:
          unreachable("unknown bit width");
       }
+}
+static void
+evaluate_ffmaz(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                 UNUSED unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      
+   
+
+                           
+      for (unsigned _i = 0; _i < num_components; _i++) {
+               const float32_t src0 =
+                  _src[0][_i].f32;
+               const float32_t src1 =
+                  _src[1][_i].f32;
+               const float32_t src2 =
+                  _src[2][_i].f32;
+
+            float32_t dst;
+
+            
+if (src0 == 0.0 || src1 == 0.0)
+   dst = 0.0 + src2;
+else if (nir_is_rounding_mode_rtz(execution_mode, 32))
+   dst = _mesa_float_fma_rtz(src0, src1, src2);
+else
+   dst = fmaf(src0, src1, src2);
+
+
+            _dst_val[_i].f32 = dst;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
+               }
+      }
+
 }
 static void
 evaluate_ffract(nir_const_value *_dst_val,
@@ -32487,9 +32148,9 @@ evaluate_fisfinite32(nir_const_value *_dst_val,
                const float src0 =
                   _mesa_half_to_float(_src[0][_i].u16);
 
-            int32_t dst = isfinite(src0);
+            bool32_t dst = isfinite(src0);
 
-            _dst_val[_i].i32 = dst;
+            _dst_val[_i].i32 = -(int)dst;
 
       }
 
@@ -32504,9 +32165,9 @@ evaluate_fisfinite32(nir_const_value *_dst_val,
                const float32_t src0 =
                   _src[0][_i].f32;
 
-            int32_t dst = isfinite(src0);
+            bool32_t dst = isfinite(src0);
 
-            _dst_val[_i].i32 = dst;
+            _dst_val[_i].i32 = -(int)dst;
 
       }
 
@@ -32521,9 +32182,9 @@ evaluate_fisfinite32(nir_const_value *_dst_val,
                const float64_t src0 =
                   _src[0][_i].f64;
 
-            int32_t dst = isfinite(src0);
+            bool32_t dst = isfinite(src0);
 
-            _dst_val[_i].i32 = dst;
+            _dst_val[_i].i32 = -(int)dst;
 
       }
 
@@ -33408,6 +33069,42 @@ if (nir_is_rounding_mode_rtz(execution_mode, bit_size)) {
       default:
          unreachable("unknown bit width");
       }
+}
+static void
+evaluate_fmulz(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                 UNUSED unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      
+   
+
+                  
+      for (unsigned _i = 0; _i < num_components; _i++) {
+               const float32_t src0 =
+                  _src[0][_i].f32;
+               const float32_t src1 =
+                  _src[1][_i].f32;
+
+            float32_t dst;
+
+            
+if (src0 == 0.0 || src1 == 0.0)
+   dst = 0.0;
+else if (nir_is_rounding_mode_rtz(execution_mode, 32))
+   dst = _mesa_double_to_float_rtz((double)src0 * (double)src1);
+else
+   dst = src0 * src1;
+
+
+            _dst_val[_i].f32 = dst;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 32)) {
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 32);
+               }
+      }
+
 }
 static void
 evaluate_fneg(nir_const_value *_dst_val,
@@ -36761,7 +36458,7 @@ evaluate_i32csel_ge(nir_const_value *_dst_val,
                const int32_t src2 =
                   _src[2][_i].i32;
 
-            int32_t dst = (src0 >= 0.0f) ? src1 : src2;
+            int32_t dst = (src0 >= 0) ? src1 : src2;
 
             _dst_val[_i].i32 = dst;
 
@@ -36787,7 +36484,7 @@ evaluate_i32csel_gt(nir_const_value *_dst_val,
                const int32_t src2 =
                   _src[2][_i].i32;
 
-            int32_t dst = (src0 > 0.0f) ? src1 : src2;
+            int32_t dst = (src0 > 0) ? src1 : src2;
 
             _dst_val[_i].i32 = dst;
 
@@ -42433,6 +42130,47 @@ evaluate_pack_half_2x16_split(nir_const_value *_dst_val,
 
 }
 static void
+evaluate_pack_sint_2x16(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                 UNUSED unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      
+   
+
+
+      const struct int32_vec src0 = {
+            _src[0][0].i32,
+            _src[0][1].i32,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+      };
+
+      struct int32_vec dst;
+
+         
+dst.x = _mesa_signed_to_signed(src0.x, 16) & 0xffff;
+dst.x |= _mesa_signed_to_signed(src0.y, 16) << 16;
+
+
+            _dst_val[0].i32 = dst.x;
+
+
+}
+static void
 evaluate_pack_snorm_2x16(nir_const_value *_dst_val,
                  UNUSED unsigned num_components,
                  UNUSED unsigned bit_size,
@@ -42510,6 +42248,47 @@ dst.x = (uint32_t) pack_snorm_1x8(src0.x);
 dst.x |= ((uint32_t) pack_snorm_1x8(src0.y)) << 8;
 dst.x |= ((uint32_t) pack_snorm_1x8(src0.z)) << 16;
 dst.x |= ((uint32_t) pack_snorm_1x8(src0.w)) << 24;
+
+
+            _dst_val[0].u32 = dst.x;
+
+
+}
+static void
+evaluate_pack_uint_2x16(nir_const_value *_dst_val,
+                 UNUSED unsigned num_components,
+                 UNUSED unsigned bit_size,
+                 UNUSED nir_const_value **_src,
+                 UNUSED unsigned execution_mode)
+{
+      
+   
+
+
+      const struct uint32_vec src0 = {
+            _src[0][0].u32,
+            _src[0][1].u32,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+      };
+
+      struct uint32_vec dst;
+
+         
+dst.x = _mesa_unsigned_to_unsigned(src0.x, 16);
+dst.x |= _mesa_unsigned_to_unsigned(src0.y, 16) << 16;
 
 
             _dst_val[0].u32 = dst.x;
@@ -54225,6 +54004,9 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_ffma:
       evaluate_ffma(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
+   case nir_op_ffmaz:
+      evaluate_ffmaz(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
    case nir_op_ffract:
       evaluate_ffract(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
@@ -54281,6 +54063,9 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
       return;
    case nir_op_fmul:
       evaluate_fmul(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_fmulz:
+      evaluate_fmulz(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_fneg:
       evaluate_fneg(dest, num_components, bit_width, src, float_controls_execution_mode);
@@ -54594,11 +54379,17 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_pack_half_2x16_split:
       evaluate_pack_half_2x16_split(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
+   case nir_op_pack_sint_2x16:
+      evaluate_pack_sint_2x16(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
    case nir_op_pack_snorm_2x16:
       evaluate_pack_snorm_2x16(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_pack_snorm_4x8:
       evaluate_pack_snorm_4x8(dest, num_components, bit_width, src, float_controls_execution_mode);
+      return;
+   case nir_op_pack_uint_2x16:
+      evaluate_pack_uint_2x16(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_pack_unorm_2x16:
       evaluate_pack_unorm_2x16(dest, num_components, bit_width, src, float_controls_execution_mode);

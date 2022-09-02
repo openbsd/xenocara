@@ -360,7 +360,7 @@ bi_lower_atom_c1(bi_context *ctx, struct bi_clause_state *clause, struct
         pinstr->op = BI_OPCODE_ATOM_CX;
         pinstr->src[2] = pinstr->src[1];
         pinstr->src[1] = pinstr->src[0];
-        pinstr->src[3] = bi_dontcare();
+        pinstr->src[3] = bi_dontcare(&b);
         pinstr->src[0] = bi_null();
 
         return atom_c;
@@ -491,6 +491,58 @@ bi_can_iaddc(bi_instr *ins)
 }
 
 /*
+ * When MUX.i32 or MUX.v2i16 is used to multiplex entire sources, they can be
+ * replaced by CSEL as follows:
+ *
+ *      MUX.neg(x, y, b) -> CSEL.s.lt(b, 0, x, y)
+ *      MUX.int_zero(x, y, b) -> CSEL.i.eq(b, 0, x, y)
+ *      MUX.fp_zero(x, y, b) -> CSEL.f.eq(b, 0, x, y)
+ *
+ * MUX.bit cannot be transformed like this.
+ *
+ * Note that MUX.v2i16 has partial support for swizzles, which CSEL.v2i16 lacks.
+ * So we must check the swizzles too.
+ */
+static bool
+bi_can_csel(bi_instr *I)
+{
+        return ((I->op == BI_OPCODE_MUX_I32) || (I->op == BI_OPCODE_MUX_V2I16)) &&
+                (I->mux != BI_MUX_BIT) &&
+                (I->src[0].swizzle == BI_SWIZZLE_H01) &&
+                (I->src[1].swizzle == BI_SWIZZLE_H01) &&
+                (I->src[2].swizzle == BI_SWIZZLE_H01);
+}
+
+static enum bi_opcode
+bi_csel_for_mux(bool b32, enum bi_mux mux)
+{
+        switch (mux) {
+        case BI_MUX_INT_ZERO:
+                return b32 ? BI_OPCODE_CSEL_I32 : BI_OPCODE_CSEL_V2I16;
+        case BI_MUX_NEG:
+                return b32 ? BI_OPCODE_CSEL_S32 : BI_OPCODE_CSEL_V2S16;
+        case BI_MUX_FP_ZERO:
+                return b32 ? BI_OPCODE_CSEL_F32 : BI_OPCODE_CSEL_V2F16;
+        default:
+             unreachable("No CSEL for MUX.bit");
+        }
+}
+
+static void
+bi_replace_mux_with_csel(bi_instr *I)
+{
+        assert(I->op == BI_OPCODE_MUX_I32 || I->op == BI_OPCODE_MUX_V2I16);
+        I->op = bi_csel_for_mux(I->op == BI_OPCODE_MUX_I32, I->mux);
+        I->cmpf = (I->mux == BI_MUX_NEG) ? BI_CMPF_LT : BI_CMPF_EQ;
+
+        bi_index vTrue = I->src[0], vFalse = I->src[1], cond = I->src[2];
+
+        I->src[0] = cond;
+        I->src[1] = bi_zero();
+        I->src[2] = vTrue;
+        I->src[3] = vFalse;
+}
+/*
  * The encoding of *FADD.v2f16 only specifies a single abs flag. All abs
  * encodings are permitted by swapping operands; however, this scheme fails if
  * both operands are equal. Test for this case.
@@ -507,6 +559,10 @@ bi_can_fma(bi_instr *ins)
 {
         /* +IADD.i32 -> *IADDC.i32 */
         if (bi_can_iaddc(ins))
+                return true;
+
+        /* +MUX -> *CSEL */
+        if (bi_can_csel(ins))
                 return true;
 
         /* *FADD.v2f16 has restricted abs modifiers, use +FADD.v2f16 instead */
@@ -551,12 +607,17 @@ bi_can_add(bi_instr *ins)
  * pseudoinstructions writing multiple destinations (expanding to multiple
  * paired instructions) can run afoul of the "no two writes on the last clause"
  * constraint, so we check for that here.
+ *
+ * Exception to the exception: TEXC, which writes to multiple sets of staging
+ * registers. Staging registers bypass the usual register write mechanism so
+ * this restriction does not apply.
  */
 
 static bool
 bi_must_not_last(bi_instr *ins)
 {
-        return !bi_is_null(ins->dest[0]) && !bi_is_null(ins->dest[1]);
+        return !bi_is_null(ins->dest[0]) && !bi_is_null(ins->dest[1]) &&
+               (ins->op != BI_OPCODE_TEXC);
 }
 
 /* Check for a message-passing instruction. +DISCARD.f32 is special-cased; we
@@ -693,7 +754,7 @@ bi_reads_t(bi_instr *ins, unsigned src)
 
         /* Staging register reads may happen before the succeeding register
          * block encodes a write, so effectively there is no passthrough */
-        if (src == 0 && bi_opcode_props[ins->op].sr_read)
+        if (bi_is_staging_src(ins, src))
                 return false;
 
         /* Bifrost cores newer than Mali G71 have restrictions on swizzles on
@@ -845,7 +906,7 @@ bi_tuple_is_new_src(bi_instr *instr, struct bi_reg_state *reg, unsigned src_idx)
                 return false;
 
         /* Staging register reads bypass the usual register file mechanism */
-        if (src_idx == 0 && bi_opcode_props[instr->op].sr_read)
+        if (bi_is_staging_src(instr, src_idx))
                 return false;
 
         /* If a source is already read in the tuple, it is already counted */
@@ -1173,9 +1234,9 @@ bi_take_instr(bi_context *ctx, struct bi_worklist st,
 {
         if (tuple->add && tuple->add->op == BI_OPCODE_CUBEFACE)
                 return bi_lower_cubeface(ctx, clause, tuple);
-        else if (tuple->add && tuple->add->op == BI_OPCODE_PATOM_C_I32)
+        else if (tuple->add && tuple->add->op == BI_OPCODE_ATOM_RETURN_I32)
                 return bi_lower_atom_c(ctx, clause, tuple);
-        else if (tuple->add && tuple->add->op == BI_OPCODE_PATOM_C1_I32)
+        else if (tuple->add && tuple->add->op == BI_OPCODE_ATOM1_RETURN_I32)
                 return bi_lower_atom_c1(ctx, clause, tuple);
         else if (tuple->add && tuple->add->op == BI_OPCODE_SEG_ADD_I64)
                 return bi_lower_seg_add(ctx, clause, tuple);
@@ -1220,27 +1281,29 @@ bi_take_instr(bi_context *ctx, struct bi_worklist st,
                 assert(bi_can_iaddc(instr));
                 instr->op = BI_OPCODE_IADDC_I32;
                 instr->src[2] = bi_zero();
+        } else if (fma && bi_can_csel(instr)) {
+                bi_replace_mux_with_csel(instr);
         }
 
         return instr;
 }
 
 /* Variant of bi_rewrite_index_src_single that uses word-equivalence, rewriting
- * to a passthrough register. If except_zero is true, the zeroth (first) source
- * is skipped, so staging register reads are not accidentally encoded as
+ * to a passthrough register. If except_sr is true, the staging sources are
+ * skipped, so staging register reads are not accidentally encoded as
  * passthrough (which is impossible) */
 
 static void
 bi_use_passthrough(bi_instr *ins, bi_index old,
                 enum bifrost_packed_src new,
-                bool except_zero)
+                bool except_sr)
 {
         /* Optional for convenience */
         if (!ins || bi_is_null(old))
                 return;
 
         bi_foreach_src(ins, i) {
-                if (i == 0 && except_zero)
+                if ((i == 0 || i == 4) && except_sr)
                         continue;
 
                 if (bi_is_word_equiv(ins->src[i], old)) {
@@ -1802,9 +1865,6 @@ bi_schedule_clause(bi_context *ctx, bi_block *block, struct bi_worklist st, uint
         clause->next_clause_prefetch = !last || (last->op != BI_OPCODE_JUMP);
         clause->block = block;
 
-        /* TODO: scoreboard assignment post-sched */
-        clause->dependencies |= (1 << 0);
-
         /* We emit in reverse and emitted to the back of the tuples array, so
          * move it up front for easy indexing */
         memmove(clause->tuples,
@@ -1891,7 +1951,7 @@ bi_check_fau_src(bi_instr *ins, unsigned s, uint32_t *constants, unsigned *cword
         bi_index src = ins->src[s];
 
         /* Staging registers can't have FAU accesses */
-        if (s == 0 && bi_opcode_props[ins->op].sr_read)
+        if (bi_is_staging_src(ins, s))
                 return (src.type != BI_INDEX_CONSTANT) && (src.type != BI_INDEX_FAU);
 
         if (src.type == BI_INDEX_CONSTANT) {

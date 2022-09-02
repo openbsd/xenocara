@@ -698,6 +698,78 @@ nir_intrinsic_has_slc_amd(const nir_intrinsic_instr *instr)
 }
 
 
+static inline uint8_t
+nir_intrinsic_offset0(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_OFFSET0] > 0);
+   return (uint8_t)instr->const_index[info->index_map[NIR_INTRINSIC_OFFSET0] - 1];
+}
+
+static inline void
+nir_intrinsic_set_offset0(nir_intrinsic_instr *instr, uint8_t val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_OFFSET0] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_OFFSET0] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_offset0(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_OFFSET0] > 0;
+}
+
+
+static inline uint8_t
+nir_intrinsic_offset1(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_OFFSET1] > 0);
+   return (uint8_t)instr->const_index[info->index_map[NIR_INTRINSIC_OFFSET1] - 1];
+}
+
+static inline void
+nir_intrinsic_set_offset1(nir_intrinsic_instr *instr, uint8_t val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_OFFSET1] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_OFFSET1] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_offset1(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_OFFSET1] > 0;
+}
+
+
+static inline bool
+nir_intrinsic_st64(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_ST64] > 0);
+   return (bool)instr->const_index[info->index_map[NIR_INTRINSIC_ST64] - 1];
+}
+
+static inline void
+nir_intrinsic_set_st64(nir_intrinsic_instr *instr, bool val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_ST64] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_ST64] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_st64(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_ST64] > 0;
+}
+
+
 static inline enum gl_access_qualifier
 nir_intrinsic_dst_access(const nir_intrinsic_instr *instr)
 {
@@ -895,6 +967,62 @@ nir_intrinsic_has_io_semantics(const nir_intrinsic_instr *instr)
 }
 
 
+static inline struct nir_io_xfb
+nir_intrinsic_io_xfb(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_IO_XFB] > 0);
+   struct nir_io_xfb res;
+   STATIC_ASSERT(sizeof(instr->const_index[0]) == sizeof(res));
+   memcpy(&res, &instr->const_index[info->index_map[NIR_INTRINSIC_IO_XFB] - 1], sizeof(res));
+   return res;
+}
+
+static inline void
+nir_intrinsic_set_io_xfb(nir_intrinsic_instr *instr, struct nir_io_xfb val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_IO_XFB] > 0);
+   STATIC_ASSERT(sizeof(instr->const_index[0]) == sizeof(val));
+   memcpy(&instr->const_index[info->index_map[NIR_INTRINSIC_IO_XFB] - 1], &val, sizeof(val));
+}
+
+static inline bool
+nir_intrinsic_has_io_xfb(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_IO_XFB] > 0;
+}
+
+
+static inline struct nir_io_xfb
+nir_intrinsic_io_xfb2(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_IO_XFB2] > 0);
+   struct nir_io_xfb res;
+   STATIC_ASSERT(sizeof(instr->const_index[0]) == sizeof(res));
+   memcpy(&res, &instr->const_index[info->index_map[NIR_INTRINSIC_IO_XFB2] - 1], sizeof(res));
+   return res;
+}
+
+static inline void
+nir_intrinsic_set_io_xfb2(nir_intrinsic_instr *instr, struct nir_io_xfb val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_IO_XFB2] > 0);
+   STATIC_ASSERT(sizeof(instr->const_index[0]) == sizeof(val));
+   memcpy(&instr->const_index[info->index_map[NIR_INTRINSIC_IO_XFB2] - 1], &val, sizeof(val));
+}
+
+static inline bool
+nir_intrinsic_has_io_xfb2(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_IO_XFB2] > 0;
+}
+
+
 static inline nir_rounding_mode
 nir_intrinsic_rounding_mode(const nir_intrinsic_instr *instr)
 {
@@ -940,6 +1068,30 @@ nir_intrinsic_has_saturate(const nir_intrinsic_instr *instr)
 {
    const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
    return info->index_map[NIR_INTRINSIC_SATURATE] > 0;
+}
+
+
+static inline bool
+nir_intrinsic_synchronous(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_SYNCHRONOUS] > 0);
+   return (bool)instr->const_index[info->index_map[NIR_INTRINSIC_SYNCHRONOUS] - 1];
+}
+
+static inline void
+nir_intrinsic_set_synchronous(nir_intrinsic_instr *instr, bool val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_SYNCHRONOUS] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_SYNCHRONOUS] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_synchronous(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_SYNCHRONOUS] > 0;
 }
 
 #endif /* _NIR_INTRINSICS_INDICES_ */

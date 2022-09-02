@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2022/02/24 03:02:07 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:41 jsg Exp $
 
 GEN=	9
 LIB=	radeonsi_gfx${GEN}
@@ -15,6 +15,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/drivers \
+		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/amd/common \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DGFX_VER=${GEN}

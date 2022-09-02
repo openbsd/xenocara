@@ -158,6 +158,12 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
    OUT_PKT4(ring, REG_A6XX_SP_CS_UNKNOWN_A9B1, 1);
    OUT_RING(ring, 0x41);
 
+   if (a6xx_backend->info->a6xx.has_lpac) {
+      OUT_PKT4(ring, REG_A6XX_HLSQ_CS_UNKNOWN_B9D0, 1);
+      OUT_RING(ring, A6XX_HLSQ_CS_UNKNOWN_B9D0_SHARED_SIZE(1) |
+                        A6XX_HLSQ_CS_UNKNOWN_B9D0_UNK6);
+   }
+
    uint32_t local_invocation_id, work_group_id;
    local_invocation_id =
       ir3_find_sysval_regid(v, SYSTEM_VALUE_LOCAL_INVOCATION_ID);
@@ -171,6 +177,16 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
    OUT_RING(ring, A6XX_HLSQ_CS_CNTL_1_LINEARLOCALIDREGID(regid(63, 0)) |
                      A6XX_HLSQ_CS_CNTL_1_THREADSIZE(thrsz));
 
+   if (a6xx_backend->info->a6xx.has_lpac) {
+      OUT_PKT4(ring, REG_A6XX_SP_CS_CNTL_0, 2);
+      OUT_RING(ring, A6XX_SP_CS_CNTL_0_WGIDCONSTID(work_group_id) |
+                        A6XX_SP_CS_CNTL_0_WGSIZECONSTID(regid(63, 0)) |
+                        A6XX_SP_CS_CNTL_0_WGOFFSETCONSTID(regid(63, 0)) |
+                        A6XX_SP_CS_CNTL_0_LOCALIDREGID(local_invocation_id));
+      OUT_RING(ring, A6XX_SP_CS_CNTL_1_LINEARLOCALIDREGID(regid(63, 0)) |
+                        A6XX_SP_CS_CNTL_1_THREADSIZE(thrsz));
+   }
+
    OUT_PKT4(ring, REG_A6XX_SP_CS_OBJ_START, 2);
    OUT_RELOC(ring, v->bo, 0, 0, 0); /* SP_CS_OBJ_START_LO/HI */
 
@@ -180,12 +196,14 @@ cs_program_emit(struct fd_ringbuffer *ring, struct kernel *kernel)
    OUT_PKT4(ring, REG_A6XX_SP_CS_OBJ_START, 2);
    OUT_RELOC(ring, v->bo, 0, 0, 0);
 
+   uint32_t shader_preload_size =
+      MIN2(v->instrlen, a6xx_backend->info->a6xx.instr_cache_size);
    OUT_PKT7(ring, CP_LOAD_STATE6_FRAG, 3);
    OUT_RING(ring, CP_LOAD_STATE6_0_DST_OFF(0) |
                      CP_LOAD_STATE6_0_STATE_TYPE(ST6_SHADER) |
                      CP_LOAD_STATE6_0_STATE_SRC(SS6_INDIRECT) |
                      CP_LOAD_STATE6_0_STATE_BLOCK(SB6_CS_SHADER) |
-                     CP_LOAD_STATE6_0_NUM_UNIT(v->instrlen));
+                     CP_LOAD_STATE6_0_NUM_UNIT(shader_preload_size));
    OUT_RELOC(ring, v->bo, 0, 0, 0);
 
    if (v->pvtmem_size > 0) {
@@ -296,11 +314,11 @@ cs_ibo_emit(struct fd_ringbuffer *ring, struct fd_submit *submit,
       unsigned width = sz & MASK(15);
       unsigned height = sz >> 15;
 
-      OUT_RING(state, A6XX_IBO_0_FMT(FMT6_32_UINT) | A6XX_IBO_0_TILE_MODE(0));
-      OUT_RING(state, A6XX_IBO_1_WIDTH(width) | A6XX_IBO_1_HEIGHT(height));
-      OUT_RING(state, A6XX_IBO_2_PITCH(0) | A6XX_IBO_2_UNK4 | A6XX_IBO_2_UNK31 |
-                         A6XX_IBO_2_TYPE(A6XX_TEX_1D));
-      OUT_RING(state, A6XX_IBO_3_ARRAY_PITCH(0));
+      OUT_RING(state, A6XX_TEX_CONST_0_FMT(FMT6_32_UINT) | A6XX_TEX_CONST_0_TILE_MODE(0));
+      OUT_RING(state, A6XX_TEX_CONST_1_WIDTH(width) | A6XX_TEX_CONST_1_HEIGHT(height));
+      OUT_RING(state, A6XX_TEX_CONST_2_PITCH(0) | A6XX_TEX_CONST_2_BUFFER |
+                         A6XX_TEX_CONST_2_TYPE(A6XX_TEX_BUFFER));
+      OUT_RING(state, A6XX_TEX_CONST_3_ARRAY_PITCH(0));
       OUT_RELOC(state, kernel->bufs[i], 0, 0, 0);
       OUT_RING(state, 0x00000000);
       OUT_RING(state, 0x00000000);
@@ -519,7 +537,8 @@ a6xx_init(struct fd_device *dev, const struct fd_dev_id *dev_id)
       .read_perfcntrs = a6xx_read_perfcntrs,
    };
 
-   a6xx_backend->compiler = ir3_compiler_create(dev, dev_id, false);
+   a6xx_backend->compiler = ir3_compiler_create(dev, dev_id,
+                                                &(struct ir3_compiler_options){});
    a6xx_backend->dev = dev;
 
    a6xx_backend->info = fd_dev_info(dev_id);

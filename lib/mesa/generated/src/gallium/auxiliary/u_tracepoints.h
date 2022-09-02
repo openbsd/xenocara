@@ -34,71 +34,83 @@ extern "C" {
 #endif
 
 
+
 /*
  * surface
  */
 struct trace_surface {
-         uint16_t width;
-         uint16_t height;
-         uint8_t nr_samples;
-         const char * format;
+   uint16_t width;
+   uint16_t height;
+   uint8_t nr_samples;
+   const char * format;
 };
-void __trace_surface(struct u_trace *ut, void *cs
+void __trace_surface(
+       struct u_trace *ut, void *cs
      , const struct pipe_surface * psurf
 );
-static inline void trace_surface(struct u_trace *ut, void *cs
-     , const struct pipe_surface * psurf
+static inline void trace_surface(
+     struct u_trace *ut, void *cs
+   , const struct pipe_surface * psurf
 ) {
-   if (!unlikely(ut->enabled))
+   if (!unlikely(ut->enabled || ut_trace_instrument))
       return;
-   __trace_surface(ut, cs
-        , psurf
+   __trace_surface(
+        ut, cs
+      , psurf
    );
 }
+
 /*
  * framebuffer
  */
 struct trace_framebuffer {
-         uint16_t width;
-         uint16_t height;
-         uint8_t layers;
-         uint8_t samples;
-         uint8_t nr_cbufs;
+   uint16_t width;
+   uint16_t height;
+   uint8_t layers;
+   uint8_t samples;
+   uint8_t nr_cbufs;
 };
-void __trace_framebuffer(struct u_trace *ut, void *cs
+void __trace_framebuffer(
+       struct u_trace *ut, void *cs
      , const struct pipe_framebuffer_state * pfb
 );
-static inline void trace_framebuffer(struct u_trace *ut, void *cs
-     , const struct pipe_framebuffer_state * pfb
+static inline void trace_framebuffer(
+     struct u_trace *ut, void *cs
+   , const struct pipe_framebuffer_state * pfb
 ) {
-   if (!unlikely(ut->enabled))
+   if (!unlikely(ut->enabled || ut_trace_instrument))
       return;
-   __trace_framebuffer(ut, cs
-        , pfb
+   __trace_framebuffer(
+        ut, cs
+      , pfb
    );
 }
+
 /*
  * grid_info
  */
 struct trace_grid_info {
-         uint8_t work_dim;
-         uint16_t block_x;
-         uint16_t block_y;
-         uint16_t block_z;
-         uint16_t grid_x;
-         uint16_t grid_y;
-         uint16_t grid_z;
+   uint8_t work_dim;
+   uint16_t block_x;
+   uint16_t block_y;
+   uint16_t block_z;
+   uint16_t grid_x;
+   uint16_t grid_y;
+   uint16_t grid_z;
 };
-void __trace_grid_info(struct u_trace *ut, void *cs
+void __trace_grid_info(
+       struct u_trace *ut, void *cs
      , const struct pipe_grid_info * pgrid
 );
-static inline void trace_grid_info(struct u_trace *ut, void *cs
-     , const struct pipe_grid_info * pgrid
+static inline void trace_grid_info(
+     struct u_trace *ut, void *cs
+   , const struct pipe_grid_info * pgrid
 ) {
-   if (!unlikely(ut->enabled))
+   if (!unlikely(ut->enabled || ut_trace_instrument))
       return;
-   __trace_grid_info(ut, cs
-        , pgrid
+   __trace_grid_info(
+        ut, cs
+      , pgrid
    );
 }
 

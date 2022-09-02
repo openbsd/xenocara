@@ -32,42 +32,6 @@
 #include <vulkan/util/vk_format.h>
 #include <vulkan/vulkan.h>
 
-static inline const struct util_format_description *
-vk_format_description(VkFormat format)
-{
-   return util_format_description(vk_format_to_pipe_format(format));
-}
-
-/**
- * Return total bits needed for the pixel format per block.
- */
-static inline unsigned
-vk_format_get_blocksizebits(VkFormat format)
-{
-   return util_format_get_blocksizebits(vk_format_to_pipe_format(format));
-}
-
-/**
- * Return bytes per block (not pixel) for the given format.
- */
-static inline unsigned
-vk_format_get_blocksize(VkFormat format)
-{
-   return util_format_get_blocksize(vk_format_to_pipe_format(format));
-}
-
-static inline unsigned
-vk_format_get_blockwidth(VkFormat format)
-{
-   return util_format_get_blockwidth(vk_format_to_pipe_format(format));
-}
-
-static inline unsigned
-vk_format_get_blockheight(VkFormat format)
-{
-   return util_format_get_blockheight(vk_format_to_pipe_format(format));
-}
-
 /**
  * Return the index of the first non-void channel
  * -1 if no non-void channels
@@ -110,45 +74,9 @@ vk_format_compose_swizzles(const VkComponentMapping *mapping, const unsigned cha
 }
 
 static inline bool
-vk_format_is_compressed(VkFormat format)
-{
-   return util_format_is_compressed(vk_format_to_pipe_format(format));
-}
-
-static inline bool
 vk_format_is_subsampled(VkFormat format)
 {
    return util_format_is_subsampled_422(vk_format_to_pipe_format(format));
-}
-
-static inline bool
-vk_format_is_int(VkFormat format)
-{
-   return util_format_is_pure_integer(vk_format_to_pipe_format(format));
-}
-
-static inline bool
-vk_format_is_uint(VkFormat format)
-{
-   return util_format_is_pure_uint(vk_format_to_pipe_format(format));
-}
-
-static inline bool
-vk_format_is_sint(VkFormat format)
-{
-   return util_format_is_pure_sint(vk_format_to_pipe_format(format));
-}
-
-static inline bool
-vk_format_is_unorm(VkFormat format)
-{
-   return util_format_is_unorm(vk_format_to_pipe_format(format));
-}
-
-static inline bool
-vk_format_is_srgb(VkFormat format)
-{
-   return util_format_is_srgb(vk_format_to_pipe_format(format));
 }
 
 static inline VkFormat
@@ -195,42 +123,9 @@ static inline unsigned
 vk_format_get_component_bits(VkFormat format, enum util_format_colorspace colorspace,
                              unsigned component)
 {
-   const struct util_format_description *desc = vk_format_description(format);
-   enum util_format_colorspace desc_colorspace;
-
-   assert(format);
-   if (!format) {
-      return 0;
-   }
-
-   assert(component < 4);
-
-   /* Treat RGB and SRGB as equivalent. */
-   if (colorspace == UTIL_FORMAT_COLORSPACE_SRGB) {
-      colorspace = UTIL_FORMAT_COLORSPACE_RGB;
-   }
-   if (desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB) {
-      desc_colorspace = UTIL_FORMAT_COLORSPACE_RGB;
-   } else {
-      desc_colorspace = desc->colorspace;
-   }
-
-   if (desc_colorspace != colorspace) {
-      return 0;
-   }
-
-   switch (desc->swizzle[component]) {
-   case PIPE_SWIZZLE_X:
-      return desc->channel[0].size;
-   case PIPE_SWIZZLE_Y:
-      return desc->channel[1].size;
-   case PIPE_SWIZZLE_Z:
-      return desc->channel[2].size;
-   case PIPE_SWIZZLE_W:
-      return desc->channel[3].size;
-   default:
-      return 0;
-   }
+   return util_format_get_component_bits(vk_format_to_pipe_format(format),
+                                         colorspace,
+                                         component);
 }
 
 static inline VkFormat
@@ -254,12 +149,6 @@ vk_to_non_srgb_format(VkFormat format)
    default:
       return format;
    }
-}
-
-static inline unsigned
-vk_format_get_nr_components(VkFormat format)
-{
-   return util_format_get_nr_components(vk_format_to_pipe_format(format));
 }
 
 static inline unsigned

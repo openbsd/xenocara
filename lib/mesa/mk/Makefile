@@ -1,14 +1,14 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:37 jsg Exp $
 
 .include "config.mk"
 
 SUBDIR=		include pkgconfig \
-		libcompiler libdri libdricommon \
+		libcompiler libdri \
 		libgallium libgalliumvl \
 		libglapi_static libglcpp libglsl \
-		libloader libmegadriver_stub \
-		libmesa_classic libmesa_common libmesa_format \
-		libmesa_gallium libmesa_util \
+		libloader \
+		libmesa libmesa_format \
+		libmesa_util \
 		libnir libpipe_loader_static libsoftpipe \
 		libswdri libswkmsdri \
 		libws_null libwsw libxmlconfig
@@ -25,9 +25,10 @@ SUBDIR+=	libmesa_sse41
 SUBDIR+=	libaddrlib libamd_common libamd_common_llvm libamdgpuwinsys
 .endif
 
-.if ${WITH_DRI_I965} == "yes" || ${WITH_GALLIUM_IRIS} == "yes" || \
+.if ${WITH_GALLIUM_CROCUS} == "yes" || ${WITH_GALLIUM_IRIS} == "yes" || \
     ${WITH_INTEL_VK} == "yes" || make(obj)
 SUBDIR+=	libblorp libintel_common libintel_compiler libintel_dev \
+		libintel-driver-ds \
 		libintel_perf libisl libisl_tiled_memcpy \
 		libisl_tiled_memcpy_sse41
 .for GFX in 40 50 60 70 75 80 90 110 120 125
@@ -41,7 +42,7 @@ SUBDIR+=	libradeonwinsys
 .endif
 
 .if ${WITH_AMD_VK} == "yes" || ${WITH_INTEL_VK} == "yes" || make(obj)
-SUBDIR+=	libvulkan_util libvulkan_wsi
+SUBDIR+=	libvulkan_runtime libvulkan_util libvulkan_wsi
 .endif
 
 .if ${WITH_LLVM} == "yes" || make(obj)
@@ -61,30 +62,22 @@ SUBDIR+=	libanv_gen${GEN}
 SUBDIR+=	libvulkan_intel
 .endif
 
+.if ${WITH_GALLIUM_I915} == "yes" || make(obj)
+SUBDIR+=	libi915 libi915drm
+.endif
+
+.if ${WITH_GALLIUM_CROCUS} == "yes" || make(obj)
+SUBDIR+=	libcrocus libcrocuswinsys
+.for GEN in 40 45 50 60 70 75 80
+SUBDIR+=	libcrocus_per_hw_ver${GEN}
+.endfor
+.endif
+
 .if ${WITH_GALLIUM_IRIS} == "yes" || make(obj)
 SUBDIR+=	libiris libiriswinsys
 .for GEN in 80 90 110 120 125
 SUBDIR+=	libiris_gen${GEN}
 .endfor
-.endif
-
-.if ${WITH_DRI_I915} == "yes" || make(obj)
-SUBDIR+=	libi915
-.endif
-
-.if ${WITH_DRI_I965} == "yes" || make(obj)
-SUBDIR+=	libi965
-.for GEN in 40 45 50 60 70 75 80 90 110
-SUBDIR+=	libi965_gen${GEN}
-.endfor
-.endif
-
-.if ${WITH_DRI_R100} == "yes" || make(obj)
-SUBDIR+=	libr100
-.endif
-
-.if ${WITH_DRI_R200} == "yes" || make(obj)
-SUBDIR+=	libr200
 .endif
 
 .if ${WITH_GALLIUM_R300} == "yes" || make(obj)
@@ -105,6 +98,6 @@ SUBDIR+=	libradeonsi
 # installed libs
 SUBDIR+=	libglapi libgbm libEGL libGL libGLESv1_CM libGLESv2 libOSMesa
 
-SUBDIR+=	libmesa_dri_drivers libgallium_dri
+SUBDIR+=	libgallium_dri
 
 .include <bsd.subdir.mk>

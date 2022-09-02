@@ -325,15 +325,6 @@ public:
        return def;
    }
 
-   Definition hint_m0(Definition def) {
-       def.setHint(aco::m0);
-       return def;
-   }
-
-   Definition hint_m0(RegClass rc) {
-       return hint_m0(def(rc));
-   }
-
    Operand vcc(Temp tmp) {
           //vcc_hi and exec_hi can still be used in wave32
           assert(tmp.type() == RegType::sgpr && tmp.bytes() <= 8);
@@ -347,17 +338,6 @@ public:
           assert(def.regClass().type() == RegType::sgpr && def.bytes() <= 8);
        def.setFixed(aco::vcc);
        return def;
-   }
-
-   Definition hint_vcc(Definition def) {
-          //vcc_hi and exec_hi can still be used in wave32
-          assert(def.regClass().type() == RegType::sgpr && def.bytes() <= 8);
-       def.setHint(aco::vcc);
-       return def;
-   }
-
-   Definition hint_vcc(RegClass rc) {
-       return hint_vcc(def(rc));
    }
 
    Operand exec(Temp tmp) {
@@ -375,17 +355,6 @@ public:
        return def;
    }
 
-   Definition hint_exec(Definition def) {
-          //vcc_hi and exec_hi can still be used in wave32
-          assert(def.regClass().type() == RegType::sgpr && def.bytes() <= 8);
-       def.setHint(aco::exec);
-       return def;
-   }
-
-   Definition hint_exec(RegClass rc) {
-       return hint_exec(def(rc));
-   }
-
    Operand scc(Temp tmp) {
        Operand op(tmp);
        op.setFixed(aco::scc);
@@ -395,15 +364,6 @@ public:
    Definition scc(Definition def) {
        def.setFixed(aco::scc);
        return def;
-   }
-
-   Definition hint_scc(Definition def) {
-       def.setHint(aco::scc);
-       return def;
-   }
-
-   Definition hint_scc(RegClass rc) {
-       return hint_scc(def(rc));
    }
 
 
@@ -494,11 +454,11 @@ public:
          b = copy(def(v1), b);
 
       if (!carry_in.op.isUndefined())
-         return vop2(aco_opcode::v_addc_co_u32, Definition(dst), hint_vcc(def(lm)), a, b, carry_in);
+         return vop2(aco_opcode::v_addc_co_u32, Definition(dst), def(lm), a, b, carry_in);
       else if (program->chip_class >= GFX10 && carry_out)
          return vop3(aco_opcode::v_add_co_u32_e64, Definition(dst), def(lm), a, b);
       else if (program->chip_class < GFX9 || carry_out)
-         return vop2(aco_opcode::v_add_co_u32, Definition(dst), hint_vcc(def(lm)), a, b);
+         return vop2(aco_opcode::v_add_co_u32, Definition(dst), def(lm), a, b);
       else
          return vop2(aco_opcode::v_add_u32, Definition(dst), a, b);
    }
@@ -546,10 +506,9 @@ public:
       if (!borrow.op.isUndefined())
          sub->operands[2] = borrow.op;
       sub->definitions[0] = dst;
-      if (carry_out) {
+      if (carry_out)
          sub->definitions[1] = Definition(carry);
-         sub->definitions[1].setHint(aco::vcc);
-      }
+
       return insert(std::move(sub));
    }
 
@@ -1587,7 +1546,7 @@ public:
    }
 
         
-   Result ds(aco_opcode opcode, Definition def0, Op op0, int16_t offset0=0, int8_t offset1=0, bool gds=false)
+   Result ds(aco_opcode opcode, Definition def0, Op op0, uint16_t offset0=0, uint8_t offset1=0, bool gds=false)
    {
       DS_instruction *instr = create_instruction<DS_instruction>(opcode, (Format)((int)Format::DS), 1, 1);
             instr->definitions[0] = def0;
@@ -1603,7 +1562,7 @@ public:
    }
 
         
-   Result ds(aco_opcode opcode, Definition def0, Op op0, Op op1, int16_t offset0=0, int8_t offset1=0, bool gds=false)
+   Result ds(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t offset0=0, uint8_t offset1=0, bool gds=false)
    {
       DS_instruction *instr = create_instruction<DS_instruction>(opcode, (Format)((int)Format::DS), 2, 1);
             instr->definitions[0] = def0;
@@ -1620,7 +1579,7 @@ public:
    }
 
         
-   Result ds(aco_opcode opcode, Op op0, Op op1, Op op2, int16_t offset0=0, int8_t offset1=0, bool gds=false)
+   Result ds(aco_opcode opcode, Op op0, Op op1, Op op2, uint16_t offset0=0, uint8_t offset1=0, bool gds=false)
    {
       DS_instruction *instr = create_instruction<DS_instruction>(opcode, (Format)((int)Format::DS), 3, 0);
             instr->operands[0] = op0.op;
@@ -1635,7 +1594,7 @@ public:
    }
 
         
-   Result ds(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, int16_t offset0=0, int8_t offset1=0, bool gds=false)
+   Result ds(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, uint16_t offset0=0, uint8_t offset1=0, bool gds=false)
    {
       DS_instruction *instr = create_instruction<DS_instruction>(opcode, (Format)((int)Format::DS), 4, 0);
             instr->operands[0] = op0.op;
@@ -2477,7 +2436,7 @@ public:
         
    Result vop1_dpp(aco_opcode opcode, Definition def0, Op op0, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::DPP), 1, 1);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::DPP16), 1, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2495,7 +2454,7 @@ public:
         
    Result vop2_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP), 2, 1);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 2, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2514,7 +2473,7 @@ public:
         
    Result vop2_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP), 3, 1);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 3, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2534,7 +2493,7 @@ public:
         
    Result vop2_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP), 2, 2);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 2, 2);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2556,7 +2515,7 @@ public:
         
    Result vop2_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP), 3, 2);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP16), 3, 2);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2579,7 +2538,7 @@ public:
         
    Result vopc_dpp(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP), 2, 1);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP16), 2, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2598,7 +2557,7 @@ public:
         
    Result vopc_dpp(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, uint16_t dpp_ctrl, uint8_t row_mask=0xF, uint8_t bank_mask=0xF, bool bound_ctrl=true)
    {
-      DPP_instruction *instr = create_instruction<DPP_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP), 2, 2);
+      DPP16_instruction *instr = create_instruction<DPP16_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP16), 2, 2);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2612,6 +2571,121 @@ public:
       instr->row_mask = row_mask;
       instr->bank_mask = bank_mask;
       instr->bound_ctrl = bound_ctrl;
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vop1_dpp8(aco_opcode opcode, Definition def0, Op op0)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP1|(int)Format::DPP8), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vop2_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOP2|(int)Format::DPP8), 3, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_dpp8(aco_opcode opcode, Definition def0, Op op0, Op op1)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP8), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result vopc_dpp8(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1)
+   {
+      DPP8_instruction *instr = create_instruction<DPP8_instruction>(opcode, (Format)((int)Format::VOPC|(int)Format::DPP8), 2, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            
             
        
       return insert(instr);

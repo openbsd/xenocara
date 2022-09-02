@@ -329,6 +329,8 @@ gl_system_value_name(gl_system_value sysval)
      ENUM(SYSTEM_VALUE_RAY_HIT_KIND),
      ENUM(SYSTEM_VALUE_RAY_FLAGS),
      ENUM(SYSTEM_VALUE_RAY_GEOMETRY_INDEX),
+     ENUM(SYSTEM_VALUE_MESH_VIEW_COUNT),
+     ENUM(SYSTEM_VALUE_MESH_VIEW_INDICES),
      ENUM(SYSTEM_VALUE_GS_HEADER_IR3),
      ENUM(SYSTEM_VALUE_TCS_HEADER_IR3),
      ENUM(SYSTEM_VALUE_REL_PATCH_ID_IR3),
@@ -372,4 +374,19 @@ gl_frag_result_name(gl_frag_result result)
    };
    STATIC_ASSERT(ARRAY_SIZE(names) == FRAG_RESULT_MAX);
    return NAME(result);
+}
+
+unsigned
+num_mesh_vertices_per_primitive(unsigned prim)
+{
+   switch (prim) {
+      case SHADER_PRIM_POINTS:
+         return 1;
+      case SHADER_PRIM_LINES:
+         return 2;
+      case SHADER_PRIM_TRIANGLES:
+         return 3;
+      default:
+         unreachable("invalid mesh shader primitive type");
+   }
 }

@@ -107,7 +107,7 @@
     const char * vk_QueryResultStatusKHR_to_str(VkQueryResultStatusKHR input);
 #endif
     const char * vk_QueryType_to_str(VkQueryType input);
-    const char * vk_QueueGlobalPriorityEXT_to_str(VkQueueGlobalPriorityEXT input);
+    const char * vk_QueueGlobalPriorityKHR_to_str(VkQueueGlobalPriorityKHR input);
     const char * vk_RasterizationOrderAMD_to_str(VkRasterizationOrderAMD input);
     const char * vk_RayTracingShaderGroupTypeKHR_to_str(VkRayTracingShaderGroupTypeKHR input);
     const char * vk_Result_to_str(VkResult input);

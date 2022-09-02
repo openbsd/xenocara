@@ -1,11 +1,12 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:39 jsg Exp $
 
 LIB=	intel_dev
 
 NOPROFILE=
 
 SRCS=	intel_debug.c \
-	intel_device_info.c
+	intel_device_info.c \
+	intel_hwconfig.c
 
 .include "../Makefile.inc"
 

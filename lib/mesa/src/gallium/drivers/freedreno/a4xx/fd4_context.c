@@ -27,6 +27,7 @@
 #include "freedreno_query_hw.h"
 
 #include "fd4_blend.h"
+#include "fd4_compute.h"
 #include "fd4_context.h"
 #include "fd4_draw.h"
 #include "fd4_emit.h"
@@ -72,6 +73,7 @@ fd4_context_create(struct pipe_screen *pscreen, void *priv,
    pctx = &fd4_ctx->base.base;
    pctx->screen = pscreen;
 
+   fd4_ctx->base.flags = flags;
    fd4_ctx->base.dev = fd_device_ref(screen->dev);
    fd4_ctx->base.screen = fd_screen(pscreen);
    fd4_ctx->base.last.key = &fd4_ctx->last_key;
@@ -82,6 +84,7 @@ fd4_context_create(struct pipe_screen *pscreen, void *priv,
    pctx->create_depth_stencil_alpha_state = fd4_zsa_state_create;
 
    fd4_draw_init(pctx);
+   fd4_compute_init(pctx);
    fd4_gmem_init(pctx);
    fd4_texture_init(pctx);
    fd4_prog_init(pctx);
@@ -108,6 +111,12 @@ fd4_context_create(struct pipe_screen *pscreen, void *priv,
 
    fd4_ctx->border_color_uploader =
       u_upload_create(pctx, 4096, 0, PIPE_USAGE_STREAM, 0);
+
+   for (int i = 0; i < 16; i++) {
+      fd4_ctx->vsampler_swizzles[i] = 0x688;
+      fd4_ctx->fsampler_swizzles[i] = 0x688;
+      fd4_ctx->csampler_swizzles[i] = 0x688;
+   }
 
    return pctx;
 }

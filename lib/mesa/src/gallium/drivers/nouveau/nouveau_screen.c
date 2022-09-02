@@ -99,7 +99,7 @@ nouveau_screen_bo_from_handle(struct pipe_screen *pscreen,
                               unsigned *out_stride)
 {
    struct nouveau_device *dev = nouveau_screen(pscreen)->device;
-   struct nouveau_bo *bo = 0;
+   struct nouveau_bo *bo = NULL;
    int ret;
 
    if (whandle->offset != 0) {
@@ -383,7 +383,7 @@ nouveau_screen_fini(struct nouveau_screen *screen)
 
 static void
 nouveau_set_debug_callback(struct pipe_context *pipe,
-                           const struct pipe_debug_callback *cb)
+                           const struct util_debug_callback *cb)
 {
    struct nouveau_context *context = nouveau_context(pipe);
 

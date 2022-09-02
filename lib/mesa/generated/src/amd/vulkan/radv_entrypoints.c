@@ -2331,6 +2331,28 @@ const struct vk_instance_entrypoint_table radv_instance_entrypoints = {
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolProperties@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetPhysicalDeviceToolProperties=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL radv_GetPhysicalDeviceToolProperties(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolPropertiesEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolPropertiesEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_GetPhysicalDeviceToolPropertiesEXT@12=_vk_entrypoint_stub@0")
@@ -2349,7 +2371,7 @@ const struct vk_instance_entrypoint_table radv_instance_entrypoints = {
     #pragma comment(linker, "/alternatename:radv_GetPhysicalDeviceToolPropertiesEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL radv_GetPhysicalDeviceToolPropertiesEXT(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolPropertiesEXT* pToolProperties) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL radv_GetPhysicalDeviceToolPropertiesEXT(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2578,6 +2600,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     .EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR = radv_EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR,
     .GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR = radv_GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR,
     .GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV = radv_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV,
+    .GetPhysicalDeviceToolProperties = radv_GetPhysicalDeviceToolProperties,
     .GetPhysicalDeviceToolPropertiesEXT = radv_GetPhysicalDeviceToolPropertiesEXT,
     .GetPhysicalDeviceFragmentShadingRatesKHR = radv_GetPhysicalDeviceFragmentShadingRatesKHR,
 #ifdef VK_ENABLE_BETA_EXTENSIONS
@@ -16017,204 +16040,6 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:radv_GetDeviceBufferMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirementsKHR* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:sqtt_GetDeviceBufferMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirementsKHR* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceBufferMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirementsKHR* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:radv_GetDeviceImageMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirementsKHR* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:sqtt_GetDeviceImageMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirementsKHR* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceImageMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirementsKHR* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:radv_GetDeviceImageSparseMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirementsKHR* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:sqtt_GetDeviceImageSparseMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirementsKHR* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR=vk_entrypoint_stub")
-#endif
-#else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirementsKHR* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_GetImageSparseMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_GetImageSparseMemoryRequirements2KHR@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_GetImageSparseMemoryRequirements2KHR@12=_vk_entrypoint_stub@0")
@@ -16278,6 +16103,402 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_GetImageSparseMemoryRequirements2KHR(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDeviceBufferMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceBufferMemoryRequirements(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDeviceBufferMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceBufferMemoryRequirements(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceBufferMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceBufferMemoryRequirements(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceBufferMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDeviceBufferMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceBufferMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDeviceBufferMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceBufferMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceBufferMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDeviceImageMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDeviceImageMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceImageMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDeviceImageMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDeviceImageMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceImageMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDeviceImageSparseMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDeviceImageSparseMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirements@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceImageSparseMemoryRequirements=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDeviceImageSparseMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDeviceImageSparseMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDeviceImageSparseMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDeviceImageSparseMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25077,6 +25298,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetCullMode@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetCullMode=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetCullMode@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetCullMode=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetCullMode@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetCullMode=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetCullModeEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetCullModeEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetCullModeEXT@12=_vk_entrypoint_stub@0")
@@ -25140,6 +25427,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetCullModeEXT(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetFrontFace@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetFrontFace=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetFrontFace@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetFrontFace=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetFrontFace@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetFrontFace=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25209,6 +25562,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopology@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetPrimitiveTopology=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveTopology@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetPrimitiveTopology=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveTopology@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetPrimitiveTopology=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopologyEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopologyEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveTopologyEXT@12=_vk_entrypoint_stub@0")
@@ -25272,6 +25691,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetPrimitiveTopologyEXT(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetViewportWithCount@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetViewportWithCount=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetViewportWithCount@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetViewportWithCount=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetViewportWithCount@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetViewportWithCount=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25341,6 +25826,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCount@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetScissorWithCount=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetScissorWithCount@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetScissorWithCount=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetScissorWithCount@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetScissorWithCount=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCountEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCountEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetScissorWithCountEXT@12=_vk_entrypoint_stub@0")
@@ -25404,6 +25955,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBindVertexBuffers2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdBindVertexBuffers2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBindVertexBuffers2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdBindVertexBuffers2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBindVertexBuffers2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdBindVertexBuffers2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25473,6 +26090,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetDepthTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetDepthTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetDepthTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnableEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnableEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetDepthTestEnableEXT@12=_vk_entrypoint_stub@0")
@@ -25536,6 +26219,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthWriteEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetDepthWriteEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthWriteEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetDepthWriteEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthWriteEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetDepthWriteEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25605,6 +26354,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOp@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetDepthCompareOp=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthCompareOp@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetDepthCompareOp=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthCompareOp@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetDepthCompareOp=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOpEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOpEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetDepthCompareOpEXT@12=_vk_entrypoint_stub@0")
@@ -25668,6 +26483,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthCompareOpEXT(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBoundsTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetDepthBoundsTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBoundsTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetDepthBoundsTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBoundsTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetDepthBoundsTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25737,6 +26618,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetStencilTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetStencilTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilTestEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetStencilTestEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnableEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnableEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetStencilTestEnableEXT@12=_vk_entrypoint_stub@0")
@@ -25800,6 +26747,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetStencilTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetStencilOp@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetStencilOp=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetStencilOp@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetStencilOp=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetStencilOp@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetStencilOp=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25935,6 +26948,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetRasterizerDiscardEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetRasterizerDiscardEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetRasterizerDiscardEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetRasterizerDiscardEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetRasterizerDiscardEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnableEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnableEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetRasterizerDiscardEnableEXT@12=_vk_entrypoint_stub@0")
@@ -25998,6 +27077,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetRasterizerDiscardEnableEXT(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetDepthBiasEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetDepthBiasEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetDepthBiasEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetDepthBiasEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetDepthBiasEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetDepthBiasEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26133,6 +27278,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetPrimitiveRestartEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetPrimitiveRestartEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetPrimitiveRestartEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetPrimitiveRestartEnable@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetPrimitiveRestartEnable=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnableEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnableEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetPrimitiveRestartEnableEXT@12=_vk_entrypoint_stub@0")
@@ -26199,6 +27410,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CreatePrivateDataSlot=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL radv_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CreatePrivateDataSlot=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL sqtt_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CreatePrivateDataSlot=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlotEXT@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlotEXT@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CreatePrivateDataSlotEXT@12=_vk_entrypoint_stub@0")
@@ -26217,7 +27494,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CreatePrivateDataSlotEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL radv_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlotEXT* pPrivateDataSlot) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL radv_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26239,7 +27516,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CreatePrivateDataSlotEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL sqtt_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlotEXT* pPrivateDataSlot) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL sqtt_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26261,7 +27538,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CreatePrivateDataSlotEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlotEXT* pPrivateDataSlot) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_DestroyPrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_DestroyPrivateDataSlot=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_DestroyPrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_DestroyPrivateDataSlot=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_DestroyPrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_DestroyPrivateDataSlot=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26283,7 +27626,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_DestroyPrivateDataSlotEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlotEXT privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26305,7 +27648,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_DestroyPrivateDataSlotEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlotEXT privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26327,7 +27670,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_DestroyPrivateDataSlotEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlotEXT privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_SetPrivateData@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_SetPrivateData=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL radv_SetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_SetPrivateData@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_SetPrivateData=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL sqtt_SetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_SetPrivateData@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_SetPrivateData=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_SetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26349,7 +27758,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_SetPrivateDataEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL radv_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlotEXT privateDataSlot, uint64_t data) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL radv_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26371,7 +27780,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_SetPrivateDataEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL sqtt_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlotEXT privateDataSlot, uint64_t data) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL sqtt_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26393,7 +27802,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_SetPrivateDataEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlotEXT privateDataSlot, uint64_t data) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetPrivateData@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetPrivateData=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetPrivateData@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetPrivateData=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetPrivateData@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetPrivateData=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26415,7 +27890,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_GetPrivateDataEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlotEXT privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26437,7 +27912,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_GetPrivateDataEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlotEXT privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26459,7 +27934,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_GetPrivateDataEXT=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlotEXT privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBuffer2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdCopyBuffer2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBuffer2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdCopyBuffer2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBuffer2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyBuffer2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26481,7 +28022,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdCopyBuffer2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2KHR* pCopyBufferInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26503,7 +28044,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdCopyBuffer2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2KHR* pCopyBufferInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26525,7 +28066,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyBuffer2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2KHR* pCopyBufferInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdCopyImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdCopyImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26547,7 +28154,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdCopyImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2KHR* pCopyImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26569,7 +28176,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdCopyImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2KHR* pCopyImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26591,7 +28198,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2KHR* pCopyImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBlitImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdBlitImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBlitImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdBlitImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBlitImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdBlitImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26613,7 +28286,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdBlitImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2KHR* pBlitImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26635,7 +28308,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdBlitImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2KHR* pBlitImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26657,7 +28330,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdBlitImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2KHR* pBlitImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyBufferToImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdCopyBufferToImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyBufferToImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdCopyBufferToImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyBufferToImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyBufferToImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26679,7 +28418,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdCopyBufferToImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2KHR* pCopyBufferToImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26701,7 +28440,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdCopyBufferToImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2KHR* pCopyBufferToImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26723,7 +28462,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyBufferToImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2KHR* pCopyBufferToImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdCopyImageToBuffer2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdCopyImageToBuffer2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdCopyImageToBuffer2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdCopyImageToBuffer2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdCopyImageToBuffer2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyImageToBuffer2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26745,7 +28550,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdCopyImageToBuffer2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2KHR* pCopyImageToBufferInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26767,7 +28572,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdCopyImageToBuffer2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2KHR* pCopyImageToBufferInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26789,7 +28594,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdCopyImageToBuffer2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2KHR* pCopyImageToBufferInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResolveImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdResolveImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResolveImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdResolveImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResolveImage2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdResolveImage2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26811,7 +28682,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdResolveImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2KHR* pResolveImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26833,7 +28704,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdResolveImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2KHR* pResolveImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26855,7 +28726,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdResolveImage2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2KHR* pResolveImageInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27189,6 +29060,72 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdSetEvent2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdSetEvent2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdSetEvent2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdSetEvent2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdSetEvent2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2KHR@4=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2KHR@8=_vk_entrypoint_stub@0")
     #pragma comment(linker, "/alternatename:_radv_CmdSetEvent2KHR@12=_vk_entrypoint_stub@0")
@@ -27207,7 +29144,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdSetEvent2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfoKHR*                          pDependencyInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27229,7 +29166,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdSetEvent2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfoKHR*                          pDependencyInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27251,7 +29188,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdSetEvent2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfoKHR*                          pDependencyInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdResetEvent2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdResetEvent2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdResetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdResetEvent2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdResetEvent2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdResetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdResetEvent2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdResetEvent2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdResetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27273,7 +29276,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdResetEvent2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2KHR                            stageMask) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27295,7 +29298,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdResetEvent2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2KHR                            stageMask) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27317,7 +29320,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdResetEvent2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2KHR                            stageMask) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWaitEvents2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdWaitEvents2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWaitEvents2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdWaitEvents2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWaitEvents2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdWaitEvents2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27339,7 +29408,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdWaitEvents2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfoKHR*         pDependencyInfos) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27361,7 +29430,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdWaitEvents2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfoKHR*         pDependencyInfos) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27383,7 +29452,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdWaitEvents2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfoKHR*         pDependencyInfos) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdPipelineBarrier2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdPipelineBarrier2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdPipelineBarrier2(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdPipelineBarrier2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdPipelineBarrier2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdPipelineBarrier2(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdPipelineBarrier2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdPipelineBarrier2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdPipelineBarrier2(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27405,7 +29540,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdPipelineBarrier2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfoKHR*                                pDependencyInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27427,7 +29562,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdPipelineBarrier2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfoKHR*                                pDependencyInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27449,7 +29584,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdPipelineBarrier2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfoKHR*                                pDependencyInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_QueueSubmit2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_QueueSubmit2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL radv_QueueSubmit2(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_QueueSubmit2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_QueueSubmit2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL sqtt_QueueSubmit2(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_QueueSubmit2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_QueueSubmit2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_QueueSubmit2(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27471,7 +29672,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_QueueSubmit2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL radv_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2KHR*           pSubmits, VkFence           fence) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL radv_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27493,7 +29694,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_QueueSubmit2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL sqtt_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2KHR*           pSubmits, VkFence           fence) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL sqtt_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27515,7 +29716,73 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_QueueSubmit2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2KHR*           pSubmits, VkFence           fence) __attribute__ ((weak));
+    VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdWriteTimestamp2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdWriteTimestamp2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdWriteTimestamp2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdWriteTimestamp2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdWriteTimestamp2@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdWriteTimestamp2=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27537,7 +29804,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdWriteTimestamp2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2KHR                            stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27559,7 +29826,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdWriteTimestamp2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2KHR                            stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27581,7 +29848,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdWriteTimestamp2KHR=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2KHR                            stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27603,7 +29870,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:radv_CmdWriteBufferMarker2AMD=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL radv_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2KHR                            stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL radv_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27625,7 +29892,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:sqtt_CmdWriteBufferMarker2AMD=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2KHR                            stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27647,7 +29914,7 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     #pragma comment(linker, "/alternatename:metro_exodus_CmdWriteBufferMarker2AMD=vk_entrypoint_stub")
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2KHR                            stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29333,6 +31600,402 @@ const struct vk_physical_device_entrypoint_table radv_physical_device_entrypoint
     VKAPI_ATTR VkResult VKAPI_CALL metro_exodus_GetBufferCollectionPropertiesFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, VkBufferCollectionPropertiesFUCHSIA* pProperties) __attribute__ ((weak));
 #endif
 #endif // VK_USE_PLATFORM_FUCHSIA
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRendering@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdBeginRendering=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdBeginRendering(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRendering@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdBeginRendering=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdBeginRendering(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRendering@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdBeginRendering=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBeginRendering(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdBeginRenderingKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdBeginRenderingKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdBeginRenderingKHR(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdBeginRenderingKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdBeginRenderingKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdBeginRenderingKHR(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdBeginRenderingKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdBeginRenderingKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdBeginRenderingKHR(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRendering@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdEndRendering=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdEndRendering(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRendering@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdEndRendering=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdEndRendering(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRendering@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdEndRendering=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdEndRendering(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_CmdEndRenderingKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_CmdEndRenderingKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_CmdEndRenderingKHR(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_CmdEndRenderingKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_CmdEndRenderingKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_CmdEndRenderingKHR(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_CmdEndRenderingKHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_CmdEndRenderingKHR=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_CmdEndRenderingKHR(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetLayoutHostMappingInfoVALVE@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDescriptorSetLayoutHostMappingInfoVALVE=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDescriptorSetLayoutHostMappingInfoVALVE(VkDevice device, const VkDescriptorSetBindingReferenceVALVE* pBindingReference, VkDescriptorSetLayoutHostMappingInfoVALVE* pHostMapping) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE(VkDevice device, const VkDescriptorSetBindingReferenceVALVE* pBindingReference, VkDescriptorSetLayoutHostMappingInfoVALVE* pHostMapping) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE(VkDevice device, const VkDescriptorSetBindingReferenceVALVE* pBindingReference, VkDescriptorSetLayoutHostMappingInfoVALVE* pHostMapping) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_radv_GetDescriptorSetHostMappingVALVE@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:radv_GetDescriptorSetHostMappingVALVE=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL radv_GetDescriptorSetHostMappingVALVE(VkDevice device, VkDescriptorSet descriptorSet, void** ppData) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_sqtt_GetDescriptorSetHostMappingVALVE@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:sqtt_GetDescriptorSetHostMappingVALVE=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL sqtt_GetDescriptorSetHostMappingVALVE(VkDevice device, VkDescriptorSet descriptorSet, void** ppData) __attribute__ ((weak));
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_metro_exodus_GetDescriptorSetHostMappingVALVE@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:metro_exodus_GetDescriptorSetHostMappingVALVE=vk_entrypoint_stub")
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL metro_exodus_GetDescriptorSetHostMappingVALVE(VkDevice device, VkDescriptorSet descriptorSet, void** ppData) __attribute__ ((weak));
+#endif
 
 const struct vk_device_entrypoint_table radv_device_entrypoints = {
     .GetDeviceProcAddr = radv_GetDeviceProcAddr,
@@ -29582,10 +32245,13 @@ const struct vk_device_entrypoint_table radv_device_entrypoints = {
     .GetImageMemoryRequirements2 = radv_GetImageMemoryRequirements2,
     .GetImageMemoryRequirements2KHR = radv_GetImageMemoryRequirements2KHR,
     .GetImageSparseMemoryRequirements2 = radv_GetImageSparseMemoryRequirements2,
-    .GetDeviceBufferMemoryRequirementsKHR = radv_GetDeviceBufferMemoryRequirementsKHR,
-    .GetDeviceImageMemoryRequirementsKHR = radv_GetDeviceImageMemoryRequirementsKHR,
-    .GetDeviceImageSparseMemoryRequirementsKHR = radv_GetDeviceImageSparseMemoryRequirementsKHR,
     .GetImageSparseMemoryRequirements2KHR = radv_GetImageSparseMemoryRequirements2KHR,
+    .GetDeviceBufferMemoryRequirements = radv_GetDeviceBufferMemoryRequirements,
+    .GetDeviceBufferMemoryRequirementsKHR = radv_GetDeviceBufferMemoryRequirementsKHR,
+    .GetDeviceImageMemoryRequirements = radv_GetDeviceImageMemoryRequirements,
+    .GetDeviceImageMemoryRequirementsKHR = radv_GetDeviceImageMemoryRequirementsKHR,
+    .GetDeviceImageSparseMemoryRequirements = radv_GetDeviceImageSparseMemoryRequirements,
+    .GetDeviceImageSparseMemoryRequirementsKHR = radv_GetDeviceImageSparseMemoryRequirementsKHR,
     .CreateSamplerYcbcrConversion = radv_CreateSamplerYcbcrConversion,
     .CreateSamplerYcbcrConversionKHR = radv_CreateSamplerYcbcrConversionKHR,
     .DestroySamplerYcbcrConversion = radv_DestroySamplerYcbcrConversion,
@@ -29755,43 +32421,74 @@ const struct vk_device_entrypoint_table radv_device_entrypoints = {
     .GetDeferredOperationMaxConcurrencyKHR = radv_GetDeferredOperationMaxConcurrencyKHR,
     .GetDeferredOperationResultKHR = radv_GetDeferredOperationResultKHR,
     .DeferredOperationJoinKHR = radv_DeferredOperationJoinKHR,
+    .CmdSetCullMode = radv_CmdSetCullMode,
     .CmdSetCullModeEXT = radv_CmdSetCullModeEXT,
+    .CmdSetFrontFace = radv_CmdSetFrontFace,
     .CmdSetFrontFaceEXT = radv_CmdSetFrontFaceEXT,
+    .CmdSetPrimitiveTopology = radv_CmdSetPrimitiveTopology,
     .CmdSetPrimitiveTopologyEXT = radv_CmdSetPrimitiveTopologyEXT,
+    .CmdSetViewportWithCount = radv_CmdSetViewportWithCount,
     .CmdSetViewportWithCountEXT = radv_CmdSetViewportWithCountEXT,
+    .CmdSetScissorWithCount = radv_CmdSetScissorWithCount,
     .CmdSetScissorWithCountEXT = radv_CmdSetScissorWithCountEXT,
+    .CmdBindVertexBuffers2 = radv_CmdBindVertexBuffers2,
     .CmdBindVertexBuffers2EXT = radv_CmdBindVertexBuffers2EXT,
+    .CmdSetDepthTestEnable = radv_CmdSetDepthTestEnable,
     .CmdSetDepthTestEnableEXT = radv_CmdSetDepthTestEnableEXT,
+    .CmdSetDepthWriteEnable = radv_CmdSetDepthWriteEnable,
     .CmdSetDepthWriteEnableEXT = radv_CmdSetDepthWriteEnableEXT,
+    .CmdSetDepthCompareOp = radv_CmdSetDepthCompareOp,
     .CmdSetDepthCompareOpEXT = radv_CmdSetDepthCompareOpEXT,
+    .CmdSetDepthBoundsTestEnable = radv_CmdSetDepthBoundsTestEnable,
     .CmdSetDepthBoundsTestEnableEXT = radv_CmdSetDepthBoundsTestEnableEXT,
+    .CmdSetStencilTestEnable = radv_CmdSetStencilTestEnable,
     .CmdSetStencilTestEnableEXT = radv_CmdSetStencilTestEnableEXT,
+    .CmdSetStencilOp = radv_CmdSetStencilOp,
     .CmdSetStencilOpEXT = radv_CmdSetStencilOpEXT,
     .CmdSetPatchControlPointsEXT = radv_CmdSetPatchControlPointsEXT,
+    .CmdSetRasterizerDiscardEnable = radv_CmdSetRasterizerDiscardEnable,
     .CmdSetRasterizerDiscardEnableEXT = radv_CmdSetRasterizerDiscardEnableEXT,
+    .CmdSetDepthBiasEnable = radv_CmdSetDepthBiasEnable,
     .CmdSetDepthBiasEnableEXT = radv_CmdSetDepthBiasEnableEXT,
     .CmdSetLogicOpEXT = radv_CmdSetLogicOpEXT,
+    .CmdSetPrimitiveRestartEnable = radv_CmdSetPrimitiveRestartEnable,
     .CmdSetPrimitiveRestartEnableEXT = radv_CmdSetPrimitiveRestartEnableEXT,
+    .CreatePrivateDataSlot = radv_CreatePrivateDataSlot,
     .CreatePrivateDataSlotEXT = radv_CreatePrivateDataSlotEXT,
+    .DestroyPrivateDataSlot = radv_DestroyPrivateDataSlot,
     .DestroyPrivateDataSlotEXT = radv_DestroyPrivateDataSlotEXT,
+    .SetPrivateData = radv_SetPrivateData,
     .SetPrivateDataEXT = radv_SetPrivateDataEXT,
+    .GetPrivateData = radv_GetPrivateData,
     .GetPrivateDataEXT = radv_GetPrivateDataEXT,
+    .CmdCopyBuffer2 = radv_CmdCopyBuffer2,
     .CmdCopyBuffer2KHR = radv_CmdCopyBuffer2KHR,
+    .CmdCopyImage2 = radv_CmdCopyImage2,
     .CmdCopyImage2KHR = radv_CmdCopyImage2KHR,
+    .CmdBlitImage2 = radv_CmdBlitImage2,
     .CmdBlitImage2KHR = radv_CmdBlitImage2KHR,
+    .CmdCopyBufferToImage2 = radv_CmdCopyBufferToImage2,
     .CmdCopyBufferToImage2KHR = radv_CmdCopyBufferToImage2KHR,
+    .CmdCopyImageToBuffer2 = radv_CmdCopyImageToBuffer2,
     .CmdCopyImageToBuffer2KHR = radv_CmdCopyImageToBuffer2KHR,
+    .CmdResolveImage2 = radv_CmdResolveImage2,
     .CmdResolveImage2KHR = radv_CmdResolveImage2KHR,
     .CmdSetFragmentShadingRateKHR = radv_CmdSetFragmentShadingRateKHR,
     .CmdSetFragmentShadingRateEnumNV = radv_CmdSetFragmentShadingRateEnumNV,
     .GetAccelerationStructureBuildSizesKHR = radv_GetAccelerationStructureBuildSizesKHR,
     .CmdSetVertexInputEXT = radv_CmdSetVertexInputEXT,
     .CmdSetColorWriteEnableEXT = radv_CmdSetColorWriteEnableEXT,
+    .CmdSetEvent2 = radv_CmdSetEvent2,
     .CmdSetEvent2KHR = radv_CmdSetEvent2KHR,
+    .CmdResetEvent2 = radv_CmdResetEvent2,
     .CmdResetEvent2KHR = radv_CmdResetEvent2KHR,
+    .CmdWaitEvents2 = radv_CmdWaitEvents2,
     .CmdWaitEvents2KHR = radv_CmdWaitEvents2KHR,
+    .CmdPipelineBarrier2 = radv_CmdPipelineBarrier2,
     .CmdPipelineBarrier2KHR = radv_CmdPipelineBarrier2KHR,
+    .QueueSubmit2 = radv_QueueSubmit2,
     .QueueSubmit2KHR = radv_QueueSubmit2KHR,
+    .CmdWriteTimestamp2 = radv_CmdWriteTimestamp2,
     .CmdWriteTimestamp2KHR = radv_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = radv_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = radv_GetQueueCheckpointData2NV,
@@ -29887,6 +32584,12 @@ const struct vk_device_entrypoint_table radv_device_entrypoints = {
 #elif defined(_MSC_VER)
     .GetBufferCollectionPropertiesFUCHSIA = (PFN_vkVoidFunction)vk_entrypoint_stub,
 #endif // VK_USE_PLATFORM_FUCHSIA
+    .CmdBeginRendering = radv_CmdBeginRendering,
+    .CmdBeginRenderingKHR = radv_CmdBeginRenderingKHR,
+    .CmdEndRendering = radv_CmdEndRendering,
+    .CmdEndRenderingKHR = radv_CmdEndRenderingKHR,
+    .GetDescriptorSetLayoutHostMappingInfoVALVE = radv_GetDescriptorSetLayoutHostMappingInfoVALVE,
+    .GetDescriptorSetHostMappingVALVE = radv_GetDescriptorSetHostMappingVALVE,
 };
 const struct vk_device_entrypoint_table sqtt_device_entrypoints = {
     .GetDeviceProcAddr = sqtt_GetDeviceProcAddr,
@@ -30136,10 +32839,13 @@ const struct vk_device_entrypoint_table sqtt_device_entrypoints = {
     .GetImageMemoryRequirements2 = sqtt_GetImageMemoryRequirements2,
     .GetImageMemoryRequirements2KHR = sqtt_GetImageMemoryRequirements2KHR,
     .GetImageSparseMemoryRequirements2 = sqtt_GetImageSparseMemoryRequirements2,
-    .GetDeviceBufferMemoryRequirementsKHR = sqtt_GetDeviceBufferMemoryRequirementsKHR,
-    .GetDeviceImageMemoryRequirementsKHR = sqtt_GetDeviceImageMemoryRequirementsKHR,
-    .GetDeviceImageSparseMemoryRequirementsKHR = sqtt_GetDeviceImageSparseMemoryRequirementsKHR,
     .GetImageSparseMemoryRequirements2KHR = sqtt_GetImageSparseMemoryRequirements2KHR,
+    .GetDeviceBufferMemoryRequirements = sqtt_GetDeviceBufferMemoryRequirements,
+    .GetDeviceBufferMemoryRequirementsKHR = sqtt_GetDeviceBufferMemoryRequirementsKHR,
+    .GetDeviceImageMemoryRequirements = sqtt_GetDeviceImageMemoryRequirements,
+    .GetDeviceImageMemoryRequirementsKHR = sqtt_GetDeviceImageMemoryRequirementsKHR,
+    .GetDeviceImageSparseMemoryRequirements = sqtt_GetDeviceImageSparseMemoryRequirements,
+    .GetDeviceImageSparseMemoryRequirementsKHR = sqtt_GetDeviceImageSparseMemoryRequirementsKHR,
     .CreateSamplerYcbcrConversion = sqtt_CreateSamplerYcbcrConversion,
     .CreateSamplerYcbcrConversionKHR = sqtt_CreateSamplerYcbcrConversionKHR,
     .DestroySamplerYcbcrConversion = sqtt_DestroySamplerYcbcrConversion,
@@ -30309,43 +33015,74 @@ const struct vk_device_entrypoint_table sqtt_device_entrypoints = {
     .GetDeferredOperationMaxConcurrencyKHR = sqtt_GetDeferredOperationMaxConcurrencyKHR,
     .GetDeferredOperationResultKHR = sqtt_GetDeferredOperationResultKHR,
     .DeferredOperationJoinKHR = sqtt_DeferredOperationJoinKHR,
+    .CmdSetCullMode = sqtt_CmdSetCullMode,
     .CmdSetCullModeEXT = sqtt_CmdSetCullModeEXT,
+    .CmdSetFrontFace = sqtt_CmdSetFrontFace,
     .CmdSetFrontFaceEXT = sqtt_CmdSetFrontFaceEXT,
+    .CmdSetPrimitiveTopology = sqtt_CmdSetPrimitiveTopology,
     .CmdSetPrimitiveTopologyEXT = sqtt_CmdSetPrimitiveTopologyEXT,
+    .CmdSetViewportWithCount = sqtt_CmdSetViewportWithCount,
     .CmdSetViewportWithCountEXT = sqtt_CmdSetViewportWithCountEXT,
+    .CmdSetScissorWithCount = sqtt_CmdSetScissorWithCount,
     .CmdSetScissorWithCountEXT = sqtt_CmdSetScissorWithCountEXT,
+    .CmdBindVertexBuffers2 = sqtt_CmdBindVertexBuffers2,
     .CmdBindVertexBuffers2EXT = sqtt_CmdBindVertexBuffers2EXT,
+    .CmdSetDepthTestEnable = sqtt_CmdSetDepthTestEnable,
     .CmdSetDepthTestEnableEXT = sqtt_CmdSetDepthTestEnableEXT,
+    .CmdSetDepthWriteEnable = sqtt_CmdSetDepthWriteEnable,
     .CmdSetDepthWriteEnableEXT = sqtt_CmdSetDepthWriteEnableEXT,
+    .CmdSetDepthCompareOp = sqtt_CmdSetDepthCompareOp,
     .CmdSetDepthCompareOpEXT = sqtt_CmdSetDepthCompareOpEXT,
+    .CmdSetDepthBoundsTestEnable = sqtt_CmdSetDepthBoundsTestEnable,
     .CmdSetDepthBoundsTestEnableEXT = sqtt_CmdSetDepthBoundsTestEnableEXT,
+    .CmdSetStencilTestEnable = sqtt_CmdSetStencilTestEnable,
     .CmdSetStencilTestEnableEXT = sqtt_CmdSetStencilTestEnableEXT,
+    .CmdSetStencilOp = sqtt_CmdSetStencilOp,
     .CmdSetStencilOpEXT = sqtt_CmdSetStencilOpEXT,
     .CmdSetPatchControlPointsEXT = sqtt_CmdSetPatchControlPointsEXT,
+    .CmdSetRasterizerDiscardEnable = sqtt_CmdSetRasterizerDiscardEnable,
     .CmdSetRasterizerDiscardEnableEXT = sqtt_CmdSetRasterizerDiscardEnableEXT,
+    .CmdSetDepthBiasEnable = sqtt_CmdSetDepthBiasEnable,
     .CmdSetDepthBiasEnableEXT = sqtt_CmdSetDepthBiasEnableEXT,
     .CmdSetLogicOpEXT = sqtt_CmdSetLogicOpEXT,
+    .CmdSetPrimitiveRestartEnable = sqtt_CmdSetPrimitiveRestartEnable,
     .CmdSetPrimitiveRestartEnableEXT = sqtt_CmdSetPrimitiveRestartEnableEXT,
+    .CreatePrivateDataSlot = sqtt_CreatePrivateDataSlot,
     .CreatePrivateDataSlotEXT = sqtt_CreatePrivateDataSlotEXT,
+    .DestroyPrivateDataSlot = sqtt_DestroyPrivateDataSlot,
     .DestroyPrivateDataSlotEXT = sqtt_DestroyPrivateDataSlotEXT,
+    .SetPrivateData = sqtt_SetPrivateData,
     .SetPrivateDataEXT = sqtt_SetPrivateDataEXT,
+    .GetPrivateData = sqtt_GetPrivateData,
     .GetPrivateDataEXT = sqtt_GetPrivateDataEXT,
+    .CmdCopyBuffer2 = sqtt_CmdCopyBuffer2,
     .CmdCopyBuffer2KHR = sqtt_CmdCopyBuffer2KHR,
+    .CmdCopyImage2 = sqtt_CmdCopyImage2,
     .CmdCopyImage2KHR = sqtt_CmdCopyImage2KHR,
+    .CmdBlitImage2 = sqtt_CmdBlitImage2,
     .CmdBlitImage2KHR = sqtt_CmdBlitImage2KHR,
+    .CmdCopyBufferToImage2 = sqtt_CmdCopyBufferToImage2,
     .CmdCopyBufferToImage2KHR = sqtt_CmdCopyBufferToImage2KHR,
+    .CmdCopyImageToBuffer2 = sqtt_CmdCopyImageToBuffer2,
     .CmdCopyImageToBuffer2KHR = sqtt_CmdCopyImageToBuffer2KHR,
+    .CmdResolveImage2 = sqtt_CmdResolveImage2,
     .CmdResolveImage2KHR = sqtt_CmdResolveImage2KHR,
     .CmdSetFragmentShadingRateKHR = sqtt_CmdSetFragmentShadingRateKHR,
     .CmdSetFragmentShadingRateEnumNV = sqtt_CmdSetFragmentShadingRateEnumNV,
     .GetAccelerationStructureBuildSizesKHR = sqtt_GetAccelerationStructureBuildSizesKHR,
     .CmdSetVertexInputEXT = sqtt_CmdSetVertexInputEXT,
     .CmdSetColorWriteEnableEXT = sqtt_CmdSetColorWriteEnableEXT,
+    .CmdSetEvent2 = sqtt_CmdSetEvent2,
     .CmdSetEvent2KHR = sqtt_CmdSetEvent2KHR,
+    .CmdResetEvent2 = sqtt_CmdResetEvent2,
     .CmdResetEvent2KHR = sqtt_CmdResetEvent2KHR,
+    .CmdWaitEvents2 = sqtt_CmdWaitEvents2,
     .CmdWaitEvents2KHR = sqtt_CmdWaitEvents2KHR,
+    .CmdPipelineBarrier2 = sqtt_CmdPipelineBarrier2,
     .CmdPipelineBarrier2KHR = sqtt_CmdPipelineBarrier2KHR,
+    .QueueSubmit2 = sqtt_QueueSubmit2,
     .QueueSubmit2KHR = sqtt_QueueSubmit2KHR,
+    .CmdWriteTimestamp2 = sqtt_CmdWriteTimestamp2,
     .CmdWriteTimestamp2KHR = sqtt_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = sqtt_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = sqtt_GetQueueCheckpointData2NV,
@@ -30441,6 +33178,12 @@ const struct vk_device_entrypoint_table sqtt_device_entrypoints = {
 #elif defined(_MSC_VER)
     .GetBufferCollectionPropertiesFUCHSIA = (PFN_vkVoidFunction)vk_entrypoint_stub,
 #endif // VK_USE_PLATFORM_FUCHSIA
+    .CmdBeginRendering = sqtt_CmdBeginRendering,
+    .CmdBeginRenderingKHR = sqtt_CmdBeginRenderingKHR,
+    .CmdEndRendering = sqtt_CmdEndRendering,
+    .CmdEndRenderingKHR = sqtt_CmdEndRenderingKHR,
+    .GetDescriptorSetLayoutHostMappingInfoVALVE = sqtt_GetDescriptorSetLayoutHostMappingInfoVALVE,
+    .GetDescriptorSetHostMappingVALVE = sqtt_GetDescriptorSetHostMappingVALVE,
 };
 const struct vk_device_entrypoint_table metro_exodus_device_entrypoints = {
     .GetDeviceProcAddr = metro_exodus_GetDeviceProcAddr,
@@ -30690,10 +33433,13 @@ const struct vk_device_entrypoint_table metro_exodus_device_entrypoints = {
     .GetImageMemoryRequirements2 = metro_exodus_GetImageMemoryRequirements2,
     .GetImageMemoryRequirements2KHR = metro_exodus_GetImageMemoryRequirements2KHR,
     .GetImageSparseMemoryRequirements2 = metro_exodus_GetImageSparseMemoryRequirements2,
-    .GetDeviceBufferMemoryRequirementsKHR = metro_exodus_GetDeviceBufferMemoryRequirementsKHR,
-    .GetDeviceImageMemoryRequirementsKHR = metro_exodus_GetDeviceImageMemoryRequirementsKHR,
-    .GetDeviceImageSparseMemoryRequirementsKHR = metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR,
     .GetImageSparseMemoryRequirements2KHR = metro_exodus_GetImageSparseMemoryRequirements2KHR,
+    .GetDeviceBufferMemoryRequirements = metro_exodus_GetDeviceBufferMemoryRequirements,
+    .GetDeviceBufferMemoryRequirementsKHR = metro_exodus_GetDeviceBufferMemoryRequirementsKHR,
+    .GetDeviceImageMemoryRequirements = metro_exodus_GetDeviceImageMemoryRequirements,
+    .GetDeviceImageMemoryRequirementsKHR = metro_exodus_GetDeviceImageMemoryRequirementsKHR,
+    .GetDeviceImageSparseMemoryRequirements = metro_exodus_GetDeviceImageSparseMemoryRequirements,
+    .GetDeviceImageSparseMemoryRequirementsKHR = metro_exodus_GetDeviceImageSparseMemoryRequirementsKHR,
     .CreateSamplerYcbcrConversion = metro_exodus_CreateSamplerYcbcrConversion,
     .CreateSamplerYcbcrConversionKHR = metro_exodus_CreateSamplerYcbcrConversionKHR,
     .DestroySamplerYcbcrConversion = metro_exodus_DestroySamplerYcbcrConversion,
@@ -30863,43 +33609,74 @@ const struct vk_device_entrypoint_table metro_exodus_device_entrypoints = {
     .GetDeferredOperationMaxConcurrencyKHR = metro_exodus_GetDeferredOperationMaxConcurrencyKHR,
     .GetDeferredOperationResultKHR = metro_exodus_GetDeferredOperationResultKHR,
     .DeferredOperationJoinKHR = metro_exodus_DeferredOperationJoinKHR,
+    .CmdSetCullMode = metro_exodus_CmdSetCullMode,
     .CmdSetCullModeEXT = metro_exodus_CmdSetCullModeEXT,
+    .CmdSetFrontFace = metro_exodus_CmdSetFrontFace,
     .CmdSetFrontFaceEXT = metro_exodus_CmdSetFrontFaceEXT,
+    .CmdSetPrimitiveTopology = metro_exodus_CmdSetPrimitiveTopology,
     .CmdSetPrimitiveTopologyEXT = metro_exodus_CmdSetPrimitiveTopologyEXT,
+    .CmdSetViewportWithCount = metro_exodus_CmdSetViewportWithCount,
     .CmdSetViewportWithCountEXT = metro_exodus_CmdSetViewportWithCountEXT,
+    .CmdSetScissorWithCount = metro_exodus_CmdSetScissorWithCount,
     .CmdSetScissorWithCountEXT = metro_exodus_CmdSetScissorWithCountEXT,
+    .CmdBindVertexBuffers2 = metro_exodus_CmdBindVertexBuffers2,
     .CmdBindVertexBuffers2EXT = metro_exodus_CmdBindVertexBuffers2EXT,
+    .CmdSetDepthTestEnable = metro_exodus_CmdSetDepthTestEnable,
     .CmdSetDepthTestEnableEXT = metro_exodus_CmdSetDepthTestEnableEXT,
+    .CmdSetDepthWriteEnable = metro_exodus_CmdSetDepthWriteEnable,
     .CmdSetDepthWriteEnableEXT = metro_exodus_CmdSetDepthWriteEnableEXT,
+    .CmdSetDepthCompareOp = metro_exodus_CmdSetDepthCompareOp,
     .CmdSetDepthCompareOpEXT = metro_exodus_CmdSetDepthCompareOpEXT,
+    .CmdSetDepthBoundsTestEnable = metro_exodus_CmdSetDepthBoundsTestEnable,
     .CmdSetDepthBoundsTestEnableEXT = metro_exodus_CmdSetDepthBoundsTestEnableEXT,
+    .CmdSetStencilTestEnable = metro_exodus_CmdSetStencilTestEnable,
     .CmdSetStencilTestEnableEXT = metro_exodus_CmdSetStencilTestEnableEXT,
+    .CmdSetStencilOp = metro_exodus_CmdSetStencilOp,
     .CmdSetStencilOpEXT = metro_exodus_CmdSetStencilOpEXT,
     .CmdSetPatchControlPointsEXT = metro_exodus_CmdSetPatchControlPointsEXT,
+    .CmdSetRasterizerDiscardEnable = metro_exodus_CmdSetRasterizerDiscardEnable,
     .CmdSetRasterizerDiscardEnableEXT = metro_exodus_CmdSetRasterizerDiscardEnableEXT,
+    .CmdSetDepthBiasEnable = metro_exodus_CmdSetDepthBiasEnable,
     .CmdSetDepthBiasEnableEXT = metro_exodus_CmdSetDepthBiasEnableEXT,
     .CmdSetLogicOpEXT = metro_exodus_CmdSetLogicOpEXT,
+    .CmdSetPrimitiveRestartEnable = metro_exodus_CmdSetPrimitiveRestartEnable,
     .CmdSetPrimitiveRestartEnableEXT = metro_exodus_CmdSetPrimitiveRestartEnableEXT,
+    .CreatePrivateDataSlot = metro_exodus_CreatePrivateDataSlot,
     .CreatePrivateDataSlotEXT = metro_exodus_CreatePrivateDataSlotEXT,
+    .DestroyPrivateDataSlot = metro_exodus_DestroyPrivateDataSlot,
     .DestroyPrivateDataSlotEXT = metro_exodus_DestroyPrivateDataSlotEXT,
+    .SetPrivateData = metro_exodus_SetPrivateData,
     .SetPrivateDataEXT = metro_exodus_SetPrivateDataEXT,
+    .GetPrivateData = metro_exodus_GetPrivateData,
     .GetPrivateDataEXT = metro_exodus_GetPrivateDataEXT,
+    .CmdCopyBuffer2 = metro_exodus_CmdCopyBuffer2,
     .CmdCopyBuffer2KHR = metro_exodus_CmdCopyBuffer2KHR,
+    .CmdCopyImage2 = metro_exodus_CmdCopyImage2,
     .CmdCopyImage2KHR = metro_exodus_CmdCopyImage2KHR,
+    .CmdBlitImage2 = metro_exodus_CmdBlitImage2,
     .CmdBlitImage2KHR = metro_exodus_CmdBlitImage2KHR,
+    .CmdCopyBufferToImage2 = metro_exodus_CmdCopyBufferToImage2,
     .CmdCopyBufferToImage2KHR = metro_exodus_CmdCopyBufferToImage2KHR,
+    .CmdCopyImageToBuffer2 = metro_exodus_CmdCopyImageToBuffer2,
     .CmdCopyImageToBuffer2KHR = metro_exodus_CmdCopyImageToBuffer2KHR,
+    .CmdResolveImage2 = metro_exodus_CmdResolveImage2,
     .CmdResolveImage2KHR = metro_exodus_CmdResolveImage2KHR,
     .CmdSetFragmentShadingRateKHR = metro_exodus_CmdSetFragmentShadingRateKHR,
     .CmdSetFragmentShadingRateEnumNV = metro_exodus_CmdSetFragmentShadingRateEnumNV,
     .GetAccelerationStructureBuildSizesKHR = metro_exodus_GetAccelerationStructureBuildSizesKHR,
     .CmdSetVertexInputEXT = metro_exodus_CmdSetVertexInputEXT,
     .CmdSetColorWriteEnableEXT = metro_exodus_CmdSetColorWriteEnableEXT,
+    .CmdSetEvent2 = metro_exodus_CmdSetEvent2,
     .CmdSetEvent2KHR = metro_exodus_CmdSetEvent2KHR,
+    .CmdResetEvent2 = metro_exodus_CmdResetEvent2,
     .CmdResetEvent2KHR = metro_exodus_CmdResetEvent2KHR,
+    .CmdWaitEvents2 = metro_exodus_CmdWaitEvents2,
     .CmdWaitEvents2KHR = metro_exodus_CmdWaitEvents2KHR,
+    .CmdPipelineBarrier2 = metro_exodus_CmdPipelineBarrier2,
     .CmdPipelineBarrier2KHR = metro_exodus_CmdPipelineBarrier2KHR,
+    .QueueSubmit2 = metro_exodus_QueueSubmit2,
     .QueueSubmit2KHR = metro_exodus_QueueSubmit2KHR,
+    .CmdWriteTimestamp2 = metro_exodus_CmdWriteTimestamp2,
     .CmdWriteTimestamp2KHR = metro_exodus_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = metro_exodus_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = metro_exodus_GetQueueCheckpointData2NV,
@@ -30995,5 +33772,11 @@ const struct vk_device_entrypoint_table metro_exodus_device_entrypoints = {
 #elif defined(_MSC_VER)
     .GetBufferCollectionPropertiesFUCHSIA = (PFN_vkVoidFunction)vk_entrypoint_stub,
 #endif // VK_USE_PLATFORM_FUCHSIA
+    .CmdBeginRendering = metro_exodus_CmdBeginRendering,
+    .CmdBeginRenderingKHR = metro_exodus_CmdBeginRenderingKHR,
+    .CmdEndRendering = metro_exodus_CmdEndRendering,
+    .CmdEndRenderingKHR = metro_exodus_CmdEndRenderingKHR,
+    .GetDescriptorSetLayoutHostMappingInfoVALVE = metro_exodus_GetDescriptorSetLayoutHostMappingInfoVALVE,
+    .GetDescriptorSetHostMappingVALVE = metro_exodus_GetDescriptorSetHostMappingVALVE,
 };
 

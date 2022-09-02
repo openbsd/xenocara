@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2022/09/02 05:46:41 jsg Exp $
 
 LIB=	vulkan_radeon
 
@@ -27,22 +27,29 @@ SRCS=	radv_metro_exodus.c \
 	radv_meta_copy_vrs_htile.c \
 	radv_meta_dcc_retile.c \
 	radv_meta_decompress.c \
+	radv_meta_etc_decode.c \
 	radv_meta_fast_clear.c \
+	radv_meta_fmask_copy.c \
 	radv_meta_fmask_expand.c \
 	radv_meta_resolve.c \
 	radv_meta_resolve_cs.c \
 	radv_meta_resolve_fs.c \
+	radv_nir_apply_pipeline_layout.c \
+	radv_nir_lower_ray_queries.c \
 	radv_nir_lower_ycbcr_textures.c \
 	radv_pass.c \
+	radv_perfcounter.c \
 	radv_pipeline.c \
 	radv_pipeline_cache.c \
 	radv_pipeline_rt.c \
+	radv_rt_common.c \
+	radv_sdma_copy_image.c \
 	radv_shader.c \
 	radv_shader_args.c \
 	radv_shader_info.c \
+	radv_spm.c \
 	radv_sqtt.c \
 	radv_query.c \
-	radv_util.c \
 	radv_wsi.c \
 	si_cmd_buffer.c \
 
@@ -68,6 +75,7 @@ CXXFLAGS+=	${LLVM_CXXFLAGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/amd/vulkan \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/src/vulkan/runtime \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/vulkan/wsi \
 		-I${MESA_SRC}/src/amd/common \
@@ -81,6 +89,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/amd/vulkan \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/amd/common \
 		-I${MESA_SRC}/generated/src/amd/vulkan \
+		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \
@@ -124,6 +133,7 @@ LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
 LDADD+=		-Wl,--whole-archive
 LDADD+=		${.CURDIR}/../libvulkan_util/${__objdir}/libvulkan_util.a
+LDADD+=		${.CURDIR}/../libvulkan_runtime/${__objdir}/libvulkan_runtime.a
 LDADD+=		-Wl,--no-whole-archive
 
 .for slib in ${SLIBS}

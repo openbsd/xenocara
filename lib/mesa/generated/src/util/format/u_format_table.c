@@ -43058,10 +43058,37 @@ util_format_descriptions[] = {
       UTIL_FORMAT_COLORSPACE_RGB,
    },
 
-   [PIPE_FORMAT_R8_G8_B8_420_UNORM] = {
-      PIPE_FORMAT_R8_G8_B8_420_UNORM,
-      "PIPE_FORMAT_R8_G8_B8_420_UNORM",
-      "r8_g8_b8_420_unorm",
+   [PIPE_FORMAT_G8_B8R8_420_UNORM] = {
+      PIPE_FORMAT_G8_B8R8_420_UNORM,
+      "PIPE_FORMAT_G8_B8R8_420_UNORM",
+      "g8_b8r8_420_unorm",
+      {1, 1, 1, 8},	/* block */
+      UTIL_FORMAT_LAYOUT_PLANAR2,
+      1,	/* nr_channels */
+      FALSE,	/* is_array */
+      FALSE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      TRUE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_Z,	/* b */
+      PIPE_SWIZZLE_W	/* a */
+   },
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
+   [PIPE_FORMAT_G8_B8_R8_420_UNORM] = {
+      PIPE_FORMAT_G8_B8_R8_420_UNORM,
+      "PIPE_FORMAT_G8_B8_R8_420_UNORM",
+      "g8_b8_r8_420_unorm",
       {1, 1, 1, 8},	/* block */
       UTIL_FORMAT_LAYOUT_PLANAR3,
       1,	/* nr_channels */
@@ -43083,6 +43110,33 @@ util_format_descriptions[] = {
       PIPE_SWIZZLE_W	/* a */
    },
       UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
+   [PIPE_FORMAT_Y8_UNORM] = {
+      PIPE_FORMAT_Y8_UNORM,
+      "PIPE_FORMAT_Y8_UNORM",
+      "y8_unorm",
+      {1, 1, 1, 8},	/* block */
+      UTIL_FORMAT_LAYOUT_OTHER,
+      1,	/* nr_channels */
+      FALSE,	/* is_array */
+      FALSE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      TRUE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      PIPE_SWIZZLE_X,	/* y */
+      PIPE_SWIZZLE_0,	/* u */
+      PIPE_SWIZZLE_0,	/* v */
+      PIPE_SWIZZLE_1	/* ignored */
+   },
+      UTIL_FORMAT_COLORSPACE_YUV,
    },
 
    [PIPE_FORMAT_Y8_U8_V8_422_UNORM] = {
@@ -49709,7 +49763,9 @@ util_format_pack_descriptions[] = {
    [PIPE_FORMAT_NV12] = { 0 },
    [PIPE_FORMAT_NV21] = { 0 },
    [PIPE_FORMAT_R8_G8B8_420_UNORM] = { 0 },
-   [PIPE_FORMAT_R8_G8_B8_420_UNORM] = { 0 },
+   [PIPE_FORMAT_G8_B8R8_420_UNORM] = { 0 },
+   [PIPE_FORMAT_G8_B8_R8_420_UNORM] = { 0 },
+   [PIPE_FORMAT_Y8_UNORM] = { 0 },
    [PIPE_FORMAT_Y8_U8_V8_422_UNORM] = { 0 },
    [PIPE_FORMAT_Y8_U8V8_422_UNORM] = { 0 },
    [PIPE_FORMAT_Y8_U8_V8_444_UNORM] = { 0 },
@@ -51227,7 +51283,9 @@ util_format_unpack_descriptions[] = {
    [PIPE_FORMAT_NV12] = { 0 },
    [PIPE_FORMAT_NV21] = { 0 },
    [PIPE_FORMAT_R8_G8B8_420_UNORM] = { 0 },
-   [PIPE_FORMAT_R8_G8_B8_420_UNORM] = { 0 },
+   [PIPE_FORMAT_G8_B8R8_420_UNORM] = { 0 },
+   [PIPE_FORMAT_G8_B8_R8_420_UNORM] = { 0 },
+   [PIPE_FORMAT_Y8_UNORM] = { 0 },
    [PIPE_FORMAT_Y8_U8_V8_422_UNORM] = { 0 },
    [PIPE_FORMAT_Y8_U8V8_422_UNORM] = { 0 },
    [PIPE_FORMAT_Y8_U8_V8_444_UNORM] = { 0 },
@@ -51926,7 +51984,9 @@ static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
   [PIPE_FORMAT_NV12] = NULL,
   [PIPE_FORMAT_NV21] = NULL,
   [PIPE_FORMAT_R8_G8B8_420_UNORM] = NULL,
-  [PIPE_FORMAT_R8_G8_B8_420_UNORM] = NULL,
+  [PIPE_FORMAT_G8_B8R8_420_UNORM] = NULL,
+  [PIPE_FORMAT_G8_B8_R8_420_UNORM] = NULL,
+  [PIPE_FORMAT_Y8_UNORM] = NULL,
   [PIPE_FORMAT_Y8_U8_V8_422_UNORM] = NULL,
   [PIPE_FORMAT_Y8_U8V8_422_UNORM] = NULL,
   [PIPE_FORMAT_Y8_U8_V8_444_UNORM] = NULL,

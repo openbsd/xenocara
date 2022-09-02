@@ -54,7 +54,9 @@ Configuration macro:
 #endif
 #define EMULATED_THREADS_TSS_DTOR_SLOTNUM 64  // see TLS_MINIMUM_AVAILABLE
 
-
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN 1
+#endif
 #include <windows.h>
 
 // check configuration
@@ -226,6 +228,7 @@ cnd_broadcast(cnd_t *cond)
 static inline void
 cnd_destroy(cnd_t *cond)
 {
+    (void)cond;
     assert(cond != NULL);
     // do nothing
 }
@@ -259,7 +262,7 @@ cnd_timedwait(cnd_t *cond, mtx_t *mtx, const struct timespec *abs_time)
     const DWORD timeout = impl_abs2relmsec(abs_time);
     if (SleepConditionVariableCS(cond, mtx, timeout))
         return thrd_success;
-    return (GetLastError() == ERROR_TIMEOUT) ? thrd_busy : thrd_error;
+    return (GetLastError() == ERROR_TIMEOUT) ? thrd_timedout : thrd_error;
 #else
     return thrd_error;
 #endif
@@ -317,7 +320,7 @@ mtx_timedlock(mtx_t *mtx, const struct timespec *ts)
 #ifdef HAVE_TIMESPEC_GET
     while (mtx_trylock(mtx) != thrd_success) {
         if (impl_abs2relmsec(ts) == 0)
-            return thrd_busy;
+            return thrd_timedout;
         // busy loop!
         thrd_yield();
     }
@@ -454,6 +457,7 @@ thrd_join(thrd_t thr, int *res)
 static inline void
 thrd_sleep(const struct timespec *time_point, struct timespec *remaining)
 {
+    (void)remaining;
     assert(time_point);
     assert(!remaining); /* not implemented */
     Sleep((DWORD)impl_timespec2msec(time_point));

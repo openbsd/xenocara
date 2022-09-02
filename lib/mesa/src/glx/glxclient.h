@@ -54,6 +54,7 @@
 #include "glxhash.h"
 #include "util/macros.h"
 #include "util/u_thread.h"
+#include "util/set.h"
 #include "loader.h"
 #include "glxextensions.h"
 
@@ -117,6 +118,7 @@ struct __GLXDRIscreenRec {
    __GLXDRIdrawable *(*createDrawable)(struct glx_screen *psc,
 				       XID drawable,
 				       GLXDrawable glxDrawable,
+				       int type,
 				       struct glx_config *config);
 
    int64_t (*swapBuffers)(__GLXDRIdrawable *pdraw, int64_t target_msc,
@@ -135,6 +137,8 @@ struct __GLXDRIscreenRec {
    int (*getBufferAge)(__GLXDRIdrawable *pdraw);
    void (*bindTexImage)(__GLXDRIdrawable *pdraw, int buffer, const int *attribs);
    void (*releaseTexImage)(__GLXDRIdrawable *pdraw, int buffer);
+
+   int maxSwapInterval;
 };
 
 struct __GLXDRIdrawableRec
@@ -154,7 +158,7 @@ struct __GLXDRIdrawableRec
 ** Function to create and DRI display data and initialize the display
 ** dependent methods.
 */
-extern __GLXDRIdisplay *driswCreateDisplay(Display * dpy);
+extern __GLXDRIdisplay *driswCreateDisplay(Display * dpy, bool zink);
 extern __GLXDRIdisplay *dri2CreateDisplay(Display * dpy);
 extern __GLXDRIdisplay *dri3_create_display(Display * dpy);
 extern __GLXDRIdisplay *driwindowsCreateDisplay(Display * dpy);
@@ -521,6 +525,9 @@ struct glx_screen
 
    Display *dpy;
    int scr;
+   bool force_direct_context;
+   bool allow_invalid_glx_destroy_window;
+   bool keep_native_window_glx_drawable;
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
     /**
@@ -591,6 +598,11 @@ struct glx_display
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
    __glxHashTable *drawHash;
+
+   /**
+    * GLXDrawable created from native window and about to be released.
+    */
+   struct set *zombieGLXDrawable;
 
     /**
      * Per display direct rendering interface functions and data.

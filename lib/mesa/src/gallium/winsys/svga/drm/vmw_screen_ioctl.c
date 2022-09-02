@@ -1005,6 +1005,8 @@ vmw_ioctl_init(struct vmw_winsys_screen *vws)
       (version->version_major == 2 && version->version_minor > 17);
    vws->ioctl.have_drm_2_19 = version->version_major > 2 ||
       (version->version_major == 2 && version->version_minor > 18);
+   vws->ioctl.have_drm_2_20 = version->version_major > 2 ||
+      (version->version_major == 2 && version->version_minor > 19);
 
    vws->ioctl.drm_execbuf_version = vws->ioctl.have_drm_2_9 ? 2 : 1;
 
@@ -1050,6 +1052,16 @@ vmw_ioctl_init(struct vmw_winsys_screen *vws)
    vws->base.have_vgpu10 = FALSE;
    vws->base.have_sm4_1 = FALSE;
    vws->base.have_intra_surface_copy = FALSE;
+
+   memset(&gp_arg, 0, sizeof(gp_arg));
+   gp_arg.param = DRM_VMW_PARAM_DEVICE_ID;
+   ret = drmCommandWriteRead(vws->ioctl.drm_fd, DRM_VMW_GET_PARAM,
+              &gp_arg, sizeof(gp_arg));
+   if (ret || gp_arg.value == 0) {
+      vws->base.device_id = 0x0405; /* assume SVGA II */
+   } else {
+      vws->base.device_id = gp_arg.value;
+   }
 
    if (vws->base.have_gb_objects) {
       memset(&gp_arg, 0, sizeof(gp_arg));
@@ -1122,6 +1134,16 @@ vmw_ioctl_init(struct vmw_winsys_screen *vws)
                                    &gp_arg, sizeof(gp_arg));
          if (ret == 0 && gp_arg.value != 0) {
             vws->base.have_sm5 = TRUE;
+         }
+      }
+
+      if (vws->ioctl.have_drm_2_20 && vws->base.have_sm5) {
+         memset(&gp_arg, 0, sizeof(gp_arg));
+         gp_arg.param = DRM_VMW_PARAM_GL43;
+         ret = drmCommandWriteRead(vws->ioctl.drm_fd, DRM_VMW_GET_PARAM,
+                                   &gp_arg, sizeof(gp_arg));
+         if (ret == 0 && gp_arg.value != 0) {
+            vws->base.have_gl43 = TRUE;
          }
       }
 

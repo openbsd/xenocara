@@ -29,6 +29,25 @@
 #include "util/u_dynarray.h"
 #include "util/hash_table.h"
 
+/* On Valhall, the driver gives the hardware a table of resource tables.
+ * Resources are addressed as the index of the table together with the index of
+ * the resource within the table. For simplicity, we put one type of resource
+ * in each table and fix the numbering of the tables.
+ *
+ * This numbering is arbitrary. It is a software ABI between the
+ * Gallium driver and the Valhall compiler.
+ */
+enum pan_resource_table {
+        PAN_TABLE_UBO = 0,
+        PAN_TABLE_ATTRIBUTE,
+        PAN_TABLE_ATTRIBUTE_BUFFER,
+        PAN_TABLE_SAMPLER,
+        PAN_TABLE_TEXTURE,
+        PAN_TABLE_IMAGE,
+
+        PAN_NUM_RESOURCE_TABLES
+};
+
 /* Indices for named (non-XFB) varyings that are present. These are packed
  * tightly so they correspond to a bitfield present (P) indexed by (1 <<
  * PAN_VARY_*). This has the nice property that you can lookup the buffer index
@@ -164,6 +183,7 @@ struct panfrost_compile_inputs {
         } blend;
         unsigned sysval_ubo;
         bool shaderdb;
+        bool no_idvs;
         bool no_ubo_to_push;
 
         enum pipe_format rt_formats[8];
@@ -191,13 +211,38 @@ struct bifrost_shader_blend_info {
         unsigned format;
 };
 
+/*
+ * Unpacked form of a v7 message preload descriptor, produced by the compiler's
+ * message preload optimization. By splitting out this struct, the compiler does
+ * not need to know about data structure packing, avoiding a dependency on
+ * GenXML.
+ */
+struct bifrost_message_preload {
+        /* Whether to preload this message */
+        bool enabled;
+
+        /* Varying to load from */
+        unsigned varying_index;
+
+        /* Register type, FP32 otherwise */
+        bool fp16;
+
+        /* Number of components, ignored if texturing */
+        unsigned num_components;
+
+        /* If texture is set, performs a texture instruction according to
+         * texture_index, skip, and zero_lod. If texture is unset, only the
+         * varying load is performed.
+         */
+        bool texture, skip, zero_lod;
+        unsigned texture_index;
+};
+
 struct bifrost_shader_info {
         struct bifrost_shader_blend_info blend[8];
         nir_alu_type blend_src1_type;
         bool wait_6, wait_7;
-
-        /* Packed, preloaded message descriptors */
-        uint16_t messages[2];
+        struct bifrost_message_preload messages[2];
 };
 
 struct midgard_shader_info {
@@ -210,21 +255,19 @@ struct pan_shader_info {
         unsigned tls_size;
         unsigned wls_size;
 
+        /* Bit mask of preloaded registers */
+        uint64_t preload;
+
         union {
                 struct {
                         bool reads_frag_coord;
                         bool reads_point_coord;
                         bool reads_face;
-                        bool helper_invocations;
                         bool can_discard;
                         bool writes_depth;
                         bool writes_stencil;
                         bool writes_coverage;
                         bool sidefx;
-                        bool reads_sample_id;
-                        bool reads_sample_pos;
-                        bool reads_sample_mask_in;
-                        bool reads_helper_invocation;
                         bool sample_shading;
                         bool early_fragment_tests;
                         bool can_early_z, can_fpk;
@@ -234,11 +277,56 @@ struct pan_shader_info {
 
                 struct {
                         bool writes_point_size;
+
+                        /* If the primary shader writes point size, the Valhall
+                         * driver may need a variant that does not write point
+                         * size. Offset to such a shader in the program binary.
+                         *
+                         * Zero if no such variant is required.
+                         *
+                         * Only used with IDVS on Valhall.
+                         */
+                        unsigned no_psiz_offset;
+
+                        /* Set if Index-Driven Vertex Shading is in use */
+                        bool idvs;
+
+                        /* If IDVS is used, whether a varying shader is used */
+                        bool secondary_enable;
+
+                        /* If a varying shader is used, the varying shader's
+                         * offset in the program binary
+                         */
+                        unsigned secondary_offset;
+
+                        /* If IDVS is in use, number of work registers used by
+                         * the varying shader
+                         */
+                        unsigned secondary_work_reg_count;
+
+                        /* If IDVS is in use, bit mask of preloaded registers
+                         * used by the varying shader
+                         */
+                        uint64_t secondary_preload;
                 } vs;
+
+                struct {
+                        /* Is it legal to merge workgroups? This is true if the
+                         * shader uses neither barriers nor shared memory.
+                         *
+                         * Used by the Valhall hardware.
+                         */
+                        bool allow_merging_workgroups;
+                } cs;
         };
 
-        bool separable;
+        /* Does the shader contains a barrier? or (for fragment shaders) does it
+         * require helper invocations, which demand the same ordering guarantees
+         * of the hardware? These notions are unified in the hardware, so we
+         * unify them here as well.
+         */
         bool contains_barrier;
+        bool separable;
         bool writes_global;
         uint64_t outputs_written;
 
@@ -383,8 +471,8 @@ bool pan_has_dest_mod(nir_dest **dest, nir_op op);
 #define PAN_WRITEOUT_C 1
 #define PAN_WRITEOUT_Z 2
 #define PAN_WRITEOUT_S 4
+#define PAN_WRITEOUT_2 8
 
-bool pan_nir_reorder_writeout(nir_shader *nir);
 bool pan_nir_lower_zs_store(nir_shader *nir);
 
 bool pan_nir_lower_64bit_intrin(nir_shader *shader);

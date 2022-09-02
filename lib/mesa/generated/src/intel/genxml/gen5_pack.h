@@ -77,6 +77,13 @@ __gen_uint(uint64_t v, uint32_t start, NDEBUG_UNUSED uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_uint_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_uint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_sint(int64_t v, uint32_t start, uint32_t end)
 {
    const int width = end - start + 1;
@@ -97,6 +104,13 @@ __gen_sint(int64_t v, uint32_t start, uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sint_nonzero(int64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ll);
+   return __gen_sint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
 {
    __gen_validate_value(v);
@@ -107,6 +121,13 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
 #endif
 
    return v;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_offset_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_offset(v, start, end);
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -132,6 +153,13 @@ __gen_float(float v)
    return ((union __intel_value) { .f = (v) }).dw;
 }
 
+static inline __attribute__((always_inline)) uint32_t
+__gen_float_nonzero(float v)
+{
+   assert(v != 0.0f);
+   return __gen_float(v);
+}
+
 static inline __attribute__((always_inline)) uint64_t
 __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 {
@@ -152,6 +180,13 @@ __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sfixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_sfixed(v, start, end, fract_bits);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract_bits)
 {
    __gen_validate_value(v);
@@ -167,6 +202,13 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
    const uint64_t uint_val = llroundf(v * factor);
 
    return uint_val << start;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_ufixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_ufixed(v, start, end, fract_bits);
 }
 
 #ifndef __gen_address_type
@@ -2895,10 +2937,10 @@ struct GFX5_XY_COLOR_BLT {
    int32_t                              DestinationPitch;
    uint32_t                             RasterOperation;
    uint32_t                             ColorDepth;
-#define COLOR_DEPTH__8bit                        0
-#define COLOR_DEPTH__565                         1
-#define COLOR_DEPTH__1555                        2
-#define COLOR_DEPTH__32bit                       3
+#define COLOR_DEPTH_8bit                         0
+#define COLOR_DEPTH_565                          1
+#define COLOR_DEPTH_1555                         2
+#define COLOR_DEPTH_32bit                        3
    bool                                 ClippingEnabled;
    int32_t                              DestinationX1Coordinate;
    int32_t                              DestinationY1Coordinate;
@@ -2942,6 +2984,79 @@ GFX5_XY_COLOR_BLT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->SolidPatternColor, 0, 31);
 }
 
+#define GFX5_XY_SETUP_BLT_length               8
+#define GFX5_XY_SETUP_BLT_length_bias          2
+#define GFX5_XY_SETUP_BLT_header                \
+   .DWordLength                         =      6,  \
+   ._2DCommandOpcode                    =      1,  \
+   .CommandType                         =      2
+
+struct GFX5_XY_SETUP_BLT {
+   uint32_t                             DWordLength;
+   bool                                 TilingEnable;
+   uint32_t                             _32bppByteMask;
+   uint32_t                             _2DCommandOpcode;
+   uint32_t                             CommandType;
+   int32_t                              DestinationPitch;
+   uint32_t                             RasterOperation;
+   uint32_t                             ColorDepth;
+#define COLOR_DEPTH_8bit                         0
+#define COLOR_DEPTH_565                          1
+#define COLOR_DEPTH_1555                         2
+#define COLOR_DEPTH_32bit                        3
+   bool                                 MonoSourceTransparencyMode;
+   bool                                 ClippingEnabled;
+   int32_t                              ClipRectX1Coordinate;
+   int32_t                              ClipRectY1Coordinate;
+   int32_t                              ClipRectX2Coordinate;
+   int32_t                              ClipRectY2Coordinate;
+   __gen_address_type                   DestinationBaseAddress;
+   uint32_t                             BackgroundColor;
+   uint32_t                             ForegroundColor;
+   uint32_t                             PatternBaseAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX5_XY_SETUP_BLT_pack(__attribute__((unused)) __gen_user_data *data,
+                       __attribute__((unused)) void * restrict dst,
+                       __attribute__((unused)) const struct GFX5_XY_SETUP_BLT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->TilingEnable, 11, 11) |
+      __gen_uint(values->_32bppByteMask, 20, 21) |
+      __gen_uint(values->_2DCommandOpcode, 22, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_sint(values->DestinationPitch, 0, 15) |
+      __gen_uint(values->RasterOperation, 16, 23) |
+      __gen_uint(values->ColorDepth, 24, 25) |
+      __gen_uint(values->MonoSourceTransparencyMode, 28, 28) |
+      __gen_uint(values->ClippingEnabled, 30, 30);
+
+   dw[2] =
+      __gen_sint(values->ClipRectX1Coordinate, 0, 15) |
+      __gen_sint(values->ClipRectY1Coordinate, 16, 31);
+
+   dw[3] =
+      __gen_sint(values->ClipRectX2Coordinate, 0, 15) |
+      __gen_sint(values->ClipRectY2Coordinate, 16, 31);
+
+   dw[4] = __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 31);
+
+   dw[5] =
+      __gen_uint(values->BackgroundColor, 0, 31);
+
+   dw[6] =
+      __gen_uint(values->ForegroundColor, 0, 31);
+
+   dw[7] =
+      __gen_uint(values->PatternBaseAddress, 0, 31);
+}
+
 #define GFX5_XY_SRC_COPY_BLT_length            8
 #define GFX5_XY_SRC_COPY_BLT_length_bias       2
 #define GFX5_XY_SRC_COPY_BLT_header             \
@@ -2959,10 +3074,10 @@ struct GFX5_XY_SRC_COPY_BLT {
    int32_t                              DestinationPitch;
    uint32_t                             RasterOperation;
    uint32_t                             ColorDepth;
-#define COLOR_DEPTH__8bit                        0
-#define COLOR_DEPTH__565                         1
-#define COLOR_DEPTH__1555                        2
-#define COLOR_DEPTH__32bit                       3
+#define COLOR_DEPTH_8bit                         0
+#define COLOR_DEPTH_565                          1
+#define COLOR_DEPTH_1555                         2
+#define COLOR_DEPTH_32bit                        3
    bool                                 ClippingEnabled;
    int32_t                              DestinationX1Coordinate;
    int32_t                              DestinationY1Coordinate;

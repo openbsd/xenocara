@@ -77,6 +77,13 @@ __gen_uint(uint64_t v, uint32_t start, NDEBUG_UNUSED uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_uint_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_uint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_sint(int64_t v, uint32_t start, uint32_t end)
 {
    const int width = end - start + 1;
@@ -97,6 +104,13 @@ __gen_sint(int64_t v, uint32_t start, uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sint_nonzero(int64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ll);
+   return __gen_sint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
 {
    __gen_validate_value(v);
@@ -107,6 +121,13 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
 #endif
 
    return v;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_offset_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_offset(v, start, end);
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -132,6 +153,13 @@ __gen_float(float v)
    return ((union __intel_value) { .f = (v) }).dw;
 }
 
+static inline __attribute__((always_inline)) uint32_t
+__gen_float_nonzero(float v)
+{
+   assert(v != 0.0f);
+   return __gen_float(v);
+}
+
 static inline __attribute__((always_inline)) uint64_t
 __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 {
@@ -152,6 +180,13 @@ __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sfixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_sfixed(v, start, end, fract_bits);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract_bits)
 {
    __gen_validate_value(v);
@@ -167,6 +202,13 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
    const uint64_t uint_val = llroundf(v * factor);
 
    return uint_val << start;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_ufixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_ufixed(v, start, end, fract_bits);
 }
 
 #ifndef __gen_address_type
@@ -3872,6 +3914,3008 @@ GFX6_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_sint(values->Scoreboard7DeltaY, 28, 31);
 }
 
+#define GFX6_MFC_AVC_FQM_STATE_length        113
+#define GFX6_MFC_AVC_FQM_STATE_length_bias      2
+#define GFX6_MFC_AVC_FQM_STATE_header           \
+   .DWordLength                         =    111,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFC_AVC_FQM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             Luma4x4IntraInvWeightScale[8];
+   uint32_t                             Cb4x4IntraInvWeightScale[8];
+   uint32_t                             Cr4x4IntraInvWeightScale[8];
+   uint32_t                             Luma4x4InterInvWeightScale[6];
+   uint32_t                             Cb4x4InterInvWeightScale[10];
+   uint32_t                             Cr4x4InterInvWeightScale[8];
+   uint32_t                             Luma8x8IntraInvWeightScale[32];
+   uint32_t                             Luma8x8InterInvWeightScale[32];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFC_AVC_FQM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX6_MFC_AVC_FQM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[0], 0, 31);
+
+   dw[2] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[1], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[2], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[3], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[4], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[5], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[6], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->Luma4x4IntraInvWeightScale[7], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[0], 0, 31);
+
+   dw[10] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[1], 0, 31);
+
+   dw[11] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[2], 0, 31);
+
+   dw[12] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[3], 0, 31);
+
+   dw[13] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[4], 0, 31);
+
+   dw[14] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[5], 0, 31);
+
+   dw[15] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[6], 0, 31);
+
+   dw[16] =
+      __gen_uint(values->Cb4x4IntraInvWeightScale[7], 0, 31);
+
+   dw[17] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[0], 0, 31);
+
+   dw[18] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[1], 0, 31);
+
+   dw[19] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[2], 0, 31);
+
+   dw[20] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[3], 0, 31);
+
+   dw[21] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[4], 0, 31);
+
+   dw[22] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[5], 0, 31);
+
+   dw[23] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[6], 0, 31);
+
+   dw[24] =
+      __gen_uint(values->Cr4x4IntraInvWeightScale[7], 0, 31);
+
+   dw[25] =
+      __gen_uint(values->Luma4x4InterInvWeightScale[0], 0, 31);
+
+   dw[26] =
+      __gen_uint(values->Luma4x4InterInvWeightScale[1], 0, 31);
+
+   dw[27] =
+      __gen_uint(values->Luma4x4InterInvWeightScale[2], 0, 31);
+
+   dw[28] =
+      __gen_uint(values->Luma4x4InterInvWeightScale[3], 0, 31);
+
+   dw[29] =
+      __gen_uint(values->Luma4x4InterInvWeightScale[4], 0, 31);
+
+   dw[30] =
+      __gen_uint(values->Luma4x4InterInvWeightScale[5], 0, 31);
+
+   dw[31] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[0], 0, 31);
+
+   dw[32] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[1], 0, 31);
+
+   dw[33] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[2], 0, 31);
+
+   dw[34] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[3], 0, 31);
+
+   dw[35] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[4], 0, 31);
+
+   dw[36] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[5], 0, 31);
+
+   dw[37] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[6], 0, 31);
+
+   dw[38] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[7], 0, 31);
+
+   dw[39] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[8], 0, 31);
+
+   dw[40] =
+      __gen_uint(values->Cb4x4InterInvWeightScale[9], 0, 31);
+
+   dw[41] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[0], 0, 31);
+
+   dw[42] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[1], 0, 31);
+
+   dw[43] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[2], 0, 31);
+
+   dw[44] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[3], 0, 31);
+
+   dw[45] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[4], 0, 31);
+
+   dw[46] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[5], 0, 31);
+
+   dw[47] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[6], 0, 31);
+
+   dw[48] =
+      __gen_uint(values->Cr4x4InterInvWeightScale[7], 0, 31);
+
+   dw[49] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[0], 0, 31);
+
+   dw[50] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[1], 0, 31);
+
+   dw[51] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[2], 0, 31);
+
+   dw[52] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[3], 0, 31);
+
+   dw[53] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[4], 0, 31);
+
+   dw[54] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[5], 0, 31);
+
+   dw[55] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[6], 0, 31);
+
+   dw[56] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[7], 0, 31);
+
+   dw[57] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[8], 0, 31);
+
+   dw[58] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[9], 0, 31);
+
+   dw[59] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[10], 0, 31);
+
+   dw[60] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[11], 0, 31);
+
+   dw[61] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[12], 0, 31);
+
+   dw[62] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[13], 0, 31);
+
+   dw[63] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[14], 0, 31);
+
+   dw[64] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[15], 0, 31);
+
+   dw[65] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[16], 0, 31);
+
+   dw[66] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[17], 0, 31);
+
+   dw[67] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[18], 0, 31);
+
+   dw[68] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[19], 0, 31);
+
+   dw[69] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[20], 0, 31);
+
+   dw[70] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[21], 0, 31);
+
+   dw[71] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[22], 0, 31);
+
+   dw[72] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[23], 0, 31);
+
+   dw[73] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[24], 0, 31);
+
+   dw[74] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[25], 0, 31);
+
+   dw[75] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[26], 0, 31);
+
+   dw[76] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[27], 0, 31);
+
+   dw[77] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[28], 0, 31);
+
+   dw[78] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[29], 0, 31);
+
+   dw[79] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[30], 0, 31);
+
+   dw[80] =
+      __gen_uint(values->Luma8x8IntraInvWeightScale[31], 0, 31);
+
+   dw[81] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[0], 0, 31);
+
+   dw[82] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[1], 0, 31);
+
+   dw[83] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[2], 0, 31);
+
+   dw[84] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[3], 0, 31);
+
+   dw[85] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[4], 0, 31);
+
+   dw[86] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[5], 0, 31);
+
+   dw[87] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[6], 0, 31);
+
+   dw[88] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[7], 0, 31);
+
+   dw[89] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[8], 0, 31);
+
+   dw[90] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[9], 0, 31);
+
+   dw[91] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[10], 0, 31);
+
+   dw[92] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[11], 0, 31);
+
+   dw[93] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[12], 0, 31);
+
+   dw[94] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[13], 0, 31);
+
+   dw[95] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[14], 0, 31);
+
+   dw[96] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[15], 0, 31);
+
+   dw[97] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[16], 0, 31);
+
+   dw[98] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[17], 0, 31);
+
+   dw[99] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[18], 0, 31);
+
+   dw[100] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[19], 0, 31);
+
+   dw[101] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[20], 0, 31);
+
+   dw[102] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[21], 0, 31);
+
+   dw[103] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[22], 0, 31);
+
+   dw[104] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[23], 0, 31);
+
+   dw[105] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[24], 0, 31);
+
+   dw[106] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[25], 0, 31);
+
+   dw[107] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[26], 0, 31);
+
+   dw[108] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[27], 0, 31);
+
+   dw[109] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[28], 0, 31);
+
+   dw[110] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[29], 0, 31);
+
+   dw[111] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[30], 0, 31);
+
+   dw[112] =
+      __gen_uint(values->Luma8x8InterInvWeightScale[31], 0, 31);
+}
+
+#define GFX6_MFC_AVC_PAK_INSERT_OBJECT_length_bias      2
+#define GFX6_MFC_AVC_PAK_INSERT_OBJECT_header   \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFC_AVC_PAK_INSERT_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 BitstreamStartReset;
+   bool                                 EndofSlice;
+   bool                                 LastHeader;
+   bool                                 EmulationByteBitsInsertEnable;
+   uint32_t                             SkipEmulationByteCount;
+   uint32_t                             DataBitsInLastDW;
+   uint32_t                             DataByteOffset;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFC_AVC_PAK_INSERT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX6_MFC_AVC_PAK_INSERT_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->BitstreamStartReset, 0, 0) |
+      __gen_uint(values->EndofSlice, 1, 1) |
+      __gen_uint(values->LastHeader, 2, 2) |
+      __gen_uint(values->EmulationByteBitsInsertEnable, 3, 3) |
+      __gen_uint(values->SkipEmulationByteCount, 4, 7) |
+      __gen_uint(values->DataBitsInLastDW, 8, 13) |
+      __gen_uint(values->DataByteOffset, 16, 17);
+}
+
+#define GFX6_MFC_AVC_PAK_OBJECT_length        11
+#define GFX6_MFC_AVC_PAK_OBJECT_length_bias      2
+#define GFX6_MFC_AVC_PAK_OBJECT_header          \
+   .DWordLength                         =      9,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFC_AVC_PAK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectPAKMVDataLength;
+   uint64_t                             IndirectPAKMVDataStartAddressOffset;
+   uint32_t                             InlineData[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFC_AVC_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX6_MFC_AVC_PAK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectPAKMVDataLength, 0, 9);
+
+   dw[2] =
+      __gen_offset(values->IndirectPAKMVDataStartAddressOffset, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[1], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->InlineData[2], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->InlineData[3], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->InlineData[4], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->InlineData[5], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->InlineData[6], 0, 31);
+
+   dw[10] =
+      __gen_uint(values->InlineData[7], 0, 31);
+}
+
+#define GFX6_MFC_STITCH_OBJECT_length_bias      2
+#define GFX6_MFC_STITCH_OBJECT_header           \
+   .SubOpcodeB                          =     10,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFC_STITCH_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 LastDstDataInsertCommand;
+   bool                                 LastSrcHeaderDataInsertCommand;
+   uint32_t                             SrCDataEndingBitInclusion;
+   uint32_t                             SrcDataStartingByteOffset;
+   uint32_t                             IndirectDataLength;
+   __gen_address_type                   IndirectDataStartAddress;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFC_STITCH_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX6_MFC_STITCH_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->LastDstDataInsertCommand, 1, 1) |
+      __gen_uint(values->LastSrcHeaderDataInsertCommand, 2, 2) |
+      __gen_uint(values->SrCDataEndingBitInclusion, 8, 13) |
+      __gen_uint(values->SrcDataStartingByteOffset, 16, 17);
+
+   dw[2] =
+      __gen_uint(values->IndirectDataLength, 0, 18);
+
+   dw[3] = __gen_address(data, &dw[3], values->IndirectDataStartAddress, 0, 0, 31);
+}
+
+#define GFX6_MFD_AVC_BSD_OBJECT_length         6
+#define GFX6_MFD_AVC_BSD_OBJECT_length_bias      2
+#define GFX6_MFD_AVC_BSD_OBJECT_header          \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFD_AVC_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectBSDDataLength;
+   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint32_t                             InlineData[3];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX6_MFD_AVC_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectBSDDataLength, 0, 21);
+
+   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[1], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->InlineData[2], 0, 31);
+}
+
+#define GFX6_MFD_IT_OBJECT_length_bias         2
+#define GFX6_MFD_IT_OBJECT_header               \
+   .DWordLength                         =     12,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFD_IT_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectITMVDataLength;
+   uint64_t                             IndirectITMVDataStartAddressOffset;
+   uint32_t                             IndirectITCOEFFDataLength;
+   uint64_t                             IndirectITCOEFFDataStartAddressOffset;
+   uint32_t                             IndirectITDBLKControlDataLength;
+   uint64_t                             IndirectITDBLKControlDataStartAddressOffset;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFD_IT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                        __attribute__((unused)) void * restrict dst,
+                        __attribute__((unused)) const struct GFX6_MFD_IT_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectITMVDataLength, 0, 9);
+
+   dw[2] =
+      __gen_offset(values->IndirectITMVDataStartAddressOffset, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->IndirectITCOEFFDataLength, 0, 11);
+
+   dw[4] =
+      __gen_offset(values->IndirectITCOEFFDataStartAddressOffset, 0, 28);
+
+   dw[5] =
+      __gen_uint(values->IndirectITDBLKControlDataLength, 0, 5);
+
+   dw[6] =
+      __gen_offset(values->IndirectITDBLKControlDataStartAddressOffset, 0, 28);
+}
+
+#define GFX6_MFD_MPEG2_BSD_OBJECT_length       5
+#define GFX6_MFD_MPEG2_BSD_OBJECT_length_bias      2
+#define GFX6_MFD_MPEG2_BSD_OBJECT_header        \
+   .DWordLength                         =      3,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFD_MPEG2_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectDataLength;
+   __gen_address_type                   IndirectDataStartAddress;
+   uint32_t                             InlineData[2];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFD_MPEG2_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX6_MFD_MPEG2_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectDataLength, 0, 16);
+
+   dw[2] = __gen_address(data, &dw[2], values->IndirectDataStartAddress, 0, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[1], 0, 31);
+}
+
+#define GFX6_MFD_VC1_BSD_OBJECT_length         4
+#define GFX6_MFD_VC1_BSD_OBJECT_length_bias      2
+#define GFX6_MFD_VC1_BSD_OBJECT_header          \
+   .DWordLength                         =      2,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFD_VC1_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectDataLength;
+   __gen_address_type                   IndirectDataStartAddress;
+   uint32_t                             FirstMBBitOffset;
+   uint32_t                             NextSliceStartVerticalPosition;
+   uint32_t                             SliceStartVerticalPosition;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFD_VC1_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX6_MFD_VC1_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectDataLength, 0, 21);
+
+   dw[2] = __gen_address(data, &dw[2], values->IndirectDataStartAddress, 0, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->FirstMBBitOffset, 0, 2) |
+      __gen_uint(values->NextSliceStartVerticalPosition, 16, 23) |
+      __gen_uint(values->SliceStartVerticalPosition, 24, 31);
+}
+
+#define GFX6_MFX_AVC_DIRECTMODE_STATE_length     69
+#define GFX6_MFX_AVC_DIRECTMODE_STATE_length_bias      2
+#define GFX6_MFX_AVC_DIRECTMODE_STATE_header    \
+   .DWordLength                         =     67,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_AVC_DIRECTMODE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   DirectMVBufferAddress[32];
+   uint32_t                             DirectMVBufferArbitrationPriorityControl[32];
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   uint32_t                             DirectMVBufferGraphicsDataType[32];
+   uint32_t                             DirectMVBufferCacheabilityControl[32];
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   __gen_address_type                   DirectMVBufferWriteAddress[2];
+   uint32_t                             DirectMVBufferWriteArbitrationPriorityControl[2];
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   uint32_t                             DirectMVBufferWriteGraphicsDataType[2];
+   uint32_t                             DirectMVBufferWriteCacheabilityControl[2];
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             POCList[34];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX6_MFX_AVC_DIRECTMODE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint32_t v1 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[0], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[0], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[0], 0, 1);
+   dw[1] = __gen_address(data, &dw[1], values->DirectMVBufferAddress[0], v1, 6, 31);
+
+   const uint32_t v2 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[1], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[1], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[1], 0, 1);
+   dw[2] = __gen_address(data, &dw[2], values->DirectMVBufferAddress[1], v2, 6, 31);
+
+   const uint32_t v3 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[2], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[2], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[2], 0, 1);
+   dw[3] = __gen_address(data, &dw[3], values->DirectMVBufferAddress[2], v3, 6, 31);
+
+   const uint32_t v4 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[3], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[3], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[3], 0, 1);
+   dw[4] = __gen_address(data, &dw[4], values->DirectMVBufferAddress[3], v4, 6, 31);
+
+   const uint32_t v5 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[4], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[4], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[4], 0, 1);
+   dw[5] = __gen_address(data, &dw[5], values->DirectMVBufferAddress[4], v5, 6, 31);
+
+   const uint32_t v6 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[5], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[5], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[5], 0, 1);
+   dw[6] = __gen_address(data, &dw[6], values->DirectMVBufferAddress[5], v6, 6, 31);
+
+   const uint32_t v7 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[6], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[6], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[6], 0, 1);
+   dw[7] = __gen_address(data, &dw[7], values->DirectMVBufferAddress[6], v7, 6, 31);
+
+   const uint32_t v8 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[7], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[7], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[7], 0, 1);
+   dw[8] = __gen_address(data, &dw[8], values->DirectMVBufferAddress[7], v8, 6, 31);
+
+   const uint32_t v9 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[8], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[8], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[8], 0, 1);
+   dw[9] = __gen_address(data, &dw[9], values->DirectMVBufferAddress[8], v9, 6, 31);
+
+   const uint32_t v10 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[9], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[9], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[9], 0, 1);
+   dw[10] = __gen_address(data, &dw[10], values->DirectMVBufferAddress[9], v10, 6, 31);
+
+   const uint32_t v11 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[10], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[10], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[10], 0, 1);
+   dw[11] = __gen_address(data, &dw[11], values->DirectMVBufferAddress[10], v11, 6, 31);
+
+   const uint32_t v12 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[11], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[11], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[11], 0, 1);
+   dw[12] = __gen_address(data, &dw[12], values->DirectMVBufferAddress[11], v12, 6, 31);
+
+   const uint32_t v13 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[12], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[12], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[12], 0, 1);
+   dw[13] = __gen_address(data, &dw[13], values->DirectMVBufferAddress[12], v13, 6, 31);
+
+   const uint32_t v14 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[13], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[13], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[13], 0, 1);
+   dw[14] = __gen_address(data, &dw[14], values->DirectMVBufferAddress[13], v14, 6, 31);
+
+   const uint32_t v15 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[14], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[14], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[14], 0, 1);
+   dw[15] = __gen_address(data, &dw[15], values->DirectMVBufferAddress[14], v15, 6, 31);
+
+   const uint32_t v16 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[15], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[15], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[15], 0, 1);
+   dw[16] = __gen_address(data, &dw[16], values->DirectMVBufferAddress[15], v16, 6, 31);
+
+   const uint32_t v17 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[16], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[16], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[16], 0, 1);
+   dw[17] = __gen_address(data, &dw[17], values->DirectMVBufferAddress[16], v17, 6, 31);
+
+   const uint32_t v18 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[17], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[17], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[17], 0, 1);
+   dw[18] = __gen_address(data, &dw[18], values->DirectMVBufferAddress[17], v18, 6, 31);
+
+   const uint32_t v19 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[18], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[18], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[18], 0, 1);
+   dw[19] = __gen_address(data, &dw[19], values->DirectMVBufferAddress[18], v19, 6, 31);
+
+   const uint32_t v20 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[19], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[19], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[19], 0, 1);
+   dw[20] = __gen_address(data, &dw[20], values->DirectMVBufferAddress[19], v20, 6, 31);
+
+   const uint32_t v21 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[20], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[20], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[20], 0, 1);
+   dw[21] = __gen_address(data, &dw[21], values->DirectMVBufferAddress[20], v21, 6, 31);
+
+   const uint32_t v22 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[21], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[21], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[21], 0, 1);
+   dw[22] = __gen_address(data, &dw[22], values->DirectMVBufferAddress[21], v22, 6, 31);
+
+   const uint32_t v23 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[22], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[22], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[22], 0, 1);
+   dw[23] = __gen_address(data, &dw[23], values->DirectMVBufferAddress[22], v23, 6, 31);
+
+   const uint32_t v24 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[23], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[23], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[23], 0, 1);
+   dw[24] = __gen_address(data, &dw[24], values->DirectMVBufferAddress[23], v24, 6, 31);
+
+   const uint32_t v25 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[24], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[24], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[24], 0, 1);
+   dw[25] = __gen_address(data, &dw[25], values->DirectMVBufferAddress[24], v25, 6, 31);
+
+   const uint32_t v26 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[25], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[25], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[25], 0, 1);
+   dw[26] = __gen_address(data, &dw[26], values->DirectMVBufferAddress[25], v26, 6, 31);
+
+   const uint32_t v27 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[26], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[26], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[26], 0, 1);
+   dw[27] = __gen_address(data, &dw[27], values->DirectMVBufferAddress[26], v27, 6, 31);
+
+   const uint32_t v28 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[27], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[27], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[27], 0, 1);
+   dw[28] = __gen_address(data, &dw[28], values->DirectMVBufferAddress[27], v28, 6, 31);
+
+   const uint32_t v29 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[28], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[28], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[28], 0, 1);
+   dw[29] = __gen_address(data, &dw[29], values->DirectMVBufferAddress[28], v29, 6, 31);
+
+   const uint32_t v30 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[29], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[29], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[29], 0, 1);
+   dw[30] = __gen_address(data, &dw[30], values->DirectMVBufferAddress[29], v30, 6, 31);
+
+   const uint32_t v31 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[30], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[30], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[30], 0, 1);
+   dw[31] = __gen_address(data, &dw[31], values->DirectMVBufferAddress[30], v31, 6, 31);
+
+   const uint32_t v32 =
+      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[31], 4, 5) |
+      __gen_uint(values->DirectMVBufferGraphicsDataType[31], 2, 2) |
+      __gen_uint(values->DirectMVBufferCacheabilityControl[31], 0, 1);
+   dw[32] = __gen_address(data, &dw[32], values->DirectMVBufferAddress[31], v32, 6, 31);
+
+   const uint32_t v33 =
+      __gen_uint(values->DirectMVBufferWriteArbitrationPriorityControl[0], 4, 5) |
+      __gen_uint(values->DirectMVBufferWriteGraphicsDataType[0], 2, 2) |
+      __gen_uint(values->DirectMVBufferWriteCacheabilityControl[0], 0, 1);
+   dw[33] = __gen_address(data, &dw[33], values->DirectMVBufferWriteAddress[0], v33, 6, 31);
+
+   const uint32_t v34 =
+      __gen_uint(values->DirectMVBufferWriteArbitrationPriorityControl[1], 4, 5) |
+      __gen_uint(values->DirectMVBufferWriteGraphicsDataType[1], 2, 2) |
+      __gen_uint(values->DirectMVBufferWriteCacheabilityControl[1], 0, 1);
+   dw[34] = __gen_address(data, &dw[34], values->DirectMVBufferWriteAddress[1], v34, 6, 31);
+
+   dw[35] =
+      __gen_uint(values->POCList[0], 0, 31);
+
+   dw[36] =
+      __gen_uint(values->POCList[1], 0, 31);
+
+   dw[37] =
+      __gen_uint(values->POCList[2], 0, 31);
+
+   dw[38] =
+      __gen_uint(values->POCList[3], 0, 31);
+
+   dw[39] =
+      __gen_uint(values->POCList[4], 0, 31);
+
+   dw[40] =
+      __gen_uint(values->POCList[5], 0, 31);
+
+   dw[41] =
+      __gen_uint(values->POCList[6], 0, 31);
+
+   dw[42] =
+      __gen_uint(values->POCList[7], 0, 31);
+
+   dw[43] =
+      __gen_uint(values->POCList[8], 0, 31);
+
+   dw[44] =
+      __gen_uint(values->POCList[9], 0, 31);
+
+   dw[45] =
+      __gen_uint(values->POCList[10], 0, 31);
+
+   dw[46] =
+      __gen_uint(values->POCList[11], 0, 31);
+
+   dw[47] =
+      __gen_uint(values->POCList[12], 0, 31);
+
+   dw[48] =
+      __gen_uint(values->POCList[13], 0, 31);
+
+   dw[49] =
+      __gen_uint(values->POCList[14], 0, 31);
+
+   dw[50] =
+      __gen_uint(values->POCList[15], 0, 31);
+
+   dw[51] =
+      __gen_uint(values->POCList[16], 0, 31);
+
+   dw[52] =
+      __gen_uint(values->POCList[17], 0, 31);
+
+   dw[53] =
+      __gen_uint(values->POCList[18], 0, 31);
+
+   dw[54] =
+      __gen_uint(values->POCList[19], 0, 31);
+
+   dw[55] =
+      __gen_uint(values->POCList[20], 0, 31);
+
+   dw[56] =
+      __gen_uint(values->POCList[21], 0, 31);
+
+   dw[57] =
+      __gen_uint(values->POCList[22], 0, 31);
+
+   dw[58] =
+      __gen_uint(values->POCList[23], 0, 31);
+
+   dw[59] =
+      __gen_uint(values->POCList[24], 0, 31);
+
+   dw[60] =
+      __gen_uint(values->POCList[25], 0, 31);
+
+   dw[61] =
+      __gen_uint(values->POCList[26], 0, 31);
+
+   dw[62] =
+      __gen_uint(values->POCList[27], 0, 31);
+
+   dw[63] =
+      __gen_uint(values->POCList[28], 0, 31);
+
+   dw[64] =
+      __gen_uint(values->POCList[29], 0, 31);
+
+   dw[65] =
+      __gen_uint(values->POCList[30], 0, 31);
+
+   dw[66] =
+      __gen_uint(values->POCList[31], 0, 31);
+
+   dw[67] =
+      __gen_uint(values->POCList[32], 0, 31);
+
+   dw[68] =
+      __gen_uint(values->POCList[33], 0, 31);
+}
+
+#define GFX6_MFX_AVC_IMG_STATE_length         13
+#define GFX6_MFX_AVC_IMG_STATE_length_bias      2
+#define GFX6_MFX_AVC_IMG_STATE_header           \
+   .DWordLength                         =     11,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_AVC_IMG_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameSize;
+   uint32_t                             FrameWidth;
+   uint32_t                             FrameHeight;
+   uint32_t                             CurrentDecodedImageFrameStoreID;
+   uint32_t                             ImageStructure;
+#define FramePicture                             0
+#define TopFieldPicture                          1
+#define BottomFieldPicture                       3
+#define Invalidnotallowed                        2
+   bool                                 QMPresent;
+   bool                                 MonochromePWTDecodingMode;
+   bool                                 InterMBConformance;
+   bool                                 IntraMBConformance;
+   uint32_t                             SecondChromaQPOffset;
+   bool                                 FieldPicture;
+   bool                                 MBAFFMode;
+   bool                                 FrameMBOnly;
+   bool                                 _8x8IDCTTransformMode;
+   bool                                 Direct8x8Inference;
+   bool                                 ConstrainedIntraPrediction;
+   bool                                 NonReferencePicture;
+   bool                                 EntropyCoding;
+   uint32_t                             ChromaFormatIDC;
+#define Monochromepicture                        0
+#define _420picture                              1
+#define _422picturenotsupported                  2
+#define _444picturenotsupported                  3
+   bool                                 MVUnpackedEnable;
+   bool                                 LoadBitstreamPointerPerSlice;
+   bool                                 MBStatusRead;
+   uint32_t                             MinimumFrameSize;
+   bool                                 IntraMBMaxBitControl;
+   bool                                 InterMBMaxBitControl;
+   bool                                 FrameBitrateMaxReport;
+   bool                                 FrameBitrateMinReport;
+   bool                                 ForceIPCMControl;
+   bool                                 MBLevelRateControl;
+   bool                                 InterMBForceCBPtoZeroControl;
+   bool                                 FrameSizeRateControl;
+   uint32_t                             IntraMBConformanceMaxSize;
+   uint32_t                             InterMBConformanceMaxSize;
+   int32_t                              SliceDeltaQPMax0;
+   int32_t                              SliceDeltaQPMax1;
+   int32_t                              SliceDeltaQPMax2;
+   int32_t                              SliceDeltaQPMax3;
+   int32_t                              SliceDeltaQPMin0;
+   int32_t                              SliceDeltaQPMin1;
+   int32_t                              SliceDeltaQPMin2;
+   int32_t                              SliceDeltaQPMin3;
+   uint32_t                             FrameBitrateMin;
+   uint32_t                             FrameBitrateMinUnit;
+   uint32_t                             FrameBitrateMax;
+   uint32_t                             FrameBitrateMaxUnit;
+   uint32_t                             FrameBitrateMinDelta;
+   uint32_t                             FrameBitrateMaxDelta;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX6_MFX_AVC_IMG_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->FrameSize, 0, 15);
+
+   dw[2] =
+      __gen_uint(values->FrameWidth, 0, 7) |
+      __gen_uint(values->FrameHeight, 16, 23);
+
+   dw[3] =
+      __gen_uint(values->CurrentDecodedImageFrameStoreID, 0, 7) |
+      __gen_uint(values->ImageStructure, 8, 9) |
+      __gen_uint(values->QMPresent, 10, 10) |
+      __gen_uint(values->MonochromePWTDecodingMode, 12, 12) |
+      __gen_uint(values->InterMBConformance, 13, 13) |
+      __gen_uint(values->IntraMBConformance, 14, 14) |
+      __gen_uint(values->SecondChromaQPOffset, 24, 28);
+
+   dw[4] =
+      __gen_uint(values->FieldPicture, 0, 0) |
+      __gen_uint(values->MBAFFMode, 1, 1) |
+      __gen_uint(values->FrameMBOnly, 2, 2) |
+      __gen_uint(values->_8x8IDCTTransformMode, 3, 3) |
+      __gen_uint(values->Direct8x8Inference, 4, 4) |
+      __gen_uint(values->ConstrainedIntraPrediction, 5, 5) |
+      __gen_uint(values->NonReferencePicture, 6, 6) |
+      __gen_uint(values->EntropyCoding, 7, 7) |
+      __gen_uint(values->ChromaFormatIDC, 10, 11) |
+      __gen_uint(values->MVUnpackedEnable, 12, 12) |
+      __gen_uint(values->LoadBitstreamPointerPerSlice, 14, 14) |
+      __gen_uint(values->MBStatusRead, 15, 15) |
+      __gen_uint(values->MinimumFrameSize, 16, 31);
+
+   dw[5] =
+      __gen_uint(values->IntraMBMaxBitControl, 0, 0) |
+      __gen_uint(values->InterMBMaxBitControl, 1, 1) |
+      __gen_uint(values->FrameBitrateMaxReport, 2, 2) |
+      __gen_uint(values->FrameBitrateMinReport, 3, 3) |
+      __gen_uint(values->ForceIPCMControl, 7, 7) |
+      __gen_uint(values->MBLevelRateControl, 9, 9) |
+      __gen_uint(values->InterMBForceCBPtoZeroControl, 12, 12) |
+      __gen_uint(values->FrameSizeRateControl, 16, 16);
+
+   dw[6] =
+      __gen_uint(values->IntraMBConformanceMaxSize, 0, 11) |
+      __gen_uint(values->InterMBConformanceMaxSize, 16, 27);
+
+   dw[7] = 0;
+
+   dw[8] =
+      __gen_sint(values->SliceDeltaQPMax0, 0, 7) |
+      __gen_sint(values->SliceDeltaQPMax1, 8, 15) |
+      __gen_sint(values->SliceDeltaQPMax2, 16, 23) |
+      __gen_sint(values->SliceDeltaQPMax3, 24, 31);
+
+   dw[9] =
+      __gen_sint(values->SliceDeltaQPMin0, 0, 7) |
+      __gen_sint(values->SliceDeltaQPMin1, 8, 15) |
+      __gen_sint(values->SliceDeltaQPMin2, 16, 23) |
+      __gen_sint(values->SliceDeltaQPMin3, 24, 31);
+
+   dw[10] =
+      __gen_uint(values->FrameBitrateMin, 0, 11) |
+      __gen_uint(values->FrameBitrateMinUnit, 15, 15) |
+      __gen_uint(values->FrameBitrateMax, 16, 27) |
+      __gen_uint(values->FrameBitrateMaxUnit, 31, 31);
+
+   dw[11] =
+      __gen_uint(values->FrameBitrateMinDelta, 0, 11) |
+      __gen_uint(values->FrameBitrateMaxDelta, 16, 27);
+
+   dw[12] = 0;
+}
+
+#define GFX6_MFX_AVC_QM_STATE_length           2
+#define GFX6_MFX_AVC_QM_STATE_length_bias      2
+#define GFX6_MFX_AVC_QM_STATE_header            \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_AVC_QM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             QMListPresentFlagsforthecurrentSlice;
+   uint32_t                             UsebuiltinDefaultQMFlagsforthecurrentSlice;
+   uint32_t                             Luma4x4IntraWeightScale[4];
+   uint32_t                             Cb4x4IntraWeightScale[4];
+   uint32_t                             Cr4x4IntraWeightScale[4];
+   uint32_t                             Luma4x4InterWeightScale[4];
+   uint32_t                             Cb4x4InterWeightScale[4];
+   uint32_t                             Cr4x4InterWeightScale[4];
+   uint64_t                             Luma8x8IntraWeightScale[4];
+   uint64_t                             Luma8x8InterWeightScale[4];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_AVC_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX6_MFX_AVC_QM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->QMListPresentFlagsforthecurrentSlice, 0, 7) |
+      __gen_uint(values->UsebuiltinDefaultQMFlagsforthecurrentSlice, 8, 15);
+}
+
+#define GFX6_MFX_AVC_REF_IDX_STATE_length     10
+#define GFX6_MFX_AVC_REF_IDX_STATE_length_bias      2
+#define GFX6_MFX_AVC_REF_IDX_STATE_header       \
+   .DWordLength                         =      8,  \
+   .SubOpcodeB                          =      4,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_AVC_REF_IDX_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ReferencePictureListSelect;
+   uint32_t                             ReferenceListEntry[32];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_AVC_REF_IDX_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX6_MFX_AVC_REF_IDX_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ReferencePictureListSelect, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->ReferenceListEntry[0], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[1], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[2], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->ReferenceListEntry[4], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[5], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[6], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->ReferenceListEntry[8], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[9], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[10], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->ReferenceListEntry[12], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[13], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[14], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[15], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->ReferenceListEntry[16], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[17], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[18], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[19], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->ReferenceListEntry[20], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[21], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[22], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[23], 24, 31);
+
+   dw[8] =
+      __gen_uint(values->ReferenceListEntry[24], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[25], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[26], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[27], 24, 31);
+
+   dw[9] =
+      __gen_uint(values->ReferenceListEntry[28], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[29], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[30], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[31], 24, 31);
+}
+
+#define GFX6_MFX_AVC_SLICE_STATE_length       10
+#define GFX6_MFX_AVC_SLICE_STATE_length_bias      2
+#define GFX6_MFX_AVC_SLICE_STATE_header         \
+   .DWordLength                         =      8,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_AVC_SLICE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SliceType;
+#define PSlice                                   0
+#define BSlice                                   1
+#define ISlice                                   2
+   uint32_t                             Log2WeightDenominatorLuma;
+   uint32_t                             Log2WeightDenominatorChroma;
+   uint32_t                             NumberofReferencePicturesinInterpredictionList0;
+   uint32_t                             NumberofReferencePicturesinInterpredictionList1;
+   int32_t                              SliceAlphaC0OffsetDiv2;
+   int32_t                              SliceBetaOffsetDiv2;
+   uint32_t                             SliceQuantizationParameter;
+   uint32_t                             CABACInitIDC;
+   uint32_t                             DisableDeblockingFilterIndicator;
+   uint32_t                             DirectPredictionType;
+#define Temporal                                 0
+#define Spatial                                  1
+   uint32_t                             WeightedPredictionIndicator;
+   uint32_t                             SliceStartMBNumber;
+   uint32_t                             SliceHorizontalPosition;
+   uint32_t                             SliceVerticalPosition;
+   uint32_t                             NextSliceHorizontalPosition;
+   uint32_t                             NextSliceVerticalPosition;
+   uint32_t                             StreamID;
+   uint32_t                             SliceID;
+   bool                                 CABACZeroWordInsertionEnable;
+   bool                                 EmulationByteSliceInsertEnable;
+   bool                                 TailInsertionPresent;
+   bool                                 SliceDataInsertionPresent;
+   bool                                 HeaderInsertionPresent;
+   bool                                 LastSliceGroup;
+   bool                                 MBTypeSkipConversionDisable;
+   bool                                 MBTypeDirectConversionDisable;
+   uint32_t                             RateControlPanicType;
+#define QPPanic                                  0
+#define CBPPanic                                 1
+   bool                                 RateControlPanicEnable;
+   uint32_t                             RateControlStableTolerance;
+   uint32_t                             RateControlTriggleMode;
+#define AlwaysRateControl                        0
+#define GentleRateControl                        1
+#define LooseRateControl                         2
+   bool                                 ResetRateControlCounter;
+   bool                                 RateControlCounterEnable;
+   uint64_t                             IndirectPAKBSEDataStartAddress;
+   uint32_t                             GrowInit;
+   uint32_t                             GrowResistance;
+   uint32_t                             ShrinkInit;
+   uint32_t                             ShrinkResistance;
+   uint32_t                             QPMaxPositiveModifierMagnitude;
+   uint32_t                             QPMaxNegativeModifierMagnitude;
+   uint32_t                             Correct1;
+   uint32_t                             Correct2;
+   uint32_t                             Correct3;
+   uint32_t                             Correct4;
+   uint32_t                             Correct5;
+   uint32_t                             Correct6;
+   uint32_t                             CV0;
+   uint32_t                             CV1;
+   uint32_t                             CV2;
+   uint32_t                             CV3;
+   uint32_t                             CV4;
+   uint32_t                             CV5;
+   uint32_t                             CV6;
+   uint32_t                             CV7;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_AVC_SLICE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX6_MFX_AVC_SLICE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SliceType, 0, 3);
+
+   dw[2] =
+      __gen_uint(values->Log2WeightDenominatorLuma, 0, 2) |
+      __gen_uint(values->Log2WeightDenominatorChroma, 8, 10) |
+      __gen_uint(values->NumberofReferencePicturesinInterpredictionList0, 16, 21) |
+      __gen_uint(values->NumberofReferencePicturesinInterpredictionList1, 24, 29);
+
+   dw[3] =
+      __gen_sint(values->SliceAlphaC0OffsetDiv2, 0, 3) |
+      __gen_sint(values->SliceBetaOffsetDiv2, 8, 11) |
+      __gen_uint(values->SliceQuantizationParameter, 16, 21) |
+      __gen_uint(values->CABACInitIDC, 24, 25) |
+      __gen_uint(values->DisableDeblockingFilterIndicator, 27, 28) |
+      __gen_uint(values->DirectPredictionType, 29, 29) |
+      __gen_uint(values->WeightedPredictionIndicator, 30, 31);
+
+   dw[4] =
+      __gen_uint(values->SliceStartMBNumber, 0, 14) |
+      __gen_uint(values->SliceHorizontalPosition, 16, 23) |
+      __gen_uint(values->SliceVerticalPosition, 24, 31);
+
+   dw[5] =
+      __gen_uint(values->NextSliceHorizontalPosition, 0, 7) |
+      __gen_uint(values->NextSliceVerticalPosition, 16, 23);
+
+   dw[6] =
+      __gen_uint(values->StreamID, 0, 1) |
+      __gen_uint(values->SliceID, 4, 7) |
+      __gen_uint(values->CABACZeroWordInsertionEnable, 12, 12) |
+      __gen_uint(values->EmulationByteSliceInsertEnable, 13, 13) |
+      __gen_uint(values->TailInsertionPresent, 15, 15) |
+      __gen_uint(values->SliceDataInsertionPresent, 16, 16) |
+      __gen_uint(values->HeaderInsertionPresent, 17, 17) |
+      __gen_uint(values->LastSliceGroup, 19, 19) |
+      __gen_uint(values->MBTypeSkipConversionDisable, 20, 20) |
+      __gen_uint(values->MBTypeDirectConversionDisable, 21, 21) |
+      __gen_uint(values->RateControlPanicType, 22, 22) |
+      __gen_uint(values->RateControlPanicEnable, 23, 23) |
+      __gen_uint(values->RateControlStableTolerance, 24, 27) |
+      __gen_uint(values->RateControlTriggleMode, 28, 29) |
+      __gen_uint(values->ResetRateControlCounter, 30, 30) |
+      __gen_uint(values->RateControlCounterEnable, 31, 31);
+
+   dw[7] =
+      __gen_offset(values->IndirectPAKBSEDataStartAddress, 0, 28);
+
+   dw[8] =
+      __gen_uint(values->GrowInit, 0, 3) |
+      __gen_uint(values->GrowResistance, 4, 7) |
+      __gen_uint(values->ShrinkInit, 8, 11) |
+      __gen_uint(values->ShrinkResistance, 12, 15) |
+      __gen_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
+      __gen_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
+
+   dw[9] =
+      __gen_uint(values->Correct1, 0, 3) |
+      __gen_uint(values->Correct2, 4, 7) |
+      __gen_uint(values->Correct3, 8, 11) |
+      __gen_uint(values->Correct4, 12, 15) |
+      __gen_uint(values->Correct5, 16, 19) |
+      __gen_uint(values->Correct6, 20, 23);
+}
+
+#define GFX6_MFX_AVC_WEIGHTOFFSET_STATE_length     50
+#define GFX6_MFX_AVC_WEIGHTOFFSET_STATE_length_bias      2
+#define GFX6_MFX_AVC_WEIGHTOFFSET_STATE_header  \
+   .DWordLength                         =     48,  \
+   .SubOpcodeB                          =      5,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_AVC_WEIGHTOFFSET_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             WeightandOffsetSelect;
+#define L0table                                  0
+#define L1table                                  1
+   uint32_t                             WeightOffset[96];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_AVC_WEIGHTOFFSET_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                     __attribute__((unused)) void * restrict dst,
+                                     __attribute__((unused)) const struct GFX6_MFX_AVC_WEIGHTOFFSET_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->WeightandOffsetSelect, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->WeightOffset[0], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->WeightOffset[1], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->WeightOffset[2], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->WeightOffset[3], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->WeightOffset[4], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->WeightOffset[5], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->WeightOffset[6], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->WeightOffset[7], 0, 31);
+
+   dw[10] =
+      __gen_uint(values->WeightOffset[8], 0, 31);
+
+   dw[11] =
+      __gen_uint(values->WeightOffset[9], 0, 31);
+
+   dw[12] =
+      __gen_uint(values->WeightOffset[10], 0, 31);
+
+   dw[13] =
+      __gen_uint(values->WeightOffset[11], 0, 31);
+
+   dw[14] =
+      __gen_uint(values->WeightOffset[12], 0, 31);
+
+   dw[15] =
+      __gen_uint(values->WeightOffset[13], 0, 31);
+
+   dw[16] =
+      __gen_uint(values->WeightOffset[14], 0, 31);
+
+   dw[17] =
+      __gen_uint(values->WeightOffset[15], 0, 31);
+
+   dw[18] =
+      __gen_uint(values->WeightOffset[16], 0, 31);
+
+   dw[19] =
+      __gen_uint(values->WeightOffset[17], 0, 31);
+
+   dw[20] =
+      __gen_uint(values->WeightOffset[18], 0, 31);
+
+   dw[21] =
+      __gen_uint(values->WeightOffset[19], 0, 31);
+
+   dw[22] =
+      __gen_uint(values->WeightOffset[20], 0, 31);
+
+   dw[23] =
+      __gen_uint(values->WeightOffset[21], 0, 31);
+
+   dw[24] =
+      __gen_uint(values->WeightOffset[22], 0, 31);
+
+   dw[25] =
+      __gen_uint(values->WeightOffset[23], 0, 31);
+
+   dw[26] =
+      __gen_uint(values->WeightOffset[24], 0, 31);
+
+   dw[27] =
+      __gen_uint(values->WeightOffset[25], 0, 31);
+
+   dw[28] =
+      __gen_uint(values->WeightOffset[26], 0, 31);
+
+   dw[29] =
+      __gen_uint(values->WeightOffset[27], 0, 31);
+
+   dw[30] =
+      __gen_uint(values->WeightOffset[28], 0, 31);
+
+   dw[31] =
+      __gen_uint(values->WeightOffset[29], 0, 31);
+
+   dw[32] =
+      __gen_uint(values->WeightOffset[30], 0, 31);
+
+   dw[33] =
+      __gen_uint(values->WeightOffset[31], 0, 31);
+
+   dw[34] =
+      __gen_uint(values->WeightOffset[32], 0, 31);
+
+   dw[35] =
+      __gen_uint(values->WeightOffset[33], 0, 31);
+
+   dw[36] =
+      __gen_uint(values->WeightOffset[34], 0, 31);
+
+   dw[37] =
+      __gen_uint(values->WeightOffset[35], 0, 31);
+
+   dw[38] =
+      __gen_uint(values->WeightOffset[36], 0, 31);
+
+   dw[39] =
+      __gen_uint(values->WeightOffset[37], 0, 31);
+
+   dw[40] =
+      __gen_uint(values->WeightOffset[38], 0, 31);
+
+   dw[41] =
+      __gen_uint(values->WeightOffset[39], 0, 31);
+
+   dw[42] =
+      __gen_uint(values->WeightOffset[40], 0, 31);
+
+   dw[43] =
+      __gen_uint(values->WeightOffset[41], 0, 31);
+
+   dw[44] =
+      __gen_uint(values->WeightOffset[42], 0, 31);
+
+   dw[45] =
+      __gen_uint(values->WeightOffset[43], 0, 31);
+
+   dw[46] =
+      __gen_uint(values->WeightOffset[44], 0, 31);
+
+   dw[47] =
+      __gen_uint(values->WeightOffset[45], 0, 31);
+
+   dw[48] =
+      __gen_uint(values->WeightOffset[46], 0, 31);
+
+   dw[49] =
+      __gen_uint(values->WeightOffset[47], 0, 31);
+}
+
+#define GFX6_MFX_BSP_BUF_BASE_ADDR_STATE_length      4
+#define GFX6_MFX_BSP_BUF_BASE_ADDR_STATE_length_bias      2
+#define GFX6_MFX_BSP_BUF_BASE_ADDR_STATE_header \
+   .DWordLength                         =      2,  \
+   .SubOpcodeB                          =      4,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_BSP_BUF_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             BSPRowStoreScratchBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             BSPRowStoreScratchBufferGraphicsDataType;
+   uint32_t                             BSDMPCRowStoreScratchBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   BSDMPCRowStoreScratchBufferAddress;
+   uint32_t                             MPRRowStoreScratchBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MPRRowStoreScratchBufferGraphicsDataType;
+   uint32_t                             MPRRowStoreScratchBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MPRRowStoreScratchBufferAddress;
+   uint32_t                             BitplaneReadBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             BitplaneReadBufferGraphicsDataType;
+   uint32_t                             BitplaneReadBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   BitplaneReadBufferAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_BSP_BUF_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX6_MFX_BSP_BUF_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint32_t v1 =
+      __gen_uint(values->BSPRowStoreScratchBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->BSPRowStoreScratchBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->BSDMPCRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+   dw[1] = __gen_address(data, &dw[1], values->BSDMPCRowStoreScratchBufferAddress, v1, 6, 31);
+
+   const uint32_t v2 =
+      __gen_uint(values->MPRRowStoreScratchBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->MPRRowStoreScratchBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->MPRRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+   dw[2] = __gen_address(data, &dw[2], values->MPRRowStoreScratchBufferAddress, v2, 6, 31);
+
+   const uint32_t v3 =
+      __gen_uint(values->BitplaneReadBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->BitplaneReadBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->BitplaneReadBufferArbitrationPriorityControl, 4, 5);
+   dw[3] = __gen_address(data, &dw[3], values->BitplaneReadBufferAddress, v3, 6, 31);
+}
+
+#define GFX6_MFX_IND_OBJ_BASE_ADDR_STATE_length     11
+#define GFX6_MFX_IND_OBJ_BASE_ADDR_STATE_length_bias      2
+#define GFX6_MFX_IND_OBJ_BASE_ADDR_STATE_header \
+   .DWordLength                         =      9,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_IND_OBJ_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             MFXIndirectBitstreamObjectCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MFXIndirectBitstreamObjectGraphicsDataType;
+   uint32_t                             MFXIndirectBitstreamObjectArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MFXIndirectBitstreamObjectAddress;
+   __gen_address_type                   MFXIndirectBitstreamObjectAccessUpperBound;
+   uint32_t                             MFXIndirectMVObjectCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MFXIndirectMVObjectGraphicsDataType;
+   uint32_t                             MFXIndirectMVObjectArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MFXIndirectMVObjectAddress;
+   __gen_address_type                   MFXIndirectMVObjectAccessUpperBound;
+   uint32_t                             MFDIndirectITCOEFFObjectCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MFDIndirectITCOEFFObjectGraphicsDataType;
+   uint32_t                             MFDIndirectITCOEFFObjectArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MFDIndirectITCOEFFObjectAddress;
+   __gen_address_type                   MFDIndirectITCOEFFObjectAccessUpperBound;
+   uint32_t                             MFDIndirectITDBLKObjectCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MFDIndirectITDBLKObjectGraphicsDataType;
+   uint32_t                             MFDIndirectITDBLKObjectArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MFDIndirectITDBLKObjectAddress;
+   __gen_address_type                   MFDIndirectITDBLKObjectAccessUpperBound;
+   uint32_t                             MFCIndirectPAKBSEObjectCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MFCIndirectPAKBSEObjectGraphicsDataType;
+   uint32_t                             MFCIndirectPAKBSEObjectArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MFCIndirectPAKBSEObjectAddress;
+   __gen_address_type                   MFCIndirectPAKBSEObjectAccessUpperBound;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_IND_OBJ_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX6_MFX_IND_OBJ_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint32_t v1 =
+      __gen_uint(values->MFXIndirectBitstreamObjectCacheabilityControl, 0, 1) |
+      __gen_uint(values->MFXIndirectBitstreamObjectGraphicsDataType, 2, 2) |
+      __gen_uint(values->MFXIndirectBitstreamObjectArbitrationPriorityControl, 4, 5);
+   dw[1] = __gen_address(data, &dw[1], values->MFXIndirectBitstreamObjectAddress, v1, 12, 31);
+
+   dw[2] = __gen_address(data, &dw[2], values->MFXIndirectBitstreamObjectAccessUpperBound, 0, 12, 31);
+
+   const uint32_t v3 =
+      __gen_uint(values->MFXIndirectMVObjectCacheabilityControl, 0, 1) |
+      __gen_uint(values->MFXIndirectMVObjectGraphicsDataType, 2, 2) |
+      __gen_uint(values->MFXIndirectMVObjectArbitrationPriorityControl, 4, 5);
+   dw[3] = __gen_address(data, &dw[3], values->MFXIndirectMVObjectAddress, v3, 12, 31);
+
+   dw[4] = __gen_address(data, &dw[4], values->MFXIndirectMVObjectAccessUpperBound, 0, 12, 31);
+
+   const uint32_t v5 =
+      __gen_uint(values->MFDIndirectITCOEFFObjectCacheabilityControl, 0, 1) |
+      __gen_uint(values->MFDIndirectITCOEFFObjectGraphicsDataType, 2, 2) |
+      __gen_uint(values->MFDIndirectITCOEFFObjectArbitrationPriorityControl, 4, 5);
+   dw[5] = __gen_address(data, &dw[5], values->MFDIndirectITCOEFFObjectAddress, v5, 12, 31);
+
+   dw[6] = __gen_address(data, &dw[6], values->MFDIndirectITCOEFFObjectAccessUpperBound, 0, 12, 31);
+
+   const uint32_t v7 =
+      __gen_uint(values->MFDIndirectITDBLKObjectCacheabilityControl, 0, 1) |
+      __gen_uint(values->MFDIndirectITDBLKObjectGraphicsDataType, 2, 2) |
+      __gen_uint(values->MFDIndirectITDBLKObjectArbitrationPriorityControl, 4, 5);
+   dw[7] = __gen_address(data, &dw[7], values->MFDIndirectITDBLKObjectAddress, v7, 12, 31);
+
+   dw[8] = __gen_address(data, &dw[8], values->MFDIndirectITDBLKObjectAccessUpperBound, 0, 12, 31);
+
+   const uint32_t v9 =
+      __gen_uint(values->MFCIndirectPAKBSEObjectCacheabilityControl, 0, 1) |
+      __gen_uint(values->MFCIndirectPAKBSEObjectGraphicsDataType, 2, 2) |
+      __gen_uint(values->MFCIndirectPAKBSEObjectArbitrationPriorityControl, 4, 5);
+   dw[9] = __gen_address(data, &dw[9], values->MFCIndirectPAKBSEObjectAddress, v9, 12, 31);
+
+   dw[10] = __gen_address(data, &dw[10], values->MFCIndirectPAKBSEObjectAccessUpperBound, 0, 12, 31);
+}
+
+#define GFX6_MFX_MPEG2_PIC_STATE_length        3
+#define GFX6_MFX_MPEG2_PIC_STATE_length_bias      2
+#define GFX6_MFX_MPEG2_PIC_STATE_header         \
+   .DWordLength                         =      1,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_MPEG2_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ScanOrder;
+#define MPEG_ZIGZAG_SCAN                         0
+#define MPEG_ALTERNATE_VERTICAL_SCAN             1
+   uint32_t                             IntraVLCFormat;
+   uint32_t                             QuantizerScaleType;
+#define MPEG_QSCALE_LINEAR                       0
+#define MPEG_QSCALE_NONLINEAR                    1
+   bool                                 ConcealmentMV;
+   uint32_t                             FramePredictionFrameDCT;
+   bool                                 TopFieldFirst;
+   uint32_t                             PictureStructure;
+#define MPEG_TOP_FIELD                           1
+#define MPEG_BOTTOM_FIELD                        2
+#define MPEG_FRAME                               3
+   uint32_t                             IntraDCPrecision;
+   uint32_t                             F_code00;
+   uint32_t                             F_code01;
+   uint32_t                             F_code10;
+   uint32_t                             F_code11;
+   uint32_t                             PictureCodingType;
+#define MPEG_I_PICTURE                           1
+#define MPEG_P_PICTURE                           2
+#define MPEG_B_PICTURE                           3
+   uint32_t                             FrameWidthInMBs;
+   uint32_t                             FrameHeightInMBs;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_MPEG2_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX6_MFX_MPEG2_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ScanOrder, 6, 6) |
+      __gen_uint(values->IntraVLCFormat, 7, 7) |
+      __gen_uint(values->QuantizerScaleType, 8, 8) |
+      __gen_uint(values->ConcealmentMV, 9, 9) |
+      __gen_uint(values->FramePredictionFrameDCT, 10, 10) |
+      __gen_uint(values->TopFieldFirst, 11, 11) |
+      __gen_uint(values->PictureStructure, 12, 13) |
+      __gen_uint(values->IntraDCPrecision, 14, 15) |
+      __gen_uint(values->F_code00, 16, 19) |
+      __gen_uint(values->F_code01, 20, 23) |
+      __gen_uint(values->F_code10, 24, 27) |
+      __gen_uint(values->F_code11, 28, 31);
+
+   dw[2] =
+      __gen_uint(values->PictureCodingType, 0, 10);
+}
+
+#define GFX6_MFX_MPEG2_QM_STATE_length        18
+#define GFX6_MFX_MPEG2_QM_STATE_length_bias      2
+#define GFX6_MFX_MPEG2_QM_STATE_header          \
+   .DWordLength                         =     16,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_MPEG2_QM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             QMType;
+#define MPEG_INTRA_QUANTIZER_MATRIX              0
+#define MPEG_NON_INTRA_QUANTIZER_MATRIX          1
+   uint32_t                             QuantizerMatrix[16];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_MPEG2_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX6_MFX_MPEG2_QM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->QMType, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->QuantizerMatrix[0], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->QuantizerMatrix[1], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->QuantizerMatrix[2], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->QuantizerMatrix[3], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->QuantizerMatrix[4], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->QuantizerMatrix[5], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->QuantizerMatrix[6], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->QuantizerMatrix[7], 0, 31);
+
+   dw[10] =
+      __gen_uint(values->QuantizerMatrix[8], 0, 31);
+
+   dw[11] =
+      __gen_uint(values->QuantizerMatrix[9], 0, 31);
+
+   dw[12] =
+      __gen_uint(values->QuantizerMatrix[10], 0, 31);
+
+   dw[13] =
+      __gen_uint(values->QuantizerMatrix[11], 0, 31);
+
+   dw[14] =
+      __gen_uint(values->QuantizerMatrix[12], 0, 31);
+
+   dw[15] =
+      __gen_uint(values->QuantizerMatrix[13], 0, 31);
+
+   dw[16] =
+      __gen_uint(values->QuantizerMatrix[14], 0, 31);
+
+   dw[17] =
+      __gen_uint(values->QuantizerMatrix[15], 0, 31);
+}
+
+#define GFX6_MFX_PIPE_BUF_ADDR_STATE_length     24
+#define GFX6_MFX_PIPE_BUF_ADDR_STATE_length_bias      2
+#define GFX6_MFX_PIPE_BUF_ADDR_STATE_header     \
+   .DWordLength                         =     22,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_PIPE_BUF_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             PreDeblockingCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             PreDeblockingGraphicsDataType;
+   uint32_t                             PreDeblockingArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   PreDeblockingAddress;
+   uint32_t                             PostDeblockingCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             PostDeblockingGraphicsDataType;
+   uint32_t                             PostDeblockingArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   PostDeblockingAddress;
+   uint32_t                             OriginalUncompressedPictureSourceCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             OriginalUncompressedPictureSourceGraphicsDataType;
+   uint32_t                             OriginalUncompressedPictureSourceArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   OriginalUncompressedPictureSourceAddress;
+   uint32_t                             StreamOutDataDestinationCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             StreamOutDataDestinationGraphicsDataType;
+   uint32_t                             StreamOutDataDestinationArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   uint64_t                             StreamOutDataDestinationAddress;
+   uint32_t                             IntraRowStoreScratchBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             IntraRowStoreScratchBufferGraphicsDataType;
+   uint32_t                             IntraRowStoreScratchBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   IntraRowStoreScratchBufferAddress;
+   uint32_t                             DeblockingFilterRowStoreScratchBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             DeblockingFilterRowStoreScratchBufferGraphicsDataType;
+   uint32_t                             DeblockingFilterRowStoreScratchBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   DeblockingFilterRowStoreScratchBufferAddress;
+   __gen_address_type                   ReferencePictureAddress[16];
+   uint32_t                             ReferencePictureArbitrationPriorityControl[16];
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   uint32_t                             ReferencePictureGraphicsDataType[16];
+   uint32_t                             ReferencePictureCacheabilityControl[16];
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MBStatusBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             MBStatusBufferGraphicsDataType;
+   uint32_t                             MBStatusBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   MBStatusBufferAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX6_MFX_PIPE_BUF_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint32_t v1 =
+      __gen_uint(values->PreDeblockingCacheabilityControl, 0, 1) |
+      __gen_uint(values->PreDeblockingGraphicsDataType, 2, 2) |
+      __gen_uint(values->PreDeblockingArbitrationPriorityControl, 4, 5);
+   dw[1] = __gen_address(data, &dw[1], values->PreDeblockingAddress, v1, 6, 31);
+
+   const uint32_t v2 =
+      __gen_uint(values->PostDeblockingCacheabilityControl, 0, 1) |
+      __gen_uint(values->PostDeblockingGraphicsDataType, 2, 2) |
+      __gen_uint(values->PostDeblockingArbitrationPriorityControl, 4, 5);
+   dw[2] = __gen_address(data, &dw[2], values->PostDeblockingAddress, v2, 6, 31);
+
+   const uint32_t v3 =
+      __gen_uint(values->OriginalUncompressedPictureSourceCacheabilityControl, 0, 1) |
+      __gen_uint(values->OriginalUncompressedPictureSourceGraphicsDataType, 2, 2) |
+      __gen_uint(values->OriginalUncompressedPictureSourceArbitrationPriorityControl, 4, 5);
+   dw[3] = __gen_address(data, &dw[3], values->OriginalUncompressedPictureSourceAddress, v3, 6, 31);
+
+   dw[4] =
+      __gen_uint(values->StreamOutDataDestinationCacheabilityControl, 0, 1) |
+      __gen_uint(values->StreamOutDataDestinationGraphicsDataType, 2, 2) |
+      __gen_uint(values->StreamOutDataDestinationArbitrationPriorityControl, 4, 5) |
+      __gen_offset(values->StreamOutDataDestinationAddress, 6, 31);
+
+   const uint32_t v5 =
+      __gen_uint(values->IntraRowStoreScratchBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->IntraRowStoreScratchBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->IntraRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+   dw[5] = __gen_address(data, &dw[5], values->IntraRowStoreScratchBufferAddress, v5, 6, 31);
+
+   const uint32_t v6 =
+      __gen_uint(values->DeblockingFilterRowStoreScratchBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->DeblockingFilterRowStoreScratchBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->DeblockingFilterRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+   dw[6] = __gen_address(data, &dw[6], values->DeblockingFilterRowStoreScratchBufferAddress, v6, 6, 31);
+
+   const uint32_t v7 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[0], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[0], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[0], 0, 1);
+   dw[7] = __gen_address(data, &dw[7], values->ReferencePictureAddress[0], v7, 6, 31);
+
+   const uint32_t v8 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[1], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[1], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[1], 0, 1);
+   dw[8] = __gen_address(data, &dw[8], values->ReferencePictureAddress[1], v8, 6, 31);
+
+   const uint32_t v9 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[2], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[2], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[2], 0, 1);
+   dw[9] = __gen_address(data, &dw[9], values->ReferencePictureAddress[2], v9, 6, 31);
+
+   const uint32_t v10 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[3], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[3], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[3], 0, 1);
+   dw[10] = __gen_address(data, &dw[10], values->ReferencePictureAddress[3], v10, 6, 31);
+
+   const uint32_t v11 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[4], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[4], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[4], 0, 1);
+   dw[11] = __gen_address(data, &dw[11], values->ReferencePictureAddress[4], v11, 6, 31);
+
+   const uint32_t v12 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[5], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[5], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[5], 0, 1);
+   dw[12] = __gen_address(data, &dw[12], values->ReferencePictureAddress[5], v12, 6, 31);
+
+   const uint32_t v13 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[6], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[6], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[6], 0, 1);
+   dw[13] = __gen_address(data, &dw[13], values->ReferencePictureAddress[6], v13, 6, 31);
+
+   const uint32_t v14 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[7], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[7], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[7], 0, 1);
+   dw[14] = __gen_address(data, &dw[14], values->ReferencePictureAddress[7], v14, 6, 31);
+
+   const uint32_t v15 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[8], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[8], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[8], 0, 1);
+   dw[15] = __gen_address(data, &dw[15], values->ReferencePictureAddress[8], v15, 6, 31);
+
+   const uint32_t v16 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[9], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[9], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[9], 0, 1);
+   dw[16] = __gen_address(data, &dw[16], values->ReferencePictureAddress[9], v16, 6, 31);
+
+   const uint32_t v17 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[10], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[10], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[10], 0, 1);
+   dw[17] = __gen_address(data, &dw[17], values->ReferencePictureAddress[10], v17, 6, 31);
+
+   const uint32_t v18 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[11], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[11], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[11], 0, 1);
+   dw[18] = __gen_address(data, &dw[18], values->ReferencePictureAddress[11], v18, 6, 31);
+
+   const uint32_t v19 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[12], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[12], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[12], 0, 1);
+   dw[19] = __gen_address(data, &dw[19], values->ReferencePictureAddress[12], v19, 6, 31);
+
+   const uint32_t v20 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[13], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[13], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[13], 0, 1);
+   dw[20] = __gen_address(data, &dw[20], values->ReferencePictureAddress[13], v20, 6, 31);
+
+   const uint32_t v21 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[14], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[14], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[14], 0, 1);
+   dw[21] = __gen_address(data, &dw[21], values->ReferencePictureAddress[14], v21, 6, 31);
+
+   const uint32_t v22 =
+      __gen_uint(values->ReferencePictureArbitrationPriorityControl[15], 4, 5) |
+      __gen_uint(values->ReferencePictureGraphicsDataType[15], 2, 2) |
+      __gen_uint(values->ReferencePictureCacheabilityControl[15], 0, 1);
+   dw[22] = __gen_address(data, &dw[22], values->ReferencePictureAddress[15], v22, 6, 31);
+
+   const uint32_t v23 =
+      __gen_uint(values->MBStatusBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->MBStatusBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->MBStatusBufferArbitrationPriorityControl, 4, 5);
+   dw[23] = __gen_address(data, &dw[23], values->MBStatusBufferAddress, v23, 6, 31);
+}
+
+#define GFX6_MFX_PIPE_MODE_SELECT_length       4
+#define GFX6_MFX_PIPE_MODE_SELECT_length_bias      2
+#define GFX6_MFX_PIPE_MODE_SELECT_header        \
+   .DWordLength                         =      2,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_PIPE_MODE_SELECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             StandardSelect;
+#define SS_VC1                                   1
+#define SS_AVC                                   2
+   uint32_t                             CodecSelect;
+#define Decode                                   0
+#define Encode                                   1
+   bool                                 StitchMode;
+   bool                                 ZLRTLBPrefetchEnable;
+   bool                                 PreDeblockingOutputEnable;
+   bool                                 PostDeblockingOutputEnable;
+   bool                                 StreamOutEnable;
+   uint32_t                             DecoderModeSelect;
+#define VLDMode                                  0
+#define ITMode                                   1
+   uint32_t                             AVCILDBBoundaryStrengthCalculation;
+#define CalculatedonlywhenpostfilterisON         0
+#define Calculatedallthetime                     1
+   uint32_t                             AVCLongFieldMV;
+#define _13bitsprecision                         0
+#define _12bitsprecision                         1
+   uint32_t                             AVCCABACCAVLCDecodeErrorDisable;
+#define Terminate                                0
+#define Willnotterminate                         1
+   uint32_t                             AVCMbdataErrorDisable;
+   uint32_t                             AVCMVPOCTableErrorDisable;
+#define Terminates                               0
+#define Willnotterminate                         1
+   bool                                 ClockGateEnableatSlicelevel;
+   uint32_t                             Intra8x8Rounding;
+   uint32_t                             SlicePBRounding;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX6_MFX_PIPE_MODE_SELECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->StandardSelect, 0, 1) |
+      __gen_uint(values->CodecSelect, 4, 4) |
+      __gen_uint(values->StitchMode, 5, 5) |
+      __gen_uint(values->ZLRTLBPrefetchEnable, 7, 7) |
+      __gen_uint(values->PreDeblockingOutputEnable, 8, 8) |
+      __gen_uint(values->PostDeblockingOutputEnable, 9, 9) |
+      __gen_uint(values->StreamOutEnable, 10, 10) |
+      __gen_uint(values->DecoderModeSelect, 16, 16);
+
+   dw[2] =
+      __gen_uint(values->AVCILDBBoundaryStrengthCalculation, 0, 0) |
+      __gen_uint(values->AVCLongFieldMV, 1, 1) |
+      __gen_uint(values->AVCCABACCAVLCDecodeErrorDisable, 2, 2) |
+      __gen_uint(values->AVCMbdataErrorDisable, 3, 3) |
+      __gen_uint(values->AVCMVPOCTableErrorDisable, 4, 4) |
+      __gen_uint(values->ClockGateEnableatSlicelevel, 6, 6) |
+      __gen_uint(values->Intra8x8Rounding, 19, 19) |
+      __gen_uint(values->SlicePBRounding, 20, 20);
+
+   dw[3] = 0;
+}
+
+#define GFX6_MFX_STATE_POINTER_length          2
+#define GFX6_MFX_STATE_POINTER_length_bias      2
+#define GFX6_MFX_STATE_POINTER_header           \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      6,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_STATE_POINTER {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             StatePointerIndex;
+#define Indirectstatepointer0                    0
+#define Indirectstatepointer1                    1
+#define Indirectstatepointer2                    2
+#define Indirectstatepointer3                    3
+   uint32_t                             StatePointer;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_STATE_POINTER_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX6_MFX_STATE_POINTER * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->StatePointerIndex, 0, 1) |
+      __gen_uint(values->StatePointer, 5, 31);
+}
+
+#define GFX6_MFX_SURFACE_STATE_length          6
+#define GFX6_MFX_SURFACE_STATE_length_bias      2
+#define GFX6_MFX_SURFACE_STATE_header           \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      0,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             CrVCbUPixelOffsetVDirection;
+   uint32_t                             Width;
+   uint32_t                             Height;
+   uint32_t                             TileWalk;
+#define TW_XMAJOR                                0
+#define TW_YMAJOR                                1
+   bool                                 TiledSurface;
+   bool                                 HalfPitchforChroma;
+   uint32_t                             SurfacePitch;
+   bool                                 InterleaveChroma;
+   uint32_t                             SurfaceFormat;
+#define YCRCB_NORMAL                             0
+#define YCRCB_SWAPUVY                            1
+#define YCRCB_SWAPUV                             2
+#define YCRCB_SWAPY                              3
+#define PLANAR_420_8                             4
+#define PLANAR_411_8                             5
+#define PLANAR_422_8                             6
+#define STMM_DN_STATISTICS                       7
+#define R10G10B10A2_UNORM                        8
+#define R8G8B8A8_UNORM                           9
+#define R8B8_UNORMCrCb                           10
+#define R8_UNORMCrCb                             11
+#define Y8_UNORM                                 12
+   uint32_t                             YOffsetforUCb;
+   uint32_t                             XOffsetforUCb;
+   uint32_t                             YOffsetforVCr;
+   uint32_t                             XOffsetforVCr;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX6_MFX_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] = 0;
+
+   dw[2] =
+      __gen_uint(values->CrVCbUPixelOffsetVDirection, 0, 1) |
+      __gen_uint(values->Width, 6, 18) |
+      __gen_uint(values->Height, 19, 31);
+
+   dw[3] =
+      __gen_uint(values->TileWalk, 0, 0) |
+      __gen_uint(values->TiledSurface, 1, 1) |
+      __gen_uint(values->HalfPitchforChroma, 2, 2) |
+      __gen_uint(values->SurfacePitch, 3, 19) |
+      __gen_uint(values->InterleaveChroma, 27, 27) |
+      __gen_uint(values->SurfaceFormat, 28, 31);
+
+   dw[4] =
+      __gen_uint(values->YOffsetforUCb, 0, 12) |
+      __gen_uint(values->XOffsetforUCb, 16, 28);
+
+   dw[5] =
+      __gen_uint(values->YOffsetforVCr, 0, 12) |
+      __gen_uint(values->XOffsetforVCr, 16, 28);
+}
+
+#define GFX6_MFX_VC1_DIRECTMODE_STATE_length      3
+#define GFX6_MFX_VC1_DIRECTMODE_STATE_length_bias      2
+#define GFX6_MFX_VC1_DIRECTMODE_STATE_header    \
+   .DWordLength                         =      1,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_VC1_DIRECTMODE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             DirectMVWriteBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotininLLCorMLC                          1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             DirectMVWriteBufferGraphicsDataType;
+   uint32_t                             DirectMVWriteBufferArbitrationPriorityControl;
+#define HighestPriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define LowestPriority                           3
+   __gen_address_type                   DirectMVWriteBufferAddress;
+   uint32_t                             DirectMVReadBufferCacheabilityControl;
+#define GTTentry                                 0
+#define NotinLLCorMLC                            1
+#define InLLCbutnotMLC                           2
+#define BothLLCandMLC                            3
+   uint32_t                             DirectMVReadBufferGraphicsDataType;
+   uint32_t                             DirectMVReadBufferArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   __gen_address_type                   DirectMVReadBufferAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_VC1_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX6_MFX_VC1_DIRECTMODE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint32_t v1 =
+      __gen_uint(values->DirectMVWriteBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->DirectMVWriteBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->DirectMVWriteBufferArbitrationPriorityControl, 4, 5);
+   dw[1] = __gen_address(data, &dw[1], values->DirectMVWriteBufferAddress, v1, 6, 31);
+
+   const uint32_t v2 =
+      __gen_uint(values->DirectMVReadBufferCacheabilityControl, 0, 1) |
+      __gen_uint(values->DirectMVReadBufferGraphicsDataType, 2, 2) |
+      __gen_uint(values->DirectMVReadBufferArbitrationPriorityControl, 4, 5);
+   dw[2] = __gen_address(data, &dw[2], values->DirectMVReadBufferAddress, v2, 6, 31);
+}
+
+#define GFX6_MFX_VC1_PIC_STATE_length          6
+#define GFX6_MFX_VC1_PIC_STATE_length_bias      2
+#define GFX6_MFX_VC1_PIC_STATE_header           \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_VC1_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             PictureWidthinMBs;
+   uint32_t                             PictureHeightinMBs;
+   uint32_t                             FrameCodingMode;
+#define ProgressiveFramePicture                  0
+#define InterlacedFramePicture                   1
+#define FieldPicturewithTopFieldFirst            2
+#define FieldPicturewithBottomFieldFirst         3
+   uint32_t                             PictureType;
+   bool                                 SecondField;
+   uint32_t                             CONDOVER;
+   bool                                 PQUniform;
+   uint32_t                             HalfQP;
+   uint32_t                             AlternativePQConfiguration;
+   uint32_t                             AlternativePQEdgeMask;
+   uint32_t                             PQValue;
+   bool                                 ImplicitQuantizer;
+   bool                                 OverlapSmoothingEnable;
+   bool                                 LoopFilterEnable;
+   uint32_t                             AlternativePQValue;
+   bool                                 ConcealmentEnable;
+   bool                                 SyncMarker;
+   uint32_t                             FRFDReferenceDistance;
+   uint32_t                             NumberofReferences;
+#define Onefieldreferenced                       0
+#define Twofieldsreferenced                      1
+   uint32_t                             ReferenceFieldPicturePolarity;
+#define TopevenField                             0
+#define BottomoddField                           1
+   uint32_t                             UnifiedMVMode;
+#define _1MVhalfpelbilinear                      3
+#define _1MV                                     1
+#define _1MVhalfpel                              2
+#define MixedMV                                  0
+   uint32_t                             FastUVMotionCompensation;
+#define NoRounding                               0
+#define QuarterPeloffsetstoHalfFullpelpositions  1
+   uint32_t                             FourMVSwitch;
+#define Only1MV                                  0
+#define _12or4MVs                                1
+   uint32_t                             ExtendedMVRange;
+   uint32_t                             ExtendedDMVRange;
+   bool                                 FIELDTXRaw;
+   bool                                 ACPREDRaw;
+   bool                                 OVERFLAGSRaw;
+   bool                                 DIRECTMBRaw;
+   bool                                 SKIPMBRaw;
+   bool                                 MVTYPEMBRaw;
+   bool                                 FORWARDMBRaw;
+   bool                                 BitplaneBufferPresent;
+   uint32_t                             CodedBlockPatternTable;
+   uint32_t                             IntraTransformDCTable;
+   uint32_t                             PicturelevelTransformChromaACCodingSetIndex;
+   uint32_t                             PicturelevelTransformLumaACCodingSetIndex;
+   uint32_t                             MBModeTable;
+   uint32_t                             MBTransformType;
+   uint32_t                             PicturelevelTransformType;
+#define _8x8Transform                            0
+#define _8x4Transform                            1
+#define _4x8Transform                            2
+#define _4x4Transform                            3
+   uint32_t                             _2MVBlockPatternTable;
+   uint32_t                             _4MVBlockPatternTable;
+   uint32_t                             MVTable;
+   uint32_t                             ScaleFactor;
+   uint32_t                             BitplaneBufferPitch;
+   uint32_t                             BRFDReferenceDistance;
+   bool                                 DMVSurfaceValid;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_VC1_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX6_MFX_VC1_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PictureWidthinMBs, 0, 7) |
+      __gen_uint(values->PictureHeightinMBs, 16, 23);
+
+   dw[2] =
+      __gen_uint(values->FrameCodingMode, 0, 1) |
+      __gen_uint(values->PictureType, 2, 4) |
+      __gen_uint(values->SecondField, 5, 5) |
+      __gen_uint(values->CONDOVER, 6, 7) |
+      __gen_uint(values->PQUniform, 8, 8) |
+      __gen_uint(values->HalfQP, 9, 9) |
+      __gen_uint(values->AlternativePQConfiguration, 10, 11) |
+      __gen_uint(values->AlternativePQEdgeMask, 12, 15) |
+      __gen_uint(values->PQValue, 16, 20) |
+      __gen_uint(values->ImplicitQuantizer, 21, 21) |
+      __gen_uint(values->OverlapSmoothingEnable, 22, 22) |
+      __gen_uint(values->LoopFilterEnable, 23, 23) |
+      __gen_uint(values->AlternativePQValue, 24, 28) |
+      __gen_uint(values->ConcealmentEnable, 29, 29) |
+      __gen_uint(values->SyncMarker, 31, 31);
+
+   dw[3] =
+      __gen_uint(values->FRFDReferenceDistance, 0, 4) |
+      __gen_uint(values->NumberofReferences, 5, 5) |
+      __gen_uint(values->ReferenceFieldPicturePolarity, 6, 6) |
+      __gen_uint(values->UnifiedMVMode, 8, 9) |
+      __gen_uint(values->FastUVMotionCompensation, 10, 10) |
+      __gen_uint(values->FourMVSwitch, 11, 11) |
+      __gen_uint(values->ExtendedMVRange, 12, 13) |
+      __gen_uint(values->ExtendedDMVRange, 14, 15) |
+      __gen_uint(values->FIELDTXRaw, 16, 16) |
+      __gen_uint(values->ACPREDRaw, 17, 17) |
+      __gen_uint(values->OVERFLAGSRaw, 18, 18) |
+      __gen_uint(values->DIRECTMBRaw, 19, 19) |
+      __gen_uint(values->SKIPMBRaw, 20, 20) |
+      __gen_uint(values->MVTYPEMBRaw, 21, 21) |
+      __gen_uint(values->FORWARDMBRaw, 22, 22) |
+      __gen_uint(values->BitplaneBufferPresent, 23, 23);
+
+   dw[4] =
+      __gen_uint(values->CodedBlockPatternTable, 0, 2) |
+      __gen_uint(values->IntraTransformDCTable, 3, 3) |
+      __gen_uint(values->PicturelevelTransformChromaACCodingSetIndex, 4, 5) |
+      __gen_uint(values->PicturelevelTransformLumaACCodingSetIndex, 6, 7) |
+      __gen_uint(values->MBModeTable, 8, 10) |
+      __gen_uint(values->MBTransformType, 11, 11) |
+      __gen_uint(values->PicturelevelTransformType, 12, 13) |
+      __gen_uint(values->_2MVBlockPatternTable, 16, 17) |
+      __gen_uint(values->_4MVBlockPatternTable, 18, 19) |
+      __gen_uint(values->MVTable, 20, 22) |
+      __gen_uint(values->ScaleFactor, 24, 31);
+
+   dw[5] =
+      __gen_uint(values->BitplaneBufferPitch, 0, 7) |
+      __gen_uint(values->BRFDReferenceDistance, 8, 12) |
+      __gen_uint(values->DMVSurfaceValid, 13, 13);
+}
+
+#define GFX6_MFX_VC1_PRED_PIPE_STATE_length      4
+#define GFX6_MFX_VC1_PRED_PIPE_STATE_length_bias      2
+#define GFX6_MFX_VC1_PRED_PIPE_STATE_header     \
+   .DWordLength                         =      2,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_VC1_PRED_PIPE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             VC1Profile;
+#define SimpleProfile                            0
+#define MainProfile                              1
+#define AdvancedProfile                          2
+   uint32_t                             InterpolationRounderControl;
+   uint32_t                             ReferenceFrameBoundaryReplicationMode;
+#define ProgressiveFrameReplication              0
+#define InterlaceFrameReplication                1
+   uint32_t                             LumScale1singleFWD;
+   uint32_t                             LumScale2singleFWD;
+   uint32_t                             LumShift1singleFWD;
+   uint32_t                             LumShift2singleFWD;
+   uint32_t                             LumScale1doubleFWD;
+   uint32_t                             LumScale2doubleFWD;
+   uint32_t                             LumShift1doubleFWD;
+   uint32_t                             LumShift2doubleFWD;
+   uint32_t                             LumScale1singleBWD;
+   uint32_t                             LumScale2singleBWD;
+   uint32_t                             LumShift1singleBWD;
+   uint32_t                             LumShift2singleBWD;
+   uint32_t                             LumScale1doubleBWD;
+   uint32_t                             LumScale2doubleBWD;
+   uint32_t                             LumShift1doubleBWD;
+   uint32_t                             LumShift2doubleBWD;
+   uint32_t                             VinIntensityCompensationSingleBackwardEnable;
+   uint32_t                             VinIntensityCompensationSingleForwardEnable;
+   uint32_t                             VinIntensityCompensationDoubleBackwardEnable;
+   uint32_t                             VinIntensityCompensationDoubleForwardEnable;
+   bool                                 RangeReduction;
+   uint32_t                             RangeReductionScale;
+   bool                                 FastUVCompensation;
+   uint32_t                             MVMode;
+#define Halfpelbicubic                           0
+#define Quarterpelbicubic                        1
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_VC1_PRED_PIPE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX6_MFX_VC1_PRED_PIPE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->VC1Profile, 2, 3) |
+      __gen_uint(values->InterpolationRounderControl, 4, 4) |
+      __gen_uint(values->ReferenceFrameBoundaryReplicationMode, 8, 11);
+
+   dw[2] =
+      __gen_uint(values->LumScale1singleFWD, 0, 5) |
+      __gen_uint(values->LumScale2singleFWD, 8, 13) |
+      __gen_uint(values->LumShift1singleFWD, 16, 21) |
+      __gen_uint(values->LumShift2singleFWD, 24, 29);
+
+   dw[3] =
+      __gen_uint(values->LumScale1doubleFWD, 0, 5) |
+      __gen_uint(values->LumScale2doubleFWD, 8, 13) |
+      __gen_uint(values->LumShift1doubleFWD, 16, 21) |
+      __gen_uint(values->LumShift2doubleFWD, 24, 29);
+}
+
+#define GFX6_MFX_WAIT_length                   1
+#define GFX6_MFX_WAIT_length_bias              1
+#define GFX6_MFX_WAIT_header                    \
+   .DWordLength                         =      0,  \
+   .SubOpcode                           =      0,  \
+   .CommandSubtype                      =      1,  \
+   .CommandType                         =      3
+
+struct GFX6_MFX_WAIT {
+   uint32_t                             DWordLength;
+   bool                                 MFXSyncControlFlag;
+   uint32_t                             SubOpcode;
+   uint32_t                             CommandSubtype;
+   uint32_t                             CommandType;
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MFX_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
+                   __attribute__((unused)) void * restrict dst,
+                   __attribute__((unused)) const struct GFX6_MFX_WAIT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 5) |
+      __gen_uint(values->MFXSyncControlFlag, 8, 8) |
+      __gen_uint(values->SubOpcode, 16, 26) |
+      __gen_uint(values->CommandSubtype, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+}
+
 #define GFX6_MI_ARB_CHECK_length               1
 #define GFX6_MI_ARB_CHECK_length_bias          1
 #define GFX6_MI_ARB_CHECK_header                \
@@ -4085,6 +7129,59 @@ GFX6_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->IndirectStatePointersDisable, 5, 5) |
       __gen_uint(values->MICommandOpcode, 23, 28) |
       __gen_uint(values->CommandType, 29, 31);
+}
+
+#define GFX6_MI_FLUSH_DW_length                4
+#define GFX6_MI_FLUSH_DW_length_bias           2
+#define GFX6_MI_FLUSH_DW_header                 \
+   .DWordLength                         =      2,  \
+   .MICommandOpcode                     =     38,  \
+   .CommandType                         =      0
+
+struct GFX6_MI_FLUSH_DW {
+   uint32_t                             DWordLength;
+   bool                                 VideoPipelineCacheInvalidate;
+   bool                                 NotifyEnable;
+   uint32_t                             PostSyncOperation;
+   bool                                 SynchronizeGFDTSurface;
+   bool                                 TLBInvalidate;
+   bool                                 StoreDataIndex;
+   uint32_t                             MICommandOpcode;
+   uint32_t                             CommandType;
+   uint32_t                             DestinationAddressType;
+#define DAT_PPGTT                                0
+#define DAT_GGTT                                 1
+   __gen_address_type                   Address;
+   uint32_t                             ImmediateData[2];
+};
+
+static inline __attribute__((always_inline)) void
+GFX6_MI_FLUSH_DW_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX6_MI_FLUSH_DW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 5) |
+      __gen_uint(values->VideoPipelineCacheInvalidate, 7, 7) |
+      __gen_uint(values->NotifyEnable, 8, 8) |
+      __gen_uint(values->PostSyncOperation, 14, 15) |
+      __gen_uint(values->SynchronizeGFDTSurface, 17, 17) |
+      __gen_uint(values->TLBInvalidate, 18, 18) |
+      __gen_uint(values->StoreDataIndex, 21, 21) |
+      __gen_uint(values->MICommandOpcode, 23, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint32_t v1 =
+      __gen_uint(values->DestinationAddressType, 2, 2);
+   dw[1] = __gen_address(data, &dw[1], values->Address, v1, 3, 31);
+
+   dw[2] =
+      __gen_uint(values->ImmediateData[0], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->ImmediateData[1], 0, 31);
 }
 
 #define GFX6_MI_LOAD_REGISTER_IMM_length       3

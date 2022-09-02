@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:40 jsg Exp $
 
 LIB=	radeonsi
 
@@ -26,6 +26,7 @@ SRCS=	gfx10_query.c \
 	si_nir_optim.c \
 	si_sdma_copy_image.c \
 	si_shader.c \
+	si_shader_info.c \
 	si_shader_llvm.c \
 	si_shader_llvm_gs.c \
 	si_shader_llvm_ps.c \
@@ -39,7 +40,7 @@ SRCS=	gfx10_query.c \
 	si_state.c \
 	si_state_binning.c \
 	si_state_msaa.c \
-	si_state_shaders.c \
+	si_state_shaders.cpp \
 	si_state_streamout.c \
 	si_state_viewport.c \
 	si_test_blit.c \
@@ -71,6 +72,7 @@ CPPFLAGS+=	-DGALLIUM_RADEONSI \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/drivers \
 		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/src/amd/common \
 		-I${MESA_SRC}/src/amd/llvm \
 		-I${MESA_SRC}/src/compiler/nir \

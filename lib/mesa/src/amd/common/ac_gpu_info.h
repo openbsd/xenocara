@@ -37,6 +37,9 @@
 extern "C" {
 #endif
 
+#define AMD_MAX_SE         8
+#define AMD_MAX_SA_PER_SE  2
+
 struct amdgpu_gpu_info;
 
 struct radeon_info {
@@ -48,6 +51,7 @@ struct radeon_info {
 
    /* Device info. */
    const char *name;
+   char lowercase_name[32];
    const char *marketing_name;
    bool is_pro_graphics;
    uint32_t pci_id;
@@ -130,6 +134,8 @@ struct radeon_info {
    unsigned ib_alignment; /* both start and size alignment */
    uint32_t me_fw_version;
    uint32_t me_fw_feature;
+   uint32_t mec_fw_version;
+   uint32_t mec_fw_feature;
    uint32_t pfp_fw_version;
    uint32_t pfp_fw_feature;
    uint32_t ce_fw_version;
@@ -184,13 +190,14 @@ struct radeon_info {
    bool has_read_registers_query;
    bool has_gds_ordered_append;
    bool has_scheduled_fence_dependency;
+   bool has_stable_pstate;
    /* Whether SR-IOV is enabled or amdgpu.mcbp=1 was set on the kernel command line. */
    bool mid_command_buffer_preemption_enabled;
    bool has_tmz_support;
    bool kernel_has_modifiers;
 
    /* Shader cores. */
-   uint32_t cu_mask[4][2];
+   uint32_t cu_mask[AMD_MAX_SE][AMD_MAX_SA_PER_SE];
    uint32_t r600_max_quad_pipes; /* wave size / 16 */
    uint32_t max_shader_clock;
    uint32_t num_good_compute_units;
@@ -229,6 +236,10 @@ struct radeon_info {
    /* Tile modes. */
    uint32_t si_tile_mode_array[32];
    uint32_t cik_macrotile_mode_array[16];
+
+   /* AMD_CU_MASK environment variable or ~0. */
+   bool spi_cu_en_has_effect;
+   uint32_t spi_cu_en;
 };
 
 bool ac_query_gpu_info(int fd, void *dev_p, struct radeon_info *info,

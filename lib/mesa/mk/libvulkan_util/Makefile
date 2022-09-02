@@ -1,35 +1,16 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:41 jsg Exp $
 
 LIB=	vulkan_util
 
 NOPROFILE=
 
 SRCS=	vk_alloc.c \
-	vk_cmd_copy.c \
-	vk_command_buffer.c \
-	vk_debug_report.c \
-	vk_debug_utils.c \
-	vk_deferred_operation.c \
-	vk_descriptors.c \
-	vk_device.c \
 	vk_format.c \
-	vk_image.c \
-	vk_instance.c \
-	vk_log.c \
-	vk_object.c \
-	vk_physical_device.c \
-	vk_queue.c \
-	vk_render_pass.c \
-	vk_shader_module.c \
-	vk_synchronization2.c \
 	vk_util.c
 
-SRCS+=	vk_cmd_queue.c \
-	vk_common_entrypoints.c \
-	vk_dispatch_table.c \
+SRCS+=	vk_dispatch_table.c \
 	vk_enum_to_str.c \
-	vk_extensions.c \
-	vk_physical_device_features.c
+	vk_extensions.c
 
 .include "../Makefile.inc"
 

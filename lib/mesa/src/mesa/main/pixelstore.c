@@ -34,6 +34,7 @@
 #include "pixelstore.h"
 #include "mtypes.h"
 #include "util/rounding.h"
+#include "api_exec_decl.h"
 
 
 static ALWAYS_INLINE void
@@ -54,7 +55,7 @@ pixel_storei(GLenum pname, GLint param, bool no_error)
          ctx->Pack.LsbFirst = param ? GL_TRUE : GL_FALSE;
          break;
       case GL_PACK_ROW_LENGTH:
-         if (!no_error && !_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
+         if (!no_error && ctx->API == API_OPENGLES)
             goto invalid_enum_error;
          if (!no_error && param<0)
             goto invalid_value_error;
@@ -68,14 +69,14 @@ pixel_storei(GLenum pname, GLint param, bool no_error)
          ctx->Pack.ImageHeight = param;
          break;
       case GL_PACK_SKIP_PIXELS:
-         if (!no_error && !_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
+         if (!no_error && ctx->API == API_OPENGLES)
             goto invalid_enum_error;
          if (!no_error && param<0)
             goto invalid_value_error;
          ctx->Pack.SkipPixels = param;
          break;
       case GL_PACK_SKIP_ROWS:
-         if (!no_error && !_mesa_is_desktop_gl(ctx) && !_mesa_is_gles3(ctx))
+         if (!no_error && ctx->API == API_OPENGLES)
             goto invalid_enum_error;
          if (!no_error && param<0)
             goto invalid_value_error;

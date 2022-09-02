@@ -1,11 +1,12 @@
-#	$OpenBSD: Makefile,v 1.1 2021/07/22 11:10:11 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:39 jsg Exp $
 
 GFX=	120
 LIB=	isl_gfx${GFX}
 
 NOPROFILE=
 
-SRCS=	isl_emit_depth_stencil.c \
+SRCS=	isl_emit_cpb.c \
+	isl_emit_depth_stencil.c \
 	isl_surface_state.c \
 	isl_gfx12.c
 

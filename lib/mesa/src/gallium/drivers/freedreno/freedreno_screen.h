@@ -149,6 +149,12 @@ struct fd_screen {
 
    struct renderonly *ro;
 
+   /* the blob seems to always use 8K factor and 128K param sizes, copy them */
+#define FD6_TESS_FACTOR_SIZE (8 * 1024)
+#define FD6_TESS_PARAM_SIZE (128 * 1024)
+#define FD6_TESS_BO_SIZE (FD6_TESS_FACTOR_SIZE + FD6_TESS_PARAM_SIZE)
+   struct fd_bo *tess_bo;
+
    /* table with PIPE_PRIM_MAX+1 entries mapping PIPE_PRIM_x to
     * DI_PT_x value to use for draw initiator.  There are some
     * slight differences between generation.
@@ -250,7 +256,7 @@ is_ir3(struct fd_screen *screen)
 static inline bool
 has_compute(struct fd_screen *screen)
 {
-   return is_a5xx(screen) || is_a6xx(screen);
+   return is_a4xx(screen) || is_a5xx(screen) || is_a6xx(screen);
 }
 
 #endif /* FREEDRENO_SCREEN_H_ */

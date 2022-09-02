@@ -4711,36 +4711,6 @@ void __indirect_glGetColorTable(GLenum target, GLenum format, GLenum type, GLvoi
     return;
 }
 
-#define X_GLvop_GetColorTableSGI 4098
-void gl_dispatch_stub_343(GLenum target, GLenum format, GLenum type, GLvoid * table)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETCOLORTABLESGIPROC p =
-            (PFNGLGETCOLORTABLESGIPROC) disp_table[343];
-    p(target, format, type, table);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    const __GLXattribute * const state = gc->client_state_private;
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 16;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetColorTableSGI, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&format), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 8), (void *)(&type), 1 * sizeof(GLenum));
-        *(int32_t *)(pc + 12) = 0;
-        * (int8_t *)(pc + 12) = state->storePack.swapEndian;
-        __glXReadPixelReply(dpy, gc, 1, 0, 0, 0, format, type, table, GL_TRUE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetColorTableParameterfv 148
 void __indirect_glGetColorTableParameterfv(GLenum target, GLenum pname, GLfloat * params)
 {
@@ -4772,32 +4742,6 @@ void __indirect_glGetColorTableParameterfv(GLenum target, GLenum pname, GLfloat 
     return;
 }
 
-#define X_GLvop_GetColorTableParameterfvSGI 4099
-void gl_dispatch_stub_344(GLenum target, GLenum pname, GLfloat * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETCOLORTABLEPARAMETERFVSGIPROC p =
-            (PFNGLGETCOLORTABLEPARAMETERFVSGIPROC) disp_table[344];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetColorTableParameterfvSGI, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetColorTableParameteriv 149
 void __indirect_glGetColorTableParameteriv(GLenum target, GLenum pname, GLint * params)
 {
@@ -4827,32 +4771,6 @@ void __indirect_glGetColorTableParameteriv(GLenum target, GLenum pname, GLint * 
 #endif /* USE_XCB */
     }
     return;
-}
-
-#define X_GLvop_GetColorTableParameterivSGI 4100
-void gl_dispatch_stub_345(GLenum target, GLenum pname, GLint * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETCOLORTABLEPARAMETERIVSGIPROC p =
-            (PFNGLGETCOLORTABLEPARAMETERIVSGIPROC) disp_table[345];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetColorTableParameterivSGI, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
 }
 
 #define X_GLrop_ColorSubTable 195
@@ -5098,36 +5016,6 @@ void __indirect_glGetConvolutionFilter(GLenum target, GLenum format, GLenum type
     return;
 }
 
-#define X_GLvop_GetConvolutionFilterEXT 1
-void gl_dispatch_stub_356(GLenum target, GLenum format, GLenum type, GLvoid * image)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETCONVOLUTIONFILTEREXTPROC p =
-            (PFNGLGETCONVOLUTIONFILTEREXTPROC) disp_table[356];
-    p(target, format, type, image);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    const __GLXattribute * const state = gc->client_state_private;
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 16;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetConvolutionFilterEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&format), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 8), (void *)(&type), 1 * sizeof(GLenum));
-        *(int32_t *)(pc + 12) = 0;
-        * (int8_t *)(pc + 12) = state->storePack.swapEndian;
-        __glXReadPixelReply(dpy, gc, 2, 0, 0, 0, format, type, image, GL_TRUE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetConvolutionParameterfv 151
 void __indirect_glGetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat * params)
 {
@@ -5157,32 +5045,6 @@ void __indirect_glGetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat
 #endif /* USE_XCB */
     }
     return;
-}
-
-#define X_GLvop_GetConvolutionParameterfvEXT 2
-void gl_dispatch_stub_357(GLenum target, GLenum pname, GLfloat * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETCONVOLUTIONPARAMETERFVEXTPROC p =
-            (PFNGLGETCONVOLUTIONPARAMETERFVEXTPROC) disp_table[357];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetConvolutionParameterfvEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
 }
 
 #define X_GLsop_GetConvolutionParameteriv 152
@@ -5216,32 +5078,6 @@ void __indirect_glGetConvolutionParameteriv(GLenum target, GLenum pname, GLint *
     return;
 }
 
-#define X_GLvop_GetConvolutionParameterivEXT 3
-void gl_dispatch_stub_358(GLenum target, GLenum pname, GLint * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETCONVOLUTIONPARAMETERIVEXTPROC p =
-            (PFNGLGETCONVOLUTIONPARAMETERIVEXTPROC) disp_table[358];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetConvolutionParameterivEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetHistogram 154
 void __indirect_glGetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
 {
@@ -5271,37 +5107,6 @@ void __indirect_glGetHistogram(GLenum target, GLboolean reset, GLenum format, GL
 #endif /* USE_XCB */
     }
     return;
-}
-
-#define X_GLvop_GetHistogramEXT 5
-void gl_dispatch_stub_361(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETHISTOGRAMEXTPROC p =
-            (PFNGLGETHISTOGRAMEXTPROC) disp_table[361];
-    p(target, reset, format, type, values);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    const __GLXattribute * const state = gc->client_state_private;
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 16;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetHistogramEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&format), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 8), (void *)(&type), 1 * sizeof(GLenum));
-        *(int32_t *)(pc + 12) = 0;
-        * (int8_t *)(pc + 12) = state->storePack.swapEndian;
-        * (int8_t *)(pc + 13) = reset;
-        __glXReadPixelReply(dpy, gc, 1, 0, 0, 0, format, type, values, GL_TRUE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
 }
 
 #define X_GLsop_GetHistogramParameterfv 155
@@ -5335,32 +5140,6 @@ void __indirect_glGetHistogramParameterfv(GLenum target, GLenum pname, GLfloat *
     return;
 }
 
-#define X_GLvop_GetHistogramParameterfvEXT 6
-void gl_dispatch_stub_362(GLenum target, GLenum pname, GLfloat * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETHISTOGRAMPARAMETERFVEXTPROC p =
-            (PFNGLGETHISTOGRAMPARAMETERFVEXTPROC) disp_table[362];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetHistogramParameterfvEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetHistogramParameteriv 156
 void __indirect_glGetHistogramParameteriv(GLenum target, GLenum pname, GLint * params)
 {
@@ -5390,32 +5169,6 @@ void __indirect_glGetHistogramParameteriv(GLenum target, GLenum pname, GLint * p
 #endif /* USE_XCB */
     }
     return;
-}
-
-#define X_GLvop_GetHistogramParameterivEXT 7
-void gl_dispatch_stub_363(GLenum target, GLenum pname, GLint * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETHISTOGRAMPARAMETERIVEXTPROC p =
-            (PFNGLGETHISTOGRAMPARAMETERIVEXTPROC) disp_table[363];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetHistogramParameterivEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
 }
 
 #define X_GLsop_GetMinmax 157
@@ -5449,37 +5202,6 @@ void __indirect_glGetMinmax(GLenum target, GLboolean reset, GLenum format, GLenu
     return;
 }
 
-#define X_GLvop_GetMinmaxEXT 8
-void gl_dispatch_stub_364(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETMINMAXEXTPROC p =
-            (PFNGLGETMINMAXEXTPROC) disp_table[364];
-    p(target, reset, format, type, values);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    const __GLXattribute * const state = gc->client_state_private;
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 16;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetMinmaxEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&format), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 8), (void *)(&type), 1 * sizeof(GLenum));
-        *(int32_t *)(pc + 12) = 0;
-        * (int8_t *)(pc + 12) = state->storePack.swapEndian;
-        * (int8_t *)(pc + 13) = reset;
-        __glXReadPixelReply(dpy, gc, 1, 2, 1, 1, format, type, values, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetMinmaxParameterfv 158
 void __indirect_glGetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat * params)
 {
@@ -5511,32 +5233,6 @@ void __indirect_glGetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat * pa
     return;
 }
 
-#define X_GLvop_GetMinmaxParameterfvEXT 9
-void gl_dispatch_stub_365(GLenum target, GLenum pname, GLfloat * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETMINMAXPARAMETERFVEXTPROC p =
-            (PFNGLGETMINMAXPARAMETERFVEXTPROC) disp_table[365];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetMinmaxParameterfvEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
-}
-
 #define X_GLsop_GetMinmaxParameteriv 159
 void __indirect_glGetMinmaxParameteriv(GLenum target, GLenum pname, GLint * params)
 {
@@ -5566,32 +5262,6 @@ void __indirect_glGetMinmaxParameteriv(GLenum target, GLenum pname, GLint * para
 #endif /* USE_XCB */
     }
     return;
-}
-
-#define X_GLvop_GetMinmaxParameterivEXT 10
-void gl_dispatch_stub_366(GLenum target, GLenum pname, GLint * params)
-{
-#if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-    if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
-        const _glapi_proc *const disp_table = (_glapi_proc *)GET_DISPATCH();
-        PFNGLGETMINMAXPARAMETERIVEXTPROC p =
-            (PFNGLGETMINMAXPARAMETERIVEXTPROC) disp_table[366];
-    p(target, pname, params);
-    } else
-#endif
-    {
-    struct glx_context * const gc = __glXGetCurrentContext();
-    Display * const dpy = gc->currentDpy;
-    const GLuint cmdlen = 8;
-    if (__builtin_expect(dpy != NULL, 1)) {
-        GLubyte const * pc = __glXSetupVendorRequest(gc, X_GLXVendorPrivateWithReply, X_GLvop_GetMinmaxParameterivEXT, cmdlen);
-(void) memcpy((void *)(pc + 0), (void *)(&target), 1 * sizeof(GLenum));
-(void) memcpy((void *)(pc + 4), (void *)(&pname), 1 * sizeof(GLenum));
-        (void) __glXReadReply(dpy, 4, params, GL_FALSE);
-        UnlockDisplay(dpy); SyncHandle();
-    }
-    return;
-}
 }
 
 #define X_GLrop_Histogram 4110
@@ -8921,26 +8591,10 @@ static const struct proc_pair
 {
    const char *name;
    _glapi_proc proc;
-} proc_pairs[20] = {
+} proc_pairs[4] = {
    { "AreTexturesResidentEXT", (_glapi_proc) glAreTexturesResidentEXT },
    { "DeleteTexturesEXT", (_glapi_proc) glDeleteTexturesEXT },
    { "GenTexturesEXT", (_glapi_proc) glGenTexturesEXT },
-   { "GetColorTableEXT", (_glapi_proc) gl_dispatch_stub_343 },
-   { "GetColorTableParameterfvEXT", (_glapi_proc) gl_dispatch_stub_344 },
-   { "GetColorTableParameterfvSGI", (_glapi_proc) gl_dispatch_stub_344 },
-   { "GetColorTableParameterivEXT", (_glapi_proc) gl_dispatch_stub_345 },
-   { "GetColorTableParameterivSGI", (_glapi_proc) gl_dispatch_stub_345 },
-   { "GetColorTableSGI", (_glapi_proc) gl_dispatch_stub_343 },
-   { "GetConvolutionFilterEXT", (_glapi_proc) gl_dispatch_stub_356 },
-   { "GetConvolutionParameterfvEXT", (_glapi_proc) gl_dispatch_stub_357 },
-   { "GetConvolutionParameterivEXT", (_glapi_proc) gl_dispatch_stub_358 },
-   { "GetHistogramEXT", (_glapi_proc) gl_dispatch_stub_361 },
-   { "GetHistogramParameterfvEXT", (_glapi_proc) gl_dispatch_stub_362 },
-   { "GetHistogramParameterivEXT", (_glapi_proc) gl_dispatch_stub_363 },
-   { "GetMinmaxEXT", (_glapi_proc) gl_dispatch_stub_364 },
-   { "GetMinmaxParameterfvEXT", (_glapi_proc) gl_dispatch_stub_365 },
-   { "GetMinmaxParameterivEXT", (_glapi_proc) gl_dispatch_stub_366 },
-   { "GetSeparableFilterEXT", (_glapi_proc) gl_dispatch_stub_359 },
    { "IsTextureEXT", (_glapi_proc) glIsTextureEXT }
 };
 

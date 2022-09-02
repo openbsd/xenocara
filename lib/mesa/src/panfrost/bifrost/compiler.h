@@ -34,6 +34,10 @@
 #include "util/u_math.h"
 #include "util/half_float.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Swizzles across bytes in a 32-bit word. Expresses swz in the XML directly.
  * To express widen, use the correpsonding replicated form, i.e. H01 = identity
  * for widen = none, H00 for widen = h0, B1111 for widen = b1. For lane, also
@@ -128,17 +132,20 @@ typedef struct {
         uint32_t offset : 2;
         bool reg : 1;
         enum bi_index_type type : 3;
+
+        /* Must be zeroed so we can hash the whole 64-bits at a time */
+        unsigned padding : (32 - 13);
 } bi_index;
 
 static inline bi_index
 bi_get_index(unsigned value, bool is_reg, unsigned offset)
 {
         return (bi_index) {
-                .type = BI_INDEX_NORMAL,
                 .value = value,
                 .swizzle = BI_SWIZZLE_H01,
                 .offset = offset,
                 .reg = is_reg,
+                .type = BI_INDEX_NORMAL,
         };
 }
 
@@ -148,9 +155,9 @@ bi_register(unsigned reg)
         assert(reg < 64);
 
         return (bi_index) {
-                .type = BI_INDEX_REGISTER,
+                .value = reg,
                 .swizzle = BI_SWIZZLE_H01,
-                .value = reg
+                .type = BI_INDEX_REGISTER,
         };
 }
 
@@ -158,9 +165,9 @@ static inline bi_index
 bi_imm_u32(uint32_t imm)
 {
         return (bi_index) {
-                .type = BI_INDEX_CONSTANT,
+                .value = imm,
                 .swizzle = BI_SWIZZLE_H01,
-                .value = imm
+                .type = BI_INDEX_CONSTANT,
         };
 }
 
@@ -186,17 +193,10 @@ static inline bi_index
 bi_passthrough(enum bifrost_packed_src value)
 {
         return (bi_index) {
-                .type = BI_INDEX_PASS,
+                .value = value,
                 .swizzle = BI_SWIZZLE_H01,
-                .value = value
+                .type = BI_INDEX_PASS,
         };
-}
-
-/* Read back power-efficent garbage, TODO maybe merge with null? */
-static inline bi_index
-bi_dontcare()
-{
-        return bi_passthrough(BIFROST_SRC_FAU_HI);
 }
 
 /* Extracts a word from a vectored index */
@@ -212,7 +212,7 @@ static inline bi_index
 bi_swz_16(bi_index idx, bool x, bool y)
 {
         assert(idx.swizzle == BI_SWIZZLE_H01);
-        idx.swizzle = BI_SWIZZLE_H00 | (x << 1) | y;
+        idx.swizzle = (enum bi_swizzle)(BI_SWIZZLE_H00 | (x << 1) | y);
         return idx;
 }
 
@@ -227,7 +227,7 @@ bi_byte(bi_index idx, unsigned lane)
 {
         assert(idx.swizzle == BI_SWIZZLE_H01);
         assert(lane < 4);
-        idx.swizzle = BI_SWIZZLE_B0000 + lane;
+        idx.swizzle = (enum bi_swizzle)(BI_SWIZZLE_B0000 + lane);
         return idx;
 }
 
@@ -348,8 +348,30 @@ bi_is_word_equiv(bi_index left, bi_index right)
         return bi_is_equiv(left, right) && left.offset == right.offset;
 }
 
+/* An even stronger equivalence that checks if indices correspond to the
+ * right value when evaluated
+ */
+static inline bool
+bi_is_value_equiv(bi_index left, bi_index right)
+{
+        if (left.type == BI_INDEX_CONSTANT && right.type == BI_INDEX_CONSTANT) {
+                return (bi_apply_swizzle(left.value, left.swizzle) ==
+                        bi_apply_swizzle(right.value, right.swizzle)) &&
+                       (left.abs == right.abs) &&
+                       (left.neg == right.neg);
+        } else {
+                return (left.value == right.value) &&
+                       (left.abs == right.abs) &&
+                       (left.neg == right.neg) &&
+                       (left.swizzle == right.swizzle) &&
+                       (left.offset == right.offset) &&
+                       (left.reg == right.reg) &&
+                       (left.type == right.type);
+        }
+}
+
 #define BI_MAX_DESTS 2
-#define BI_MAX_SRCS 4
+#define BI_MAX_SRCS 5
 
 typedef struct {
         /* Must be first */
@@ -368,12 +390,21 @@ typedef struct {
         enum bi_register_format register_format;
         enum bi_vecsize vecsize;
 
+        /* Flow control associated with a Valhall instruction */
+        uint8_t flow;
+
         /* Can we spill the value written here? Used to prevent
          * useless double fills */
         bool no_spill;
 
-        /* Override table, inducing a DTSEL_IMM pair if nonzero */
-        enum bi_table table;
+        /* On Bifrost: A value of bi_table to override the table, inducing a
+         * DTSEL_IMM pair if nonzero.
+         *
+         * On Valhall: the table index to use for resource instructions.
+         *
+         * These two interpretations are equivalent if you squint a bit.
+         */
+        unsigned table;
 
         /* Everything after this MUST NOT be accessed directly, since
          * interpretation depends on opcodes */
@@ -393,7 +424,6 @@ typedef struct {
                 uint32_t fill;
                 uint32_t index;
                 uint32_t attribute_index;
-                int32_t branch_offset;
 
                 struct {
                         uint32_t varying_index;
@@ -402,7 +432,18 @@ typedef struct {
                 };
 
                 /* TEXC, ATOM_CX: # of staging registers used */
-                uint32_t sr_count;
+                struct {
+                        uint32_t sr_count;
+                        uint32_t sr_count_2;
+
+                        union {
+                                /* Atomics effectively require all three */
+                                int32_t byte_offset;
+
+                                /* BLEND requires all three */
+                                int32_t branch_offset;
+                        };
+                };
         };
 
         /* Modifiers specific to particular instructions are thrown in a union */
@@ -448,10 +489,20 @@ typedef struct {
                         enum bi_varying_name varying_name; /* LD_VAR_SPECIAL */
                         bool skip; /* VAR_TEX, TEXS, TEXC */
                         bool lod_mode; /* VAR_TEX, TEXS, implicitly for TEXC */
+
+                        /* Used for valhall texturing */
+                        bool shadow;
+                        bool texel_offset;
+                        bool array_enable;
+                        bool integer_coordinates;
+                        enum bi_fetch_component fetch_component;
+                        enum bi_va_lod_mode va_lod_mode;
+                        enum bi_dimension dimension;
+                        enum bi_write_mask write_mask;
                 };
 
                 /* Maximum size, for hashing */
-                unsigned flags[5];
+                unsigned flags[11];
 
                 struct {
                         enum bi_subgroup subgroup; /* WMASK, CLPER */
@@ -472,6 +523,7 @@ typedef struct {
                 struct {
                         bool bytes2; /* RROT_DOUBLE, FRSHIFT_DOUBLE */
                         bool result_word;
+                        bool arithmetic; /* ARSHIFT_OR */
                 };
 
                 struct {
@@ -486,6 +538,12 @@ typedef struct {
                 };
         };
 } bi_instr;
+
+static inline bool
+bi_is_staging_src(bi_instr *I, unsigned s)
+{
+        return (s == 0 || s == 4) && bi_opcode_props[I->op].sr_read;
+}
 
 /* Represents the assignment of slots for a given bi_tuple */
 
@@ -579,6 +637,15 @@ typedef struct {
         bool td;
 } bi_clause;
 
+#define BI_NUM_SLOTS 8
+
+/* A model for the state of the scoreboard */
+struct bi_scoreboard_state {
+        /** Bitmap of registers read/written by a slot */
+        uint64_t read[BI_NUM_SLOTS];
+        uint64_t write[BI_NUM_SLOTS];
+};
+
 typedef struct bi_block {
         /* Link to next block. Must be first for mir_get_block */
         struct list_head link;
@@ -605,19 +672,67 @@ typedef struct bi_block {
         /* Post-RA liveness */
         uint64_t reg_live_in, reg_live_out;
 
+        /* Scoreboard state at the start/end of block */
+        struct bi_scoreboard_state scoreboard_in, scoreboard_out;
+
         /* Flags available for pass-internal use */
         uint8_t pass_flags;
 } bi_block;
 
+static inline bi_block *
+bi_start_block(struct list_head *blocks)
+{
+        bi_block *first = list_first_entry(blocks, bi_block, link);
+        assert(first->predecessors->entries == 0);
+        return first;
+}
+
+static inline bi_block *
+bi_exit_block(struct list_head *blocks)
+{
+        bi_block *last = list_last_entry(blocks, bi_block, link);
+        assert(!last->successors[0] && !last->successors[1]);
+        return last;
+}
+
+/* Subset of pan_shader_info needed per-variant, in order to support IDVS */
+struct bi_shader_info {
+        struct panfrost_ubo_push *push;
+        struct bifrost_shader_info *bifrost;
+        struct panfrost_sysvals *sysvals;
+        unsigned tls_size;
+        unsigned work_reg_count;
+        unsigned push_offset;
+};
+
+/* State of index-driven vertex shading for current shader */
+enum bi_idvs_mode {
+        /* IDVS not in use */
+        BI_IDVS_NONE = 0,
+
+        /* IDVS in use. Compiling a position shader */
+        BI_IDVS_POSITION = 1,
+
+        /* IDVS in use. Compiling a varying shader */
+        BI_IDVS_VARYING = 2,
+};
+
 typedef struct {
        const struct panfrost_compile_inputs *inputs;
        nir_shader *nir;
-       struct pan_shader_info *info;
+       struct bi_shader_info info;
        gl_shader_stage stage;
        struct list_head blocks; /* list of bi_block */
        struct hash_table_u64 *sysval_to_id;
        uint32_t quirks;
        unsigned arch;
+       enum bi_idvs_mode idvs;
+
+       /* In any graphics shader, whether the "IDVS with memory
+        * allocation" flow is used. This affects how varyings are loaded and
+        * stored. Ignore for compute.
+        */
+       bool malloc_idvs;
 
        /* During NIR->BIR */
        bi_block *current_block;
@@ -676,11 +791,36 @@ static inline bi_index
 bi_fau(enum bir_fau value, bool hi)
 {
         return (bi_index) {
-                .type = BI_INDEX_FAU,
                 .value = value,
                 .swizzle = BI_SWIZZLE_H01,
-                .offset = hi ? 1 : 0
+                .offset = hi ? 1u : 0u,
+                .type = BI_INDEX_FAU,
         };
+}
+
+/*
+ * Builder for Valhall LUT entries. Generally, constants are modeled with
+ * BI_INDEX_IMMEDIATE in the intermediate representation. This helper is only
+ * necessary for passes running after lowering constants, as well as when
+ * lowering constants.
+ *
+ */
+static inline bi_index
+va_lut(unsigned index)
+{
+        return bi_fau((enum bir_fau) (BIR_FAU_IMMEDIATE | (index >> 1)),
+                      index & 1);
+}
+
+/*
+ * va_lut_zero is like bi_zero but only works on Valhall. It is intended for
+ * use by late passes that run after constants are lowered, specifically
+ * register allocation. bi_zero() is preferred where possible.
+ */
+static inline bi_index
+va_zero_lut()
+{
+        return va_lut(0);
 }
 
 static inline unsigned
@@ -701,19 +841,6 @@ bi_temp_reg(bi_context *ctx)
         return bi_get_index(ctx->reg_alloc++, true, 0);
 }
 
-/* NIR booleans are 1-bit (0/1). For now, backend IR booleans are N-bit
- * (0/~0) where N depends on the context. This requires us to sign-extend
- * when converting constants from NIR to the backend IR.
- */
-static inline uint32_t
-bi_extend_constant(uint32_t constant, unsigned bit_size)
-{
-        if (bit_size == 1 && constant != 0)
-                return ~0;
-        else
-                return constant;
-}
-
 /* Inline constants automatically, will be lowered out by bi_lower_fau where a
  * constant is not allowed. load_const_to_scalar gaurantees that this makes
  * sense */
@@ -721,13 +848,11 @@ bi_extend_constant(uint32_t constant, unsigned bit_size)
 static inline bi_index
 bi_src_index(nir_src *src)
 {
-        if (nir_src_is_const(*src) && nir_src_bit_size(*src) <= 32) {
-                uint32_t v = nir_src_as_uint(*src);
-
-                return bi_imm_u32(bi_extend_constant(v, nir_src_bit_size(*src)));
-        } else if (src->is_ssa) {
+        if (nir_src_is_const(*src) && nir_src_bit_size(*src) <= 32)
+                return bi_imm_u32(nir_src_as_uint(*src));
+        else if (src->is_ssa)
                 return bi_get_index(src->ssa->index, false, 0);
-        } else {
+        else {
                 assert(!src->reg.indirect);
                 return bi_get_index(src->reg.reg->index, true, 0);
         }
@@ -757,7 +882,7 @@ static inline bi_index
 bi_node_to_index(unsigned node, unsigned node_count)
 {
         assert(node < node_count);
-        assert(node_count < ~0);
+        assert(node_count < ~0u);
 
         return bi_get_index(node >> 1, node & PAN_IS_REG, 0);
 }
@@ -891,7 +1016,7 @@ unsigned bi_count_write_registers(const bi_instr *ins, unsigned dest);
 bool bi_is_regfmt_16(enum bi_register_format fmt);
 unsigned bi_writemask(const bi_instr *ins, unsigned dest);
 bi_clause * bi_next_clause(bi_context *ctx, bi_block *block, bi_clause *clause);
-bool bi_side_effects(enum bi_opcode op);
+bool bi_side_effects(const bi_instr *I);
 bool bi_reconverge_branches(bi_block *block);
 
 void bi_print_instr(const bi_instr *I, FILE *fp);
@@ -910,12 +1035,16 @@ void bi_opt_cse(bi_context *ctx);
 void bi_opt_mod_prop_forward(bi_context *ctx);
 void bi_opt_mod_prop_backward(bi_context *ctx);
 void bi_opt_dead_code_eliminate(bi_context *ctx);
+void bi_opt_fuse_dual_texture(bi_context *ctx);
 void bi_opt_dce_post_ra(bi_context *ctx);
+void bi_opt_message_preload(bi_context *ctx);
 void bi_opt_push_ubo(bi_context *ctx);
+void bi_opt_reorder_push(bi_context *ctx);
 void bi_lower_swizzle(bi_context *ctx);
 void bi_lower_fau(bi_context *ctx);
 void bi_assign_scoreboard(bi_context *ctx);
 void bi_register_allocate(bi_context *ctx);
+void va_optimize(bi_context *ctx);
 
 void bi_lower_opt_instruction(bi_instr *I);
 
@@ -936,7 +1065,7 @@ static inline void bi_validate(UNUSED bi_context *ctx, UNUSED const char *after_
 #endif
 
 uint32_t bi_fold_constant(bi_instr *I, bool *unsupported);
-void bi_opt_constant_fold(bi_context *ctx);
+bool bi_opt_constant_fold(bi_context *ctx);
 
 /* Liveness */
 
@@ -968,6 +1097,7 @@ bi_is_terminal_block(bi_block *block)
 
 /* Returns the size of the final clause */
 unsigned bi_pack(bi_context *ctx, struct util_dynarray *emission);
+void bi_pack_valhall(bi_context *ctx, struct util_dynarray *emission);
 
 struct bi_packed_tuple {
         uint64_t lo;
@@ -1055,6 +1185,15 @@ bi_after_instr(bi_instr *instr)
         .option = bi_cursor_after_instr,
         .instr = instr
     };
+}
+
+static inline bi_cursor
+bi_before_nonempty_block(bi_block *block)
+{
+        bi_instr *I = list_first_entry(&block->instructions, bi_instr, link);
+        assert(I != NULL);
+
+        return bi_before_instr(I);
 }
 
 /* Invariant: a tuple must be nonempty UNLESS it is the last tuple of a clause,
@@ -1166,6 +1305,16 @@ bi_builder_insert(bi_cursor *cursor, bi_instr *I)
     unreachable("Invalid cursor option");
 }
 
+/* Read back power-efficent garbage, TODO maybe merge with null? */
+static inline bi_index
+bi_dontcare(bi_builder *b)
+{
+        if (b->shader->arch >= 9)
+               return bi_zero();
+        else
+               return bi_passthrough(BIFROST_SRC_FAU_HI);
+}
+
 static inline unsigned
 bi_word_node(bi_index idx)
 {
@@ -1173,8 +1322,29 @@ bi_word_node(bi_index idx)
         return (idx.value << 2) | idx.offset;
 }
 
+/*
+ * Vertex ID and Instance ID are preloaded registers. Where they are preloaded
+ * changed from Bifrost to Valhall. Provide helpers that smooth over the
+ * architectural difference.
+ */
+static inline bi_index
+bi_vertex_id(bi_builder *b)
+{
+        return bi_register((b->shader->arch >= 9) ? 60 : 61);
+}
+
+static inline bi_index
+bi_instance_id(bi_builder *b)
+{
+        return bi_register((b->shader->arch >= 9) ? 61 : 62);
+}
+
 /* NIR passes */
 
 bool bi_lower_divergent_indirects(nir_shader *shader, unsigned lanes);
+
+#ifdef __cplusplus
+} /* extern C */
+#endif
 
 #endif

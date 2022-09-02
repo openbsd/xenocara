@@ -312,12 +312,9 @@ __glConvolutionParameterfv_size( GLenum e )
 {
     switch( e ) {
         case GL_CONVOLUTION_BORDER_MODE:
-/*      case GL_CONVOLUTION_BORDER_MODE_EXT:*/
             return 1;
         case GL_CONVOLUTION_FILTER_SCALE:
-/*      case GL_CONVOLUTION_FILTER_SCALE_EXT:*/
         case GL_CONVOLUTION_FILTER_BIAS:
-/*      case GL_CONVOLUTION_FILTER_BIAS_EXT:*/
         case GL_CONVOLUTION_BORDER_COLOR:
 /*      case GL_CONVOLUTION_BORDER_COLOR_HP:*/
             return 4;

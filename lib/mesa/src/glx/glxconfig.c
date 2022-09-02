@@ -145,10 +145,10 @@ glx_config_get(struct glx_config * mode, int attribute, int *value_return)
       *value_return = mode->fbconfigID;
       return 0;
    case GLX_MAX_PBUFFER_WIDTH:
-      *value_return = mode->maxPbufferWidth;
+      *value_return = 4096; /* _EGL_MAX_PBUFFER_WIDTH */
       return 0;
    case GLX_MAX_PBUFFER_HEIGHT:
-      *value_return = mode->maxPbufferHeight;
+      *value_return = 4096; /* _EGL_MAX_PBUFFER_HEIGHT */
       return 0;
    case GLX_MAX_PBUFFER_PIXELS:
       *value_return = mode->maxPbufferPixels;
@@ -186,9 +186,11 @@ glx_config_get(struct glx_config * mode, int attribute, int *value_return)
    case GLX_Y_INVERTED_EXT:
       *value_return = mode->yInverted;
       return 0;
-
    case GLX_FRAMEBUFFER_SRGB_CAPABLE_EXT:
       *value_return = mode->sRGBCapable;
+      return 0;
+   case GLX_FLOAT_COMPONENTS_NV:
+      *value_return = mode->floatComponentsNV;
       return 0;
 
       /* Applications are NOT allowed to query GLX_VISUAL_SELECT_GROUP_SGIX.

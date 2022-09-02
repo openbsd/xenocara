@@ -77,6 +77,13 @@ __gen_uint(uint64_t v, uint32_t start, NDEBUG_UNUSED uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_uint_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_uint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_sint(int64_t v, uint32_t start, uint32_t end)
 {
    const int width = end - start + 1;
@@ -97,6 +104,13 @@ __gen_sint(int64_t v, uint32_t start, uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sint_nonzero(int64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ll);
+   return __gen_sint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
 {
    __gen_validate_value(v);
@@ -107,6 +121,13 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
 #endif
 
    return v;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_offset_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_offset(v, start, end);
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -132,6 +153,13 @@ __gen_float(float v)
    return ((union __intel_value) { .f = (v) }).dw;
 }
 
+static inline __attribute__((always_inline)) uint32_t
+__gen_float_nonzero(float v)
+{
+   assert(v != 0.0f);
+   return __gen_float(v);
+}
+
 static inline __attribute__((always_inline)) uint64_t
 __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 {
@@ -152,6 +180,13 @@ __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sfixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_sfixed(v, start, end, fract_bits);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract_bits)
 {
    __gen_validate_value(v);
@@ -167,6 +202,13 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
    const uint64_t uint_val = llroundf(v * factor);
 
    return uint_val << start;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_ufixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_ufixed(v, start, end, fract_bits);
 }
 
 #ifndef __gen_address_type
@@ -2436,8 +2478,8 @@ struct GFX4_STATE_BASE_ADDRESS {
    __gen_address_type                   IndirectObjectBaseAddress;
    bool                                 GeneralStateAccessUpperBoundModifyEnable;
    __gen_address_type                   GeneralStateAccessUpperBound;
-   bool                                 InstructionAccessUpperBoundModifyEnable;
-   __gen_address_type                   InstructionAccessUpperBound;
+   bool                                 IndirectObjectAccessUpperBoundModifyEnable;
+   __gen_address_type                   IndirectObjectAccessUpperBound;
 };
 
 static inline __attribute__((always_inline)) void
@@ -2471,8 +2513,8 @@ GFX4_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] = __gen_address(data, &dw[4], values->GeneralStateAccessUpperBound, v4, 12, 31);
 
    const uint32_t v5 =
-      __gen_uint(values->InstructionAccessUpperBoundModifyEnable, 0, 0);
-   dw[5] = __gen_address(data, &dw[5], values->InstructionAccessUpperBound, v5, 12, 31);
+      __gen_uint(values->IndirectObjectAccessUpperBoundModifyEnable, 0, 0);
+   dw[5] = __gen_address(data, &dw[5], values->IndirectObjectAccessUpperBound, v5, 12, 31);
 }
 
 #define GFX4_STATE_SIP_length                  2
@@ -2587,10 +2629,10 @@ struct GFX4_XY_COLOR_BLT {
    int32_t                              DestinationPitch;
    uint32_t                             RasterOperation;
    uint32_t                             ColorDepth;
-#define COLOR_DEPTH__8bit                        0
-#define COLOR_DEPTH__565                         1
-#define COLOR_DEPTH__1555                        2
-#define COLOR_DEPTH__32bit                       3
+#define COLOR_DEPTH_8bit                         0
+#define COLOR_DEPTH_565                          1
+#define COLOR_DEPTH_1555                         2
+#define COLOR_DEPTH_32bit                        3
    bool                                 ClippingEnabled;
    int32_t                              DestinationX1Coordinate;
    int32_t                              DestinationY1Coordinate;
@@ -2650,10 +2692,10 @@ struct GFX4_XY_SETUP_BLT {
    int32_t                              DestinationPitch;
    uint32_t                             RasterOperation;
    uint32_t                             ColorDepth;
-#define COLOR_DEPTH__8bit                        0
-#define COLOR_DEPTH__565                         1
-#define COLOR_DEPTH__1555                        2
-#define COLOR_DEPTH__32bit                       3
+#define COLOR_DEPTH_8bit                         0
+#define COLOR_DEPTH_565                          1
+#define COLOR_DEPTH_1555                         2
+#define COLOR_DEPTH_32bit                        3
    bool                                 MonoSourceTransparencyMode;
    bool                                 ClippingEnabled;
    int32_t                              ClipRectX1Coordinate;
@@ -2724,10 +2766,10 @@ struct GFX4_XY_SRC_COPY_BLT {
    int32_t                              DestinationPitch;
    uint32_t                             RasterOperation;
    uint32_t                             ColorDepth;
-#define COLOR_DEPTH__8bit                        0
-#define COLOR_DEPTH__565                         1
-#define COLOR_DEPTH__1555                        2
-#define COLOR_DEPTH__32bit                       3
+#define COLOR_DEPTH_8bit                         0
+#define COLOR_DEPTH_565                          1
+#define COLOR_DEPTH_1555                         2
+#define COLOR_DEPTH_32bit                        3
    bool                                 ClippingEnabled;
    int32_t                              DestinationX1Coordinate;
    int32_t                              DestinationY1Coordinate;

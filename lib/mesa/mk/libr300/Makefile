@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:40 jsg Exp $
 
 LIB=	r300
 
@@ -43,7 +43,6 @@ SRCS=	r300_blit.c \
 	radeon_dataflow_deadcode.c \
 	radeon_dataflow_swizzles.c \
 	radeon_emulate_branches.c \
-	radeon_emulate_loops.c \
 	radeon_inline_literals.c \
 	radeon_list.c \
 	radeon_opcodes.c \
@@ -62,6 +61,8 @@ SRCS=	r300_blit.c \
 	radeon_variable.c \
 	radeon_vert_fc.c
 
+SRCS+=	r300_nir_algebraic.c
+
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
@@ -70,7 +71,9 @@ CPPFLAGS+=	-DGALLIUM_R300 \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/gallium/drivers \
-		-I${MESA_SRC}/src/mesa
+		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src/compiler/nir
 
 install:
 
@@ -81,3 +84,4 @@ obj: _xenocara_obj
 
 .PATH: ${MESA_SRC}/src/gallium/drivers/r300
 .PATH: ${MESA_SRC}/src/gallium/drivers/r300/compiler
+.PATH: ${MESA_SRC}/generated/src/gallium/drivers/r300

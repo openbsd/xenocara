@@ -1132,6 +1132,7 @@ enum ir_intrinsic_id {
    ir_intrinsic_image_samples,
    ir_intrinsic_image_atomic_inc_wrap,
    ir_intrinsic_image_atomic_dec_wrap,
+   ir_intrinsic_image_sparse_load,
 
    ir_intrinsic_ssbo_load,
    ir_intrinsic_ssbo_store = MAKE_INTRINSIC_FOR_TYPE(store, ssbo),
@@ -1173,6 +1174,8 @@ enum ir_intrinsic_id {
    ir_intrinsic_shared_atomic_max = MAKE_INTRINSIC_FOR_TYPE(atomic_max, shared),
    ir_intrinsic_shared_atomic_exchange = MAKE_INTRINSIC_FOR_TYPE(atomic_exchange, shared),
    ir_intrinsic_shared_atomic_comp_swap = MAKE_INTRINSIC_FOR_TYPE(atomic_comp_swap, shared),
+
+   ir_intrinsic_is_sparse_texels_resident,
 };
 
 /*@{*/
@@ -1460,7 +1463,7 @@ public:
 
 class ir_assignment : public ir_instruction {
 public:
-   ir_assignment(ir_rvalue *lhs, ir_rvalue *rhs, ir_rvalue *condition = NULL);
+   ir_assignment(ir_rvalue *lhs, ir_rvalue *rhs);
 
    /**
     * Construct an assignment with an explicit write mask
@@ -1469,8 +1472,7 @@ public:
     * Since a write mask is supplied, the LHS must already be a bare
     * \c ir_dereference.  The cannot be any swizzles in the LHS.
     */
-   ir_assignment(ir_dereference *lhs, ir_rvalue *rhs, ir_rvalue *condition,
-		 unsigned write_mask);
+   ir_assignment(ir_dereference *lhs, ir_rvalue *rhs, unsigned write_mask);
 
    virtual ir_assignment *clone(void *mem_ctx, struct hash_table *ht) const;
 
@@ -1515,12 +1517,6 @@ public:
     * Value being assigned
     */
    ir_rvalue *rhs;
-
-   /**
-    * Optional condition for the assignment.
-    */
-   ir_rvalue *condition;
-
 
    /**
     * Component mask written
@@ -1878,30 +1874,32 @@ enum ir_texture_opcode {
  * selected from \c ir_texture_opcodes.  In the printed IR, these will
  * appear as:
  *
- *                                    Texel offset (0 or an expression)
- *                                    | Projection divisor
- *                                    | |  Shadow comparator
- *                                    | |  |
- *                                    v v  v
- * (tex <type> <sampler> <coordinate> 0 1 ( ))
- * (txb <type> <sampler> <coordinate> 0 1 ( ) <bias>)
- * (txl <type> <sampler> <coordinate> 0 1 ( ) <lod>)
- * (txd <type> <sampler> <coordinate> 0 1 ( ) (dPdx dPdy))
- * (txf <type> <sampler> <coordinate> 0       <lod>)
+ *                                             Texel offset (0 or an expression)
+ *                                             | Projection divisor
+ *                                             | |  Shadow comparator
+ *                                             | |  |   Lod clamp
+ *                                             | |  |   |
+ *                                             v v  v   v
+ * (tex <type> <sampler> <coordinate> <sparse> 0 1 ( ) ( ))
+ * (txb <type> <sampler> <coordinate> <sparse> 0 1 ( ) ( ) <bias>)
+ * (txl <type> <sampler> <coordinate> <sparse> 0 1 ( )     <lod>)
+ * (txd <type> <sampler> <coordinate> <sparse> 0 1 ( ) ( ) (dPdx dPdy))
+ * (txf <type> <sampler> <coordinate> <sparse> 0	         <lod>)
  * (txf_ms
- *      <type> <sampler> <coordinate>         <sample_index>)
+ *      <type> <sampler> <coordinate> <sparse>             <sample_index>)
  * (txs <type> <sampler> <lod>)
  * (lod <type> <sampler> <coordinate>)
- * (tg4 <type> <sampler> <coordinate> <offset> <component>)
+ * (tg4 <type> <sampler> <coordinate> <sparse>             <offset> <component>)
  * (query_levels <type> <sampler>)
  * (samples_identical <sampler> <coordinate>)
  */
 class ir_texture : public ir_rvalue {
 public:
-   ir_texture(enum ir_texture_opcode op)
+   ir_texture(enum ir_texture_opcode op, bool sparse = false)
       : ir_rvalue(ir_type_texture),
         op(op), sampler(NULL), coordinate(NULL), projector(NULL),
-        shadow_comparator(NULL), offset(NULL)
+        shadow_comparator(NULL), offset(NULL), clamp(NULL),
+        is_sparse(sparse)
    {
       memset(&lod_info, 0, sizeof(lod_info));
    }
@@ -1962,6 +1960,9 @@ public:
    /** Texel offset. */
    ir_rvalue *offset;
 
+   /** Lod clamp. */
+   ir_rvalue *clamp;
+
    union {
       ir_rvalue *lod;		/**< Floating point LOD */
       ir_rvalue *bias;		/**< Floating point LOD bias */
@@ -1972,6 +1973,9 @@ public:
 	 ir_rvalue *dPdy;	/**< Partial derivative of coordinate wrt Y */
       } grad;
    } lod_info;
+
+   /* Whether a sparse texture */
+   bool is_sparse;
 };
 
 

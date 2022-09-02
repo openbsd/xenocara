@@ -44,18 +44,19 @@ static void __print_surface(FILE *out, const void *arg) {
 static const struct u_tracepoint __tp_surface = {
     ALIGN_POT(sizeof(struct trace_surface), 8),   /* keep size 64b aligned */
     "surface",
+    false,
     __print_surface,
 };
-void __trace_surface(struct u_trace *ut, void *cs
-     , const struct pipe_surface * psurf
+void __trace_surface(
+     struct u_trace *ut, void *cs
+   , const struct pipe_surface * psurf
 ) {
    struct trace_surface *__entry =
       (struct trace_surface *)u_trace_append(ut, cs, &__tp_surface);
-   (void)__entry;
-        __entry->width = psurf->width;
-        __entry->height = psurf->height;
-        __entry->nr_samples = psurf->nr_samples;
-        __entry->format = util_format_short_name(psurf->format);
+   __entry->width = psurf->width;
+   __entry->height = psurf->height;
+   __entry->nr_samples = psurf->nr_samples;
+   __entry->format = util_format_short_name(psurf->format);
 }
 
 /*
@@ -75,19 +76,20 @@ static void __print_framebuffer(FILE *out, const void *arg) {
 static const struct u_tracepoint __tp_framebuffer = {
     ALIGN_POT(sizeof(struct trace_framebuffer), 8),   /* keep size 64b aligned */
     "framebuffer",
+    false,
     __print_framebuffer,
 };
-void __trace_framebuffer(struct u_trace *ut, void *cs
-     , const struct pipe_framebuffer_state * pfb
+void __trace_framebuffer(
+     struct u_trace *ut, void *cs
+   , const struct pipe_framebuffer_state * pfb
 ) {
    struct trace_framebuffer *__entry =
       (struct trace_framebuffer *)u_trace_append(ut, cs, &__tp_framebuffer);
-   (void)__entry;
-        __entry->width = pfb->width;
-        __entry->height = pfb->height;
-        __entry->layers = pfb->layers;
-        __entry->samples = pfb->samples;
-        __entry->nr_cbufs = pfb->nr_cbufs;
+   __entry->width = pfb->width;
+   __entry->height = pfb->height;
+   __entry->layers = pfb->layers;
+   __entry->samples = pfb->samples;
+   __entry->nr_cbufs = pfb->nr_cbufs;
 }
 
 /*
@@ -109,20 +111,21 @@ static void __print_grid_info(FILE *out, const void *arg) {
 static const struct u_tracepoint __tp_grid_info = {
     ALIGN_POT(sizeof(struct trace_grid_info), 8),   /* keep size 64b aligned */
     "grid_info",
+    false,
     __print_grid_info,
 };
-void __trace_grid_info(struct u_trace *ut, void *cs
-     , const struct pipe_grid_info * pgrid
+void __trace_grid_info(
+     struct u_trace *ut, void *cs
+   , const struct pipe_grid_info * pgrid
 ) {
    struct trace_grid_info *__entry =
       (struct trace_grid_info *)u_trace_append(ut, cs, &__tp_grid_info);
-   (void)__entry;
-        __entry->work_dim = pgrid->work_dim;
-        __entry->block_x = pgrid->block[0];
-        __entry->block_y = pgrid->block[1];
-        __entry->block_z = pgrid->block[2];
-        __entry->grid_x = pgrid->grid[0];
-        __entry->grid_y = pgrid->grid[1];
-        __entry->grid_z = pgrid->grid[2];
+   __entry->work_dim = pgrid->work_dim;
+   __entry->block_x = pgrid->block[0];
+   __entry->block_y = pgrid->block[1];
+   __entry->block_z = pgrid->block[2];
+   __entry->grid_x = pgrid->grid[0];
+   __entry->grid_y = pgrid->grid[1];
+   __entry->grid_z = pgrid->grid[2];
 }
 

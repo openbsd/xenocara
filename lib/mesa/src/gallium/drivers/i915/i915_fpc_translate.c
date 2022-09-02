@@ -200,10 +200,50 @@ src_vector(struct i915_fp_compile *p,
       }
       break;
 
-   case TGSI_FILE_IMMEDIATE:
+   case TGSI_FILE_IMMEDIATE: {
       assert(index < p->num_immediates);
+
+      uint8_t swiz[4] = {
+         source->Register.SwizzleX,
+         source->Register.SwizzleY,
+         source->Register.SwizzleZ,
+         source->Register.SwizzleW
+      };
+
+      uint8_t neg[4] = {
+         source->Register.Negate,
+         source->Register.Negate,
+         source->Register.Negate,
+         source->Register.Negate
+      };
+
+      unsigned i;
+
+      for (i = 0; i < 4; i++) {
+         if (swiz[i] == TGSI_SWIZZLE_ZERO || swiz[i] == TGSI_SWIZZLE_ONE) {
+            continue;
+         } else if (p->immediates[index][swiz[i]] == 0.0) {
+            swiz[i] = TGSI_SWIZZLE_ZERO;
+         } else if (p->immediates[index][swiz[i]] == 1.0) {
+            swiz[i] = TGSI_SWIZZLE_ONE;
+         } else if (p->immediates[index][swiz[i]] == -1.0) {
+            swiz[i] = TGSI_SWIZZLE_ONE;
+            neg[i] ^= 1;
+         } else {
+            break;
+         }
+      }
+
+      if (i == 4) {
+         return negate(swizzle(UREG(REG_TYPE_R, 0),
+                               swiz[0], swiz[1], swiz[2], swiz[3]),
+                       neg[0], neg[1], neg[2], neg[3]);
+      }
+
       index = p->immediates_map[index];
       FALLTHROUGH;
+   }
+
    case TGSI_FILE_CONSTANT:
       src = UREG(REG_TYPE_CONST, index);
       break;
@@ -326,26 +366,28 @@ translate_tex_src_target(struct i915_fp_compile *p, uint32_t tex)
  * Return the number of coords needed to access a given TGSI_TEXTURE_*
  */
 uint32_t
-i915_num_coords(uint32_t tex)
+i915_coord_mask(enum tgsi_opcode opcode, enum tgsi_texture_type tex)
 {
+   uint32_t coord_mask = 0;
+
+   if (opcode == TGSI_OPCODE_TXP || opcode == TGSI_OPCODE_TXB)
+      coord_mask |= TGSI_WRITEMASK_W;
+
    switch (tex) {
-   case TGSI_TEXTURE_SHADOW1D:
-   case TGSI_TEXTURE_1D:
-      return 1;
-
-   case TGSI_TEXTURE_SHADOW2D:
+   case TGSI_TEXTURE_1D: /* See the 1D coord swizzle below. */
    case TGSI_TEXTURE_2D:
-   case TGSI_TEXTURE_SHADOWRECT:
    case TGSI_TEXTURE_RECT:
-      return 2;
+      return coord_mask | TGSI_WRITEMASK_XY;
 
+   case TGSI_TEXTURE_SHADOW1D:
+   case TGSI_TEXTURE_SHADOW2D:
+   case TGSI_TEXTURE_SHADOWRECT:
    case TGSI_TEXTURE_3D:
    case TGSI_TEXTURE_CUBE:
-      return 3;
+      return coord_mask | TGSI_WRITEMASK_XYZ;
 
    default:
-      debug_printf("Unknown texture target for num coords");
-      return 2;
+      unreachable("bad texture target");
    }
 }
 
@@ -362,9 +404,16 @@ emit_tex(struct i915_fp_compile *p, const struct i915_full_instruction *inst,
    uint32_t sampler = i915_emit_decl(p, REG_TYPE_S, unit, tex);
    uint32_t coord = src_vector(p, &inst->Src[0], fs);
 
+   /* For 1D textures, set the Y coord to the same as X.  Otherwise, we could
+    * select the wrong LOD based on the uninitialized Y coord when we sample our
+    * 1D textures as 2D.
+    */
+   if (texture == TGSI_TEXTURE_1D || texture == TGSI_TEXTURE_SHADOW1D)
+      coord = swizzle(coord, X, X, Z, W);
+
    i915_emit_texld(p, get_result_vector(p, &inst->Dst[0]),
                    get_result_flags(inst), sampler, coord, opcode,
-                   i915_num_coords(texture));
+                   i915_coord_mask(inst->Instruction.Opcode, texture));
 }
 
 /**
@@ -521,7 +570,7 @@ i915_translate_instruction(struct i915_fp_compile *p,
                       0,                   /* sampler */
                       src0,                /* coord*/
                       T0_TEXKILL,          /* opcode */
-                      1);                  /* num_coord */
+                      TGSI_WRITEMASK_XYZW);/* coord_mask */
       break;
 
    case TGSI_OPCODE_KILL:
@@ -534,7 +583,7 @@ i915_translate_instruction(struct i915_fp_compile *p,
                       negate(swizzle(UREG(REG_TYPE_R, 0), ONE, ONE, ONE, ONE),
                              1, 1, 1, 1), /* coord */
                       T0_TEXKILL,         /* opcode */
-                      1);                 /* num_coord */
+                      TGSI_WRITEMASK_X);  /* coord_mask */
       break;
 
    case TGSI_OPCODE_LG2:
@@ -657,22 +706,40 @@ i915_translate_instruction(struct i915_fp_compile *p,
                       0);
       break;
 
-   case TGSI_OPCODE_SEQ:
+   case TGSI_OPCODE_SEQ: {
+      const uint32_t zero = swizzle(UREG(REG_TYPE_R, 0),
+                                    SRC_ZERO, SRC_ZERO, SRC_ZERO, SRC_ZERO);
+
       /* if we're both >= and <= then we're == */
       src0 = src_vector(p, &inst->Src[0], fs);
       src1 = src_vector(p, &inst->Src[1], fs);
       tmp = i915_get_utemp(p);
 
-      i915_emit_arith(p, A0_SGE, tmp, A0_DEST_CHANNEL_ALL, 0, src0, src1, 0);
+      if (src0 == zero || src1 == zero) {
+         if (src0 == zero)
+            src0 = src1;
 
-      i915_emit_arith(p, A0_SGE, get_result_vector(p, &inst->Dst[0]),
-                      get_result_flags(inst), 0, src1, src0, 0);
+         /* x == 0 is equivalent to -abs(x) >= 0, but the latter requires only
+          * two instructions instead of three.
+          */
+         i915_emit_arith(p, A0_MAX, tmp, A0_DEST_CHANNEL_ALL, 0, src0,
+                         negate(src0, 1, 1, 1, 1), 0);
+         i915_emit_arith(p, A0_SGE, get_result_vector(p, &inst->Dst[0]),
+                         get_result_flags(inst), 0,
+                         negate(tmp, 1, 1, 1, 1), zero, 0);
+      } else {
+         i915_emit_arith(p, A0_SGE, tmp, A0_DEST_CHANNEL_ALL, 0, src0, src1, 0);
 
-      i915_emit_arith(p, A0_MUL, get_result_vector(p, &inst->Dst[0]),
-                      get_result_flags(inst), 0,
-                      get_result_vector(p, &inst->Dst[0]), tmp, 0);
+         i915_emit_arith(p, A0_SGE, get_result_vector(p, &inst->Dst[0]),
+                         get_result_flags(inst), 0, src1, src0, 0);
+
+         i915_emit_arith(p, A0_MUL, get_result_vector(p, &inst->Dst[0]),
+                         get_result_flags(inst), 0,
+                         get_result_vector(p, &inst->Dst[0]), tmp, 0);
+      }
 
       break;
+   }
 
    case TGSI_OPCODE_SGE:
       emit_simple_arith(p, inst, A0_SGE, 2, fs);
@@ -692,21 +759,39 @@ i915_translate_instruction(struct i915_fp_compile *p,
       emit_simple_arith_swap2(p, inst, A0_SLT, 2, fs);
       break;
 
-   case TGSI_OPCODE_SNE:
+   case TGSI_OPCODE_SNE: {
+      const uint32_t zero = swizzle(UREG(REG_TYPE_R, 0),
+                                    SRC_ZERO, SRC_ZERO, SRC_ZERO, SRC_ZERO);
+
       /* if we're < or > then we're != */
       src0 = src_vector(p, &inst->Src[0], fs);
       src1 = src_vector(p, &inst->Src[1], fs);
       tmp = i915_get_utemp(p);
 
-      i915_emit_arith(p, A0_SLT, tmp, A0_DEST_CHANNEL_ALL, 0, src0, src1, 0);
+      if (src0 == zero || src1 == zero) {
+         if (src0 == zero)
+            src0 = src1;
 
-      i915_emit_arith(p, A0_SLT, get_result_vector(p, &inst->Dst[0]),
-                      get_result_flags(inst), 0, src1, src0, 0);
+         /* x != 0 is equivalent to -abs(x) < 0, but the latter requires only
+          * two instructions instead of three.
+          */
+         i915_emit_arith(p, A0_MAX, tmp, A0_DEST_CHANNEL_ALL, 0, src0,
+                         negate(src0, 1, 1, 1, 1), 0);
+         i915_emit_arith(p, A0_SLT, get_result_vector(p, &inst->Dst[0]),
+                         get_result_flags(inst), 0,
+                         negate(tmp, 1, 1, 1, 1), zero, 0);
+      } else {
+         i915_emit_arith(p, A0_SLT, tmp, A0_DEST_CHANNEL_ALL, 0, src0, src1, 0);
 
-      i915_emit_arith(p, A0_ADD, get_result_vector(p, &inst->Dst[0]),
-                      get_result_flags(inst), 0,
-                      get_result_vector(p, &inst->Dst[0]), tmp, 0);
+         i915_emit_arith(p, A0_SLT, get_result_vector(p, &inst->Dst[0]),
+                         get_result_flags(inst), 0, src1, src0, 0);
+
+         i915_emit_arith(p, A0_ADD, get_result_vector(p, &inst->Dst[0]),
+                         get_result_flags(inst), 0,
+                         get_result_vector(p, &inst->Dst[0]), tmp, 0);
+      }
       break;
+   }
 
    case TGSI_OPCODE_SSG:
       /* compute (src>0) - (src<0) */
@@ -892,7 +977,7 @@ i915_init_compile(struct i915_context *i915, struct i915_fragment_shader *ifs)
    p->decl = p->declarations;
    p->decl_s = 0;
    p->decl_t = 0;
-   p->temp_flag = ~0x0 << I915_MAX_TEMPORARY;
+   p->temp_flag = ~0x0U << I915_MAX_TEMPORARY;
    p->utemp_flag = ~0x7;
 
    /* initialize the first program word */
@@ -957,11 +1042,13 @@ i915_fini_compile(struct i915_context *i915, struct i915_fp_compile *p)
       memcpy(&ifs->program[decl_size], p->program,
              program_size * sizeof(uint32_t));
 
-      pipe_debug_message(
+      util_debug_message(
          &i915->debug, SHADER_INFO,
-         "%s shader: %d inst, %d tex, %d tex_indirect, %d const",
+         "%s shader: %d inst, %d tex, %d tex_indirect, %d temps, %d const",
          _mesa_shader_stage_to_abbrev(MESA_SHADER_FRAGMENT), (int)program_size,
-         p->nr_tex_insn, p->nr_tex_indirect, ifs->num_constants);
+         p->nr_tex_insn, p->nr_tex_indirect,
+         p->shader->info.file_max[TGSI_FILE_TEMPORARY] + 1,
+         ifs->num_constants);
    }
 
    /* Release the compilation struct:

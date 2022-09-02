@@ -27,7 +27,7 @@
 #include "compiler/nir/nir_builder.h"
 #include "compiler/glsl/list.h"
 
-#include "main/mtypes.h"
+#include "main/shader_types.h"
 #include "util/ralloc.h"
 
 #include "prog_to_nir.h"
@@ -916,7 +916,7 @@ setup_registers_and_variables(struct ptn_compile *c)
    }
 
    /* Create output registers and variables. */
-   int max_outputs = util_last_bit(c->prog->info.outputs_written);
+   int max_outputs = util_last_bit64(c->prog->info.outputs_written);
    c->output_regs = rzalloc_array(c, nir_register *, max_outputs);
 
    uint64_t outputs_written = c->prog->info.outputs_written;
@@ -1025,6 +1025,7 @@ prog_to_nir(const struct gl_program *prog,
    s->info.cull_distance_array_size = 0;
    s->info.separate_shader = false;
    s->info.io_lowered = false;
+   s->info.internal = false;
 
 fail:
    if (c->error) {

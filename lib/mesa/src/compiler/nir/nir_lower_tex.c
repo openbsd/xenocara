@@ -767,6 +767,9 @@ lower_tex_to_txd(nir_builder *b, nir_tex_instr *tex)
    txd->coord_components = tex->coord_components;
    txd->texture_index = tex->texture_index;
    txd->sampler_index = tex->sampler_index;
+   txd->is_array = tex->is_array;
+   txd->is_shadow = tex->is_shadow;
+   txd->is_new_style_shadow = tex->is_new_style_shadow;
 
    /* reuse existing srcs */
    for (unsigned i = 0; i < tex->num_srcs; i++) {
@@ -803,6 +806,9 @@ lower_txb_to_txl(nir_builder *b, nir_tex_instr *tex)
    txl->coord_components = tex->coord_components;
    txl->texture_index = tex->texture_index;
    txl->sampler_index = tex->sampler_index;
+   txl->is_array = tex->is_array;
+   txl->is_shadow = tex->is_shadow;
+   txl->is_new_style_shadow = tex->is_new_style_shadow;
 
    /* reuse all but bias src */
    for (int i = 0; i < 2; i++) {
@@ -939,15 +945,15 @@ swizzle_result(nir_builder *b, nir_tex_instr *tex, const uint8_t swizzle[4])
          /* We have no 0s or 1s, just emit a swizzling MOV */
          swizzled = nir_swizzle(b, &tex->dest.ssa, swiz, 4);
       } else {
-         nir_ssa_def *srcs[4];
+         nir_ssa_scalar srcs[4];
          for (unsigned i = 0; i < 4; i++) {
             if (swizzle[i] < 4) {
-               srcs[i] = nir_channel(b, &tex->dest.ssa, swizzle[i]);
+               srcs[i] = nir_get_ssa_scalar(&tex->dest.ssa, swizzle[i]);
             } else {
-               srcs[i] = get_zero_or_one(b, tex->dest_type, swizzle[i]);
+               srcs[i] = nir_get_ssa_scalar(get_zero_or_one(b, tex->dest_type, swizzle[i]), 0);
             }
          }
-         swizzled = nir_vec(b, srcs, 4);
+         swizzled = nir_vec_scalars(b, srcs, 4);
       }
    }
 
@@ -1083,7 +1089,8 @@ lower_tg4_offsets(nir_builder *b, nir_tex_instr *tex)
 
    b->cursor = nir_after_instr(&tex->instr);
 
-   nir_ssa_def *dest[5] = {NULL};
+   nir_ssa_scalar dest[5] = { 0 };
+   nir_ssa_def *residency = NULL;
    for (unsigned i = 0; i < 4; ++i) {
       nir_tex_instr *tex_copy = nir_tex_instr_create(b->shader, tex->num_srcs + 1);
       tex_copy->op = tex->op;
@@ -1112,14 +1119,18 @@ lower_tg4_offsets(nir_builder *b, nir_tex_instr *tex)
 
       nir_builder_instr_insert(b, &tex_copy->instr);
 
-      dest[i] = nir_channel(b, &tex_copy->dest.ssa, 3);
+      dest[i] = nir_get_ssa_scalar(&tex_copy->dest.ssa, 3);
       if (tex->is_sparse) {
          nir_ssa_def *code = nir_channel(b, &tex_copy->dest.ssa, 4);
-         dest[4] = dest[4] ? nir_sparse_residency_code_and(b, dest[4], code) : code;
+         if (residency)
+            residency = nir_sparse_residency_code_and(b, residency, code);
+         else
+            residency = code;
       }
    }
+   dest[4] = nir_get_ssa_scalar(residency, 0);
 
-   nir_ssa_def *res = nir_vec(b, dest, tex->dest.ssa.num_components);
+   nir_ssa_def *res = nir_vec_scalars(b, dest, tex->dest.ssa.num_components);
    nir_ssa_def_rewrite_uses(&tex->dest.ssa, res);
    nir_instr_remove(&tex->instr);
 
@@ -1255,6 +1266,38 @@ nir_lower_samples_identical_to_fragment_fetch(nir_builder *b, nir_tex_instr *tex
    nir_instr_remove_v(&tex->instr);
 }
 
+static void
+nir_lower_lod_zero_width(nir_builder *b, nir_tex_instr *tex)
+{
+   int coord_index = nir_tex_instr_src_index(tex, nir_tex_src_coord);
+   assert(coord_index >= 0);
+
+   b->cursor = nir_after_instr(&tex->instr);
+
+   nir_ssa_def *is_zero = nir_imm_bool(b, true);
+   for (unsigned i = 0; i < tex->coord_components; i++) {
+      nir_ssa_def *coord = nir_channel(b, tex->src[coord_index].src.ssa, i);
+
+      /* Compute the sum of the absolute values of derivatives. */
+      nir_ssa_def *dfdx = nir_fddx(b, coord);
+      nir_ssa_def *dfdy = nir_fddy(b, coord);
+      nir_ssa_def *fwidth = nir_fadd(b, nir_fabs(b, dfdx), nir_fabs(b, dfdy));
+
+      /* Check if the sum is 0. */
+      is_zero = nir_iand(b, is_zero, nir_feq(b, fwidth, nir_imm_float(b, 0.0)));
+   }
+
+   /* Replace the raw LOD by -FLT_MAX if the sum is 0 for all coordinates. */
+   nir_ssa_def *adjusted_lod =
+      nir_bcsel(b, is_zero, nir_imm_float(b, -FLT_MAX),
+                   nir_channel(b, &tex->dest.ssa, 1));
+
+   nir_ssa_def *def =
+      nir_vec2(b, nir_channel(b, &tex->dest.ssa, 0), adjusted_lod);
+
+   nir_ssa_def_rewrite_uses_after(&tex->dest.ssa, def, def->parent_instr);
+}
+
 static bool
 nir_lower_tex_block(nir_block *block, nir_builder *b,
                     const nir_lower_tex_options *options,
@@ -1282,21 +1325,25 @@ nir_lower_tex_block(nir_block *block, nir_builder *b,
       /* If we are clamping any coords, we must lower projector first
        * as clamping happens *after* projection:
        */
-      if (lower_txp || sat_mask) {
+      if (lower_txp || sat_mask ||
+          (options->lower_txp_array && tex->is_array)) {
          progress |= project_src(b, tex);
       }
 
       if ((tex->op == nir_texop_txf && options->lower_txf_offset) ||
           (sat_mask && nir_tex_instr_src_index(tex, nir_tex_src_coord) >= 0) ||
           (tex->sampler_dim == GLSL_SAMPLER_DIM_RECT &&
-           options->lower_rect_offset)) {
+           options->lower_rect_offset) ||
+          (options->lower_offset_filter &&
+           options->lower_offset_filter(instr, options->callback_data))) {
          progress = lower_offset(b, tex) || progress;
       }
 
       if ((tex->sampler_dim == GLSL_SAMPLER_DIM_RECT) && options->lower_rect &&
-          tex->op != nir_texop_txf && !nir_tex_instr_is_query(tex)) {
-
-         if (compiler_options->has_txs)
+          tex->op != nir_texop_txf) {
+         if (nir_tex_instr_is_query(tex))
+            tex->sampler_dim = GLSL_SAMPLER_DIM_2D;
+         else if (compiler_options->has_txs)
             lower_rect(b, tex);
          else
             lower_rect_tex_scale(b, tex);
@@ -1311,7 +1358,7 @@ nir_lower_tex_block(nir_block *block, nir_builder *b,
          nir_deref_instr *deref = nir_src_as_deref(tex->src[tex_index].src);
          nir_variable *var = nir_deref_instr_get_variable(deref);
          texture_index = var ? var->data.binding : 0;
-         texture_mask = var ? (1u << texture_index) : 0u;
+         texture_mask = var && texture_index < 32 ? (1u << texture_index) : 0u;
       }
 
       if (texture_mask & options->lower_y_uv_external) {
@@ -1415,7 +1462,8 @@ nir_lower_tex_block(nir_block *block, nir_builder *b,
            (options->lower_txd_cube_map &&
             tex->sampler_dim == GLSL_SAMPLER_DIM_CUBE) ||
            (options->lower_txd_3d &&
-            tex->sampler_dim == GLSL_SAMPLER_DIM_3D))) {
+            tex->sampler_dim == GLSL_SAMPLER_DIM_3D) ||
+           (options->lower_txd_array && tex->is_array))) {
          lower_gradient(b, tex);
          progress = true;
          continue;
@@ -1436,8 +1484,10 @@ nir_lower_tex_block(nir_block *block, nir_builder *b,
       /* Only fragment and compute (in some cases) support implicit
        * derivatives.  Lower those opcodes which use implicit derivatives to
        * use an explicit LOD of 0.
+       * But don't touch RECT samplers because they don't have mips.
        */
       if (nir_tex_instr_has_implicit_derivative(tex) &&
+          tex->sampler_dim != GLSL_SAMPLER_DIM_RECT &&
           !nir_shader_supports_implicit_lod(b->shader)) {
          lower_zero_lod(b, tex);
          progress = true;
@@ -1473,6 +1523,12 @@ nir_lower_tex_block(nir_block *block, nir_builder *b,
 
       if (options->lower_to_fragment_fetch_amd && tex->op == nir_texop_samples_identical) {
          nir_lower_samples_identical_to_fragment_fetch(b, tex);
+         progress = true;
+         continue;
+      }
+
+      if (options->lower_lod_zero_width && tex->op == nir_texop_lod) {
+         nir_lower_lod_zero_width(b, tex);
          progress = true;
          continue;
       }

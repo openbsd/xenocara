@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2022/04/21 04:37:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2022/09/02 05:46:40 jsg Exp $
 
 LIB=	mesa_util
 
@@ -45,8 +45,7 @@ SRCS=	anon_file.c \
 	u_debug_describe.c \
 	u_debug_refcnt.c \
 	u_cpu_detect.c \
-	u_printf.cpp \
-	u_printf_length.c \
+	u_printf.c \
 	u_debug.c \
 	u_debug_memory.c \
 	u_math.c \
@@ -56,12 +55,14 @@ SRCS=	anon_file.c \
 	u_hash_table.c \
 	u_queue.c \
 	u_vector.c \
-	vma.c
+	vma.c \
+	u_primconvert.c
 
 SRCS+=	u_debug_stack.c \
-	u_debug_symbol.c
-
-SRCS+=	format_srgb.c
+	u_debug_symbol.c \
+	format_srgb.c \
+	u_indices_gen.c \
+	u_unfilled_gen.c
 
 .include "../Makefile.inc"
 
@@ -80,6 +81,7 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/util
+.PATH: ${MESA_SRC}/src/util/indices
 .PATH: ${MESA_SRC}/src/util/perf
 .PATH: ${MESA_SRC}/src/util/sha1
 .PATH: ${MESA_SRC}/generated/src/util

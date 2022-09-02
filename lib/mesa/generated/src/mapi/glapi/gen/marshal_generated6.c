@@ -26,7 +26,7 @@
  */
 
 
-#include "api_exec.h"
+#include "context.h"
 #include "glthread_marshal.h"
 #include "bufferobj.h"
 #include "dispatch.h"
@@ -7267,61 +7267,6 @@ _mesa_marshal_GetVertexArrayIntegeri_vEXT(GLuint vaobj, GLuint index, GLenum pna
    GET_CURRENT_CONTEXT(ctx);
    _mesa_glthread_finish_before(ctx, "GetVertexArrayIntegeri_vEXT");
    CALL_GetVertexArrayIntegeri_vEXT(ctx->CurrentServerDispatch, (vaobj, index, pname, param));
-}
-
-
-/* GetVertexArrayPointeri_vEXT: marshalled synchronously */
-void GLAPIENTRY
-_mesa_marshal_GetVertexArrayPointeri_vEXT(GLuint vaobj, GLuint index, GLenum pname, GLvoid** param)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   _mesa_glthread_finish_before(ctx, "GetVertexArrayPointeri_vEXT");
-   CALL_GetVertexArrayPointeri_vEXT(ctx->CurrentServerDispatch, (vaobj, index, pname, param));
-}
-
-
-/* NamedProgramStringEXT: marshalled asynchronously */
-struct marshal_cmd_NamedProgramStringEXT
-{
-   struct marshal_cmd_base cmd_base;
-   GLuint program;
-   GLenum target;
-   GLenum format;
-   GLsizei len;
-   /* Next len bytes are GLvoid string[len] */
-};
-uint32_t
-_mesa_unmarshal_NamedProgramStringEXT(struct gl_context *ctx, const struct marshal_cmd_NamedProgramStringEXT *cmd, const uint64_t *last)
-{
-   GLuint program = cmd->program;
-   GLenum target = cmd->target;
-   GLenum format = cmd->format;
-   GLsizei len = cmd->len;
-   GLvoid * string;
-   const char *variable_data = (const char *) (cmd + 1);
-   string = (GLvoid *) variable_data;
-   CALL_NamedProgramStringEXT(ctx->CurrentServerDispatch, (program, target, format, len, string));
-   return cmd->cmd_base.cmd_size;
-}
-void GLAPIENTRY
-_mesa_marshal_NamedProgramStringEXT(GLuint program, GLenum target, GLenum format, GLsizei len, const GLvoid* string)
-{
-   GET_CURRENT_CONTEXT(ctx);
-   int string_size = len;
-   int cmd_size = sizeof(struct marshal_cmd_NamedProgramStringEXT) + string_size;
-   struct marshal_cmd_NamedProgramStringEXT *cmd;
-   if (unlikely(string_size < 0 || (string_size > 0 && !string) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
-      _mesa_glthread_finish_before(ctx, "NamedProgramStringEXT");
-      CALL_NamedProgramStringEXT(ctx->CurrentServerDispatch, (program, target, format, len, string));
-      return;
-   }
-   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_NamedProgramStringEXT, cmd_size);
-   cmd->program = program;
-   cmd->target = target;
-   cmd->format = format;
-   cmd->len = len;
-   char *variable_data = (char *) (cmd + 1);
-   memcpy(variable_data, string, string_size);
 }
 
 

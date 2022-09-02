@@ -249,10 +249,6 @@ dri3_create_context_attribs(struct glx_screen *base,
    if (*error != __DRI_CTX_ERROR_SUCCESS)
       goto error_exit;
 
-   if (!dri2_check_no_error(dca.flags, shareList, dca.major_ver, error)) {
-      goto error_exit;
-   }
-
    /* Check the renderType value */
    if (!validate_renderType_against_config(config_base, dca.render_type))
        goto error_exit;
@@ -261,6 +257,17 @@ dri3_create_context_attribs(struct glx_screen *base,
       /* We can't share with an indirect context */
       if (!shareList->isDirect)
          return NULL;
+
+      /* The GLX_ARB_create_context_no_error specs say:
+       *
+       *    BadMatch is generated if the value of GLX_CONTEXT_OPENGL_NO_ERROR_ARB
+       *    used to create <share_context> does not match the value of
+       *    GLX_CONTEXT_OPENGL_NO_ERROR_ARB for the context being created.
+       */
+      if (!!shareList->noError != !!dca.no_error) {
+         *error = __DRI_CTX_ERROR_BAD_FLAG;
+         return NULL;
+      }
 
       pcp_shared = (struct dri3_context *) shareList;
       shared = pcp_shared->driContext;
@@ -294,16 +301,15 @@ dri3_create_context_attribs(struct glx_screen *base,
       ctx_attribs[num_ctx_attribs++] = dca.release;
    }
 
+   if (dca.no_error) {
+      ctx_attribs[num_ctx_attribs++] = __DRI_CTX_ATTRIB_NO_ERROR;
+      ctx_attribs[num_ctx_attribs++] = dca.no_error;
+      pcp->base.noError = GL_TRUE;
+   }
+
    if (dca.flags != 0) {
       ctx_attribs[num_ctx_attribs++] = __DRI_CTX_ATTRIB_FLAGS;
-
-      /* The current __DRI_CTX_FLAG_* values are identical to the
-       * GLX_CONTEXT_*_BIT values.
-       */
       ctx_attribs[num_ctx_attribs++] = dca.flags;
-
-      if (dca.flags & __DRI_CTX_FLAG_NO_ERROR)
-         pcp->base.noError = GL_TRUE;
    }
 
    pcp->base.renderType = dca.render_type;
@@ -342,9 +348,25 @@ dri3_destroy_drawable(__GLXDRIdrawable *base)
    free(pdraw);
 }
 
+static enum loader_dri3_drawable_type
+glx_to_loader_dri3_drawable_type(int type)
+{
+   switch (type) {
+   case GLX_WINDOW_BIT:
+      return LOADER_DRI3_DRAWABLE_WINDOW;
+   case GLX_PIXMAP_BIT:
+      return LOADER_DRI3_DRAWABLE_PIXMAP;
+   case GLX_PBUFFER_BIT:
+      return LOADER_DRI3_DRAWABLE_PBUFFER;
+   default:
+      return LOADER_DRI3_DRAWABLE_UNKNOWN;
+   }
+}
+
 static __GLXDRIdrawable *
 dri3_create_drawable(struct glx_screen *base, XID xDrawable,
-                     GLXDrawable drawable, struct glx_config *config_base)
+                     GLXDrawable drawable, int type,
+                     struct glx_config *config_base)
 {
    struct dri3_drawable *pdraw;
    struct dri3_screen *psc = (struct dri3_screen *) base;
@@ -375,7 +397,9 @@ dri3_create_drawable(struct glx_screen *base, XID xDrawable,
    (void) __glXInitialize(psc->base.dpy);
 
    if (loader_dri3_drawable_init(XGetXCBConnection(base->dpy),
-                                 xDrawable, psc->driScreen,
+                                 xDrawable,
+                                 glx_to_loader_dri3_drawable_type(type),
+                                 psc->driScreen,
                                  psc->is_different_gpu, has_multibuffer,
                                  psc->prefer_back_buffer_reuse,
                                  config->driConfig,
@@ -775,13 +799,15 @@ dri3_bind_extensions(struct dri3_screen *psc, struct glx_display * priv,
          __glXEnableDirectExtension(&psc->base,
                                     "GLX_ARB_create_context_robustness");
 
-      if (strcmp(extensions[i]->name, __DRI2_NO_ERROR) == 0)
-         __glXEnableDirectExtension(&psc->base,
-                                    "GLX_ARB_create_context_no_error");
-
       if (strcmp(extensions[i]->name, __DRI2_RENDERER_QUERY) == 0) {
          psc->rendererQuery = (__DRI2rendererQueryExtension *) extensions[i];
          __glXEnableDirectExtension(&psc->base, "GLX_MESA_query_renderer");
+         unsigned int no_error = 0;
+         if (psc->rendererQuery->queryInteger(psc->driScreen,
+                                              __DRI2_RENDERER_HAS_NO_ERROR_CONTEXT,
+                                              &no_error) == 0 && no_error)
+             __glXEnableDirectExtension(&psc->base,
+                                        "GLX_ARB_create_context_no_error");
       }
 
       if (strcmp(extensions[i]->name, __DRI2_INTEROP) == 0)
@@ -924,7 +950,7 @@ dri3_create_screen(int screen, struct glx_display * priv)
                                           &driver_configs, psc);
 
    if (psc->driScreen == NULL) {
-      ErrorMessageF("failed to create dri screen\n");
+      ErrorMessageF("glx: failed to create dri3 screen\n");
       goto handle_error;
    }
 
@@ -995,6 +1021,7 @@ dri3_create_screen(int screen, struct glx_display * priv)
    psp->getSwapInterval = dri3_get_swap_interval;
    psp->bindTexImage = dri3_bind_tex_image;
    psp->releaseTexImage = dri3_release_tex_image;
+   psp->maxSwapInterval = INT_MAX;
 
    __glXEnableDirectExtension(&psc->base, "GLX_OML_sync_control");
    __glXEnableDirectExtension(&psc->base, "GLX_SGI_video_sync");
@@ -1015,6 +1042,28 @@ dri3_create_screen(int screen, struct glx_display * priv)
                                     "indirect_gl_extension_override",
                                     &tmp) == 0)
       __IndirectGlParseExtensionOverride(&psc->base, tmp);
+
+   if (psc->config->base.version > 1) {
+      uint8_t force = false;
+      if (psc->config->configQueryb(psc->driScreen, "force_direct_glx_context",
+                                    &force) == 0) {
+         psc->base.force_direct_context = force;
+      }
+
+      uint8_t invalid_glx_destroy_window = false;
+      if (psc->config->configQueryb(psc->driScreen,
+                                    "allow_invalid_glx_destroy_window",
+                                    &invalid_glx_destroy_window) == 0) {
+         psc->base.allow_invalid_glx_destroy_window = invalid_glx_destroy_window;
+      }
+
+      uint8_t keep_native_window_glx_drawable = false;
+      if (psc->config->configQueryb(psc->driScreen,
+                                    "keep_native_window_glx_drawable",
+                                    &keep_native_window_glx_drawable) == 0) {
+         psc->base.keep_native_window_glx_drawable = keep_native_window_glx_drawable;
+      }
+   }
 
    free(driverName);
 

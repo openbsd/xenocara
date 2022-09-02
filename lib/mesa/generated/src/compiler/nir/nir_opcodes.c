@@ -2980,7 +2980,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdot16_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       16, 16
@@ -3010,7 +3010,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdot2_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       2, 2
@@ -3040,7 +3040,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdot3_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       3, 3
@@ -3070,7 +3070,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdot4_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       4, 4
@@ -3100,7 +3100,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdot5_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       5, 5
@@ -3130,7 +3130,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdot8_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       8, 8
@@ -3160,7 +3160,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
 {
    .name = "fdph_replicated",
    .num_inputs = 2,
-   .output_size = 4,
+   .output_size = 0,
    .output_type = nir_type_float,
    .input_sizes = {
       3, 4
@@ -3278,6 +3278,21 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
       NIR_OP_IS_2SRC_COMMUTATIVE
 },
 {
+   .name = "ffmaz",
+   .num_inputs = 3,
+   .output_size = 0,
+   .output_type = nir_type_float32,
+   .input_sizes = {
+      0, 0, 0
+   },
+   .input_types = {
+      nir_type_float32, nir_type_float32, nir_type_float32
+   },
+   .is_conversion = false,
+   .algebraic_properties =
+      NIR_OP_IS_2SRC_COMMUTATIVE
+},
+{
    .name = "ffract",
    .num_inputs = 1,
    .output_size = 0,
@@ -3386,7 +3401,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    .name = "fisfinite32",
    .num_inputs = 1,
    .output_size = 0,
-   .output_type = nir_type_int32,
+   .output_type = nir_type_bool32,
    .input_sizes = {
       0
    },
@@ -3557,6 +3572,21 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .input_types = {
       nir_type_float, nir_type_float
+   },
+   .is_conversion = false,
+   .algebraic_properties =
+      NIR_OP_IS_2SRC_COMMUTATIVE | NIR_OP_IS_ASSOCIATIVE
+},
+{
+   .name = "fmulz",
+   .num_inputs = 2,
+   .output_size = 0,
+   .output_type = nir_type_float32,
+   .input_sizes = {
+      0, 0
+   },
+   .input_types = {
+      nir_type_float32, nir_type_float32
    },
    .is_conversion = false,
    .algebraic_properties =
@@ -5123,6 +5153,21 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
       0
 },
 {
+   .name = "pack_sint_2x16",
+   .num_inputs = 1,
+   .output_size = 1,
+   .output_type = nir_type_int32,
+   .input_sizes = {
+      2
+   },
+   .input_types = {
+      nir_type_int32
+   },
+   .is_conversion = false,
+   .algebraic_properties =
+      0
+},
+{
    .name = "pack_snorm_2x16",
    .num_inputs = 1,
    .output_size = 1,
@@ -5147,6 +5192,21 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .input_types = {
       nir_type_float32
+   },
+   .is_conversion = false,
+   .algebraic_properties =
+      0
+},
+{
+   .name = "pack_uint_2x16",
+   .num_inputs = 1,
+   .output_size = 1,
+   .output_type = nir_type_uint32,
+   .input_sizes = {
+      2
+   },
+   .input_types = {
+      nir_type_uint32
    },
    .is_conversion = false,
    .algebraic_properties =

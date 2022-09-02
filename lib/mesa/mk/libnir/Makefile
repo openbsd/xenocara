@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:40 jsg Exp $
 
 LIB=	nir
 
 NOPROFILE=
 
 SRCS=	nir.c \
+	nir_builder.c \
 	nir_builtin_builder.c \
 	nir_clone.c \
 	nir_control_flow.c \
@@ -16,6 +17,7 @@ SRCS=	nir.c \
 	nir_gather_info.c \
 	nir_gather_ssa_types.c \
 	nir_gather_xfb_info.c \
+	nir_group_loads.c \
 	nir_gs_count_vertices.c \
 	nir_inline_functions.c \
 	nir_inline_uniforms.c \
@@ -41,6 +43,7 @@ SRCS=	nir.c \
 	nir_lower_clip_halfz.c \
 	nir_lower_convert_alu_types.c \
 	nir_lower_variable_initializers.c \
+	nir_lower_discard_if.c \
 	nir_lower_discard_or_demote.c \
 	nir_lower_double_ops.c \
 	nir_lower_drawpixels.c \
@@ -91,6 +94,7 @@ SRCS=	nir.c \
 	nir_lower_ssbo.c \
 	nir_lower_subgroups.c \
 	nir_lower_system_values.c \
+	nir_lower_tex_shadow.c \
 	nir_lower_tex.c \
 	nir_lower_texcoord_replace.c \
 	nir_lower_to_source_mods.c \
@@ -138,8 +142,11 @@ SRCS=	nir.c \
 	nir_opt_offsets.c \
 	nir_opt_peephole_select.c \
 	nir_opt_phi_precision.c \
+	nir_opt_preamble.c \
+	nir_opt_ray_queries.c \
 	nir_opt_rematerialize_compares.c \
 	nir_opt_remove_phis.c \
+	nir_opt_shrink_stores.c \
 	nir_opt_shrink_vectors.c \
 	nir_opt_sink.c \
 	nir_opt_trivial_continues.c \

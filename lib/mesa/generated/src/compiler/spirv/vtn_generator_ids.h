@@ -46,5 +46,7 @@ enum vtn_generator {
    vtn_generator_naga = 28,
    vtn_generator_msp_shader_compiler = 29,
    vtn_generator_spvgentwo_spirv_ir_tools = 30,
+   vtn_generator_skia_sksl = 31,
+   vtn_generator_spirv_beehive_toolkit = 32,
    vtn_generator_max = 0xffff,
 };

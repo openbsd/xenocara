@@ -395,12 +395,12 @@ lima_pack_reload_plbu_cmd(struct lima_job *job, struct pipe_surface *psurf)
    lima_texture_desc_set_res(ctx, td, psurf->texture, level, level, first_layer);
    td->format = lima_format_get_texel_reload(psurf->format);
    td->unnorm_coords = 1;
-   td->texture_type = LIMA_TEXTURE_TYPE_2D;
+   td->sampler_dim = LIMA_SAMPLER_DIM_2D;
    td->min_img_filter_nearest = 1;
    td->mag_img_filter_nearest = 1;
-   td->wrap_s_clamp_to_edge = 1;
-   td->wrap_t_clamp_to_edge = 1;
-   td->unknown_2_2 = 0x1;
+   td->wrap_s = LIMA_TEX_WRAP_CLAMP_TO_EDGE;
+   td->wrap_t = LIMA_TEX_WRAP_CLAMP_TO_EDGE;
+   td->wrap_r = LIMA_TEX_WRAP_CLAMP_TO_EDGE;
 
    uint32_t *ta = cpu + lima_reload_tex_array_offset;
    ta[0] = va + lima_reload_tex_desc_offset;
@@ -543,7 +543,8 @@ lima_generate_pp_stream(struct lima_job *job, int off_x, int off_y,
    struct lima_pp_stream_state *ps = &ctx->pp_stream;
    struct lima_job_fb_info *fb = &job->fb;
    struct lima_screen *screen = lima_screen(ctx->base.screen);
-   int i, num_pp = screen->num_pp;
+   int num_pp = screen->num_pp;
+   assert(num_pp > 0);
 
    /* use hilbert_coords to generates 1D to 2D relationship.
     * 1D for pp stream index and 2D for plb block x/y on framebuffer.
@@ -565,10 +566,10 @@ lima_generate_pp_stream(struct lima_job *job, int off_x, int off_y,
       count = 1 << (dim + dim);
    }
 
-   for (i = 0; i < num_pp; i++)
+   for (int i = 0; i < num_pp; i++)
       stream[i] = ps->map + ps->offset[i];
 
-   for (i = 0; i < count; i++) {
+   for (int i = 0; i < count; i++) {
       int x, y;
       hilbert_coords(max, i, &x, &y);
       if (x < tiled_w && y < tiled_h) {
@@ -589,7 +590,7 @@ lima_generate_pp_stream(struct lima_job *job, int off_x, int off_y,
       }
    }
 
-   for (i = 0; i < num_pp; i++) {
+   for (int i = 0; i < num_pp; i++) {
       stream[i][si[i]++] = 0;
       stream[i][si[i]++] = 0xBC000000;
       stream[i][si[i]++] = 0;

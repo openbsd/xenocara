@@ -35,6 +35,7 @@
 
 #include "draw/draw_vertex.h"
 #include "util/u_blitter.h"
+#include "util/list.h"
 
 #include "lp_tex_sample.h"
 #include "lp_jit.h"
@@ -58,6 +59,7 @@ struct lp_velems_state;
 struct llvmpipe_context {
    struct pipe_context pipe;  /**< base class */
 
+   struct list_head list;
    /** Constant state objects */
    const struct pipe_blend_state *blend;
    struct pipe_sampler_state *samplers[PIPE_SHADER_TYPES][PIPE_MAX_SAMPLERS];
@@ -90,7 +92,7 @@ struct llvmpipe_context {
 
    struct pipe_shader_buffer ssbos[PIPE_SHADER_TYPES][LP_MAX_TGSI_SHADER_BUFFERS];
    struct pipe_image_view images[PIPE_SHADER_TYPES][LP_MAX_TGSI_SHADER_IMAGES];
-
+   uint32_t fs_ssbo_write_mask;
    unsigned num_samplers[PIPE_SHADER_TYPES];
    unsigned num_sampler_views[PIPE_SHADER_TYPES];
    unsigned num_images[PIPE_SHADER_TYPES];

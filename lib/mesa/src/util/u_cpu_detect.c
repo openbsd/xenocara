@@ -1,5 +1,5 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2008 Dennis Smit
  * All Rights Reserved.
  *
@@ -21,7 +21,7 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 /**
@@ -817,6 +817,10 @@ util_cpu_detect_once(void)
 #if defined(PIPE_ARCH_MIPS64)
    check_os_mips64_support();
 #endif /* PIPE_ARCH_MIPS64 */
+
+#if defined(PIPE_ARCH_S390)
+   util_cpu_caps.family = CPU_S390X;
+#endif
 
    get_cpu_topology();
 

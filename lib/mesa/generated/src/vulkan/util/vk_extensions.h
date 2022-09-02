@@ -28,8 +28,7 @@
 
 #include <stdbool.h>
 
-
-#define VK_INSTANCE_EXTENSION_COUNT 34
+#define VK_INSTANCE_EXTENSION_COUNT 36
 
 extern const VkExtensionProperties vk_instance_extensions[];
 
@@ -46,6 +45,7 @@ struct vk_instance_extension_table {
          bool KHR_get_display_properties2;
          bool KHR_get_physical_device_properties2;
          bool KHR_get_surface_capabilities2;
+         bool KHR_portability_enumeration;
          bool KHR_surface;
          bool KHR_surface_protected_capabilities;
          bool KHR_wayland_surface;
@@ -66,6 +66,7 @@ struct vk_instance_extension_table {
          bool EXT_validation_flags;
          bool FUCHSIA_imagepipe_surface;
          bool GGP_stream_descriptor_surface;
+         bool GOOGLE_surfaceless_query;
          bool MVK_ios_surface;
          bool MVK_macos_surface;
          bool NN_vi_surface;
@@ -76,7 +77,7 @@ struct vk_instance_extension_table {
 };
 
 
-#define VK_DEVICE_EXTENSION_COUNT 229
+#define VK_DEVICE_EXTENSION_COUNT 242
 
 extern const VkExtensionProperties vk_device_extensions[];
 
@@ -99,6 +100,7 @@ struct vk_device_extension_table {
         bool KHR_display_swapchain;
         bool KHR_draw_indirect_count;
         bool KHR_driver_properties;
+        bool KHR_dynamic_rendering;
         bool KHR_external_fence;
         bool KHR_external_fence_fd;
         bool KHR_external_fence_win32;
@@ -111,6 +113,7 @@ struct vk_device_extension_table {
         bool KHR_format_feature_flags2;
         bool KHR_fragment_shading_rate;
         bool KHR_get_memory_requirements2;
+        bool KHR_global_priority;
         bool KHR_image_format_list;
         bool KHR_imageless_framebuffer;
         bool KHR_incremental_present;
@@ -161,6 +164,7 @@ struct vk_device_extension_table {
         bool EXT_4444_formats;
         bool EXT_astc_decode_mode;
         bool EXT_blend_operation_advanced;
+        bool EXT_border_color_swizzle;
         bool EXT_buffer_device_address;
         bool EXT_calibrated_timestamps;
         bool EXT_color_write_enable;
@@ -168,6 +172,7 @@ struct vk_device_extension_table {
         bool EXT_conservative_rasterization;
         bool EXT_custom_border_color;
         bool EXT_debug_marker;
+        bool EXT_depth_clip_control;
         bool EXT_depth_clip_enable;
         bool EXT_depth_range_unrestricted;
         bool EXT_descriptor_indexing;
@@ -185,10 +190,13 @@ struct vk_device_extension_table {
         bool EXT_full_screen_exclusive;
         bool EXT_global_priority;
         bool EXT_global_priority_query;
+        bool EXT_graphics_pipeline_library;
         bool EXT_hdr_metadata;
         bool EXT_host_query_reset;
+        bool EXT_image_2d_view_of_3d;
         bool EXT_image_drm_format_modifier;
         bool EXT_image_robustness;
+        bool EXT_image_view_min_lod;
         bool EXT_index_type_uint8;
         bool EXT_inline_uniform_block;
         bool EXT_line_rasterization;
@@ -203,6 +211,7 @@ struct vk_device_extension_table {
         bool EXT_pipeline_creation_feedback;
         bool EXT_post_depth_coverage;
         bool EXT_primitive_topology_list_restart;
+        bool EXT_primitives_generated_query;
         bool EXT_private_data;
         bool EXT_provoking_vertex;
         bool EXT_queue_family_foreign;
@@ -231,6 +240,7 @@ struct vk_device_extension_table {
         bool EXT_video_decode_h264;
         bool EXT_video_decode_h265;
         bool EXT_video_encode_h264;
+        bool EXT_video_encode_h265;
         bool EXT_ycbcr_2plane_444_formats;
         bool EXT_ycbcr_image_arrays;
         bool AMD_buffer_marker;
@@ -256,6 +266,7 @@ struct vk_device_extension_table {
         bool AMD_texture_gather_bias_lod;
         bool ANDROID_external_memory_android_hardware_buffer;
         bool ANDROID_native_buffer;
+        bool ARM_rasterization_order_attachment_access;
         bool FUCHSIA_buffer_collection;
         bool FUCHSIA_external_memory;
         bool FUCHSIA_external_semaphore;
@@ -295,6 +306,7 @@ struct vk_device_extension_table {
         bool NV_geometry_shader_passthrough;
         bool NV_glsl_shader;
         bool NV_inherited_viewport_scissor;
+        bool NV_linear_color_attachment;
         bool NV_mesh_shader;
         bool NV_ray_tracing;
         bool NV_ray_tracing_motion_blur;
@@ -308,10 +320,12 @@ struct vk_device_extension_table {
         bool NV_viewport_array2;
         bool NV_viewport_swizzle;
         bool NV_win32_keyed_mutex;
+        bool QCOM_fragment_density_map_offset;
         bool QCOM_render_pass_shader_resolve;
         bool QCOM_render_pass_store_ops;
         bool QCOM_render_pass_transform;
         bool QCOM_rotated_copy_commands;
+        bool VALVE_descriptor_set_host_mapping;
         bool VALVE_mutable_descriptor_type;
       };
    };

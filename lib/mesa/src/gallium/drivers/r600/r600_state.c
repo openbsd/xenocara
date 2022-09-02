@@ -202,7 +202,7 @@ bool r600_is_format_supported(struct pipe_screen *screen,
 
 	if (usage & PIPE_BIND_SAMPLER_VIEW) {
 		if (target == PIPE_BUFFER) {
-			if (r600_is_vertex_format_supported(format))
+			if (r600_is_buffer_format_supported(format, false))
 				retval |= PIPE_BIND_SAMPLER_VIEW;
 		} else {
 			if (r600_is_sampler_format_supported(screen, format))
@@ -232,7 +232,7 @@ bool r600_is_format_supported(struct pipe_screen *screen,
 	}
 
 	if ((usage & PIPE_BIND_VERTEX_BUFFER) &&
-	    r600_is_vertex_format_supported(format)) {
+	    r600_is_buffer_format_supported(format, true)) {
 		retval |= PIPE_BIND_VERTEX_BUFFER;
 	}
 
@@ -1387,10 +1387,10 @@ static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_a
 			reloc = radeon_add_to_buffer_list(&rctx->b,
 						      &rctx->b.gfx,
 						      (struct r600_resource*)cb[i]->base.texture,
-						      RADEON_USAGE_READWRITE,
-						      cb[i]->base.texture->nr_samples > 1 ?
+						      RADEON_USAGE_READWRITE |
+						      (cb[i]->base.texture->nr_samples > 1 ?
 							      RADEON_PRIO_COLOR_BUFFER_MSAA :
-							      RADEON_PRIO_COLOR_BUFFER);
+							      RADEON_PRIO_COLOR_BUFFER));
 			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 			radeon_emit(cs, reloc);
 
@@ -1400,10 +1400,10 @@ static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_a
 			reloc = radeon_add_to_buffer_list(&rctx->b,
 						      &rctx->b.gfx,
 						      cb[i]->cb_buffer_fmask,
-						      RADEON_USAGE_READWRITE,
-						      cb[i]->base.texture->nr_samples > 1 ?
+						      RADEON_USAGE_READWRITE |
+						      (cb[i]->base.texture->nr_samples > 1 ?
 							      RADEON_PRIO_COLOR_BUFFER_MSAA :
-							      RADEON_PRIO_COLOR_BUFFER);
+							      RADEON_PRIO_COLOR_BUFFER));
 			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 			radeon_emit(cs, reloc);
 
@@ -1413,10 +1413,10 @@ static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_a
 			reloc = radeon_add_to_buffer_list(&rctx->b,
 						      &rctx->b.gfx,
 						      cb[i]->cb_buffer_cmask,
-						      RADEON_USAGE_READWRITE,
-						      cb[i]->base.texture->nr_samples > 1 ?
+						      RADEON_USAGE_READWRITE |
+						      (cb[i]->base.texture->nr_samples > 1 ?
 							      RADEON_PRIO_COLOR_BUFFER_MSAA :
-							      RADEON_PRIO_COLOR_BUFFER);
+							      RADEON_PRIO_COLOR_BUFFER));
 			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 			radeon_emit(cs, reloc);
 		}
@@ -1452,10 +1452,10 @@ static void r600_emit_framebuffer_state(struct r600_context *rctx, struct r600_a
 		unsigned reloc = radeon_add_to_buffer_list(&rctx->b,
 						       &rctx->b.gfx,
 						       (struct r600_resource*)state->zsbuf->texture,
-						       RADEON_USAGE_READWRITE,
-						       surf->base.texture->nr_samples > 1 ?
+						       RADEON_USAGE_READWRITE |
+						       (surf->base.texture->nr_samples > 1 ?
 							       RADEON_PRIO_DEPTH_BUFFER_MSAA :
-							       RADEON_PRIO_DEPTH_BUFFER);
+							       RADEON_PRIO_DEPTH_BUFFER));
 
 		radeon_set_context_reg_seq(cs, R_028000_DB_DEPTH_SIZE, 2);
 		radeon_emit(cs, surf->db_depth_size); /* R_028000_DB_DEPTH_SIZE */
@@ -1561,7 +1561,7 @@ static void r600_emit_db_state(struct r600_context *rctx, struct r600_atom *atom
 		radeon_set_context_reg(cs, R_028D24_DB_HTILE_SURFACE, a->rsurf->db_htile_surface);
 		radeon_set_context_reg(cs, R_028014_DB_HTILE_DATA_BASE, a->rsurf->db_htile_data_base);
 		reloc_idx = radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, &rtex->resource,
-						  RADEON_USAGE_READWRITE, RADEON_PRIO_SEPARATE_META);
+						  RADEON_USAGE_READWRITE | RADEON_PRIO_SEPARATE_META);
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, reloc_idx);
 	} else {
@@ -1695,7 +1695,7 @@ static void r600_emit_vertex_buffers(struct r600_context *rctx, struct r600_atom
 
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
-						      RADEON_USAGE_READ, RADEON_PRIO_VERTEX_BUFFER));
+						      RADEON_USAGE_READ | RADEON_PRIO_VERTEX_BUFFER));
 	}
 }
 
@@ -1727,7 +1727,7 @@ static void r600_emit_constant_buffers(struct r600_context *rctx,
 			radeon_set_context_reg(cs, reg_alu_const_cache + buffer_index * 4, offset >> 8);
 			radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 			radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
-								  RADEON_USAGE_READ, RADEON_PRIO_CONST_BUFFER));
+								  RADEON_USAGE_READ | RADEON_PRIO_CONST_BUFFER));
 		}
 
 		radeon_emit(cs, PKT3(PKT3_SET_RESOURCE, 7, 0));
@@ -1744,7 +1744,7 @@ static void r600_emit_constant_buffers(struct r600_context *rctx,
 
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
-						      RADEON_USAGE_READ, RADEON_PRIO_CONST_BUFFER));
+						      RADEON_USAGE_READ | RADEON_PRIO_CONST_BUFFER));
 
 		dirty_mask &= ~(1 << buffer_index);
 	}
@@ -1795,7 +1795,7 @@ static void r600_emit_sampler_views(struct r600_context *rctx,
 		radeon_emit_array(cs, rview->tex_resource_words, 7);
 
 		reloc = radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rview->tex_resource,
-					      RADEON_USAGE_READ,
+					      RADEON_USAGE_READ |
 					      r600_get_sampler_view_priority(rview->tex_resource));
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, reloc);
@@ -1920,7 +1920,7 @@ static void r600_emit_vertex_fetch_shader(struct r600_context *rctx, struct r600
 	radeon_set_context_reg(cs, R_028894_SQ_PGM_START_FS, shader->offset >> 8);
 	radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 	radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, shader->buffer,
-                                                  RADEON_USAGE_READ,
+                                                  RADEON_USAGE_READ |
                                                   RADEON_PRIO_SHADER_BINARY));
 }
 
@@ -1974,7 +1974,7 @@ static void r600_emit_gs_rings(struct r600_context *rctx, struct r600_atom *a)
 		radeon_set_config_reg(cs, R_008C40_SQ_ESGS_RING_BASE, 0);
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
-						      RADEON_USAGE_READWRITE,
+						      RADEON_USAGE_READWRITE |
 						      RADEON_PRIO_SHADER_RINGS));
 		radeon_set_config_reg(cs, R_008C44_SQ_ESGS_RING_SIZE,
 				state->esgs_ring.buffer_size >> 8);
@@ -1983,7 +1983,7 @@ static void r600_emit_gs_rings(struct r600_context *rctx, struct r600_atom *a)
 		radeon_set_config_reg(cs, R_008C48_SQ_GSVS_RING_BASE, 0);
 		radeon_emit(cs, PKT3(PKT3_NOP, 0, 0));
 		radeon_emit(cs, radeon_add_to_buffer_list(&rctx->b, &rctx->b.gfx, rbuffer,
-						      RADEON_USAGE_READWRITE,
+						      RADEON_USAGE_READWRITE |
 						      RADEON_PRIO_SHADER_RINGS));
 		radeon_set_config_reg(cs, R_008C4C_SQ_GSVS_RING_SIZE,
 				state->gsvs_ring.buffer_size >> 8);
@@ -2446,7 +2446,14 @@ void r600_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader *sha
 	unsigned tmp, sid, ufi = 0;
 	int need_linear = 0;
 	unsigned z_export = 0, stencil_export = 0, mask_export = 0;
-	unsigned sprite_coord_enable = rctx->rasterizer ? rctx->rasterizer->sprite_coord_enable : 0;
+
+	/* Pull any state we use out of rctx.  Make sure that any additional
+	 * state added to this list is also checked in the caller in
+	 * r600_update_derived_state().
+	 */
+	bool sprite_coord_enable = rctx->rasterizer ? rctx->rasterizer->sprite_coord_enable : 0;
+	bool flatshade = rctx->rasterizer ? rctx->rasterizer->flatshade : 0;
+	bool msaa = rctx->framebuffer.nr_samples > 1 && rctx->ps_iter_samples > 0;
 
 	if (!cb->buf) {
 		r600_init_command_buffer(cb, 64);
@@ -2473,8 +2480,7 @@ void r600_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader *sha
 
 		if (rshader->input[i].name == TGSI_SEMANTIC_POSITION ||
 			rshader->input[i].interpolate == TGSI_INTERPOLATE_CONSTANT ||
-			(rshader->input[i].interpolate == TGSI_INTERPOLATE_COLOR &&
-				rctx->rasterizer && rctx->rasterizer->flatshade))
+			(rshader->input[i].interpolate == TGSI_INTERPOLATE_COLOR && flatshade))
 			tmp |= S_028644_FLAT_SHADE(1);
 
 		if (rshader->input[i].name == TGSI_SEMANTIC_PCOORD ||
@@ -2503,8 +2509,7 @@ void r600_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader *sha
 			z_export = 1;
 		if (rshader->output[i].name == TGSI_SEMANTIC_STENCIL)
 			stencil_export = 1;
-		if (rshader->output[i].name == TGSI_SEMANTIC_SAMPLEMASK &&
-			rctx->framebuffer.nr_samples > 1 && rctx->ps_iter_samples > 0)
+		if (rshader->output[i].name == TGSI_SEMANTIC_SAMPLEMASK && msaa)
 			mask_export = 1;
 	}
 	db_shader_control |= S_02880C_Z_EXPORT_ENABLE(z_export);
@@ -2585,8 +2590,8 @@ void r600_update_ps_state(struct pipe_context *ctx, struct r600_pipe_shader *sha
 	shader->ps_depth_export = z_export | stencil_export | mask_export;
 
 	shader->sprite_coord_enable = sprite_coord_enable;
-	if (rctx->rasterizer)
-		shader->flatshade = rctx->rasterizer->flatshade;
+	shader->flatshade = flatshade;
+	shader->msaa = msaa;
 }
 
 void r600_update_vs_state(struct pipe_context *ctx, struct r600_pipe_shader *shader)
@@ -2929,8 +2934,8 @@ static boolean r600_dma_copy_tile(struct r600_context *rctx,
 		cheight = cheight > copy_height ? copy_height : cheight;
 		size = (cheight * pitch) / 4;
 		/* emit reloc before writing cs so that cs is always in consistent state */
-		radeon_add_to_buffer_list(&rctx->b, &rctx->b.dma, &rsrc->resource, RADEON_USAGE_READ, 0);
-		radeon_add_to_buffer_list(&rctx->b, &rctx->b.dma, &rdst->resource, RADEON_USAGE_WRITE, 0);
+		radeon_add_to_buffer_list(&rctx->b, &rctx->b.dma, &rsrc->resource, RADEON_USAGE_READ);
+		radeon_add_to_buffer_list(&rctx->b, &rctx->b.dma, &rdst->resource, RADEON_USAGE_WRITE);
 		radeon_emit(cs, DMA_PACKET(DMA_PACKET_COPY, 1, 0, size));
 		radeon_emit(cs, base >> 8);
 		radeon_emit(cs, (detile << 31) | (array_mode << 27) |

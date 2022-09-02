@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:39 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -44,6 +44,8 @@ SRCS=	brw_cfg.cpp \
 	brw_fs_visitor.cpp \
 	brw_interpolation_map.c \
 	brw_ir_performance.cpp \
+	brw_kernel.c \
+	brw_mesh.cpp \
 	brw_nir.c \
 	brw_nir_analyze_boolean_resolves.c \
 	brw_nir_analyze_ubo_ranges.c \
@@ -53,9 +55,11 @@ SRCS=	brw_cfg.cpp \
 	brw_nir_lower_alpha_to_coverage.c \
 	brw_nir_lower_intersection_shader.c \
 	brw_nir_lower_mem_access_bit_sizes.c \
+	brw_nir_lower_ray_queries.c \
 	brw_nir_lower_rt_intrinsics.c \
 	brw_nir_lower_scoped_barriers.c \
 	brw_nir_lower_shader_calls.c \
+	brw_nir_lower_shading_rate_output.c \
 	brw_nir_lower_storage_image.c \
 	brw_nir_opt_peephole_ffma.c \
 	brw_nir_rt.c \
@@ -66,6 +70,7 @@ SRCS=	brw_cfg.cpp \
 	brw_reg_type.c \
 	brw_schedule_instructions.cpp \
 	brw_shader.cpp \
+	brw_simd_selection.c \
 	brw_vec4_cmod_propagation.cpp \
 	brw_vec4_copy_propagation.cpp \
 	brw_vec4.cpp \

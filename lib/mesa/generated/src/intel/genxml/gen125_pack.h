@@ -77,6 +77,13 @@ __gen_uint(uint64_t v, uint32_t start, NDEBUG_UNUSED uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_uint_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_uint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_sint(int64_t v, uint32_t start, uint32_t end)
 {
    const int width = end - start + 1;
@@ -97,6 +104,13 @@ __gen_sint(int64_t v, uint32_t start, uint32_t end)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sint_nonzero(int64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ll);
+   return __gen_sint(v, start, end);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
 {
    __gen_validate_value(v);
@@ -107,6 +121,13 @@ __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t en
 #endif
 
    return v;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_offset_nonzero(uint64_t v, uint32_t start, uint32_t end)
+{
+   assert(v != 0ull);
+   return __gen_offset(v, start, end);
 }
 
 static inline __attribute__((always_inline)) uint64_t
@@ -132,6 +153,13 @@ __gen_float(float v)
    return ((union __intel_value) { .f = (v) }).dw;
 }
 
+static inline __attribute__((always_inline)) uint32_t
+__gen_float_nonzero(float v)
+{
+   assert(v != 0.0f);
+   return __gen_float(v);
+}
+
 static inline __attribute__((always_inline)) uint64_t
 __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 {
@@ -152,6 +180,13 @@ __gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
 }
 
 static inline __attribute__((always_inline)) uint64_t
+__gen_sfixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_sfixed(v, start, end, fract_bits);
+}
+
+static inline __attribute__((always_inline)) uint64_t
 __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract_bits)
 {
    __gen_validate_value(v);
@@ -167,6 +202,13 @@ __gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract
    const uint64_t uint_val = llroundf(v * factor);
 
    return uint_val << start;
+}
+
+static inline __attribute__((always_inline)) uint64_t
+__gen_ufixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
+{
+   assert(v != 0.0f);
+   return __gen_ufixed(v, start, end, fract_bits);
 }
 
 #ifndef __gen_address_type
@@ -501,7 +543,7 @@ GFX125_3DSTATE_SO_BUFFER_INDEX_BODY_pack(__attribute__((unused)) __gen_user_data
    dw[0] =
       __gen_uint(values->StreamOutputBufferOffsetAddressEnable, 20, 20) |
       __gen_uint(values->StreamOffsetWriteEnable, 21, 21) |
-      __gen_uint(values->MOCS, 22, 28) |
+      __gen_uint_nonzero(values->MOCS, 22, 28) |
       __gen_uint(values->SOBufferEnable, 31, 31);
 
    const uint64_t v1_address =
@@ -782,17 +824,29 @@ struct GFX125_CPS_STATE {
 #define CPS_MODE_CONSTANT                        1
 #define CPS_MODE_RADIAL                          2
    uint32_t                             ScaleAxis;
-#define SCALE_AXIS_XAxis                         0
-#define SCALE_AXIS_YAxis                         1
+#define Xaxis                                    0
+#define Yaxis                                    1
    float                                MinCPSizeY;
+   uint32_t                             Combiner1OpcodeforCPsize;
+#define PASSTHROUGH                              0
+#define OVERRIDE                                 1
+#define HIGH_QUALITY                             2
+#define LOW_QUALITY                              3
+#define RELATIVE                                 4
+   uint32_t                             Combiner0OpcodeforCPsize;
+#define PASSTHROUGH                              0
+#define OVERRIDE                                 1
+#define HIGH_QUALITY                             2
+#define LOW_QUALITY                              3
+#define RELATIVE                                 4
    float                                MaxCPSizeX;
    float                                MaxCPSizeY;
-   float                                YFocal;
-   float                                XFocal;
-   float                                My;
-   float                                Mx;
-   float                                Rmin;
-   float                                Aspect;
+   int32_t                              Y_Focal;
+   int32_t                              X_Focal;
+   uint32_t                             My;
+   uint32_t                             Mx;
+   uint32_t                             Rmin;
+   uint32_t                             Aspect;
 };
 
 static inline __attribute__((always_inline)) void
@@ -807,29 +861,31 @@ GFX125_CPS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->StatisticsEnable, 11, 11) |
       __gen_uint(values->CoarsePixelShadingMode, 12, 13) |
       __gen_uint(values->ScaleAxis, 14, 14) |
-      __gen_sfixed(values->MinCPSizeY, 16, 26, 7);
+      __gen_sfixed(values->MinCPSizeY, 15, 25, 7) |
+      __gen_uint(values->Combiner1OpcodeforCPsize, 26, 28) |
+      __gen_uint(values->Combiner0OpcodeforCPsize, 29, 31);
 
    dw[1] =
       __gen_sfixed(values->MaxCPSizeX, 0, 10, 7) |
       __gen_sfixed(values->MaxCPSizeY, 16, 26, 7);
 
    dw[2] =
-      __gen_sfixed(values->YFocal, 0, 15, 0);
+      __gen_sint(values->Y_Focal, 0, 15);
 
    dw[3] =
-      __gen_sfixed(values->XFocal, 0, 15, 0);
+      __gen_sint(values->X_Focal, 0, 15);
 
    dw[4] =
-      __gen_float(values->My);
+      __gen_uint(values->My, 0, 31);
 
    dw[5] =
-      __gen_float(values->Mx);
+      __gen_uint(values->Mx, 0, 31);
 
    dw[6] =
-      __gen_float(values->Rmin);
+      __gen_uint(values->Rmin, 0, 31);
 
    dw[7] =
-      __gen_float(values->Aspect);
+      __gen_uint(values->Aspect, 0, 31);
 }
 
 #define GFX125_EXECUTION_UNIT_EXTENDED_MESSAGE_DESCRIPTOR_length      1
@@ -984,7 +1040,7 @@ GFX125_MEMORYADDRESSATTRIBUTES_pack(__attribute__((unused)) __gen_user_data *dat
    GFX125_HEVC_ARBITRATION_PRIORITY_pack(data, &v0_0, &values->ArbitrationPriorityControl);
 
    dw[0] =
-      __gen_uint(values->MOCS, 1, 6) |
+      __gen_uint_nonzero(values->MOCS, 1, 6) |
       __gen_uint(v0_0, 7, 8) |
       __gen_uint(values->MemoryCompressionEnable, 9, 9) |
       __gen_uint(values->MemoryCompressionMode, 10, 10) |
@@ -1623,10 +1679,13 @@ GFX125_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
 
 #define GFX125_POSTSYNC_DATA_length            5
 struct GFX125_POSTSYNC_DATA {
-   uint32_t                             MOCS[2];
-   bool                                 L3flush[2];
-   bool                                 HDCPipelineFlush[2];
-   uint32_t                             Operation[2];
+   uint32_t                             Operation;
+#define NoWrite                                  0
+#define WriteImmediateData                       1
+#define WriteTimestamp                           3
+   bool                                 HDCPipelineFlush;
+   bool                                 L3flush;
+   uint32_t                             MOCS;
    __gen_address_type                   DestinationAddress;
    uint64_t                             ImmediateData;
 };
@@ -1639,14 +1698,10 @@ GFX125_POSTSYNC_DATA_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MOCS[0], 4, 10) |
-      __gen_uint(values->L3flush[0], 3, 3) |
-      __gen_uint(values->HDCPipelineFlush[0], 2, 2) |
-      __gen_uint(values->Operation[0], 0, 1) |
-      __gen_uint(values->MOCS[1], 15, 21) |
-      __gen_uint(values->L3flush[1], 14, 14) |
-      __gen_uint(values->HDCPipelineFlush[1], 13, 13) |
-      __gen_uint(values->Operation[1], 11, 12);
+      __gen_uint(values->Operation, 0, 1) |
+      __gen_uint(values->HDCPipelineFlush, 2, 2) |
+      __gen_uint(values->L3flush, 3, 3) |
+      __gen_uint_nonzero(values->MOCS, 4, 10);
 
    const uint64_t v1_address =
       __gen_address(data, &dw[1], values->DestinationAddress, 0, 0, 63);
@@ -1742,6 +1797,12 @@ struct GFX125_RENDER_SURFACE_STATE {
    uint32_t                             CoherencyType;
 #define GPUcoherent                              0
 #define IAcoherent                               1
+   uint32_t                             L1CacheControl;
+#define L1CC_WBP                                 0
+#define L1CC_UC                                  1
+#define L1CC_WB                                  2
+#define L1CC_WT                                  3
+#define L1CC_WS                                  4
    uint32_t                             TiledResourceMode;
 #define NONE                                     0
 #define _4KB                                     1
@@ -1778,7 +1839,7 @@ struct GFX125_RENDER_SURFACE_STATE {
    bool                                 ClearValueAddressEnable;
    uint32_t                             CachingExpandedFormats;
    __gen_address_type                   AuxiliarySurfaceBaseAddress;
-   uint32_t                             RenderCompressionFormat;
+   uint32_t                             CompressionFormat;
    __gen_address_type                   ClearValueAddress;
 };
 
@@ -1814,7 +1875,7 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DoubleFetchDisable, 17, 17) |
       __gen_uint(values->CornerTexelMode, 18, 18) |
       __gen_ufixed(values->BaseMipLevel, 19, 23, 1) |
-      __gen_uint(values->MOCS, 24, 30) |
+      __gen_uint_nonzero(values->MOCS, 24, 30) |
       __gen_uint(values->EnableUnormPathInColorPipe, 31, 31);
 
    dw[2] =
@@ -1842,6 +1903,7 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceMinLOD, 4, 7) |
       __gen_uint(values->MipTailStartLOD, 8, 11) |
       __gen_uint(values->CoherencyType, 14, 14) |
+      __gen_uint(values->L1CacheControl, 16, 18) |
       __gen_uint(values->TiledResourceMode, 18, 19) |
       __gen_uint(values->EWADisableForCube, 20, 20) |
       __gen_uint(values->YOffset, 21, 23) |
@@ -1850,7 +1912,7 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[6] =
       __gen_uint(values->AuxiliarySurfaceMode, 0, 2) |
       __gen_uint(values->YOffsetforUorUVPlane, 0, 13) |
-      __gen_uint(values->AuxiliarySurfacePitch, 3, 11) |
+      __gen_uint(values->AuxiliarySurfacePitch, 3, 12) |
       __gen_uint(values->YUVInterpolationEnable, 15, 15) |
       __gen_uint(values->AuxiliarySurfaceQPitch, 16, 30) |
       __gen_uint(values->XOffsetforUorUVPlane, 16, 29) |
@@ -1882,7 +1944,7 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[11] = (v10_address >> 32) | (v10 >> 32);
 
    const uint64_t v12 =
-      __gen_uint(values->RenderCompressionFormat, 0, 4);
+      __gen_uint(values->CompressionFormat, 0, 4);
    const uint64_t v12_address =
       __gen_address(data, &dw[12], values->ClearValueAddress, v12, 6, 47);
    dw[12] = v12_address;
@@ -2093,6 +2155,8 @@ struct GFX125_SAMPLER_STATE {
 #define COMPARISON                               1
 #define MINIMUM                                  2
 #define MAXIMUM                                  3
+   bool                                 AllowLowQualityLODCalculation;
+   bool                                 LowQualityFilter;
 };
 
 static inline __attribute__((always_inline)) void
@@ -2145,7 +2209,9 @@ GFX125_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->UAddressMinFilterRoundingEnable, 17, 17) |
       __gen_uint(values->UAddressMagFilterRoundingEnable, 18, 18) |
       __gen_uint(values->MaximumAnisotropy, 19, 21) |
-      __gen_uint(values->ReductionType, 22, 23);
+      __gen_uint(values->ReductionType, 22, 23) |
+      __gen_uint(values->AllowLowQualityLODCalculation, 24, 24) |
+      __gen_uint(values->LowQualityFilter, 26, 26);
 }
 
 #define GFX125_SAMPLER_STATE_8X8_AVS_COEFFICIENTS_length      8
@@ -2801,9 +2867,9 @@ GFX125_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *
       __gen_uint(values->ComponentOverrideW, 15, 15);
 }
 
-#define GFX125_SLICE_HASH_TABLE_length        32
+#define GFX125_SLICE_HASH_TABLE_length       224
 struct GFX125_SLICE_HASH_TABLE {
-   uint32_t                             Entry[16][16];
+   uint32_t                             Entry[7][16][16];
 };
 
 static inline __attribute__((always_inline)) void
@@ -2814,324 +2880,2244 @@ GFX125_SLICE_HASH_TABLE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->Entry[0][0], 0, 3) |
-      __gen_uint(values->Entry[0][1], 4, 7) |
-      __gen_uint(values->Entry[0][2], 8, 11) |
-      __gen_uint(values->Entry[0][3], 12, 15) |
-      __gen_uint(values->Entry[0][4], 16, 19) |
-      __gen_uint(values->Entry[0][5], 20, 23) |
-      __gen_uint(values->Entry[0][6], 24, 27) |
-      __gen_uint(values->Entry[0][7], 28, 31);
+      __gen_uint(values->Entry[0][0][0], 0, 3) |
+      __gen_uint(values->Entry[0][0][1], 4, 7) |
+      __gen_uint(values->Entry[0][0][2], 8, 11) |
+      __gen_uint(values->Entry[0][0][3], 12, 15) |
+      __gen_uint(values->Entry[0][0][4], 16, 19) |
+      __gen_uint(values->Entry[0][0][5], 20, 23) |
+      __gen_uint(values->Entry[0][0][6], 24, 27) |
+      __gen_uint(values->Entry[0][0][7], 28, 31);
 
    dw[1] =
-      __gen_uint(values->Entry[0][8], 0, 3) |
-      __gen_uint(values->Entry[0][9], 4, 7) |
-      __gen_uint(values->Entry[0][10], 8, 11) |
-      __gen_uint(values->Entry[0][11], 12, 15) |
-      __gen_uint(values->Entry[0][12], 16, 19) |
-      __gen_uint(values->Entry[0][13], 20, 23) |
-      __gen_uint(values->Entry[0][14], 24, 27) |
-      __gen_uint(values->Entry[0][15], 28, 31);
+      __gen_uint(values->Entry[0][0][8], 0, 3) |
+      __gen_uint(values->Entry[0][0][9], 4, 7) |
+      __gen_uint(values->Entry[0][0][10], 8, 11) |
+      __gen_uint(values->Entry[0][0][11], 12, 15) |
+      __gen_uint(values->Entry[0][0][12], 16, 19) |
+      __gen_uint(values->Entry[0][0][13], 20, 23) |
+      __gen_uint(values->Entry[0][0][14], 24, 27) |
+      __gen_uint(values->Entry[0][0][15], 28, 31);
 
    dw[2] =
-      __gen_uint(values->Entry[1][0], 0, 3) |
-      __gen_uint(values->Entry[1][1], 4, 7) |
-      __gen_uint(values->Entry[1][2], 8, 11) |
-      __gen_uint(values->Entry[1][3], 12, 15) |
-      __gen_uint(values->Entry[1][4], 16, 19) |
-      __gen_uint(values->Entry[1][5], 20, 23) |
-      __gen_uint(values->Entry[1][6], 24, 27) |
-      __gen_uint(values->Entry[1][7], 28, 31);
+      __gen_uint(values->Entry[0][1][0], 0, 3) |
+      __gen_uint(values->Entry[0][1][1], 4, 7) |
+      __gen_uint(values->Entry[0][1][2], 8, 11) |
+      __gen_uint(values->Entry[0][1][3], 12, 15) |
+      __gen_uint(values->Entry[0][1][4], 16, 19) |
+      __gen_uint(values->Entry[0][1][5], 20, 23) |
+      __gen_uint(values->Entry[0][1][6], 24, 27) |
+      __gen_uint(values->Entry[0][1][7], 28, 31);
 
    dw[3] =
-      __gen_uint(values->Entry[1][8], 0, 3) |
-      __gen_uint(values->Entry[1][9], 4, 7) |
-      __gen_uint(values->Entry[1][10], 8, 11) |
-      __gen_uint(values->Entry[1][11], 12, 15) |
-      __gen_uint(values->Entry[1][12], 16, 19) |
-      __gen_uint(values->Entry[1][13], 20, 23) |
-      __gen_uint(values->Entry[1][14], 24, 27) |
-      __gen_uint(values->Entry[1][15], 28, 31);
+      __gen_uint(values->Entry[0][1][8], 0, 3) |
+      __gen_uint(values->Entry[0][1][9], 4, 7) |
+      __gen_uint(values->Entry[0][1][10], 8, 11) |
+      __gen_uint(values->Entry[0][1][11], 12, 15) |
+      __gen_uint(values->Entry[0][1][12], 16, 19) |
+      __gen_uint(values->Entry[0][1][13], 20, 23) |
+      __gen_uint(values->Entry[0][1][14], 24, 27) |
+      __gen_uint(values->Entry[0][1][15], 28, 31);
 
    dw[4] =
-      __gen_uint(values->Entry[2][0], 0, 3) |
-      __gen_uint(values->Entry[2][1], 4, 7) |
-      __gen_uint(values->Entry[2][2], 8, 11) |
-      __gen_uint(values->Entry[2][3], 12, 15) |
-      __gen_uint(values->Entry[2][4], 16, 19) |
-      __gen_uint(values->Entry[2][5], 20, 23) |
-      __gen_uint(values->Entry[2][6], 24, 27) |
-      __gen_uint(values->Entry[2][7], 28, 31);
+      __gen_uint(values->Entry[0][2][0], 0, 3) |
+      __gen_uint(values->Entry[0][2][1], 4, 7) |
+      __gen_uint(values->Entry[0][2][2], 8, 11) |
+      __gen_uint(values->Entry[0][2][3], 12, 15) |
+      __gen_uint(values->Entry[0][2][4], 16, 19) |
+      __gen_uint(values->Entry[0][2][5], 20, 23) |
+      __gen_uint(values->Entry[0][2][6], 24, 27) |
+      __gen_uint(values->Entry[0][2][7], 28, 31);
 
    dw[5] =
-      __gen_uint(values->Entry[2][8], 0, 3) |
-      __gen_uint(values->Entry[2][9], 4, 7) |
-      __gen_uint(values->Entry[2][10], 8, 11) |
-      __gen_uint(values->Entry[2][11], 12, 15) |
-      __gen_uint(values->Entry[2][12], 16, 19) |
-      __gen_uint(values->Entry[2][13], 20, 23) |
-      __gen_uint(values->Entry[2][14], 24, 27) |
-      __gen_uint(values->Entry[2][15], 28, 31);
+      __gen_uint(values->Entry[0][2][8], 0, 3) |
+      __gen_uint(values->Entry[0][2][9], 4, 7) |
+      __gen_uint(values->Entry[0][2][10], 8, 11) |
+      __gen_uint(values->Entry[0][2][11], 12, 15) |
+      __gen_uint(values->Entry[0][2][12], 16, 19) |
+      __gen_uint(values->Entry[0][2][13], 20, 23) |
+      __gen_uint(values->Entry[0][2][14], 24, 27) |
+      __gen_uint(values->Entry[0][2][15], 28, 31);
 
    dw[6] =
-      __gen_uint(values->Entry[3][0], 0, 3) |
-      __gen_uint(values->Entry[3][1], 4, 7) |
-      __gen_uint(values->Entry[3][2], 8, 11) |
-      __gen_uint(values->Entry[3][3], 12, 15) |
-      __gen_uint(values->Entry[3][4], 16, 19) |
-      __gen_uint(values->Entry[3][5], 20, 23) |
-      __gen_uint(values->Entry[3][6], 24, 27) |
-      __gen_uint(values->Entry[3][7], 28, 31);
+      __gen_uint(values->Entry[0][3][0], 0, 3) |
+      __gen_uint(values->Entry[0][3][1], 4, 7) |
+      __gen_uint(values->Entry[0][3][2], 8, 11) |
+      __gen_uint(values->Entry[0][3][3], 12, 15) |
+      __gen_uint(values->Entry[0][3][4], 16, 19) |
+      __gen_uint(values->Entry[0][3][5], 20, 23) |
+      __gen_uint(values->Entry[0][3][6], 24, 27) |
+      __gen_uint(values->Entry[0][3][7], 28, 31);
 
    dw[7] =
-      __gen_uint(values->Entry[3][8], 0, 3) |
-      __gen_uint(values->Entry[3][9], 4, 7) |
-      __gen_uint(values->Entry[3][10], 8, 11) |
-      __gen_uint(values->Entry[3][11], 12, 15) |
-      __gen_uint(values->Entry[3][12], 16, 19) |
-      __gen_uint(values->Entry[3][13], 20, 23) |
-      __gen_uint(values->Entry[3][14], 24, 27) |
-      __gen_uint(values->Entry[3][15], 28, 31);
+      __gen_uint(values->Entry[0][3][8], 0, 3) |
+      __gen_uint(values->Entry[0][3][9], 4, 7) |
+      __gen_uint(values->Entry[0][3][10], 8, 11) |
+      __gen_uint(values->Entry[0][3][11], 12, 15) |
+      __gen_uint(values->Entry[0][3][12], 16, 19) |
+      __gen_uint(values->Entry[0][3][13], 20, 23) |
+      __gen_uint(values->Entry[0][3][14], 24, 27) |
+      __gen_uint(values->Entry[0][3][15], 28, 31);
 
    dw[8] =
-      __gen_uint(values->Entry[4][0], 0, 3) |
-      __gen_uint(values->Entry[4][1], 4, 7) |
-      __gen_uint(values->Entry[4][2], 8, 11) |
-      __gen_uint(values->Entry[4][3], 12, 15) |
-      __gen_uint(values->Entry[4][4], 16, 19) |
-      __gen_uint(values->Entry[4][5], 20, 23) |
-      __gen_uint(values->Entry[4][6], 24, 27) |
-      __gen_uint(values->Entry[4][7], 28, 31);
+      __gen_uint(values->Entry[0][4][0], 0, 3) |
+      __gen_uint(values->Entry[0][4][1], 4, 7) |
+      __gen_uint(values->Entry[0][4][2], 8, 11) |
+      __gen_uint(values->Entry[0][4][3], 12, 15) |
+      __gen_uint(values->Entry[0][4][4], 16, 19) |
+      __gen_uint(values->Entry[0][4][5], 20, 23) |
+      __gen_uint(values->Entry[0][4][6], 24, 27) |
+      __gen_uint(values->Entry[0][4][7], 28, 31);
 
    dw[9] =
-      __gen_uint(values->Entry[4][8], 0, 3) |
-      __gen_uint(values->Entry[4][9], 4, 7) |
-      __gen_uint(values->Entry[4][10], 8, 11) |
-      __gen_uint(values->Entry[4][11], 12, 15) |
-      __gen_uint(values->Entry[4][12], 16, 19) |
-      __gen_uint(values->Entry[4][13], 20, 23) |
-      __gen_uint(values->Entry[4][14], 24, 27) |
-      __gen_uint(values->Entry[4][15], 28, 31);
+      __gen_uint(values->Entry[0][4][8], 0, 3) |
+      __gen_uint(values->Entry[0][4][9], 4, 7) |
+      __gen_uint(values->Entry[0][4][10], 8, 11) |
+      __gen_uint(values->Entry[0][4][11], 12, 15) |
+      __gen_uint(values->Entry[0][4][12], 16, 19) |
+      __gen_uint(values->Entry[0][4][13], 20, 23) |
+      __gen_uint(values->Entry[0][4][14], 24, 27) |
+      __gen_uint(values->Entry[0][4][15], 28, 31);
 
    dw[10] =
-      __gen_uint(values->Entry[5][0], 0, 3) |
-      __gen_uint(values->Entry[5][1], 4, 7) |
-      __gen_uint(values->Entry[5][2], 8, 11) |
-      __gen_uint(values->Entry[5][3], 12, 15) |
-      __gen_uint(values->Entry[5][4], 16, 19) |
-      __gen_uint(values->Entry[5][5], 20, 23) |
-      __gen_uint(values->Entry[5][6], 24, 27) |
-      __gen_uint(values->Entry[5][7], 28, 31);
+      __gen_uint(values->Entry[0][5][0], 0, 3) |
+      __gen_uint(values->Entry[0][5][1], 4, 7) |
+      __gen_uint(values->Entry[0][5][2], 8, 11) |
+      __gen_uint(values->Entry[0][5][3], 12, 15) |
+      __gen_uint(values->Entry[0][5][4], 16, 19) |
+      __gen_uint(values->Entry[0][5][5], 20, 23) |
+      __gen_uint(values->Entry[0][5][6], 24, 27) |
+      __gen_uint(values->Entry[0][5][7], 28, 31);
 
    dw[11] =
-      __gen_uint(values->Entry[5][8], 0, 3) |
-      __gen_uint(values->Entry[5][9], 4, 7) |
-      __gen_uint(values->Entry[5][10], 8, 11) |
-      __gen_uint(values->Entry[5][11], 12, 15) |
-      __gen_uint(values->Entry[5][12], 16, 19) |
-      __gen_uint(values->Entry[5][13], 20, 23) |
-      __gen_uint(values->Entry[5][14], 24, 27) |
-      __gen_uint(values->Entry[5][15], 28, 31);
+      __gen_uint(values->Entry[0][5][8], 0, 3) |
+      __gen_uint(values->Entry[0][5][9], 4, 7) |
+      __gen_uint(values->Entry[0][5][10], 8, 11) |
+      __gen_uint(values->Entry[0][5][11], 12, 15) |
+      __gen_uint(values->Entry[0][5][12], 16, 19) |
+      __gen_uint(values->Entry[0][5][13], 20, 23) |
+      __gen_uint(values->Entry[0][5][14], 24, 27) |
+      __gen_uint(values->Entry[0][5][15], 28, 31);
 
    dw[12] =
-      __gen_uint(values->Entry[6][0], 0, 3) |
-      __gen_uint(values->Entry[6][1], 4, 7) |
-      __gen_uint(values->Entry[6][2], 8, 11) |
-      __gen_uint(values->Entry[6][3], 12, 15) |
-      __gen_uint(values->Entry[6][4], 16, 19) |
-      __gen_uint(values->Entry[6][5], 20, 23) |
-      __gen_uint(values->Entry[6][6], 24, 27) |
-      __gen_uint(values->Entry[6][7], 28, 31);
+      __gen_uint(values->Entry[0][6][0], 0, 3) |
+      __gen_uint(values->Entry[0][6][1], 4, 7) |
+      __gen_uint(values->Entry[0][6][2], 8, 11) |
+      __gen_uint(values->Entry[0][6][3], 12, 15) |
+      __gen_uint(values->Entry[0][6][4], 16, 19) |
+      __gen_uint(values->Entry[0][6][5], 20, 23) |
+      __gen_uint(values->Entry[0][6][6], 24, 27) |
+      __gen_uint(values->Entry[0][6][7], 28, 31);
 
    dw[13] =
-      __gen_uint(values->Entry[6][8], 0, 3) |
-      __gen_uint(values->Entry[6][9], 4, 7) |
-      __gen_uint(values->Entry[6][10], 8, 11) |
-      __gen_uint(values->Entry[6][11], 12, 15) |
-      __gen_uint(values->Entry[6][12], 16, 19) |
-      __gen_uint(values->Entry[6][13], 20, 23) |
-      __gen_uint(values->Entry[6][14], 24, 27) |
-      __gen_uint(values->Entry[6][15], 28, 31);
+      __gen_uint(values->Entry[0][6][8], 0, 3) |
+      __gen_uint(values->Entry[0][6][9], 4, 7) |
+      __gen_uint(values->Entry[0][6][10], 8, 11) |
+      __gen_uint(values->Entry[0][6][11], 12, 15) |
+      __gen_uint(values->Entry[0][6][12], 16, 19) |
+      __gen_uint(values->Entry[0][6][13], 20, 23) |
+      __gen_uint(values->Entry[0][6][14], 24, 27) |
+      __gen_uint(values->Entry[0][6][15], 28, 31);
 
    dw[14] =
-      __gen_uint(values->Entry[7][0], 0, 3) |
-      __gen_uint(values->Entry[7][1], 4, 7) |
-      __gen_uint(values->Entry[7][2], 8, 11) |
-      __gen_uint(values->Entry[7][3], 12, 15) |
-      __gen_uint(values->Entry[7][4], 16, 19) |
-      __gen_uint(values->Entry[7][5], 20, 23) |
-      __gen_uint(values->Entry[7][6], 24, 27) |
-      __gen_uint(values->Entry[7][7], 28, 31);
+      __gen_uint(values->Entry[0][7][0], 0, 3) |
+      __gen_uint(values->Entry[0][7][1], 4, 7) |
+      __gen_uint(values->Entry[0][7][2], 8, 11) |
+      __gen_uint(values->Entry[0][7][3], 12, 15) |
+      __gen_uint(values->Entry[0][7][4], 16, 19) |
+      __gen_uint(values->Entry[0][7][5], 20, 23) |
+      __gen_uint(values->Entry[0][7][6], 24, 27) |
+      __gen_uint(values->Entry[0][7][7], 28, 31);
 
    dw[15] =
-      __gen_uint(values->Entry[7][8], 0, 3) |
-      __gen_uint(values->Entry[7][9], 4, 7) |
-      __gen_uint(values->Entry[7][10], 8, 11) |
-      __gen_uint(values->Entry[7][11], 12, 15) |
-      __gen_uint(values->Entry[7][12], 16, 19) |
-      __gen_uint(values->Entry[7][13], 20, 23) |
-      __gen_uint(values->Entry[7][14], 24, 27) |
-      __gen_uint(values->Entry[7][15], 28, 31);
+      __gen_uint(values->Entry[0][7][8], 0, 3) |
+      __gen_uint(values->Entry[0][7][9], 4, 7) |
+      __gen_uint(values->Entry[0][7][10], 8, 11) |
+      __gen_uint(values->Entry[0][7][11], 12, 15) |
+      __gen_uint(values->Entry[0][7][12], 16, 19) |
+      __gen_uint(values->Entry[0][7][13], 20, 23) |
+      __gen_uint(values->Entry[0][7][14], 24, 27) |
+      __gen_uint(values->Entry[0][7][15], 28, 31);
 
    dw[16] =
-      __gen_uint(values->Entry[8][0], 0, 3) |
-      __gen_uint(values->Entry[8][1], 4, 7) |
-      __gen_uint(values->Entry[8][2], 8, 11) |
-      __gen_uint(values->Entry[8][3], 12, 15) |
-      __gen_uint(values->Entry[8][4], 16, 19) |
-      __gen_uint(values->Entry[8][5], 20, 23) |
-      __gen_uint(values->Entry[8][6], 24, 27) |
-      __gen_uint(values->Entry[8][7], 28, 31);
+      __gen_uint(values->Entry[0][8][0], 0, 3) |
+      __gen_uint(values->Entry[0][8][1], 4, 7) |
+      __gen_uint(values->Entry[0][8][2], 8, 11) |
+      __gen_uint(values->Entry[0][8][3], 12, 15) |
+      __gen_uint(values->Entry[0][8][4], 16, 19) |
+      __gen_uint(values->Entry[0][8][5], 20, 23) |
+      __gen_uint(values->Entry[0][8][6], 24, 27) |
+      __gen_uint(values->Entry[0][8][7], 28, 31);
 
    dw[17] =
-      __gen_uint(values->Entry[8][8], 0, 3) |
-      __gen_uint(values->Entry[8][9], 4, 7) |
-      __gen_uint(values->Entry[8][10], 8, 11) |
-      __gen_uint(values->Entry[8][11], 12, 15) |
-      __gen_uint(values->Entry[8][12], 16, 19) |
-      __gen_uint(values->Entry[8][13], 20, 23) |
-      __gen_uint(values->Entry[8][14], 24, 27) |
-      __gen_uint(values->Entry[8][15], 28, 31);
+      __gen_uint(values->Entry[0][8][8], 0, 3) |
+      __gen_uint(values->Entry[0][8][9], 4, 7) |
+      __gen_uint(values->Entry[0][8][10], 8, 11) |
+      __gen_uint(values->Entry[0][8][11], 12, 15) |
+      __gen_uint(values->Entry[0][8][12], 16, 19) |
+      __gen_uint(values->Entry[0][8][13], 20, 23) |
+      __gen_uint(values->Entry[0][8][14], 24, 27) |
+      __gen_uint(values->Entry[0][8][15], 28, 31);
 
    dw[18] =
-      __gen_uint(values->Entry[9][0], 0, 3) |
-      __gen_uint(values->Entry[9][1], 4, 7) |
-      __gen_uint(values->Entry[9][2], 8, 11) |
-      __gen_uint(values->Entry[9][3], 12, 15) |
-      __gen_uint(values->Entry[9][4], 16, 19) |
-      __gen_uint(values->Entry[9][5], 20, 23) |
-      __gen_uint(values->Entry[9][6], 24, 27) |
-      __gen_uint(values->Entry[9][7], 28, 31);
+      __gen_uint(values->Entry[0][9][0], 0, 3) |
+      __gen_uint(values->Entry[0][9][1], 4, 7) |
+      __gen_uint(values->Entry[0][9][2], 8, 11) |
+      __gen_uint(values->Entry[0][9][3], 12, 15) |
+      __gen_uint(values->Entry[0][9][4], 16, 19) |
+      __gen_uint(values->Entry[0][9][5], 20, 23) |
+      __gen_uint(values->Entry[0][9][6], 24, 27) |
+      __gen_uint(values->Entry[0][9][7], 28, 31);
 
    dw[19] =
-      __gen_uint(values->Entry[9][8], 0, 3) |
-      __gen_uint(values->Entry[9][9], 4, 7) |
-      __gen_uint(values->Entry[9][10], 8, 11) |
-      __gen_uint(values->Entry[9][11], 12, 15) |
-      __gen_uint(values->Entry[9][12], 16, 19) |
-      __gen_uint(values->Entry[9][13], 20, 23) |
-      __gen_uint(values->Entry[9][14], 24, 27) |
-      __gen_uint(values->Entry[9][15], 28, 31);
+      __gen_uint(values->Entry[0][9][8], 0, 3) |
+      __gen_uint(values->Entry[0][9][9], 4, 7) |
+      __gen_uint(values->Entry[0][9][10], 8, 11) |
+      __gen_uint(values->Entry[0][9][11], 12, 15) |
+      __gen_uint(values->Entry[0][9][12], 16, 19) |
+      __gen_uint(values->Entry[0][9][13], 20, 23) |
+      __gen_uint(values->Entry[0][9][14], 24, 27) |
+      __gen_uint(values->Entry[0][9][15], 28, 31);
 
    dw[20] =
-      __gen_uint(values->Entry[10][0], 0, 3) |
-      __gen_uint(values->Entry[10][1], 4, 7) |
-      __gen_uint(values->Entry[10][2], 8, 11) |
-      __gen_uint(values->Entry[10][3], 12, 15) |
-      __gen_uint(values->Entry[10][4], 16, 19) |
-      __gen_uint(values->Entry[10][5], 20, 23) |
-      __gen_uint(values->Entry[10][6], 24, 27) |
-      __gen_uint(values->Entry[10][7], 28, 31);
+      __gen_uint(values->Entry[0][10][0], 0, 3) |
+      __gen_uint(values->Entry[0][10][1], 4, 7) |
+      __gen_uint(values->Entry[0][10][2], 8, 11) |
+      __gen_uint(values->Entry[0][10][3], 12, 15) |
+      __gen_uint(values->Entry[0][10][4], 16, 19) |
+      __gen_uint(values->Entry[0][10][5], 20, 23) |
+      __gen_uint(values->Entry[0][10][6], 24, 27) |
+      __gen_uint(values->Entry[0][10][7], 28, 31);
 
    dw[21] =
-      __gen_uint(values->Entry[10][8], 0, 3) |
-      __gen_uint(values->Entry[10][9], 4, 7) |
-      __gen_uint(values->Entry[10][10], 8, 11) |
-      __gen_uint(values->Entry[10][11], 12, 15) |
-      __gen_uint(values->Entry[10][12], 16, 19) |
-      __gen_uint(values->Entry[10][13], 20, 23) |
-      __gen_uint(values->Entry[10][14], 24, 27) |
-      __gen_uint(values->Entry[10][15], 28, 31);
+      __gen_uint(values->Entry[0][10][8], 0, 3) |
+      __gen_uint(values->Entry[0][10][9], 4, 7) |
+      __gen_uint(values->Entry[0][10][10], 8, 11) |
+      __gen_uint(values->Entry[0][10][11], 12, 15) |
+      __gen_uint(values->Entry[0][10][12], 16, 19) |
+      __gen_uint(values->Entry[0][10][13], 20, 23) |
+      __gen_uint(values->Entry[0][10][14], 24, 27) |
+      __gen_uint(values->Entry[0][10][15], 28, 31);
 
    dw[22] =
-      __gen_uint(values->Entry[11][0], 0, 3) |
-      __gen_uint(values->Entry[11][1], 4, 7) |
-      __gen_uint(values->Entry[11][2], 8, 11) |
-      __gen_uint(values->Entry[11][3], 12, 15) |
-      __gen_uint(values->Entry[11][4], 16, 19) |
-      __gen_uint(values->Entry[11][5], 20, 23) |
-      __gen_uint(values->Entry[11][6], 24, 27) |
-      __gen_uint(values->Entry[11][7], 28, 31);
+      __gen_uint(values->Entry[0][11][0], 0, 3) |
+      __gen_uint(values->Entry[0][11][1], 4, 7) |
+      __gen_uint(values->Entry[0][11][2], 8, 11) |
+      __gen_uint(values->Entry[0][11][3], 12, 15) |
+      __gen_uint(values->Entry[0][11][4], 16, 19) |
+      __gen_uint(values->Entry[0][11][5], 20, 23) |
+      __gen_uint(values->Entry[0][11][6], 24, 27) |
+      __gen_uint(values->Entry[0][11][7], 28, 31);
 
    dw[23] =
-      __gen_uint(values->Entry[11][8], 0, 3) |
-      __gen_uint(values->Entry[11][9], 4, 7) |
-      __gen_uint(values->Entry[11][10], 8, 11) |
-      __gen_uint(values->Entry[11][11], 12, 15) |
-      __gen_uint(values->Entry[11][12], 16, 19) |
-      __gen_uint(values->Entry[11][13], 20, 23) |
-      __gen_uint(values->Entry[11][14], 24, 27) |
-      __gen_uint(values->Entry[11][15], 28, 31);
+      __gen_uint(values->Entry[0][11][8], 0, 3) |
+      __gen_uint(values->Entry[0][11][9], 4, 7) |
+      __gen_uint(values->Entry[0][11][10], 8, 11) |
+      __gen_uint(values->Entry[0][11][11], 12, 15) |
+      __gen_uint(values->Entry[0][11][12], 16, 19) |
+      __gen_uint(values->Entry[0][11][13], 20, 23) |
+      __gen_uint(values->Entry[0][11][14], 24, 27) |
+      __gen_uint(values->Entry[0][11][15], 28, 31);
 
    dw[24] =
-      __gen_uint(values->Entry[12][0], 0, 3) |
-      __gen_uint(values->Entry[12][1], 4, 7) |
-      __gen_uint(values->Entry[12][2], 8, 11) |
-      __gen_uint(values->Entry[12][3], 12, 15) |
-      __gen_uint(values->Entry[12][4], 16, 19) |
-      __gen_uint(values->Entry[12][5], 20, 23) |
-      __gen_uint(values->Entry[12][6], 24, 27) |
-      __gen_uint(values->Entry[12][7], 28, 31);
+      __gen_uint(values->Entry[0][12][0], 0, 3) |
+      __gen_uint(values->Entry[0][12][1], 4, 7) |
+      __gen_uint(values->Entry[0][12][2], 8, 11) |
+      __gen_uint(values->Entry[0][12][3], 12, 15) |
+      __gen_uint(values->Entry[0][12][4], 16, 19) |
+      __gen_uint(values->Entry[0][12][5], 20, 23) |
+      __gen_uint(values->Entry[0][12][6], 24, 27) |
+      __gen_uint(values->Entry[0][12][7], 28, 31);
 
    dw[25] =
-      __gen_uint(values->Entry[12][8], 0, 3) |
-      __gen_uint(values->Entry[12][9], 4, 7) |
-      __gen_uint(values->Entry[12][10], 8, 11) |
-      __gen_uint(values->Entry[12][11], 12, 15) |
-      __gen_uint(values->Entry[12][12], 16, 19) |
-      __gen_uint(values->Entry[12][13], 20, 23) |
-      __gen_uint(values->Entry[12][14], 24, 27) |
-      __gen_uint(values->Entry[12][15], 28, 31);
+      __gen_uint(values->Entry[0][12][8], 0, 3) |
+      __gen_uint(values->Entry[0][12][9], 4, 7) |
+      __gen_uint(values->Entry[0][12][10], 8, 11) |
+      __gen_uint(values->Entry[0][12][11], 12, 15) |
+      __gen_uint(values->Entry[0][12][12], 16, 19) |
+      __gen_uint(values->Entry[0][12][13], 20, 23) |
+      __gen_uint(values->Entry[0][12][14], 24, 27) |
+      __gen_uint(values->Entry[0][12][15], 28, 31);
 
    dw[26] =
-      __gen_uint(values->Entry[13][0], 0, 3) |
-      __gen_uint(values->Entry[13][1], 4, 7) |
-      __gen_uint(values->Entry[13][2], 8, 11) |
-      __gen_uint(values->Entry[13][3], 12, 15) |
-      __gen_uint(values->Entry[13][4], 16, 19) |
-      __gen_uint(values->Entry[13][5], 20, 23) |
-      __gen_uint(values->Entry[13][6], 24, 27) |
-      __gen_uint(values->Entry[13][7], 28, 31);
+      __gen_uint(values->Entry[0][13][0], 0, 3) |
+      __gen_uint(values->Entry[0][13][1], 4, 7) |
+      __gen_uint(values->Entry[0][13][2], 8, 11) |
+      __gen_uint(values->Entry[0][13][3], 12, 15) |
+      __gen_uint(values->Entry[0][13][4], 16, 19) |
+      __gen_uint(values->Entry[0][13][5], 20, 23) |
+      __gen_uint(values->Entry[0][13][6], 24, 27) |
+      __gen_uint(values->Entry[0][13][7], 28, 31);
 
    dw[27] =
-      __gen_uint(values->Entry[13][8], 0, 3) |
-      __gen_uint(values->Entry[13][9], 4, 7) |
-      __gen_uint(values->Entry[13][10], 8, 11) |
-      __gen_uint(values->Entry[13][11], 12, 15) |
-      __gen_uint(values->Entry[13][12], 16, 19) |
-      __gen_uint(values->Entry[13][13], 20, 23) |
-      __gen_uint(values->Entry[13][14], 24, 27) |
-      __gen_uint(values->Entry[13][15], 28, 31);
+      __gen_uint(values->Entry[0][13][8], 0, 3) |
+      __gen_uint(values->Entry[0][13][9], 4, 7) |
+      __gen_uint(values->Entry[0][13][10], 8, 11) |
+      __gen_uint(values->Entry[0][13][11], 12, 15) |
+      __gen_uint(values->Entry[0][13][12], 16, 19) |
+      __gen_uint(values->Entry[0][13][13], 20, 23) |
+      __gen_uint(values->Entry[0][13][14], 24, 27) |
+      __gen_uint(values->Entry[0][13][15], 28, 31);
 
    dw[28] =
-      __gen_uint(values->Entry[14][0], 0, 3) |
-      __gen_uint(values->Entry[14][1], 4, 7) |
-      __gen_uint(values->Entry[14][2], 8, 11) |
-      __gen_uint(values->Entry[14][3], 12, 15) |
-      __gen_uint(values->Entry[14][4], 16, 19) |
-      __gen_uint(values->Entry[14][5], 20, 23) |
-      __gen_uint(values->Entry[14][6], 24, 27) |
-      __gen_uint(values->Entry[14][7], 28, 31);
+      __gen_uint(values->Entry[0][14][0], 0, 3) |
+      __gen_uint(values->Entry[0][14][1], 4, 7) |
+      __gen_uint(values->Entry[0][14][2], 8, 11) |
+      __gen_uint(values->Entry[0][14][3], 12, 15) |
+      __gen_uint(values->Entry[0][14][4], 16, 19) |
+      __gen_uint(values->Entry[0][14][5], 20, 23) |
+      __gen_uint(values->Entry[0][14][6], 24, 27) |
+      __gen_uint(values->Entry[0][14][7], 28, 31);
 
    dw[29] =
-      __gen_uint(values->Entry[14][8], 0, 3) |
-      __gen_uint(values->Entry[14][9], 4, 7) |
-      __gen_uint(values->Entry[14][10], 8, 11) |
-      __gen_uint(values->Entry[14][11], 12, 15) |
-      __gen_uint(values->Entry[14][12], 16, 19) |
-      __gen_uint(values->Entry[14][13], 20, 23) |
-      __gen_uint(values->Entry[14][14], 24, 27) |
-      __gen_uint(values->Entry[14][15], 28, 31);
+      __gen_uint(values->Entry[0][14][8], 0, 3) |
+      __gen_uint(values->Entry[0][14][9], 4, 7) |
+      __gen_uint(values->Entry[0][14][10], 8, 11) |
+      __gen_uint(values->Entry[0][14][11], 12, 15) |
+      __gen_uint(values->Entry[0][14][12], 16, 19) |
+      __gen_uint(values->Entry[0][14][13], 20, 23) |
+      __gen_uint(values->Entry[0][14][14], 24, 27) |
+      __gen_uint(values->Entry[0][14][15], 28, 31);
 
    dw[30] =
-      __gen_uint(values->Entry[15][0], 0, 3) |
-      __gen_uint(values->Entry[15][1], 4, 7) |
-      __gen_uint(values->Entry[15][2], 8, 11) |
-      __gen_uint(values->Entry[15][3], 12, 15) |
-      __gen_uint(values->Entry[15][4], 16, 19) |
-      __gen_uint(values->Entry[15][5], 20, 23) |
-      __gen_uint(values->Entry[15][6], 24, 27) |
-      __gen_uint(values->Entry[15][7], 28, 31);
+      __gen_uint(values->Entry[0][15][0], 0, 3) |
+      __gen_uint(values->Entry[0][15][1], 4, 7) |
+      __gen_uint(values->Entry[0][15][2], 8, 11) |
+      __gen_uint(values->Entry[0][15][3], 12, 15) |
+      __gen_uint(values->Entry[0][15][4], 16, 19) |
+      __gen_uint(values->Entry[0][15][5], 20, 23) |
+      __gen_uint(values->Entry[0][15][6], 24, 27) |
+      __gen_uint(values->Entry[0][15][7], 28, 31);
 
    dw[31] =
-      __gen_uint(values->Entry[15][8], 0, 3) |
-      __gen_uint(values->Entry[15][9], 4, 7) |
-      __gen_uint(values->Entry[15][10], 8, 11) |
-      __gen_uint(values->Entry[15][11], 12, 15) |
-      __gen_uint(values->Entry[15][12], 16, 19) |
-      __gen_uint(values->Entry[15][13], 20, 23) |
-      __gen_uint(values->Entry[15][14], 24, 27) |
-      __gen_uint(values->Entry[15][15], 28, 31);
+      __gen_uint(values->Entry[0][15][8], 0, 3) |
+      __gen_uint(values->Entry[0][15][9], 4, 7) |
+      __gen_uint(values->Entry[0][15][10], 8, 11) |
+      __gen_uint(values->Entry[0][15][11], 12, 15) |
+      __gen_uint(values->Entry[0][15][12], 16, 19) |
+      __gen_uint(values->Entry[0][15][13], 20, 23) |
+      __gen_uint(values->Entry[0][15][14], 24, 27) |
+      __gen_uint(values->Entry[0][15][15], 28, 31);
+
+   dw[32] =
+      __gen_uint(values->Entry[1][0][0], 0, 3) |
+      __gen_uint(values->Entry[1][0][1], 4, 7) |
+      __gen_uint(values->Entry[1][0][2], 8, 11) |
+      __gen_uint(values->Entry[1][0][3], 12, 15) |
+      __gen_uint(values->Entry[1][0][4], 16, 19) |
+      __gen_uint(values->Entry[1][0][5], 20, 23) |
+      __gen_uint(values->Entry[1][0][6], 24, 27) |
+      __gen_uint(values->Entry[1][0][7], 28, 31);
+
+   dw[33] =
+      __gen_uint(values->Entry[1][0][8], 0, 3) |
+      __gen_uint(values->Entry[1][0][9], 4, 7) |
+      __gen_uint(values->Entry[1][0][10], 8, 11) |
+      __gen_uint(values->Entry[1][0][11], 12, 15) |
+      __gen_uint(values->Entry[1][0][12], 16, 19) |
+      __gen_uint(values->Entry[1][0][13], 20, 23) |
+      __gen_uint(values->Entry[1][0][14], 24, 27) |
+      __gen_uint(values->Entry[1][0][15], 28, 31);
+
+   dw[34] =
+      __gen_uint(values->Entry[1][1][0], 0, 3) |
+      __gen_uint(values->Entry[1][1][1], 4, 7) |
+      __gen_uint(values->Entry[1][1][2], 8, 11) |
+      __gen_uint(values->Entry[1][1][3], 12, 15) |
+      __gen_uint(values->Entry[1][1][4], 16, 19) |
+      __gen_uint(values->Entry[1][1][5], 20, 23) |
+      __gen_uint(values->Entry[1][1][6], 24, 27) |
+      __gen_uint(values->Entry[1][1][7], 28, 31);
+
+   dw[35] =
+      __gen_uint(values->Entry[1][1][8], 0, 3) |
+      __gen_uint(values->Entry[1][1][9], 4, 7) |
+      __gen_uint(values->Entry[1][1][10], 8, 11) |
+      __gen_uint(values->Entry[1][1][11], 12, 15) |
+      __gen_uint(values->Entry[1][1][12], 16, 19) |
+      __gen_uint(values->Entry[1][1][13], 20, 23) |
+      __gen_uint(values->Entry[1][1][14], 24, 27) |
+      __gen_uint(values->Entry[1][1][15], 28, 31);
+
+   dw[36] =
+      __gen_uint(values->Entry[1][2][0], 0, 3) |
+      __gen_uint(values->Entry[1][2][1], 4, 7) |
+      __gen_uint(values->Entry[1][2][2], 8, 11) |
+      __gen_uint(values->Entry[1][2][3], 12, 15) |
+      __gen_uint(values->Entry[1][2][4], 16, 19) |
+      __gen_uint(values->Entry[1][2][5], 20, 23) |
+      __gen_uint(values->Entry[1][2][6], 24, 27) |
+      __gen_uint(values->Entry[1][2][7], 28, 31);
+
+   dw[37] =
+      __gen_uint(values->Entry[1][2][8], 0, 3) |
+      __gen_uint(values->Entry[1][2][9], 4, 7) |
+      __gen_uint(values->Entry[1][2][10], 8, 11) |
+      __gen_uint(values->Entry[1][2][11], 12, 15) |
+      __gen_uint(values->Entry[1][2][12], 16, 19) |
+      __gen_uint(values->Entry[1][2][13], 20, 23) |
+      __gen_uint(values->Entry[1][2][14], 24, 27) |
+      __gen_uint(values->Entry[1][2][15], 28, 31);
+
+   dw[38] =
+      __gen_uint(values->Entry[1][3][0], 0, 3) |
+      __gen_uint(values->Entry[1][3][1], 4, 7) |
+      __gen_uint(values->Entry[1][3][2], 8, 11) |
+      __gen_uint(values->Entry[1][3][3], 12, 15) |
+      __gen_uint(values->Entry[1][3][4], 16, 19) |
+      __gen_uint(values->Entry[1][3][5], 20, 23) |
+      __gen_uint(values->Entry[1][3][6], 24, 27) |
+      __gen_uint(values->Entry[1][3][7], 28, 31);
+
+   dw[39] =
+      __gen_uint(values->Entry[1][3][8], 0, 3) |
+      __gen_uint(values->Entry[1][3][9], 4, 7) |
+      __gen_uint(values->Entry[1][3][10], 8, 11) |
+      __gen_uint(values->Entry[1][3][11], 12, 15) |
+      __gen_uint(values->Entry[1][3][12], 16, 19) |
+      __gen_uint(values->Entry[1][3][13], 20, 23) |
+      __gen_uint(values->Entry[1][3][14], 24, 27) |
+      __gen_uint(values->Entry[1][3][15], 28, 31);
+
+   dw[40] =
+      __gen_uint(values->Entry[1][4][0], 0, 3) |
+      __gen_uint(values->Entry[1][4][1], 4, 7) |
+      __gen_uint(values->Entry[1][4][2], 8, 11) |
+      __gen_uint(values->Entry[1][4][3], 12, 15) |
+      __gen_uint(values->Entry[1][4][4], 16, 19) |
+      __gen_uint(values->Entry[1][4][5], 20, 23) |
+      __gen_uint(values->Entry[1][4][6], 24, 27) |
+      __gen_uint(values->Entry[1][4][7], 28, 31);
+
+   dw[41] =
+      __gen_uint(values->Entry[1][4][8], 0, 3) |
+      __gen_uint(values->Entry[1][4][9], 4, 7) |
+      __gen_uint(values->Entry[1][4][10], 8, 11) |
+      __gen_uint(values->Entry[1][4][11], 12, 15) |
+      __gen_uint(values->Entry[1][4][12], 16, 19) |
+      __gen_uint(values->Entry[1][4][13], 20, 23) |
+      __gen_uint(values->Entry[1][4][14], 24, 27) |
+      __gen_uint(values->Entry[1][4][15], 28, 31);
+
+   dw[42] =
+      __gen_uint(values->Entry[1][5][0], 0, 3) |
+      __gen_uint(values->Entry[1][5][1], 4, 7) |
+      __gen_uint(values->Entry[1][5][2], 8, 11) |
+      __gen_uint(values->Entry[1][5][3], 12, 15) |
+      __gen_uint(values->Entry[1][5][4], 16, 19) |
+      __gen_uint(values->Entry[1][5][5], 20, 23) |
+      __gen_uint(values->Entry[1][5][6], 24, 27) |
+      __gen_uint(values->Entry[1][5][7], 28, 31);
+
+   dw[43] =
+      __gen_uint(values->Entry[1][5][8], 0, 3) |
+      __gen_uint(values->Entry[1][5][9], 4, 7) |
+      __gen_uint(values->Entry[1][5][10], 8, 11) |
+      __gen_uint(values->Entry[1][5][11], 12, 15) |
+      __gen_uint(values->Entry[1][5][12], 16, 19) |
+      __gen_uint(values->Entry[1][5][13], 20, 23) |
+      __gen_uint(values->Entry[1][5][14], 24, 27) |
+      __gen_uint(values->Entry[1][5][15], 28, 31);
+
+   dw[44] =
+      __gen_uint(values->Entry[1][6][0], 0, 3) |
+      __gen_uint(values->Entry[1][6][1], 4, 7) |
+      __gen_uint(values->Entry[1][6][2], 8, 11) |
+      __gen_uint(values->Entry[1][6][3], 12, 15) |
+      __gen_uint(values->Entry[1][6][4], 16, 19) |
+      __gen_uint(values->Entry[1][6][5], 20, 23) |
+      __gen_uint(values->Entry[1][6][6], 24, 27) |
+      __gen_uint(values->Entry[1][6][7], 28, 31);
+
+   dw[45] =
+      __gen_uint(values->Entry[1][6][8], 0, 3) |
+      __gen_uint(values->Entry[1][6][9], 4, 7) |
+      __gen_uint(values->Entry[1][6][10], 8, 11) |
+      __gen_uint(values->Entry[1][6][11], 12, 15) |
+      __gen_uint(values->Entry[1][6][12], 16, 19) |
+      __gen_uint(values->Entry[1][6][13], 20, 23) |
+      __gen_uint(values->Entry[1][6][14], 24, 27) |
+      __gen_uint(values->Entry[1][6][15], 28, 31);
+
+   dw[46] =
+      __gen_uint(values->Entry[1][7][0], 0, 3) |
+      __gen_uint(values->Entry[1][7][1], 4, 7) |
+      __gen_uint(values->Entry[1][7][2], 8, 11) |
+      __gen_uint(values->Entry[1][7][3], 12, 15) |
+      __gen_uint(values->Entry[1][7][4], 16, 19) |
+      __gen_uint(values->Entry[1][7][5], 20, 23) |
+      __gen_uint(values->Entry[1][7][6], 24, 27) |
+      __gen_uint(values->Entry[1][7][7], 28, 31);
+
+   dw[47] =
+      __gen_uint(values->Entry[1][7][8], 0, 3) |
+      __gen_uint(values->Entry[1][7][9], 4, 7) |
+      __gen_uint(values->Entry[1][7][10], 8, 11) |
+      __gen_uint(values->Entry[1][7][11], 12, 15) |
+      __gen_uint(values->Entry[1][7][12], 16, 19) |
+      __gen_uint(values->Entry[1][7][13], 20, 23) |
+      __gen_uint(values->Entry[1][7][14], 24, 27) |
+      __gen_uint(values->Entry[1][7][15], 28, 31);
+
+   dw[48] =
+      __gen_uint(values->Entry[1][8][0], 0, 3) |
+      __gen_uint(values->Entry[1][8][1], 4, 7) |
+      __gen_uint(values->Entry[1][8][2], 8, 11) |
+      __gen_uint(values->Entry[1][8][3], 12, 15) |
+      __gen_uint(values->Entry[1][8][4], 16, 19) |
+      __gen_uint(values->Entry[1][8][5], 20, 23) |
+      __gen_uint(values->Entry[1][8][6], 24, 27) |
+      __gen_uint(values->Entry[1][8][7], 28, 31);
+
+   dw[49] =
+      __gen_uint(values->Entry[1][8][8], 0, 3) |
+      __gen_uint(values->Entry[1][8][9], 4, 7) |
+      __gen_uint(values->Entry[1][8][10], 8, 11) |
+      __gen_uint(values->Entry[1][8][11], 12, 15) |
+      __gen_uint(values->Entry[1][8][12], 16, 19) |
+      __gen_uint(values->Entry[1][8][13], 20, 23) |
+      __gen_uint(values->Entry[1][8][14], 24, 27) |
+      __gen_uint(values->Entry[1][8][15], 28, 31);
+
+   dw[50] =
+      __gen_uint(values->Entry[1][9][0], 0, 3) |
+      __gen_uint(values->Entry[1][9][1], 4, 7) |
+      __gen_uint(values->Entry[1][9][2], 8, 11) |
+      __gen_uint(values->Entry[1][9][3], 12, 15) |
+      __gen_uint(values->Entry[1][9][4], 16, 19) |
+      __gen_uint(values->Entry[1][9][5], 20, 23) |
+      __gen_uint(values->Entry[1][9][6], 24, 27) |
+      __gen_uint(values->Entry[1][9][7], 28, 31);
+
+   dw[51] =
+      __gen_uint(values->Entry[1][9][8], 0, 3) |
+      __gen_uint(values->Entry[1][9][9], 4, 7) |
+      __gen_uint(values->Entry[1][9][10], 8, 11) |
+      __gen_uint(values->Entry[1][9][11], 12, 15) |
+      __gen_uint(values->Entry[1][9][12], 16, 19) |
+      __gen_uint(values->Entry[1][9][13], 20, 23) |
+      __gen_uint(values->Entry[1][9][14], 24, 27) |
+      __gen_uint(values->Entry[1][9][15], 28, 31);
+
+   dw[52] =
+      __gen_uint(values->Entry[1][10][0], 0, 3) |
+      __gen_uint(values->Entry[1][10][1], 4, 7) |
+      __gen_uint(values->Entry[1][10][2], 8, 11) |
+      __gen_uint(values->Entry[1][10][3], 12, 15) |
+      __gen_uint(values->Entry[1][10][4], 16, 19) |
+      __gen_uint(values->Entry[1][10][5], 20, 23) |
+      __gen_uint(values->Entry[1][10][6], 24, 27) |
+      __gen_uint(values->Entry[1][10][7], 28, 31);
+
+   dw[53] =
+      __gen_uint(values->Entry[1][10][8], 0, 3) |
+      __gen_uint(values->Entry[1][10][9], 4, 7) |
+      __gen_uint(values->Entry[1][10][10], 8, 11) |
+      __gen_uint(values->Entry[1][10][11], 12, 15) |
+      __gen_uint(values->Entry[1][10][12], 16, 19) |
+      __gen_uint(values->Entry[1][10][13], 20, 23) |
+      __gen_uint(values->Entry[1][10][14], 24, 27) |
+      __gen_uint(values->Entry[1][10][15], 28, 31);
+
+   dw[54] =
+      __gen_uint(values->Entry[1][11][0], 0, 3) |
+      __gen_uint(values->Entry[1][11][1], 4, 7) |
+      __gen_uint(values->Entry[1][11][2], 8, 11) |
+      __gen_uint(values->Entry[1][11][3], 12, 15) |
+      __gen_uint(values->Entry[1][11][4], 16, 19) |
+      __gen_uint(values->Entry[1][11][5], 20, 23) |
+      __gen_uint(values->Entry[1][11][6], 24, 27) |
+      __gen_uint(values->Entry[1][11][7], 28, 31);
+
+   dw[55] =
+      __gen_uint(values->Entry[1][11][8], 0, 3) |
+      __gen_uint(values->Entry[1][11][9], 4, 7) |
+      __gen_uint(values->Entry[1][11][10], 8, 11) |
+      __gen_uint(values->Entry[1][11][11], 12, 15) |
+      __gen_uint(values->Entry[1][11][12], 16, 19) |
+      __gen_uint(values->Entry[1][11][13], 20, 23) |
+      __gen_uint(values->Entry[1][11][14], 24, 27) |
+      __gen_uint(values->Entry[1][11][15], 28, 31);
+
+   dw[56] =
+      __gen_uint(values->Entry[1][12][0], 0, 3) |
+      __gen_uint(values->Entry[1][12][1], 4, 7) |
+      __gen_uint(values->Entry[1][12][2], 8, 11) |
+      __gen_uint(values->Entry[1][12][3], 12, 15) |
+      __gen_uint(values->Entry[1][12][4], 16, 19) |
+      __gen_uint(values->Entry[1][12][5], 20, 23) |
+      __gen_uint(values->Entry[1][12][6], 24, 27) |
+      __gen_uint(values->Entry[1][12][7], 28, 31);
+
+   dw[57] =
+      __gen_uint(values->Entry[1][12][8], 0, 3) |
+      __gen_uint(values->Entry[1][12][9], 4, 7) |
+      __gen_uint(values->Entry[1][12][10], 8, 11) |
+      __gen_uint(values->Entry[1][12][11], 12, 15) |
+      __gen_uint(values->Entry[1][12][12], 16, 19) |
+      __gen_uint(values->Entry[1][12][13], 20, 23) |
+      __gen_uint(values->Entry[1][12][14], 24, 27) |
+      __gen_uint(values->Entry[1][12][15], 28, 31);
+
+   dw[58] =
+      __gen_uint(values->Entry[1][13][0], 0, 3) |
+      __gen_uint(values->Entry[1][13][1], 4, 7) |
+      __gen_uint(values->Entry[1][13][2], 8, 11) |
+      __gen_uint(values->Entry[1][13][3], 12, 15) |
+      __gen_uint(values->Entry[1][13][4], 16, 19) |
+      __gen_uint(values->Entry[1][13][5], 20, 23) |
+      __gen_uint(values->Entry[1][13][6], 24, 27) |
+      __gen_uint(values->Entry[1][13][7], 28, 31);
+
+   dw[59] =
+      __gen_uint(values->Entry[1][13][8], 0, 3) |
+      __gen_uint(values->Entry[1][13][9], 4, 7) |
+      __gen_uint(values->Entry[1][13][10], 8, 11) |
+      __gen_uint(values->Entry[1][13][11], 12, 15) |
+      __gen_uint(values->Entry[1][13][12], 16, 19) |
+      __gen_uint(values->Entry[1][13][13], 20, 23) |
+      __gen_uint(values->Entry[1][13][14], 24, 27) |
+      __gen_uint(values->Entry[1][13][15], 28, 31);
+
+   dw[60] =
+      __gen_uint(values->Entry[1][14][0], 0, 3) |
+      __gen_uint(values->Entry[1][14][1], 4, 7) |
+      __gen_uint(values->Entry[1][14][2], 8, 11) |
+      __gen_uint(values->Entry[1][14][3], 12, 15) |
+      __gen_uint(values->Entry[1][14][4], 16, 19) |
+      __gen_uint(values->Entry[1][14][5], 20, 23) |
+      __gen_uint(values->Entry[1][14][6], 24, 27) |
+      __gen_uint(values->Entry[1][14][7], 28, 31);
+
+   dw[61] =
+      __gen_uint(values->Entry[1][14][8], 0, 3) |
+      __gen_uint(values->Entry[1][14][9], 4, 7) |
+      __gen_uint(values->Entry[1][14][10], 8, 11) |
+      __gen_uint(values->Entry[1][14][11], 12, 15) |
+      __gen_uint(values->Entry[1][14][12], 16, 19) |
+      __gen_uint(values->Entry[1][14][13], 20, 23) |
+      __gen_uint(values->Entry[1][14][14], 24, 27) |
+      __gen_uint(values->Entry[1][14][15], 28, 31);
+
+   dw[62] =
+      __gen_uint(values->Entry[1][15][0], 0, 3) |
+      __gen_uint(values->Entry[1][15][1], 4, 7) |
+      __gen_uint(values->Entry[1][15][2], 8, 11) |
+      __gen_uint(values->Entry[1][15][3], 12, 15) |
+      __gen_uint(values->Entry[1][15][4], 16, 19) |
+      __gen_uint(values->Entry[1][15][5], 20, 23) |
+      __gen_uint(values->Entry[1][15][6], 24, 27) |
+      __gen_uint(values->Entry[1][15][7], 28, 31);
+
+   dw[63] =
+      __gen_uint(values->Entry[1][15][8], 0, 3) |
+      __gen_uint(values->Entry[1][15][9], 4, 7) |
+      __gen_uint(values->Entry[1][15][10], 8, 11) |
+      __gen_uint(values->Entry[1][15][11], 12, 15) |
+      __gen_uint(values->Entry[1][15][12], 16, 19) |
+      __gen_uint(values->Entry[1][15][13], 20, 23) |
+      __gen_uint(values->Entry[1][15][14], 24, 27) |
+      __gen_uint(values->Entry[1][15][15], 28, 31);
+
+   dw[64] =
+      __gen_uint(values->Entry[2][0][0], 0, 3) |
+      __gen_uint(values->Entry[2][0][1], 4, 7) |
+      __gen_uint(values->Entry[2][0][2], 8, 11) |
+      __gen_uint(values->Entry[2][0][3], 12, 15) |
+      __gen_uint(values->Entry[2][0][4], 16, 19) |
+      __gen_uint(values->Entry[2][0][5], 20, 23) |
+      __gen_uint(values->Entry[2][0][6], 24, 27) |
+      __gen_uint(values->Entry[2][0][7], 28, 31);
+
+   dw[65] =
+      __gen_uint(values->Entry[2][0][8], 0, 3) |
+      __gen_uint(values->Entry[2][0][9], 4, 7) |
+      __gen_uint(values->Entry[2][0][10], 8, 11) |
+      __gen_uint(values->Entry[2][0][11], 12, 15) |
+      __gen_uint(values->Entry[2][0][12], 16, 19) |
+      __gen_uint(values->Entry[2][0][13], 20, 23) |
+      __gen_uint(values->Entry[2][0][14], 24, 27) |
+      __gen_uint(values->Entry[2][0][15], 28, 31);
+
+   dw[66] =
+      __gen_uint(values->Entry[2][1][0], 0, 3) |
+      __gen_uint(values->Entry[2][1][1], 4, 7) |
+      __gen_uint(values->Entry[2][1][2], 8, 11) |
+      __gen_uint(values->Entry[2][1][3], 12, 15) |
+      __gen_uint(values->Entry[2][1][4], 16, 19) |
+      __gen_uint(values->Entry[2][1][5], 20, 23) |
+      __gen_uint(values->Entry[2][1][6], 24, 27) |
+      __gen_uint(values->Entry[2][1][7], 28, 31);
+
+   dw[67] =
+      __gen_uint(values->Entry[2][1][8], 0, 3) |
+      __gen_uint(values->Entry[2][1][9], 4, 7) |
+      __gen_uint(values->Entry[2][1][10], 8, 11) |
+      __gen_uint(values->Entry[2][1][11], 12, 15) |
+      __gen_uint(values->Entry[2][1][12], 16, 19) |
+      __gen_uint(values->Entry[2][1][13], 20, 23) |
+      __gen_uint(values->Entry[2][1][14], 24, 27) |
+      __gen_uint(values->Entry[2][1][15], 28, 31);
+
+   dw[68] =
+      __gen_uint(values->Entry[2][2][0], 0, 3) |
+      __gen_uint(values->Entry[2][2][1], 4, 7) |
+      __gen_uint(values->Entry[2][2][2], 8, 11) |
+      __gen_uint(values->Entry[2][2][3], 12, 15) |
+      __gen_uint(values->Entry[2][2][4], 16, 19) |
+      __gen_uint(values->Entry[2][2][5], 20, 23) |
+      __gen_uint(values->Entry[2][2][6], 24, 27) |
+      __gen_uint(values->Entry[2][2][7], 28, 31);
+
+   dw[69] =
+      __gen_uint(values->Entry[2][2][8], 0, 3) |
+      __gen_uint(values->Entry[2][2][9], 4, 7) |
+      __gen_uint(values->Entry[2][2][10], 8, 11) |
+      __gen_uint(values->Entry[2][2][11], 12, 15) |
+      __gen_uint(values->Entry[2][2][12], 16, 19) |
+      __gen_uint(values->Entry[2][2][13], 20, 23) |
+      __gen_uint(values->Entry[2][2][14], 24, 27) |
+      __gen_uint(values->Entry[2][2][15], 28, 31);
+
+   dw[70] =
+      __gen_uint(values->Entry[2][3][0], 0, 3) |
+      __gen_uint(values->Entry[2][3][1], 4, 7) |
+      __gen_uint(values->Entry[2][3][2], 8, 11) |
+      __gen_uint(values->Entry[2][3][3], 12, 15) |
+      __gen_uint(values->Entry[2][3][4], 16, 19) |
+      __gen_uint(values->Entry[2][3][5], 20, 23) |
+      __gen_uint(values->Entry[2][3][6], 24, 27) |
+      __gen_uint(values->Entry[2][3][7], 28, 31);
+
+   dw[71] =
+      __gen_uint(values->Entry[2][3][8], 0, 3) |
+      __gen_uint(values->Entry[2][3][9], 4, 7) |
+      __gen_uint(values->Entry[2][3][10], 8, 11) |
+      __gen_uint(values->Entry[2][3][11], 12, 15) |
+      __gen_uint(values->Entry[2][3][12], 16, 19) |
+      __gen_uint(values->Entry[2][3][13], 20, 23) |
+      __gen_uint(values->Entry[2][3][14], 24, 27) |
+      __gen_uint(values->Entry[2][3][15], 28, 31);
+
+   dw[72] =
+      __gen_uint(values->Entry[2][4][0], 0, 3) |
+      __gen_uint(values->Entry[2][4][1], 4, 7) |
+      __gen_uint(values->Entry[2][4][2], 8, 11) |
+      __gen_uint(values->Entry[2][4][3], 12, 15) |
+      __gen_uint(values->Entry[2][4][4], 16, 19) |
+      __gen_uint(values->Entry[2][4][5], 20, 23) |
+      __gen_uint(values->Entry[2][4][6], 24, 27) |
+      __gen_uint(values->Entry[2][4][7], 28, 31);
+
+   dw[73] =
+      __gen_uint(values->Entry[2][4][8], 0, 3) |
+      __gen_uint(values->Entry[2][4][9], 4, 7) |
+      __gen_uint(values->Entry[2][4][10], 8, 11) |
+      __gen_uint(values->Entry[2][4][11], 12, 15) |
+      __gen_uint(values->Entry[2][4][12], 16, 19) |
+      __gen_uint(values->Entry[2][4][13], 20, 23) |
+      __gen_uint(values->Entry[2][4][14], 24, 27) |
+      __gen_uint(values->Entry[2][4][15], 28, 31);
+
+   dw[74] =
+      __gen_uint(values->Entry[2][5][0], 0, 3) |
+      __gen_uint(values->Entry[2][5][1], 4, 7) |
+      __gen_uint(values->Entry[2][5][2], 8, 11) |
+      __gen_uint(values->Entry[2][5][3], 12, 15) |
+      __gen_uint(values->Entry[2][5][4], 16, 19) |
+      __gen_uint(values->Entry[2][5][5], 20, 23) |
+      __gen_uint(values->Entry[2][5][6], 24, 27) |
+      __gen_uint(values->Entry[2][5][7], 28, 31);
+
+   dw[75] =
+      __gen_uint(values->Entry[2][5][8], 0, 3) |
+      __gen_uint(values->Entry[2][5][9], 4, 7) |
+      __gen_uint(values->Entry[2][5][10], 8, 11) |
+      __gen_uint(values->Entry[2][5][11], 12, 15) |
+      __gen_uint(values->Entry[2][5][12], 16, 19) |
+      __gen_uint(values->Entry[2][5][13], 20, 23) |
+      __gen_uint(values->Entry[2][5][14], 24, 27) |
+      __gen_uint(values->Entry[2][5][15], 28, 31);
+
+   dw[76] =
+      __gen_uint(values->Entry[2][6][0], 0, 3) |
+      __gen_uint(values->Entry[2][6][1], 4, 7) |
+      __gen_uint(values->Entry[2][6][2], 8, 11) |
+      __gen_uint(values->Entry[2][6][3], 12, 15) |
+      __gen_uint(values->Entry[2][6][4], 16, 19) |
+      __gen_uint(values->Entry[2][6][5], 20, 23) |
+      __gen_uint(values->Entry[2][6][6], 24, 27) |
+      __gen_uint(values->Entry[2][6][7], 28, 31);
+
+   dw[77] =
+      __gen_uint(values->Entry[2][6][8], 0, 3) |
+      __gen_uint(values->Entry[2][6][9], 4, 7) |
+      __gen_uint(values->Entry[2][6][10], 8, 11) |
+      __gen_uint(values->Entry[2][6][11], 12, 15) |
+      __gen_uint(values->Entry[2][6][12], 16, 19) |
+      __gen_uint(values->Entry[2][6][13], 20, 23) |
+      __gen_uint(values->Entry[2][6][14], 24, 27) |
+      __gen_uint(values->Entry[2][6][15], 28, 31);
+
+   dw[78] =
+      __gen_uint(values->Entry[2][7][0], 0, 3) |
+      __gen_uint(values->Entry[2][7][1], 4, 7) |
+      __gen_uint(values->Entry[2][7][2], 8, 11) |
+      __gen_uint(values->Entry[2][7][3], 12, 15) |
+      __gen_uint(values->Entry[2][7][4], 16, 19) |
+      __gen_uint(values->Entry[2][7][5], 20, 23) |
+      __gen_uint(values->Entry[2][7][6], 24, 27) |
+      __gen_uint(values->Entry[2][7][7], 28, 31);
+
+   dw[79] =
+      __gen_uint(values->Entry[2][7][8], 0, 3) |
+      __gen_uint(values->Entry[2][7][9], 4, 7) |
+      __gen_uint(values->Entry[2][7][10], 8, 11) |
+      __gen_uint(values->Entry[2][7][11], 12, 15) |
+      __gen_uint(values->Entry[2][7][12], 16, 19) |
+      __gen_uint(values->Entry[2][7][13], 20, 23) |
+      __gen_uint(values->Entry[2][7][14], 24, 27) |
+      __gen_uint(values->Entry[2][7][15], 28, 31);
+
+   dw[80] =
+      __gen_uint(values->Entry[2][8][0], 0, 3) |
+      __gen_uint(values->Entry[2][8][1], 4, 7) |
+      __gen_uint(values->Entry[2][8][2], 8, 11) |
+      __gen_uint(values->Entry[2][8][3], 12, 15) |
+      __gen_uint(values->Entry[2][8][4], 16, 19) |
+      __gen_uint(values->Entry[2][8][5], 20, 23) |
+      __gen_uint(values->Entry[2][8][6], 24, 27) |
+      __gen_uint(values->Entry[2][8][7], 28, 31);
+
+   dw[81] =
+      __gen_uint(values->Entry[2][8][8], 0, 3) |
+      __gen_uint(values->Entry[2][8][9], 4, 7) |
+      __gen_uint(values->Entry[2][8][10], 8, 11) |
+      __gen_uint(values->Entry[2][8][11], 12, 15) |
+      __gen_uint(values->Entry[2][8][12], 16, 19) |
+      __gen_uint(values->Entry[2][8][13], 20, 23) |
+      __gen_uint(values->Entry[2][8][14], 24, 27) |
+      __gen_uint(values->Entry[2][8][15], 28, 31);
+
+   dw[82] =
+      __gen_uint(values->Entry[2][9][0], 0, 3) |
+      __gen_uint(values->Entry[2][9][1], 4, 7) |
+      __gen_uint(values->Entry[2][9][2], 8, 11) |
+      __gen_uint(values->Entry[2][9][3], 12, 15) |
+      __gen_uint(values->Entry[2][9][4], 16, 19) |
+      __gen_uint(values->Entry[2][9][5], 20, 23) |
+      __gen_uint(values->Entry[2][9][6], 24, 27) |
+      __gen_uint(values->Entry[2][9][7], 28, 31);
+
+   dw[83] =
+      __gen_uint(values->Entry[2][9][8], 0, 3) |
+      __gen_uint(values->Entry[2][9][9], 4, 7) |
+      __gen_uint(values->Entry[2][9][10], 8, 11) |
+      __gen_uint(values->Entry[2][9][11], 12, 15) |
+      __gen_uint(values->Entry[2][9][12], 16, 19) |
+      __gen_uint(values->Entry[2][9][13], 20, 23) |
+      __gen_uint(values->Entry[2][9][14], 24, 27) |
+      __gen_uint(values->Entry[2][9][15], 28, 31);
+
+   dw[84] =
+      __gen_uint(values->Entry[2][10][0], 0, 3) |
+      __gen_uint(values->Entry[2][10][1], 4, 7) |
+      __gen_uint(values->Entry[2][10][2], 8, 11) |
+      __gen_uint(values->Entry[2][10][3], 12, 15) |
+      __gen_uint(values->Entry[2][10][4], 16, 19) |
+      __gen_uint(values->Entry[2][10][5], 20, 23) |
+      __gen_uint(values->Entry[2][10][6], 24, 27) |
+      __gen_uint(values->Entry[2][10][7], 28, 31);
+
+   dw[85] =
+      __gen_uint(values->Entry[2][10][8], 0, 3) |
+      __gen_uint(values->Entry[2][10][9], 4, 7) |
+      __gen_uint(values->Entry[2][10][10], 8, 11) |
+      __gen_uint(values->Entry[2][10][11], 12, 15) |
+      __gen_uint(values->Entry[2][10][12], 16, 19) |
+      __gen_uint(values->Entry[2][10][13], 20, 23) |
+      __gen_uint(values->Entry[2][10][14], 24, 27) |
+      __gen_uint(values->Entry[2][10][15], 28, 31);
+
+   dw[86] =
+      __gen_uint(values->Entry[2][11][0], 0, 3) |
+      __gen_uint(values->Entry[2][11][1], 4, 7) |
+      __gen_uint(values->Entry[2][11][2], 8, 11) |
+      __gen_uint(values->Entry[2][11][3], 12, 15) |
+      __gen_uint(values->Entry[2][11][4], 16, 19) |
+      __gen_uint(values->Entry[2][11][5], 20, 23) |
+      __gen_uint(values->Entry[2][11][6], 24, 27) |
+      __gen_uint(values->Entry[2][11][7], 28, 31);
+
+   dw[87] =
+      __gen_uint(values->Entry[2][11][8], 0, 3) |
+      __gen_uint(values->Entry[2][11][9], 4, 7) |
+      __gen_uint(values->Entry[2][11][10], 8, 11) |
+      __gen_uint(values->Entry[2][11][11], 12, 15) |
+      __gen_uint(values->Entry[2][11][12], 16, 19) |
+      __gen_uint(values->Entry[2][11][13], 20, 23) |
+      __gen_uint(values->Entry[2][11][14], 24, 27) |
+      __gen_uint(values->Entry[2][11][15], 28, 31);
+
+   dw[88] =
+      __gen_uint(values->Entry[2][12][0], 0, 3) |
+      __gen_uint(values->Entry[2][12][1], 4, 7) |
+      __gen_uint(values->Entry[2][12][2], 8, 11) |
+      __gen_uint(values->Entry[2][12][3], 12, 15) |
+      __gen_uint(values->Entry[2][12][4], 16, 19) |
+      __gen_uint(values->Entry[2][12][5], 20, 23) |
+      __gen_uint(values->Entry[2][12][6], 24, 27) |
+      __gen_uint(values->Entry[2][12][7], 28, 31);
+
+   dw[89] =
+      __gen_uint(values->Entry[2][12][8], 0, 3) |
+      __gen_uint(values->Entry[2][12][9], 4, 7) |
+      __gen_uint(values->Entry[2][12][10], 8, 11) |
+      __gen_uint(values->Entry[2][12][11], 12, 15) |
+      __gen_uint(values->Entry[2][12][12], 16, 19) |
+      __gen_uint(values->Entry[2][12][13], 20, 23) |
+      __gen_uint(values->Entry[2][12][14], 24, 27) |
+      __gen_uint(values->Entry[2][12][15], 28, 31);
+
+   dw[90] =
+      __gen_uint(values->Entry[2][13][0], 0, 3) |
+      __gen_uint(values->Entry[2][13][1], 4, 7) |
+      __gen_uint(values->Entry[2][13][2], 8, 11) |
+      __gen_uint(values->Entry[2][13][3], 12, 15) |
+      __gen_uint(values->Entry[2][13][4], 16, 19) |
+      __gen_uint(values->Entry[2][13][5], 20, 23) |
+      __gen_uint(values->Entry[2][13][6], 24, 27) |
+      __gen_uint(values->Entry[2][13][7], 28, 31);
+
+   dw[91] =
+      __gen_uint(values->Entry[2][13][8], 0, 3) |
+      __gen_uint(values->Entry[2][13][9], 4, 7) |
+      __gen_uint(values->Entry[2][13][10], 8, 11) |
+      __gen_uint(values->Entry[2][13][11], 12, 15) |
+      __gen_uint(values->Entry[2][13][12], 16, 19) |
+      __gen_uint(values->Entry[2][13][13], 20, 23) |
+      __gen_uint(values->Entry[2][13][14], 24, 27) |
+      __gen_uint(values->Entry[2][13][15], 28, 31);
+
+   dw[92] =
+      __gen_uint(values->Entry[2][14][0], 0, 3) |
+      __gen_uint(values->Entry[2][14][1], 4, 7) |
+      __gen_uint(values->Entry[2][14][2], 8, 11) |
+      __gen_uint(values->Entry[2][14][3], 12, 15) |
+      __gen_uint(values->Entry[2][14][4], 16, 19) |
+      __gen_uint(values->Entry[2][14][5], 20, 23) |
+      __gen_uint(values->Entry[2][14][6], 24, 27) |
+      __gen_uint(values->Entry[2][14][7], 28, 31);
+
+   dw[93] =
+      __gen_uint(values->Entry[2][14][8], 0, 3) |
+      __gen_uint(values->Entry[2][14][9], 4, 7) |
+      __gen_uint(values->Entry[2][14][10], 8, 11) |
+      __gen_uint(values->Entry[2][14][11], 12, 15) |
+      __gen_uint(values->Entry[2][14][12], 16, 19) |
+      __gen_uint(values->Entry[2][14][13], 20, 23) |
+      __gen_uint(values->Entry[2][14][14], 24, 27) |
+      __gen_uint(values->Entry[2][14][15], 28, 31);
+
+   dw[94] =
+      __gen_uint(values->Entry[2][15][0], 0, 3) |
+      __gen_uint(values->Entry[2][15][1], 4, 7) |
+      __gen_uint(values->Entry[2][15][2], 8, 11) |
+      __gen_uint(values->Entry[2][15][3], 12, 15) |
+      __gen_uint(values->Entry[2][15][4], 16, 19) |
+      __gen_uint(values->Entry[2][15][5], 20, 23) |
+      __gen_uint(values->Entry[2][15][6], 24, 27) |
+      __gen_uint(values->Entry[2][15][7], 28, 31);
+
+   dw[95] =
+      __gen_uint(values->Entry[2][15][8], 0, 3) |
+      __gen_uint(values->Entry[2][15][9], 4, 7) |
+      __gen_uint(values->Entry[2][15][10], 8, 11) |
+      __gen_uint(values->Entry[2][15][11], 12, 15) |
+      __gen_uint(values->Entry[2][15][12], 16, 19) |
+      __gen_uint(values->Entry[2][15][13], 20, 23) |
+      __gen_uint(values->Entry[2][15][14], 24, 27) |
+      __gen_uint(values->Entry[2][15][15], 28, 31);
+
+   dw[96] =
+      __gen_uint(values->Entry[3][0][0], 0, 3) |
+      __gen_uint(values->Entry[3][0][1], 4, 7) |
+      __gen_uint(values->Entry[3][0][2], 8, 11) |
+      __gen_uint(values->Entry[3][0][3], 12, 15) |
+      __gen_uint(values->Entry[3][0][4], 16, 19) |
+      __gen_uint(values->Entry[3][0][5], 20, 23) |
+      __gen_uint(values->Entry[3][0][6], 24, 27) |
+      __gen_uint(values->Entry[3][0][7], 28, 31);
+
+   dw[97] =
+      __gen_uint(values->Entry[3][0][8], 0, 3) |
+      __gen_uint(values->Entry[3][0][9], 4, 7) |
+      __gen_uint(values->Entry[3][0][10], 8, 11) |
+      __gen_uint(values->Entry[3][0][11], 12, 15) |
+      __gen_uint(values->Entry[3][0][12], 16, 19) |
+      __gen_uint(values->Entry[3][0][13], 20, 23) |
+      __gen_uint(values->Entry[3][0][14], 24, 27) |
+      __gen_uint(values->Entry[3][0][15], 28, 31);
+
+   dw[98] =
+      __gen_uint(values->Entry[3][1][0], 0, 3) |
+      __gen_uint(values->Entry[3][1][1], 4, 7) |
+      __gen_uint(values->Entry[3][1][2], 8, 11) |
+      __gen_uint(values->Entry[3][1][3], 12, 15) |
+      __gen_uint(values->Entry[3][1][4], 16, 19) |
+      __gen_uint(values->Entry[3][1][5], 20, 23) |
+      __gen_uint(values->Entry[3][1][6], 24, 27) |
+      __gen_uint(values->Entry[3][1][7], 28, 31);
+
+   dw[99] =
+      __gen_uint(values->Entry[3][1][8], 0, 3) |
+      __gen_uint(values->Entry[3][1][9], 4, 7) |
+      __gen_uint(values->Entry[3][1][10], 8, 11) |
+      __gen_uint(values->Entry[3][1][11], 12, 15) |
+      __gen_uint(values->Entry[3][1][12], 16, 19) |
+      __gen_uint(values->Entry[3][1][13], 20, 23) |
+      __gen_uint(values->Entry[3][1][14], 24, 27) |
+      __gen_uint(values->Entry[3][1][15], 28, 31);
+
+   dw[100] =
+      __gen_uint(values->Entry[3][2][0], 0, 3) |
+      __gen_uint(values->Entry[3][2][1], 4, 7) |
+      __gen_uint(values->Entry[3][2][2], 8, 11) |
+      __gen_uint(values->Entry[3][2][3], 12, 15) |
+      __gen_uint(values->Entry[3][2][4], 16, 19) |
+      __gen_uint(values->Entry[3][2][5], 20, 23) |
+      __gen_uint(values->Entry[3][2][6], 24, 27) |
+      __gen_uint(values->Entry[3][2][7], 28, 31);
+
+   dw[101] =
+      __gen_uint(values->Entry[3][2][8], 0, 3) |
+      __gen_uint(values->Entry[3][2][9], 4, 7) |
+      __gen_uint(values->Entry[3][2][10], 8, 11) |
+      __gen_uint(values->Entry[3][2][11], 12, 15) |
+      __gen_uint(values->Entry[3][2][12], 16, 19) |
+      __gen_uint(values->Entry[3][2][13], 20, 23) |
+      __gen_uint(values->Entry[3][2][14], 24, 27) |
+      __gen_uint(values->Entry[3][2][15], 28, 31);
+
+   dw[102] =
+      __gen_uint(values->Entry[3][3][0], 0, 3) |
+      __gen_uint(values->Entry[3][3][1], 4, 7) |
+      __gen_uint(values->Entry[3][3][2], 8, 11) |
+      __gen_uint(values->Entry[3][3][3], 12, 15) |
+      __gen_uint(values->Entry[3][3][4], 16, 19) |
+      __gen_uint(values->Entry[3][3][5], 20, 23) |
+      __gen_uint(values->Entry[3][3][6], 24, 27) |
+      __gen_uint(values->Entry[3][3][7], 28, 31);
+
+   dw[103] =
+      __gen_uint(values->Entry[3][3][8], 0, 3) |
+      __gen_uint(values->Entry[3][3][9], 4, 7) |
+      __gen_uint(values->Entry[3][3][10], 8, 11) |
+      __gen_uint(values->Entry[3][3][11], 12, 15) |
+      __gen_uint(values->Entry[3][3][12], 16, 19) |
+      __gen_uint(values->Entry[3][3][13], 20, 23) |
+      __gen_uint(values->Entry[3][3][14], 24, 27) |
+      __gen_uint(values->Entry[3][3][15], 28, 31);
+
+   dw[104] =
+      __gen_uint(values->Entry[3][4][0], 0, 3) |
+      __gen_uint(values->Entry[3][4][1], 4, 7) |
+      __gen_uint(values->Entry[3][4][2], 8, 11) |
+      __gen_uint(values->Entry[3][4][3], 12, 15) |
+      __gen_uint(values->Entry[3][4][4], 16, 19) |
+      __gen_uint(values->Entry[3][4][5], 20, 23) |
+      __gen_uint(values->Entry[3][4][6], 24, 27) |
+      __gen_uint(values->Entry[3][4][7], 28, 31);
+
+   dw[105] =
+      __gen_uint(values->Entry[3][4][8], 0, 3) |
+      __gen_uint(values->Entry[3][4][9], 4, 7) |
+      __gen_uint(values->Entry[3][4][10], 8, 11) |
+      __gen_uint(values->Entry[3][4][11], 12, 15) |
+      __gen_uint(values->Entry[3][4][12], 16, 19) |
+      __gen_uint(values->Entry[3][4][13], 20, 23) |
+      __gen_uint(values->Entry[3][4][14], 24, 27) |
+      __gen_uint(values->Entry[3][4][15], 28, 31);
+
+   dw[106] =
+      __gen_uint(values->Entry[3][5][0], 0, 3) |
+      __gen_uint(values->Entry[3][5][1], 4, 7) |
+      __gen_uint(values->Entry[3][5][2], 8, 11) |
+      __gen_uint(values->Entry[3][5][3], 12, 15) |
+      __gen_uint(values->Entry[3][5][4], 16, 19) |
+      __gen_uint(values->Entry[3][5][5], 20, 23) |
+      __gen_uint(values->Entry[3][5][6], 24, 27) |
+      __gen_uint(values->Entry[3][5][7], 28, 31);
+
+   dw[107] =
+      __gen_uint(values->Entry[3][5][8], 0, 3) |
+      __gen_uint(values->Entry[3][5][9], 4, 7) |
+      __gen_uint(values->Entry[3][5][10], 8, 11) |
+      __gen_uint(values->Entry[3][5][11], 12, 15) |
+      __gen_uint(values->Entry[3][5][12], 16, 19) |
+      __gen_uint(values->Entry[3][5][13], 20, 23) |
+      __gen_uint(values->Entry[3][5][14], 24, 27) |
+      __gen_uint(values->Entry[3][5][15], 28, 31);
+
+   dw[108] =
+      __gen_uint(values->Entry[3][6][0], 0, 3) |
+      __gen_uint(values->Entry[3][6][1], 4, 7) |
+      __gen_uint(values->Entry[3][6][2], 8, 11) |
+      __gen_uint(values->Entry[3][6][3], 12, 15) |
+      __gen_uint(values->Entry[3][6][4], 16, 19) |
+      __gen_uint(values->Entry[3][6][5], 20, 23) |
+      __gen_uint(values->Entry[3][6][6], 24, 27) |
+      __gen_uint(values->Entry[3][6][7], 28, 31);
+
+   dw[109] =
+      __gen_uint(values->Entry[3][6][8], 0, 3) |
+      __gen_uint(values->Entry[3][6][9], 4, 7) |
+      __gen_uint(values->Entry[3][6][10], 8, 11) |
+      __gen_uint(values->Entry[3][6][11], 12, 15) |
+      __gen_uint(values->Entry[3][6][12], 16, 19) |
+      __gen_uint(values->Entry[3][6][13], 20, 23) |
+      __gen_uint(values->Entry[3][6][14], 24, 27) |
+      __gen_uint(values->Entry[3][6][15], 28, 31);
+
+   dw[110] =
+      __gen_uint(values->Entry[3][7][0], 0, 3) |
+      __gen_uint(values->Entry[3][7][1], 4, 7) |
+      __gen_uint(values->Entry[3][7][2], 8, 11) |
+      __gen_uint(values->Entry[3][7][3], 12, 15) |
+      __gen_uint(values->Entry[3][7][4], 16, 19) |
+      __gen_uint(values->Entry[3][7][5], 20, 23) |
+      __gen_uint(values->Entry[3][7][6], 24, 27) |
+      __gen_uint(values->Entry[3][7][7], 28, 31);
+
+   dw[111] =
+      __gen_uint(values->Entry[3][7][8], 0, 3) |
+      __gen_uint(values->Entry[3][7][9], 4, 7) |
+      __gen_uint(values->Entry[3][7][10], 8, 11) |
+      __gen_uint(values->Entry[3][7][11], 12, 15) |
+      __gen_uint(values->Entry[3][7][12], 16, 19) |
+      __gen_uint(values->Entry[3][7][13], 20, 23) |
+      __gen_uint(values->Entry[3][7][14], 24, 27) |
+      __gen_uint(values->Entry[3][7][15], 28, 31);
+
+   dw[112] =
+      __gen_uint(values->Entry[3][8][0], 0, 3) |
+      __gen_uint(values->Entry[3][8][1], 4, 7) |
+      __gen_uint(values->Entry[3][8][2], 8, 11) |
+      __gen_uint(values->Entry[3][8][3], 12, 15) |
+      __gen_uint(values->Entry[3][8][4], 16, 19) |
+      __gen_uint(values->Entry[3][8][5], 20, 23) |
+      __gen_uint(values->Entry[3][8][6], 24, 27) |
+      __gen_uint(values->Entry[3][8][7], 28, 31);
+
+   dw[113] =
+      __gen_uint(values->Entry[3][8][8], 0, 3) |
+      __gen_uint(values->Entry[3][8][9], 4, 7) |
+      __gen_uint(values->Entry[3][8][10], 8, 11) |
+      __gen_uint(values->Entry[3][8][11], 12, 15) |
+      __gen_uint(values->Entry[3][8][12], 16, 19) |
+      __gen_uint(values->Entry[3][8][13], 20, 23) |
+      __gen_uint(values->Entry[3][8][14], 24, 27) |
+      __gen_uint(values->Entry[3][8][15], 28, 31);
+
+   dw[114] =
+      __gen_uint(values->Entry[3][9][0], 0, 3) |
+      __gen_uint(values->Entry[3][9][1], 4, 7) |
+      __gen_uint(values->Entry[3][9][2], 8, 11) |
+      __gen_uint(values->Entry[3][9][3], 12, 15) |
+      __gen_uint(values->Entry[3][9][4], 16, 19) |
+      __gen_uint(values->Entry[3][9][5], 20, 23) |
+      __gen_uint(values->Entry[3][9][6], 24, 27) |
+      __gen_uint(values->Entry[3][9][7], 28, 31);
+
+   dw[115] =
+      __gen_uint(values->Entry[3][9][8], 0, 3) |
+      __gen_uint(values->Entry[3][9][9], 4, 7) |
+      __gen_uint(values->Entry[3][9][10], 8, 11) |
+      __gen_uint(values->Entry[3][9][11], 12, 15) |
+      __gen_uint(values->Entry[3][9][12], 16, 19) |
+      __gen_uint(values->Entry[3][9][13], 20, 23) |
+      __gen_uint(values->Entry[3][9][14], 24, 27) |
+      __gen_uint(values->Entry[3][9][15], 28, 31);
+
+   dw[116] =
+      __gen_uint(values->Entry[3][10][0], 0, 3) |
+      __gen_uint(values->Entry[3][10][1], 4, 7) |
+      __gen_uint(values->Entry[3][10][2], 8, 11) |
+      __gen_uint(values->Entry[3][10][3], 12, 15) |
+      __gen_uint(values->Entry[3][10][4], 16, 19) |
+      __gen_uint(values->Entry[3][10][5], 20, 23) |
+      __gen_uint(values->Entry[3][10][6], 24, 27) |
+      __gen_uint(values->Entry[3][10][7], 28, 31);
+
+   dw[117] =
+      __gen_uint(values->Entry[3][10][8], 0, 3) |
+      __gen_uint(values->Entry[3][10][9], 4, 7) |
+      __gen_uint(values->Entry[3][10][10], 8, 11) |
+      __gen_uint(values->Entry[3][10][11], 12, 15) |
+      __gen_uint(values->Entry[3][10][12], 16, 19) |
+      __gen_uint(values->Entry[3][10][13], 20, 23) |
+      __gen_uint(values->Entry[3][10][14], 24, 27) |
+      __gen_uint(values->Entry[3][10][15], 28, 31);
+
+   dw[118] =
+      __gen_uint(values->Entry[3][11][0], 0, 3) |
+      __gen_uint(values->Entry[3][11][1], 4, 7) |
+      __gen_uint(values->Entry[3][11][2], 8, 11) |
+      __gen_uint(values->Entry[3][11][3], 12, 15) |
+      __gen_uint(values->Entry[3][11][4], 16, 19) |
+      __gen_uint(values->Entry[3][11][5], 20, 23) |
+      __gen_uint(values->Entry[3][11][6], 24, 27) |
+      __gen_uint(values->Entry[3][11][7], 28, 31);
+
+   dw[119] =
+      __gen_uint(values->Entry[3][11][8], 0, 3) |
+      __gen_uint(values->Entry[3][11][9], 4, 7) |
+      __gen_uint(values->Entry[3][11][10], 8, 11) |
+      __gen_uint(values->Entry[3][11][11], 12, 15) |
+      __gen_uint(values->Entry[3][11][12], 16, 19) |
+      __gen_uint(values->Entry[3][11][13], 20, 23) |
+      __gen_uint(values->Entry[3][11][14], 24, 27) |
+      __gen_uint(values->Entry[3][11][15], 28, 31);
+
+   dw[120] =
+      __gen_uint(values->Entry[3][12][0], 0, 3) |
+      __gen_uint(values->Entry[3][12][1], 4, 7) |
+      __gen_uint(values->Entry[3][12][2], 8, 11) |
+      __gen_uint(values->Entry[3][12][3], 12, 15) |
+      __gen_uint(values->Entry[3][12][4], 16, 19) |
+      __gen_uint(values->Entry[3][12][5], 20, 23) |
+      __gen_uint(values->Entry[3][12][6], 24, 27) |
+      __gen_uint(values->Entry[3][12][7], 28, 31);
+
+   dw[121] =
+      __gen_uint(values->Entry[3][12][8], 0, 3) |
+      __gen_uint(values->Entry[3][12][9], 4, 7) |
+      __gen_uint(values->Entry[3][12][10], 8, 11) |
+      __gen_uint(values->Entry[3][12][11], 12, 15) |
+      __gen_uint(values->Entry[3][12][12], 16, 19) |
+      __gen_uint(values->Entry[3][12][13], 20, 23) |
+      __gen_uint(values->Entry[3][12][14], 24, 27) |
+      __gen_uint(values->Entry[3][12][15], 28, 31);
+
+   dw[122] =
+      __gen_uint(values->Entry[3][13][0], 0, 3) |
+      __gen_uint(values->Entry[3][13][1], 4, 7) |
+      __gen_uint(values->Entry[3][13][2], 8, 11) |
+      __gen_uint(values->Entry[3][13][3], 12, 15) |
+      __gen_uint(values->Entry[3][13][4], 16, 19) |
+      __gen_uint(values->Entry[3][13][5], 20, 23) |
+      __gen_uint(values->Entry[3][13][6], 24, 27) |
+      __gen_uint(values->Entry[3][13][7], 28, 31);
+
+   dw[123] =
+      __gen_uint(values->Entry[3][13][8], 0, 3) |
+      __gen_uint(values->Entry[3][13][9], 4, 7) |
+      __gen_uint(values->Entry[3][13][10], 8, 11) |
+      __gen_uint(values->Entry[3][13][11], 12, 15) |
+      __gen_uint(values->Entry[3][13][12], 16, 19) |
+      __gen_uint(values->Entry[3][13][13], 20, 23) |
+      __gen_uint(values->Entry[3][13][14], 24, 27) |
+      __gen_uint(values->Entry[3][13][15], 28, 31);
+
+   dw[124] =
+      __gen_uint(values->Entry[3][14][0], 0, 3) |
+      __gen_uint(values->Entry[3][14][1], 4, 7) |
+      __gen_uint(values->Entry[3][14][2], 8, 11) |
+      __gen_uint(values->Entry[3][14][3], 12, 15) |
+      __gen_uint(values->Entry[3][14][4], 16, 19) |
+      __gen_uint(values->Entry[3][14][5], 20, 23) |
+      __gen_uint(values->Entry[3][14][6], 24, 27) |
+      __gen_uint(values->Entry[3][14][7], 28, 31);
+
+   dw[125] =
+      __gen_uint(values->Entry[3][14][8], 0, 3) |
+      __gen_uint(values->Entry[3][14][9], 4, 7) |
+      __gen_uint(values->Entry[3][14][10], 8, 11) |
+      __gen_uint(values->Entry[3][14][11], 12, 15) |
+      __gen_uint(values->Entry[3][14][12], 16, 19) |
+      __gen_uint(values->Entry[3][14][13], 20, 23) |
+      __gen_uint(values->Entry[3][14][14], 24, 27) |
+      __gen_uint(values->Entry[3][14][15], 28, 31);
+
+   dw[126] =
+      __gen_uint(values->Entry[3][15][0], 0, 3) |
+      __gen_uint(values->Entry[3][15][1], 4, 7) |
+      __gen_uint(values->Entry[3][15][2], 8, 11) |
+      __gen_uint(values->Entry[3][15][3], 12, 15) |
+      __gen_uint(values->Entry[3][15][4], 16, 19) |
+      __gen_uint(values->Entry[3][15][5], 20, 23) |
+      __gen_uint(values->Entry[3][15][6], 24, 27) |
+      __gen_uint(values->Entry[3][15][7], 28, 31);
+
+   dw[127] =
+      __gen_uint(values->Entry[3][15][8], 0, 3) |
+      __gen_uint(values->Entry[3][15][9], 4, 7) |
+      __gen_uint(values->Entry[3][15][10], 8, 11) |
+      __gen_uint(values->Entry[3][15][11], 12, 15) |
+      __gen_uint(values->Entry[3][15][12], 16, 19) |
+      __gen_uint(values->Entry[3][15][13], 20, 23) |
+      __gen_uint(values->Entry[3][15][14], 24, 27) |
+      __gen_uint(values->Entry[3][15][15], 28, 31);
+
+   dw[128] =
+      __gen_uint(values->Entry[4][0][0], 0, 3) |
+      __gen_uint(values->Entry[4][0][1], 4, 7) |
+      __gen_uint(values->Entry[4][0][2], 8, 11) |
+      __gen_uint(values->Entry[4][0][3], 12, 15) |
+      __gen_uint(values->Entry[4][0][4], 16, 19) |
+      __gen_uint(values->Entry[4][0][5], 20, 23) |
+      __gen_uint(values->Entry[4][0][6], 24, 27) |
+      __gen_uint(values->Entry[4][0][7], 28, 31);
+
+   dw[129] =
+      __gen_uint(values->Entry[4][0][8], 0, 3) |
+      __gen_uint(values->Entry[4][0][9], 4, 7) |
+      __gen_uint(values->Entry[4][0][10], 8, 11) |
+      __gen_uint(values->Entry[4][0][11], 12, 15) |
+      __gen_uint(values->Entry[4][0][12], 16, 19) |
+      __gen_uint(values->Entry[4][0][13], 20, 23) |
+      __gen_uint(values->Entry[4][0][14], 24, 27) |
+      __gen_uint(values->Entry[4][0][15], 28, 31);
+
+   dw[130] =
+      __gen_uint(values->Entry[4][1][0], 0, 3) |
+      __gen_uint(values->Entry[4][1][1], 4, 7) |
+      __gen_uint(values->Entry[4][1][2], 8, 11) |
+      __gen_uint(values->Entry[4][1][3], 12, 15) |
+      __gen_uint(values->Entry[4][1][4], 16, 19) |
+      __gen_uint(values->Entry[4][1][5], 20, 23) |
+      __gen_uint(values->Entry[4][1][6], 24, 27) |
+      __gen_uint(values->Entry[4][1][7], 28, 31);
+
+   dw[131] =
+      __gen_uint(values->Entry[4][1][8], 0, 3) |
+      __gen_uint(values->Entry[4][1][9], 4, 7) |
+      __gen_uint(values->Entry[4][1][10], 8, 11) |
+      __gen_uint(values->Entry[4][1][11], 12, 15) |
+      __gen_uint(values->Entry[4][1][12], 16, 19) |
+      __gen_uint(values->Entry[4][1][13], 20, 23) |
+      __gen_uint(values->Entry[4][1][14], 24, 27) |
+      __gen_uint(values->Entry[4][1][15], 28, 31);
+
+   dw[132] =
+      __gen_uint(values->Entry[4][2][0], 0, 3) |
+      __gen_uint(values->Entry[4][2][1], 4, 7) |
+      __gen_uint(values->Entry[4][2][2], 8, 11) |
+      __gen_uint(values->Entry[4][2][3], 12, 15) |
+      __gen_uint(values->Entry[4][2][4], 16, 19) |
+      __gen_uint(values->Entry[4][2][5], 20, 23) |
+      __gen_uint(values->Entry[4][2][6], 24, 27) |
+      __gen_uint(values->Entry[4][2][7], 28, 31);
+
+   dw[133] =
+      __gen_uint(values->Entry[4][2][8], 0, 3) |
+      __gen_uint(values->Entry[4][2][9], 4, 7) |
+      __gen_uint(values->Entry[4][2][10], 8, 11) |
+      __gen_uint(values->Entry[4][2][11], 12, 15) |
+      __gen_uint(values->Entry[4][2][12], 16, 19) |
+      __gen_uint(values->Entry[4][2][13], 20, 23) |
+      __gen_uint(values->Entry[4][2][14], 24, 27) |
+      __gen_uint(values->Entry[4][2][15], 28, 31);
+
+   dw[134] =
+      __gen_uint(values->Entry[4][3][0], 0, 3) |
+      __gen_uint(values->Entry[4][3][1], 4, 7) |
+      __gen_uint(values->Entry[4][3][2], 8, 11) |
+      __gen_uint(values->Entry[4][3][3], 12, 15) |
+      __gen_uint(values->Entry[4][3][4], 16, 19) |
+      __gen_uint(values->Entry[4][3][5], 20, 23) |
+      __gen_uint(values->Entry[4][3][6], 24, 27) |
+      __gen_uint(values->Entry[4][3][7], 28, 31);
+
+   dw[135] =
+      __gen_uint(values->Entry[4][3][8], 0, 3) |
+      __gen_uint(values->Entry[4][3][9], 4, 7) |
+      __gen_uint(values->Entry[4][3][10], 8, 11) |
+      __gen_uint(values->Entry[4][3][11], 12, 15) |
+      __gen_uint(values->Entry[4][3][12], 16, 19) |
+      __gen_uint(values->Entry[4][3][13], 20, 23) |
+      __gen_uint(values->Entry[4][3][14], 24, 27) |
+      __gen_uint(values->Entry[4][3][15], 28, 31);
+
+   dw[136] =
+      __gen_uint(values->Entry[4][4][0], 0, 3) |
+      __gen_uint(values->Entry[4][4][1], 4, 7) |
+      __gen_uint(values->Entry[4][4][2], 8, 11) |
+      __gen_uint(values->Entry[4][4][3], 12, 15) |
+      __gen_uint(values->Entry[4][4][4], 16, 19) |
+      __gen_uint(values->Entry[4][4][5], 20, 23) |
+      __gen_uint(values->Entry[4][4][6], 24, 27) |
+      __gen_uint(values->Entry[4][4][7], 28, 31);
+
+   dw[137] =
+      __gen_uint(values->Entry[4][4][8], 0, 3) |
+      __gen_uint(values->Entry[4][4][9], 4, 7) |
+      __gen_uint(values->Entry[4][4][10], 8, 11) |
+      __gen_uint(values->Entry[4][4][11], 12, 15) |
+      __gen_uint(values->Entry[4][4][12], 16, 19) |
+      __gen_uint(values->Entry[4][4][13], 20, 23) |
+      __gen_uint(values->Entry[4][4][14], 24, 27) |
+      __gen_uint(values->Entry[4][4][15], 28, 31);
+
+   dw[138] =
+      __gen_uint(values->Entry[4][5][0], 0, 3) |
+      __gen_uint(values->Entry[4][5][1], 4, 7) |
+      __gen_uint(values->Entry[4][5][2], 8, 11) |
+      __gen_uint(values->Entry[4][5][3], 12, 15) |
+      __gen_uint(values->Entry[4][5][4], 16, 19) |
+      __gen_uint(values->Entry[4][5][5], 20, 23) |
+      __gen_uint(values->Entry[4][5][6], 24, 27) |
+      __gen_uint(values->Entry[4][5][7], 28, 31);
+
+   dw[139] =
+      __gen_uint(values->Entry[4][5][8], 0, 3) |
+      __gen_uint(values->Entry[4][5][9], 4, 7) |
+      __gen_uint(values->Entry[4][5][10], 8, 11) |
+      __gen_uint(values->Entry[4][5][11], 12, 15) |
+      __gen_uint(values->Entry[4][5][12], 16, 19) |
+      __gen_uint(values->Entry[4][5][13], 20, 23) |
+      __gen_uint(values->Entry[4][5][14], 24, 27) |
+      __gen_uint(values->Entry[4][5][15], 28, 31);
+
+   dw[140] =
+      __gen_uint(values->Entry[4][6][0], 0, 3) |
+      __gen_uint(values->Entry[4][6][1], 4, 7) |
+      __gen_uint(values->Entry[4][6][2], 8, 11) |
+      __gen_uint(values->Entry[4][6][3], 12, 15) |
+      __gen_uint(values->Entry[4][6][4], 16, 19) |
+      __gen_uint(values->Entry[4][6][5], 20, 23) |
+      __gen_uint(values->Entry[4][6][6], 24, 27) |
+      __gen_uint(values->Entry[4][6][7], 28, 31);
+
+   dw[141] =
+      __gen_uint(values->Entry[4][6][8], 0, 3) |
+      __gen_uint(values->Entry[4][6][9], 4, 7) |
+      __gen_uint(values->Entry[4][6][10], 8, 11) |
+      __gen_uint(values->Entry[4][6][11], 12, 15) |
+      __gen_uint(values->Entry[4][6][12], 16, 19) |
+      __gen_uint(values->Entry[4][6][13], 20, 23) |
+      __gen_uint(values->Entry[4][6][14], 24, 27) |
+      __gen_uint(values->Entry[4][6][15], 28, 31);
+
+   dw[142] =
+      __gen_uint(values->Entry[4][7][0], 0, 3) |
+      __gen_uint(values->Entry[4][7][1], 4, 7) |
+      __gen_uint(values->Entry[4][7][2], 8, 11) |
+      __gen_uint(values->Entry[4][7][3], 12, 15) |
+      __gen_uint(values->Entry[4][7][4], 16, 19) |
+      __gen_uint(values->Entry[4][7][5], 20, 23) |
+      __gen_uint(values->Entry[4][7][6], 24, 27) |
+      __gen_uint(values->Entry[4][7][7], 28, 31);
+
+   dw[143] =
+      __gen_uint(values->Entry[4][7][8], 0, 3) |
+      __gen_uint(values->Entry[4][7][9], 4, 7) |
+      __gen_uint(values->Entry[4][7][10], 8, 11) |
+      __gen_uint(values->Entry[4][7][11], 12, 15) |
+      __gen_uint(values->Entry[4][7][12], 16, 19) |
+      __gen_uint(values->Entry[4][7][13], 20, 23) |
+      __gen_uint(values->Entry[4][7][14], 24, 27) |
+      __gen_uint(values->Entry[4][7][15], 28, 31);
+
+   dw[144] =
+      __gen_uint(values->Entry[4][8][0], 0, 3) |
+      __gen_uint(values->Entry[4][8][1], 4, 7) |
+      __gen_uint(values->Entry[4][8][2], 8, 11) |
+      __gen_uint(values->Entry[4][8][3], 12, 15) |
+      __gen_uint(values->Entry[4][8][4], 16, 19) |
+      __gen_uint(values->Entry[4][8][5], 20, 23) |
+      __gen_uint(values->Entry[4][8][6], 24, 27) |
+      __gen_uint(values->Entry[4][8][7], 28, 31);
+
+   dw[145] =
+      __gen_uint(values->Entry[4][8][8], 0, 3) |
+      __gen_uint(values->Entry[4][8][9], 4, 7) |
+      __gen_uint(values->Entry[4][8][10], 8, 11) |
+      __gen_uint(values->Entry[4][8][11], 12, 15) |
+      __gen_uint(values->Entry[4][8][12], 16, 19) |
+      __gen_uint(values->Entry[4][8][13], 20, 23) |
+      __gen_uint(values->Entry[4][8][14], 24, 27) |
+      __gen_uint(values->Entry[4][8][15], 28, 31);
+
+   dw[146] =
+      __gen_uint(values->Entry[4][9][0], 0, 3) |
+      __gen_uint(values->Entry[4][9][1], 4, 7) |
+      __gen_uint(values->Entry[4][9][2], 8, 11) |
+      __gen_uint(values->Entry[4][9][3], 12, 15) |
+      __gen_uint(values->Entry[4][9][4], 16, 19) |
+      __gen_uint(values->Entry[4][9][5], 20, 23) |
+      __gen_uint(values->Entry[4][9][6], 24, 27) |
+      __gen_uint(values->Entry[4][9][7], 28, 31);
+
+   dw[147] =
+      __gen_uint(values->Entry[4][9][8], 0, 3) |
+      __gen_uint(values->Entry[4][9][9], 4, 7) |
+      __gen_uint(values->Entry[4][9][10], 8, 11) |
+      __gen_uint(values->Entry[4][9][11], 12, 15) |
+      __gen_uint(values->Entry[4][9][12], 16, 19) |
+      __gen_uint(values->Entry[4][9][13], 20, 23) |
+      __gen_uint(values->Entry[4][9][14], 24, 27) |
+      __gen_uint(values->Entry[4][9][15], 28, 31);
+
+   dw[148] =
+      __gen_uint(values->Entry[4][10][0], 0, 3) |
+      __gen_uint(values->Entry[4][10][1], 4, 7) |
+      __gen_uint(values->Entry[4][10][2], 8, 11) |
+      __gen_uint(values->Entry[4][10][3], 12, 15) |
+      __gen_uint(values->Entry[4][10][4], 16, 19) |
+      __gen_uint(values->Entry[4][10][5], 20, 23) |
+      __gen_uint(values->Entry[4][10][6], 24, 27) |
+      __gen_uint(values->Entry[4][10][7], 28, 31);
+
+   dw[149] =
+      __gen_uint(values->Entry[4][10][8], 0, 3) |
+      __gen_uint(values->Entry[4][10][9], 4, 7) |
+      __gen_uint(values->Entry[4][10][10], 8, 11) |
+      __gen_uint(values->Entry[4][10][11], 12, 15) |
+      __gen_uint(values->Entry[4][10][12], 16, 19) |
+      __gen_uint(values->Entry[4][10][13], 20, 23) |
+      __gen_uint(values->Entry[4][10][14], 24, 27) |
+      __gen_uint(values->Entry[4][10][15], 28, 31);
+
+   dw[150] =
+      __gen_uint(values->Entry[4][11][0], 0, 3) |
+      __gen_uint(values->Entry[4][11][1], 4, 7) |
+      __gen_uint(values->Entry[4][11][2], 8, 11) |
+      __gen_uint(values->Entry[4][11][3], 12, 15) |
+      __gen_uint(values->Entry[4][11][4], 16, 19) |
+      __gen_uint(values->Entry[4][11][5], 20, 23) |
+      __gen_uint(values->Entry[4][11][6], 24, 27) |
+      __gen_uint(values->Entry[4][11][7], 28, 31);
+
+   dw[151] =
+      __gen_uint(values->Entry[4][11][8], 0, 3) |
+      __gen_uint(values->Entry[4][11][9], 4, 7) |
+      __gen_uint(values->Entry[4][11][10], 8, 11) |
+      __gen_uint(values->Entry[4][11][11], 12, 15) |
+      __gen_uint(values->Entry[4][11][12], 16, 19) |
+      __gen_uint(values->Entry[4][11][13], 20, 23) |
+      __gen_uint(values->Entry[4][11][14], 24, 27) |
+      __gen_uint(values->Entry[4][11][15], 28, 31);
+
+   dw[152] =
+      __gen_uint(values->Entry[4][12][0], 0, 3) |
+      __gen_uint(values->Entry[4][12][1], 4, 7) |
+      __gen_uint(values->Entry[4][12][2], 8, 11) |
+      __gen_uint(values->Entry[4][12][3], 12, 15) |
+      __gen_uint(values->Entry[4][12][4], 16, 19) |
+      __gen_uint(values->Entry[4][12][5], 20, 23) |
+      __gen_uint(values->Entry[4][12][6], 24, 27) |
+      __gen_uint(values->Entry[4][12][7], 28, 31);
+
+   dw[153] =
+      __gen_uint(values->Entry[4][12][8], 0, 3) |
+      __gen_uint(values->Entry[4][12][9], 4, 7) |
+      __gen_uint(values->Entry[4][12][10], 8, 11) |
+      __gen_uint(values->Entry[4][12][11], 12, 15) |
+      __gen_uint(values->Entry[4][12][12], 16, 19) |
+      __gen_uint(values->Entry[4][12][13], 20, 23) |
+      __gen_uint(values->Entry[4][12][14], 24, 27) |
+      __gen_uint(values->Entry[4][12][15], 28, 31);
+
+   dw[154] =
+      __gen_uint(values->Entry[4][13][0], 0, 3) |
+      __gen_uint(values->Entry[4][13][1], 4, 7) |
+      __gen_uint(values->Entry[4][13][2], 8, 11) |
+      __gen_uint(values->Entry[4][13][3], 12, 15) |
+      __gen_uint(values->Entry[4][13][4], 16, 19) |
+      __gen_uint(values->Entry[4][13][5], 20, 23) |
+      __gen_uint(values->Entry[4][13][6], 24, 27) |
+      __gen_uint(values->Entry[4][13][7], 28, 31);
+
+   dw[155] =
+      __gen_uint(values->Entry[4][13][8], 0, 3) |
+      __gen_uint(values->Entry[4][13][9], 4, 7) |
+      __gen_uint(values->Entry[4][13][10], 8, 11) |
+      __gen_uint(values->Entry[4][13][11], 12, 15) |
+      __gen_uint(values->Entry[4][13][12], 16, 19) |
+      __gen_uint(values->Entry[4][13][13], 20, 23) |
+      __gen_uint(values->Entry[4][13][14], 24, 27) |
+      __gen_uint(values->Entry[4][13][15], 28, 31);
+
+   dw[156] =
+      __gen_uint(values->Entry[4][14][0], 0, 3) |
+      __gen_uint(values->Entry[4][14][1], 4, 7) |
+      __gen_uint(values->Entry[4][14][2], 8, 11) |
+      __gen_uint(values->Entry[4][14][3], 12, 15) |
+      __gen_uint(values->Entry[4][14][4], 16, 19) |
+      __gen_uint(values->Entry[4][14][5], 20, 23) |
+      __gen_uint(values->Entry[4][14][6], 24, 27) |
+      __gen_uint(values->Entry[4][14][7], 28, 31);
+
+   dw[157] =
+      __gen_uint(values->Entry[4][14][8], 0, 3) |
+      __gen_uint(values->Entry[4][14][9], 4, 7) |
+      __gen_uint(values->Entry[4][14][10], 8, 11) |
+      __gen_uint(values->Entry[4][14][11], 12, 15) |
+      __gen_uint(values->Entry[4][14][12], 16, 19) |
+      __gen_uint(values->Entry[4][14][13], 20, 23) |
+      __gen_uint(values->Entry[4][14][14], 24, 27) |
+      __gen_uint(values->Entry[4][14][15], 28, 31);
+
+   dw[158] =
+      __gen_uint(values->Entry[4][15][0], 0, 3) |
+      __gen_uint(values->Entry[4][15][1], 4, 7) |
+      __gen_uint(values->Entry[4][15][2], 8, 11) |
+      __gen_uint(values->Entry[4][15][3], 12, 15) |
+      __gen_uint(values->Entry[4][15][4], 16, 19) |
+      __gen_uint(values->Entry[4][15][5], 20, 23) |
+      __gen_uint(values->Entry[4][15][6], 24, 27) |
+      __gen_uint(values->Entry[4][15][7], 28, 31);
+
+   dw[159] =
+      __gen_uint(values->Entry[4][15][8], 0, 3) |
+      __gen_uint(values->Entry[4][15][9], 4, 7) |
+      __gen_uint(values->Entry[4][15][10], 8, 11) |
+      __gen_uint(values->Entry[4][15][11], 12, 15) |
+      __gen_uint(values->Entry[4][15][12], 16, 19) |
+      __gen_uint(values->Entry[4][15][13], 20, 23) |
+      __gen_uint(values->Entry[4][15][14], 24, 27) |
+      __gen_uint(values->Entry[4][15][15], 28, 31);
+
+   dw[160] =
+      __gen_uint(values->Entry[5][0][0], 0, 3) |
+      __gen_uint(values->Entry[5][0][1], 4, 7) |
+      __gen_uint(values->Entry[5][0][2], 8, 11) |
+      __gen_uint(values->Entry[5][0][3], 12, 15) |
+      __gen_uint(values->Entry[5][0][4], 16, 19) |
+      __gen_uint(values->Entry[5][0][5], 20, 23) |
+      __gen_uint(values->Entry[5][0][6], 24, 27) |
+      __gen_uint(values->Entry[5][0][7], 28, 31);
+
+   dw[161] =
+      __gen_uint(values->Entry[5][0][8], 0, 3) |
+      __gen_uint(values->Entry[5][0][9], 4, 7) |
+      __gen_uint(values->Entry[5][0][10], 8, 11) |
+      __gen_uint(values->Entry[5][0][11], 12, 15) |
+      __gen_uint(values->Entry[5][0][12], 16, 19) |
+      __gen_uint(values->Entry[5][0][13], 20, 23) |
+      __gen_uint(values->Entry[5][0][14], 24, 27) |
+      __gen_uint(values->Entry[5][0][15], 28, 31);
+
+   dw[162] =
+      __gen_uint(values->Entry[5][1][0], 0, 3) |
+      __gen_uint(values->Entry[5][1][1], 4, 7) |
+      __gen_uint(values->Entry[5][1][2], 8, 11) |
+      __gen_uint(values->Entry[5][1][3], 12, 15) |
+      __gen_uint(values->Entry[5][1][4], 16, 19) |
+      __gen_uint(values->Entry[5][1][5], 20, 23) |
+      __gen_uint(values->Entry[5][1][6], 24, 27) |
+      __gen_uint(values->Entry[5][1][7], 28, 31);
+
+   dw[163] =
+      __gen_uint(values->Entry[5][1][8], 0, 3) |
+      __gen_uint(values->Entry[5][1][9], 4, 7) |
+      __gen_uint(values->Entry[5][1][10], 8, 11) |
+      __gen_uint(values->Entry[5][1][11], 12, 15) |
+      __gen_uint(values->Entry[5][1][12], 16, 19) |
+      __gen_uint(values->Entry[5][1][13], 20, 23) |
+      __gen_uint(values->Entry[5][1][14], 24, 27) |
+      __gen_uint(values->Entry[5][1][15], 28, 31);
+
+   dw[164] =
+      __gen_uint(values->Entry[5][2][0], 0, 3) |
+      __gen_uint(values->Entry[5][2][1], 4, 7) |
+      __gen_uint(values->Entry[5][2][2], 8, 11) |
+      __gen_uint(values->Entry[5][2][3], 12, 15) |
+      __gen_uint(values->Entry[5][2][4], 16, 19) |
+      __gen_uint(values->Entry[5][2][5], 20, 23) |
+      __gen_uint(values->Entry[5][2][6], 24, 27) |
+      __gen_uint(values->Entry[5][2][7], 28, 31);
+
+   dw[165] =
+      __gen_uint(values->Entry[5][2][8], 0, 3) |
+      __gen_uint(values->Entry[5][2][9], 4, 7) |
+      __gen_uint(values->Entry[5][2][10], 8, 11) |
+      __gen_uint(values->Entry[5][2][11], 12, 15) |
+      __gen_uint(values->Entry[5][2][12], 16, 19) |
+      __gen_uint(values->Entry[5][2][13], 20, 23) |
+      __gen_uint(values->Entry[5][2][14], 24, 27) |
+      __gen_uint(values->Entry[5][2][15], 28, 31);
+
+   dw[166] =
+      __gen_uint(values->Entry[5][3][0], 0, 3) |
+      __gen_uint(values->Entry[5][3][1], 4, 7) |
+      __gen_uint(values->Entry[5][3][2], 8, 11) |
+      __gen_uint(values->Entry[5][3][3], 12, 15) |
+      __gen_uint(values->Entry[5][3][4], 16, 19) |
+      __gen_uint(values->Entry[5][3][5], 20, 23) |
+      __gen_uint(values->Entry[5][3][6], 24, 27) |
+      __gen_uint(values->Entry[5][3][7], 28, 31);
+
+   dw[167] =
+      __gen_uint(values->Entry[5][3][8], 0, 3) |
+      __gen_uint(values->Entry[5][3][9], 4, 7) |
+      __gen_uint(values->Entry[5][3][10], 8, 11) |
+      __gen_uint(values->Entry[5][3][11], 12, 15) |
+      __gen_uint(values->Entry[5][3][12], 16, 19) |
+      __gen_uint(values->Entry[5][3][13], 20, 23) |
+      __gen_uint(values->Entry[5][3][14], 24, 27) |
+      __gen_uint(values->Entry[5][3][15], 28, 31);
+
+   dw[168] =
+      __gen_uint(values->Entry[5][4][0], 0, 3) |
+      __gen_uint(values->Entry[5][4][1], 4, 7) |
+      __gen_uint(values->Entry[5][4][2], 8, 11) |
+      __gen_uint(values->Entry[5][4][3], 12, 15) |
+      __gen_uint(values->Entry[5][4][4], 16, 19) |
+      __gen_uint(values->Entry[5][4][5], 20, 23) |
+      __gen_uint(values->Entry[5][4][6], 24, 27) |
+      __gen_uint(values->Entry[5][4][7], 28, 31);
+
+   dw[169] =
+      __gen_uint(values->Entry[5][4][8], 0, 3) |
+      __gen_uint(values->Entry[5][4][9], 4, 7) |
+      __gen_uint(values->Entry[5][4][10], 8, 11) |
+      __gen_uint(values->Entry[5][4][11], 12, 15) |
+      __gen_uint(values->Entry[5][4][12], 16, 19) |
+      __gen_uint(values->Entry[5][4][13], 20, 23) |
+      __gen_uint(values->Entry[5][4][14], 24, 27) |
+      __gen_uint(values->Entry[5][4][15], 28, 31);
+
+   dw[170] =
+      __gen_uint(values->Entry[5][5][0], 0, 3) |
+      __gen_uint(values->Entry[5][5][1], 4, 7) |
+      __gen_uint(values->Entry[5][5][2], 8, 11) |
+      __gen_uint(values->Entry[5][5][3], 12, 15) |
+      __gen_uint(values->Entry[5][5][4], 16, 19) |
+      __gen_uint(values->Entry[5][5][5], 20, 23) |
+      __gen_uint(values->Entry[5][5][6], 24, 27) |
+      __gen_uint(values->Entry[5][5][7], 28, 31);
+
+   dw[171] =
+      __gen_uint(values->Entry[5][5][8], 0, 3) |
+      __gen_uint(values->Entry[5][5][9], 4, 7) |
+      __gen_uint(values->Entry[5][5][10], 8, 11) |
+      __gen_uint(values->Entry[5][5][11], 12, 15) |
+      __gen_uint(values->Entry[5][5][12], 16, 19) |
+      __gen_uint(values->Entry[5][5][13], 20, 23) |
+      __gen_uint(values->Entry[5][5][14], 24, 27) |
+      __gen_uint(values->Entry[5][5][15], 28, 31);
+
+   dw[172] =
+      __gen_uint(values->Entry[5][6][0], 0, 3) |
+      __gen_uint(values->Entry[5][6][1], 4, 7) |
+      __gen_uint(values->Entry[5][6][2], 8, 11) |
+      __gen_uint(values->Entry[5][6][3], 12, 15) |
+      __gen_uint(values->Entry[5][6][4], 16, 19) |
+      __gen_uint(values->Entry[5][6][5], 20, 23) |
+      __gen_uint(values->Entry[5][6][6], 24, 27) |
+      __gen_uint(values->Entry[5][6][7], 28, 31);
+
+   dw[173] =
+      __gen_uint(values->Entry[5][6][8], 0, 3) |
+      __gen_uint(values->Entry[5][6][9], 4, 7) |
+      __gen_uint(values->Entry[5][6][10], 8, 11) |
+      __gen_uint(values->Entry[5][6][11], 12, 15) |
+      __gen_uint(values->Entry[5][6][12], 16, 19) |
+      __gen_uint(values->Entry[5][6][13], 20, 23) |
+      __gen_uint(values->Entry[5][6][14], 24, 27) |
+      __gen_uint(values->Entry[5][6][15], 28, 31);
+
+   dw[174] =
+      __gen_uint(values->Entry[5][7][0], 0, 3) |
+      __gen_uint(values->Entry[5][7][1], 4, 7) |
+      __gen_uint(values->Entry[5][7][2], 8, 11) |
+      __gen_uint(values->Entry[5][7][3], 12, 15) |
+      __gen_uint(values->Entry[5][7][4], 16, 19) |
+      __gen_uint(values->Entry[5][7][5], 20, 23) |
+      __gen_uint(values->Entry[5][7][6], 24, 27) |
+      __gen_uint(values->Entry[5][7][7], 28, 31);
+
+   dw[175] =
+      __gen_uint(values->Entry[5][7][8], 0, 3) |
+      __gen_uint(values->Entry[5][7][9], 4, 7) |
+      __gen_uint(values->Entry[5][7][10], 8, 11) |
+      __gen_uint(values->Entry[5][7][11], 12, 15) |
+      __gen_uint(values->Entry[5][7][12], 16, 19) |
+      __gen_uint(values->Entry[5][7][13], 20, 23) |
+      __gen_uint(values->Entry[5][7][14], 24, 27) |
+      __gen_uint(values->Entry[5][7][15], 28, 31);
+
+   dw[176] =
+      __gen_uint(values->Entry[5][8][0], 0, 3) |
+      __gen_uint(values->Entry[5][8][1], 4, 7) |
+      __gen_uint(values->Entry[5][8][2], 8, 11) |
+      __gen_uint(values->Entry[5][8][3], 12, 15) |
+      __gen_uint(values->Entry[5][8][4], 16, 19) |
+      __gen_uint(values->Entry[5][8][5], 20, 23) |
+      __gen_uint(values->Entry[5][8][6], 24, 27) |
+      __gen_uint(values->Entry[5][8][7], 28, 31);
+
+   dw[177] =
+      __gen_uint(values->Entry[5][8][8], 0, 3) |
+      __gen_uint(values->Entry[5][8][9], 4, 7) |
+      __gen_uint(values->Entry[5][8][10], 8, 11) |
+      __gen_uint(values->Entry[5][8][11], 12, 15) |
+      __gen_uint(values->Entry[5][8][12], 16, 19) |
+      __gen_uint(values->Entry[5][8][13], 20, 23) |
+      __gen_uint(values->Entry[5][8][14], 24, 27) |
+      __gen_uint(values->Entry[5][8][15], 28, 31);
+
+   dw[178] =
+      __gen_uint(values->Entry[5][9][0], 0, 3) |
+      __gen_uint(values->Entry[5][9][1], 4, 7) |
+      __gen_uint(values->Entry[5][9][2], 8, 11) |
+      __gen_uint(values->Entry[5][9][3], 12, 15) |
+      __gen_uint(values->Entry[5][9][4], 16, 19) |
+      __gen_uint(values->Entry[5][9][5], 20, 23) |
+      __gen_uint(values->Entry[5][9][6], 24, 27) |
+      __gen_uint(values->Entry[5][9][7], 28, 31);
+
+   dw[179] =
+      __gen_uint(values->Entry[5][9][8], 0, 3) |
+      __gen_uint(values->Entry[5][9][9], 4, 7) |
+      __gen_uint(values->Entry[5][9][10], 8, 11) |
+      __gen_uint(values->Entry[5][9][11], 12, 15) |
+      __gen_uint(values->Entry[5][9][12], 16, 19) |
+      __gen_uint(values->Entry[5][9][13], 20, 23) |
+      __gen_uint(values->Entry[5][9][14], 24, 27) |
+      __gen_uint(values->Entry[5][9][15], 28, 31);
+
+   dw[180] =
+      __gen_uint(values->Entry[5][10][0], 0, 3) |
+      __gen_uint(values->Entry[5][10][1], 4, 7) |
+      __gen_uint(values->Entry[5][10][2], 8, 11) |
+      __gen_uint(values->Entry[5][10][3], 12, 15) |
+      __gen_uint(values->Entry[5][10][4], 16, 19) |
+      __gen_uint(values->Entry[5][10][5], 20, 23) |
+      __gen_uint(values->Entry[5][10][6], 24, 27) |
+      __gen_uint(values->Entry[5][10][7], 28, 31);
+
+   dw[181] =
+      __gen_uint(values->Entry[5][10][8], 0, 3) |
+      __gen_uint(values->Entry[5][10][9], 4, 7) |
+      __gen_uint(values->Entry[5][10][10], 8, 11) |
+      __gen_uint(values->Entry[5][10][11], 12, 15) |
+      __gen_uint(values->Entry[5][10][12], 16, 19) |
+      __gen_uint(values->Entry[5][10][13], 20, 23) |
+      __gen_uint(values->Entry[5][10][14], 24, 27) |
+      __gen_uint(values->Entry[5][10][15], 28, 31);
+
+   dw[182] =
+      __gen_uint(values->Entry[5][11][0], 0, 3) |
+      __gen_uint(values->Entry[5][11][1], 4, 7) |
+      __gen_uint(values->Entry[5][11][2], 8, 11) |
+      __gen_uint(values->Entry[5][11][3], 12, 15) |
+      __gen_uint(values->Entry[5][11][4], 16, 19) |
+      __gen_uint(values->Entry[5][11][5], 20, 23) |
+      __gen_uint(values->Entry[5][11][6], 24, 27) |
+      __gen_uint(values->Entry[5][11][7], 28, 31);
+
+   dw[183] =
+      __gen_uint(values->Entry[5][11][8], 0, 3) |
+      __gen_uint(values->Entry[5][11][9], 4, 7) |
+      __gen_uint(values->Entry[5][11][10], 8, 11) |
+      __gen_uint(values->Entry[5][11][11], 12, 15) |
+      __gen_uint(values->Entry[5][11][12], 16, 19) |
+      __gen_uint(values->Entry[5][11][13], 20, 23) |
+      __gen_uint(values->Entry[5][11][14], 24, 27) |
+      __gen_uint(values->Entry[5][11][15], 28, 31);
+
+   dw[184] =
+      __gen_uint(values->Entry[5][12][0], 0, 3) |
+      __gen_uint(values->Entry[5][12][1], 4, 7) |
+      __gen_uint(values->Entry[5][12][2], 8, 11) |
+      __gen_uint(values->Entry[5][12][3], 12, 15) |
+      __gen_uint(values->Entry[5][12][4], 16, 19) |
+      __gen_uint(values->Entry[5][12][5], 20, 23) |
+      __gen_uint(values->Entry[5][12][6], 24, 27) |
+      __gen_uint(values->Entry[5][12][7], 28, 31);
+
+   dw[185] =
+      __gen_uint(values->Entry[5][12][8], 0, 3) |
+      __gen_uint(values->Entry[5][12][9], 4, 7) |
+      __gen_uint(values->Entry[5][12][10], 8, 11) |
+      __gen_uint(values->Entry[5][12][11], 12, 15) |
+      __gen_uint(values->Entry[5][12][12], 16, 19) |
+      __gen_uint(values->Entry[5][12][13], 20, 23) |
+      __gen_uint(values->Entry[5][12][14], 24, 27) |
+      __gen_uint(values->Entry[5][12][15], 28, 31);
+
+   dw[186] =
+      __gen_uint(values->Entry[5][13][0], 0, 3) |
+      __gen_uint(values->Entry[5][13][1], 4, 7) |
+      __gen_uint(values->Entry[5][13][2], 8, 11) |
+      __gen_uint(values->Entry[5][13][3], 12, 15) |
+      __gen_uint(values->Entry[5][13][4], 16, 19) |
+      __gen_uint(values->Entry[5][13][5], 20, 23) |
+      __gen_uint(values->Entry[5][13][6], 24, 27) |
+      __gen_uint(values->Entry[5][13][7], 28, 31);
+
+   dw[187] =
+      __gen_uint(values->Entry[5][13][8], 0, 3) |
+      __gen_uint(values->Entry[5][13][9], 4, 7) |
+      __gen_uint(values->Entry[5][13][10], 8, 11) |
+      __gen_uint(values->Entry[5][13][11], 12, 15) |
+      __gen_uint(values->Entry[5][13][12], 16, 19) |
+      __gen_uint(values->Entry[5][13][13], 20, 23) |
+      __gen_uint(values->Entry[5][13][14], 24, 27) |
+      __gen_uint(values->Entry[5][13][15], 28, 31);
+
+   dw[188] =
+      __gen_uint(values->Entry[5][14][0], 0, 3) |
+      __gen_uint(values->Entry[5][14][1], 4, 7) |
+      __gen_uint(values->Entry[5][14][2], 8, 11) |
+      __gen_uint(values->Entry[5][14][3], 12, 15) |
+      __gen_uint(values->Entry[5][14][4], 16, 19) |
+      __gen_uint(values->Entry[5][14][5], 20, 23) |
+      __gen_uint(values->Entry[5][14][6], 24, 27) |
+      __gen_uint(values->Entry[5][14][7], 28, 31);
+
+   dw[189] =
+      __gen_uint(values->Entry[5][14][8], 0, 3) |
+      __gen_uint(values->Entry[5][14][9], 4, 7) |
+      __gen_uint(values->Entry[5][14][10], 8, 11) |
+      __gen_uint(values->Entry[5][14][11], 12, 15) |
+      __gen_uint(values->Entry[5][14][12], 16, 19) |
+      __gen_uint(values->Entry[5][14][13], 20, 23) |
+      __gen_uint(values->Entry[5][14][14], 24, 27) |
+      __gen_uint(values->Entry[5][14][15], 28, 31);
+
+   dw[190] =
+      __gen_uint(values->Entry[5][15][0], 0, 3) |
+      __gen_uint(values->Entry[5][15][1], 4, 7) |
+      __gen_uint(values->Entry[5][15][2], 8, 11) |
+      __gen_uint(values->Entry[5][15][3], 12, 15) |
+      __gen_uint(values->Entry[5][15][4], 16, 19) |
+      __gen_uint(values->Entry[5][15][5], 20, 23) |
+      __gen_uint(values->Entry[5][15][6], 24, 27) |
+      __gen_uint(values->Entry[5][15][7], 28, 31);
+
+   dw[191] =
+      __gen_uint(values->Entry[5][15][8], 0, 3) |
+      __gen_uint(values->Entry[5][15][9], 4, 7) |
+      __gen_uint(values->Entry[5][15][10], 8, 11) |
+      __gen_uint(values->Entry[5][15][11], 12, 15) |
+      __gen_uint(values->Entry[5][15][12], 16, 19) |
+      __gen_uint(values->Entry[5][15][13], 20, 23) |
+      __gen_uint(values->Entry[5][15][14], 24, 27) |
+      __gen_uint(values->Entry[5][15][15], 28, 31);
+
+   dw[192] =
+      __gen_uint(values->Entry[6][0][0], 0, 3) |
+      __gen_uint(values->Entry[6][0][1], 4, 7) |
+      __gen_uint(values->Entry[6][0][2], 8, 11) |
+      __gen_uint(values->Entry[6][0][3], 12, 15) |
+      __gen_uint(values->Entry[6][0][4], 16, 19) |
+      __gen_uint(values->Entry[6][0][5], 20, 23) |
+      __gen_uint(values->Entry[6][0][6], 24, 27) |
+      __gen_uint(values->Entry[6][0][7], 28, 31);
+
+   dw[193] =
+      __gen_uint(values->Entry[6][0][8], 0, 3) |
+      __gen_uint(values->Entry[6][0][9], 4, 7) |
+      __gen_uint(values->Entry[6][0][10], 8, 11) |
+      __gen_uint(values->Entry[6][0][11], 12, 15) |
+      __gen_uint(values->Entry[6][0][12], 16, 19) |
+      __gen_uint(values->Entry[6][0][13], 20, 23) |
+      __gen_uint(values->Entry[6][0][14], 24, 27) |
+      __gen_uint(values->Entry[6][0][15], 28, 31);
+
+   dw[194] =
+      __gen_uint(values->Entry[6][1][0], 0, 3) |
+      __gen_uint(values->Entry[6][1][1], 4, 7) |
+      __gen_uint(values->Entry[6][1][2], 8, 11) |
+      __gen_uint(values->Entry[6][1][3], 12, 15) |
+      __gen_uint(values->Entry[6][1][4], 16, 19) |
+      __gen_uint(values->Entry[6][1][5], 20, 23) |
+      __gen_uint(values->Entry[6][1][6], 24, 27) |
+      __gen_uint(values->Entry[6][1][7], 28, 31);
+
+   dw[195] =
+      __gen_uint(values->Entry[6][1][8], 0, 3) |
+      __gen_uint(values->Entry[6][1][9], 4, 7) |
+      __gen_uint(values->Entry[6][1][10], 8, 11) |
+      __gen_uint(values->Entry[6][1][11], 12, 15) |
+      __gen_uint(values->Entry[6][1][12], 16, 19) |
+      __gen_uint(values->Entry[6][1][13], 20, 23) |
+      __gen_uint(values->Entry[6][1][14], 24, 27) |
+      __gen_uint(values->Entry[6][1][15], 28, 31);
+
+   dw[196] =
+      __gen_uint(values->Entry[6][2][0], 0, 3) |
+      __gen_uint(values->Entry[6][2][1], 4, 7) |
+      __gen_uint(values->Entry[6][2][2], 8, 11) |
+      __gen_uint(values->Entry[6][2][3], 12, 15) |
+      __gen_uint(values->Entry[6][2][4], 16, 19) |
+      __gen_uint(values->Entry[6][2][5], 20, 23) |
+      __gen_uint(values->Entry[6][2][6], 24, 27) |
+      __gen_uint(values->Entry[6][2][7], 28, 31);
+
+   dw[197] =
+      __gen_uint(values->Entry[6][2][8], 0, 3) |
+      __gen_uint(values->Entry[6][2][9], 4, 7) |
+      __gen_uint(values->Entry[6][2][10], 8, 11) |
+      __gen_uint(values->Entry[6][2][11], 12, 15) |
+      __gen_uint(values->Entry[6][2][12], 16, 19) |
+      __gen_uint(values->Entry[6][2][13], 20, 23) |
+      __gen_uint(values->Entry[6][2][14], 24, 27) |
+      __gen_uint(values->Entry[6][2][15], 28, 31);
+
+   dw[198] =
+      __gen_uint(values->Entry[6][3][0], 0, 3) |
+      __gen_uint(values->Entry[6][3][1], 4, 7) |
+      __gen_uint(values->Entry[6][3][2], 8, 11) |
+      __gen_uint(values->Entry[6][3][3], 12, 15) |
+      __gen_uint(values->Entry[6][3][4], 16, 19) |
+      __gen_uint(values->Entry[6][3][5], 20, 23) |
+      __gen_uint(values->Entry[6][3][6], 24, 27) |
+      __gen_uint(values->Entry[6][3][7], 28, 31);
+
+   dw[199] =
+      __gen_uint(values->Entry[6][3][8], 0, 3) |
+      __gen_uint(values->Entry[6][3][9], 4, 7) |
+      __gen_uint(values->Entry[6][3][10], 8, 11) |
+      __gen_uint(values->Entry[6][3][11], 12, 15) |
+      __gen_uint(values->Entry[6][3][12], 16, 19) |
+      __gen_uint(values->Entry[6][3][13], 20, 23) |
+      __gen_uint(values->Entry[6][3][14], 24, 27) |
+      __gen_uint(values->Entry[6][3][15], 28, 31);
+
+   dw[200] =
+      __gen_uint(values->Entry[6][4][0], 0, 3) |
+      __gen_uint(values->Entry[6][4][1], 4, 7) |
+      __gen_uint(values->Entry[6][4][2], 8, 11) |
+      __gen_uint(values->Entry[6][4][3], 12, 15) |
+      __gen_uint(values->Entry[6][4][4], 16, 19) |
+      __gen_uint(values->Entry[6][4][5], 20, 23) |
+      __gen_uint(values->Entry[6][4][6], 24, 27) |
+      __gen_uint(values->Entry[6][4][7], 28, 31);
+
+   dw[201] =
+      __gen_uint(values->Entry[6][4][8], 0, 3) |
+      __gen_uint(values->Entry[6][4][9], 4, 7) |
+      __gen_uint(values->Entry[6][4][10], 8, 11) |
+      __gen_uint(values->Entry[6][4][11], 12, 15) |
+      __gen_uint(values->Entry[6][4][12], 16, 19) |
+      __gen_uint(values->Entry[6][4][13], 20, 23) |
+      __gen_uint(values->Entry[6][4][14], 24, 27) |
+      __gen_uint(values->Entry[6][4][15], 28, 31);
+
+   dw[202] =
+      __gen_uint(values->Entry[6][5][0], 0, 3) |
+      __gen_uint(values->Entry[6][5][1], 4, 7) |
+      __gen_uint(values->Entry[6][5][2], 8, 11) |
+      __gen_uint(values->Entry[6][5][3], 12, 15) |
+      __gen_uint(values->Entry[6][5][4], 16, 19) |
+      __gen_uint(values->Entry[6][5][5], 20, 23) |
+      __gen_uint(values->Entry[6][5][6], 24, 27) |
+      __gen_uint(values->Entry[6][5][7], 28, 31);
+
+   dw[203] =
+      __gen_uint(values->Entry[6][5][8], 0, 3) |
+      __gen_uint(values->Entry[6][5][9], 4, 7) |
+      __gen_uint(values->Entry[6][5][10], 8, 11) |
+      __gen_uint(values->Entry[6][5][11], 12, 15) |
+      __gen_uint(values->Entry[6][5][12], 16, 19) |
+      __gen_uint(values->Entry[6][5][13], 20, 23) |
+      __gen_uint(values->Entry[6][5][14], 24, 27) |
+      __gen_uint(values->Entry[6][5][15], 28, 31);
+
+   dw[204] =
+      __gen_uint(values->Entry[6][6][0], 0, 3) |
+      __gen_uint(values->Entry[6][6][1], 4, 7) |
+      __gen_uint(values->Entry[6][6][2], 8, 11) |
+      __gen_uint(values->Entry[6][6][3], 12, 15) |
+      __gen_uint(values->Entry[6][6][4], 16, 19) |
+      __gen_uint(values->Entry[6][6][5], 20, 23) |
+      __gen_uint(values->Entry[6][6][6], 24, 27) |
+      __gen_uint(values->Entry[6][6][7], 28, 31);
+
+   dw[205] =
+      __gen_uint(values->Entry[6][6][8], 0, 3) |
+      __gen_uint(values->Entry[6][6][9], 4, 7) |
+      __gen_uint(values->Entry[6][6][10], 8, 11) |
+      __gen_uint(values->Entry[6][6][11], 12, 15) |
+      __gen_uint(values->Entry[6][6][12], 16, 19) |
+      __gen_uint(values->Entry[6][6][13], 20, 23) |
+      __gen_uint(values->Entry[6][6][14], 24, 27) |
+      __gen_uint(values->Entry[6][6][15], 28, 31);
+
+   dw[206] =
+      __gen_uint(values->Entry[6][7][0], 0, 3) |
+      __gen_uint(values->Entry[6][7][1], 4, 7) |
+      __gen_uint(values->Entry[6][7][2], 8, 11) |
+      __gen_uint(values->Entry[6][7][3], 12, 15) |
+      __gen_uint(values->Entry[6][7][4], 16, 19) |
+      __gen_uint(values->Entry[6][7][5], 20, 23) |
+      __gen_uint(values->Entry[6][7][6], 24, 27) |
+      __gen_uint(values->Entry[6][7][7], 28, 31);
+
+   dw[207] =
+      __gen_uint(values->Entry[6][7][8], 0, 3) |
+      __gen_uint(values->Entry[6][7][9], 4, 7) |
+      __gen_uint(values->Entry[6][7][10], 8, 11) |
+      __gen_uint(values->Entry[6][7][11], 12, 15) |
+      __gen_uint(values->Entry[6][7][12], 16, 19) |
+      __gen_uint(values->Entry[6][7][13], 20, 23) |
+      __gen_uint(values->Entry[6][7][14], 24, 27) |
+      __gen_uint(values->Entry[6][7][15], 28, 31);
+
+   dw[208] =
+      __gen_uint(values->Entry[6][8][0], 0, 3) |
+      __gen_uint(values->Entry[6][8][1], 4, 7) |
+      __gen_uint(values->Entry[6][8][2], 8, 11) |
+      __gen_uint(values->Entry[6][8][3], 12, 15) |
+      __gen_uint(values->Entry[6][8][4], 16, 19) |
+      __gen_uint(values->Entry[6][8][5], 20, 23) |
+      __gen_uint(values->Entry[6][8][6], 24, 27) |
+      __gen_uint(values->Entry[6][8][7], 28, 31);
+
+   dw[209] =
+      __gen_uint(values->Entry[6][8][8], 0, 3) |
+      __gen_uint(values->Entry[6][8][9], 4, 7) |
+      __gen_uint(values->Entry[6][8][10], 8, 11) |
+      __gen_uint(values->Entry[6][8][11], 12, 15) |
+      __gen_uint(values->Entry[6][8][12], 16, 19) |
+      __gen_uint(values->Entry[6][8][13], 20, 23) |
+      __gen_uint(values->Entry[6][8][14], 24, 27) |
+      __gen_uint(values->Entry[6][8][15], 28, 31);
+
+   dw[210] =
+      __gen_uint(values->Entry[6][9][0], 0, 3) |
+      __gen_uint(values->Entry[6][9][1], 4, 7) |
+      __gen_uint(values->Entry[6][9][2], 8, 11) |
+      __gen_uint(values->Entry[6][9][3], 12, 15) |
+      __gen_uint(values->Entry[6][9][4], 16, 19) |
+      __gen_uint(values->Entry[6][9][5], 20, 23) |
+      __gen_uint(values->Entry[6][9][6], 24, 27) |
+      __gen_uint(values->Entry[6][9][7], 28, 31);
+
+   dw[211] =
+      __gen_uint(values->Entry[6][9][8], 0, 3) |
+      __gen_uint(values->Entry[6][9][9], 4, 7) |
+      __gen_uint(values->Entry[6][9][10], 8, 11) |
+      __gen_uint(values->Entry[6][9][11], 12, 15) |
+      __gen_uint(values->Entry[6][9][12], 16, 19) |
+      __gen_uint(values->Entry[6][9][13], 20, 23) |
+      __gen_uint(values->Entry[6][9][14], 24, 27) |
+      __gen_uint(values->Entry[6][9][15], 28, 31);
+
+   dw[212] =
+      __gen_uint(values->Entry[6][10][0], 0, 3) |
+      __gen_uint(values->Entry[6][10][1], 4, 7) |
+      __gen_uint(values->Entry[6][10][2], 8, 11) |
+      __gen_uint(values->Entry[6][10][3], 12, 15) |
+      __gen_uint(values->Entry[6][10][4], 16, 19) |
+      __gen_uint(values->Entry[6][10][5], 20, 23) |
+      __gen_uint(values->Entry[6][10][6], 24, 27) |
+      __gen_uint(values->Entry[6][10][7], 28, 31);
+
+   dw[213] =
+      __gen_uint(values->Entry[6][10][8], 0, 3) |
+      __gen_uint(values->Entry[6][10][9], 4, 7) |
+      __gen_uint(values->Entry[6][10][10], 8, 11) |
+      __gen_uint(values->Entry[6][10][11], 12, 15) |
+      __gen_uint(values->Entry[6][10][12], 16, 19) |
+      __gen_uint(values->Entry[6][10][13], 20, 23) |
+      __gen_uint(values->Entry[6][10][14], 24, 27) |
+      __gen_uint(values->Entry[6][10][15], 28, 31);
+
+   dw[214] =
+      __gen_uint(values->Entry[6][11][0], 0, 3) |
+      __gen_uint(values->Entry[6][11][1], 4, 7) |
+      __gen_uint(values->Entry[6][11][2], 8, 11) |
+      __gen_uint(values->Entry[6][11][3], 12, 15) |
+      __gen_uint(values->Entry[6][11][4], 16, 19) |
+      __gen_uint(values->Entry[6][11][5], 20, 23) |
+      __gen_uint(values->Entry[6][11][6], 24, 27) |
+      __gen_uint(values->Entry[6][11][7], 28, 31);
+
+   dw[215] =
+      __gen_uint(values->Entry[6][11][8], 0, 3) |
+      __gen_uint(values->Entry[6][11][9], 4, 7) |
+      __gen_uint(values->Entry[6][11][10], 8, 11) |
+      __gen_uint(values->Entry[6][11][11], 12, 15) |
+      __gen_uint(values->Entry[6][11][12], 16, 19) |
+      __gen_uint(values->Entry[6][11][13], 20, 23) |
+      __gen_uint(values->Entry[6][11][14], 24, 27) |
+      __gen_uint(values->Entry[6][11][15], 28, 31);
+
+   dw[216] =
+      __gen_uint(values->Entry[6][12][0], 0, 3) |
+      __gen_uint(values->Entry[6][12][1], 4, 7) |
+      __gen_uint(values->Entry[6][12][2], 8, 11) |
+      __gen_uint(values->Entry[6][12][3], 12, 15) |
+      __gen_uint(values->Entry[6][12][4], 16, 19) |
+      __gen_uint(values->Entry[6][12][5], 20, 23) |
+      __gen_uint(values->Entry[6][12][6], 24, 27) |
+      __gen_uint(values->Entry[6][12][7], 28, 31);
+
+   dw[217] =
+      __gen_uint(values->Entry[6][12][8], 0, 3) |
+      __gen_uint(values->Entry[6][12][9], 4, 7) |
+      __gen_uint(values->Entry[6][12][10], 8, 11) |
+      __gen_uint(values->Entry[6][12][11], 12, 15) |
+      __gen_uint(values->Entry[6][12][12], 16, 19) |
+      __gen_uint(values->Entry[6][12][13], 20, 23) |
+      __gen_uint(values->Entry[6][12][14], 24, 27) |
+      __gen_uint(values->Entry[6][12][15], 28, 31);
+
+   dw[218] =
+      __gen_uint(values->Entry[6][13][0], 0, 3) |
+      __gen_uint(values->Entry[6][13][1], 4, 7) |
+      __gen_uint(values->Entry[6][13][2], 8, 11) |
+      __gen_uint(values->Entry[6][13][3], 12, 15) |
+      __gen_uint(values->Entry[6][13][4], 16, 19) |
+      __gen_uint(values->Entry[6][13][5], 20, 23) |
+      __gen_uint(values->Entry[6][13][6], 24, 27) |
+      __gen_uint(values->Entry[6][13][7], 28, 31);
+
+   dw[219] =
+      __gen_uint(values->Entry[6][13][8], 0, 3) |
+      __gen_uint(values->Entry[6][13][9], 4, 7) |
+      __gen_uint(values->Entry[6][13][10], 8, 11) |
+      __gen_uint(values->Entry[6][13][11], 12, 15) |
+      __gen_uint(values->Entry[6][13][12], 16, 19) |
+      __gen_uint(values->Entry[6][13][13], 20, 23) |
+      __gen_uint(values->Entry[6][13][14], 24, 27) |
+      __gen_uint(values->Entry[6][13][15], 28, 31);
+
+   dw[220] =
+      __gen_uint(values->Entry[6][14][0], 0, 3) |
+      __gen_uint(values->Entry[6][14][1], 4, 7) |
+      __gen_uint(values->Entry[6][14][2], 8, 11) |
+      __gen_uint(values->Entry[6][14][3], 12, 15) |
+      __gen_uint(values->Entry[6][14][4], 16, 19) |
+      __gen_uint(values->Entry[6][14][5], 20, 23) |
+      __gen_uint(values->Entry[6][14][6], 24, 27) |
+      __gen_uint(values->Entry[6][14][7], 28, 31);
+
+   dw[221] =
+      __gen_uint(values->Entry[6][14][8], 0, 3) |
+      __gen_uint(values->Entry[6][14][9], 4, 7) |
+      __gen_uint(values->Entry[6][14][10], 8, 11) |
+      __gen_uint(values->Entry[6][14][11], 12, 15) |
+      __gen_uint(values->Entry[6][14][12], 16, 19) |
+      __gen_uint(values->Entry[6][14][13], 20, 23) |
+      __gen_uint(values->Entry[6][14][14], 24, 27) |
+      __gen_uint(values->Entry[6][14][15], 28, 31);
+
+   dw[222] =
+      __gen_uint(values->Entry[6][15][0], 0, 3) |
+      __gen_uint(values->Entry[6][15][1], 4, 7) |
+      __gen_uint(values->Entry[6][15][2], 8, 11) |
+      __gen_uint(values->Entry[6][15][3], 12, 15) |
+      __gen_uint(values->Entry[6][15][4], 16, 19) |
+      __gen_uint(values->Entry[6][15][5], 20, 23) |
+      __gen_uint(values->Entry[6][15][6], 24, 27) |
+      __gen_uint(values->Entry[6][15][7], 28, 31);
+
+   dw[223] =
+      __gen_uint(values->Entry[6][15][8], 0, 3) |
+      __gen_uint(values->Entry[6][15][9], 4, 7) |
+      __gen_uint(values->Entry[6][15][10], 8, 11) |
+      __gen_uint(values->Entry[6][15][11], 12, 15) |
+      __gen_uint(values->Entry[6][15][12], 16, 19) |
+      __gen_uint(values->Entry[6][15][13], 20, 23) |
+      __gen_uint(values->Entry[6][15][14], 24, 27) |
+      __gen_uint(values->Entry[6][15][15], 28, 31);
 }
 
 #define GFX125_SO_DECL_length                  1
@@ -3217,7 +5203,7 @@ GFX125_VDENC_SURFACE_CONTROL_BITS_pack(__attribute__((unused)) __gen_user_data *
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MOCS, 1, 6) |
+      __gen_uint_nonzero(values->MOCS, 1, 6) |
       __gen_uint(values->ArbitrationPriorityControl, 7, 8) |
       __gen_uint(values->MemoryCompressionEnable, 9, 9) |
       __gen_uint(values->MemoryCompressionMode, 10, 10) |
@@ -3328,7 +5314,7 @@ GFX125_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->BufferPitch, 0, 11) |
       __gen_uint(values->NullVertexBuffer, 13, 13) |
       __gen_uint(values->AddressModifyEnable, 14, 14) |
-      __gen_uint(values->MOCS, 16, 22) |
+      __gen_uint_nonzero(values->MOCS, 16, 22) |
       __gen_uint(values->L3BypassDisable, 25, 25) |
       __gen_uint(values->VertexBufferIndex, 26, 31);
 
@@ -3373,6 +5359,112 @@ GFX125_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Component2Control, 20, 22) |
       __gen_uint(values->Component1Control, 24, 26) |
       __gen_uint(values->Component0Control, 28, 30);
+}
+
+#define GFX125_3DMESH_1D_length                3
+#define GFX125_3DMESH_1D_length_bias           2
+#define GFX125_3DMESH_1D_header                 \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =      1,  \
+   ._3DCommandOpcode                    =      3,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DMESH_1D {
+   uint32_t                             DWordLength;
+   bool                                 PredicateEnable;
+   bool                                 UAVCoherencyRequired;
+   bool                                 IndirectParameterEnable;
+   uint32_t                             TBIMREnabled;
+   uint32_t                             ExtendedParameter0Present;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             ThreadGroupCountX;
+   uint32_t                             StartingThreadGroupIDX;
+   uint32_t                             ExtendedParameter0XP0;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DMESH_1D_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX125_3DMESH_1D * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->PredicateEnable, 8, 8) |
+      __gen_uint(values->UAVCoherencyRequired, 9, 9) |
+      __gen_uint(values->IndirectParameterEnable, 10, 10) |
+      __gen_uint(values->TBIMREnabled, 13, 13) |
+      __gen_uint(values->ExtendedParameter0Present, 14, 14) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ThreadGroupCountX, 0, 31);
+
+   dw[2] =
+      __gen_uint(values->StartingThreadGroupIDX, 0, 31);
+}
+
+#define GFX125_3DMESH_3D_length                4
+#define GFX125_3DMESH_3D_length_bias           2
+#define GFX125_3DMESH_3D_header                 \
+   .DWordLength                         =      2,  \
+   ._3DCommandSubOpcode                 =      2,  \
+   ._3DCommandOpcode                    =      3,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DMESH_3D {
+   uint32_t                             DWordLength;
+   bool                                 PredicateEnable;
+   bool                                 UAVCoherencyRequired;
+   bool                                 IndirectParameterEnable;
+   uint32_t                             TBIMREnabled;
+   uint32_t                             ExtendedParameter0Present;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             ThreadGroupCountX;
+   uint32_t                             ThreadGroupCountY;
+   uint32_t                             ThreadGroupCountZ;
+   uint32_t                             ExtendedParameter0XP0;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DMESH_3D_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX125_3DMESH_3D * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->PredicateEnable, 8, 8) |
+      __gen_uint(values->UAVCoherencyRequired, 9, 9) |
+      __gen_uint(values->IndirectParameterEnable, 10, 10) |
+      __gen_uint(values->TBIMREnabled, 13, 13) |
+      __gen_uint(values->ExtendedParameter0Present, 14, 14) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ThreadGroupCountX, 0, 31);
+
+   dw[2] =
+      __gen_uint(values->ThreadGroupCountY, 0, 31);
+
+   dw[3] =
+      __gen_uint(values->ThreadGroupCountZ, 0, 31);
 }
 
 #define GFX125_3DPRIMITIVE_length              7
@@ -3470,7 +5562,7 @@ struct GFX125_3DSTATE_3D_MODE {
    bool                                 _3DScoreboardHashingMode;
    bool                                 SubsliceHashingTableEnable;
    bool                                 SliceHashingTableEnable;
-   uint32_t                             CrossSliceHashingModeMask;
+   int32_t                              CrossSliceHashingModeMask;
    bool                                 _3DScoreboardHashingModeMask;
    bool                                 SubsliceHashingTableEnableMask;
    bool                                 SliceHashingTableEnableMask;
@@ -3495,7 +5587,7 @@ GFX125_3DSTATE_3D_MODE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->_3DScoreboardHashingMode, 4, 4) |
       __gen_uint(values->SubsliceHashingTableEnable, 5, 5) |
       __gen_uint(values->SliceHashingTableEnable, 6, 6) |
-      __gen_uint(values->CrossSliceHashingModeMask, 16, 17) |
+      __gen_sint(values->CrossSliceHashingModeMask, 16, 17) |
       __gen_uint(values->_3DScoreboardHashingModeMask, 20, 20) |
       __gen_uint(values->SubsliceHashingTableEnableMask, 21, 21) |
       __gen_uint(values->SliceHashingTableEnableMask, 22, 22);
@@ -3954,7 +6046,6 @@ struct GFX125_3DSTATE_BINDING_TABLE_POOL_ALLOC {
    uint32_t                             CommandSubType;
    uint32_t                             CommandType;
    uint32_t                             MOCS;
-   bool                                 BindingTablePoolEnable;
    __gen_address_type                   BindingTablePoolBaseAddress;
    uint32_t                             BindingTablePoolBufferSize;
 #define NoValidData                              0
@@ -3975,8 +6066,7 @@ GFX125_3DSTATE_BINDING_TABLE_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_
       __gen_uint(values->CommandType, 29, 31);
 
    const uint64_t v1 =
-      __gen_uint(values->MOCS, 0, 6) |
-      __gen_uint(values->BindingTablePoolEnable, 11, 11);
+      __gen_uint_nonzero(values->MOCS, 0, 6);
    const uint64_t v1_address =
       __gen_address(data, &dw[1], values->BindingTablePoolBaseAddress, v1, 12, 63);
    dw[1] = v1_address;
@@ -4235,6 +6325,46 @@ GFX125_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_ufixed(values->MinimumPointWidth, 17, 27, 3);
 }
 
+#define GFX125_3DSTATE_CLIP_MESH_length        2
+#define GFX125_3DSTATE_CLIP_MESH_length_bias      2
+#define GFX125_3DSTATE_CLIP_MESH_header         \
+   .DWordLength                         =      0,  \
+   ._3DCommandSubOpcode                 =    129,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_CLIP_MESH {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             UserClipDistanceCullTestEnableBitmask;
+   uint32_t                             UserClipDistanceClipTestEnableBitmask;
+   uint32_t                             PrimitiveHeaderEnable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_CLIP_MESH_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_3DSTATE_CLIP_MESH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->UserClipDistanceCullTestEnableBitmask, 0, 7) |
+      __gen_uint(values->UserClipDistanceClipTestEnableBitmask, 8, 15) |
+      __gen_uint(values->PrimitiveHeaderEnable, 16, 16);
+}
+
 #define GFX125_3DSTATE_CONSTANT_ALL_length      2
 #define GFX125_3DSTATE_CONSTANT_ALL_length_bias      2
 #define GFX125_3DSTATE_CONSTANT_ALL_header      \
@@ -4283,7 +6413,7 @@ GFX125_3DSTATE_CONSTANT_ALL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->MOCS, 0, 6) |
+      __gen_uint_nonzero(values->MOCS, 0, 6) |
       __gen_uint(values->PointerBufferMask, 16, 19) |
       __gen_uint(values->UpdateMode, 31, 31);
 }
@@ -4316,7 +6446,7 @@ GFX125_3DSTATE_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MOCS, 8, 14) |
+      __gen_uint_nonzero(values->MOCS, 8, 14) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -4353,7 +6483,7 @@ GFX125_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MOCS, 8, 14) |
+      __gen_uint_nonzero(values->MOCS, 8, 14) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -4390,7 +6520,7 @@ GFX125_3DSTATE_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MOCS, 8, 14) |
+      __gen_uint_nonzero(values->MOCS, 8, 14) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -4428,7 +6558,7 @@ GFX125_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MOCS, 8, 14) |
+      __gen_uint_nonzero(values->MOCS, 8, 14) |
       __gen_uint(values->DisableGatheratSetShaderHint, 15, 15) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
@@ -4466,13 +6596,89 @@ GFX125_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MOCS, 8, 14) |
+      __gen_uint_nonzero(values->MOCS, 8, 14) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
       __gen_uint(values->CommandType, 29, 31);
 
    GFX125_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
+}
+
+#define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_length      8
+#define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_length_bias      2
+#define GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_header\
+   .DWordLength                         =      6,  \
+   ._3DCommandSubOpcode                 =    131,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             SurfacePitch;
+   bool                                 CPCBCompressionEnable;
+   uint32_t                             SurfaceType;
+   __gen_address_type                   SurfaceBaseAddress;
+   uint32_t                             Width;
+   uint32_t                             Height;
+   uint32_t                             MOCS;
+   uint32_t                             MinimumArrayElement;
+   uint32_t                             Depth;
+   uint32_t                             MipTailStartLOD;
+   uint32_t                             TiledMode;
+#define TILE64                                   1
+#define TILE4                                    3
+   uint32_t                             SurfaceQPitch;
+   uint32_t                             SurfLOD;
+   uint32_t                             RenderTargetViewExtent;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
+                                          __attribute__((unused)) void * restrict dst,
+                                          __attribute__((unused)) const struct GFX125_3DSTATE_CPSIZE_CONTROL_BUFFER * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SurfacePitch, 0, 16) |
+      __gen_uint(values->CPCBCompressionEnable, 25, 25) |
+      __gen_uint(values->SurfaceType, 29, 31);
+
+   const uint64_t v2_address =
+      __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 63);
+   dw[2] = v2_address;
+   dw[3] = v2_address >> 32;
+
+   dw[4] =
+      __gen_uint(values->Width, 1, 14) |
+      __gen_uint(values->Height, 17, 30);
+
+   dw[5] =
+      __gen_uint(values->MOCS, 0, 6) |
+      __gen_uint(values->MinimumArrayElement, 8, 18) |
+      __gen_uint(values->Depth, 20, 30);
+
+   dw[6] =
+      __gen_uint(values->MipTailStartLOD, 26, 29) |
+      __gen_uint(values->TiledMode, 30, 31);
+
+   dw[7] =
+      __gen_uint(values->SurfaceQPitch, 0, 14) |
+      __gen_uint(values->SurfLOD, 16, 19) |
+      __gen_uint(values->RenderTargetViewExtent, 21, 31);
 }
 
 #define GFX125_3DSTATE_CPS_POINTERS_length      2
@@ -4559,10 +6765,10 @@ GFX125_3DSTATE_DEPTH_BOUNDS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_float(values->DepthBoundsTestMaxValue);
 }
 
-#define GFX125_3DSTATE_DEPTH_BUFFER_length      8
+#define GFX125_3DSTATE_DEPTH_BUFFER_length     10
 #define GFX125_3DSTATE_DEPTH_BUFFER_length_bias      2
 #define GFX125_3DSTATE_DEPTH_BUFFER_header      \
-   .DWordLength                         =      6,  \
+   .DWordLength                         =      8,  \
    ._3DCommandSubOpcode                 =      5,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
@@ -4641,7 +6847,7 @@ GFX125_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Height, 17, 30);
 
    dw[5] =
-      __gen_uint(values->MOCS, 0, 6) |
+      __gen_uint_nonzero(values->MOCS, 0, 6) |
       __gen_uint(values->MinimumArrayElement, 8, 18) |
       __gen_uint(values->Depth, 20, 30);
 
@@ -4655,6 +6861,10 @@ GFX125_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->SurfaceQPitch, 0, 14) |
       __gen_uint(values->LOD, 16, 19) |
       __gen_uint(values->RenderTargetViewExtent, 21, 31);
+
+   dw[8] = 0;
+
+   dw[9] = 0;
 }
 
 #define GFX125_3DSTATE_DRAWING_RECTANGLE_length      4
@@ -4754,6 +6964,7 @@ struct GFX125_3DSTATE_DS {
    uint32_t                             DispatchMode;
 #define DISPATCH_MODE_SIMD8_SINGLE_PATCH         1
 #define DISPATCH_MODE_SIMD8_SINGLE_OR_DUAL_PATCH 2
+   bool                                 PrimitiveIDNotRequired;
    bool                                 StatisticsEnable;
    uint32_t                             MaximumNumberofThreads;
    uint32_t                             UserClipDistanceCullTestEnableBitmask;
@@ -4807,6 +7018,7 @@ GFX125_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CacheDisable, 1, 1) |
       __gen_uint(values->ComputeWCoordinateEnable, 2, 2) |
       __gen_uint(values->DispatchMode, 3, 4) |
+      __gen_uint(values->PrimitiveIDNotRequired, 9, 9) |
       __gen_uint(values->StatisticsEnable, 10, 10) |
       __gen_uint(values->MaximumNumberofThreads, 21, 30);
 
@@ -5126,7 +7338,7 @@ GFX125_3DSTATE_GATHER_POOL_ALLOC_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->CommandType, 29, 31);
 
    const uint64_t v1 =
-      __gen_uint(values->MOCS, 0, 6) |
+      __gen_uint_nonzero(values->MOCS, 0, 6) |
       __gen_uint(values->GatherPoolEnable, 11, 11);
    const uint64_t v1_address =
       __gen_address(data, &dw[1], values->GatherPoolBaseAddress, v1, 12, 63);
@@ -5299,7 +7511,6 @@ struct GFX125_3DSTATE_HIER_DEPTH_BUFFER {
 #define TILE64                                   1
 #define TILE4                                    3
    uint32_t                             MOCS;
-   uint32_t                             HierarchicalDepthBufferMOCS;
    __gen_address_type                   SurfaceBaseAddress;
    uint32_t                             SurfaceQPitch;
 };
@@ -5322,8 +7533,7 @@ GFX125_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *d
       __gen_uint(values->SurfacePitch, 0, 16) |
       __gen_uint(values->HierarchicalDepthBufferWriteThruEnable, 20, 20) |
       __gen_uint(values->TiledMode, 22, 23) |
-      __gen_uint(values->MOCS, 25, 31) |
-      __gen_uint(values->HierarchicalDepthBufferMOCS, 25, 31);
+      __gen_uint_nonzero(values->MOCS, 25, 31);
 
    const uint64_t v2_address =
       __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 63);
@@ -5375,7 +7585,7 @@ struct GFX125_3DSTATE_HS {
    uint32_t                             VertexURBEntryReadLength;
    uint32_t                             DispatchMode;
 #define DISPATCH_MODE_SINGLE_PATCH               0
-#define DISPATCH_MODE__8_PATCH                   2
+#define DISPATCH_MODE_8_PATCH                    2
    uint32_t                             DispatchGRFStartRegisterForURBData;
    bool                                 IncludeVertexHandles;
    bool                                 AccessesUAV;
@@ -5478,7 +7688,7 @@ GFX125_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->MOCS, 0, 6) |
+      __gen_uint_nonzero(values->MOCS, 0, 6) |
       __gen_uint(values->IndexFormat, 8, 9) |
       __gen_uint(values->L3BypassDisable, 11, 11);
 
@@ -5537,6 +7747,290 @@ GFX125_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
    dw[2] =
       __gen_uint(values->LineStippleRepeatCount, 0, 8) |
       __gen_ufixed(values->LineStippleInverseRepeatCount, 15, 31, 16);
+}
+
+#define GFX125_3DSTATE_MESH_CONTROL_length      3
+#define GFX125_3DSTATE_MESH_CONTROL_length_bias      2
+#define GFX125_3DSTATE_MESH_CONTROL_header      \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =    119,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_MESH_CONTROL {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             MaximumNumberofThreadGroups;
+   uint32_t                             ThreadDispatchPriority;
+#define High                                     1
+   bool                                 FusedEUDispatch;
+   bool                                 StatisticsEnable;
+   uint32_t                             MeshShaderEnable;
+   uint32_t                             ScratchSpaceBuffer;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_MESH_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_MESH_CONTROL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->MaximumNumberofThreadGroups, 0, 8) |
+      __gen_uint(values->ThreadDispatchPriority, 28, 28) |
+      __gen_uint(values->FusedEUDispatch, 29, 29) |
+      __gen_uint(values->StatisticsEnable, 30, 30) |
+      __gen_uint(values->MeshShaderEnable, 31, 31);
+
+   dw[2] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+}
+
+#define GFX125_3DSTATE_MESH_DISTRIB_length      2
+#define GFX125_3DSTATE_MESH_DISTRIB_length_bias      2
+#define GFX125_3DSTATE_MESH_DISTRIB_header      \
+   .DWordLength                         =      0,  \
+   ._3DCommandSubOpcode                 =    120,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_MESH_DISTRIB {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   bool                                 MeshDistributionDisable;
+   bool                                 TaskDistributionDisable;
+   uint32_t                             DistributionMode;
+#define MESH_RR_FREE                             1
+#define MESH_RR_STRICT                           0
+   uint32_t                             MeshDistributionBatchSize;
+   uint32_t                             TaskDistributionBatchSize;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_MESH_DISTRIB_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_MESH_DISTRIB * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->MeshDistributionDisable, 0, 0) |
+      __gen_uint(values->TaskDistributionDisable, 1, 1) |
+      __gen_uint(values->DistributionMode, 2, 2) |
+      __gen_uint(values->MeshDistributionBatchSize, 4, 7) |
+      __gen_uint(values->TaskDistributionBatchSize, 10, 13);
+}
+
+#define GFX125_3DSTATE_MESH_SHADER_length      8
+#define GFX125_3DSTATE_MESH_SHADER_length_bias      2
+#define GFX125_3DSTATE_MESH_SHADER_header       \
+   .DWordLength                         =      6,  \
+   ._3DCommandSubOpcode                 =    122,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_MESH_SHADER {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint64_t                             KernelStartPointer;
+   uint32_t                             LocalXMaximum;
+   bool                                 SoftwareExceptionEnable;
+   bool                                 MaskStackExceptionEnable;
+   bool                                 IllegalOpcodeExceptionEnable;
+   uint32_t                             FloatingPointMode;
+#define IEEE754                                  0
+#define Alternate                                1
+   uint32_t                             SingleProgramFlow;
+   uint32_t                             DenormMode;
+#define Ftz                                      0
+#define SetByKernel                              1
+   uint32_t                             NumberofThreadsinGPGPUThreadGroup;
+   uint32_t                             SharedLocalMemorySize;
+   bool                                 BarrierEnable;
+   uint32_t                             RoundingMode;
+#define RTNE                                     0
+#define RU                                       1
+#define RD                                       2
+#define RTZ                                      3
+   uint32_t                             PreferredSLMAllocationSize;
+   uint32_t                             NumberofBarriers;
+   uint32_t                             IndirectDataLength;
+   bool                                 L3PrefetchDisable;
+   bool                                 EmitLocalIDX;
+   bool                                 EmitInlineParameter;
+   bool                                 SystolicModeEnable;
+   bool                                 AccessesUAV;
+   uint32_t                             XP0Required;
+   uint32_t                             MessageSIMD;
+#define SIMD8                                    0
+#define SIMD16                                   1
+#define SIMD32                                   2
+   uint32_t                             SIMDSize;
+#define SIMD8                                    0
+#define SIMD16                                   1
+#define SIMD32                                   2
+   uint32_t                             ExecutionMask;
+   uint32_t                             MaximumPrimitiveCount;
+   uint32_t                             PerPrimitiveDataPitch;
+   uint32_t                             PerVertexDataPitch;
+   uint32_t                             IndexFormat;
+#define INDEX_U888X                              0
+#define INDEX_U101010X                           1
+#define INDEX_U8                                 4
+#define INDEX_U16                                5
+#define INDEX_U32                                3
+   uint32_t                             OutputTopology;
+#define OUTPUT_POINT                             0
+#define OUTPUT_LINE                              1
+#define OUTPUT_TRI                               2
+   uint32_t                             PerPrimitiveDataPresent;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_MESH_SHADER_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_3DSTATE_MESH_SHADER * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1 =
+      __gen_offset(values->KernelStartPointer, 6, 63);
+   dw[1] = v1;
+   dw[2] = v1 >> 32;
+
+   dw[3] =
+      __gen_uint(values->LocalXMaximum, 0, 9) |
+      __gen_uint(values->SoftwareExceptionEnable, 10, 10) |
+      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
+      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      __gen_uint(values->FloatingPointMode, 16, 16) |
+      __gen_uint(values->SingleProgramFlow, 18, 18) |
+      __gen_uint(values->DenormMode, 19, 19);
+
+   dw[4] =
+      __gen_uint(values->NumberofThreadsinGPGPUThreadGroup, 0, 9) |
+      __gen_uint(values->SharedLocalMemorySize, 16, 20) |
+      __gen_uint(values->BarrierEnable, 21, 21) |
+      __gen_uint(values->RoundingMode, 22, 23) |
+      __gen_uint(values->PreferredSLMAllocationSize, 24, 27) |
+      __gen_uint(values->NumberofBarriers, 28, 30);
+
+   dw[5] =
+      __gen_uint(values->IndirectDataLength, 0, 16) |
+      __gen_uint(values->L3PrefetchDisable, 17, 17) |
+      __gen_uint(values->EmitLocalIDX, 18, 18) |
+      __gen_uint(values->EmitInlineParameter, 19, 19) |
+      __gen_uint(values->SystolicModeEnable, 20, 20) |
+      __gen_uint(values->AccessesUAV, 21, 21) |
+      __gen_uint(values->XP0Required, 22, 22) |
+      __gen_uint(values->MessageSIMD, 28, 29) |
+      __gen_uint(values->SIMDSize, 30, 31);
+
+   dw[6] =
+      __gen_uint(values->ExecutionMask, 0, 31);
+
+   dw[7] =
+      __gen_uint(values->MaximumPrimitiveCount, 0, 9) |
+      __gen_uint(values->PerPrimitiveDataPitch, 12, 16) |
+      __gen_uint(values->PerVertexDataPitch, 20, 24) |
+      __gen_uint(values->IndexFormat, 25, 27) |
+      __gen_uint(values->OutputTopology, 28, 29) |
+      __gen_uint(values->PerPrimitiveDataPresent, 31, 31);
+}
+
+#define GFX125_3DSTATE_MESH_SHADER_DATA_length     10
+#define GFX125_3DSTATE_MESH_SHADER_DATA_length_bias      2
+#define GFX125_3DSTATE_MESH_SHADER_DATA_header  \
+   .DWordLength                         =      8,  \
+   ._3DCommandSubOpcode                 =    123,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_MESH_SHADER_DATA {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint64_t                             IndirectDataStartAddress;
+   uint32_t                             InlineData[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_MESH_SHADER_DATA_pack(__attribute__((unused)) __gen_user_data *data,
+                                     __attribute__((unused)) void * restrict dst,
+                                     __attribute__((unused)) const struct GFX125_3DSTATE_MESH_SHADER_DATA * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_offset(values->IndirectDataStartAddress, 6, 31);
+
+   dw[2] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->InlineData[1], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[2], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->InlineData[3], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->InlineData[4], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->InlineData[5], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->InlineData[6], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->InlineData[7], 0, 31);
 }
 
 #define GFX125_3DSTATE_MONOFILTER_SIZE_length      2
@@ -6073,6 +8567,7 @@ struct GFX125_3DSTATE_PS_EXTRA {
    bool                                 PixelShaderDisablesAlphaToCoverage;
    bool                                 AttributeEnable;
    bool                                 SimplePSHint;
+   bool                                 EnablePSDependencyOnCPsizeChange;
    bool                                 PixelShaderRequiresSubpixelSampleOffsets;
    bool                                 PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients;
    bool                                 PixelShaderRequiresPerspectiveBaryPlaneCoefficients;
@@ -6116,6 +8611,7 @@ GFX125_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->PixelShaderDisablesAlphaToCoverage, 7, 7) |
       __gen_uint(values->AttributeEnable, 8, 8) |
       __gen_uint(values->SimplePSHint, 9, 9) |
+      __gen_uint(values->EnablePSDependencyOnCPsizeChange, 17, 17) |
       __gen_uint(values->PixelShaderRequiresSubpixelSampleOffsets, 18, 18) |
       __gen_uint(values->PixelShaderRequiresNonPerspectiveBaryPlaneCoefficients, 19, 19) |
       __gen_uint(values->PixelShaderRequiresPerspectiveBaryPlaneCoefficients, 20, 20) |
@@ -7036,6 +9532,48 @@ GFX125_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->AttributeActiveComponentFormat[31], 30, 31);
 }
 
+#define GFX125_3DSTATE_SBE_MESH_length         2
+#define GFX125_3DSTATE_SBE_MESH_length_bias      2
+#define GFX125_3DSTATE_SBE_MESH_header          \
+   .DWordLength                         =      0,  \
+   ._3DCommandSubOpcode                 =    130,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_SBE_MESH {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             PerVertexURBEntryOutputReadLength;
+   uint32_t                             PerVertexURBEntryOutputReadOffset;
+   uint32_t                             PerPrimitiveURBEntryOutputReadLength;
+   uint32_t                             PerPrimitiveURBEntryOutputReadOffset;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_SBE_MESH_pack(__attribute__((unused)) __gen_user_data *data,
+                             __attribute__((unused)) void * restrict dst,
+                             __attribute__((unused)) const struct GFX125_3DSTATE_SBE_MESH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PerVertexURBEntryOutputReadLength, 0, 4) |
+      __gen_uint(values->PerVertexURBEntryOutputReadOffset, 5, 10) |
+      __gen_uint(values->PerPrimitiveURBEntryOutputReadLength, 11, 15) |
+      __gen_uint(values->PerPrimitiveURBEntryOutputReadOffset, 16, 21);
+}
+
 #define GFX125_3DSTATE_SBE_SWIZ_length        11
 #define GFX125_3DSTATE_SBE_SWIZ_length_bias      2
 #define GFX125_3DSTATE_SBE_SWIZ_header          \
@@ -7234,6 +9772,7 @@ struct GFX125_3DSTATE_SF {
 #define BlockDerefSize32                         0
 #define PerPolyDerefMode                         1
 #define BlockDerefSize8                          2
+#define MeshShaderEODB                           3
    float                                PointWidth;
    uint32_t                             PointWidthSource;
 #define Vertex                                   0
@@ -7700,7 +10239,7 @@ GFX125_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       __gen_uint(values->StreamOutputBufferOffsetAddressEnable, 20, 20) |
       __gen_uint(values->StreamOffsetWriteEnable, 21, 21) |
-      __gen_uint(values->MOCS, 22, 28) |
+      __gen_uint_nonzero(values->MOCS, 22, 28) |
       __gen_uint(values->SOBufferIndex, 29, 30) |
       __gen_uint(values->SOBufferEnable, 31, 31);
 
@@ -7987,7 +10526,7 @@ GFX125_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data
       __gen_uint(values->Height, 17, 30);
 
    dw[5] =
-      __gen_uint(values->MOCS, 0, 6) |
+      __gen_uint_nonzero(values->MOCS, 0, 6) |
       __gen_uint(values->MinimumArrayElement, 8, 18) |
       __gen_uint(values->Depth, 20, 30);
 
@@ -8084,6 +10623,275 @@ GFX125_3DSTATE_STREAMOUT_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->Buffer3SurfacePitch, 16, 27);
 }
 
+#define GFX125_3DSTATE_TASK_CONTROL_length      3
+#define GFX125_3DSTATE_TASK_CONTROL_length_bias      2
+#define GFX125_3DSTATE_TASK_CONTROL_header      \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =    124,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_TASK_CONTROL {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             MaximumNumberofThreadGroups;
+   uint32_t                             ThreadDispatchPriority;
+#define High                                     1
+   bool                                 FusedEUDispatch;
+   bool                                 StatisticsEnable;
+   uint32_t                             TaskShaderEnable;
+   uint32_t                             ScratchSpaceBuffer;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_TASK_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DSTATE_TASK_CONTROL * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->MaximumNumberofThreadGroups, 0, 0) |
+      __gen_uint(values->ThreadDispatchPriority, 28, 28) |
+      __gen_uint(values->FusedEUDispatch, 29, 29) |
+      __gen_uint(values->StatisticsEnable, 30, 30) |
+      __gen_uint(values->TaskShaderEnable, 31, 31);
+
+   dw[2] =
+      __gen_uint(values->ScratchSpaceBuffer, 10, 31);
+}
+
+#define GFX125_3DSTATE_TASK_REDISTRIB_length      2
+#define GFX125_3DSTATE_TASK_REDISTRIB_length_bias      2
+#define GFX125_3DSTATE_TASK_REDISTRIB_header    \
+   .DWordLength                         =      0,  \
+   ._3DCommandSubOpcode                 =    121,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_TASK_REDISTRIB {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             TaskRedistributionMode;
+#define TASKREDISTRIB_OFF                        0
+#define TASKREDISTRIB_RR_STRICT                  1
+#define TASKREDISTRIB_RR_FREE                    2
+   uint32_t                             TaskRedistributionLevel;
+#define TASKREDISTRIB_TASK                       0
+#define TASKREDISTRIB_BOM                        1
+   uint32_t                             TargetMeshBatchSize;
+   uint32_t                             SmallTaskThreshold;
+   uint32_t                             LocalBOTAccumulatorThreshold;
+#define MULTIPLIER_0                             0
+#define MULTIPLIER_1                             1
+#define MULTIPLIER_2                             2
+#define MULTIPLIER_4                             3
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_TASK_REDISTRIB_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_3DSTATE_TASK_REDISTRIB * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->TaskRedistributionMode, 0, 1) |
+      __gen_uint(values->TaskRedistributionLevel, 2, 3) |
+      __gen_uint(values->TargetMeshBatchSize, 4, 7) |
+      __gen_uint(values->SmallTaskThreshold, 10, 12) |
+      __gen_uint(values->LocalBOTAccumulatorThreshold, 16, 17);
+}
+
+#define GFX125_3DSTATE_TASK_SHADER_length      7
+#define GFX125_3DSTATE_TASK_SHADER_length_bias      2
+#define GFX125_3DSTATE_TASK_SHADER_header       \
+   .DWordLength                         =      5,  \
+   ._3DCommandSubOpcode                 =    125,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_TASK_SHADER {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint64_t                             KernelStartPointer;
+   uint32_t                             LocalXMaximum;
+   bool                                 SoftwareExceptionEnable;
+   bool                                 MaskStackExceptionEnable;
+   bool                                 IllegalOpcodeExceptionEnable;
+   uint32_t                             FloatingPointMode;
+#define IEEE754                                  0
+#define Alternate                                1
+   uint32_t                             SingleProgramFlow;
+   uint32_t                             DenormMode;
+#define Ftz                                      0
+#define SetByKernel                              1
+   uint32_t                             NumberofThreadsinGPGPUThreadGroup;
+   uint32_t                             SharedLocalMemorySize;
+   bool                                 BarrierEnable;
+   uint32_t                             RoundingMode;
+#define RTNE                                     0
+#define RU                                       1
+#define RD                                       2
+#define RTZ                                      3
+   uint32_t                             PreferredSLMAllocationSize;
+   uint32_t                             NumberofBarriers;
+   uint32_t                             IndirectDataLength;
+   bool                                 L3PrefetchDisable;
+   bool                                 EmitLocalIDX;
+   bool                                 EmitInlineParameter;
+   bool                                 SystolicModeEnable;
+   bool                                 AccessesUAV;
+   uint32_t                             XP0Required;
+   uint32_t                             MessageSIMD;
+#define SIMD8                                    0
+#define SIMD16                                   1
+#define SIMD32                                   2
+   uint32_t                             SIMDSize;
+#define SIMD8                                    0
+#define SIMD16                                   1
+#define SIMD32                                   2
+   uint32_t                             ExecutionMask;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_TASK_SHADER_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_3DSTATE_TASK_SHADER * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1 =
+      __gen_offset(values->KernelStartPointer, 6, 63);
+   dw[1] = v1;
+   dw[2] = v1 >> 32;
+
+   dw[3] =
+      __gen_uint(values->LocalXMaximum, 0, 9) |
+      __gen_uint(values->SoftwareExceptionEnable, 10, 10) |
+      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
+      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      __gen_uint(values->FloatingPointMode, 16, 16) |
+      __gen_uint(values->SingleProgramFlow, 18, 18) |
+      __gen_uint(values->DenormMode, 19, 19);
+
+   dw[4] =
+      __gen_uint(values->NumberofThreadsinGPGPUThreadGroup, 0, 9) |
+      __gen_uint(values->SharedLocalMemorySize, 16, 20) |
+      __gen_uint(values->BarrierEnable, 21, 21) |
+      __gen_uint(values->RoundingMode, 22, 23) |
+      __gen_uint(values->PreferredSLMAllocationSize, 24, 27) |
+      __gen_uint(values->NumberofBarriers, 28, 30);
+
+   dw[5] =
+      __gen_uint(values->IndirectDataLength, 0, 16) |
+      __gen_uint(values->L3PrefetchDisable, 17, 17) |
+      __gen_uint(values->EmitLocalIDX, 18, 18) |
+      __gen_uint(values->EmitInlineParameter, 19, 19) |
+      __gen_uint(values->SystolicModeEnable, 20, 20) |
+      __gen_uint(values->AccessesUAV, 21, 21) |
+      __gen_uint(values->XP0Required, 22, 22) |
+      __gen_uint(values->MessageSIMD, 28, 29) |
+      __gen_uint(values->SIMDSize, 30, 31);
+
+   dw[6] =
+      __gen_uint(values->ExecutionMask, 0, 31);
+}
+
+#define GFX125_3DSTATE_TASK_SHADER_DATA_length     10
+#define GFX125_3DSTATE_TASK_SHADER_DATA_length_bias      2
+#define GFX125_3DSTATE_TASK_SHADER_DATA_header  \
+   .DWordLength                         =      8,  \
+   ._3DCommandSubOpcode                 =    126,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_TASK_SHADER_DATA {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint64_t                             IndirectDataStartAddress;
+   uint32_t                             InlineData[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_TASK_SHADER_DATA_pack(__attribute__((unused)) __gen_user_data *data,
+                                     __attribute__((unused)) void * restrict dst,
+                                     __attribute__((unused)) const struct GFX125_3DSTATE_TASK_SHADER_DATA * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_offset(values->IndirectDataStartAddress, 6, 31);
+
+   dw[2] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->InlineData[1], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[2], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->InlineData[3], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->InlineData[4], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->InlineData[5], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->InlineData[6], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->InlineData[7], 0, 31);
+}
+
 #define GFX125_3DSTATE_TE_length               4
 #define GFX125_3DSTATE_TE_length_bias          2
 #define GFX125_3DSTATE_TE_header                \
@@ -8115,6 +10923,39 @@ struct GFX125_3DSTATE_TE {
 #define INTEGER                                  0
 #define ODD_FRACTIONAL                           1
 #define EVEN_FRACTIONAL                          2
+   uint32_t                             TessellationDistributionMode;
+#define TEDMODE_OFF                              0
+#define TEDMODE_RR_STRICT                        1
+#define TEDMODE_RR_FREE                          2
+   uint32_t                             TessellationDistributionLevel;
+#define TEDLEVEL_PATCH                           0
+   uint32_t                             SmallPatchThreshold;
+#define SPT_8_TRIANGLES                          0
+#define SPT_16_TRIANGLES                         1
+#define SPT_32_TRIANGLES                         2
+#define SPT_64_TRIANGLES                         3
+   uint32_t                             TargetBlockSize;
+#define _64_TRIANGLES                            0
+#define _96_TRIANGLES                            1
+#define _128_TRIANGLES                           2
+#define _192_TRIANGLES                           3
+#define _256_TRIANGLES                           4
+#define _384_TRIANGLES                           5
+#define _512_TRIANGLES                           6
+#define _768_TRIANGLES                           7
+#define _1K_TRIANGLES                            8
+#define _15K_TRIANGLES                           9
+#define _2K_TRIANGLES                            10
+#define _3K_TRIANGLES                            11
+#define _4K_TRIANGLES                            12
+#define _6K_TRIANGLES                            13
+#define _8K_TRIANGLES                            14
+#define _12K_TRIANGLES                           15
+   uint32_t                             LocalBOPAccumulatorThreshold;
+#define MULTIPLIER_0                             0
+#define MULTIPLIER_1                             1
+#define MULTIPLIER_2                             2
+#define MULTIPLIER_3                             3
    float                                MaximumTessellationFactorOdd;
    float                                MaximumTessellationFactorNotOdd;
 };
@@ -8138,13 +10979,110 @@ GFX125_3DSTATE_TE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->TEMode, 1, 2) |
       __gen_uint(values->TEDomain, 4, 5) |
       __gen_uint(values->OutputTopology, 8, 9) |
-      __gen_uint(values->Partitioning, 12, 13);
+      __gen_uint(values->Partitioning, 12, 13) |
+      __gen_uint(values->TessellationDistributionMode, 14, 15) |
+      __gen_uint(values->TessellationDistributionLevel, 17, 18) |
+      __gen_uint(values->SmallPatchThreshold, 24, 25) |
+      __gen_uint(values->TargetBlockSize, 26, 29) |
+      __gen_uint(values->LocalBOPAccumulatorThreshold, 30, 31);
 
    dw[2] =
       __gen_float(values->MaximumTessellationFactorOdd);
 
    dw[3] =
       __gen_float(values->MaximumTessellationFactorNotOdd);
+}
+
+#define GFX125_3DSTATE_URB_ALLOC_MESH_length      3
+#define GFX125_3DSTATE_URB_ALLOC_MESH_length_bias      2
+#define GFX125_3DSTATE_URB_ALLOC_MESH_header    \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =    127,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_URB_ALLOC_MESH {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             MESHURBEntryAllocationSize;
+   uint32_t                             MESHURBStartingAddressSlice0;
+   uint32_t                             MESHURBStartingAddressSliceN;
+   uint32_t                             MESHNumberofURBEntriesSlice0;
+   uint32_t                             MESHNumberofURBEntriesSliceN;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_URB_ALLOC_MESH_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_3DSTATE_URB_ALLOC_MESH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->MESHURBEntryAllocationSize, 0, 9) |
+      __gen_uint(values->MESHURBStartingAddressSlice0, 10, 17) |
+      __gen_uint(values->MESHURBStartingAddressSliceN, 21, 28);
+
+   dw[2] =
+      __gen_uint(values->MESHNumberofURBEntriesSlice0, 0, 15) |
+      __gen_uint(values->MESHNumberofURBEntriesSliceN, 16, 31);
+}
+
+#define GFX125_3DSTATE_URB_ALLOC_TASK_length      3
+#define GFX125_3DSTATE_URB_ALLOC_TASK_length_bias      2
+#define GFX125_3DSTATE_URB_ALLOC_TASK_header    \
+   .DWordLength                         =      1,  \
+   ._3DCommandSubOpcode                 =    128,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_URB_ALLOC_TASK {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             TASKURBEntryAllocationSize;
+   uint32_t                             TASKURBStartingAddressSlice0;
+   uint32_t                             TASKURBStartingAddressSliceN;
+   uint32_t                             TASKNumberofURBEntriesSlice0;
+   uint32_t                             TASKNumberofURBEntriesSliceN;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_URB_ALLOC_TASK_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_3DSTATE_URB_ALLOC_TASK * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->TASKURBEntryAllocationSize, 0, 9) |
+      __gen_uint(values->TASKURBStartingAddressSlice0, 10, 17) |
+      __gen_uint(values->TASKURBStartingAddressSliceN, 21, 28);
+
+   dw[2] =
+      __gen_uint(values->TASKNumberofURBEntriesSlice0, 0, 15) |
+      __gen_uint(values->TASKNumberofURBEntriesSliceN, 16, 31);
 }
 
 #define GFX125_3DSTATE_URB_CLEAR_length        2
@@ -8424,6 +11362,7 @@ struct GFX125_3DSTATE_VF {
    bool                                 ComponentPackingEnable;
    bool                                 SequentialDrawCutIndexEnable;
    bool                                 VertexIDOffsetEnable;
+   bool                                 GeometryDistributionEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -8444,6 +11383,7 @@ GFX125_3DSTATE_VF_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->ComponentPackingEnable, 9, 9) |
       __gen_uint(values->SequentialDrawCutIndexEnable, 10, 10) |
       __gen_uint(values->VertexIDOffsetEnable, 11, 11) |
+      __gen_uint(values->GeometryDistributionEnable, 12, 12) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -8451,6 +11391,71 @@ GFX125_3DSTATE_VF_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[1] =
       __gen_uint(values->CutIndex, 0, 31);
+}
+
+#define GFX125_3DSTATE_VFG_length              4
+#define GFX125_3DSTATE_VFG_length_bias         2
+#define GFX125_3DSTATE_VFG_header               \
+   .DWordLength                         =      2,  \
+   ._3DCommandSubOpcode                 =     87,  \
+   ._3DCommandOpcode                    =      0,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DSTATE_VFG {
+   uint32_t                             DWordLength;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   uint32_t                             DistributionGranularity;
+#define BatchLevelGranularity                    0
+#define InstanceLevelGranularity                 1
+#define DrawLevelGranularity                     2
+   bool                                 GranularityThresholdDisable;
+   bool                                 ListCutIndexEnable;
+   uint32_t                             DistributionMode;
+#define RR_STRICT                                0
+#define RR_FREE                                  1
+   uint32_t                             List1BatchSizeScale;
+   uint32_t                             List2BatchSizeScale;
+   uint32_t                             List3BatchSizeScale;
+   uint32_t                             ListNBatchSizeScale;
+   uint32_t                             StripBatchSizeScale;
+   uint32_t                             PatchBatchSizeScale;
+   uint32_t                             PatchBatchSizeMultiplier;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DSTATE_VFG_pack(__attribute__((unused)) __gen_user_data *data,
+                        __attribute__((unused)) void * restrict dst,
+                        __attribute__((unused)) const struct GFX125_3DSTATE_VFG * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
+      __gen_uint(values->_3DCommandOpcode, 24, 26) |
+      __gen_uint(values->CommandSubType, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->DistributionGranularity, 0, 1) |
+      __gen_uint(values->GranularityThresholdDisable, 2, 2) |
+      __gen_uint(values->ListCutIndexEnable, 3, 3) |
+      __gen_uint(values->DistributionMode, 4, 4);
+
+   dw[2] =
+      __gen_uint(values->List1BatchSizeScale, 0, 2) |
+      __gen_uint(values->List2BatchSizeScale, 8, 10) |
+      __gen_uint(values->List3BatchSizeScale, 16, 18) |
+      __gen_uint(values->ListNBatchSizeScale, 24, 26);
+
+   dw[3] =
+      __gen_uint(values->StripBatchSizeScale, 0, 2) |
+      __gen_uint(values->PatchBatchSizeScale, 8, 10) |
+      __gen_uint(values->PatchBatchSizeMultiplier, 16, 20);
 }
 
 #define GFX125_3DSTATE_VF_COMPONENT_PACKING_length      5
@@ -9182,10 +12187,10 @@ GFX125_3DSTATE_WM_DEPTH_STENCIL_pack(__attribute__((unused)) __gen_user_data *da
       __gen_uint(values->StencilReferenceValue, 8, 15);
 }
 
-#define GFX125_3DSTATE_WM_HZ_OP_length         5
+#define GFX125_3DSTATE_WM_HZ_OP_length         6
 #define GFX125_3DSTATE_WM_HZ_OP_length_bias      2
 #define GFX125_3DSTATE_WM_HZ_OP_header          \
-   .DWordLength                         =      3,  \
+   .DWordLength                         =      4,  \
    ._3DCommandSubOpcode                 =     82,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
@@ -9250,6 +12255,8 @@ GFX125_3DSTATE_WM_HZ_OP_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[4] =
       __gen_uint(values->SampleMask, 0, 15);
+
+   dw[5] = 0;
 }
 
 #define GFX125_CFE_STATE_length                6
@@ -9494,6 +12501,9185 @@ GFX125_COMPUTE_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[38] =
       __gen_uint(values->InlineData[7], 0, 31);
+}
+
+#define GFX125_HCP_BSD_OBJECT_length           3
+#define GFX125_HCP_BSD_OBJECT_length_bias      2
+#define GFX125_HCP_BSD_OBJECT_header            \
+   .SubOpcode                           =     32,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectBSDDataLength;
+   uint64_t                             IndirectBSDDataStartAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_HCP_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
+}
+
+#define GFX125_HCP_FQM_STATE_length           34
+#define GFX125_HCP_FQM_STATE_length_bias       2
+#define GFX125_HCP_FQM_STATE_header             \
+   .SubOpcode                           =      5,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_FQM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IntraInter;
+#define Intra                                    0
+#define Inter                                    1
+   uint32_t                             SizeID;
+#define SZ_4x4                                   0
+#define SZ_8x8                                   1
+#define SZ_16x16                                 2
+#define SZ_32x32                                 3
+   uint32_t                             ColorComponent;
+#define Luma                                     0
+#define ChromaCb                                 1
+#define ChromaCr                                 2
+   uint32_t                             FQMDCValue;
+   uint32_t                             QuantizerMatrix8x8[64];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_FQM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_HCP_FQM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IntraInter, 0, 0) |
+      __gen_uint(values->SizeID, 1, 2) |
+      __gen_uint(values->ColorComponent, 3, 4) |
+      __gen_uint(values->FQMDCValue, 16, 31);
+
+   dw[2] =
+      __gen_uint(values->QuantizerMatrix8x8[0], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[1], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[2], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->QuantizerMatrix8x8[4], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[5], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[6], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->QuantizerMatrix8x8[8], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[9], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[10], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->QuantizerMatrix8x8[12], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[13], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[14], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[15], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->QuantizerMatrix8x8[16], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[17], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[18], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[19], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->QuantizerMatrix8x8[20], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[21], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[22], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[23], 24, 31);
+
+   dw[8] =
+      __gen_uint(values->QuantizerMatrix8x8[24], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[25], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[26], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[27], 24, 31);
+
+   dw[9] =
+      __gen_uint(values->QuantizerMatrix8x8[28], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[29], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[30], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[31], 24, 31);
+
+   dw[10] =
+      __gen_uint(values->QuantizerMatrix8x8[32], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[33], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[34], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[35], 24, 31);
+
+   dw[11] =
+      __gen_uint(values->QuantizerMatrix8x8[36], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[37], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[38], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[39], 24, 31);
+
+   dw[12] =
+      __gen_uint(values->QuantizerMatrix8x8[40], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[41], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[42], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[43], 24, 31);
+
+   dw[13] =
+      __gen_uint(values->QuantizerMatrix8x8[44], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[45], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[46], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[47], 24, 31);
+
+   dw[14] =
+      __gen_uint(values->QuantizerMatrix8x8[48], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[49], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[50], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[51], 24, 31);
+
+   dw[15] =
+      __gen_uint(values->QuantizerMatrix8x8[52], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[53], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[54], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[55], 24, 31);
+
+   dw[16] =
+      __gen_uint(values->QuantizerMatrix8x8[56], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[57], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[58], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[59], 24, 31);
+
+   dw[17] =
+      __gen_uint(values->QuantizerMatrix8x8[60], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[61], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[62], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[63], 24, 31);
+
+   dw[18] = 0;
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] = 0;
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] = 0;
+
+   dw[30] = 0;
+
+   dw[31] = 0;
+
+   dw[32] = 0;
+
+   dw[33] = 0;
+}
+
+#define GFX125_HCP_IND_OBJ_BASE_ADDR_STATE_length     14
+#define GFX125_HCP_IND_OBJ_BASE_ADDR_STATE_length_bias      2
+#define GFX125_HCP_IND_OBJ_BASE_ADDR_STATE_header\
+   .SubOpcode                           =      3,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_IND_OBJ_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   HCPIndirectBitstreamObjectBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPIndirectBitstreamObjectMemoryAddressAttributes;
+   __gen_address_type                   HCPIndirectBitstreamObjectAccessUpperBound;
+   __gen_address_type                   HCPIndirectCUObjectBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPIndirectCUObjectMemoryAddressAttributes;
+   __gen_address_type                   HCPPAKBSEObjectBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPPAKBSEObjectMemoryAddressAttributes;
+   __gen_address_type                   HCPPAKBSEObjectAccessUpperBound;
+   __gen_address_type                   HCPVP9PAKCompressedHeaderSyntaxStreamInBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPVP9PAKCompressedHeaderSyntaxStreamInMemoryAddressAttributes;
+   __gen_address_type                   HCPVP9PAKProbabilityCounterStreamOutBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPVP9PAKProbabilityCounterStreamOutMemoryAddressAttributes;
+   __gen_address_type                   HCPVP9PAKProbabilityDeltasStreamInBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPVP9PAKProbabilityDeltasStreamInMemoryAddressAttributes;
+   __gen_address_type                   HCPVP9PAKTileRecordStreamOutBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPVP9PAKTileRecordStreamOutMemoryAddressAttributes;
+   __gen_address_type                   HCPVP9PAKCULevelStatisticStreamOutBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPVP9PAKCULevelStatisticStreamOutMemoryAddressAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_IND_OBJ_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                        __attribute__((unused)) void * restrict dst,
+                                        __attribute__((unused)) const struct GFX125_HCP_IND_OBJ_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->HCPIndirectBitstreamObjectBaseAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->HCPIndirectBitstreamObjectMemoryAddressAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->HCPIndirectBitstreamObjectAccessUpperBound, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   const uint64_t v6_address =
+      __gen_address(data, &dw[6], values->HCPIndirectCUObjectBaseAddress, 0, 0, 63);
+   dw[6] = v6_address;
+   dw[7] = v6_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[8], &values->HCPIndirectCUObjectMemoryAddressAttributes);
+
+   const uint64_t v9_address =
+      __gen_address(data, &dw[9], values->HCPPAKBSEObjectBaseAddress, 0, 0, 63);
+   dw[9] = v9_address;
+   dw[10] = v9_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[11], &values->HCPPAKBSEObjectMemoryAddressAttributes);
+
+   const uint64_t v12_address =
+      __gen_address(data, &dw[12], values->HCPPAKBSEObjectAccessUpperBound, 0, 0, 63);
+   dw[12] = v12_address;
+   dw[13] = v12_address >> 32;
+}
+
+#define GFX125_HCP_PAK_INSERT_OBJECT_length_bias      2
+#define GFX125_HCP_PAK_INSERT_OBJECT_header     \
+   .DWordLength                         =      0,  \
+   .SubOpcode                           =     34,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_PAK_INSERT_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 EndofSlice;
+   bool                                 LastHeader;
+   bool                                 EmulationByteBitsInsertEnable;
+   uint32_t                             SkipEmulationByteCount;
+   uint32_t                             DataBitsInLastDW;
+   bool                                 SliceHeaderIndicator;
+   uint32_t                             HeaderLengthExcludedFromSize;
+#define ACCUMULATE                               0
+#define NO_ACCUMULATION                          1
+   uint32_t                             DataByteOffset;
+   bool                                 IndirectPayloadEnable;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_PAK_INSERT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_HCP_PAK_INSERT_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->EndofSlice, 1, 1) |
+      __gen_uint(values->LastHeader, 2, 2) |
+      __gen_uint(values->EmulationByteBitsInsertEnable, 3, 3) |
+      __gen_uint(values->SkipEmulationByteCount, 4, 7) |
+      __gen_uint(values->DataBitsInLastDW, 8, 13) |
+      __gen_uint(values->SliceHeaderIndicator, 14, 14) |
+      __gen_uint(values->HeaderLengthExcludedFromSize, 15, 15) |
+      __gen_uint(values->DataByteOffset, 16, 17) |
+      __gen_uint(values->IndirectPayloadEnable, 31, 31);
+}
+
+#define GFX125_HCP_PAK_OBJECT_length           2
+#define GFX125_HCP_PAK_OBJECT_length_bias      2
+#define GFX125_HCP_PAK_OBJECT_header            \
+   .SubOpcode                           =     33,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_PAK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SplitLevel2Part0;
+   uint32_t                             SplitLevel2Part1;
+   uint32_t                             SplitLevel2Part2;
+   uint32_t                             SplitLevel2Part3;
+   uint32_t                             SplitLevel1;
+   uint32_t                             SplitLevel0;
+   uint32_t                             CUCount;
+   bool                                 LastLCUofTile;
+   bool                                 LastLCUofSlice;
+   uint32_t                             CurrentLCUXAddress;
+   uint32_t                             CurrentLCUYAddress;
+   uint32_t                             EstimatedLCUSize;
+   uint32_t                             SSEClassID32x32_0;
+   uint32_t                             SSEClassID32x32_1;
+   uint32_t                             SSEClassID32x32_2;
+   uint32_t                             SSEClassID32x32_3;
+   bool                                 LCUForceZeroCoeff;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_HCP_PAK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SplitLevel2Part0, 0, 3) |
+      __gen_uint(values->SplitLevel2Part1, 4, 7) |
+      __gen_uint(values->SplitLevel2Part2, 8, 11) |
+      __gen_uint(values->SplitLevel2Part3, 12, 15) |
+      __gen_uint(values->SplitLevel1, 16, 19) |
+      __gen_uint(values->SplitLevel0, 20, 20) |
+      __gen_uint(values->CUCount, 24, 29) |
+      __gen_uint(values->LastLCUofTile, 30, 30) |
+      __gen_uint(values->LastLCUofSlice, 31, 31);
+}
+
+#define GFX125_HCP_PIC_STATE_length           31
+#define GFX125_HCP_PIC_STATE_length_bias       2
+#define GFX125_HCP_PIC_STATE_header             \
+   .SubOpcode                           =     16,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameWidthInMinimumCodingBlockSize;
+   bool                                 PAKTransformSkipEnable;
+   uint32_t                             FrameHeightInMinimumCodingBlockSize;
+   uint32_t                             MinCUSize;
+#define LCU_64x64                                3
+#define LCU_32x32                                2
+#define LCU_16x16                                1
+#define LCU_8x8                                  0
+   uint32_t                             LCUSize;
+#define LCU_64x64                                3
+#define LCU_32x32                                2
+#define LCU_16x16                                1
+#define LCU_Illegalreserved                      0
+   uint32_t                             MinTUSize;
+#define TU_32x32                                 3
+#define TU_16x16                                 2
+#define TU_8x8                                   1
+#define TU_4x4                                   0
+   uint32_t                             MaxTUSize;
+#define TU_32x32                                 3
+#define TU_16x16                                 2
+#define TU_8x8                                   1
+#define TU_4x4                                   0
+   uint32_t                             MinPCMSize;
+#define PCM_32x32                                2
+#define PCM_16x16                                1
+#define PCM_8x8                                  0
+   uint32_t                             MaxPCMSize;
+#define PCM_32x32                                2
+#define PCM_16x16                                1
+#define PCM_8x8                                  0
+   uint32_t                             Log2SAOOffsetScaleLuma;
+   uint32_t                             Log2SAOOffsetScaleChroma;
+   uint32_t                             ChromaQPOffsetListLength;
+   uint32_t                             DiffCUChromaQPOffsetDepth;
+   bool                                 ChromaQPOffsetListEnable;
+   uint32_t                             ChromaSubsampling;
+#define _420                                     1
+#define _422                                     2
+#define _444                                     3
+   bool                                 CollocatedPictureIsISlice;
+   bool                                 CurrentPictureIsISlice;
+   bool                                 CABACZeroWordInsertionTestEnable;
+   bool                                 HighPrecisionOffsetsEnable;
+   uint32_t                             Log2MaxTransformSkipSize;
+   bool                                 CrossComponentPredictionEnable;
+   bool                                 CABACBypassAlignmentEnable;
+   bool                                 PersistentRiceAdaptationEnable;
+   bool                                 IntraSmoothingDisable;
+   bool                                 ExplicitRDPCMEnable;
+   bool                                 ImplicitRDPCMEnable;
+   bool                                 TransformSkipContextEnable;
+   bool                                 TransformSkipRotationEnable;
+   bool                                 SPSRangeExtensionEnable;
+   bool                                 SampleAdaptiveOffsetEnable;
+   bool                                 PCMEnable;
+   bool                                 CUQPDeltaEnable;
+   uint32_t                             MaxDQPDepth;
+   bool                                 PCMLoopFilterDisable;
+   bool                                 ConstrainedIntraPrediction;
+   uint32_t                             Log2ParallelMergeLevel;
+   bool                                 SignDataHiding;
+   bool                                 LoopFilterEnable;
+   bool                                 EntropyCodingSyncEnable;
+   bool                                 TilingEnable;
+   bool                                 WeightedBiPredicationEnable;
+   bool                                 WeightedPredicationEnable;
+   bool                                 FieldPic;
+   bool                                 TopField;
+   bool                                 TransformSkipEnable;
+   bool                                 AMPEnable;
+   bool                                 TransquantBypassEnable;
+   bool                                 StrongIntraSmoothingEnable;
+   uint32_t                             CUPacketStructure;
+#define VME                                      0
+#define ExtEnc                                   1
+   int32_t                              PictureCbQPOffset;
+   int32_t                              PictureCrQPOffset;
+   uint32_t                             IntraMaxTransformHierarchyDepth;
+   uint32_t                             InterMaxTransformHierarchyDepth;
+   uint32_t                             ChromaPCMSampleBitDepth;
+   uint32_t                             LumaPCMSampleBitDepth;
+   uint32_t                             ChromaBitDepth;
+#define _8bit                                    0
+#define _9bit                                    1
+#define _10bit                                   2
+#define _11bit                                   3
+#define _12bit                                   4
+   uint32_t                             LumaBitDepth;
+#define _8bit                                    0
+#define _9bit                                    1
+#define _10bit                                   2
+#define _11bit                                   3
+#define _12bit                                   4
+   uint32_t                             LCUMaxBitSizeAllowed;
+   bool                                 NonFirstPass;
+   bool                                 LCUMaxSizeReport;
+   bool                                 FrameBitrateMaxReport;
+   bool                                 FrameBitrateMinReport;
+   bool                                 LoadBitstreamPointerPerSlice;
+   uint32_t                             FrameBitrateMax;
+   uint32_t                             FrameBitrateMaxUnit;
+   uint32_t                             FrameBitrateMin;
+   uint32_t                             FrameBitrateMinUnit;
+   uint32_t                             FrameBitrateMinDelta;
+   uint32_t                             FrameBitrateMaxDelta;
+   struct GFX125_FRAMEDELTAQP           FrameDeltaQPMax;
+   struct GFX125_FRAMEDELTAQP           FrameDeltaQPMin;
+   struct GFX125_FRAMEDELTAQPRANGE      FrameDeltaQPMaxRange;
+   struct GFX125_FRAMEDELTAQPRANGE      FrameDeltaQPMinRange;
+   uint32_t                             MinimumFrameSize;
+   uint32_t                             MinimumFrameSizeUnits;
+#define HCP_MFSU_4Kb                             0
+#define HCP_MFSU_16Kb                            1
+#define HCP_MFSU_Compatibilitymode               2
+#define HCP_MFSU_16bytes                         3
+   uint32_t                             FractionalQPInput;
+   uint32_t                             FractionalQPOffset;
+   bool                                 RhoDomainRateControlEnable;
+   bool                                 FractionalQPAdjustmentEnable;
+   uint32_t                             RhoDomainFrameLevelQP;
+   bool                                 PAKDynamicSliceModeEnable;
+   bool                                 NoOutputofPriorPics;
+   bool                                 FirstSliceSegmentInPic;
+   uint32_t                             NalUnitType;
+   uint32_t                             Slice_pic_parameter_set_id;
+   bool                                 SSEEnable;
+   bool                                 RDOQEnable;
+   uint32_t                             NumberofLCUsInNormalSliceSizeConformanceMode;
+   bool                                 IntraTUCountBasedRDOQDisable;
+   uint32_t                             SliceSizeThreshold;
+   uint32_t                             TargetSliceSize;
+   uint32_t                             Class0_SSE_Threshold0;
+   uint32_t                             Class0_SSE_Threshold1;
+   uint64_t                             SSEThresholdsforClass18;
+   int32_t                              CbQPOffsetList0;
+   int32_t                              CbQPOffsetList1;
+   int32_t                              CbQPOffsetList2;
+   int32_t                              CbQPOffsetList3;
+   int32_t                              CbQPOffsetList4;
+   int32_t                              CbQPOffsetList5;
+   int32_t                              CrQPOffsetList0;
+   int32_t                              CrQPOffsetList1;
+   int32_t                              CrQPOffsetList2;
+   int32_t                              CrQPOffsetList3;
+   int32_t                              CrQPOffsetList4;
+   int32_t                              CrQPOffsetList5;
+   uint32_t                             RDOQIntraTUThreshold;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_HCP_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->FrameWidthInMinimumCodingBlockSize, 0, 10) |
+      __gen_uint(values->PAKTransformSkipEnable, 15, 15) |
+      __gen_uint(values->FrameHeightInMinimumCodingBlockSize, 16, 26);
+
+   dw[2] =
+      __gen_uint(values->MinCUSize, 0, 1) |
+      __gen_uint(values->LCUSize, 2, 3) |
+      __gen_uint(values->MinTUSize, 4, 5) |
+      __gen_uint(values->MaxTUSize, 6, 7) |
+      __gen_uint(values->MinPCMSize, 8, 9) |
+      __gen_uint(values->MaxPCMSize, 10, 11) |
+      __gen_uint(values->Log2SAOOffsetScaleLuma, 12, 14) |
+      __gen_uint(values->Log2SAOOffsetScaleChroma, 16, 18) |
+      __gen_uint(values->ChromaQPOffsetListLength, 20, 22) |
+      __gen_uint(values->DiffCUChromaQPOffsetDepth, 24, 27) |
+      __gen_uint(values->ChromaQPOffsetListEnable, 28, 28) |
+      __gen_uint(values->ChromaSubsampling, 29, 31);
+
+   dw[3] =
+      __gen_uint(values->CollocatedPictureIsISlice, 0, 0) |
+      __gen_uint(values->CurrentPictureIsISlice, 1, 1) |
+      __gen_uint(values->CABACZeroWordInsertionTestEnable, 2, 2) |
+      __gen_uint(values->HighPrecisionOffsetsEnable, 19, 19) |
+      __gen_uint(values->Log2MaxTransformSkipSize, 20, 22) |
+      __gen_uint(values->CrossComponentPredictionEnable, 23, 23) |
+      __gen_uint(values->CABACBypassAlignmentEnable, 24, 24) |
+      __gen_uint(values->PersistentRiceAdaptationEnable, 25, 25) |
+      __gen_uint(values->IntraSmoothingDisable, 26, 26) |
+      __gen_uint(values->ExplicitRDPCMEnable, 27, 27) |
+      __gen_uint(values->ImplicitRDPCMEnable, 28, 28) |
+      __gen_uint(values->TransformSkipContextEnable, 29, 29) |
+      __gen_uint(values->TransformSkipRotationEnable, 30, 30) |
+      __gen_uint(values->SPSRangeExtensionEnable, 31, 31);
+
+   dw[4] =
+      __gen_uint(values->SampleAdaptiveOffsetEnable, 3, 3) |
+      __gen_uint(values->PCMEnable, 4, 4) |
+      __gen_uint(values->CUQPDeltaEnable, 5, 5) |
+      __gen_uint(values->MaxDQPDepth, 6, 7) |
+      __gen_uint(values->PCMLoopFilterDisable, 8, 8) |
+      __gen_uint(values->ConstrainedIntraPrediction, 9, 9) |
+      __gen_uint(values->Log2ParallelMergeLevel, 10, 12) |
+      __gen_uint(values->SignDataHiding, 13, 13) |
+      __gen_uint(values->LoopFilterEnable, 15, 15) |
+      __gen_uint(values->EntropyCodingSyncEnable, 16, 16) |
+      __gen_uint(values->TilingEnable, 17, 17) |
+      __gen_uint(values->WeightedBiPredicationEnable, 18, 18) |
+      __gen_uint(values->WeightedPredicationEnable, 19, 19) |
+      __gen_uint(values->FieldPic, 20, 20) |
+      __gen_uint(values->TopField, 21, 21) |
+      __gen_uint(values->TransformSkipEnable, 22, 22) |
+      __gen_uint(values->AMPEnable, 23, 23) |
+      __gen_uint(values->TransquantBypassEnable, 25, 25) |
+      __gen_uint(values->StrongIntraSmoothingEnable, 26, 26) |
+      __gen_uint(values->CUPacketStructure, 27, 27);
+
+   dw[5] =
+      __gen_sint(values->PictureCbQPOffset, 0, 4) |
+      __gen_sint(values->PictureCrQPOffset, 5, 9) |
+      __gen_uint(values->IntraMaxTransformHierarchyDepth, 10, 12) |
+      __gen_uint(values->InterMaxTransformHierarchyDepth, 13, 15) |
+      __gen_uint(values->ChromaPCMSampleBitDepth, 16, 19) |
+      __gen_uint(values->LumaPCMSampleBitDepth, 20, 23) |
+      __gen_uint(values->ChromaBitDepth, 24, 26) |
+      __gen_uint(values->LumaBitDepth, 27, 29);
+
+   dw[6] =
+      __gen_uint(values->LCUMaxBitSizeAllowed, 0, 15) |
+      __gen_uint(values->NonFirstPass, 16, 16) |
+      __gen_uint(values->LCUMaxSizeReport, 24, 24) |
+      __gen_uint(values->FrameBitrateMaxReport, 25, 25) |
+      __gen_uint(values->FrameBitrateMinReport, 26, 26) |
+      __gen_uint(values->LoadBitstreamPointerPerSlice, 29, 29);
+
+   dw[7] =
+      __gen_uint(values->FrameBitrateMax, 0, 13) |
+      __gen_uint(values->FrameBitrateMaxUnit, 31, 31);
+
+   dw[8] =
+      __gen_uint(values->FrameBitrateMin, 0, 13) |
+      __gen_uint(values->FrameBitrateMinUnit, 31, 31);
+
+   dw[9] =
+      __gen_uint(values->FrameBitrateMinDelta, 0, 14) |
+      __gen_uint(values->FrameBitrateMaxDelta, 16, 30);
+
+   GFX125_FRAMEDELTAQP_pack(data, &dw[10], &values->FrameDeltaQPMax);
+
+   GFX125_FRAMEDELTAQP_pack(data, &dw[12], &values->FrameDeltaQPMin);
+
+   GFX125_FRAMEDELTAQPRANGE_pack(data, &dw[14], &values->FrameDeltaQPMaxRange);
+
+   GFX125_FRAMEDELTAQPRANGE_pack(data, &dw[16], &values->FrameDeltaQPMinRange);
+
+   dw[18] =
+      __gen_uint(values->MinimumFrameSize, 0, 15) |
+      __gen_uint(values->MinimumFrameSizeUnits, 30, 31);
+
+   dw[19] =
+      __gen_uint(values->FractionalQPInput, 0, 2) |
+      __gen_uint(values->FractionalQPOffset, 3, 5) |
+      __gen_uint(values->RhoDomainRateControlEnable, 6, 6) |
+      __gen_uint(values->FractionalQPAdjustmentEnable, 7, 7) |
+      __gen_uint(values->RhoDomainFrameLevelQP, 8, 13) |
+      __gen_uint(values->PAKDynamicSliceModeEnable, 14, 14) |
+      __gen_uint(values->NoOutputofPriorPics, 15, 15) |
+      __gen_uint(values->FirstSliceSegmentInPic, 16, 16) |
+      __gen_uint(values->NalUnitType, 17, 17) |
+      __gen_uint(values->Slice_pic_parameter_set_id, 18, 23) |
+      __gen_uint(values->SSEEnable, 24, 24) |
+      __gen_uint(values->RDOQEnable, 25, 25) |
+      __gen_uint(values->NumberofLCUsInNormalSliceSizeConformanceMode, 26, 27);
+
+   dw[20] =
+      __gen_uint(values->IntraTUCountBasedRDOQDisable, 6, 6);
+
+   dw[21] =
+      __gen_uint(values->SliceSizeThreshold, 0, 31);
+
+   dw[22] =
+      __gen_uint(values->TargetSliceSize, 0, 31);
+
+   dw[23] =
+      __gen_uint(values->Class0_SSE_Threshold0, 0, 15) |
+      __gen_uint(values->Class0_SSE_Threshold1, 16, 31);
+
+   const uint64_t v24 =
+      __gen_uint(values->SSEThresholdsforClass18, 0, 255);
+   dw[24] = v24;
+   dw[25] = v24 >> 32;
+}
+
+#define GFX125_HCP_PIPE_BUF_ADDR_STATE_length    104
+#define GFX125_HCP_PIPE_BUF_ADDR_STATE_length_bias      2
+#define GFX125_HCP_PIPE_BUF_ADDR_STATE_header   \
+   .SubOpcode                           =      2,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_PIPE_BUF_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   DecodedPictureAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DecodedPictureMemoryAddressAttributes;
+   __gen_address_type                   DeblockingFilterLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockingFilterLineBufferMemoryAddressAttributes;
+   __gen_address_type                   DeblockingFilterTileLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockingFilterTileLineBufferMemoryAddressAttributes;
+   __gen_address_type                   DeblockingFilterTileColumnBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockingFilterTileColumnBufferMemoryAddressAttributes;
+   __gen_address_type                   MetadataLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MetadataLineBufferMemoryAddressAttributes;
+   __gen_address_type                   MetadataTileLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MetadataTileLineBufferMemoryAddressAttributes;
+   __gen_address_type                   MetadataTileColumnBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MetadataTileColumnBufferMemoryAddressAttributes;
+   __gen_address_type                   SAOLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SAOLineBufferMemoryAddressAttributes;
+   __gen_address_type                   SAOTileLineBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SAOTileLineBufferMemoryAddressAttributes;
+   __gen_address_type                   SAOTileColumnBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SAOTileColumnBufferMemoryAddressAttributes;
+   __gen_address_type                   CurrentMVTemporalBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CurrentMVTemporalBufferMemoryAddressAttributes;
+   __gen_address_type                   ReferencePictureAddress[8];
+   struct GFX125_MEMORYADDRESSATTRIBUTES ReferencePictureMemoryAddressAttributes;
+   __gen_address_type                   OriginalUncompressedPictureSourceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES OriginalUncompressedPictureSourceMemoryAddressAttributes;
+   __gen_address_type                   SAORowStoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SAORowStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   DecodedPictureStatusBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DecodedPictureStatusBufferMemoryAddressAttributes;
+   __gen_address_type                   LCUILDBStreamOutBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES LCUILDBStreamOutBufferMemoryAddressAttributes;
+   __gen_address_type                   CollocatedMVTemporalBufferAddress[8];
+   struct GFX125_MEMORYADDRESSATTRIBUTES CollocatedMVTemporalBufferMemoryAddressAttributes;
+   __gen_address_type                   VP9ProbabilityBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES VP9ProbabilityBufferMemoryAddressAttributes;
+   uint64_t                             VP9SegmentIDBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES VP9SegmentIDBufferMemoryAddressAttributes;
+   __gen_address_type                   VP9HVDLineRowStoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES VP9HVDLineRowStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   VP9HVDTileRowStoreBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES VP9HVDTileRowStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   SAOStreamOutDataDestinationBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SAOStreamOutDataDestinationBufferMemoryAddressAttributes;
+   __gen_address_type                   FrameStatisticsStreamOutDataDestinationBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES FrameStatisticsStreamOutDataDestinationBufferMemoryAddressAttributes;
+   __gen_address_type                   SSESourcePixelRowStoreBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SSESourcePixelRowStoreBufferMemoryAddressAttributesReadWrite;
+   __gen_address_type                   HCPScalabilitySliceStateBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPScalabilitySliceStateBufferMemoryAddressAttributes;
+   __gen_address_type                   HCPScalabilityCABACDecodedSyntaxElementsBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPScalabilityCABACDecodedSyntaxElementsBufferMemoryAddressAttributes;
+   __gen_address_type                   MVUpperRightColumnStoreBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MVUpperRightColumnStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   IntraPredictionUpperRightColumnStoreBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntraPredictionUpperRightColumnStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   IntraPredictionLeftReconColumnStoreBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntraPredictionLeftReconColumnStoreBufferMemoryAddressAttributes;
+   __gen_address_type                   HCPScalabilityCABACDecodedSyntaxElementsBufferMaxAddress;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_HCP_PIPE_BUF_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->DecodedPictureAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->DecodedPictureMemoryAddressAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->DeblockingFilterLineBufferAddress, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[6], &values->DeblockingFilterLineBufferMemoryAddressAttributes);
+
+   const uint64_t v7_address =
+      __gen_address(data, &dw[7], values->DeblockingFilterTileLineBufferAddress, 0, 0, 63);
+   dw[7] = v7_address;
+   dw[8] = v7_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[9], &values->DeblockingFilterTileLineBufferMemoryAddressAttributes);
+
+   const uint64_t v10_address =
+      __gen_address(data, &dw[10], values->DeblockingFilterTileColumnBufferAddress, 0, 0, 63);
+   dw[10] = v10_address;
+   dw[11] = v10_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[12], &values->DeblockingFilterTileColumnBufferMemoryAddressAttributes);
+
+   const uint64_t v13_address =
+      __gen_address(data, &dw[13], values->MetadataLineBufferAddress, 0, 0, 63);
+   dw[13] = v13_address;
+   dw[14] = v13_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[15], &values->MetadataLineBufferMemoryAddressAttributes);
+
+   const uint64_t v16_address =
+      __gen_address(data, &dw[16], values->MetadataTileLineBufferAddress, 0, 0, 63);
+   dw[16] = v16_address;
+   dw[17] = v16_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[18], &values->MetadataTileLineBufferMemoryAddressAttributes);
+
+   const uint64_t v19_address =
+      __gen_address(data, &dw[19], values->MetadataTileColumnBufferAddress, 0, 0, 63);
+   dw[19] = v19_address;
+   dw[20] = v19_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[21], &values->MetadataTileColumnBufferMemoryAddressAttributes);
+
+   const uint64_t v22_address =
+      __gen_address(data, &dw[22], values->SAOLineBufferAddress, 0, 0, 63);
+   dw[22] = v22_address;
+   dw[23] = v22_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[24], &values->SAOLineBufferMemoryAddressAttributes);
+
+   const uint64_t v25_address =
+      __gen_address(data, &dw[25], values->SAOTileLineBufferAddress, 0, 0, 63);
+   dw[25] = v25_address;
+   dw[26] = v25_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[27], &values->SAOTileLineBufferMemoryAddressAttributes);
+
+   const uint64_t v28_address =
+      __gen_address(data, &dw[28], values->SAOTileColumnBufferAddress, 0, 0, 63);
+   dw[28] = v28_address;
+   dw[29] = v28_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[30], &values->SAOTileColumnBufferMemoryAddressAttributes);
+
+   const uint64_t v31_address =
+      __gen_address(data, &dw[31], values->CurrentMVTemporalBufferAddress, 0, 0, 63);
+   dw[31] = v31_address;
+   dw[32] = v31_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[33], &values->CurrentMVTemporalBufferMemoryAddressAttributes);
+
+   dw[34] = 0;
+
+   dw[35] = 0;
+
+   dw[36] = 0;
+
+   const uint64_t v37_address =
+      __gen_address(data, &dw[37], values->ReferencePictureAddress[0], 0, 0, 63);
+   dw[37] = v37_address;
+   dw[38] = v37_address >> 32;
+
+   const uint64_t v39_address =
+      __gen_address(data, &dw[39], values->ReferencePictureAddress[1], 0, 0, 63);
+   dw[39] = v39_address;
+   dw[40] = v39_address >> 32;
+
+   const uint64_t v41_address =
+      __gen_address(data, &dw[41], values->ReferencePictureAddress[2], 0, 0, 63);
+   dw[41] = v41_address;
+   dw[42] = v41_address >> 32;
+
+   const uint64_t v43_address =
+      __gen_address(data, &dw[43], values->ReferencePictureAddress[3], 0, 0, 63);
+   dw[43] = v43_address;
+   dw[44] = v43_address >> 32;
+
+   const uint64_t v45_address =
+      __gen_address(data, &dw[45], values->ReferencePictureAddress[4], 0, 0, 63);
+   dw[45] = v45_address;
+   dw[46] = v45_address >> 32;
+
+   const uint64_t v47_address =
+      __gen_address(data, &dw[47], values->ReferencePictureAddress[5], 0, 0, 63);
+   dw[47] = v47_address;
+   dw[48] = v47_address >> 32;
+
+   const uint64_t v49_address =
+      __gen_address(data, &dw[49], values->ReferencePictureAddress[6], 0, 0, 63);
+   dw[49] = v49_address;
+   dw[50] = v49_address >> 32;
+
+   const uint64_t v51_address =
+      __gen_address(data, &dw[51], values->ReferencePictureAddress[7], 0, 0, 63);
+   dw[51] = v51_address;
+   dw[52] = v51_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[53], &values->ReferencePictureMemoryAddressAttributes);
+
+   const uint64_t v54_address =
+      __gen_address(data, &dw[54], values->OriginalUncompressedPictureSourceAddress, 0, 0, 63);
+   dw[54] = v54_address;
+   dw[55] = v54_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[56], &values->OriginalUncompressedPictureSourceMemoryAddressAttributes);
+
+   const uint64_t v57_address =
+      __gen_address(data, &dw[57], values->SAORowStoreBufferAddress, 0, 0, 63);
+   dw[57] = v57_address;
+   dw[58] = v57_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[59], &values->SAORowStoreBufferMemoryAddressAttributes);
+
+   const uint64_t v60_address =
+      __gen_address(data, &dw[60], values->DecodedPictureStatusBufferAddress, 0, 0, 63);
+   dw[60] = v60_address;
+   dw[61] = v60_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[62], &values->DecodedPictureStatusBufferMemoryAddressAttributes);
+
+   const uint64_t v63_address =
+      __gen_address(data, &dw[63], values->LCUILDBStreamOutBufferAddress, 0, 0, 63);
+   dw[63] = v63_address;
+   dw[64] = v63_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[65], &values->LCUILDBStreamOutBufferMemoryAddressAttributes);
+
+   const uint64_t v66_address =
+      __gen_address(data, &dw[66], values->CollocatedMVTemporalBufferAddress[0], 0, 0, 63);
+   dw[66] = v66_address;
+   dw[67] = v66_address >> 32;
+
+   const uint64_t v68_address =
+      __gen_address(data, &dw[68], values->CollocatedMVTemporalBufferAddress[1], 0, 0, 63);
+   dw[68] = v68_address;
+   dw[69] = v68_address >> 32;
+
+   const uint64_t v70_address =
+      __gen_address(data, &dw[70], values->CollocatedMVTemporalBufferAddress[2], 0, 0, 63);
+   dw[70] = v70_address;
+   dw[71] = v70_address >> 32;
+
+   const uint64_t v72_address =
+      __gen_address(data, &dw[72], values->CollocatedMVTemporalBufferAddress[3], 0, 0, 63);
+   dw[72] = v72_address;
+   dw[73] = v72_address >> 32;
+
+   const uint64_t v74_address =
+      __gen_address(data, &dw[74], values->CollocatedMVTemporalBufferAddress[4], 0, 0, 63);
+   dw[74] = v74_address;
+   dw[75] = v74_address >> 32;
+
+   const uint64_t v76_address =
+      __gen_address(data, &dw[76], values->CollocatedMVTemporalBufferAddress[5], 0, 0, 63);
+   dw[76] = v76_address;
+   dw[77] = v76_address >> 32;
+
+   const uint64_t v78_address =
+      __gen_address(data, &dw[78], values->CollocatedMVTemporalBufferAddress[6], 0, 0, 63);
+   dw[78] = v78_address;
+   dw[79] = v78_address >> 32;
+
+   const uint64_t v80_address =
+      __gen_address(data, &dw[80], values->CollocatedMVTemporalBufferAddress[7], 0, 0, 63);
+   dw[80] = v80_address;
+   dw[81] = v80_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[82], &values->CollocatedMVTemporalBufferMemoryAddressAttributes);
+
+   const uint64_t v83_address =
+      __gen_address(data, &dw[83], values->VP9ProbabilityBufferAddress, 0, 0, 63);
+   dw[83] = v83_address;
+   dw[84] = v83_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[85], &values->VP9ProbabilityBufferMemoryAddressAttributes);
+
+   const uint64_t v86 =
+      __gen_uint(values->VP9SegmentIDBufferAddress, 0, 63);
+   dw[86] = v86;
+   dw[87] = v86 >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[88], &values->VP9SegmentIDBufferMemoryAddressAttributes);
+
+   const uint64_t v89_address =
+      __gen_address(data, &dw[89], values->VP9HVDLineRowStoreBufferAddress, 0, 0, 63);
+   dw[89] = v89_address;
+   dw[90] = v89_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[91], &values->VP9HVDLineRowStoreBufferMemoryAddressAttributes);
+
+   const uint64_t v92_address =
+      __gen_address(data, &dw[92], values->VP9HVDTileRowStoreBufferAddress, 0, 0, 63);
+   dw[92] = v92_address;
+   dw[93] = v92_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[94], &values->VP9HVDTileRowStoreBufferMemoryAddressAttributes);
+
+   const uint64_t v95_address =
+      __gen_address(data, &dw[95], values->SAOStreamOutDataDestinationBufferBaseAddress, 0, 0, 63);
+   dw[95] = v95_address;
+   dw[96] = v95_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[97], &values->SAOStreamOutDataDestinationBufferMemoryAddressAttributes);
+
+   const uint64_t v98_address =
+      __gen_address(data, &dw[98], values->FrameStatisticsStreamOutDataDestinationBufferBaseAddress, 0, 0, 63);
+   dw[98] = v98_address;
+   dw[99] = v98_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[100], &values->FrameStatisticsStreamOutDataDestinationBufferMemoryAddressAttributes);
+
+   const uint64_t v101_address =
+      __gen_address(data, &dw[101], values->SSESourcePixelRowStoreBufferBaseAddress, 0, 0, 63);
+   dw[101] = v101_address;
+   dw[102] = v101_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[103], &values->SSESourcePixelRowStoreBufferMemoryAddressAttributesReadWrite);
+}
+
+#define GFX125_HCP_PIPE_MODE_SELECT_length      6
+#define GFX125_HCP_PIPE_MODE_SELECT_length_bias      2
+#define GFX125_HCP_PIPE_MODE_SELECT_header      \
+   .SubOpcode                           =      0,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_PIPE_MODE_SELECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             CodecSelect;
+#define Decode                                   0
+#define Encode                                   1
+   bool                                 DeblockerStreamOutEnable;
+   bool                                 PAKPipelineStreamOutEnable;
+   bool                                 PicStatusErrorReportEnable;
+   uint32_t                             CodecStandardSelect;
+#define HEVC                                     0
+#define VP9                                      1
+   bool                                 AdvancedRateControlEnable;
+   uint32_t                             VDEncMode;
+#define VM_MBEncMode                             0
+#define VM_VDEncMode                             1
+   bool                                 RDOQEnable;
+   bool                                 PAKFrameLevelStreamOutEnable;
+   uint32_t                             MultiEngineMode;
+   uint32_t                             PipeWorkingMode;
+#define LegacyDecoderEncoderMode                 0
+#define CABACFEOnlyDecodeMode                    1
+#define DecoderBEOnlyorEncoderMode               2
+   uint32_t                             MediaSoftResetCounter;
+   uint32_t                             PicStatusErrorReportID;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_HCP_PIPE_MODE_SELECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->CodecSelect, 0, 0) |
+      __gen_uint(values->DeblockerStreamOutEnable, 1, 1) |
+      __gen_uint(values->PAKPipelineStreamOutEnable, 2, 2) |
+      __gen_uint(values->PicStatusErrorReportEnable, 3, 3) |
+      __gen_uint(values->CodecStandardSelect, 5, 7) |
+      __gen_uint(values->AdvancedRateControlEnable, 9, 9) |
+      __gen_uint(values->VDEncMode, 10, 10) |
+      __gen_uint(values->RDOQEnable, 11, 11) |
+      __gen_uint(values->PAKFrameLevelStreamOutEnable, 12, 12) |
+      __gen_uint(values->MultiEngineMode, 13, 14) |
+      __gen_uint(values->PipeWorkingMode, 15, 16);
+
+   dw[2] =
+      __gen_uint(values->MediaSoftResetCounter, 0, 31);
+
+   dw[3] =
+      __gen_uint(values->PicStatusErrorReportID, 0, 31);
+
+   dw[4] = 0;
+
+   dw[5] = 0;
+}
+
+#define GFX125_HCP_QM_STATE_length            34
+#define GFX125_HCP_QM_STATE_length_bias        2
+#define GFX125_HCP_QM_STATE_header              \
+   .SubOpcode                           =      4,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_QM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             PredictionType;
+#define Intra                                    0
+#define Inter                                    1
+   uint32_t                             SizeID;
+#define _4x4                                     0
+#define _8x8                                     1
+#define _16x16                                   2
+#define _32x32                                   3
+   uint32_t                             ColorComponent;
+#define Luma                                     0
+#define ChromaCb                                 1
+#define ChromaCr                                 2
+   uint32_t                             DCCoefficient;
+   uint32_t                             QuantizerMatrix8x8[64];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                         __attribute__((unused)) void * restrict dst,
+                         __attribute__((unused)) const struct GFX125_HCP_QM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PredictionType, 0, 0) |
+      __gen_uint(values->SizeID, 1, 2) |
+      __gen_uint(values->ColorComponent, 3, 4) |
+      __gen_uint(values->DCCoefficient, 5, 12);
+
+   dw[2] =
+      __gen_uint(values->QuantizerMatrix8x8[0], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[1], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[2], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->QuantizerMatrix8x8[4], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[5], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[6], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->QuantizerMatrix8x8[8], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[9], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[10], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->QuantizerMatrix8x8[12], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[13], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[14], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[15], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->QuantizerMatrix8x8[16], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[17], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[18], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[19], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->QuantizerMatrix8x8[20], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[21], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[22], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[23], 24, 31);
+
+   dw[8] =
+      __gen_uint(values->QuantizerMatrix8x8[24], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[25], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[26], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[27], 24, 31);
+
+   dw[9] =
+      __gen_uint(values->QuantizerMatrix8x8[28], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[29], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[30], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[31], 24, 31);
+
+   dw[10] =
+      __gen_uint(values->QuantizerMatrix8x8[32], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[33], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[34], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[35], 24, 31);
+
+   dw[11] =
+      __gen_uint(values->QuantizerMatrix8x8[36], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[37], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[38], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[39], 24, 31);
+
+   dw[12] =
+      __gen_uint(values->QuantizerMatrix8x8[40], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[41], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[42], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[43], 24, 31);
+
+   dw[13] =
+      __gen_uint(values->QuantizerMatrix8x8[44], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[45], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[46], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[47], 24, 31);
+
+   dw[14] =
+      __gen_uint(values->QuantizerMatrix8x8[48], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[49], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[50], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[51], 24, 31);
+
+   dw[15] =
+      __gen_uint(values->QuantizerMatrix8x8[52], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[53], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[54], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[55], 24, 31);
+
+   dw[16] =
+      __gen_uint(values->QuantizerMatrix8x8[56], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[57], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[58], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[59], 24, 31);
+
+   dw[17] =
+      __gen_uint(values->QuantizerMatrix8x8[60], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[61], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[62], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[63], 24, 31);
+
+   dw[18] = 0;
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] = 0;
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] = 0;
+
+   dw[30] = 0;
+
+   dw[31] = 0;
+
+   dw[32] = 0;
+
+   dw[33] = 0;
+}
+
+#define GFX125_HCP_RDOQ_STATE_length           9
+#define GFX125_HCP_RDOQ_STATE_length_bias      2
+#define GFX125_HCP_RDOQ_STATE_header            \
+   .SubOpcode                           =     21,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_RDOQ_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 IntraRDOQ;
+   bool                                 InterRDOQ;
+   uint32_t                             LambdaIntraLuma[26];
+   uint32_t                             LambdaIntraChroma[26];
+   uint32_t                             LambdaInterLuma[26];
+   uint32_t                             LambdaInterChroma[26];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_RDOQ_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_HCP_RDOQ_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IntraRDOQ, 0, 0) |
+      __gen_uint(values->InterRDOQ, 1, 1);
+
+   dw[2] =
+      __gen_uint(values->LambdaIntraLuma[0], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[1], 16, 31);
+
+   dw[3] =
+      __gen_uint(values->LambdaIntraLuma[2], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[3], 16, 31);
+
+   dw[4] =
+      __gen_uint(values->LambdaIntraLuma[4], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[5], 16, 31);
+
+   dw[5] =
+      __gen_uint(values->LambdaIntraLuma[6], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[7], 16, 31);
+
+   dw[6] =
+      __gen_uint(values->LambdaIntraLuma[8], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[9], 16, 31);
+
+   dw[7] =
+      __gen_uint(values->LambdaIntraLuma[10], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[11], 16, 31);
+
+   dw[8] =
+      __gen_uint(values->LambdaIntraLuma[12], 0, 15) |
+      __gen_uint(values->LambdaIntraLuma[13], 16, 31);
+}
+
+#define GFX125_HCP_REF_IDX_STATE_length       18
+#define GFX125_HCP_REF_IDX_STATE_length_bias      2
+#define GFX125_HCP_REF_IDX_STATE_header         \
+   .SubOpcode                           =     18,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_REF_IDX_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ReferencePictureListSelect;
+   uint32_t                             NumberofReferenceIndexesActive;
+   struct GFX125_HCP_REF_LIST_ENTRY     ReferenceListEntry[16];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_REF_IDX_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_HCP_REF_IDX_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ReferencePictureListSelect, 0, 0) |
+      __gen_uint(values->NumberofReferenceIndexesActive, 1, 4);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[2], &values->ReferenceListEntry[0]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[3], &values->ReferenceListEntry[1]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[4], &values->ReferenceListEntry[2]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[5], &values->ReferenceListEntry[3]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[6], &values->ReferenceListEntry[4]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[7], &values->ReferenceListEntry[5]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[8], &values->ReferenceListEntry[6]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[9], &values->ReferenceListEntry[7]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[10], &values->ReferenceListEntry[8]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[11], &values->ReferenceListEntry[9]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[12], &values->ReferenceListEntry[10]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[13], &values->ReferenceListEntry[11]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[14], &values->ReferenceListEntry[12]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[15], &values->ReferenceListEntry[13]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[16], &values->ReferenceListEntry[14]);
+
+   GFX125_HCP_REF_LIST_ENTRY_pack(data, &dw[17], &values->ReferenceListEntry[15]);
+}
+
+#define GFX125_HCP_SLICE_STATE_length          2
+#define GFX125_HCP_SLICE_STATE_length_bias      2
+#define GFX125_HCP_SLICE_STATE_header           \
+   .SubOpcode                           =     20,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_SLICE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SliceHorizontalPosition;
+   uint32_t                             SliceVerticalPosition;
+   uint32_t                             NextSliceHorizontalPosition;
+   uint32_t                             NextSliceVerticalPosition;
+   uint32_t                             SliceType;
+#define HCP_ST_BSlice                            0
+#define HCP_ST_PSlice                            1
+#define HCP_ST_ISlice                            2
+   bool                                 LastSlice;
+   uint32_t                             SliceQPSign;
+   bool                                 DependentSlice;
+   bool                                 SliceTemporalMVPEnable;
+   uint32_t                             SliceQP;
+   int32_t                              SliceCbQPOffset;
+#define _12                                      20
+#define _11                                      21
+#define _10                                      22
+#define _9                                       23
+#define _8                                       24
+#define _7                                       25
+#define _6                                       26
+#define _5                                       27
+#define _4                                       28
+#define _3                                       29
+#define _2                                       30
+#define _1                                       31
+   int32_t                              SliceCrQPOffset;
+#define _12                                      20
+#define _11                                      21
+#define _10                                      22
+#define _9                                       23
+#define _8                                       24
+#define _7                                       25
+#define _6                                       26
+#define _5                                       27
+#define _4                                       28
+#define _3                                       29
+#define _2                                       30
+#define _1                                       31
+   bool                                 IntraRefFetchDisable;
+   bool                                 CUChromaQPOffsetEnable;
+   uint32_t                             LastSliceofTile;
+   bool                                 SliceHeaderDisableDeblockingFilter;
+   int32_t                              SliceTCOffsetDiv2;
+   int32_t                              SliceBetaOffsetDiv2;
+   bool                                 SliceLoopFilterEnable;
+   bool                                 SliceSAOChroma;
+   bool                                 SliceSAOLuma;
+   bool                                 MVDL1Zero;
+   bool                                 LowDelay;
+   bool                                 CollocatedFromL0;
+   uint32_t                             Log2WeightDenominatorChroma;
+   uint32_t                             Log2WeightDenominatorLuma;
+   bool                                 CABACInit;
+   uint32_t                             MaxMergeIndex;
+   uint32_t                             CollocatedMVTemporalBufferIndex;
+   uint32_t                             SliceHeaderLength;
+   uint32_t                             RoundIntra;
+#define _132                                     0
+#define _232                                     1
+#define _332                                     2
+#define _432                                     3
+#define _532                                     4
+#define _632                                     5
+#define _732                                     6
+#define _832                                     7
+#define _932                                     8
+#define _1032                                    9
+#define _1132                                    10
+#define _1232                                    11
+#define _1332                                    12
+#define _1432                                    13
+#define _1532                                    14
+#define _1632                                    15
+   uint32_t                             RoundInter;
+#define _132                                     0
+#define _232                                     1
+#define _332                                     2
+#define _432                                     3
+#define _532                                     4
+#define _632                                     5
+#define _732                                     6
+#define _832                                     7
+#define _932                                     8
+#define _1032                                    9
+#define _1132                                    10
+#define _1232                                    11
+#define _1332                                    12
+#define _1432                                    13
+#define _1532                                    14
+#define _1632                                    15
+   bool                                 CABACZeroWordInsertionEnable;
+   bool                                 EmulationByteSliceInsertEnable;
+   bool                                 TailInsertionPresent;
+   bool                                 SliceDataInsertionPresent;
+   bool                                 HeaderInsertionPresent;
+   uint64_t                             IndirectPAKBSEDataStartOffset;
+   uint32_t                             TransformSkipLambda;
+   bool                                 ForceSAOParametersToZero;
+   uint32_t                             TransformSkipNumberofZeroCoeffsFactor0;
+   uint32_t                             TransformSkipNumberofNonZeroCoeffsFactor0;
+   uint32_t                             TransformSkipNumberofZeroCoeffsFactor1;
+   uint32_t                             TransformSkipNumberofNonZeroCoeffsFactor1;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_SLICE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX125_HCP_SLICE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SliceHorizontalPosition, 0, 9) |
+      __gen_uint(values->SliceVerticalPosition, 16, 25);
+}
+
+#define GFX125_HCP_SURFACE_STATE_length        3
+#define GFX125_HCP_SURFACE_STATE_length_bias      2
+#define GFX125_HCP_SURFACE_STATE_header         \
+   .SubOpcode                           =      1,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SurfacePitch;
+   uint32_t                             SurfaceID;
+#define HCP_CurrentDecodedPicture                0
+#define HCP_SourceInputPicture                   1
+#define HCP_PrevReferencePicture                 2
+#define HCP_GoldenReferencePicture               3
+#define HCP_AltRefReferencePicture               4
+   uint32_t                             YOffsetforUCb;
+   uint32_t                             SurfaceFormat;
+#define YUY2                                     0
+#define RGB_8                                    1
+#define AYUV4444                                 2
+#define P010Variant                              3
+#define PLANAR_420_8                             4
+#define YCRCB_SwapY                              5
+#define YCRCB_SwapUV                             6
+#define YCRCB_SwapUVY                            7
+#define Y216Y210                                 8
+#define RGB_10                                   9
+#define Y410                                     10
+#define NV21Planar_420_8                         11
+#define Y416                                     12
+#define P010                                     13
+#define P016                                     14
+#define Y216Variant                              17
+#define Y416Variant                              18
+#define YUY2Variant                              19
+#define AYUV4444Variant                          20
+   uint32_t                             DefaultAlphaValue;
+   uint32_t                             YOffsetforVCr;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_HCP_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SurfacePitch, 0, 16) |
+      __gen_uint(values->SurfaceID, 28, 31);
+
+   dw[2] =
+      __gen_uint(values->YOffsetforUCb, 0, 14) |
+      __gen_uint(values->SurfaceFormat, 27, 31);
+}
+
+#define GFX125_HCP_TILE_CODING_length         14
+#define GFX125_HCP_TILE_CODING_length_bias      1
+#define GFX125_HCP_TILE_CODING_header           \
+   .DWordLength                         =     13,  \
+   .SubOpcode                           =     21,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_TILE_CODING {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             TileColumnPosition;
+   uint32_t                             TileRowPosition;
+   bool                                 LastTileofColumn;
+   uint32_t                             TileHeightInMinimumCodingBlockSize;
+   uint32_t                             TileWidthInMinimumCodingBlockSize;
+   uint32_t                             SAOParameterOffset;
+   uint32_t                             BitstreamByteOffset;
+   uint32_t                             PAKFrameStatisticsOffset;
+   uint32_t                             CULevelStreamOutOffset;
+   uint32_t                             SliceSizeStreamOutOffset;
+   uint32_t                             CURecordOffset;
+   uint32_t                             SSERowStoreOffset;
+   uint32_t                             SAORowStoreOffset;
+   uint32_t                             TileSizeStreamOutOffset;
+   uint32_t                             VP9ProbabilityCounterStreamOutOffset;
+   __gen_address_type                   HCPScalabilitySynchronizeBufferBaseAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HCPScalabilitySynchronizeBufferAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_TILE_CODING_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX125_HCP_TILE_CODING * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] = 0;
+
+   dw[2] =
+      __gen_uint(values->TileColumnPosition, 0, 9) |
+      __gen_uint(values->TileRowPosition, 16, 25) |
+      __gen_uint(values->LastTileofColumn, 31, 31);
+
+   dw[3] =
+      __gen_uint(values->TileHeightInMinimumCodingBlockSize, 0, 10) |
+      __gen_uint(values->TileWidthInMinimumCodingBlockSize, 16, 26);
+
+   dw[4] =
+      __gen_uint(values->SAOParameterOffset, 0, 31) |
+      __gen_uint(values->BitstreamByteOffset, 6, 31);
+
+   dw[5] =
+      __gen_uint(values->PAKFrameStatisticsOffset, 6, 31);
+
+   dw[6] =
+      __gen_uint(values->CULevelStreamOutOffset, 6, 31);
+
+   dw[7] =
+      __gen_uint(values->SliceSizeStreamOutOffset, 6, 31);
+
+   dw[8] =
+      __gen_uint(values->CURecordOffset, 6, 31);
+
+   dw[9] =
+      __gen_uint(values->SSERowStoreOffset, 6, 31);
+
+   dw[10] =
+      __gen_uint(values->SAORowStoreOffset, 6, 31);
+
+   dw[11] =
+      __gen_uint(values->TileSizeStreamOutOffset, 6, 31);
+
+   dw[12] =
+      __gen_uint(values->VP9ProbabilityCounterStreamOutOffset, 6, 31);
+
+   const uint64_t v13_address =
+      __gen_address(data, &dw[13], values->HCPScalabilitySynchronizeBufferBaseAddress, 0, 0, 63);
+   dw[13] = v13_address;
+   dw[14] = v13_address >> 32;
+}
+
+#define GFX125_HCP_TILE_STATE_length          17
+#define GFX125_HCP_TILE_STATE_length_bias      2
+#define GFX125_HCP_TILE_STATE_header            \
+   .MediaInstructionCommand             =     17,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_TILE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             MediaInstructionCommand;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             NumberofTileRows;
+   uint32_t                             NumberofTileColumns;
+   struct GFX125_HCP_TILE_POSITION_IN_CTB ColumnPosition[5];
+   struct GFX125_HCP_TILE_POSITION_IN_CTB Rowposition[6];
+   struct GFX125_HCP_TILE_POSITION_IN_CTB_MSB CtbColumnPositionMSB;
+   struct GFX125_HCP_TILE_POSITION_IN_CTB_MSB CtbRowPositionMSB;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_TILE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_HCP_TILE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->MediaInstructionCommand, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->NumberofTileRows, 0, 4) |
+      __gen_uint(values->NumberofTileColumns, 5, 9);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[2], &values->ColumnPosition[0]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[3], &values->ColumnPosition[1]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[4], &values->ColumnPosition[2]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[5], &values->ColumnPosition[3]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[6], &values->ColumnPosition[4]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[7], &values->Rowposition[0]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[8], &values->Rowposition[1]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[9], &values->Rowposition[2]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[10], &values->Rowposition[3]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[11], &values->Rowposition[4]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_pack(data, &dw[12], &values->Rowposition[5]);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_MSB_pack(data, &dw[13], &values->CtbColumnPositionMSB);
+
+   GFX125_HCP_TILE_POSITION_IN_CTB_MSB_pack(data, &dw[15], &values->CtbRowPositionMSB);
+}
+
+#define GFX125_HCP_VP9_PAK_OBJECT_length       2
+#define GFX125_HCP_VP9_PAK_OBJECT_length_bias      2
+#define GFX125_HCP_VP9_PAK_OBJECT_header        \
+   .SubOpcode                           =     53,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_VP9_PAK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             Split_coding_unit_flagx0y0;
+   uint32_t                             CUCount;
+   bool                                 LastSBofTile;
+   uint32_t                             CurrentSBXAddress;
+   uint32_t                             CurrentSBYAddress;
+   uint32_t                             SSEClassID32x32_0;
+   uint32_t                             SSEClassID32x32_1;
+   uint32_t                             SSEClassID32x32_2;
+   uint32_t                             SSEClassID32x32_3;
+   bool                                 LCUForceZeroCoeff;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_VP9_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_HCP_VP9_PAK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->Split_coding_unit_flagx0y0, 0, 20) |
+      __gen_uint(values->CUCount, 24, 29) |
+      __gen_uint(values->LastSBofTile, 31, 31);
+}
+
+#define GFX125_HCP_VP9_PIC_STATE_length        2
+#define GFX125_HCP_VP9_PIC_STATE_length_bias      2
+#define GFX125_HCP_VP9_PIC_STATE_header         \
+   .SubOpcode                           =     48,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_VP9_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameWidth;
+   uint32_t                             FrameHeight;
+   uint32_t                             FrameType;
+#define VP9_KeyFrame                             0
+#define VP9_InterFrame                           1
+   bool                                 AdaptProbabilities;
+   bool                                 IntraOnly;
+   bool                                 AllowHiPrecisionMV;
+   uint32_t                             MotionCompensationFilterType;
+#define Eighttap                                 0
+#define EighttapSmooth                           1
+#define EighttapSharp                            2
+#define Bilinear                                 3
+#define Switchable                               4
+   uint32_t                             ReferenceFrameSignBias;
+   bool                                 UsePrevinFindMVReferences;
+   uint32_t                             HybridPredictionMode;
+   uint32_t                             SelectableTXMode;
+   uint32_t                             LastFrameType;
+#define VP9_KeyFrame                             0
+#define VP9_NonKeyFrame                          1
+   bool                                 RefreshFrameContextEnable;
+   bool                                 ErrorResilientModeEnable;
+   bool                                 FrameParallelDecodingModeEnable;
+   uint32_t                             FilterLevel;
+   uint32_t                             SharpnessLevel;
+   bool                                 SegmentationEnable;
+   bool                                 SegmentationUpdateMap;
+   bool                                 SegmentationTemporalUpdate;
+   bool                                 LosslessMode;
+   bool                                 SegmentIDStreamOutEnable;
+   bool                                 SegmentIDStreamInEnable;
+   uint32_t                             Log2TileColumn;
+#define _1TileColumn                             0
+#define _2TileColumn                             1
+#define _4TileColumn                             2
+#define _8TileColumn                             3
+#define _16TileColumn                            4
+#define _32TileColumn                            5
+#define _64TileColumn                            6
+   uint32_t                             Log2TileRow;
+#define _1TileRow                                0
+#define _2TileRow                                1
+#define _4TileRow                                2
+   bool                                 SSEEnable;
+   uint32_t                             ChromaSamplingFormat;
+#define Format_420                               0
+#define Format_444                               2
+   uint32_t                             BitDepth;
+#define _8bit                                    0
+#define _10bit                                   2
+#define _12bit                                   4
+   uint32_t                             ProfileLevel;
+#define Profile_0                                0
+#define Profile_1                                1
+#define Profile_2                                2
+#define Profile_3                                3
+   float                                VerticalScaleFactorforLAST;
+   float                                HorizontalScaleFactorforLAST;
+   float                                VerticalScaleFactorforGOLDEN;
+   float                                HorizontalScaleFactorforGOLDEN;
+   float                                VerticalScaleFactorforALTREF;
+   float                                HorizontalScaleFactorforALTREF;
+   uint32_t                             LastFrameWidth;
+   uint32_t                             LastFrameHeight;
+   uint32_t                             GoldenFrameWidth;
+   uint32_t                             GoldenFrameHeight;
+   uint32_t                             AltrefFrameWidth;
+   uint32_t                             AltrefFrameHeight;
+   uint32_t                             UncompressedHeaderLength;
+   uint32_t                             FirstPartitionSize;
+   bool                                 MotionCompScalingEnable;
+   uint32_t                             CompressedHeaderBINcount;
+   uint32_t                             LumaACQIndexDelta;
+   bool                                 TailInsertionEnable;
+   bool                                 HeaderInsertionEnable;
+   int32_t                              ChromaACQIndexDelta;
+   int32_t                              ChromaDCQIndexDelta;
+   int32_t                              LumaDCQIndexDelta;
+   int32_t                              LFRefDelta0;
+   int32_t                              LFRefDelta1;
+   int32_t                              LFRefDelta2;
+   int32_t                              LFRefDelta3;
+   int32_t                              LFModeDelta0;
+   int32_t                              LFModeDelta1;
+   uint32_t                             BitOffsetforLFRefDelta;
+   uint32_t                             BitOffsetforLFModeDelta;
+   uint32_t                             BitOffsetforQIndex;
+   uint32_t                             BitOffsetforLFLevel;
+   bool                                 NonFirstPass;
+   bool                                 VDENCPAK_ONLYPASS;
+   bool                                 FrameBitrateMaxReport;
+   bool                                 FrameBitrateMinReport;
+   uint32_t                             FrameBitrateMax;
+   uint32_t                             FrameBitrateMaxUnit;
+   uint32_t                             FrameBitrateMin;
+   uint32_t                             FrameBitrateMinUnit;
+   uint64_t                             FrameDeltaQIndexMax;
+   uint32_t                             FrameDeltaQIndexMin;
+   uint64_t                             FrameDeltaLFMax;
+   uint32_t                             FrameDeltaLFMin;
+   uint64_t                             FrameDeltaQIndexLFMaxRange;
+   uint32_t                             FrameDeltaQIndexLFMinRange;
+   uint32_t                             MinimumFrameSize;
+   uint32_t                             MinimumFrameSizeUnits;
+#define VP9_MFSU_4Kb                             0
+#define VP9_MFSU_16Kb                            1
+#define VP9_MFSU_Comaptibilitymode               2
+#define VP9_MFSU_16bytes                         3
+   uint32_t                             BitOffsetforFirstPartitionSize;
+   uint32_t                             Class0_SSE_Threshold0;
+   uint32_t                             Class0_SSE_Threshold1;
+   uint64_t                             SSEThresholdsforClass18;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_VP9_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_HCP_VP9_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->FrameWidth, 0, 13) |
+      __gen_uint(values->FrameHeight, 16, 29);
+}
+
+#define GFX125_HCP_VP9_SEGMENT_STATE_length      8
+#define GFX125_HCP_VP9_SEGMENT_STATE_length_bias      2
+#define GFX125_HCP_VP9_SEGMENT_STATE_header     \
+   .SubOpcode                           =     50,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_VP9_SEGMENT_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SegmentID;
+   bool                                 SegmentSkipped;
+   uint32_t                             SegmentReference;
+   bool                                 SegmentReferenceEnable;
+   uint32_t                             FilterLevelRef0Mode0;
+   uint32_t                             FilterLevelRef0Mode1;
+   uint32_t                             FilterLevelRef1Mode0;
+   uint32_t                             FilterLevelRef1Mode1;
+   uint32_t                             FilterLevelRef2Mode0;
+   uint32_t                             FilterLevelRef2Mode1;
+   uint32_t                             FilterLevelRef3Mode0;
+   uint32_t                             FilterLevelRef3Mode1;
+   uint32_t                             LumaDCQuantScale;
+   uint32_t                             LumaACQuantScale;
+   uint32_t                             ChromaDCQuantScale;
+   uint32_t                             ChromaACQuantScale;
+   int32_t                              SegmentQIndexDelta;
+   int32_t                              SegmentLFLevelDelta;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_VP9_SEGMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_HCP_VP9_SEGMENT_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SegmentID, 0, 2);
+
+   dw[2] =
+      __gen_uint(values->SegmentSkipped, 0, 0) |
+      __gen_uint(values->SegmentReference, 1, 2) |
+      __gen_uint(values->SegmentReferenceEnable, 3, 3);
+
+   dw[3] =
+      __gen_uint(values->FilterLevelRef0Mode0, 0, 5) |
+      __gen_uint(values->FilterLevelRef0Mode1, 8, 13) |
+      __gen_uint(values->FilterLevelRef1Mode0, 16, 21) |
+      __gen_uint(values->FilterLevelRef1Mode1, 24, 29);
+
+   dw[4] =
+      __gen_uint(values->FilterLevelRef2Mode0, 0, 5) |
+      __gen_uint(values->FilterLevelRef2Mode1, 8, 13) |
+      __gen_uint(values->FilterLevelRef3Mode0, 16, 21) |
+      __gen_uint(values->FilterLevelRef3Mode1, 24, 29);
+
+   dw[5] =
+      __gen_uint(values->LumaDCQuantScale, 0, 14) |
+      __gen_uint(values->LumaACQuantScale, 16, 30);
+
+   dw[6] =
+      __gen_uint(values->ChromaDCQuantScale, 0, 14) |
+      __gen_uint(values->ChromaACQuantScale, 16, 30);
+
+   dw[7] =
+      __gen_sint(values->SegmentQIndexDelta, 0, 8) |
+      __gen_sint(values->SegmentLFLevelDelta, 16, 22);
+}
+
+#define GFX125_HCP_WEIGHTOFFSET_STATE_length     42
+#define GFX125_HCP_WEIGHTOFFSET_STATE_length_bias      2
+#define GFX125_HCP_WEIGHTOFFSET_STATE_header    \
+   .SubOpcode                           =     19,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HCP_WEIGHTOFFSET_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ReferencePictureListSelect;
+   struct GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY LumaOffsets[16];
+   struct GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY ChromaOffsets[16];
+   struct GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY ChromaOffsetsExt[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HCP_WEIGHTOFFSET_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_HCP_WEIGHTOFFSET_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ReferencePictureListSelect, 0, 0);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[2], &values->LumaOffsets[0]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[3], &values->LumaOffsets[1]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[4], &values->LumaOffsets[2]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[5], &values->LumaOffsets[3]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[6], &values->LumaOffsets[4]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[7], &values->LumaOffsets[5]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[8], &values->LumaOffsets[6]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[9], &values->LumaOffsets[7]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[10], &values->LumaOffsets[8]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[11], &values->LumaOffsets[9]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[12], &values->LumaOffsets[10]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[13], &values->LumaOffsets[11]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[14], &values->LumaOffsets[12]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[15], &values->LumaOffsets[13]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[16], &values->LumaOffsets[14]);
+
+   GFX125_HCP_WEIGHTOFFSET_LUMA_ENTRY_pack(data, &dw[17], &values->LumaOffsets[15]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[18], &values->ChromaOffsets[0]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[19], &values->ChromaOffsets[1]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[20], &values->ChromaOffsets[2]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[21], &values->ChromaOffsets[3]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[22], &values->ChromaOffsets[4]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[23], &values->ChromaOffsets[5]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[24], &values->ChromaOffsets[6]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[25], &values->ChromaOffsets[7]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[26], &values->ChromaOffsets[8]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[27], &values->ChromaOffsets[9]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[28], &values->ChromaOffsets[10]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[29], &values->ChromaOffsets[11]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[30], &values->ChromaOffsets[12]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[31], &values->ChromaOffsets[13]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[32], &values->ChromaOffsets[14]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_ENTRY_pack(data, &dw[33], &values->ChromaOffsets[15]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[34], &values->ChromaOffsetsExt[0]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[35], &values->ChromaOffsetsExt[1]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[36], &values->ChromaOffsetsExt[2]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[37], &values->ChromaOffsetsExt[3]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[38], &values->ChromaOffsetsExt[4]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[39], &values->ChromaOffsetsExt[5]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[40], &values->ChromaOffsetsExt[6]);
+
+   GFX125_HCP_WEIGHTOFFSET_CHROMA_EXT_ENTRY_pack(data, &dw[41], &values->ChromaOffsetsExt[7]);
+}
+
+#define GFX125_HEVC_VP9_RDOQ_STATE_length     62
+#define GFX125_HEVC_VP9_RDOQ_STATE_length_bias      2
+#define GFX125_HEVC_VP9_RDOQ_STATE_header       \
+   .DWordLength                         =     60,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HEVC_VP9_RDOQ_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 HTQPerformanceFix1Disable;
+   bool                                 HTQPerformanceFix0Disable;
+   struct GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS IntraLumaLambda[32];
+   struct GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS IntraChromaLambda[32];
+   struct GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS InterLumaLambda[32];
+   struct GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS InterChromaLambda[32];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HEVC_VP9_RDOQ_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_HEVC_VP9_RDOQ_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->HTQPerformanceFix1Disable, 30, 30) |
+      __gen_uint(values->HTQPerformanceFix0Disable, 31, 31);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[2], &values->IntraLumaLambda[0]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[3], &values->IntraLumaLambda[1]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[4], &values->IntraLumaLambda[2]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[5], &values->IntraLumaLambda[3]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[6], &values->IntraLumaLambda[4]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[7], &values->IntraLumaLambda[5]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[8], &values->IntraLumaLambda[6]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[9], &values->IntraLumaLambda[7]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[10], &values->IntraLumaLambda[8]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[11], &values->IntraLumaLambda[9]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[12], &values->IntraLumaLambda[10]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[13], &values->IntraLumaLambda[11]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[14], &values->IntraLumaLambda[12]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[15], &values->IntraLumaLambda[13]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[16], &values->IntraLumaLambda[14]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[17], &values->IntraLumaLambda[15]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[18], &values->IntraLumaLambda[16]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[19], &values->IntraLumaLambda[17]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[20], &values->IntraLumaLambda[18]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[21], &values->IntraLumaLambda[19]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[22], &values->IntraLumaLambda[20]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[23], &values->IntraLumaLambda[21]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[24], &values->IntraLumaLambda[22]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[25], &values->IntraLumaLambda[23]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[26], &values->IntraLumaLambda[24]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[27], &values->IntraLumaLambda[25]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[28], &values->IntraLumaLambda[26]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[29], &values->IntraLumaLambda[27]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[30], &values->IntraLumaLambda[28]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[31], &values->IntraLumaLambda[29]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[32], &values->IntraLumaLambda[30]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[33], &values->IntraLumaLambda[31]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[34], &values->IntraChromaLambda[0]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[35], &values->IntraChromaLambda[1]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[36], &values->IntraChromaLambda[2]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[37], &values->IntraChromaLambda[3]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[38], &values->IntraChromaLambda[4]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[39], &values->IntraChromaLambda[5]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[40], &values->IntraChromaLambda[6]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[41], &values->IntraChromaLambda[7]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[42], &values->IntraChromaLambda[8]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[43], &values->IntraChromaLambda[9]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[44], &values->IntraChromaLambda[10]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[45], &values->IntraChromaLambda[11]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[46], &values->IntraChromaLambda[12]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[47], &values->IntraChromaLambda[13]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[48], &values->IntraChromaLambda[14]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[49], &values->IntraChromaLambda[15]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[50], &values->IntraChromaLambda[16]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[51], &values->IntraChromaLambda[17]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[52], &values->IntraChromaLambda[18]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[53], &values->IntraChromaLambda[19]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[54], &values->IntraChromaLambda[20]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[55], &values->IntraChromaLambda[21]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[56], &values->IntraChromaLambda[22]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[57], &values->IntraChromaLambda[23]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[58], &values->IntraChromaLambda[24]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[59], &values->IntraChromaLambda[25]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[60], &values->IntraChromaLambda[26]);
+
+   GFX125_HEVC_VP9_RDOQ_LAMBDA_FIELDS_pack(data, &dw[61], &values->IntraChromaLambda[27]);
+}
+
+#define GFX125_HUC_CFG_STATE_length            2
+#define GFX125_HUC_CFG_STATE_length_bias       2
+#define GFX125_HUC_CFG_STATE_header             \
+   .SubOpcode                           =      3,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_CFG_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             P24C;
+#define Normaloperation                          0
+#define Forcereset                               1
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_CFG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_HUC_CFG_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->P24C, 0, 0);
+}
+
+#define GFX125_HUC_DMEM_STATE_length           6
+#define GFX125_HUC_DMEM_STATE_length_bias      2
+#define GFX125_HUC_DMEM_STATE_header            \
+   .SubOpcode                           =      2,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_DMEM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   HUCDataSourceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HUCDataSourceMemoryAddressAttributes;
+   __gen_address_type                   HUCDataDestinationAddress;
+   uint32_t                             HUCDataLength;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_DMEM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_HUC_DMEM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->HUCDataSourceAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->HUCDataSourceMemoryAddressAttributes);
+
+   dw[4] = __gen_address(data, &dw[4], values->HUCDataDestinationAddress, 0, 6, 16);
+
+   dw[5] =
+      __gen_uint(values->HUCDataLength, 6, 16);
+}
+
+#define GFX125_HUC_IMEM_STATE_length           5
+#define GFX125_HUC_IMEM_STATE_length_bias      2
+#define GFX125_HUC_IMEM_STATE_header            \
+   .SubOpcode                           =      1,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_IMEM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             HUCFirmwareDescriptor;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_IMEM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_HUC_IMEM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] = 0;
+
+   dw[2] = 0;
+
+   dw[3] = 0;
+
+   dw[4] =
+      __gen_uint(values->HUCFirmwareDescriptor, 0, 7);
+}
+
+#define GFX125_HUC_IND_OBJ_BASE_ADDR_STATE_length     11
+#define GFX125_HUC_IND_OBJ_BASE_ADDR_STATE_length_bias      2
+#define GFX125_HUC_IND_OBJ_BASE_ADDR_STATE_header\
+   .SubOpcode                           =      5,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_IND_OBJ_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   HUCIndirectStreamInObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HUCIndirectStreamInObjectMemoryAddressAttributes;
+   __gen_address_type                   HUCIndirectStreamInObjectAccessUpperBound;
+   __gen_address_type                   HUCIndirectStreamOutObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES HUCIndirectStreamOutObjectMemoryAddressAttributes;
+   __gen_address_type                   HUCIndirectStreamOutObjectAccessUpperBound;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_IND_OBJ_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                        __attribute__((unused)) void * restrict dst,
+                                        __attribute__((unused)) const struct GFX125_HUC_IND_OBJ_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->HUCIndirectStreamInObjectAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->HUCIndirectStreamInObjectMemoryAddressAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->HUCIndirectStreamInObjectAccessUpperBound, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   const uint64_t v6_address =
+      __gen_address(data, &dw[6], values->HUCIndirectStreamOutObjectAddress, 0, 0, 63);
+   dw[6] = v6_address;
+   dw[7] = v6_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[8], &values->HUCIndirectStreamOutObjectMemoryAddressAttributes);
+
+   const uint64_t v9_address =
+      __gen_address(data, &dw[9], values->HUCIndirectStreamOutObjectAccessUpperBound, 0, 0, 63);
+   dw[9] = v9_address;
+   dw[10] = v9_address >> 32;
+}
+
+#define GFX125_HUC_PIPE_MODE_SELECT_length      3
+#define GFX125_HUC_PIPE_MODE_SELECT_length_bias      2
+#define GFX125_HUC_PIPE_MODE_SELECT_header      \
+   .SubOpcode                           =      0,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_PIPE_MODE_SELECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 IndirectStreamOutEnable;
+   uint32_t                             MediaSoftResetCounter;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_HUC_PIPE_MODE_SELECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectStreamOutEnable, 4, 4);
+
+   dw[2] =
+      __gen_uint(values->MediaSoftResetCounter, 0, 31);
+}
+
+#define GFX125_HUC_START_length                2
+#define GFX125_HUC_START_length_bias           2
+#define GFX125_HUC_START_header                 \
+   .SubOpcode                           =     33,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_START {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 LastStreamObject;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_START_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX125_HUC_START * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->LastStreamObject, 0, 0);
+}
+
+#define GFX125_HUC_STREAM_OBJECT_length        5
+#define GFX125_HUC_STREAM_OBJECT_length_bias      2
+#define GFX125_HUC_STREAM_OBJECT_header         \
+   .SubOpcode                           =     32,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_STREAM_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectStreamInDataLength;
+   __gen_address_type                   IndirectStreamInAddress;
+   bool                                 HuCProcessing;
+   __gen_address_type                   IndirectStreamOutAddress;
+   uint32_t                             StartCodeByte0;
+   uint32_t                             StartCodeByte1;
+   uint32_t                             StartCodeByte2;
+   bool                                 StartCodeSearchEngine;
+   bool                                 EmulationPreventionByteRemoval;
+   bool                                 StreamOut;
+   uint32_t                             DRMLengthMode;
+#define StartCodeMode                            0
+#define LengthMode                               1
+   bool                                 HUCBitstreamEnable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_STREAM_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_HUC_STREAM_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectStreamInDataLength, 0, 31);
+
+   const uint32_t v2 =
+      __gen_uint(values->HuCProcessing, 31, 31);
+   dw[2] = __gen_address(data, &dw[2], values->IndirectStreamInAddress, v2, 0, 28);
+
+   dw[3] = __gen_address(data, &dw[3], values->IndirectStreamOutAddress, 0, 0, 28);
+
+   dw[4] =
+      __gen_uint(values->StartCodeByte0, 0, 7) |
+      __gen_uint(values->StartCodeByte1, 8, 15) |
+      __gen_uint(values->StartCodeByte2, 16, 23) |
+      __gen_uint(values->StartCodeSearchEngine, 24, 24) |
+      __gen_uint(values->EmulationPreventionByteRemoval, 25, 25) |
+      __gen_uint(values->StreamOut, 26, 26) |
+      __gen_uint(values->DRMLengthMode, 27, 28) |
+      __gen_uint(values->HUCBitstreamEnable, 29, 29);
+}
+
+#define GFX125_HUC_VIRTUAL_ADDR_STATE_length     49
+#define GFX125_HUC_VIRTUAL_ADDR_STATE_length_bias      2
+#define GFX125_HUC_VIRTUAL_ADDR_STATE_header    \
+   .SubOpcode                           =      4,  \
+   .MediaCommandOpcode                  =     11,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_HUC_VIRTUAL_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcode;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_HUC_VIRTUAL_ADDR_REGION HUCVirtualAddressRegion[16];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_HUC_VIRTUAL_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_HUC_VIRTUAL_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcode, 16, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[1], &values->HUCVirtualAddressRegion[0]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[4], &values->HUCVirtualAddressRegion[1]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[7], &values->HUCVirtualAddressRegion[2]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[10], &values->HUCVirtualAddressRegion[3]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[13], &values->HUCVirtualAddressRegion[4]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[16], &values->HUCVirtualAddressRegion[5]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[19], &values->HUCVirtualAddressRegion[6]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[22], &values->HUCVirtualAddressRegion[7]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[25], &values->HUCVirtualAddressRegion[8]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[28], &values->HUCVirtualAddressRegion[9]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[31], &values->HUCVirtualAddressRegion[10]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[34], &values->HUCVirtualAddressRegion[11]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[37], &values->HUCVirtualAddressRegion[12]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[40], &values->HUCVirtualAddressRegion[13]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[43], &values->HUCVirtualAddressRegion[14]);
+
+   GFX125_HUC_VIRTUAL_ADDR_REGION_pack(data, &dw[46], &values->HUCVirtualAddressRegion[15]);
+}
+
+#define GFX125_MFC_AVC_PAK_OBJECT_length      12
+#define GFX125_MFC_AVC_PAK_OBJECT_length_bias      2
+#define GFX125_MFC_AVC_PAK_OBJECT_header        \
+   .DWordLength                         =     10,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFC_AVC_PAK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectPAKMVDataLength;
+   uint64_t                             IndirectPAKMVDataStartAddressOffset;
+   uint32_t                             InlineData[8];
+   uint32_t                             VDEncModeInlineData[12];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFC_AVC_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_MFC_AVC_PAK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectPAKMVDataLength, 0, 9);
+
+   dw[2] =
+      __gen_offset(values->IndirectPAKMVDataStartAddressOffset, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[1], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->InlineData[2], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->InlineData[3], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->InlineData[4], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->InlineData[5], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->InlineData[6], 0, 31);
+
+   dw[10] =
+      __gen_uint(values->InlineData[7], 0, 31);
+
+   dw[11] = 0;
+}
+
+#define GFX125_MFC_JPEG_HUFF_TABLE_STATE_length    176
+#define GFX125_MFC_JPEG_HUFF_TABLE_STATE_length_bias      2
+#define GFX125_MFC_JPEG_HUFF_TABLE_STATE_header \
+   .DWordLength                         =    174,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFC_JPEG_HUFF_TABLE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             HuffTableID;
+   uint64_t                             DC_TABLE;
+   uint64_t                             AC_TABLE;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFC_JPEG_HUFF_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX125_MFC_JPEG_HUFF_TABLE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->HuffTableID, 0, 0);
+
+   const uint64_t v2 =
+      __gen_uint(values->DC_TABLE, 0, 383);
+   dw[2] = v2;
+   dw[3] = v2 >> 32;
+
+   const uint64_t v14 =
+      __gen_uint(values->AC_TABLE, 0, 5183);
+   dw[14] = v14;
+   dw[15] = v14 >> 32;
+}
+
+#define GFX125_MFC_JPEG_SCAN_OBJECT_length      3
+#define GFX125_MFC_JPEG_SCAN_OBJECT_length_bias      2
+#define GFX125_MFC_JPEG_SCAN_OBJECT_header      \
+   .DWordLength                         =      1,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFC_JPEG_SCAN_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             MCUCount;
+   uint32_t                             RestartInterval;
+   bool                                 LastScan;
+   bool                                 HeadPresent;
+   uint32_t                             HuffmanDCTable;
+   uint32_t                             HuffmanACTable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFC_JPEG_SCAN_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_MFC_JPEG_SCAN_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->MCUCount, 0, 25);
+
+   dw[2] =
+      __gen_uint(values->RestartInterval, 0, 15) |
+      __gen_uint(values->LastScan, 16, 16) |
+      __gen_uint(values->HeadPresent, 17, 17) |
+      __gen_uint(values->HuffmanDCTable, 18, 20) |
+      __gen_uint(values->HuffmanACTable, 22, 24);
+}
+
+#define GFX125_MFC_MPEG2_PAK_OBJECT_length      9
+#define GFX125_MFC_MPEG2_PAK_OBJECT_length_bias      2
+#define GFX125_MFC_MPEG2_PAK_OBJECT_header      \
+   .DWordLength                         =      7,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFC_MPEG2_PAK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             InlineData[8];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFC_MPEG2_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_MFC_MPEG2_PAK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->InlineData[0], 0, 31);
+
+   dw[2] =
+      __gen_uint(values->InlineData[1], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->InlineData[2], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->InlineData[3], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->InlineData[4], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->InlineData[5], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->InlineData[6], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->InlineData[7], 0, 31);
+}
+
+#define GFX125_MFC_MPEG2_SLICEGROUP_STATE_length      8
+#define GFX125_MFC_MPEG2_SLICEGROUP_STATE_length_bias      2
+#define GFX125_MFC_MPEG2_SLICEGROUP_STATE_header\
+   .DWordLength                         =      6,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFC_MPEG2_SLICEGROUP_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             StreamID;
+   uint32_t                             SliceID;
+   bool                                 IntraSliceFlag;
+   bool                                 IntraSlice;
+   bool                                 FirstSliceHeaderDisable;
+   bool                                 TailInsertionPresent;
+   bool                                 SliceDataInsertionPresent;
+   bool                                 HeaderInsertionPresent;
+   bool                                 CompressedBitStreamOutputDisable;
+   bool                                 LastSlice;
+   bool                                 MBTypeSkipConversionDisable;
+   uint32_t                             RateControlPanicType;
+#define QPPanic                                  0
+#define CBPPanic                                 1
+   bool                                 RateControlPanicEnable;
+   uint32_t                             RateControlStableTolerance;
+   uint32_t                             RateControlTriggleMode;
+#define AlwaysRateControl                        0
+#define GentleRateControl                        1
+#define LooseRateControl                         2
+   bool                                 ResetRateControlCounter;
+   bool                                 RateControlCounterEnable;
+   uint32_t                             FirstMBXCount;
+   uint32_t                             FirstMBYCount;
+   uint32_t                             NextSliceGroupMBXCount;
+   uint32_t                             NextSliceGroupMBYCount;
+   uint32_t                             SliceGroupQP;
+   bool                                 SliceGroupSkip;
+   uint64_t                             IndirectPAKBSEDataStartAddress;
+   uint32_t                             GrowInit;
+   uint32_t                             GrowResistance;
+   uint32_t                             ShrinkInit;
+   uint32_t                             ShrinkResistance;
+   uint32_t                             QPMaxPositiveModifierMagnitude;
+   uint32_t                             QPMaxNegativeModifierMagnitude;
+   uint32_t                             Correct1;
+   uint32_t                             Correct2;
+   uint32_t                             Correct3;
+   uint32_t                             Correct4;
+   uint32_t                             Correct5;
+   uint32_t                             Correct6;
+   uint32_t                             CV0;
+   uint32_t                             CV1;
+   uint32_t                             CV2;
+   uint32_t                             CV3;
+   uint32_t                             CV4;
+   uint32_t                             CV5;
+   uint32_t                             CV6;
+   uint32_t                             CV7;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFC_MPEG2_SLICEGROUP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                       __attribute__((unused)) void * restrict dst,
+                                       __attribute__((unused)) const struct GFX125_MFC_MPEG2_SLICEGROUP_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->StreamID, 0, 1) |
+      __gen_uint(values->SliceID, 4, 7) |
+      __gen_uint(values->IntraSliceFlag, 12, 12) |
+      __gen_uint(values->IntraSlice, 13, 13) |
+      __gen_uint(values->FirstSliceHeaderDisable, 14, 14) |
+      __gen_uint(values->TailInsertionPresent, 15, 15) |
+      __gen_uint(values->SliceDataInsertionPresent, 16, 16) |
+      __gen_uint(values->HeaderInsertionPresent, 17, 17) |
+      __gen_uint(values->CompressedBitStreamOutputDisable, 18, 18) |
+      __gen_uint(values->LastSlice, 19, 19) |
+      __gen_uint(values->MBTypeSkipConversionDisable, 20, 20) |
+      __gen_uint(values->RateControlPanicType, 22, 22) |
+      __gen_uint(values->RateControlPanicEnable, 23, 23) |
+      __gen_uint(values->RateControlStableTolerance, 24, 27) |
+      __gen_uint(values->RateControlTriggleMode, 28, 29) |
+      __gen_uint(values->ResetRateControlCounter, 30, 30) |
+      __gen_uint(values->RateControlCounterEnable, 31, 31);
+
+   dw[2] =
+      __gen_uint(values->FirstMBXCount, 0, 7) |
+      __gen_uint(values->FirstMBYCount, 8, 15) |
+      __gen_uint(values->NextSliceGroupMBXCount, 16, 23) |
+      __gen_uint(values->NextSliceGroupMBYCount, 24, 31);
+
+   dw[3] =
+      __gen_uint(values->SliceGroupQP, 0, 5) |
+      __gen_uint(values->SliceGroupSkip, 8, 8);
+
+   dw[4] =
+      __gen_offset(values->IndirectPAKBSEDataStartAddress, 0, 28);
+
+   dw[5] =
+      __gen_uint(values->GrowInit, 0, 3) |
+      __gen_uint(values->GrowResistance, 4, 7) |
+      __gen_uint(values->ShrinkInit, 8, 11) |
+      __gen_uint(values->ShrinkResistance, 12, 15) |
+      __gen_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
+      __gen_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
+
+   dw[6] =
+      __gen_uint(values->Correct1, 0, 3) |
+      __gen_uint(values->Correct2, 4, 7) |
+      __gen_uint(values->Correct3, 8, 11) |
+      __gen_uint(values->Correct4, 12, 15) |
+      __gen_uint(values->Correct5, 16, 19) |
+      __gen_uint(values->Correct6, 20, 23);
+
+   dw[7] =
+      __gen_uint(values->CV0, 0, 3) |
+      __gen_uint(values->CV1, 4, 7) |
+      __gen_uint(values->CV2, 8, 11) |
+      __gen_uint(values->CV3, 12, 15) |
+      __gen_uint(values->CV4, 16, 19) |
+      __gen_uint(values->CV5, 20, 23) |
+      __gen_uint(values->CV6, 24, 27) |
+      __gen_uint(values->CV7, 28, 31);
+}
+
+#define GFX125_MFD_AVC_BSD_OBJECT_length       7
+#define GFX125_MFD_AVC_BSD_OBJECT_length_bias      2
+#define GFX125_MFD_AVC_BSD_OBJECT_header        \
+   .DWordLength                         =      5,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_AVC_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectBSDDataLength;
+   __gen_address_type                   IndirectBSDDataStartAddress;
+   struct GFX125_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT InlineData;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_MFD_AVC_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+
+   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+
+   GFX125_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(data, &dw[3], &values->InlineData);
+
+   dw[6] = 0;
+}
+
+#define GFX125_MFD_AVC_DPB_STATE_length       27
+#define GFX125_MFD_AVC_DPB_STATE_length_bias      2
+#define GFX125_MFD_AVC_DPB_STATE_header         \
+   .DWordLength                         =      9,  \
+   .SubOpcodeB                          =      6,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_AVC_DPB_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             NonExistingFrame[16];
+#define INVALID                                  1
+#define VALID                                    0
+   uint32_t                             LongTermFrame[16];
+   uint32_t                             UsedforReference[16];
+#define NOT_REFERENCE                            0
+#define TOP_FIELD                                1
+#define BOTTOM_FIELD                             2
+#define FRAME                                    3
+   uint32_t                             LTSTFrameNumberList[16];
+#define LTST_LongTermFrame                       1
+#define LTST_ShortTermFrame                      0
+   uint32_t                             ViewID[16];
+   uint32_t                             L0ViewOrder[16];
+   uint32_t                             L1ViewOrder[16];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_AVC_DPB_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFD_AVC_DPB_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->NonExistingFrame[0], 0, 0) |
+      __gen_uint(values->NonExistingFrame[1], 1, 1) |
+      __gen_uint(values->NonExistingFrame[2], 2, 2) |
+      __gen_uint(values->NonExistingFrame[3], 3, 3) |
+      __gen_uint(values->NonExistingFrame[4], 4, 4) |
+      __gen_uint(values->NonExistingFrame[5], 5, 5) |
+      __gen_uint(values->NonExistingFrame[6], 6, 6) |
+      __gen_uint(values->NonExistingFrame[7], 7, 7) |
+      __gen_uint(values->NonExistingFrame[8], 8, 8) |
+      __gen_uint(values->NonExistingFrame[9], 9, 9) |
+      __gen_uint(values->NonExistingFrame[10], 10, 10) |
+      __gen_uint(values->NonExistingFrame[11], 11, 11) |
+      __gen_uint(values->NonExistingFrame[12], 12, 12) |
+      __gen_uint(values->NonExistingFrame[13], 13, 13) |
+      __gen_uint(values->NonExistingFrame[14], 14, 14) |
+      __gen_uint(values->NonExistingFrame[15], 15, 15) |
+      __gen_uint(values->LongTermFrame[0], 16, 16) |
+      __gen_uint(values->LongTermFrame[1], 17, 17) |
+      __gen_uint(values->LongTermFrame[2], 18, 18) |
+      __gen_uint(values->LongTermFrame[3], 19, 19) |
+      __gen_uint(values->LongTermFrame[4], 20, 20) |
+      __gen_uint(values->LongTermFrame[5], 21, 21) |
+      __gen_uint(values->LongTermFrame[6], 22, 22) |
+      __gen_uint(values->LongTermFrame[7], 23, 23) |
+      __gen_uint(values->LongTermFrame[8], 24, 24) |
+      __gen_uint(values->LongTermFrame[9], 25, 25) |
+      __gen_uint(values->LongTermFrame[10], 26, 26) |
+      __gen_uint(values->LongTermFrame[11], 27, 27) |
+      __gen_uint(values->LongTermFrame[12], 28, 28) |
+      __gen_uint(values->LongTermFrame[13], 29, 29) |
+      __gen_uint(values->LongTermFrame[14], 30, 30) |
+      __gen_uint(values->LongTermFrame[15], 31, 31);
+
+   dw[2] =
+      __gen_uint(values->UsedforReference[0], 0, 1) |
+      __gen_uint(values->UsedforReference[1], 2, 3) |
+      __gen_uint(values->UsedforReference[2], 4, 5) |
+      __gen_uint(values->UsedforReference[3], 6, 7) |
+      __gen_uint(values->UsedforReference[4], 8, 9) |
+      __gen_uint(values->UsedforReference[5], 10, 11) |
+      __gen_uint(values->UsedforReference[6], 12, 13) |
+      __gen_uint(values->UsedforReference[7], 14, 15) |
+      __gen_uint(values->UsedforReference[8], 16, 17) |
+      __gen_uint(values->UsedforReference[9], 18, 19) |
+      __gen_uint(values->UsedforReference[10], 20, 21) |
+      __gen_uint(values->UsedforReference[11], 22, 23) |
+      __gen_uint(values->UsedforReference[12], 24, 25) |
+      __gen_uint(values->UsedforReference[13], 26, 27) |
+      __gen_uint(values->UsedforReference[14], 28, 29) |
+      __gen_uint(values->UsedforReference[15], 30, 31);
+
+   dw[3] =
+      __gen_uint(values->LTSTFrameNumberList[0], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[1], 16, 31);
+
+   dw[4] =
+      __gen_uint(values->LTSTFrameNumberList[2], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[3], 16, 31);
+
+   dw[5] =
+      __gen_uint(values->LTSTFrameNumberList[4], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[5], 16, 31);
+
+   dw[6] =
+      __gen_uint(values->LTSTFrameNumberList[6], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[7], 16, 31);
+
+   dw[7] =
+      __gen_uint(values->LTSTFrameNumberList[8], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[9], 16, 31);
+
+   dw[8] =
+      __gen_uint(values->LTSTFrameNumberList[10], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[11], 16, 31);
+
+   dw[9] =
+      __gen_uint(values->LTSTFrameNumberList[12], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[13], 16, 31);
+
+   dw[10] =
+      __gen_uint(values->LTSTFrameNumberList[14], 0, 15) |
+      __gen_uint(values->LTSTFrameNumberList[15], 16, 31);
+
+   dw[11] =
+      __gen_uint(values->ViewID[0], 0, 15) |
+      __gen_uint(values->ViewID[1], 16, 31);
+
+   dw[12] =
+      __gen_uint(values->ViewID[2], 0, 15) |
+      __gen_uint(values->ViewID[3], 16, 31);
+
+   dw[13] =
+      __gen_uint(values->ViewID[4], 0, 15) |
+      __gen_uint(values->ViewID[5], 16, 31);
+
+   dw[14] =
+      __gen_uint(values->ViewID[6], 0, 15) |
+      __gen_uint(values->ViewID[7], 16, 31);
+
+   dw[15] =
+      __gen_uint(values->ViewID[8], 0, 15) |
+      __gen_uint(values->ViewID[9], 16, 31);
+
+   dw[16] =
+      __gen_uint(values->ViewID[10], 0, 15) |
+      __gen_uint(values->ViewID[11], 16, 31);
+
+   dw[17] =
+      __gen_uint(values->ViewID[12], 0, 15) |
+      __gen_uint(values->ViewID[13], 16, 31);
+
+   dw[18] =
+      __gen_uint(values->ViewID[14], 0, 15) |
+      __gen_uint(values->ViewID[15], 16, 31);
+
+   dw[19] =
+      __gen_uint(values->L0ViewOrder[0], 0, 7) |
+      __gen_uint(values->L0ViewOrder[1], 8, 15) |
+      __gen_uint(values->L0ViewOrder[2], 16, 23) |
+      __gen_uint(values->L0ViewOrder[3], 24, 31);
+
+   dw[20] =
+      __gen_uint(values->L0ViewOrder[4], 0, 7) |
+      __gen_uint(values->L0ViewOrder[5], 8, 15) |
+      __gen_uint(values->L0ViewOrder[6], 16, 23) |
+      __gen_uint(values->L0ViewOrder[7], 24, 31);
+
+   dw[21] =
+      __gen_uint(values->L0ViewOrder[8], 0, 7) |
+      __gen_uint(values->L0ViewOrder[9], 8, 15) |
+      __gen_uint(values->L0ViewOrder[10], 16, 23) |
+      __gen_uint(values->L0ViewOrder[11], 24, 31);
+
+   dw[22] =
+      __gen_uint(values->L0ViewOrder[12], 0, 7) |
+      __gen_uint(values->L0ViewOrder[13], 8, 15) |
+      __gen_uint(values->L0ViewOrder[14], 16, 23) |
+      __gen_uint(values->L0ViewOrder[15], 24, 31);
+
+   dw[23] =
+      __gen_uint(values->L1ViewOrder[0], 0, 7) |
+      __gen_uint(values->L1ViewOrder[1], 8, 15) |
+      __gen_uint(values->L1ViewOrder[2], 16, 23) |
+      __gen_uint(values->L1ViewOrder[3], 24, 31);
+
+   dw[24] =
+      __gen_uint(values->L1ViewOrder[4], 0, 7) |
+      __gen_uint(values->L1ViewOrder[5], 8, 15) |
+      __gen_uint(values->L1ViewOrder[6], 16, 23) |
+      __gen_uint(values->L1ViewOrder[7], 24, 31);
+
+   dw[25] =
+      __gen_uint(values->L1ViewOrder[8], 0, 7) |
+      __gen_uint(values->L1ViewOrder[9], 8, 15) |
+      __gen_uint(values->L1ViewOrder[10], 16, 23) |
+      __gen_uint(values->L1ViewOrder[11], 24, 31);
+
+   dw[26] =
+      __gen_uint(values->L1ViewOrder[12], 0, 7) |
+      __gen_uint(values->L1ViewOrder[13], 8, 15) |
+      __gen_uint(values->L1ViewOrder[14], 16, 23) |
+      __gen_uint(values->L1ViewOrder[15], 24, 31);
+}
+
+#define GFX125_MFD_AVC_PICID_STATE_length     10
+#define GFX125_MFD_AVC_PICID_STATE_length_bias      2
+#define GFX125_MFD_AVC_PICID_STATE_header       \
+   .DWordLength                         =      8,  \
+   .SubOpcodeB                          =      5,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_AVC_PICID_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             PictureIDRemappingDisable;
+#define Use16bitsPictureID                       0
+#define Use4bitsFrameStoreID                     1
+   uint32_t                             PictureID[16];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_AVC_PICID_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_MFD_AVC_PICID_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PictureIDRemappingDisable, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->PictureID[0], 0, 15) |
+      __gen_uint(values->PictureID[1], 16, 31);
+
+   dw[3] =
+      __gen_uint(values->PictureID[2], 0, 15) |
+      __gen_uint(values->PictureID[3], 16, 31);
+
+   dw[4] =
+      __gen_uint(values->PictureID[4], 0, 15) |
+      __gen_uint(values->PictureID[5], 16, 31);
+
+   dw[5] =
+      __gen_uint(values->PictureID[6], 0, 15) |
+      __gen_uint(values->PictureID[7], 16, 31);
+
+   dw[6] =
+      __gen_uint(values->PictureID[8], 0, 15) |
+      __gen_uint(values->PictureID[9], 16, 31);
+
+   dw[7] =
+      __gen_uint(values->PictureID[10], 0, 15) |
+      __gen_uint(values->PictureID[11], 16, 31);
+
+   dw[8] =
+      __gen_uint(values->PictureID[12], 0, 15) |
+      __gen_uint(values->PictureID[13], 16, 31);
+
+   dw[9] =
+      __gen_uint(values->PictureID[14], 0, 15) |
+      __gen_uint(values->PictureID[15], 16, 31);
+}
+
+#define GFX125_MFD_AVC_SLICEADDR_length        4
+#define GFX125_MFD_AVC_SLICEADDR_length_bias      2
+#define GFX125_MFD_AVC_SLICEADDR_header         \
+   .DWordLength                         =      2,  \
+   .SubOpcodeB                          =      7,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_AVC_SLICEADDR {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectBSDDataLength;
+   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint32_t                             DriverProvidedNALTypeValue;
+   uint32_t                             AVCNALTypeFirstByteOverride;
+#define UseBitstreamDecodedNALType               0
+#define UseDriverProgrammedNALType               1
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_AVC_SLICEADDR_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFD_AVC_SLICEADDR * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+
+   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->DriverProvidedNALTypeValue, 0, 7) |
+      __gen_uint(values->AVCNALTypeFirstByteOverride, 8, 8);
+}
+
+#define GFX125_MFD_IT_OBJECT_length_bias       2
+#define GFX125_MFD_IT_OBJECT_header             \
+   .DWordLength                         =      6,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_IT_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectITMVDataLength;
+   uint64_t                             IndirectITMVDataStartAddressOffset;
+   uint32_t                             IndirectITCOEFFDataLength;
+   uint64_t                             IndirectITCOEFFDataStartAddressOffset;
+   uint32_t                             IndirectITDBLKControlDataLength;
+   uint64_t                             IndirectITDBLKControlDataStartAddressOffset;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_IT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_MFD_IT_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectITMVDataLength, 0, 9);
+
+   dw[2] =
+      __gen_offset(values->IndirectITMVDataStartAddressOffset, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->IndirectITCOEFFDataLength, 0, 11);
+
+   dw[4] =
+      __gen_offset(values->IndirectITCOEFFDataStartAddressOffset, 0, 28);
+
+   dw[5] =
+      __gen_uint(values->IndirectITDBLKControlDataLength, 0, 5);
+
+   dw[6] =
+      __gen_offset(values->IndirectITDBLKControlDataStartAddressOffset, 0, 28);
+}
+
+#define GFX125_MFD_JPEG_BSD_OBJECT_length      6
+#define GFX125_MFD_JPEG_BSD_OBJECT_length_bias      2
+#define GFX125_MFD_JPEG_BSD_OBJECT_header       \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_JPEG_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectDataLength;
+   uint64_t                             IndirectDataStartAddress;
+   uint32_t                             ScanVerticalPosition;
+   uint32_t                             ScanHorizontalPosition;
+   uint32_t                             MCUCount;
+   uint32_t                             ScanComponents;
+   bool                                 Interleaved;
+   uint32_t                             RestartInterval;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_JPEG_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_MFD_JPEG_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectDataLength, 0, 31);
+
+   dw[2] =
+      __gen_offset(values->IndirectDataStartAddress, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->ScanVerticalPosition, 0, 12) |
+      __gen_uint(values->ScanHorizontalPosition, 16, 28);
+
+   dw[4] =
+      __gen_uint(values->MCUCount, 0, 25) |
+      __gen_uint(values->ScanComponents, 27, 29) |
+      __gen_uint(values->Interleaved, 30, 30);
+
+   dw[5] =
+      __gen_uint(values->RestartInterval, 0, 15);
+}
+
+#define GFX125_MFD_MPEG2_BSD_OBJECT_length      5
+#define GFX125_MFD_MPEG2_BSD_OBJECT_length_bias      2
+#define GFX125_MFD_MPEG2_BSD_OBJECT_header      \
+   .DWordLength                         =      3,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_MPEG2_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectBSDDataLength;
+   uint64_t                             IndirectBSDDataStartAddress;
+   struct GFX125_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION InlineData;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_MPEG2_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_MFD_MPEG2_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
+
+   GFX125_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_pack(data, &dw[3], &values->InlineData);
+}
+
+#define GFX125_MFD_VC1_BSD_OBJECT_length       5
+#define GFX125_MFD_VC1_BSD_OBJECT_length_bias      2
+#define GFX125_MFD_VC1_BSD_OBJECT_header        \
+   .DWordLength                         =      3,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_VC1_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectBSDDataLength;
+   uint64_t                             IndirectBSDDataStartAddress;
+   uint32_t                             NextSliceVerticalPosition;
+   uint32_t                             SliceStartVerticalPosition;
+   uint32_t                             FirstMBBitOffset;
+   uint32_t                             EmulationPreventionBytePresent;
+   uint32_t                             FirstMBByteOffsetofSliceDataorSliceHeader;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_VC1_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_MFD_VC1_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectBSDDataLength, 0, 23);
+
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
+
+   dw[3] =
+      __gen_uint(values->NextSliceVerticalPosition, 0, 8) |
+      __gen_uint(values->SliceStartVerticalPosition, 16, 23);
+
+   dw[4] =
+      __gen_uint(values->FirstMBBitOffset, 0, 2) |
+      __gen_uint(values->EmulationPreventionBytePresent, 4, 4) |
+      __gen_uint(values->FirstMBByteOffsetofSliceDataorSliceHeader, 16, 31);
+}
+
+#define GFX125_MFD_VC1_LONG_PIC_STATE_length      6
+#define GFX125_MFD_VC1_LONG_PIC_STATE_length_bias      2
+#define GFX125_MFD_VC1_LONG_PIC_STATE_header    \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_VC1_LONG_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             PictureWidthInMBs;
+   uint32_t                             PictureHeightInMBs;
+   uint32_t                             VC1Profile;
+#define SimpleMainProfile                        0
+#define AdvancedProfile                          1
+   bool                                 SecondField;
+   bool                                 OverlapSmoothingEnable;
+   bool                                 LoopFilterEnable;
+   bool                                 RangeReductionEnable;
+   uint32_t                             RangeReductionScale;
+   uint32_t                             MVMode;
+   bool                                 SyncMarker;
+   bool                                 InterpolationRounderControl;
+   bool                                 ImplicitQuantizer;
+   bool                                 DMVSurfaceValid;
+   uint32_t                             BitplaneBufferPitch;
+   uint32_t                             BScaleFactor;
+   uint32_t                             PQValue;
+   uint32_t                             AlternativePQValue;
+   uint32_t                             FrameCodingMode;
+#define ProgressiveFramePicture                  0
+#define InterlacedFramePicture                   1
+#define FieldPicturewithTopFieldFirst            2
+#define FieldPicturewithBottomFieldFirst         3
+   uint32_t                             PictureType;
+   uint32_t                             CONDOVER;
+   bool                                 PQUniform;
+   bool                                 HalfQP;
+   uint32_t                             AlternativePQConfiguration;
+   uint32_t                             AlternativePQEdgeMask;
+   uint32_t                             ExtendedMVRange;
+   uint32_t                             ExtendedDMVRange;
+   uint32_t                             ForwardReferenceDistance;
+   uint32_t                             BackwardReferenceDistance;
+   uint32_t                             NumberofReferences;
+#define Onefieldreferenced                       0
+#define Twofieldsreferenced                      1
+   uint32_t                             ReferenceFieldPicturePolarity;
+#define TopevenField                             0
+#define BottomoddField                           1
+   uint32_t                             FastUVMotionCompensation;
+#define NoRounding                               0
+#define QuarterPeloffsetstoHalfFullpelpositions  1
+   uint32_t                             FourMVSwitch;
+#define Only1MV                                  0
+#define _12or4MVs                                1
+   uint32_t                             UnifiedMVMode;
+#define _1MVhalfpelbilinear                      3
+#define _1MV                                     1
+#define _1MVhalfpel                              2
+#define MixedMV                                  0
+   uint32_t                             CodedBlockPatternTable;
+   uint32_t                             IntraTransformDCTable;
+   uint32_t                             PicturelevelTransformChromaACCodingSetIndex;
+   uint32_t                             PicturelevelTransformLumaACCodingSetIndex;
+   uint32_t                             MBModeTable;
+   bool                                 MBTransformType;
+   uint32_t                             PicturelevelTransformType;
+#define _8x8Transform                            0
+#define _8x4Transform                            1
+#define _4x8Transform                            2
+#define _4x4Transform                            3
+   uint32_t                             _2MVBlockPatternTable;
+   uint32_t                             _4MVBlockPatternTable;
+   uint32_t                             MVTable;
+   bool                                 FIELDTXRaw;
+   bool                                 ACPREDRaw;
+   bool                                 OVERFLAGSRaw;
+   bool                                 DIRECTMBRaw;
+   bool                                 SKIPMBRaw;
+   bool                                 MVTYPEMBRaw;
+   bool                                 FORWARDMBRaw;
+   bool                                 BitplaneBufferPresent;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_VC1_LONG_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_MFD_VC1_LONG_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PictureWidthInMBs, 0, 7) |
+      __gen_uint(values->PictureHeightInMBs, 16, 23);
+
+   dw[2] =
+      __gen_uint(values->VC1Profile, 0, 0) |
+      __gen_uint(values->SecondField, 3, 3) |
+      __gen_uint(values->OverlapSmoothingEnable, 4, 4) |
+      __gen_uint(values->LoopFilterEnable, 5, 5) |
+      __gen_uint(values->RangeReductionEnable, 6, 6) |
+      __gen_uint(values->RangeReductionScale, 7, 7) |
+      __gen_uint(values->MVMode, 8, 11) |
+      __gen_uint(values->SyncMarker, 12, 12) |
+      __gen_uint(values->InterpolationRounderControl, 13, 13) |
+      __gen_uint(values->ImplicitQuantizer, 14, 14) |
+      __gen_uint(values->DMVSurfaceValid, 15, 15) |
+      __gen_uint(values->BitplaneBufferPitch, 24, 31);
+
+   dw[3] =
+      __gen_uint(values->BScaleFactor, 0, 7) |
+      __gen_uint(values->PQValue, 8, 12) |
+      __gen_uint(values->AlternativePQValue, 16, 20) |
+      __gen_uint(values->FrameCodingMode, 24, 25) |
+      __gen_uint(values->PictureType, 26, 28) |
+      __gen_uint(values->CONDOVER, 29, 30);
+
+   dw[4] =
+      __gen_uint(values->PQUniform, 0, 0) |
+      __gen_uint(values->HalfQP, 1, 1) |
+      __gen_uint(values->AlternativePQConfiguration, 2, 3) |
+      __gen_uint(values->AlternativePQEdgeMask, 4, 7) |
+      __gen_uint(values->ExtendedMVRange, 8, 9) |
+      __gen_uint(values->ExtendedDMVRange, 10, 11) |
+      __gen_uint(values->ForwardReferenceDistance, 16, 19) |
+      __gen_uint(values->BackwardReferenceDistance, 20, 23) |
+      __gen_uint(values->NumberofReferences, 24, 24) |
+      __gen_uint(values->ReferenceFieldPicturePolarity, 25, 25) |
+      __gen_uint(values->FastUVMotionCompensation, 26, 26) |
+      __gen_uint(values->FourMVSwitch, 27, 27) |
+      __gen_uint(values->UnifiedMVMode, 28, 29);
+
+   dw[5] =
+      __gen_uint(values->CodedBlockPatternTable, 0, 2) |
+      __gen_uint(values->IntraTransformDCTable, 3, 3) |
+      __gen_uint(values->PicturelevelTransformChromaACCodingSetIndex, 4, 5) |
+      __gen_uint(values->PicturelevelTransformLumaACCodingSetIndex, 6, 7) |
+      __gen_uint(values->MBModeTable, 8, 10) |
+      __gen_uint(values->MBTransformType, 11, 11) |
+      __gen_uint(values->PicturelevelTransformType, 12, 13) |
+      __gen_uint(values->_2MVBlockPatternTable, 16, 17) |
+      __gen_uint(values->_4MVBlockPatternTable, 18, 19) |
+      __gen_uint(values->MVTable, 20, 22) |
+      __gen_uint(values->FIELDTXRaw, 24, 24) |
+      __gen_uint(values->ACPREDRaw, 25, 25) |
+      __gen_uint(values->OVERFLAGSRaw, 26, 26) |
+      __gen_uint(values->DIRECTMBRaw, 27, 27) |
+      __gen_uint(values->SKIPMBRaw, 28, 28) |
+      __gen_uint(values->MVTYPEMBRaw, 29, 29) |
+      __gen_uint(values->FORWARDMBRaw, 30, 30) |
+      __gen_uint(values->BitplaneBufferPresent, 31, 31);
+}
+
+#define GFX125_MFD_VC1_SHORT_PIC_STATE_length      5
+#define GFX125_MFD_VC1_SHORT_PIC_STATE_length_bias      2
+#define GFX125_MFD_VC1_SHORT_PIC_STATE_header   \
+   .DWordLength                         =      3,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_VC1_SHORT_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             PictureWidth;
+   uint32_t                             PictureHeight;
+   uint32_t                             PictureStructure;
+   bool                                 SecondField;
+   bool                                 IntraPicture;
+   bool                                 BackwardPredictionPresent;
+   uint32_t                             VC1Profile;
+#define SimpleMainProfile                        0
+#define AdvancedProfile                          1
+   bool                                 DMVSurfaceValid;
+   uint32_t                             MVMode;
+   bool                                 InterpolationRounderControl;
+   uint32_t                             BitplaneBufferPitch;
+   bool                                 variablesizedtransformcoding;
+   uint32_t                             DQUANT;
+   bool                                 EXTENDED_MVPresent;
+   uint32_t                             FastUVMotionCompensation;
+#define NoRounding                               0
+#define QuarterPeloffsetstoHalfFullpelpositions  1
+   bool                                 LoopFilterEnable;
+   bool                                 REFDIST_FLAG;
+   bool                                 PANSCANPresent;
+   uint32_t                             MAXBFRAMES;
+   bool                                 RANGEREDPresent;
+   bool                                 SYNCMARKERPresent;
+   bool                                 MULTIRESPresent;
+   uint32_t                             QUANTIZER;
+   uint32_t                             PPicRefDistance;
+   uint32_t                             ProgressivePicType;
+   uint32_t                             RangeReductionEnable;
+   uint32_t                             RangeReductionScale;
+   bool                                 OverlapSmoothingEnable;
+   bool                                 EXTENDED_DMVPresent;
+   bool                                 PSF;
+   bool                                 REFPIC;
+   bool                                 FINTERFLAG;
+   bool                                 TFCNTRFLAG;
+   bool                                 INTERLACE;
+   bool                                 PULLDOWN;
+   bool                                 POSTPROC;
+   bool                                 _4MVAllowed;
+   uint32_t                             BFractionEnumeration;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_VC1_SHORT_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_MFD_VC1_SHORT_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PictureWidth, 0, 7) |
+      __gen_uint(values->PictureHeight, 16, 23);
+
+   dw[2] =
+      __gen_uint(values->PictureStructure, 0, 1) |
+      __gen_uint(values->SecondField, 3, 3) |
+      __gen_uint(values->IntraPicture, 4, 4) |
+      __gen_uint(values->BackwardPredictionPresent, 5, 5) |
+      __gen_uint(values->VC1Profile, 11, 11) |
+      __gen_uint(values->DMVSurfaceValid, 15, 15) |
+      __gen_uint(values->MVMode, 16, 19) |
+      __gen_uint(values->InterpolationRounderControl, 23, 23) |
+      __gen_uint(values->BitplaneBufferPitch, 24, 31);
+
+   dw[3] =
+      __gen_uint(values->variablesizedtransformcoding, 0, 0) |
+      __gen_uint(values->DQUANT, 1, 2) |
+      __gen_uint(values->EXTENDED_MVPresent, 3, 3) |
+      __gen_uint(values->FastUVMotionCompensation, 4, 4) |
+      __gen_uint(values->LoopFilterEnable, 5, 5) |
+      __gen_uint(values->REFDIST_FLAG, 6, 6) |
+      __gen_uint(values->PANSCANPresent, 7, 7) |
+      __gen_uint(values->MAXBFRAMES, 8, 10) |
+      __gen_uint(values->RANGEREDPresent, 11, 11) |
+      __gen_uint(values->SYNCMARKERPresent, 12, 12) |
+      __gen_uint(values->MULTIRESPresent, 13, 13) |
+      __gen_uint(values->QUANTIZER, 14, 15) |
+      __gen_uint(values->PPicRefDistance, 16, 20) |
+      __gen_uint(values->ProgressivePicType, 22, 23) |
+      __gen_uint(values->RangeReductionEnable, 28, 28) |
+      __gen_uint(values->RangeReductionScale, 29, 29) |
+      __gen_uint(values->OverlapSmoothingEnable, 30, 30);
+
+   dw[4] =
+      __gen_uint(values->EXTENDED_DMVPresent, 0, 0) |
+      __gen_uint(values->PSF, 1, 1) |
+      __gen_uint(values->REFPIC, 2, 2) |
+      __gen_uint(values->FINTERFLAG, 3, 3) |
+      __gen_uint(values->TFCNTRFLAG, 4, 4) |
+      __gen_uint(values->INTERLACE, 5, 5) |
+      __gen_uint(values->PULLDOWN, 6, 6) |
+      __gen_uint(values->POSTPROC, 7, 7) |
+      __gen_uint(values->_4MVAllowed, 8, 8) |
+      __gen_uint(values->BFractionEnumeration, 24, 28);
+}
+
+#define GFX125_MFD_VP8_BSD_OBJECT_length      22
+#define GFX125_MFD_VP8_BSD_OBJECT_length_bias      2
+#define GFX125_MFD_VP8_BSD_OBJECT_header        \
+   .DWordLength                         =     20,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      1,  \
+   .MediaCommandOpCode                  =      4,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFD_VP8_BSD_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpCode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             Partition0FirstMBBitOffsetfromFrameHeader;
+   uint32_t                             CodedNumofCoeffTokenPartitions;
+   uint32_t                             Partition0CPBACEntropyRange;
+   uint32_t                             Partition0CPBACEntropyCount;
+   uint32_t                             Partition0CPBACEntropyValue;
+   uint32_t                             IndirectPartition0DataLength;
+   uint32_t                             IndirectPartition0DataStartOffset;
+   uint32_t                             IndirectPartition1DataLength;
+   uint32_t                             IndirectPartition1DataStartOffset;
+   uint32_t                             IndirectPartition2DataLength;
+   uint32_t                             IndirectPartition2DataStartOffset;
+   uint32_t                             IndirectPartition3DataLength;
+   uint32_t                             IndirectPartition3DataStartOffset;
+   uint32_t                             IndirectPartition4DataLength;
+   uint32_t                             IndirectPartition4DataStartOffset;
+   uint32_t                             IndirectPartition5DataLength;
+   uint32_t                             IndirectPartition5DataStartOffset;
+   uint32_t                             IndirectPartition6DataLength;
+   uint32_t                             IndirectPartition6DataStartOffset;
+   uint32_t                             IndirectPartition7DataLength;
+   uint32_t                             IndirectPartition7DataStartOffset;
+   uint32_t                             IndirectPartition8DataLength;
+   uint32_t                             IndirectPartition8DataStartOffset;
+   uint32_t                             MBHeaderErrorHandling;
+   uint32_t                             EntropyErrorHandling;
+   uint32_t                             MPRErrorMVoutofrangeHandling;
+   uint32_t                             BSDPrematureCompleteErrorHandling;
+   uint32_t                             ConcealmentPictureID;
+   uint32_t                             ConcealmentMethod;
+#define Intra16x16Prediction                     0
+#define InterPCopy                               1
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFD_VP8_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_MFD_VP8_BSD_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpCode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->Partition0FirstMBBitOffsetfromFrameHeader, 0, 2) |
+      __gen_uint(values->CodedNumofCoeffTokenPartitions, 4, 5) |
+      __gen_uint(values->Partition0CPBACEntropyRange, 8, 15) |
+      __gen_uint(values->Partition0CPBACEntropyCount, 16, 20);
+
+   dw[2] =
+      __gen_uint(values->Partition0CPBACEntropyValue, 24, 31);
+
+   dw[3] =
+      __gen_uint(values->IndirectPartition0DataLength, 0, 23);
+
+   dw[4] =
+      __gen_uint(values->IndirectPartition0DataStartOffset, 0, 31);
+
+   dw[5] =
+      __gen_uint(values->IndirectPartition1DataLength, 0, 23);
+
+   dw[6] =
+      __gen_uint(values->IndirectPartition1DataStartOffset, 0, 31);
+
+   dw[7] =
+      __gen_uint(values->IndirectPartition2DataLength, 0, 23);
+
+   dw[8] =
+      __gen_uint(values->IndirectPartition2DataStartOffset, 0, 31);
+
+   dw[9] =
+      __gen_uint(values->IndirectPartition3DataLength, 0, 23);
+
+   dw[10] =
+      __gen_uint(values->IndirectPartition3DataStartOffset, 0, 31);
+
+   dw[11] =
+      __gen_uint(values->IndirectPartition4DataLength, 0, 23);
+
+   dw[12] =
+      __gen_uint(values->IndirectPartition4DataStartOffset, 0, 31);
+
+   dw[13] =
+      __gen_uint(values->IndirectPartition5DataLength, 0, 23);
+
+   dw[14] =
+      __gen_uint(values->IndirectPartition5DataStartOffset, 0, 31);
+
+   dw[15] =
+      __gen_uint(values->IndirectPartition6DataLength, 0, 23);
+
+   dw[16] =
+      __gen_uint(values->IndirectPartition6DataStartOffset, 0, 31);
+
+   dw[17] =
+      __gen_uint(values->IndirectPartition7DataLength, 0, 23);
+
+   dw[18] =
+      __gen_uint(values->IndirectPartition7DataStartOffset, 0, 31);
+
+   dw[19] =
+      __gen_uint(values->IndirectPartition8DataLength, 0, 23);
+
+   dw[20] =
+      __gen_uint(values->IndirectPartition8DataStartOffset, 0, 31);
+
+   dw[21] =
+      __gen_uint(values->MBHeaderErrorHandling, 8, 8) |
+      __gen_uint(values->EntropyErrorHandling, 10, 10) |
+      __gen_uint(values->MPRErrorMVoutofrangeHandling, 12, 12) |
+      __gen_uint(values->BSDPrematureCompleteErrorHandling, 14, 14) |
+      __gen_uint(values->ConcealmentPictureID, 16, 17) |
+      __gen_uint(values->ConcealmentMethod, 31, 31);
+}
+
+#define GFX125_MFX_AVC_DIRECTMODE_STATE_length     71
+#define GFX125_MFX_AVC_DIRECTMODE_STATE_length_bias      2
+#define GFX125_MFX_AVC_DIRECTMODE_STATE_header  \
+   .DWordLength                         =     69,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_AVC_DIRECTMODE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   DirectMVBufferAddress[16];
+   struct GFX125_MEMORYADDRESSATTRIBUTES DirectMVBufferAttributes;
+   __gen_address_type                   DirectMVBufferWriteAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DirectMVBufferWriteAttributes;
+   uint32_t                             POCList[34];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                     __attribute__((unused)) void * restrict dst,
+                                     __attribute__((unused)) const struct GFX125_MFX_AVC_DIRECTMODE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->DirectMVBufferAddress[0], 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   const uint64_t v3_address =
+      __gen_address(data, &dw[3], values->DirectMVBufferAddress[1], 0, 0, 63);
+   dw[3] = v3_address;
+   dw[4] = v3_address >> 32;
+
+   const uint64_t v5_address =
+      __gen_address(data, &dw[5], values->DirectMVBufferAddress[2], 0, 0, 63);
+   dw[5] = v5_address;
+   dw[6] = v5_address >> 32;
+
+   const uint64_t v7_address =
+      __gen_address(data, &dw[7], values->DirectMVBufferAddress[3], 0, 0, 63);
+   dw[7] = v7_address;
+   dw[8] = v7_address >> 32;
+
+   const uint64_t v9_address =
+      __gen_address(data, &dw[9], values->DirectMVBufferAddress[4], 0, 0, 63);
+   dw[9] = v9_address;
+   dw[10] = v9_address >> 32;
+
+   const uint64_t v11_address =
+      __gen_address(data, &dw[11], values->DirectMVBufferAddress[5], 0, 0, 63);
+   dw[11] = v11_address;
+   dw[12] = v11_address >> 32;
+
+   const uint64_t v13_address =
+      __gen_address(data, &dw[13], values->DirectMVBufferAddress[6], 0, 0, 63);
+   dw[13] = v13_address;
+   dw[14] = v13_address >> 32;
+
+   const uint64_t v15_address =
+      __gen_address(data, &dw[15], values->DirectMVBufferAddress[7], 0, 0, 63);
+   dw[15] = v15_address;
+   dw[16] = v15_address >> 32;
+
+   const uint64_t v17_address =
+      __gen_address(data, &dw[17], values->DirectMVBufferAddress[8], 0, 0, 63);
+   dw[17] = v17_address;
+   dw[18] = v17_address >> 32;
+
+   const uint64_t v19_address =
+      __gen_address(data, &dw[19], values->DirectMVBufferAddress[9], 0, 0, 63);
+   dw[19] = v19_address;
+   dw[20] = v19_address >> 32;
+
+   const uint64_t v21_address =
+      __gen_address(data, &dw[21], values->DirectMVBufferAddress[10], 0, 0, 63);
+   dw[21] = v21_address;
+   dw[22] = v21_address >> 32;
+
+   const uint64_t v23_address =
+      __gen_address(data, &dw[23], values->DirectMVBufferAddress[11], 0, 0, 63);
+   dw[23] = v23_address;
+   dw[24] = v23_address >> 32;
+
+   const uint64_t v25_address =
+      __gen_address(data, &dw[25], values->DirectMVBufferAddress[12], 0, 0, 63);
+   dw[25] = v25_address;
+   dw[26] = v25_address >> 32;
+
+   const uint64_t v27_address =
+      __gen_address(data, &dw[27], values->DirectMVBufferAddress[13], 0, 0, 63);
+   dw[27] = v27_address;
+   dw[28] = v27_address >> 32;
+
+   const uint64_t v29_address =
+      __gen_address(data, &dw[29], values->DirectMVBufferAddress[14], 0, 0, 63);
+   dw[29] = v29_address;
+   dw[30] = v29_address >> 32;
+
+   const uint64_t v31_address =
+      __gen_address(data, &dw[31], values->DirectMVBufferAddress[15], 0, 0, 63);
+   dw[31] = v31_address;
+   dw[32] = v31_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[33], &values->DirectMVBufferAttributes);
+
+   const uint64_t v34_address =
+      __gen_address(data, &dw[34], values->DirectMVBufferWriteAddress, 0, 0, 63);
+   dw[34] = v34_address;
+   dw[35] = v34_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[36], &values->DirectMVBufferWriteAttributes);
+
+   dw[37] =
+      __gen_uint(values->POCList[0], 0, 31);
+
+   dw[38] =
+      __gen_uint(values->POCList[1], 0, 31);
+
+   dw[39] =
+      __gen_uint(values->POCList[2], 0, 31);
+
+   dw[40] =
+      __gen_uint(values->POCList[3], 0, 31);
+
+   dw[41] =
+      __gen_uint(values->POCList[4], 0, 31);
+
+   dw[42] =
+      __gen_uint(values->POCList[5], 0, 31);
+
+   dw[43] =
+      __gen_uint(values->POCList[6], 0, 31);
+
+   dw[44] =
+      __gen_uint(values->POCList[7], 0, 31);
+
+   dw[45] =
+      __gen_uint(values->POCList[8], 0, 31);
+
+   dw[46] =
+      __gen_uint(values->POCList[9], 0, 31);
+
+   dw[47] =
+      __gen_uint(values->POCList[10], 0, 31);
+
+   dw[48] =
+      __gen_uint(values->POCList[11], 0, 31);
+
+   dw[49] =
+      __gen_uint(values->POCList[12], 0, 31);
+
+   dw[50] =
+      __gen_uint(values->POCList[13], 0, 31);
+
+   dw[51] =
+      __gen_uint(values->POCList[14], 0, 31);
+
+   dw[52] =
+      __gen_uint(values->POCList[15], 0, 31);
+
+   dw[53] =
+      __gen_uint(values->POCList[16], 0, 31);
+
+   dw[54] =
+      __gen_uint(values->POCList[17], 0, 31);
+
+   dw[55] =
+      __gen_uint(values->POCList[18], 0, 31);
+
+   dw[56] =
+      __gen_uint(values->POCList[19], 0, 31);
+
+   dw[57] =
+      __gen_uint(values->POCList[20], 0, 31);
+
+   dw[58] =
+      __gen_uint(values->POCList[21], 0, 31);
+
+   dw[59] =
+      __gen_uint(values->POCList[22], 0, 31);
+
+   dw[60] =
+      __gen_uint(values->POCList[23], 0, 31);
+
+   dw[61] =
+      __gen_uint(values->POCList[24], 0, 31);
+
+   dw[62] =
+      __gen_uint(values->POCList[25], 0, 31);
+
+   dw[63] =
+      __gen_uint(values->POCList[26], 0, 31);
+
+   dw[64] =
+      __gen_uint(values->POCList[27], 0, 31);
+
+   dw[65] =
+      __gen_uint(values->POCList[28], 0, 31);
+
+   dw[66] =
+      __gen_uint(values->POCList[29], 0, 31);
+
+   dw[67] =
+      __gen_uint(values->POCList[30], 0, 31);
+
+   dw[68] =
+      __gen_uint(values->POCList[31], 0, 31);
+
+   dw[69] =
+      __gen_uint(values->POCList[32], 0, 31);
+
+   dw[70] =
+      __gen_uint(values->POCList[33], 0, 31);
+}
+
+#define GFX125_MFX_AVC_IMG_STATE_length       14
+#define GFX125_MFX_AVC_IMG_STATE_length_bias      2
+#define GFX125_MFX_AVC_IMG_STATE_header         \
+   .DWordLength                         =     12,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_AVC_IMG_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameSize;
+   uint32_t                             FrameWidth;
+   uint32_t                             FrameHeight;
+   uint32_t                             ImageStructure;
+#define FramePicture                             0
+#define TopFieldPicture                          1
+#define BottomFieldPicture                       3
+#define Invalidnotallowed                        2
+   uint32_t                             WeightedBiPredictionIDC;
+#define DEFAULT                                  0
+#define EXPLICIT                                 1
+#define IMPLICIT                                 2
+   bool                                 WeightedPredictionEnable;
+   bool                                 RhoDomainRateControlEnable;
+   uint32_t                             FirstChromaQPOffset;
+   uint32_t                             SecondChromaQPOffset;
+   bool                                 FieldPicture;
+   bool                                 MBAFFMode;
+   bool                                 FrameMBOnly;
+   bool                                 _8x8IDCTTransformMode;
+   bool                                 Direct8x8Inference;
+   bool                                 ConstrainedIntraPrediction;
+   bool                                 NonReferencePicture;
+   bool                                 EntropyCodingSyncEnable;
+   uint32_t                             MBMVFormat;
+#define IGNORE                                   0
+#define FOLLOW                                   1
+   uint32_t                             ChromaFormatIDC;
+#define Monochromepicture                        0
+#define _420picture                              1
+#define _422picturenotsupported                  2
+#define _444picturenotsupported                  3
+   bool                                 MVUnpackedEnable;
+   bool                                 LoadBitstreamPointerPerSlice;
+   bool                                 MBStatusRead;
+   uint32_t                             MinimumFrameSize;
+   bool                                 IntraMBMaxBitControl;
+   bool                                 InterMBMaxBitControl;
+   bool                                 FrameBitrateMaxReport;
+   bool                                 FrameBitrateMinReport;
+   bool                                 ForceIPCMControl;
+   bool                                 MBLevelRateControl;
+   uint32_t                             MinimumFrameSizeUnits;
+#define AVC_MFSU_Compatibilitymode               0
+#define AVC_MFSU_16bytes                         1
+#define AVC_MFSU_4Kb                             2
+#define AVC_MFSU_16Kb                            3
+   uint32_t                             NonFirstPass;
+   bool                                 TrellisQuantizationChromaDisable;
+   uint32_t                             TrellisQuantizationRounding;
+   bool                                 TrellisQuantizationEnable;
+   uint32_t                             IntraMBConformanceMaxSize;
+   uint32_t                             InterMBConformanceMaxSize;
+   int32_t                              SliceDeltaQPMax0;
+   int32_t                              SliceDeltaQPMax1;
+   uint32_t                             SliceDeltaQPMax2;
+   int32_t                              SliceDeltaQPMax3;
+   int32_t                              SliceDeltaQPMin0;
+   int32_t                              SliceDeltaQPMin1;
+   int32_t                              SliceDeltaQPMin2;
+   int32_t                              SliceDeltaQPMin3;
+   uint32_t                             FrameBitrateMin;
+   uint32_t                             FrameBitrateMinUnitMode;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             FrameBitrateMinUnit;
+   uint32_t                             FrameBitrateMax;
+   uint32_t                             FrameBitrateMaxUnitMode;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             FrameBitrateMaxUnit;
+   uint32_t                             FrameBitrateMinDelta;
+   uint32_t                             FrameBitrateMaxDelta;
+   bool                                 SliceStatsStreamOutEnable;
+   int32_t                              InitialQPValue;
+   uint32_t                             NumberofActiveReferencePicturesfromL0;
+   uint32_t                             NumberofActiveReferencePicturesfromL1;
+   uint32_t                             NumberofReferenceFrames;
+   bool                                 CurrentPictureHasPerformedMMCO5;
+   bool                                 PicOrderPresent;
+   bool                                 DeltaPicOrderAlwaysZero;
+   uint32_t                             PicOrderCountType;
+   uint32_t                             SliceGroupMapType;
+   bool                                 RedundantPicCountPresent;
+   uint32_t                             NumberofSliceGroups;
+   bool                                 DeblockingFilterControlPresent;
+   uint32_t                             Log2MaxFrameNumber;
+   uint32_t                             Log2MaxPicOrderCountLSB;
+   uint32_t                             SliceGroupChangeRate;
+   uint32_t                             CurrentPictureFrameNumber;
+   uint32_t                             CurrentFrameViewID;
+   uint32_t                             MaxViewIDXL0;
+   uint32_t                             MaxViewIDXL1;
+   bool                                 InterViewOrderDisable;
+   uint32_t                             FractionalQPInput;
+   uint32_t                             FractionalQPOffset;
+   bool                                 ExtendedRhoDomainStatisticsEnable;
+   uint32_t                             RhoDomainAverageMBQP;
+   uint32_t                             ThresholdSize;
+   uint32_t                             TargetSliceSize;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFX_AVC_IMG_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->FrameSize, 0, 15);
+
+   dw[2] =
+      __gen_uint(values->FrameWidth, 0, 7) |
+      __gen_uint(values->FrameHeight, 16, 23);
+
+   dw[3] =
+      __gen_uint(values->ImageStructure, 8, 9) |
+      __gen_uint(values->WeightedBiPredictionIDC, 10, 11) |
+      __gen_uint(values->WeightedPredictionEnable, 12, 12) |
+      __gen_uint(values->RhoDomainRateControlEnable, 13, 13) |
+      __gen_uint(values->FirstChromaQPOffset, 16, 20) |
+      __gen_uint(values->SecondChromaQPOffset, 24, 28);
+
+   dw[4] =
+      __gen_uint(values->FieldPicture, 0, 0) |
+      __gen_uint(values->MBAFFMode, 1, 1) |
+      __gen_uint(values->FrameMBOnly, 2, 2) |
+      __gen_uint(values->_8x8IDCTTransformMode, 3, 3) |
+      __gen_uint(values->Direct8x8Inference, 4, 4) |
+      __gen_uint(values->ConstrainedIntraPrediction, 5, 5) |
+      __gen_uint(values->NonReferencePicture, 6, 6) |
+      __gen_uint(values->EntropyCodingSyncEnable, 7, 7) |
+      __gen_uint(values->MBMVFormat, 8, 8) |
+      __gen_uint(values->ChromaFormatIDC, 10, 11) |
+      __gen_uint(values->MVUnpackedEnable, 12, 12) |
+      __gen_uint(values->LoadBitstreamPointerPerSlice, 14, 14) |
+      __gen_uint(values->MBStatusRead, 15, 15) |
+      __gen_uint(values->MinimumFrameSize, 16, 31);
+
+   dw[5] =
+      __gen_uint(values->IntraMBMaxBitControl, 0, 0) |
+      __gen_uint(values->InterMBMaxBitControl, 1, 1) |
+      __gen_uint(values->FrameBitrateMaxReport, 2, 2) |
+      __gen_uint(values->FrameBitrateMinReport, 3, 3) |
+      __gen_uint(values->ForceIPCMControl, 7, 7) |
+      __gen_uint(values->MBLevelRateControl, 9, 9) |
+      __gen_uint(values->MinimumFrameSizeUnits, 10, 11) |
+      __gen_uint(values->NonFirstPass, 16, 16) |
+      __gen_uint(values->TrellisQuantizationChromaDisable, 27, 27) |
+      __gen_uint(values->TrellisQuantizationRounding, 28, 30) |
+      __gen_uint(values->TrellisQuantizationEnable, 31, 31);
+
+   dw[6] =
+      __gen_uint(values->IntraMBConformanceMaxSize, 0, 11) |
+      __gen_uint(values->InterMBConformanceMaxSize, 16, 27);
+
+   dw[7] = 0;
+
+   dw[8] =
+      __gen_sint(values->SliceDeltaQPMax0, 0, 7) |
+      __gen_sint(values->SliceDeltaQPMax1, 8, 15) |
+      __gen_uint(values->SliceDeltaQPMax2, 16, 23) |
+      __gen_sint(values->SliceDeltaQPMax3, 24, 31);
+
+   dw[9] =
+      __gen_sint(values->SliceDeltaQPMin0, 0, 7) |
+      __gen_sint(values->SliceDeltaQPMin1, 8, 15) |
+      __gen_sint(values->SliceDeltaQPMin2, 16, 23) |
+      __gen_sint(values->SliceDeltaQPMin3, 24, 31);
+
+   dw[10] =
+      __gen_uint(values->FrameBitrateMin, 0, 13) |
+      __gen_uint(values->FrameBitrateMinUnitMode, 14, 14) |
+      __gen_uint(values->FrameBitrateMinUnit, 15, 15) |
+      __gen_uint(values->FrameBitrateMax, 16, 29) |
+      __gen_uint(values->FrameBitrateMaxUnitMode, 30, 30) |
+      __gen_uint(values->FrameBitrateMaxUnit, 31, 31);
+
+   dw[11] =
+      __gen_uint(values->FrameBitrateMinDelta, 0, 14) |
+      __gen_uint(values->FrameBitrateMaxDelta, 16, 30) |
+      __gen_uint(values->SliceStatsStreamOutEnable, 31, 31);
+
+   dw[12] = 0;
+
+   dw[13] =
+      __gen_sint(values->InitialQPValue, 0, 7) |
+      __gen_uint(values->NumberofActiveReferencePicturesfromL0, 8, 13) |
+      __gen_uint(values->NumberofActiveReferencePicturesfromL1, 16, 21) |
+      __gen_uint(values->NumberofReferenceFrames, 24, 28) |
+      __gen_uint(values->CurrentPictureHasPerformedMMCO5, 29, 29);
+}
+
+#define GFX125_MFX_AVC_REF_IDX_STATE_length     10
+#define GFX125_MFX_AVC_REF_IDX_STATE_length_bias      2
+#define GFX125_MFX_AVC_REF_IDX_STATE_header     \
+   .DWordLength                         =      8,  \
+   .SubOpcodeB                          =      4,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_AVC_REF_IDX_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ReferencePictureListSelect;
+   uint32_t                             ReferenceListEntry[32];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_AVC_REF_IDX_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_MFX_AVC_REF_IDX_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ReferencePictureListSelect, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->ReferenceListEntry[0], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[1], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[2], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->ReferenceListEntry[4], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[5], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[6], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->ReferenceListEntry[8], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[9], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[10], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->ReferenceListEntry[12], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[13], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[14], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[15], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->ReferenceListEntry[16], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[17], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[18], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[19], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->ReferenceListEntry[20], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[21], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[22], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[23], 24, 31);
+
+   dw[8] =
+      __gen_uint(values->ReferenceListEntry[24], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[25], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[26], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[27], 24, 31);
+
+   dw[9] =
+      __gen_uint(values->ReferenceListEntry[28], 0, 7) |
+      __gen_uint(values->ReferenceListEntry[29], 8, 15) |
+      __gen_uint(values->ReferenceListEntry[30], 16, 23) |
+      __gen_uint(values->ReferenceListEntry[31], 24, 31);
+}
+
+#define GFX125_MFX_AVC_SLICE_STATE_length     10
+#define GFX125_MFX_AVC_SLICE_STATE_length_bias      2
+#define GFX125_MFX_AVC_SLICE_STATE_header       \
+   .DWordLength                         =      8,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_AVC_SLICE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SliceType;
+#define AVC_ST_PSlice                            0
+#define AVC_ST_BSlice                            1
+#define AVC_ST_ISlice                            2
+   uint32_t                             Log2WeightDenominatorLuma;
+   uint32_t                             Log2WeightDenominatorChroma;
+   uint32_t                             NumberofReferencePicturesinInterpredictionList0;
+   uint32_t                             NumberofReferencePicturesinInterpredictionList1;
+   int32_t                              SliceAlphaC0OffsetDiv2;
+   int32_t                              SliceBetaOffsetDiv2;
+   uint32_t                             SliceQuantizationParameter;
+   uint32_t                             CABACInitIDC;
+   uint32_t                             DisableDeblockingFilterIndicator;
+   uint32_t                             DirectPredictionType;
+#define Temporal                                 0
+#define Spatial                                  1
+   uint32_t                             WeightedPredictionIndicator;
+   uint32_t                             SliceStartMBNumber;
+   uint32_t                             SliceHorizontalPosition;
+   uint32_t                             SliceVerticalPosition;
+   uint32_t                             NextSliceHorizontalPosition;
+   uint32_t                             NextSliceVerticalPosition;
+   uint32_t                             StreamID;
+   uint32_t                             SliceID;
+   bool                                 CABACZeroWordInsertionEnable;
+   bool                                 EmulationByteSliceInsertEnable;
+   bool                                 TailInsertionPresent;
+   bool                                 SliceDataInsertionPresent;
+   bool                                 HeaderInsertionPresent;
+   bool                                 LastSliceGroup;
+   bool                                 MBTypeSkipConversionDisable;
+   bool                                 MBTypeDirectConversionDisable;
+   uint32_t                             RateControlPanicType;
+#define QPPanic                                  0
+#define CBPPanic                                 1
+   bool                                 RateControlPanicEnable;
+   uint32_t                             RateControlStableTolerance;
+   uint32_t                             RateControlTriggleMode;
+#define AlwaysRateControl                        0
+#define GentleRateControl                        1
+#define LooseRateControl                         2
+   bool                                 ResetRateControlCounter;
+   uint32_t                             RateControlCounterEnable;
+   uint64_t                             IndirectPAKBSEDataStartAddress;
+   uint32_t                             GrowInit;
+   uint32_t                             GrowResistance;
+   uint32_t                             ShrinkInit;
+   uint32_t                             ShrinkResistance;
+   uint32_t                             QPMaxPositiveModifierMagnitude;
+   uint32_t                             QPMaxNegativeModifierMagnitude;
+   uint32_t                             Correct1;
+   uint32_t                             Correct2;
+   uint32_t                             Correct3;
+   uint32_t                             Correct4;
+   uint32_t                             Correct5;
+   uint32_t                             Correct6;
+   uint32_t                             RoundIntra;
+#define _116                                     0
+#define _216                                     1
+#define _316                                     2
+#define _416                                     3
+#define _516                                     4
+#define _616                                     5
+#define _716                                     6
+#define _816                                     7
+   bool                                 RoundIntraEnable;
+   uint32_t                             RoundInter;
+#define _116                                     0
+#define _216                                     1
+#define _316                                     2
+#define _416                                     3
+#define _516                                     4
+#define _616                                     5
+#define _716                                     6
+#define _816                                     7
+   bool                                 RoundInterEnable;
+   uint32_t                             CV0;
+   uint32_t                             CV1;
+   uint32_t                             CV2;
+   uint32_t                             CV3;
+   uint32_t                             CV4;
+   uint32_t                             CV5;
+   uint32_t                             CV6;
+   uint32_t                             CV7;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_AVC_SLICE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_MFX_AVC_SLICE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SliceType, 0, 3);
+
+   dw[2] =
+      __gen_uint(values->Log2WeightDenominatorLuma, 0, 2) |
+      __gen_uint(values->Log2WeightDenominatorChroma, 8, 10) |
+      __gen_uint(values->NumberofReferencePicturesinInterpredictionList0, 16, 21) |
+      __gen_uint(values->NumberofReferencePicturesinInterpredictionList1, 24, 29);
+
+   dw[3] =
+      __gen_sint(values->SliceAlphaC0OffsetDiv2, 0, 3) |
+      __gen_sint(values->SliceBetaOffsetDiv2, 8, 11) |
+      __gen_uint(values->SliceQuantizationParameter, 16, 21) |
+      __gen_uint(values->CABACInitIDC, 24, 25) |
+      __gen_uint(values->DisableDeblockingFilterIndicator, 27, 28) |
+      __gen_uint(values->DirectPredictionType, 29, 29) |
+      __gen_uint(values->WeightedPredictionIndicator, 30, 31);
+
+   dw[4] =
+      __gen_uint(values->SliceStartMBNumber, 0, 14) |
+      __gen_uint(values->SliceHorizontalPosition, 16, 23) |
+      __gen_uint(values->SliceVerticalPosition, 24, 31);
+
+   dw[5] =
+      __gen_uint(values->NextSliceHorizontalPosition, 0, 7) |
+      __gen_uint(values->NextSliceVerticalPosition, 16, 23);
+
+   dw[6] =
+      __gen_uint(values->StreamID, 0, 1) |
+      __gen_uint(values->SliceID, 4, 7) |
+      __gen_uint(values->CABACZeroWordInsertionEnable, 12, 12) |
+      __gen_uint(values->EmulationByteSliceInsertEnable, 13, 13) |
+      __gen_uint(values->TailInsertionPresent, 15, 15) |
+      __gen_uint(values->SliceDataInsertionPresent, 16, 16) |
+      __gen_uint(values->HeaderInsertionPresent, 17, 17) |
+      __gen_uint(values->LastSliceGroup, 19, 19) |
+      __gen_uint(values->MBTypeSkipConversionDisable, 20, 20) |
+      __gen_uint(values->MBTypeDirectConversionDisable, 21, 21) |
+      __gen_uint(values->RateControlPanicType, 22, 22) |
+      __gen_uint(values->RateControlPanicEnable, 23, 23) |
+      __gen_uint(values->RateControlStableTolerance, 24, 27) |
+      __gen_uint(values->RateControlTriggleMode, 28, 29) |
+      __gen_uint(values->ResetRateControlCounter, 30, 30) |
+      __gen_uint(values->RateControlCounterEnable, 31, 31);
+
+   dw[7] =
+      __gen_offset(values->IndirectPAKBSEDataStartAddress, 0, 28);
+
+   dw[8] =
+      __gen_uint(values->GrowInit, 0, 3) |
+      __gen_uint(values->GrowResistance, 4, 7) |
+      __gen_uint(values->ShrinkInit, 8, 11) |
+      __gen_uint(values->ShrinkResistance, 12, 15) |
+      __gen_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
+      __gen_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
+
+   dw[9] =
+      __gen_uint(values->Correct1, 0, 3) |
+      __gen_uint(values->Correct2, 4, 7) |
+      __gen_uint(values->Correct3, 8, 11) |
+      __gen_uint(values->Correct4, 12, 15) |
+      __gen_uint(values->Correct5, 16, 19) |
+      __gen_uint(values->Correct6, 20, 23) |
+      __gen_uint(values->RoundIntra, 24, 26) |
+      __gen_uint(values->RoundIntraEnable, 27, 27) |
+      __gen_uint(values->RoundInter, 28, 30) |
+      __gen_uint(values->RoundInterEnable, 31, 31);
+}
+
+#define GFX125_MFX_AVC_WEIGHTOFFSET_STATE_length     98
+#define GFX125_MFX_AVC_WEIGHTOFFSET_STATE_length_bias      2
+#define GFX125_MFX_AVC_WEIGHTOFFSET_STATE_header\
+   .DWordLength                         =     96,  \
+   .SubOpcodeB                          =      5,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_AVC_WEIGHTOFFSET_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             WeightandOffsetSelect;
+#define L0table                                  0
+#define L1table                                  1
+   uint32_t                             WeightOffset[96];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_AVC_WEIGHTOFFSET_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                       __attribute__((unused)) void * restrict dst,
+                                       __attribute__((unused)) const struct GFX125_MFX_AVC_WEIGHTOFFSET_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->WeightandOffsetSelect, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->WeightOffset[0], 0, 31);
+
+   dw[3] =
+      __gen_uint(values->WeightOffset[1], 0, 31);
+
+   dw[4] =
+      __gen_uint(values->WeightOffset[2], 0, 31);
+
+   dw[5] =
+      __gen_uint(values->WeightOffset[3], 0, 31);
+
+   dw[6] =
+      __gen_uint(values->WeightOffset[4], 0, 31);
+
+   dw[7] =
+      __gen_uint(values->WeightOffset[5], 0, 31);
+
+   dw[8] =
+      __gen_uint(values->WeightOffset[6], 0, 31);
+
+   dw[9] =
+      __gen_uint(values->WeightOffset[7], 0, 31);
+
+   dw[10] =
+      __gen_uint(values->WeightOffset[8], 0, 31);
+
+   dw[11] =
+      __gen_uint(values->WeightOffset[9], 0, 31);
+
+   dw[12] =
+      __gen_uint(values->WeightOffset[10], 0, 31);
+
+   dw[13] =
+      __gen_uint(values->WeightOffset[11], 0, 31);
+
+   dw[14] =
+      __gen_uint(values->WeightOffset[12], 0, 31);
+
+   dw[15] =
+      __gen_uint(values->WeightOffset[13], 0, 31);
+
+   dw[16] =
+      __gen_uint(values->WeightOffset[14], 0, 31);
+
+   dw[17] =
+      __gen_uint(values->WeightOffset[15], 0, 31);
+
+   dw[18] =
+      __gen_uint(values->WeightOffset[16], 0, 31);
+
+   dw[19] =
+      __gen_uint(values->WeightOffset[17], 0, 31);
+
+   dw[20] =
+      __gen_uint(values->WeightOffset[18], 0, 31);
+
+   dw[21] =
+      __gen_uint(values->WeightOffset[19], 0, 31);
+
+   dw[22] =
+      __gen_uint(values->WeightOffset[20], 0, 31);
+
+   dw[23] =
+      __gen_uint(values->WeightOffset[21], 0, 31);
+
+   dw[24] =
+      __gen_uint(values->WeightOffset[22], 0, 31);
+
+   dw[25] =
+      __gen_uint(values->WeightOffset[23], 0, 31);
+
+   dw[26] =
+      __gen_uint(values->WeightOffset[24], 0, 31);
+
+   dw[27] =
+      __gen_uint(values->WeightOffset[25], 0, 31);
+
+   dw[28] =
+      __gen_uint(values->WeightOffset[26], 0, 31);
+
+   dw[29] =
+      __gen_uint(values->WeightOffset[27], 0, 31);
+
+   dw[30] =
+      __gen_uint(values->WeightOffset[28], 0, 31);
+
+   dw[31] =
+      __gen_uint(values->WeightOffset[29], 0, 31);
+
+   dw[32] =
+      __gen_uint(values->WeightOffset[30], 0, 31);
+
+   dw[33] =
+      __gen_uint(values->WeightOffset[31], 0, 31);
+
+   dw[34] =
+      __gen_uint(values->WeightOffset[32], 0, 31);
+
+   dw[35] =
+      __gen_uint(values->WeightOffset[33], 0, 31);
+
+   dw[36] =
+      __gen_uint(values->WeightOffset[34], 0, 31);
+
+   dw[37] =
+      __gen_uint(values->WeightOffset[35], 0, 31);
+
+   dw[38] =
+      __gen_uint(values->WeightOffset[36], 0, 31);
+
+   dw[39] =
+      __gen_uint(values->WeightOffset[37], 0, 31);
+
+   dw[40] =
+      __gen_uint(values->WeightOffset[38], 0, 31);
+
+   dw[41] =
+      __gen_uint(values->WeightOffset[39], 0, 31);
+
+   dw[42] =
+      __gen_uint(values->WeightOffset[40], 0, 31);
+
+   dw[43] =
+      __gen_uint(values->WeightOffset[41], 0, 31);
+
+   dw[44] =
+      __gen_uint(values->WeightOffset[42], 0, 31);
+
+   dw[45] =
+      __gen_uint(values->WeightOffset[43], 0, 31);
+
+   dw[46] =
+      __gen_uint(values->WeightOffset[44], 0, 31);
+
+   dw[47] =
+      __gen_uint(values->WeightOffset[45], 0, 31);
+
+   dw[48] =
+      __gen_uint(values->WeightOffset[46], 0, 31);
+
+   dw[49] =
+      __gen_uint(values->WeightOffset[47], 0, 31);
+
+   dw[50] =
+      __gen_uint(values->WeightOffset[48], 0, 31);
+
+   dw[51] =
+      __gen_uint(values->WeightOffset[49], 0, 31);
+
+   dw[52] =
+      __gen_uint(values->WeightOffset[50], 0, 31);
+
+   dw[53] =
+      __gen_uint(values->WeightOffset[51], 0, 31);
+
+   dw[54] =
+      __gen_uint(values->WeightOffset[52], 0, 31);
+
+   dw[55] =
+      __gen_uint(values->WeightOffset[53], 0, 31);
+
+   dw[56] =
+      __gen_uint(values->WeightOffset[54], 0, 31);
+
+   dw[57] =
+      __gen_uint(values->WeightOffset[55], 0, 31);
+
+   dw[58] =
+      __gen_uint(values->WeightOffset[56], 0, 31);
+
+   dw[59] =
+      __gen_uint(values->WeightOffset[57], 0, 31);
+
+   dw[60] =
+      __gen_uint(values->WeightOffset[58], 0, 31);
+
+   dw[61] =
+      __gen_uint(values->WeightOffset[59], 0, 31);
+
+   dw[62] =
+      __gen_uint(values->WeightOffset[60], 0, 31);
+
+   dw[63] =
+      __gen_uint(values->WeightOffset[61], 0, 31);
+
+   dw[64] =
+      __gen_uint(values->WeightOffset[62], 0, 31);
+
+   dw[65] =
+      __gen_uint(values->WeightOffset[63], 0, 31);
+
+   dw[66] =
+      __gen_uint(values->WeightOffset[64], 0, 31);
+
+   dw[67] =
+      __gen_uint(values->WeightOffset[65], 0, 31);
+
+   dw[68] =
+      __gen_uint(values->WeightOffset[66], 0, 31);
+
+   dw[69] =
+      __gen_uint(values->WeightOffset[67], 0, 31);
+
+   dw[70] =
+      __gen_uint(values->WeightOffset[68], 0, 31);
+
+   dw[71] =
+      __gen_uint(values->WeightOffset[69], 0, 31);
+
+   dw[72] =
+      __gen_uint(values->WeightOffset[70], 0, 31);
+
+   dw[73] =
+      __gen_uint(values->WeightOffset[71], 0, 31);
+
+   dw[74] =
+      __gen_uint(values->WeightOffset[72], 0, 31);
+
+   dw[75] =
+      __gen_uint(values->WeightOffset[73], 0, 31);
+
+   dw[76] =
+      __gen_uint(values->WeightOffset[74], 0, 31);
+
+   dw[77] =
+      __gen_uint(values->WeightOffset[75], 0, 31);
+
+   dw[78] =
+      __gen_uint(values->WeightOffset[76], 0, 31);
+
+   dw[79] =
+      __gen_uint(values->WeightOffset[77], 0, 31);
+
+   dw[80] =
+      __gen_uint(values->WeightOffset[78], 0, 31);
+
+   dw[81] =
+      __gen_uint(values->WeightOffset[79], 0, 31);
+
+   dw[82] =
+      __gen_uint(values->WeightOffset[80], 0, 31);
+
+   dw[83] =
+      __gen_uint(values->WeightOffset[81], 0, 31);
+
+   dw[84] =
+      __gen_uint(values->WeightOffset[82], 0, 31);
+
+   dw[85] =
+      __gen_uint(values->WeightOffset[83], 0, 31);
+
+   dw[86] =
+      __gen_uint(values->WeightOffset[84], 0, 31);
+
+   dw[87] =
+      __gen_uint(values->WeightOffset[85], 0, 31);
+
+   dw[88] =
+      __gen_uint(values->WeightOffset[86], 0, 31);
+
+   dw[89] =
+      __gen_uint(values->WeightOffset[87], 0, 31);
+
+   dw[90] =
+      __gen_uint(values->WeightOffset[88], 0, 31);
+
+   dw[91] =
+      __gen_uint(values->WeightOffset[89], 0, 31);
+
+   dw[92] =
+      __gen_uint(values->WeightOffset[90], 0, 31);
+
+   dw[93] =
+      __gen_uint(values->WeightOffset[91], 0, 31);
+
+   dw[94] =
+      __gen_uint(values->WeightOffset[92], 0, 31);
+
+   dw[95] =
+      __gen_uint(values->WeightOffset[93], 0, 31);
+
+   dw[96] =
+      __gen_uint(values->WeightOffset[94], 0, 31);
+
+   dw[97] =
+      __gen_uint(values->WeightOffset[95], 0, 31);
+}
+
+#define GFX125_MFX_BSP_BUF_BASE_ADDR_STATE_length     10
+#define GFX125_MFX_BSP_BUF_BASE_ADDR_STATE_length_bias      2
+#define GFX125_MFX_BSP_BUF_BASE_ADDR_STATE_header\
+   .DWordLength                         =      8,  \
+   .SubOpcodeB                          =      4,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_BSP_BUF_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   BSDMPCRowStoreScratchBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES BSDMPCRowStoreScratchBufferAttributes;
+   __gen_address_type                   MPRRowStoreScratchBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MPRRowStoreScratchBufferAttributes;
+   __gen_address_type                   BitplaneReadBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES BitplaneReadBufferAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_BSP_BUF_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                        __attribute__((unused)) void * restrict dst,
+                                        __attribute__((unused)) const struct GFX125_MFX_BSP_BUF_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->BSDMPCRowStoreScratchBufferAddress, 0, 6, 47);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->BSDMPCRowStoreScratchBufferAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->MPRRowStoreScratchBufferAddress, 0, 6, 47);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[6], &values->MPRRowStoreScratchBufferAttributes);
+
+   const uint64_t v7_address =
+      __gen_address(data, &dw[7], values->BitplaneReadBufferAddress, 0, 6, 47);
+   dw[7] = v7_address;
+   dw[8] = v7_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[9], &values->BitplaneReadBufferAttributes);
+}
+
+#define GFX125_MFX_DBK_OBJECT_length          13
+#define GFX125_MFX_DBK_OBJECT_length_bias      2
+#define GFX125_MFX_DBK_OBJECT_header            \
+   .DWordLength                         =     11,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_DBK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   PreDeblockingSourceAddress;
+   uint32_t                             PreDeblockingSourceMOCS;
+   uint32_t                             PreDeblockingSourceArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   bool                                 PreDeblockingSourceMemoryCompressionEnable;
+   uint32_t                             PreDeblockingSourceMemoryCompressionMode;
+   uint32_t                             PreDeblockingSourceTiledResourceMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   __gen_address_type                   DeblockingControlAddress;
+   uint32_t                             DeblockingControlMOCS;
+   uint32_t                             DeblockingControlArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   bool                                 DeblockingControlMemoryCompressionEnable;
+   uint32_t                             DeblockingControlMemoryCompressionMode;
+   uint32_t                             DeblockingControlTiledResourceMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   __gen_address_type                   DeblockingDestinationAddressHigh;
+   uint32_t                             DeblockingDestinationMOCS;
+   uint32_t                             DeblockingDestinationArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   bool                                 DeblockingDestinationMemoryCompressionEnable;
+   uint32_t                             DeblockingDestinationMemoryCompressionMode;
+   uint32_t                             DeblockingDestinationTiledResourceMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   __gen_address_type                   DeblockRowStoreAddress;
+   uint32_t                             CoeffProbabilityStreamInMOCS;
+   uint32_t                             DeblockRowStoreArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   bool                                 DeblockRowStoreMemoryCompressionEnable;
+   uint32_t                             DeblockRowStoreMemoryCompressionMode;
+   uint32_t                             DeblockRowStoreTiledResourceMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_DBK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                           __attribute__((unused)) void * restrict dst,
+                           __attribute__((unused)) const struct GFX125_MFX_DBK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->PreDeblockingSourceAddress, 0, 6, 47);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   dw[3] =
+      __gen_uint_nonzero(values->PreDeblockingSourceMOCS, 1, 6) |
+      __gen_uint(values->PreDeblockingSourceArbitrationPriorityControl, 7, 8) |
+      __gen_uint(values->PreDeblockingSourceMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->PreDeblockingSourceMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->PreDeblockingSourceTiledResourceMode, 13, 14);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->DeblockingControlAddress, 0, 6, 47);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   dw[6] =
+      __gen_uint_nonzero(values->DeblockingControlMOCS, 1, 6) |
+      __gen_uint(values->DeblockingControlArbitrationPriorityControl, 7, 8) |
+      __gen_uint(values->DeblockingControlMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->DeblockingControlMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->DeblockingControlTiledResourceMode, 13, 14);
+
+   const uint64_t v7_address =
+      __gen_address(data, &dw[7], values->DeblockingDestinationAddressHigh, 0, 6, 47);
+   dw[7] = v7_address;
+   dw[8] = v7_address >> 32;
+
+   dw[9] =
+      __gen_uint_nonzero(values->DeblockingDestinationMOCS, 1, 6) |
+      __gen_uint(values->DeblockingDestinationArbitrationPriorityControl, 7, 8) |
+      __gen_uint(values->DeblockingDestinationMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->DeblockingDestinationMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->DeblockingDestinationTiledResourceMode, 13, 14);
+
+   const uint64_t v10_address =
+      __gen_address(data, &dw[10], values->DeblockRowStoreAddress, 0, 6, 47);
+   dw[10] = v10_address;
+   dw[11] = v10_address >> 32;
+
+   dw[12] =
+      __gen_uint_nonzero(values->CoeffProbabilityStreamInMOCS, 1, 6) |
+      __gen_uint(values->DeblockRowStoreArbitrationPriorityControl, 7, 8) |
+      __gen_uint(values->DeblockRowStoreMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->DeblockRowStoreMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->DeblockRowStoreTiledResourceMode, 13, 14);
+}
+
+#define GFX125_MFX_FQM_STATE_length           34
+#define GFX125_MFX_FQM_STATE_length_bias       2
+#define GFX125_MFX_FQM_STATE_header             \
+   .DWordLength                         =     32,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_FQM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             AVC;
+#define AVC_4x4_Intra_MATRIX                     0
+#define AVC_4x4_Inter_MATRIX                     1
+#define AVC_8x8_Intra_MATRIX                     2
+#define AVC_8x8_Inter_MATRIX                     3
+   uint32_t                             MPEG2;
+#define MPEG_INTRA_QUANTIZER_MATRIX              0
+#define MPEG_NON_INTRA_QUANTIZER_MATRIX          1
+   uint32_t                             JPEG;
+#define JPEG_Luma_Y_QUANTIZER_MATRIXorR          0
+#define JPEG_Chroma_Cb_QUANTIZER_MATRIXorG       1
+#define JPEG_Chroma_Cr_QUANTIZER_MATRIXorB       2
+   uint32_t                             QuantizerMatrix8x8[64];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_FQM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_MFX_FQM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->AVC, 0, 1) |
+      __gen_uint(values->MPEG2, 0, 1) |
+      __gen_uint(values->JPEG, 0, 1);
+
+   dw[2] =
+      __gen_uint(values->QuantizerMatrix8x8[0], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[1], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[2], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->QuantizerMatrix8x8[4], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[5], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[6], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->QuantizerMatrix8x8[8], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[9], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[10], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->QuantizerMatrix8x8[12], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[13], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[14], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[15], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->QuantizerMatrix8x8[16], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[17], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[18], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[19], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->QuantizerMatrix8x8[20], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[21], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[22], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[23], 24, 31);
+
+   dw[8] =
+      __gen_uint(values->QuantizerMatrix8x8[24], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[25], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[26], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[27], 24, 31);
+
+   dw[9] =
+      __gen_uint(values->QuantizerMatrix8x8[28], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[29], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[30], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[31], 24, 31);
+
+   dw[10] =
+      __gen_uint(values->QuantizerMatrix8x8[32], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[33], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[34], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[35], 24, 31);
+
+   dw[11] =
+      __gen_uint(values->QuantizerMatrix8x8[36], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[37], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[38], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[39], 24, 31);
+
+   dw[12] =
+      __gen_uint(values->QuantizerMatrix8x8[40], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[41], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[42], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[43], 24, 31);
+
+   dw[13] =
+      __gen_uint(values->QuantizerMatrix8x8[44], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[45], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[46], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[47], 24, 31);
+
+   dw[14] =
+      __gen_uint(values->QuantizerMatrix8x8[48], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[49], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[50], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[51], 24, 31);
+
+   dw[15] =
+      __gen_uint(values->QuantizerMatrix8x8[52], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[53], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[54], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[55], 24, 31);
+
+   dw[16] =
+      __gen_uint(values->QuantizerMatrix8x8[56], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[57], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[58], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[59], 24, 31);
+
+   dw[17] =
+      __gen_uint(values->QuantizerMatrix8x8[60], 0, 7) |
+      __gen_uint(values->QuantizerMatrix8x8[61], 8, 15) |
+      __gen_uint(values->QuantizerMatrix8x8[62], 16, 23) |
+      __gen_uint(values->QuantizerMatrix8x8[63], 24, 31);
+
+   dw[18] = 0;
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] = 0;
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] = 0;
+
+   dw[30] = 0;
+
+   dw[31] = 0;
+
+   dw[32] = 0;
+
+   dw[33] = 0;
+}
+
+#define GFX125_MFX_IND_OBJ_BASE_ADDR_STATE_length     26
+#define GFX125_MFX_IND_OBJ_BASE_ADDR_STATE_length_bias      2
+#define GFX125_MFX_IND_OBJ_BASE_ADDR_STATE_header\
+   .DWordLength                         =     24,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_IND_OBJ_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   MFXIndirectBitstreamObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MFXIndirectBitstreamObjectAttributes;
+   __gen_address_type                   MFXIndirectBitstreamObjectUpperBound;
+   __gen_address_type                   MFXIndirectMVObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MFXIndirectMVObjectAttributes;
+   __gen_address_type                   MFXIndirectMVObjectUpperBound;
+   __gen_address_type                   MFDIndirectITCOEFFObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MFDIndirectITCOEFFObjectAttributes;
+   __gen_address_type                   MFDIndirectITCOEFFObjectUpperBound;
+   __gen_address_type                   MFDIndirectITDBLKObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MFDIndirectITDBLKObjectAttributes;
+   __gen_address_type                   MFDIndirectITDBLKObjectUpperBound;
+   __gen_address_type                   MFCIndirectPAKBSEObjectAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MFCIndirectPAKBSEObjectAttributes;
+   __gen_address_type                   MFCIndirectPAKBSEObjectUpperBound;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_IND_OBJ_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                        __attribute__((unused)) void * restrict dst,
+                                        __attribute__((unused)) const struct GFX125_MFX_IND_OBJ_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->MFXIndirectBitstreamObjectAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->MFXIndirectBitstreamObjectAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->MFXIndirectBitstreamObjectUpperBound, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   const uint64_t v6_address =
+      __gen_address(data, &dw[6], values->MFXIndirectMVObjectAddress, 0, 0, 63);
+   dw[6] = v6_address;
+   dw[7] = v6_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[8], &values->MFXIndirectMVObjectAttributes);
+
+   const uint64_t v9_address =
+      __gen_address(data, &dw[9], values->MFXIndirectMVObjectUpperBound, 0, 0, 63);
+   dw[9] = v9_address;
+   dw[10] = v9_address >> 32;
+
+   const uint64_t v11_address =
+      __gen_address(data, &dw[11], values->MFDIndirectITCOEFFObjectAddress, 0, 0, 63);
+   dw[11] = v11_address;
+   dw[12] = v11_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[13], &values->MFDIndirectITCOEFFObjectAttributes);
+
+   const uint64_t v14_address =
+      __gen_address(data, &dw[14], values->MFDIndirectITCOEFFObjectUpperBound, 0, 0, 63);
+   dw[14] = v14_address;
+   dw[15] = v14_address >> 32;
+
+   const uint64_t v16_address =
+      __gen_address(data, &dw[16], values->MFDIndirectITDBLKObjectAddress, 0, 0, 63);
+   dw[16] = v16_address;
+   dw[17] = v16_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[18], &values->MFDIndirectITDBLKObjectAttributes);
+
+   const uint64_t v19_address =
+      __gen_address(data, &dw[19], values->MFDIndirectITDBLKObjectUpperBound, 0, 0, 63);
+   dw[19] = v19_address;
+   dw[20] = v19_address >> 32;
+
+   const uint64_t v21_address =
+      __gen_address(data, &dw[21], values->MFCIndirectPAKBSEObjectAddress, 0, 0, 63);
+   dw[21] = v21_address;
+   dw[22] = v21_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[23], &values->MFCIndirectPAKBSEObjectAttributes);
+
+   const uint64_t v24_address =
+      __gen_address(data, &dw[24], values->MFCIndirectPAKBSEObjectUpperBound, 0, 0, 63);
+   dw[24] = v24_address;
+   dw[25] = v24_address >> 32;
+}
+
+#define GFX125_MFX_JPEG_HUFF_TABLE_STATE_length    831
+#define GFX125_MFX_JPEG_HUFF_TABLE_STATE_length_bias      2
+#define GFX125_MFX_JPEG_HUFF_TABLE_STATE_header \
+   .DWordLength                         =    829,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_JPEG_HUFF_TABLE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             HuffmanTableID;
+   uint32_t                             DC_BITS[12];
+   uint32_t                             DC_HUFFVAL[12];
+   uint32_t                             AC_BITS[16];
+   uint32_t                             AC_HUFFVAL[160];
+   uint32_t                             AC_HUFFVAL2[2];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_JPEG_HUFF_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX125_MFX_JPEG_HUFF_TABLE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->HuffmanTableID, 0, 0);
+
+   dw[2] =
+      __gen_uint(values->DC_BITS[0], 0, 7) |
+      __gen_uint(values->DC_BITS[1], 8, 15) |
+      __gen_uint(values->DC_BITS[2], 16, 23) |
+      __gen_uint(values->DC_BITS[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->DC_BITS[4], 0, 7) |
+      __gen_uint(values->DC_BITS[5], 8, 15) |
+      __gen_uint(values->DC_BITS[6], 16, 23) |
+      __gen_uint(values->DC_BITS[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->DC_BITS[8], 0, 7) |
+      __gen_uint(values->DC_BITS[9], 8, 15) |
+      __gen_uint(values->DC_BITS[10], 16, 23) |
+      __gen_uint(values->DC_BITS[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->DC_HUFFVAL[0], 0, 7) |
+      __gen_uint(values->DC_HUFFVAL[1], 8, 15) |
+      __gen_uint(values->DC_HUFFVAL[2], 16, 23) |
+      __gen_uint(values->DC_HUFFVAL[3], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->DC_HUFFVAL[4], 0, 7) |
+      __gen_uint(values->DC_HUFFVAL[5], 8, 15) |
+      __gen_uint(values->DC_HUFFVAL[6], 16, 23) |
+      __gen_uint(values->DC_HUFFVAL[7], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->DC_HUFFVAL[8], 0, 7) |
+      __gen_uint(values->DC_HUFFVAL[9], 8, 15) |
+      __gen_uint(values->DC_HUFFVAL[10], 16, 23) |
+      __gen_uint(values->DC_HUFFVAL[11], 24, 31);
+
+   const uint64_t v8 =
+      __gen_uint(values->AC_BITS[0], 0, 15) |
+      __gen_uint(values->AC_BITS[1], 8, 23) |
+      __gen_uint(values->AC_BITS[2], 16, 31) |
+      __gen_uint(values->AC_BITS[3], 24, 39) |
+      __gen_uint(values->AC_BITS[4], 32, 47) |
+      __gen_uint(values->AC_BITS[5], 40, 55) |
+      __gen_uint(values->AC_BITS[6], 48, 63) |
+      __gen_uint(values->AC_BITS[7], 56, 71) |
+      __gen_uint(values->AC_BITS[8], 64, 79) |
+      __gen_uint(values->AC_BITS[9], 72, 87) |
+      __gen_uint(values->AC_BITS[10], 80, 95) |
+      __gen_uint(values->AC_BITS[11], 88, 103) |
+      __gen_uint(values->AC_BITS[12], 96, 111) |
+      __gen_uint(values->AC_BITS[13], 104, 119) |
+      __gen_uint(values->AC_BITS[14], 112, 127) |
+      __gen_uint(values->AC_BITS[15], 120, 135) |
+      __gen_uint(values->AC_HUFFVAL[0], 128, 135) |
+      __gen_uint(values->AC_HUFFVAL[1], 136, 143) |
+      __gen_uint(values->AC_HUFFVAL[2], 144, 151) |
+      __gen_uint(values->AC_HUFFVAL[3], 152, 159);
+   dw[8] = v8;
+   dw[9] = v8 >> 32;
+
+   dw[13] =
+      __gen_uint(values->AC_HUFFVAL[4], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[5], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[6], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[7], 24, 31);
+
+   dw[14] =
+      __gen_uint(values->AC_HUFFVAL[8], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[9], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[10], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[11], 24, 31);
+
+   dw[15] =
+      __gen_uint(values->AC_HUFFVAL[12], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[13], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[14], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[15], 24, 31);
+
+   dw[16] =
+      __gen_uint(values->AC_HUFFVAL[16], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[17], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[18], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[19], 24, 31);
+
+   dw[17] =
+      __gen_uint(values->AC_HUFFVAL[20], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[21], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[22], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[23], 24, 31);
+
+   dw[18] =
+      __gen_uint(values->AC_HUFFVAL[24], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[25], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[26], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[27], 24, 31);
+
+   dw[19] =
+      __gen_uint(values->AC_HUFFVAL[28], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[29], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[30], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[31], 24, 31);
+
+   dw[20] =
+      __gen_uint(values->AC_HUFFVAL[32], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[33], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[34], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[35], 24, 31);
+
+   dw[21] =
+      __gen_uint(values->AC_HUFFVAL[36], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[37], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[38], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[39], 24, 31);
+
+   dw[22] =
+      __gen_uint(values->AC_HUFFVAL[40], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[41], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[42], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[43], 24, 31);
+
+   dw[23] =
+      __gen_uint(values->AC_HUFFVAL[44], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[45], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[46], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[47], 24, 31);
+
+   dw[24] =
+      __gen_uint(values->AC_HUFFVAL[48], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[49], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[50], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[51], 24, 31);
+
+   dw[25] =
+      __gen_uint(values->AC_HUFFVAL[52], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[53], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[54], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[55], 24, 31);
+
+   dw[26] =
+      __gen_uint(values->AC_HUFFVAL[56], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[57], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[58], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[59], 24, 31);
+
+   dw[27] =
+      __gen_uint(values->AC_HUFFVAL[60], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[61], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[62], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[63], 24, 31);
+
+   dw[28] =
+      __gen_uint(values->AC_HUFFVAL[64], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[65], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[66], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[67], 24, 31);
+
+   dw[29] =
+      __gen_uint(values->AC_HUFFVAL[68], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[69], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[70], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[71], 24, 31);
+
+   dw[30] =
+      __gen_uint(values->AC_HUFFVAL[72], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[73], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[74], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[75], 24, 31);
+
+   dw[31] =
+      __gen_uint(values->AC_HUFFVAL[76], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[77], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[78], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[79], 24, 31);
+
+   dw[32] =
+      __gen_uint(values->AC_HUFFVAL[80], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[81], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[82], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[83], 24, 31);
+
+   dw[33] =
+      __gen_uint(values->AC_HUFFVAL[84], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[85], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[86], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[87], 24, 31);
+
+   dw[34] =
+      __gen_uint(values->AC_HUFFVAL[88], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[89], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[90], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[91], 24, 31);
+
+   dw[35] =
+      __gen_uint(values->AC_HUFFVAL[92], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[93], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[94], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[95], 24, 31);
+
+   dw[36] =
+      __gen_uint(values->AC_HUFFVAL[96], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[97], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[98], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[99], 24, 31);
+
+   dw[37] =
+      __gen_uint(values->AC_HUFFVAL[100], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[101], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[102], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[103], 24, 31);
+
+   dw[38] =
+      __gen_uint(values->AC_HUFFVAL[104], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[105], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[106], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[107], 24, 31);
+
+   dw[39] =
+      __gen_uint(values->AC_HUFFVAL[108], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[109], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[110], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[111], 24, 31);
+
+   dw[40] =
+      __gen_uint(values->AC_HUFFVAL[112], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[113], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[114], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[115], 24, 31);
+
+   dw[41] =
+      __gen_uint(values->AC_HUFFVAL[116], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[117], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[118], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[119], 24, 31);
+
+   dw[42] =
+      __gen_uint(values->AC_HUFFVAL[120], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[121], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[122], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[123], 24, 31);
+
+   dw[43] =
+      __gen_uint(values->AC_HUFFVAL[124], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[125], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[126], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[127], 24, 31);
+
+   dw[44] =
+      __gen_uint(values->AC_HUFFVAL[128], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[129], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[130], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[131], 24, 31);
+
+   dw[45] =
+      __gen_uint(values->AC_HUFFVAL[132], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[133], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[134], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[135], 24, 31);
+
+   dw[46] =
+      __gen_uint(values->AC_HUFFVAL[136], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[137], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[138], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[139], 24, 31);
+
+   dw[47] =
+      __gen_uint(values->AC_HUFFVAL[140], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[141], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[142], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[143], 24, 31);
+
+   dw[48] =
+      __gen_uint(values->AC_HUFFVAL[144], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[145], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[146], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[147], 24, 31);
+
+   dw[49] =
+      __gen_uint(values->AC_HUFFVAL[148], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[149], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[150], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[151], 24, 31);
+
+   dw[50] =
+      __gen_uint(values->AC_HUFFVAL[152], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[153], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[154], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[155], 24, 31);
+
+   dw[51] =
+      __gen_uint(values->AC_HUFFVAL[156], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL[157], 8, 15) |
+      __gen_uint(values->AC_HUFFVAL[158], 16, 23) |
+      __gen_uint(values->AC_HUFFVAL[159], 24, 31);
+
+   dw[52] =
+      __gen_uint(values->AC_HUFFVAL2[0], 0, 7) |
+      __gen_uint(values->AC_HUFFVAL2[1], 8, 15);
+
+   dw[53] = 0;
+
+   dw[54] = 0;
+
+   dw[55] = 0;
+
+   dw[56] = 0;
+
+   dw[57] = 0;
+
+   dw[58] = 0;
+
+   dw[59] = 0;
+
+   dw[60] = 0;
+
+   dw[61] = 0;
+
+   dw[62] = 0;
+
+   dw[63] = 0;
+
+   dw[64] = 0;
+
+   dw[65] = 0;
+
+   dw[66] = 0;
+
+   dw[67] = 0;
+
+   dw[68] = 0;
+
+   dw[69] = 0;
+
+   dw[70] = 0;
+
+   dw[71] = 0;
+
+   dw[72] = 0;
+
+   dw[73] = 0;
+
+   dw[74] = 0;
+
+   dw[75] = 0;
+
+   dw[76] = 0;
+
+   dw[77] = 0;
+
+   dw[78] = 0;
+
+   dw[79] = 0;
+
+   dw[80] = 0;
+
+   dw[81] = 0;
+
+   dw[82] = 0;
+
+   dw[83] = 0;
+
+   dw[84] = 0;
+
+   dw[85] = 0;
+
+   dw[86] = 0;
+
+   dw[87] = 0;
+
+   dw[88] = 0;
+
+   dw[89] = 0;
+
+   dw[90] = 0;
+
+   dw[91] = 0;
+
+   dw[92] = 0;
+
+   dw[93] = 0;
+
+   dw[94] = 0;
+
+   dw[95] = 0;
+
+   dw[96] = 0;
+
+   dw[97] = 0;
+
+   dw[98] = 0;
+
+   dw[99] = 0;
+
+   dw[100] = 0;
+
+   dw[101] = 0;
+
+   dw[102] = 0;
+
+   dw[103] = 0;
+
+   dw[104] = 0;
+
+   dw[105] = 0;
+
+   dw[106] = 0;
+
+   dw[107] = 0;
+
+   dw[108] = 0;
+
+   dw[109] = 0;
+
+   dw[110] = 0;
+
+   dw[111] = 0;
+
+   dw[112] = 0;
+
+   dw[113] = 0;
+
+   dw[114] = 0;
+
+   dw[115] = 0;
+
+   dw[116] = 0;
+
+   dw[117] = 0;
+
+   dw[118] = 0;
+
+   dw[119] = 0;
+
+   dw[120] = 0;
+
+   dw[121] = 0;
+
+   dw[122] = 0;
+
+   dw[123] = 0;
+
+   dw[124] = 0;
+
+   dw[125] = 0;
+
+   dw[126] = 0;
+
+   dw[127] = 0;
+
+   dw[128] = 0;
+
+   dw[129] = 0;
+
+   dw[130] = 0;
+
+   dw[131] = 0;
+
+   dw[132] = 0;
+
+   dw[133] = 0;
+
+   dw[134] = 0;
+
+   dw[135] = 0;
+
+   dw[136] = 0;
+
+   dw[137] = 0;
+
+   dw[138] = 0;
+
+   dw[139] = 0;
+
+   dw[140] = 0;
+
+   dw[141] = 0;
+
+   dw[142] = 0;
+
+   dw[143] = 0;
+
+   dw[144] = 0;
+
+   dw[145] = 0;
+
+   dw[146] = 0;
+
+   dw[147] = 0;
+
+   dw[148] = 0;
+
+   dw[149] = 0;
+
+   dw[150] = 0;
+
+   dw[151] = 0;
+
+   dw[152] = 0;
+
+   dw[153] = 0;
+
+   dw[154] = 0;
+
+   dw[155] = 0;
+
+   dw[156] = 0;
+
+   dw[157] = 0;
+
+   dw[158] = 0;
+
+   dw[159] = 0;
+
+   dw[160] = 0;
+
+   dw[161] = 0;
+
+   dw[162] = 0;
+
+   dw[163] = 0;
+
+   dw[164] = 0;
+
+   dw[165] = 0;
+
+   dw[166] = 0;
+
+   dw[167] = 0;
+
+   dw[168] = 0;
+
+   dw[169] = 0;
+
+   dw[170] = 0;
+
+   dw[171] = 0;
+
+   dw[172] = 0;
+
+   dw[173] = 0;
+
+   dw[174] = 0;
+
+   dw[175] = 0;
+
+   dw[176] = 0;
+
+   dw[177] = 0;
+
+   dw[178] = 0;
+
+   dw[179] = 0;
+
+   dw[180] = 0;
+
+   dw[181] = 0;
+
+   dw[182] = 0;
+
+   dw[183] = 0;
+
+   dw[184] = 0;
+
+   dw[185] = 0;
+
+   dw[186] = 0;
+
+   dw[187] = 0;
+
+   dw[188] = 0;
+
+   dw[189] = 0;
+
+   dw[190] = 0;
+
+   dw[191] = 0;
+
+   dw[192] = 0;
+
+   dw[193] = 0;
+
+   dw[194] = 0;
+
+   dw[195] = 0;
+
+   dw[196] = 0;
+
+   dw[197] = 0;
+
+   dw[198] = 0;
+
+   dw[199] = 0;
+
+   dw[200] = 0;
+
+   dw[201] = 0;
+
+   dw[202] = 0;
+
+   dw[203] = 0;
+
+   dw[204] = 0;
+
+   dw[205] = 0;
+
+   dw[206] = 0;
+
+   dw[207] = 0;
+
+   dw[208] = 0;
+
+   dw[209] = 0;
+
+   dw[210] = 0;
+
+   dw[211] = 0;
+
+   dw[212] = 0;
+
+   dw[213] = 0;
+
+   dw[214] = 0;
+
+   dw[215] = 0;
+
+   dw[216] = 0;
+
+   dw[217] = 0;
+
+   dw[218] = 0;
+
+   dw[219] = 0;
+
+   dw[220] = 0;
+
+   dw[221] = 0;
+
+   dw[222] = 0;
+
+   dw[223] = 0;
+
+   dw[224] = 0;
+
+   dw[225] = 0;
+
+   dw[226] = 0;
+
+   dw[227] = 0;
+
+   dw[228] = 0;
+
+   dw[229] = 0;
+
+   dw[230] = 0;
+
+   dw[231] = 0;
+
+   dw[232] = 0;
+
+   dw[233] = 0;
+
+   dw[234] = 0;
+
+   dw[235] = 0;
+
+   dw[236] = 0;
+
+   dw[237] = 0;
+
+   dw[238] = 0;
+
+   dw[239] = 0;
+
+   dw[240] = 0;
+
+   dw[241] = 0;
+
+   dw[242] = 0;
+
+   dw[243] = 0;
+
+   dw[244] = 0;
+
+   dw[245] = 0;
+
+   dw[246] = 0;
+
+   dw[247] = 0;
+
+   dw[248] = 0;
+
+   dw[249] = 0;
+
+   dw[250] = 0;
+
+   dw[251] = 0;
+
+   dw[252] = 0;
+
+   dw[253] = 0;
+
+   dw[254] = 0;
+
+   dw[255] = 0;
+
+   dw[256] = 0;
+
+   dw[257] = 0;
+
+   dw[258] = 0;
+
+   dw[259] = 0;
+
+   dw[260] = 0;
+
+   dw[261] = 0;
+
+   dw[262] = 0;
+
+   dw[263] = 0;
+
+   dw[264] = 0;
+
+   dw[265] = 0;
+
+   dw[266] = 0;
+
+   dw[267] = 0;
+
+   dw[268] = 0;
+
+   dw[269] = 0;
+
+   dw[270] = 0;
+
+   dw[271] = 0;
+
+   dw[272] = 0;
+
+   dw[273] = 0;
+
+   dw[274] = 0;
+
+   dw[275] = 0;
+
+   dw[276] = 0;
+
+   dw[277] = 0;
+
+   dw[278] = 0;
+
+   dw[279] = 0;
+
+   dw[280] = 0;
+
+   dw[281] = 0;
+
+   dw[282] = 0;
+
+   dw[283] = 0;
+
+   dw[284] = 0;
+
+   dw[285] = 0;
+
+   dw[286] = 0;
+
+   dw[287] = 0;
+
+   dw[288] = 0;
+
+   dw[289] = 0;
+
+   dw[290] = 0;
+
+   dw[291] = 0;
+
+   dw[292] = 0;
+
+   dw[293] = 0;
+
+   dw[294] = 0;
+
+   dw[295] = 0;
+
+   dw[296] = 0;
+
+   dw[297] = 0;
+
+   dw[298] = 0;
+
+   dw[299] = 0;
+
+   dw[300] = 0;
+
+   dw[301] = 0;
+
+   dw[302] = 0;
+
+   dw[303] = 0;
+
+   dw[304] = 0;
+
+   dw[305] = 0;
+
+   dw[306] = 0;
+
+   dw[307] = 0;
+
+   dw[308] = 0;
+
+   dw[309] = 0;
+
+   dw[310] = 0;
+
+   dw[311] = 0;
+
+   dw[312] = 0;
+
+   dw[313] = 0;
+
+   dw[314] = 0;
+
+   dw[315] = 0;
+
+   dw[316] = 0;
+
+   dw[317] = 0;
+
+   dw[318] = 0;
+
+   dw[319] = 0;
+
+   dw[320] = 0;
+
+   dw[321] = 0;
+
+   dw[322] = 0;
+
+   dw[323] = 0;
+
+   dw[324] = 0;
+
+   dw[325] = 0;
+
+   dw[326] = 0;
+
+   dw[327] = 0;
+
+   dw[328] = 0;
+
+   dw[329] = 0;
+
+   dw[330] = 0;
+
+   dw[331] = 0;
+
+   dw[332] = 0;
+
+   dw[333] = 0;
+
+   dw[334] = 0;
+
+   dw[335] = 0;
+
+   dw[336] = 0;
+
+   dw[337] = 0;
+
+   dw[338] = 0;
+
+   dw[339] = 0;
+
+   dw[340] = 0;
+
+   dw[341] = 0;
+
+   dw[342] = 0;
+
+   dw[343] = 0;
+
+   dw[344] = 0;
+
+   dw[345] = 0;
+
+   dw[346] = 0;
+
+   dw[347] = 0;
+
+   dw[348] = 0;
+
+   dw[349] = 0;
+
+   dw[350] = 0;
+
+   dw[351] = 0;
+
+   dw[352] = 0;
+
+   dw[353] = 0;
+
+   dw[354] = 0;
+
+   dw[355] = 0;
+
+   dw[356] = 0;
+
+   dw[357] = 0;
+
+   dw[358] = 0;
+
+   dw[359] = 0;
+
+   dw[360] = 0;
+
+   dw[361] = 0;
+
+   dw[362] = 0;
+
+   dw[363] = 0;
+
+   dw[364] = 0;
+
+   dw[365] = 0;
+
+   dw[366] = 0;
+
+   dw[367] = 0;
+
+   dw[368] = 0;
+
+   dw[369] = 0;
+
+   dw[370] = 0;
+
+   dw[371] = 0;
+
+   dw[372] = 0;
+
+   dw[373] = 0;
+
+   dw[374] = 0;
+
+   dw[375] = 0;
+
+   dw[376] = 0;
+
+   dw[377] = 0;
+
+   dw[378] = 0;
+
+   dw[379] = 0;
+
+   dw[380] = 0;
+
+   dw[381] = 0;
+
+   dw[382] = 0;
+
+   dw[383] = 0;
+
+   dw[384] = 0;
+
+   dw[385] = 0;
+
+   dw[386] = 0;
+
+   dw[387] = 0;
+
+   dw[388] = 0;
+
+   dw[389] = 0;
+
+   dw[390] = 0;
+
+   dw[391] = 0;
+
+   dw[392] = 0;
+
+   dw[393] = 0;
+
+   dw[394] = 0;
+
+   dw[395] = 0;
+
+   dw[396] = 0;
+
+   dw[397] = 0;
+
+   dw[398] = 0;
+
+   dw[399] = 0;
+
+   dw[400] = 0;
+
+   dw[401] = 0;
+
+   dw[402] = 0;
+
+   dw[403] = 0;
+
+   dw[404] = 0;
+
+   dw[405] = 0;
+
+   dw[406] = 0;
+
+   dw[407] = 0;
+
+   dw[408] = 0;
+
+   dw[409] = 0;
+
+   dw[410] = 0;
+
+   dw[411] = 0;
+
+   dw[412] = 0;
+
+   dw[413] = 0;
+
+   dw[414] = 0;
+
+   dw[415] = 0;
+
+   dw[416] = 0;
+
+   dw[417] = 0;
+
+   dw[418] = 0;
+
+   dw[419] = 0;
+
+   dw[420] = 0;
+
+   dw[421] = 0;
+
+   dw[422] = 0;
+
+   dw[423] = 0;
+
+   dw[424] = 0;
+
+   dw[425] = 0;
+
+   dw[426] = 0;
+
+   dw[427] = 0;
+
+   dw[428] = 0;
+
+   dw[429] = 0;
+
+   dw[430] = 0;
+
+   dw[431] = 0;
+
+   dw[432] = 0;
+
+   dw[433] = 0;
+
+   dw[434] = 0;
+
+   dw[435] = 0;
+
+   dw[436] = 0;
+
+   dw[437] = 0;
+
+   dw[438] = 0;
+
+   dw[439] = 0;
+
+   dw[440] = 0;
+
+   dw[441] = 0;
+
+   dw[442] = 0;
+
+   dw[443] = 0;
+
+   dw[444] = 0;
+
+   dw[445] = 0;
+
+   dw[446] = 0;
+
+   dw[447] = 0;
+
+   dw[448] = 0;
+
+   dw[449] = 0;
+
+   dw[450] = 0;
+
+   dw[451] = 0;
+
+   dw[452] = 0;
+
+   dw[453] = 0;
+
+   dw[454] = 0;
+
+   dw[455] = 0;
+
+   dw[456] = 0;
+
+   dw[457] = 0;
+
+   dw[458] = 0;
+
+   dw[459] = 0;
+
+   dw[460] = 0;
+
+   dw[461] = 0;
+
+   dw[462] = 0;
+
+   dw[463] = 0;
+
+   dw[464] = 0;
+
+   dw[465] = 0;
+
+   dw[466] = 0;
+
+   dw[467] = 0;
+
+   dw[468] = 0;
+
+   dw[469] = 0;
+
+   dw[470] = 0;
+
+   dw[471] = 0;
+
+   dw[472] = 0;
+
+   dw[473] = 0;
+
+   dw[474] = 0;
+
+   dw[475] = 0;
+
+   dw[476] = 0;
+
+   dw[477] = 0;
+
+   dw[478] = 0;
+
+   dw[479] = 0;
+
+   dw[480] = 0;
+
+   dw[481] = 0;
+
+   dw[482] = 0;
+
+   dw[483] = 0;
+
+   dw[484] = 0;
+
+   dw[485] = 0;
+
+   dw[486] = 0;
+
+   dw[487] = 0;
+
+   dw[488] = 0;
+
+   dw[489] = 0;
+
+   dw[490] = 0;
+
+   dw[491] = 0;
+
+   dw[492] = 0;
+
+   dw[493] = 0;
+
+   dw[494] = 0;
+
+   dw[495] = 0;
+
+   dw[496] = 0;
+
+   dw[497] = 0;
+
+   dw[498] = 0;
+
+   dw[499] = 0;
+
+   dw[500] = 0;
+
+   dw[501] = 0;
+
+   dw[502] = 0;
+
+   dw[503] = 0;
+
+   dw[504] = 0;
+
+   dw[505] = 0;
+
+   dw[506] = 0;
+
+   dw[507] = 0;
+
+   dw[508] = 0;
+
+   dw[509] = 0;
+
+   dw[510] = 0;
+
+   dw[511] = 0;
+
+   dw[512] = 0;
+
+   dw[513] = 0;
+
+   dw[514] = 0;
+
+   dw[515] = 0;
+
+   dw[516] = 0;
+
+   dw[517] = 0;
+
+   dw[518] = 0;
+
+   dw[519] = 0;
+
+   dw[520] = 0;
+
+   dw[521] = 0;
+
+   dw[522] = 0;
+
+   dw[523] = 0;
+
+   dw[524] = 0;
+
+   dw[525] = 0;
+
+   dw[526] = 0;
+
+   dw[527] = 0;
+
+   dw[528] = 0;
+
+   dw[529] = 0;
+
+   dw[530] = 0;
+
+   dw[531] = 0;
+
+   dw[532] = 0;
+
+   dw[533] = 0;
+
+   dw[534] = 0;
+
+   dw[535] = 0;
+
+   dw[536] = 0;
+
+   dw[537] = 0;
+
+   dw[538] = 0;
+
+   dw[539] = 0;
+
+   dw[540] = 0;
+
+   dw[541] = 0;
+
+   dw[542] = 0;
+
+   dw[543] = 0;
+
+   dw[544] = 0;
+
+   dw[545] = 0;
+
+   dw[546] = 0;
+
+   dw[547] = 0;
+
+   dw[548] = 0;
+
+   dw[549] = 0;
+
+   dw[550] = 0;
+
+   dw[551] = 0;
+
+   dw[552] = 0;
+
+   dw[553] = 0;
+
+   dw[554] = 0;
+
+   dw[555] = 0;
+
+   dw[556] = 0;
+
+   dw[557] = 0;
+
+   dw[558] = 0;
+
+   dw[559] = 0;
+
+   dw[560] = 0;
+
+   dw[561] = 0;
+
+   dw[562] = 0;
+
+   dw[563] = 0;
+
+   dw[564] = 0;
+
+   dw[565] = 0;
+
+   dw[566] = 0;
+
+   dw[567] = 0;
+
+   dw[568] = 0;
+
+   dw[569] = 0;
+
+   dw[570] = 0;
+
+   dw[571] = 0;
+
+   dw[572] = 0;
+
+   dw[573] = 0;
+
+   dw[574] = 0;
+
+   dw[575] = 0;
+
+   dw[576] = 0;
+
+   dw[577] = 0;
+
+   dw[578] = 0;
+
+   dw[579] = 0;
+
+   dw[580] = 0;
+
+   dw[581] = 0;
+
+   dw[582] = 0;
+
+   dw[583] = 0;
+
+   dw[584] = 0;
+
+   dw[585] = 0;
+
+   dw[586] = 0;
+
+   dw[587] = 0;
+
+   dw[588] = 0;
+
+   dw[589] = 0;
+
+   dw[590] = 0;
+
+   dw[591] = 0;
+
+   dw[592] = 0;
+
+   dw[593] = 0;
+
+   dw[594] = 0;
+
+   dw[595] = 0;
+
+   dw[596] = 0;
+
+   dw[597] = 0;
+
+   dw[598] = 0;
+
+   dw[599] = 0;
+
+   dw[600] = 0;
+
+   dw[601] = 0;
+
+   dw[602] = 0;
+
+   dw[603] = 0;
+
+   dw[604] = 0;
+
+   dw[605] = 0;
+
+   dw[606] = 0;
+
+   dw[607] = 0;
+
+   dw[608] = 0;
+
+   dw[609] = 0;
+
+   dw[610] = 0;
+
+   dw[611] = 0;
+
+   dw[612] = 0;
+
+   dw[613] = 0;
+
+   dw[614] = 0;
+
+   dw[615] = 0;
+
+   dw[616] = 0;
+
+   dw[617] = 0;
+
+   dw[618] = 0;
+
+   dw[619] = 0;
+
+   dw[620] = 0;
+
+   dw[621] = 0;
+
+   dw[622] = 0;
+
+   dw[623] = 0;
+
+   dw[624] = 0;
+
+   dw[625] = 0;
+
+   dw[626] = 0;
+
+   dw[627] = 0;
+
+   dw[628] = 0;
+
+   dw[629] = 0;
+
+   dw[630] = 0;
+
+   dw[631] = 0;
+
+   dw[632] = 0;
+
+   dw[633] = 0;
+
+   dw[634] = 0;
+
+   dw[635] = 0;
+
+   dw[636] = 0;
+
+   dw[637] = 0;
+
+   dw[638] = 0;
+
+   dw[639] = 0;
+
+   dw[640] = 0;
+
+   dw[641] = 0;
+
+   dw[642] = 0;
+
+   dw[643] = 0;
+
+   dw[644] = 0;
+
+   dw[645] = 0;
+
+   dw[646] = 0;
+
+   dw[647] = 0;
+
+   dw[648] = 0;
+
+   dw[649] = 0;
+
+   dw[650] = 0;
+
+   dw[651] = 0;
+
+   dw[652] = 0;
+
+   dw[653] = 0;
+
+   dw[654] = 0;
+
+   dw[655] = 0;
+
+   dw[656] = 0;
+
+   dw[657] = 0;
+
+   dw[658] = 0;
+
+   dw[659] = 0;
+
+   dw[660] = 0;
+
+   dw[661] = 0;
+
+   dw[662] = 0;
+
+   dw[663] = 0;
+
+   dw[664] = 0;
+
+   dw[665] = 0;
+
+   dw[666] = 0;
+
+   dw[667] = 0;
+
+   dw[668] = 0;
+
+   dw[669] = 0;
+
+   dw[670] = 0;
+
+   dw[671] = 0;
+
+   dw[672] = 0;
+
+   dw[673] = 0;
+
+   dw[674] = 0;
+
+   dw[675] = 0;
+
+   dw[676] = 0;
+
+   dw[677] = 0;
+
+   dw[678] = 0;
+
+   dw[679] = 0;
+
+   dw[680] = 0;
+
+   dw[681] = 0;
+
+   dw[682] = 0;
+
+   dw[683] = 0;
+
+   dw[684] = 0;
+
+   dw[685] = 0;
+
+   dw[686] = 0;
+
+   dw[687] = 0;
+
+   dw[688] = 0;
+
+   dw[689] = 0;
+
+   dw[690] = 0;
+
+   dw[691] = 0;
+
+   dw[692] = 0;
+
+   dw[693] = 0;
+
+   dw[694] = 0;
+
+   dw[695] = 0;
+
+   dw[696] = 0;
+
+   dw[697] = 0;
+
+   dw[698] = 0;
+
+   dw[699] = 0;
+
+   dw[700] = 0;
+
+   dw[701] = 0;
+
+   dw[702] = 0;
+
+   dw[703] = 0;
+
+   dw[704] = 0;
+
+   dw[705] = 0;
+
+   dw[706] = 0;
+
+   dw[707] = 0;
+
+   dw[708] = 0;
+
+   dw[709] = 0;
+
+   dw[710] = 0;
+
+   dw[711] = 0;
+
+   dw[712] = 0;
+
+   dw[713] = 0;
+
+   dw[714] = 0;
+
+   dw[715] = 0;
+
+   dw[716] = 0;
+
+   dw[717] = 0;
+
+   dw[718] = 0;
+
+   dw[719] = 0;
+
+   dw[720] = 0;
+
+   dw[721] = 0;
+
+   dw[722] = 0;
+
+   dw[723] = 0;
+
+   dw[724] = 0;
+
+   dw[725] = 0;
+
+   dw[726] = 0;
+
+   dw[727] = 0;
+
+   dw[728] = 0;
+
+   dw[729] = 0;
+
+   dw[730] = 0;
+
+   dw[731] = 0;
+
+   dw[732] = 0;
+
+   dw[733] = 0;
+
+   dw[734] = 0;
+
+   dw[735] = 0;
+
+   dw[736] = 0;
+
+   dw[737] = 0;
+
+   dw[738] = 0;
+
+   dw[739] = 0;
+
+   dw[740] = 0;
+
+   dw[741] = 0;
+
+   dw[742] = 0;
+
+   dw[743] = 0;
+
+   dw[744] = 0;
+
+   dw[745] = 0;
+
+   dw[746] = 0;
+
+   dw[747] = 0;
+
+   dw[748] = 0;
+
+   dw[749] = 0;
+
+   dw[750] = 0;
+
+   dw[751] = 0;
+
+   dw[752] = 0;
+
+   dw[753] = 0;
+
+   dw[754] = 0;
+
+   dw[755] = 0;
+
+   dw[756] = 0;
+
+   dw[757] = 0;
+
+   dw[758] = 0;
+
+   dw[759] = 0;
+
+   dw[760] = 0;
+
+   dw[761] = 0;
+
+   dw[762] = 0;
+
+   dw[763] = 0;
+
+   dw[764] = 0;
+
+   dw[765] = 0;
+
+   dw[766] = 0;
+
+   dw[767] = 0;
+
+   dw[768] = 0;
+
+   dw[769] = 0;
+
+   dw[770] = 0;
+
+   dw[771] = 0;
+
+   dw[772] = 0;
+
+   dw[773] = 0;
+
+   dw[774] = 0;
+
+   dw[775] = 0;
+
+   dw[776] = 0;
+
+   dw[777] = 0;
+
+   dw[778] = 0;
+
+   dw[779] = 0;
+
+   dw[780] = 0;
+
+   dw[781] = 0;
+
+   dw[782] = 0;
+
+   dw[783] = 0;
+
+   dw[784] = 0;
+
+   dw[785] = 0;
+
+   dw[786] = 0;
+
+   dw[787] = 0;
+
+   dw[788] = 0;
+
+   dw[789] = 0;
+
+   dw[790] = 0;
+
+   dw[791] = 0;
+
+   dw[792] = 0;
+
+   dw[793] = 0;
+
+   dw[794] = 0;
+
+   dw[795] = 0;
+
+   dw[796] = 0;
+
+   dw[797] = 0;
+
+   dw[798] = 0;
+
+   dw[799] = 0;
+
+   dw[800] = 0;
+
+   dw[801] = 0;
+
+   dw[802] = 0;
+
+   dw[803] = 0;
+
+   dw[804] = 0;
+
+   dw[805] = 0;
+
+   dw[806] = 0;
+
+   dw[807] = 0;
+
+   dw[808] = 0;
+
+   dw[809] = 0;
+
+   dw[810] = 0;
+
+   dw[811] = 0;
+
+   dw[812] = 0;
+
+   dw[813] = 0;
+
+   dw[814] = 0;
+
+   dw[815] = 0;
+
+   dw[816] = 0;
+
+   dw[817] = 0;
+
+   dw[818] = 0;
+
+   dw[819] = 0;
+
+   dw[820] = 0;
+
+   dw[821] = 0;
+
+   dw[822] = 0;
+
+   dw[823] = 0;
+
+   dw[824] = 0;
+
+   dw[825] = 0;
+
+   dw[826] = 0;
+
+   dw[827] = 0;
+
+   dw[828] = 0;
+
+   dw[829] = 0;
+
+   dw[830] = 0;
+}
+
+#define GFX125_MFX_JPEG_PIC_STATE_length       3
+#define GFX125_MFX_JPEG_PIC_STATE_length_bias      2
+#define GFX125_MFX_JPEG_PIC_STATE_header        \
+   .DWordLength                         =      1,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      7,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_JPEG_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             InputFormatYUV;
+   uint32_t                             OutputMCUStructure;
+#define MCU_YUV400                               0
+#define MCU_YUV420                               1
+#define MCU_YUV422H_2Y                           2
+#define MCU_RGB                                  3
+   uint32_t                             Rotation;
+   uint32_t                             OutputFormatYUV;
+   uint32_t                             InputSurfaceFormatYUV;
+#define IS_NV12                                  1
+#define IS_UYVY                                  2
+#define IS_YUY2                                  3
+#define IS_Y8                                    4
+#define IS_RGB                                   5
+   uint32_t                             AverageDownSampling;
+   bool                                 VerticalDownSamplingEnable;
+   bool                                 HorizontalDownSamplingEnable;
+   bool                                 VerticalUpSamplingEnable;
+   uint32_t                             PixelsInVerticalLastMCU;
+   uint32_t                             PixelsInHorizontalLastMCU;
+   uint32_t                             FrameWidthInBlocks;
+   uint32_t                             RoundingQuant;
+   uint32_t                             FrameHeightInBlocks;
+   uint32_t                             OutputPixelNormalize;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_JPEG_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_MFX_JPEG_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->InputFormatYUV, 0, 2) |
+      __gen_uint(values->OutputMCUStructure, 0, 2) |
+      __gen_uint(values->Rotation, 4, 5) |
+      __gen_uint(values->OutputFormatYUV, 8, 11) |
+      __gen_uint(values->InputSurfaceFormatYUV, 8, 11) |
+      __gen_uint(values->AverageDownSampling, 16, 16) |
+      __gen_uint(values->VerticalDownSamplingEnable, 17, 17) |
+      __gen_uint(values->HorizontalDownSamplingEnable, 18, 18) |
+      __gen_uint(values->VerticalUpSamplingEnable, 20, 20) |
+      __gen_uint(values->PixelsInVerticalLastMCU, 21, 25) |
+      __gen_uint(values->PixelsInHorizontalLastMCU, 26, 30);
+
+   dw[2] =
+      __gen_uint(values->FrameWidthInBlocks, 0, 12) |
+      __gen_uint(values->RoundingQuant, 13, 15) |
+      __gen_uint(values->FrameHeightInBlocks, 16, 28) |
+      __gen_uint(values->OutputPixelNormalize, 29, 29);
+}
+
+#define GFX125_MFX_MPEG2_PIC_STATE_length      2
+#define GFX125_MFX_MPEG2_PIC_STATE_length_bias      2
+#define GFX125_MFX_MPEG2_PIC_STATE_header       \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      3,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_MPEG2_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ScanOrder;
+#define MPEG_ZIGZAG_SCAN                         0
+#define MPEG_ALTERNATE_VERTICAL_SCAN             1
+   uint32_t                             IntraVLCFormat;
+   uint32_t                             QuantizerScaleType;
+#define MPEG_QSCALE_LINEAR                       0
+#define MPEG_QSCALE_NONLINEAR                    1
+   bool                                 ConcealmentMV;
+   uint32_t                             FramePredictionFrameDCT;
+   bool                                 TopFieldFirst;
+   uint32_t                             PictureStructure;
+#define MPEG_TOP_FIELD                           1
+#define MPEG_BOTTOM_FIELD                        2
+#define MPEG_FRAME                               3
+   uint32_t                             IntraDCPrecision;
+   uint32_t                             F_code00;
+   uint32_t                             F_code01;
+   uint32_t                             F_code10;
+   uint32_t                             F_code11;
+   bool                                 DisableMismatch;
+   bool                                 MismatchControlDisable;
+   uint32_t                             PictureCodingType;
+#define MPEG_I_PICTURE                           1
+#define MPEG_P_PICTURE                           2
+#define MPEG_B_PICTURE                           3
+   bool                                 LoadBitstreamPointerPerSlice;
+   uint32_t                             PBSlicePredictedMVOverride;
+#define Predicted                                0
+#define ZERO                                     1
+   uint32_t                             PBSlicePredictedBidirectionMVTypeOverride;
+#define MPEG2_MVTO_BID                           0
+#define MPEG2_MVTO_RESERVED                      1
+#define MPEG2_MVTO_FWD                           2
+#define MPEG2_MVTO_BWD                           3
+   uint32_t                             PBSliceConcealmentMode;
+#define MPEG2_CM_INTER                           0
+#define MPEG2_CM_LEFT                            1
+#define MPEG2_CM_ZERO                            2
+#define MPEG2_CM_INTRA                           3
+   uint32_t                             ISliceConcealmentMode;
+#define MPEG2_CM_IntraConcealment                0
+#define MPEG2_CM_InterConcealment                1
+   uint32_t                             FrameWidthInMBs;
+   uint32_t                             FrameHeightInMBs;
+   bool                                 SliceConcealmentDisable;
+   uint32_t                             RoundIntraDC;
+   uint32_t                             RoundInterDC;
+   uint32_t                             RoundIntraAC;
+   uint32_t                             RoundInterAC;
+   uint32_t                             MinimumFrameSize;
+   uint32_t                             IntraMBMaxBitControl;
+   uint32_t                             InterMBMaxBitControl;
+   uint32_t                             FrameBitrateMaxReport;
+   uint32_t                             FrameBitrateMinReport;
+   uint32_t                             MBRateControlMask;
+   uint32_t                             MinimumFrameSizeUnits;
+#define MPEG2_MFSU_Compatibilitymode             0
+#define MPEG2_MFSU_16bytes                       1
+#define MPEG2_MFSU_4Kb                           2
+#define MPEG2_MFSU_16Kb                          3
+   uint32_t                             InterMBForceCBPtoZeroControl;
+   uint32_t                             FrameSizeControl;
+   uint32_t                             IntraMBConformanceMaxSize;
+   uint32_t                             InterMBConformanceMaxSize;
+   int32_t                              SliceDeltaQPMax0;
+   int32_t                              SliceDeltaQPMax1;
+   int32_t                              SliceDeltaQPMax2;
+   int32_t                              SliceDeltaQPMax3;
+   int32_t                              SliceDeltaQPMin0;
+   int32_t                              SliceDeltaQPMin1;
+   int32_t                              SliceDeltaQPMin2;
+   int32_t                              SliceDeltaQPMin3;
+   uint32_t                             FrameBitrateMin;
+   uint32_t                             FrameBitrateMinUnitMode;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             FrameBitrateMinUnit;
+   uint32_t                             FrameBitrateMax;
+   uint32_t                             FrameBitrateMaxUnitMode;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             FrameBitrateMaxUnit;
+   uint32_t                             FrameBitrateMinDelta;
+   uint32_t                             FrameBitrateMaxDelta;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_MPEG2_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_MFX_MPEG2_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ScanOrder, 6, 6) |
+      __gen_uint(values->IntraVLCFormat, 7, 7) |
+      __gen_uint(values->QuantizerScaleType, 8, 8) |
+      __gen_uint(values->ConcealmentMV, 9, 9) |
+      __gen_uint(values->FramePredictionFrameDCT, 10, 10) |
+      __gen_uint(values->TopFieldFirst, 11, 11) |
+      __gen_uint(values->PictureStructure, 12, 13) |
+      __gen_uint(values->IntraDCPrecision, 14, 15) |
+      __gen_uint(values->F_code00, 16, 19) |
+      __gen_uint(values->F_code01, 20, 23) |
+      __gen_uint(values->F_code10, 24, 27) |
+      __gen_uint(values->F_code11, 28, 31);
+}
+
+#define GFX125_MFX_PAK_INSERT_OBJECT_length_bias      2
+#define GFX125_MFX_PAK_INSERT_OBJECT_header     \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_PAK_INSERT_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 BitstreamStartReset;
+   bool                                 EndofSlice;
+   bool                                 LastHeader;
+   bool                                 EmulationByteBitsInsertEnable;
+   uint32_t                             SkipEmulationByteCount;
+   uint32_t                             DataBitsInLastDW;
+   uint32_t                             SliceHeaderIndicator;
+#define SLICE_HEADER                             1
+#define LEGACY                                   0
+   uint32_t                             HeaderLengthExcludedFromSize;
+#define NO_ACCUMULATION                          1
+#define ACCUMULATE                               0
+   uint32_t                             DataByteOffset;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_PAK_INSERT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_MFX_PAK_INSERT_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->BitstreamStartReset, 0, 0) |
+      __gen_uint(values->EndofSlice, 1, 1) |
+      __gen_uint(values->LastHeader, 2, 2) |
+      __gen_uint(values->EmulationByteBitsInsertEnable, 3, 3) |
+      __gen_uint(values->SkipEmulationByteCount, 4, 7) |
+      __gen_uint(values->DataBitsInLastDW, 8, 13) |
+      __gen_uint(values->SliceHeaderIndicator, 14, 14) |
+      __gen_uint(values->HeaderLengthExcludedFromSize, 15, 15) |
+      __gen_uint(values->DataByteOffset, 16, 17);
+}
+
+#define GFX125_MFX_PIPE_BUF_ADDR_STATE_length     65
+#define GFX125_MFX_PIPE_BUF_ADDR_STATE_length_bias      2
+#define GFX125_MFX_PIPE_BUF_ADDR_STATE_header   \
+   .DWordLength                         =     63,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_PIPE_BUF_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   PreDeblockingDestinationAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES PreDeblockingDestinationAttributes;
+   __gen_address_type                   PostDeblockingDestinationAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES PostDeblockingDestinationAttributes;
+   __gen_address_type                   OriginalUncompressedPictureSourceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES OriginalUncompressedPictureSourceAttributes;
+   __gen_address_type                   StreamOutDataDestinationAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES StreamOutDataDestinationAttributes;
+   __gen_address_type                   IntraRowStoreScratchBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntraRowStoreScratchBufferAttributes;
+   __gen_address_type                   DeblockingFilterRowStoreScratchAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DeblockingFilterRowStoreScratchAttributes;
+   __gen_address_type                   ReferencePictureAddress[16];
+   struct GFX125_MEMORYADDRESSATTRIBUTES ReferencePictureAttributes;
+   __gen_address_type                   MBStatusBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MBStatusBufferAttributes;
+   __gen_address_type                   MBILDBStreamOutBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MBILDBStreamOutBufferAttributes;
+   __gen_address_type                   SecondMBILDBStreamOutBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES SecondMBILDBStreamOutBufferAttributes;
+   uint32_t                             ReferencePictureMemoryCompressionMode[16];
+   bool                                 ReferencePictureMemoryCompressionEnable[16];
+   __gen_address_type                   ScaledReferenceSurfaceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES ScaledReferenceSurfaceAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_MFX_PIPE_BUF_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->PreDeblockingDestinationAddress, 0, 6, 47);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->PreDeblockingDestinationAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->PostDeblockingDestinationAddress, 0, 6, 47);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[6], &values->PostDeblockingDestinationAttributes);
+
+   const uint64_t v7_address =
+      __gen_address(data, &dw[7], values->OriginalUncompressedPictureSourceAddress, 0, 6, 47);
+   dw[7] = v7_address;
+   dw[8] = v7_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[9], &values->OriginalUncompressedPictureSourceAttributes);
+
+   const uint64_t v10_address =
+      __gen_address(data, &dw[10], values->StreamOutDataDestinationAddress, 0, 6, 47);
+   dw[10] = v10_address;
+   dw[11] = v10_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[12], &values->StreamOutDataDestinationAttributes);
+
+   const uint64_t v13_address =
+      __gen_address(data, &dw[13], values->IntraRowStoreScratchBufferAddress, 0, 6, 47);
+   dw[13] = v13_address;
+   dw[14] = v13_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[15], &values->IntraRowStoreScratchBufferAttributes);
+
+   const uint64_t v16_address =
+      __gen_address(data, &dw[16], values->DeblockingFilterRowStoreScratchAddress, 0, 6, 47);
+   dw[16] = v16_address;
+   dw[17] = v16_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[18], &values->DeblockingFilterRowStoreScratchAttributes);
+
+   const uint64_t v19_address =
+      __gen_address(data, &dw[19], values->ReferencePictureAddress[0], 0, 0, 63);
+   dw[19] = v19_address;
+   dw[20] = v19_address >> 32;
+
+   const uint64_t v21_address =
+      __gen_address(data, &dw[21], values->ReferencePictureAddress[1], 0, 0, 63);
+   dw[21] = v21_address;
+   dw[22] = v21_address >> 32;
+
+   const uint64_t v23_address =
+      __gen_address(data, &dw[23], values->ReferencePictureAddress[2], 0, 0, 63);
+   dw[23] = v23_address;
+   dw[24] = v23_address >> 32;
+
+   const uint64_t v25_address =
+      __gen_address(data, &dw[25], values->ReferencePictureAddress[3], 0, 0, 63);
+   dw[25] = v25_address;
+   dw[26] = v25_address >> 32;
+
+   const uint64_t v27_address =
+      __gen_address(data, &dw[27], values->ReferencePictureAddress[4], 0, 0, 63);
+   dw[27] = v27_address;
+   dw[28] = v27_address >> 32;
+
+   const uint64_t v29_address =
+      __gen_address(data, &dw[29], values->ReferencePictureAddress[5], 0, 0, 63);
+   dw[29] = v29_address;
+   dw[30] = v29_address >> 32;
+
+   const uint64_t v31_address =
+      __gen_address(data, &dw[31], values->ReferencePictureAddress[6], 0, 0, 63);
+   dw[31] = v31_address;
+   dw[32] = v31_address >> 32;
+
+   const uint64_t v33_address =
+      __gen_address(data, &dw[33], values->ReferencePictureAddress[7], 0, 0, 63);
+   dw[33] = v33_address;
+   dw[34] = v33_address >> 32;
+
+   const uint64_t v35_address =
+      __gen_address(data, &dw[35], values->ReferencePictureAddress[8], 0, 0, 63);
+   dw[35] = v35_address;
+   dw[36] = v35_address >> 32;
+
+   const uint64_t v37_address =
+      __gen_address(data, &dw[37], values->ReferencePictureAddress[9], 0, 0, 63);
+   dw[37] = v37_address;
+   dw[38] = v37_address >> 32;
+
+   const uint64_t v39_address =
+      __gen_address(data, &dw[39], values->ReferencePictureAddress[10], 0, 0, 63);
+   dw[39] = v39_address;
+   dw[40] = v39_address >> 32;
+
+   const uint64_t v41_address =
+      __gen_address(data, &dw[41], values->ReferencePictureAddress[11], 0, 0, 63);
+   dw[41] = v41_address;
+   dw[42] = v41_address >> 32;
+
+   const uint64_t v43_address =
+      __gen_address(data, &dw[43], values->ReferencePictureAddress[12], 0, 0, 63);
+   dw[43] = v43_address;
+   dw[44] = v43_address >> 32;
+
+   const uint64_t v45_address =
+      __gen_address(data, &dw[45], values->ReferencePictureAddress[13], 0, 0, 63);
+   dw[45] = v45_address;
+   dw[46] = v45_address >> 32;
+
+   const uint64_t v47_address =
+      __gen_address(data, &dw[47], values->ReferencePictureAddress[14], 0, 0, 63);
+   dw[47] = v47_address;
+   dw[48] = v47_address >> 32;
+
+   const uint64_t v49_address =
+      __gen_address(data, &dw[49], values->ReferencePictureAddress[15], 0, 0, 63);
+   dw[49] = v49_address;
+   dw[50] = v49_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[51], &values->ReferencePictureAttributes);
+
+   const uint64_t v52_address =
+      __gen_address(data, &dw[52], values->MBStatusBufferAddress, 0, 6, 47);
+   dw[52] = v52_address;
+   dw[53] = v52_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[54], &values->MBStatusBufferAttributes);
+
+   const uint64_t v55_address =
+      __gen_address(data, &dw[55], values->MBILDBStreamOutBufferAddress, 0, 6, 47);
+   dw[55] = v55_address;
+   dw[56] = v55_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[57], &values->MBILDBStreamOutBufferAttributes);
+
+   const uint64_t v58_address =
+      __gen_address(data, &dw[58], values->SecondMBILDBStreamOutBufferAddress, 0, 6, 47);
+   dw[58] = v58_address;
+   dw[59] = v58_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[60], &values->SecondMBILDBStreamOutBufferAttributes);
+
+   dw[61] =
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[0], 1, 1) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[0], 0, 0) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[1], 3, 3) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[1], 2, 2) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[2], 5, 5) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[2], 4, 4) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[3], 7, 7) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[3], 6, 6) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[4], 9, 9) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[4], 8, 8) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[5], 11, 11) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[5], 10, 10) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[6], 13, 13) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[6], 12, 12) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[7], 15, 15) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[7], 14, 14) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[8], 17, 17) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[8], 16, 16) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[9], 19, 19) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[9], 18, 18) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[10], 21, 21) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[10], 20, 20) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[11], 23, 23) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[11], 22, 22) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[12], 25, 25) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[12], 24, 24) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[13], 27, 27) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[13], 26, 26) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[14], 29, 29) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[14], 28, 28) |
+      __gen_uint(values->ReferencePictureMemoryCompressionMode[15], 31, 31) |
+      __gen_uint(values->ReferencePictureMemoryCompressionEnable[15], 30, 30);
+
+   const uint64_t v62_address =
+      __gen_address(data, &dw[62], values->ScaledReferenceSurfaceAddress, 0, 6, 47);
+   dw[62] = v62_address;
+   dw[63] = v62_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[64], &values->ScaledReferenceSurfaceAttributes);
+}
+
+#define GFX125_MFX_PIPE_MODE_SELECT_length      5
+#define GFX125_MFX_PIPE_MODE_SELECT_length_bias      2
+#define GFX125_MFX_PIPE_MODE_SELECT_header      \
+   .DWordLength                         =      3,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_PIPE_MODE_SELECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             StandardSelect;
+#define SS_MPEG2                                 0
+#define SS_VC1                                   1
+#define SS_AVC                                   2
+#define SS_JPEG                                  3
+#define SS_VP8                                   5
+#define SS_UVLD                                  15
+   uint32_t                             CodecSelect;
+#define Decode                                   0
+#define Encode                                   1
+   bool                                 StitchMode;
+   bool                                 FrameStatisticsStreamOutEnable;
+   bool                                 ScaledSurfaceEnable;
+   bool                                 PreDeblockingOutputEnable;
+   bool                                 PostDeblockingOutputEnable;
+   bool                                 StreamOutEnable;
+   bool                                 PicErrorStatusReportEnable;
+   bool                                 DeblockerStreamOutEnable;
+   uint32_t                             VDEncMode;
+#define VM_MBEncMode                             0
+#define VM_VDEncMode                             1
+   bool                                 StandaloneVDEncModeEnable;
+   uint32_t                             DecoderModeSelect;
+#define VLDMode                                  0
+#define ITMode                                   1
+#define DeblockerMode                            2
+#define InterlayerMode                           3
+   uint32_t                             DecoderShortFormatMode;
+#define ShortFormatDriverInterface               0
+#define LongFormatDriverInterface                1
+   bool                                 ExtendedStreamOutEnable;
+   uint32_t                             AESControl;
+   uint32_t                             PicStatusErrorReportID;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_MFX_PIPE_MODE_SELECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->StandardSelect, 0, 3) |
+      __gen_uint(values->CodecSelect, 4, 4) |
+      __gen_uint(values->StitchMode, 5, 5) |
+      __gen_uint(values->FrameStatisticsStreamOutEnable, 6, 6) |
+      __gen_uint(values->ScaledSurfaceEnable, 7, 7) |
+      __gen_uint(values->PreDeblockingOutputEnable, 8, 8) |
+      __gen_uint(values->PostDeblockingOutputEnable, 9, 9) |
+      __gen_uint(values->StreamOutEnable, 10, 10) |
+      __gen_uint(values->PicErrorStatusReportEnable, 11, 11) |
+      __gen_uint(values->DeblockerStreamOutEnable, 12, 12) |
+      __gen_uint(values->VDEncMode, 13, 13) |
+      __gen_uint(values->StandaloneVDEncModeEnable, 14, 14) |
+      __gen_uint(values->DecoderModeSelect, 15, 16) |
+      __gen_uint(values->DecoderShortFormatMode, 17, 17) |
+      __gen_uint(values->ExtendedStreamOutEnable, 18, 18) |
+      __gen_uint(values->AESControl, 24, 31);
+
+   dw[2] = 0;
+
+   dw[3] =
+      __gen_uint(values->PicStatusErrorReportID, 0, 31);
+
+   dw[4] = 0;
+}
+
+#define GFX125_MFX_QM_STATE_length            34
+#define GFX125_MFX_QM_STATE_length_bias        2
+#define GFX125_MFX_QM_STATE_header              \
+   .DWordLength                         =     32,  \
+   .SubOpcodeB                          =      7,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_QM_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             AVC;
+#define AVC_4x4_Intra_MATRIX                     0
+#define AVC_4x4_Inter_MATRIX                     1
+#define AVC_8x8_Intra_MATRIX                     2
+#define AVC_8x8_Inter_MATRIX                     3
+   uint32_t                             MPEG2;
+#define MPEG_INTRA_QUANTIZER_MATRIX              0
+#define MPEG_NON_INTRA_QUANTIZER_MATRIX          1
+   uint32_t                             JPEG;
+#define JPEG_Luma_Y_QUANTIZER_MATRIXorR          0
+#define JPEG_Chroma_Cb_QUANTIZER_MATRIXorG       1
+#define JPEG_Chroma_Cr_QUANTIZER_MATRIXorB       2
+   uint32_t                             ForwardQuantizerMatrix[64];
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                         __attribute__((unused)) void * restrict dst,
+                         __attribute__((unused)) const struct GFX125_MFX_QM_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->AVC, 0, 1) |
+      __gen_uint(values->MPEG2, 0, 1) |
+      __gen_uint(values->JPEG, 0, 1);
+
+   dw[2] =
+      __gen_uint(values->ForwardQuantizerMatrix[0], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[1], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[2], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[3], 24, 31);
+
+   dw[3] =
+      __gen_uint(values->ForwardQuantizerMatrix[4], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[5], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[6], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[7], 24, 31);
+
+   dw[4] =
+      __gen_uint(values->ForwardQuantizerMatrix[8], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[9], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[10], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[11], 24, 31);
+
+   dw[5] =
+      __gen_uint(values->ForwardQuantizerMatrix[12], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[13], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[14], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[15], 24, 31);
+
+   dw[6] =
+      __gen_uint(values->ForwardQuantizerMatrix[16], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[17], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[18], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[19], 24, 31);
+
+   dw[7] =
+      __gen_uint(values->ForwardQuantizerMatrix[20], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[21], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[22], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[23], 24, 31);
+
+   dw[8] =
+      __gen_uint(values->ForwardQuantizerMatrix[24], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[25], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[26], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[27], 24, 31);
+
+   dw[9] =
+      __gen_uint(values->ForwardQuantizerMatrix[28], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[29], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[30], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[31], 24, 31);
+
+   dw[10] =
+      __gen_uint(values->ForwardQuantizerMatrix[32], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[33], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[34], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[35], 24, 31);
+
+   dw[11] =
+      __gen_uint(values->ForwardQuantizerMatrix[36], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[37], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[38], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[39], 24, 31);
+
+   dw[12] =
+      __gen_uint(values->ForwardQuantizerMatrix[40], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[41], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[42], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[43], 24, 31);
+
+   dw[13] =
+      __gen_uint(values->ForwardQuantizerMatrix[44], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[45], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[46], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[47], 24, 31);
+
+   dw[14] =
+      __gen_uint(values->ForwardQuantizerMatrix[48], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[49], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[50], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[51], 24, 31);
+
+   dw[15] =
+      __gen_uint(values->ForwardQuantizerMatrix[52], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[53], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[54], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[55], 24, 31);
+
+   dw[16] =
+      __gen_uint(values->ForwardQuantizerMatrix[56], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[57], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[58], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[59], 24, 31);
+
+   dw[17] =
+      __gen_uint(values->ForwardQuantizerMatrix[60], 0, 7) |
+      __gen_uint(values->ForwardQuantizerMatrix[61], 8, 15) |
+      __gen_uint(values->ForwardQuantizerMatrix[62], 16, 23) |
+      __gen_uint(values->ForwardQuantizerMatrix[63], 24, 31);
+
+   dw[18] = 0;
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] = 0;
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] = 0;
+
+   dw[30] = 0;
+
+   dw[31] = 0;
+
+   dw[32] = 0;
+
+   dw[33] = 0;
+}
+
+#define GFX125_MFX_STATE_POINTER_length        2
+#define GFX125_MFX_STATE_POINTER_length_bias      2
+#define GFX125_MFX_STATE_POINTER_header         \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      6,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_STATE_POINTER {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             StatePointerIndex;
+   uint32_t                             StatePointer;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_STATE_POINTER_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFX_STATE_POINTER * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->StatePointerIndex, 0, 1) |
+      __gen_uint(values->StatePointer, 5, 31);
+}
+
+#define GFX125_MFX_STITCH_OBJECT_length_bias      2
+#define GFX125_MFX_STITCH_OBJECT_header         \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =     10,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_STITCH_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 EndofSlice;
+   bool                                 LastHeader;
+   uint32_t                             SourceDataEndingBitInclusion;
+   uint32_t                             SourceDataStartingByteOffset;
+   uint32_t                             IndirectDataLength;
+   uint64_t                             IndirectDataStartAddress;
+   /* variable length fields follow */
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_STITCH_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFX_STITCH_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->EndofSlice, 1, 1) |
+      __gen_uint(values->LastHeader, 2, 2) |
+      __gen_uint(values->SourceDataEndingBitInclusion, 8, 13) |
+      __gen_uint(values->SourceDataStartingByteOffset, 16, 17);
+
+   dw[2] =
+      __gen_uint(values->IndirectDataLength, 0, 18);
+
+   dw[3] =
+      __gen_offset(values->IndirectDataStartAddress, 0, 31);
+}
+
+#define GFX125_MFX_SURFACE_STATE_length        6
+#define GFX125_MFX_SURFACE_STATE_length_bias      2
+#define GFX125_MFX_SURFACE_STATE_header         \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      0,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SurfaceID;
+#define MFX_SourceInputPicture                   4
+#define MFX_ReconstructedScaledReferencePicture  5
+   float                                CrVCbUPixelOffsetVDirection;
+   uint32_t                             Width;
+   uint32_t                             Height;
+   uint32_t                             TileWalk;
+#define TW_XMAJOR                                0
+#define TW_YMAJOR                                1
+   bool                                 TiledSurface;
+   bool                                 HalfPitchforChroma;
+   uint32_t                             SurfacePitch;
+   bool                                 InterleaveChroma;
+   uint32_t                             SurfaceFormat;
+#define MFX_YCRCB_NORMAL                         0
+#define MFX_YCRCB_SWAPUVY                        1
+#define MFX_YCRCB_SWAPUV                         2
+#define MFX_YCRCB_SWAPY                          3
+#define MFX_PLANAR_420_8                         4
+#define MFX_PLANAR_411_8                         5
+#define MFX_PLANAR_422_8                         6
+#define MFX_STMM_DN_STATISTICS                   7
+#define MFX_R10G10B10A2_UNORM                    8
+#define MFX_R8G8B8A8_UNORM                       9
+#define MFX_R8B8_UNORMCrCb                       10
+#define MFX_R8_UNORMCrCb                         11
+#define MFX_Y8_UNORM                             12
+   uint32_t                             YOffsetforUCb;
+   uint32_t                             XOffsetforUCb;
+   uint32_t                             YOffsetforVCr;
+   uint32_t                             XOffsetforVCr;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFX_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SurfaceID, 0, 3);
+
+   dw[2] =
+      __gen_ufixed(values->CrVCbUPixelOffsetVDirection, 0, 1, 2) |
+      __gen_uint(values->Width, 4, 17) |
+      __gen_uint(values->Height, 18, 31);
+
+   dw[3] =
+      __gen_uint(values->TileWalk, 0, 0) |
+      __gen_uint(values->TiledSurface, 1, 1) |
+      __gen_uint(values->HalfPitchforChroma, 2, 2) |
+      __gen_uint(values->SurfacePitch, 3, 19) |
+      __gen_uint(values->InterleaveChroma, 27, 27) |
+      __gen_uint(values->SurfaceFormat, 28, 31);
+
+   dw[4] =
+      __gen_uint(values->YOffsetforUCb, 0, 14) |
+      __gen_uint(values->XOffsetforUCb, 16, 30);
+
+   dw[5] =
+      __gen_uint(values->YOffsetforVCr, 0, 15) |
+      __gen_uint(values->XOffsetforVCr, 16, 28);
+}
+
+#define GFX125_MFX_VC1_DIRECTMODE_STATE_length      7
+#define GFX125_MFX_VC1_DIRECTMODE_STATE_length_bias      2
+#define GFX125_MFX_VC1_DIRECTMODE_STATE_header  \
+   .DWordLength                         =      5,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_VC1_DIRECTMODE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   DirectMVWriteBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DirectMVWriteBufferAttributes;
+   __gen_address_type                   DirectMVReadBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES DirectMVReadBufferAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_VC1_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                     __attribute__((unused)) void * restrict dst,
+                                     __attribute__((unused)) const struct GFX125_MFX_VC1_DIRECTMODE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->DirectMVWriteBufferAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[3], &values->DirectMVWriteBufferAttributes);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->DirectMVReadBufferAddress, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   GFX125_MEMORYADDRESSATTRIBUTES_pack(data, &dw[6], &values->DirectMVReadBufferAttributes);
+}
+
+#define GFX125_MFX_VC1_PRED_PIPE_STATE_length      6
+#define GFX125_MFX_VC1_PRED_PIPE_STATE_length_bias      2
+#define GFX125_MFX_VC1_PRED_PIPE_STATE_header   \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      2,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_VC1_PRED_PIPE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             ReferenceFrameBoundaryReplicationMode;
+   uint32_t                             Vin_intensitycomp_Single_BWDen;
+   uint32_t                             Vin_intensitycomp_Single_FWDen;
+   uint32_t                             Vin_intensitycomp_Double_BWDen;
+   uint32_t                             Vin_intensitycomp_Double_FWDen;
+   uint32_t                             LumScale1singleFWD;
+   uint32_t                             LumScale2singleFWD;
+   uint32_t                             LumShift1singleFWD;
+   uint32_t                             LumShift2singleFWD;
+   uint32_t                             LumScale1doubleFWD;
+   uint32_t                             LumScale2doubleFWD;
+   uint32_t                             LumShift1doubleFWD;
+   uint32_t                             LumShift2doubleFWD;
+   uint32_t                             LumScale1singleBWD;
+   uint32_t                             LumScale2singleBWD;
+   uint32_t                             LumShift1singleBWD;
+   uint32_t                             LumShift2singleBWD;
+   uint32_t                             LumScale1doubleBWD;
+   uint32_t                             LumScale2doubleBWD;
+   uint32_t                             LumShift1doubleBWD;
+   uint32_t                             LumShift2doubleBWD;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_VC1_PRED_PIPE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_MFX_VC1_PRED_PIPE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->ReferenceFrameBoundaryReplicationMode, 4, 7) |
+      __gen_uint(values->Vin_intensitycomp_Single_BWDen, 8, 9) |
+      __gen_uint(values->Vin_intensitycomp_Single_FWDen, 10, 11) |
+      __gen_uint(values->Vin_intensitycomp_Double_BWDen, 12, 13) |
+      __gen_uint(values->Vin_intensitycomp_Double_FWDen, 14, 15);
+
+   dw[2] =
+      __gen_uint(values->LumScale1singleFWD, 0, 5) |
+      __gen_uint(values->LumScale2singleFWD, 8, 13) |
+      __gen_uint(values->LumShift1singleFWD, 16, 21) |
+      __gen_uint(values->LumShift2singleFWD, 24, 29);
+
+   dw[3] =
+      __gen_uint(values->LumScale1doubleFWD, 0, 5) |
+      __gen_uint(values->LumScale2doubleFWD, 8, 13) |
+      __gen_uint(values->LumShift1doubleFWD, 16, 21) |
+      __gen_uint(values->LumShift2doubleFWD, 24, 29);
+
+   dw[4] =
+      __gen_uint(values->LumScale1singleBWD, 0, 5) |
+      __gen_uint(values->LumScale2singleBWD, 8, 13) |
+      __gen_uint(values->LumShift1singleBWD, 16, 21) |
+      __gen_uint(values->LumShift2singleBWD, 24, 29);
+
+   dw[5] =
+      __gen_uint(values->LumScale1doubleBWD, 0, 5) |
+      __gen_uint(values->LumScale2doubleBWD, 8, 13) |
+      __gen_uint(values->LumShift1doubleBWD, 16, 21) |
+      __gen_uint(values->LumShift2doubleBWD, 24, 29);
+}
+
+#define GFX125_MFX_VP8_BSP_BUF_BASE_ADDR_STATE_length      2
+#define GFX125_MFX_VP8_BSP_BUF_BASE_ADDR_STATE_length_bias      2
+#define GFX125_MFX_VP8_BSP_BUF_BASE_ADDR_STATE_header\
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      4,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_VP8_BSP_BUF_BASE_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   __gen_address_type                   FrameHeaderAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES FrameHeaderAttributes;
+   __gen_address_type                   IntermediateBufferAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES IntermediateBufferAttributes;
+   uint64_t                             IntermediateBufferPartitionOffset;
+   uint32_t                             IntermediateBufferMaxSize;
+   __gen_address_type                   FinalFrameAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES FinalFrameAttributes;
+   uint32_t                             FinalFrameByteOffset;
+   __gen_address_type                   StreamOutAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES StreamOutAttributes;
+   __gen_address_type                   CoeffProbsStreamInSurfaceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES CoeffProbsStreamInSurfaceAttributes;
+   __gen_address_type                   TokenStatisticsSurfaceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES TokenStatisticsSurfaceAttributes;
+   __gen_address_type                   MPCRowStoreSurfaceAddress;
+   struct GFX125_MEMORYADDRESSATTRIBUTES MPCRowStoreSurfaceAttributes;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_VP8_BSP_BUF_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                            __attribute__((unused)) void * restrict dst,
+                                            __attribute__((unused)) const struct GFX125_MFX_VP8_BSP_BUF_BASE_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->FrameHeaderAddress, 0, 0, 63);
+   dw[1] = v1_address;
+   dw[2] = v1_address >> 32;
+}
+
+#define GFX125_MFX_VP8_ENCODER_CFG_length      2
+#define GFX125_MFX_VP8_ENCODER_CFG_length_bias      2
+#define GFX125_MFX_VP8_ENCODER_CFG_header       \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      4,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_VP8_ENCODER_CFG {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 PerformanceCounterEnable;
+   bool                                 FinalBitstreamOutputDisable;
+   bool                                 TokenStatisticsOutputEnable;
+   bool                                 BitstreamStatisticsOutputEnable;
+   bool                                 UpdateSegmentFeatureDataFlag;
+   bool                                 SkipFinalBitstreamwhenOverUnderflow;
+   bool                                 RateControlInitialPass;
+   bool                                 PerSegmentDeltaQindexLoopFilterDisable;
+   bool                                 FinerBRCEnable;
+   bool                                 CompressedBitstreamOutputDisable;
+   bool                                 VBSPUnitPowerClockGatingDisable;
+   bool                                 MaxFrameBitcountRateControlEnable;
+   bool                                 MinFrameBitCountRateControlEnable;
+   bool                                 MaxInterMBBitCountCheckEnable;
+   bool                                 MaxIntraMBBitCountCheckEnable;
+   bool                                 IntermediateBitBufferOverrunEnable;
+   bool                                 FinalBistreamBufferOverrunEnable;
+   bool                                 QIndexClampHighforUnderflow;
+   bool                                 QIndexClampHighforOverflow;
+   uint32_t                             MaxInterMBBitCount;
+   uint32_t                             MaxIntraMBBitCountLimit;
+   uint32_t                             FrameBitrateMax;
+   uint32_t                             FrameBitrateMaxUnit;
+   uint32_t                             FrameBitrateMaxUnitMode;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             FrameBitrateMin;
+   uint32_t                             FrameBitrateMinUnit;
+   uint32_t                             FrameBitrateMinUnitMode;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             FrameDeltaQIndexMax0;
+   uint32_t                             FrameDeltaQIndexMax1;
+   uint32_t                             FrameDeltaQIndexMax2;
+   uint32_t                             FrameDeltaQIndexMax3;
+   uint32_t                             FrameDeltaQIndexMin0;
+   uint32_t                             FrameDeltaQIndexMin1;
+   uint32_t                             FrameDeltaQIndexMin2;
+   uint32_t                             FrameDeltaQIndexMin3;
+   uint32_t                             PerSegmentFrameDeltaQIndexMax1;
+   uint32_t                             PerSegmentFrameDeltaQIndexMin1;
+   uint32_t                             PerSegmentFrameDeltaQIndexMax2;
+   uint32_t                             PerSegmentFrameDeltaQIndexMin2;
+   uint32_t                             PerSegmentFrameDeltaQIndexMax3;
+   uint32_t                             PerSegmentFrameDeltaQIndexMin3;
+   uint32_t                             FrameDeltaLoopFilterMax0;
+   uint32_t                             FrameDeltaLoopFilterMax1;
+   uint32_t                             FrameDeltaLoopFilterMax2;
+   uint32_t                             FrameDeltaLoopFilterMax3;
+   uint32_t                             FrameDeltaLoopFilterMin0;
+   uint32_t                             FrameDeltaLoopFilterMin1;
+   uint32_t                             FrameDeltaLoopFilterMin2;
+   uint32_t                             FrameDeltaLoopFilterMin3;
+   uint32_t                             PerSegmentFrameDeltaLoopFilterMax1;
+   uint32_t                             PerSegmentFrameDeltaLoopFilterMin1;
+   uint32_t                             PerSegmentFrameDeltaLoopFilterMax2;
+   uint32_t                             PerSegmentFrameDeltaLoopFilterMin2;
+   uint32_t                             PerSegmentFrameDeltaLoopFilterMax3;
+   uint32_t                             PerSegmentFrameDeltaLoopFilterMin3;
+   uint32_t                             FrameBitrateMaxDelta;
+   uint32_t                             FrameBitrateMinDelta;
+   uint32_t                             MinimumFrameSize;
+   uint32_t                             MinimumFrameSizeUnit;
+#define Compatibilitymode                        0
+#define Newmode                                  1
+   uint32_t                             BitstreamFormatVersion;
+   uint32_t                             ShowFrame;
+   uint32_t                             Horizontal_Size_Code;
+   uint32_t                             Vertical_Size_Code;
+   uint32_t                             FrameHeaderBitCount;
+   uint32_t                             FrameHeaderBinBufferQIndexUpdatePointer;
+   uint32_t                             FrameHeaderBinBufferLoopFilterUpdatePointer;
+   uint32_t                             FrameHeaderBinBufferTokenUpdatePointer;
+   uint32_t                             FrameHeaderBinBufferMVUpdatePointer;
+   uint32_t                             CV0;
+   uint32_t                             CV1;
+   uint32_t                             CV2;
+   uint32_t                             CV3;
+   uint32_t                             CV4;
+   uint32_t                             CV5;
+   uint32_t                             CV6;
+   uint32_t                             CV7;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_VP8_ENCODER_CFG_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX125_MFX_VP8_ENCODER_CFG * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->PerformanceCounterEnable, 0, 0) |
+      __gen_uint(values->FinalBitstreamOutputDisable, 1, 1) |
+      __gen_uint(values->TokenStatisticsOutputEnable, 2, 2) |
+      __gen_uint(values->BitstreamStatisticsOutputEnable, 3, 3) |
+      __gen_uint(values->UpdateSegmentFeatureDataFlag, 4, 4) |
+      __gen_uint(values->SkipFinalBitstreamwhenOverUnderflow, 5, 5) |
+      __gen_uint(values->RateControlInitialPass, 6, 6) |
+      __gen_uint(values->PerSegmentDeltaQindexLoopFilterDisable, 7, 7) |
+      __gen_uint(values->FinerBRCEnable, 8, 8) |
+      __gen_uint(values->CompressedBitstreamOutputDisable, 9, 9) |
+      __gen_uint(values->VBSPUnitPowerClockGatingDisable, 10, 10);
+}
+
+#define GFX125_MFX_VP8_PAK_OBJECT_length       7
+#define GFX125_MFX_VP8_PAK_OBJECT_length_bias      2
+#define GFX125_MFX_VP8_PAK_OBJECT_header        \
+   .DWordLength                         =      5,  \
+   .SubOpcodeB                          =      9,  \
+   .SubOpcodeA                          =      2,  \
+   .MediaCommandOpcode                  =      4,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_VP8_PAK_OBJECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             IndirectPAKMVDataLength;
+   bool                                 EnableInlineMVdata;
+   uint64_t                             IndirectPAKMVDataStartAddressOffset;
+   uint64_t                             InlineData;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_VP8_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_MFX_VP8_PAK_OBJECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpcode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->IndirectPAKMVDataLength, 0, 9) |
+      __gen_uint(values->EnableInlineMVdata, 29, 29);
+
+   dw[2] =
+      __gen_offset(values->IndirectPAKMVDataStartAddressOffset, 0, 28);
+
+   const uint64_t v3 =
+      __gen_uint(values->InlineData, 0, 127);
+   dw[3] = v3;
+   dw[4] = v3 >> 32;
+}
+
+#define GFX125_MFX_VP8_PIC_STATE_length        2
+#define GFX125_MFX_VP8_PIC_STATE_length_bias      2
+#define GFX125_MFX_VP8_PIC_STATE_header         \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpCode                  =      4,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_VP8_PIC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpCode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameWidth;
+   uint32_t                             FrameHeight;
+   uint32_t                             MCFilterSelect;
+   uint32_t                             ChromaFullPixelMCFilterMode;
+   uint32_t                             DBLKFilterType;
+   bool                                 KeyFrame;
+   bool                                 SegmentationIDStreamOutEnable;
+   bool                                 SegmentationIDStreamInEnable;
+   bool                                 SegmentEnable;
+   bool                                 UpdateMBSegmentMap;
+   bool                                 MBNoCoeffSkip;
+   bool                                 ModeReferenceLoopFilterDeltaEnable;
+   bool                                 GoldenRefPictureMVSignBias;
+   bool                                 AlternateRefPicMVSignBias;
+   uint32_t                             DeblockSharpnessLevel;
+   uint32_t                             Log2NumofPartition;
+#define _1Tokenpartition                         0
+#define _2Tokenpartition                         1
+#define _4Tokenpartition                         2
+#define _8Tokenpartition                         3
+   uint32_t                             DBLKFilterLevelforSegment0;
+   uint32_t                             DBLKFilterLevelforSegment1;
+   uint32_t                             DBLKFilterLevelforSegment2;
+   uint32_t                             DBLKFilterLevelforSegment3;
+   uint32_t                             Segment0QIndex;
+   uint32_t                             Segment1QIndex;
+   uint32_t                             Segment2QIndex;
+   uint32_t                             Segment3QIndex;
+   uint32_t                             Y2DCQIndexDelta;
+   uint32_t                             Y2ACQIndexDeltaSign;
+   uint32_t                             Y2ACQIndexDelta;
+   uint32_t                             Y2ACQIndexSign;
+   uint32_t                             UVDCQIndexDelta;
+   uint32_t                             UVDCQIndexDeltaSign;
+   uint32_t                             UVACQIndexDelta;
+   uint32_t                             UVACQIndexDeltaSign;
+   uint32_t                             Y1DCQIndexDelta;
+   uint32_t                             Y1DCQIndexDeltaSign;
+   uint32_t                             ClampQIndexLow;
+   uint32_t                             ClampQIndexHigh;
+   uint32_t                             QuantizerValue1UVDC;
+   uint32_t                             QuantizerValue1UVAC;
+   uint32_t                             QuantizerValue1Y2DC;
+   uint32_t                             QuantizerValue1Y2AC;
+   uint32_t                             QuantizerValue2Y1DC;
+   uint32_t                             QuantizerValue2Y1AC;
+   uint32_t                             QuantizerValue2UVDC;
+   uint32_t                             QuantizerValue2UVAC;
+   uint32_t                             QuantizerValue2Y2DC;
+   uint32_t                             QuantizerValue2Y2AC;
+   uint32_t                             QuantizerValue3Y1DC;
+   uint32_t                             QuantizerValue3Y1AC;
+   uint32_t                             QuantizerValue3UVDC;
+   uint32_t                             QuantizerValue3UVAC;
+   uint32_t                             QuantizerValue3Y2DC;
+   uint32_t                             QuantizerValue3Y2AC;
+   uint64_t                             CoeffProbabilityStreamInAddress;
+   uint32_t                             CoeffProbabilityStreamInMOCSEncoderOnly;
+   uint32_t                             CoeffProbabilityStreamInArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   bool                                 CoeffProbabilityStreamInMemoryCompressionEnable;
+   uint32_t                             CoeffProbabilityStreamInMemoryCompressionMode;
+   uint32_t                             CoeffProbabilityStreamInTiledResourceMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   uint32_t                             MBSegmentIDTreeProbs0;
+   uint32_t                             MBSegmentIDTreeProbs1;
+   uint32_t                             MBSegmentIDTreeProbs2;
+   uint32_t                             InterPredFromGRefRefProb;
+   uint32_t                             InterPredFromLastRefProb;
+   uint32_t                             IntraMBProb;
+   uint32_t                             MBNoCoeffSkipFalseProb;
+   uint32_t                             YModeProb0;
+   uint32_t                             YModeProb1;
+   uint32_t                             YModeProb2;
+   uint32_t                             YModeProb3;
+   uint32_t                             UVModeProb0;
+   uint32_t                             UVModeProb1;
+   uint32_t                             UVModeProb2;
+   uint32_t                             MVUpdateProbs00;
+   uint32_t                             MVUpdateProbs01;
+   uint32_t                             MVUpdateProbs02;
+   uint32_t                             MVUpdateProbs03;
+   uint32_t                             MVUpdateProbs04;
+   uint32_t                             MVUpdateProbs05;
+   uint32_t                             MVUpdateProbs06;
+   uint32_t                             MVUpdateProbs07;
+   uint32_t                             MVUpdateProbs08;
+   uint32_t                             MVUpdateProbs09;
+   uint32_t                             MVUpdateProbs010;
+   uint32_t                             MVUpdateProbs011;
+   uint32_t                             MVUpdateProbs012;
+   uint32_t                             MVUpdateProbs013;
+   uint32_t                             MVUpdateProbs014;
+   uint32_t                             MVUpdateProbs015;
+   uint32_t                             MVUpdateProbs016;
+   uint32_t                             MVUpdateProbs017;
+   uint32_t                             MVUpdateProbs018;
+   uint32_t                             MVUpdateProbs10;
+   uint32_t                             MVUpdateProbs11;
+   uint32_t                             MVUpdateProbs12;
+   uint32_t                             MVUpdateProbs13;
+   uint32_t                             MVUpdateProbs14;
+   uint32_t                             MVUpdateProbs15;
+   uint32_t                             MVUpdateProbs16;
+   uint32_t                             MVUpdateProbs17;
+   uint32_t                             MVUpdateProbs18;
+   uint32_t                             MVUpdateProbs19;
+   uint32_t                             MVUpdateProbs110;
+   uint32_t                             MVUpdateProbs111;
+   uint32_t                             MVUpdateProbs112;
+   uint32_t                             MVUpdateProbs113;
+   uint32_t                             MVUpdateProbs114;
+   uint32_t                             MVUpdateProbs115;
+   uint32_t                             MVUpdateProbs116;
+   uint32_t                             MVUpdateProbs117;
+   uint32_t                             MVUpdateProbs118;
+   int32_t                              RefLFDelta0;
+   int32_t                              RefLFDelta1;
+   int32_t                              RefLFDelta2;
+   int32_t                              RefLFDelta3;
+   int32_t                              ModeLFDelta0;
+   int32_t                              ModeLFDelta1;
+   int32_t                              ModeLFDelta2;
+   int32_t                              ModeLFDelta3;
+   uint64_t                             SegmentationIDStreamAddress;
+   uint32_t                             CoeffProbabilityStreamInMOCS;
+   uint32_t                             SegmentationIDStreamArbitrationPriorityControl;
+#define Highestpriority                          0
+#define Secondhighestpriority                    1
+#define Thirdhighestpriority                     2
+#define Lowestpriority                           3
+   bool                                 SegmentationIDStreamMemoryCompressionEnable;
+   uint32_t                             SegmentationIDStreamMemoryCompressionMode;
+   uint32_t                             SegmentationIDStreamTiledResourceMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_VP8_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_MFX_VP8_PIC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 23) |
+      __gen_uint(values->MediaCommandOpCode, 24, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->FrameWidth, 0, 7) |
+      __gen_uint(values->FrameHeight, 16, 23);
+}
+
+#define GFX125_MFX_WAIT_length                 1
+#define GFX125_MFX_WAIT_length_bias            1
+#define GFX125_MFX_WAIT_header                  \
+   .DWordLength                         =      0,  \
+   .SubOpcode                           =      0,  \
+   .CommandSubtype                      =      1,  \
+   .CommandType                         =      3
+
+struct GFX125_MFX_WAIT {
+   uint32_t                             DWordLength;
+   uint32_t                             MFXSyncControlFlag;
+   uint32_t                             SubOpcode;
+   uint32_t                             CommandSubtype;
+   uint32_t                             CommandType;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MFX_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
+                     __attribute__((unused)) void * restrict dst,
+                     __attribute__((unused)) const struct GFX125_MFX_WAIT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 5) |
+      __gen_uint(values->MFXSyncControlFlag, 8, 8) |
+      __gen_uint(values->SubOpcode, 16, 26) |
+      __gen_uint(values->CommandSubtype, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
 }
 
 #define GFX125_MI_ARB_CHECK_length             1
@@ -9880,6 +22066,63 @@ GFX125_MI_DISPLAY_FLIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->FlipType, 0, 1) |
       __gen_uint(values->VRRMasterFlip, 11, 11);
    dw[2] = __gen_address(data, &dw[2], values->DisplayBufferBaseAddress, v2, 12, 31);
+}
+
+#define GFX125_MI_FLUSH_DW_length              5
+#define GFX125_MI_FLUSH_DW_length_bias         2
+#define GFX125_MI_FLUSH_DW_header               \
+   .DWordLength                         =      3,  \
+   .MICommandOpcode                     =     38,  \
+   .CommandType                         =      0
+
+struct GFX125_MI_FLUSH_DW {
+   uint32_t                             DWordLength;
+   bool                                 VideoPipelineCacheInvalidate;
+   bool                                 NotifyEnable;
+   bool                                 FlushLLC;
+   uint32_t                             PostSyncOperation;
+   bool                                 FlushCCS;
+   bool                                 TLBInvalidate;
+   uint32_t                             StoreDataIndex;
+   uint32_t                             MICommandOpcode;
+   uint32_t                             CommandType;
+   uint32_t                             DestinationAddressType;
+#define DAT_PPGTT                                0
+#define DAT_GGTT                                 1
+   __gen_address_type                   Address;
+   uint64_t                             ImmediateData;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_MI_FLUSH_DW_pack(__attribute__((unused)) __gen_user_data *data,
+                        __attribute__((unused)) void * restrict dst,
+                        __attribute__((unused)) const struct GFX125_MI_FLUSH_DW * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 5) |
+      __gen_uint(values->VideoPipelineCacheInvalidate, 7, 7) |
+      __gen_uint(values->NotifyEnable, 8, 8) |
+      __gen_uint(values->FlushLLC, 9, 9) |
+      __gen_uint(values->PostSyncOperation, 14, 15) |
+      __gen_uint(values->FlushCCS, 16, 16) |
+      __gen_uint(values->TLBInvalidate, 18, 18) |
+      __gen_uint(values->StoreDataIndex, 21, 21) |
+      __gen_uint(values->MICommandOpcode, 23, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   const uint64_t v1 =
+      __gen_uint(values->DestinationAddressType, 2, 2);
+   const uint64_t v1_address =
+      __gen_address(data, &dw[1], values->Address, v1, 3, 47);
+   dw[1] = v1_address;
+   dw[2] = (v1_address >> 32) | (v1 >> 32);
+
+   const uint64_t v3 =
+      __gen_uint(values->ImmediateData, 0, 63);
+   dw[3] = v3;
+   dw[4] = v3 >> 32;
 }
 
 #define GFX125_MI_FORCE_WAKEUP_length          2
@@ -10915,6 +23158,7 @@ struct GFX125_PIPE_CONTROL {
    uint32_t                             DWordLength;
    bool                                 HDCPipelineFlushEnable;
    bool                                 L3ReadOnlyCacheInvalidationEnable;
+   bool                                 UntypedDataPortCacheFlushEnable;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -10938,7 +23182,7 @@ struct GFX125_PIPE_CONTROL {
 #define WritePSDepthCount                        2
 #define WriteTimestamp                           3
    bool                                 GenericMediaStateClear;
-   bool                                 PSDSyncEnable;
+   bool                                 PSSStallSyncEnable;
    bool                                 TLBInvalidate;
    bool                                 GlobalSnapshotCountReset;
    bool                                 CommandStreamerStallEnable;
@@ -10969,6 +23213,7 @@ GFX125_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DWordLength, 0, 7) |
       __gen_uint(values->HDCPipelineFlushEnable, 9, 9) |
       __gen_uint(values->L3ReadOnlyCacheInvalidationEnable, 10, 10) |
+      __gen_uint(values->UntypedDataPortCacheFlushEnable, 11, 11) |
       __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
       __gen_uint(values->_3DCommandOpcode, 24, 26) |
       __gen_uint(values->CommandSubType, 27, 28) |
@@ -10990,7 +23235,7 @@ GFX125_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->DepthStallEnable, 13, 13) |
       __gen_uint(values->PostSyncOperation, 14, 15) |
       __gen_uint(values->GenericMediaStateClear, 16, 16) |
-      __gen_uint(values->PSDSyncEnable, 17, 17) |
+      __gen_uint(values->PSSStallSyncEnable, 17, 17) |
       __gen_uint(values->TLBInvalidate, 18, 18) |
       __gen_uint(values->GlobalSnapshotCountReset, 19, 19) |
       __gen_uint(values->CommandStreamerStallEnable, 20, 20) |
@@ -11014,6 +23259,537 @@ GFX125_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    dw[5] = v4 >> 32;
 }
 
+#define GFX125_SFC_AVS_CHROMA_COEFF_TABLE_length     65
+#define GFX125_SFC_AVS_CHROMA_COEFF_TABLE_length_bias      2
+#define GFX125_SFC_AVS_CHROMA_COEFF_TABLE_header\
+   .DWordLength                         =     63,  \
+   .SubOpcodeB                          =      6,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_AVS_CHROMA_COEFF_TABLE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_SFC_AVS_CHROMA_COEFF_TABLE_BODY AVSCHROMACoefficientTableBody;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_AVS_CHROMA_COEFF_TABLE_pack(__attribute__((unused)) __gen_user_data *data,
+                                       __attribute__((unused)) void * restrict dst,
+                                       __attribute__((unused)) const struct GFX125_SFC_AVS_CHROMA_COEFF_TABLE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_SFC_AVS_CHROMA_COEFF_TABLE_BODY_pack(data, &dw[1], &values->AVSCHROMACoefficientTableBody);
+}
+
+#define GFX125_SFC_AVS_LUMA_COEFF_TABLE_length    129
+#define GFX125_SFC_AVS_LUMA_COEFF_TABLE_length_bias      2
+#define GFX125_SFC_AVS_LUMA_COEFF_TABLE_header  \
+   .DWordLength                         =    127,  \
+   .SubOpcodeB                          =      5,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_AVS_LUMA_COEFF_TABLE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_SFC_AVS_LUMA_COEFF_TABLE_BODY AVSLUMACoefficientTableBody;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_AVS_LUMA_COEFF_TABLE_pack(__attribute__((unused)) __gen_user_data *data,
+                                     __attribute__((unused)) void * restrict dst,
+                                     __attribute__((unused)) const struct GFX125_SFC_AVS_LUMA_COEFF_TABLE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_SFC_AVS_LUMA_COEFF_TABLE_BODY_pack(data, &dw[1], &values->AVSLUMACoefficientTableBody);
+}
+
+#define GFX125_SFC_AVS_STATE_length            4
+#define GFX125_SFC_AVS_STATE_length_bias       2
+#define GFX125_SFC_AVS_STATE_header             \
+   .DWordLength                         =      2,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_AVS_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_SFC_AVS_STATE_BODY     AVSStateBody;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_AVS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_SFC_AVS_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_SFC_AVS_STATE_BODY_pack(data, &dw[1], &values->AVSStateBody);
+}
+
+#define GFX125_SFC_FRAME_START_length          2
+#define GFX125_SFC_FRAME_START_length_bias      2
+#define GFX125_SFC_FRAME_START_header           \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      4,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_FRAME_START {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             FrameStartBody;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_FRAME_START_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX125_SFC_FRAME_START * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->FrameStartBody, 0, 31);
+}
+
+#define GFX125_SFC_IEF_STATE_length           24
+#define GFX125_SFC_IEF_STATE_length_bias       2
+#define GFX125_SFC_IEF_STATE_header             \
+   .DWordLength                         =     22,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_IEF_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_SFC_IEF_STATE_BODY     SFCIEFStateBody;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_IEF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                          __attribute__((unused)) void * restrict dst,
+                          __attribute__((unused)) const struct GFX125_SFC_IEF_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_SFC_IEF_STATE_BODY_pack(data, &dw[1], &values->SFCIEFStateBody);
+}
+
+#define GFX125_SFC_LOCK_length                 2
+#define GFX125_SFC_LOCK_length_bias            2
+#define GFX125_SFC_LOCK_header                  \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_LOCK {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_SFC_LOCK_BODY          SFCLockBody;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_LOCK_pack(__attribute__((unused)) __gen_user_data *data,
+                     __attribute__((unused)) void * restrict dst,
+                     __attribute__((unused)) const struct GFX125_SFC_LOCK * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_SFC_LOCK_BODY_pack(data, &dw[1], &values->SFCLockBody);
+}
+
+#define GFX125_SFC_STATE_length               32
+#define GFX125_SFC_STATE_length_bias           2
+#define GFX125_SFC_STATE_header                 \
+   .DWordLength                         =     30,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     10,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_SFC_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             SFCPipeMode;
+   uint32_t                             SFCInputChromaSubSampling;
+#define _400                                     0
+#define _420                                     1
+#define _422Horizonatal                          2
+#define _444ProgressiveInterleaved               4
+   uint32_t                             VDVEInputOrderingMode;
+   uint32_t                             InputFrameResolutionWidth;
+   uint32_t                             InputFrameResolutionHeight;
+   uint32_t                             OutputSurfaceFormatType;
+   bool                                 RGBAChannelSwapEnable;
+   uint32_t                             OutputChromaDownsamplingCositingpositionVerticalDirection;
+#define _08LeftFullPixel                         0
+#define _18                                      1
+#define _1428                                    2
+#define _38                                      3
+#define _1248                                    4
+#define _58                                      5
+#define _3468                                    6
+#define _78                                      7
+#define _88                                      8
+   uint32_t                             OutputChromaDownsamplingCositingpositionHorizontalDirection;
+#define _08LeftFullPixel                         0
+#define _18                                      1
+#define _1428                                    2
+#define _38                                      3
+#define _1248                                    4
+#define _58                                      5
+#define _3468                                    6
+#define _78                                      7
+#define _88                                      8
+   bool                                 IEFEnable;
+   bool                                 SkinToneTunedIEF_Enable;
+   bool                                 IEF4SmoothEnable;
+   uint32_t                             AVSFilterMode;
+#define _5x5PolyphasefilterBilinear              0
+#define _8x8polyphasefilterBilinear              1
+#define Bilinearfilteronly                       2
+   bool                                 AdaptiveFilterforallChannels;
+   bool                                 AVSScalingEnable;
+   bool                                 BypassYAdaptiveFiltering;
+   bool                                 BypassXAdaptiveFiltering;
+   bool                                 RGBAdaptive;
+   bool                                 ChromaUpsamplingEnable;
+   uint32_t                             MirrorType;
+#define HorizontalFlip                           0
+#define VerticalFlip                             1
+   bool                                 MirrorMode;
+   uint32_t                             RotationMode;
+#define _0                                       0
+#define _90CW                                    1
+#define _180CW                                   2
+#define _270CW                                   3
+   bool                                 ColorFillEnable;
+   bool                                 CSCEnable;
+   uint32_t                             BitDepth;
+#define SFC_10bit                                0
+#define SFC_16bit                                1
+   uint32_t                             SourceRegionWidth;
+   uint32_t                             SourceRegionHeight;
+   uint32_t                             SourceRegionHorizontalOffset;
+   uint32_t                             SourceRegionVerticalOffset;
+   uint32_t                             OutputFrameWidth;
+   uint32_t                             OutputFrameHeight;
+   uint32_t                             ScaledRegionSizeWidth;
+   uint32_t                             ScaledRegionSizeHeight;
+   int32_t                              ScaledRegionHorizontalOffset;
+   int32_t                              ScaledRegionVerticalOffset;
+   uint32_t                             GrayBarPixelUG;
+   uint32_t                             GrayBarPixelYR;
+   uint32_t                             GrayBarPixelA;
+   uint32_t                             GrayBarPixelVB;
+   uint32_t                             UVDefaultvalueforUchannel;
+   uint32_t                             UVDefaultvalueforVchannel;
+   uint32_t                             AlphaDefaultValue;
+   float                                ScalingFactorHeight;
+   float                                ScalingFactorWidth;
+   uint64_t                             OutputFrameAddress;
+   uint32_t                             OutputFrameMOCS;
+   struct GFX125_HEVC_ARBITRATION_PRIORITY OutputFrameArbitrationPriorityControl;
+   bool                                 OutputFrameMemoryCompressionEnable;
+   uint32_t                             OutputFrameMemoryCompressionMode;
+   bool                                 OutputFrameCacheSelect;
+   uint32_t                             OutputFrameTiledMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   uint64_t                             AVSLineBufferAddress;
+   uint32_t                             AVSLineBufferMOCS;
+   struct GFX125_HEVC_ARBITRATION_PRIORITY AVSLineBufferArbitrationPriorityControl;
+   bool                                 AVSLineBufferMemoryCompressionEnable;
+   uint32_t                             AVSLineBufferMemoryCompressionMode;
+#define HorizontalCompressionMode                0
+   uint32_t                             AVSLineBufferCacheSelect;
+#define LLC                                      0
+   uint32_t                             AVSLineBufferTiledMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   uint64_t                             IEFLineBufferAddress;
+   uint32_t                             IEFLineBufferMOCS;
+   struct GFX125_HEVC_ARBITRATION_PRIORITY IEFLineBufferArbitrationPriorityControl;
+   bool                                 IEFLineBufferMemoryCompressionEnable;
+   uint32_t                             IEFLineBufferMemoryCompressionMode;
+   uint32_t                             IEFLineBufferCacheSelect;
+   uint32_t                             IEFLineBufferTiledMode;
+#define TRMODE_NONE                              0
+#define TRMODE_TILEYF                            1
+#define TRMODE_TILEYS                            2
+   uint32_t                             OutputSurfaceTileWalk;
+#define TW_XMAJOR                                0
+#define TW_YMAJOR                                1
+   bool                                 OutputSurfaceTiled;
+   bool                                 OutputSurfaceHalfPitchforChroma;
+   uint32_t                             OutputSurfacePitch;
+   bool                                 OutputSurfaceInterleaveChromaEnable;
+   uint32_t                             OutputSurfaceFormat;
+   uint32_t                             OutputSurfaceYOffsetforU;
+   uint32_t                             OutputSurfaceXOffsetforU;
+   uint32_t                             OutputSurfaceYOffsetforV;
+   uint32_t                             OutputSurfaceXOffsetforV;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_SFC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX125_SFC_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->SFCPipeMode, 0, 3) |
+      __gen_uint(values->SFCInputChromaSubSampling, 4, 7) |
+      __gen_uint(values->VDVEInputOrderingMode, 8, 10);
+
+   dw[2] =
+      __gen_uint(values->InputFrameResolutionWidth, 0, 11) |
+      __gen_uint(values->InputFrameResolutionHeight, 16, 27);
+
+   dw[3] =
+      __gen_uint(values->OutputSurfaceFormatType, 0, 3) |
+      __gen_uint(values->RGBAChannelSwapEnable, 5, 5) |
+      __gen_uint(values->OutputChromaDownsamplingCositingpositionVerticalDirection, 8, 11) |
+      __gen_uint(values->OutputChromaDownsamplingCositingpositionHorizontalDirection, 12, 15);
+
+   dw[4] =
+      __gen_uint(values->IEFEnable, 0, 0) |
+      __gen_uint(values->SkinToneTunedIEF_Enable, 1, 1) |
+      __gen_uint(values->IEF4SmoothEnable, 2, 2) |
+      __gen_uint(values->AVSFilterMode, 4, 5) |
+      __gen_uint(values->AdaptiveFilterforallChannels, 6, 6) |
+      __gen_uint(values->AVSScalingEnable, 7, 7) |
+      __gen_uint(values->BypassYAdaptiveFiltering, 8, 8) |
+      __gen_uint(values->BypassXAdaptiveFiltering, 9, 9) |
+      __gen_uint(values->RGBAdaptive, 10, 10) |
+      __gen_uint(values->ChromaUpsamplingEnable, 12, 12) |
+      __gen_uint(values->MirrorType, 13, 13) |
+      __gen_uint(values->MirrorMode, 14, 14) |
+      __gen_uint(values->RotationMode, 16, 17) |
+      __gen_uint(values->ColorFillEnable, 18, 18) |
+      __gen_uint(values->CSCEnable, 19, 19) |
+      __gen_uint(values->BitDepth, 20, 21);
+
+   dw[5] =
+      __gen_uint(values->SourceRegionWidth, 0, 11) |
+      __gen_uint(values->SourceRegionHeight, 16, 27);
+
+   dw[6] =
+      __gen_uint(values->SourceRegionHorizontalOffset, 0, 11) |
+      __gen_uint(values->SourceRegionVerticalOffset, 16, 27);
+
+   dw[7] =
+      __gen_uint(values->OutputFrameWidth, 0, 11) |
+      __gen_uint(values->OutputFrameHeight, 16, 27);
+
+   dw[8] =
+      __gen_uint(values->ScaledRegionSizeWidth, 0, 11) |
+      __gen_uint(values->ScaledRegionSizeHeight, 16, 27);
+
+   dw[9] =
+      __gen_sint(values->ScaledRegionHorizontalOffset, 0, 12) |
+      __gen_sint(values->ScaledRegionVerticalOffset, 16, 28);
+
+   dw[10] =
+      __gen_uint(values->GrayBarPixelUG, 0, 9) |
+      __gen_uint(values->GrayBarPixelYR, 16, 25);
+
+   dw[11] =
+      __gen_uint(values->GrayBarPixelA, 0, 9) |
+      __gen_uint(values->GrayBarPixelVB, 16, 25);
+
+   dw[12] =
+      __gen_uint(values->UVDefaultvalueforUchannel, 0, 9) |
+      __gen_uint(values->UVDefaultvalueforVchannel, 16, 25);
+
+   dw[13] =
+      __gen_uint(values->AlphaDefaultValue, 0, 9);
+
+   dw[14] =
+      __gen_ufixed(values->ScalingFactorHeight, 0, 20, 17);
+
+   dw[15] =
+      __gen_ufixed(values->ScalingFactorWidth, 0, 20, 17);
+
+   dw[16] = 0;
+
+   const uint64_t v17 =
+      __gen_uint(values->OutputFrameAddress, 12, 47);
+   dw[17] = v17;
+   dw[18] = v17 >> 32;
+
+   uint32_t v19_0;
+   GFX125_HEVC_ARBITRATION_PRIORITY_pack(data, &v19_0, &values->OutputFrameArbitrationPriorityControl);
+
+   dw[19] =
+      __gen_uint_nonzero(values->OutputFrameMOCS, 1, 6) |
+      __gen_uint(v19_0, 7, 8) |
+      __gen_uint(values->OutputFrameMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->OutputFrameMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->OutputFrameCacheSelect, 12, 12) |
+      __gen_uint(values->OutputFrameTiledMode, 13, 14);
+
+   const uint64_t v20 =
+      __gen_uint(values->AVSLineBufferAddress, 12, 47);
+   dw[20] = v20;
+   dw[21] = v20 >> 32;
+
+   uint32_t v22_0;
+   GFX125_HEVC_ARBITRATION_PRIORITY_pack(data, &v22_0, &values->AVSLineBufferArbitrationPriorityControl);
+
+   dw[22] =
+      __gen_uint_nonzero(values->AVSLineBufferMOCS, 1, 6) |
+      __gen_uint(v22_0, 7, 8) |
+      __gen_uint(values->AVSLineBufferMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->AVSLineBufferMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->AVSLineBufferCacheSelect, 12, 12) |
+      __gen_uint(values->AVSLineBufferTiledMode, 13, 14);
+
+   const uint64_t v23 =
+      __gen_uint(values->IEFLineBufferAddress, 12, 47);
+   dw[23] = v23;
+   dw[24] = v23 >> 32;
+
+   uint32_t v25_0;
+   GFX125_HEVC_ARBITRATION_PRIORITY_pack(data, &v25_0, &values->IEFLineBufferArbitrationPriorityControl);
+
+   dw[25] =
+      __gen_uint_nonzero(values->IEFLineBufferMOCS, 1, 6) |
+      __gen_uint(v25_0, 7, 8) |
+      __gen_uint(values->IEFLineBufferMemoryCompressionEnable, 9, 9) |
+      __gen_uint(values->IEFLineBufferMemoryCompressionMode, 10, 10) |
+      __gen_uint(values->IEFLineBufferCacheSelect, 12, 12) |
+      __gen_uint(values->IEFLineBufferTiledMode, 13, 14);
+
+   dw[26] = 0;
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] =
+      __gen_uint(values->OutputSurfaceTileWalk, 0, 0) |
+      __gen_uint(values->OutputSurfaceTiled, 1, 1) |
+      __gen_uint(values->OutputSurfaceHalfPitchforChroma, 2, 2) |
+      __gen_uint(values->OutputSurfacePitch, 3, 19) |
+      __gen_uint(values->OutputSurfaceInterleaveChromaEnable, 27, 27) |
+      __gen_uint(values->OutputSurfaceFormat, 28, 31);
+
+   dw[30] =
+      __gen_uint(values->OutputSurfaceYOffsetforU, 0, 13) |
+      __gen_uint(values->OutputSurfaceXOffsetforU, 16, 29);
+
+   dw[31] =
+      __gen_uint(values->OutputSurfaceYOffsetforV, 0, 13) |
+      __gen_uint(values->OutputSurfaceXOffsetforV, 16, 29);
+}
+
 #define GFX125_STATE_BASE_ADDRESS_length      22
 #define GFX125_STATE_BASE_ADDRESS_length_bias      2
 #define GFX125_STATE_BASE_ADDRESS_header        \
@@ -11033,6 +23809,12 @@ struct GFX125_STATE_BASE_ADDRESS {
    uint32_t                             GeneralStateMOCS;
    __gen_address_type                   GeneralStateBaseAddress;
    uint32_t                             StatelessDataPortAccessMOCS;
+   uint32_t                             L1CacheControl;
+#define L1CC_WBP                                 0
+#define L1CC_UC                                  1
+#define L1CC_WB                                  2
+#define L1CC_WT                                  3
+#define L1CC_WS                                  4
    bool                                 SurfaceStateBaseAddressModifyEnable;
    uint32_t                             SurfaceStateMOCS;
    __gen_address_type                   SurfaceStateBaseAddress;
@@ -11079,18 +23861,19 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint64_t v1 =
       __gen_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->GeneralStateMOCS, 4, 10);
+      __gen_uint_nonzero(values->GeneralStateMOCS, 4, 10);
    const uint64_t v1_address =
       __gen_address(data, &dw[1], values->GeneralStateBaseAddress, v1, 12, 63);
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
    dw[3] =
-      __gen_uint(values->StatelessDataPortAccessMOCS, 16, 22);
+      __gen_uint_nonzero(values->StatelessDataPortAccessMOCS, 16, 22) |
+      __gen_uint(values->L1CacheControl, 23, 25);
 
    const uint64_t v4 =
       __gen_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->SurfaceStateMOCS, 4, 10);
+      __gen_uint_nonzero(values->SurfaceStateMOCS, 4, 10);
    const uint64_t v4_address =
       __gen_address(data, &dw[4], values->SurfaceStateBaseAddress, v4, 12, 63);
    dw[4] = v4_address;
@@ -11098,7 +23881,7 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint64_t v6 =
       __gen_uint(values->DynamicStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->DynamicStateMOCS, 4, 10);
+      __gen_uint_nonzero(values->DynamicStateMOCS, 4, 10);
    const uint64_t v6_address =
       __gen_address(data, &dw[6], values->DynamicStateBaseAddress, v6, 12, 63);
    dw[6] = v6_address;
@@ -11106,7 +23889,7 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint64_t v8 =
       __gen_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->IndirectObjectMOCS, 4, 10);
+      __gen_uint_nonzero(values->IndirectObjectMOCS, 4, 10);
    const uint64_t v8_address =
       __gen_address(data, &dw[8], values->IndirectObjectBaseAddress, v8, 12, 63);
    dw[8] = v8_address;
@@ -11114,7 +23897,7 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint64_t v10 =
       __gen_uint(values->InstructionBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->InstructionMOCS, 4, 10);
+      __gen_uint_nonzero(values->InstructionMOCS, 4, 10);
    const uint64_t v10_address =
       __gen_address(data, &dw[10], values->InstructionBaseAddress, v10, 12, 63);
    dw[10] = v10_address;
@@ -11138,7 +23921,7 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint64_t v16 =
       __gen_uint(values->BindlessSurfaceStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->BindlessSurfaceStateMOCS, 4, 10);
+      __gen_uint_nonzero(values->BindlessSurfaceStateMOCS, 4, 10);
    const uint64_t v16_address =
       __gen_address(data, &dw[16], values->BindlessSurfaceStateBaseAddress, v16, 12, 63);
    dw[16] = v16_address;
@@ -11149,7 +23932,7 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
 
    const uint64_t v19 =
       __gen_uint(values->BindlessSamplerStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->BindlessSamplerStateMOCS, 4, 10);
+      __gen_uint_nonzero(values->BindlessSamplerStateMOCS, 4, 10);
    const uint64_t v19_address =
       __gen_address(data, &dw[19], values->BindlessSamplerStateBaseAddress, v19, 12, 63);
    dw[19] = v19_address;
@@ -11195,6 +23978,1169 @@ GFX125_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_offset(values->SystemInstructionPointer, 4, 63);
    dw[1] = v1;
    dw[2] = v1 >> 32;
+}
+
+#define GFX125_VDENC_CONST_QPT_STATE_length     62
+#define GFX125_VDENC_CONST_QPT_STATE_length_bias      2
+#define GFX125_VDENC_CONST_QPT_STATE_header     \
+   .DWordLength                         =     60,  \
+   .SubOpcodeB                          =      6,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_CONST_QPT_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             QPLambdaArrayIndexn;
+   uint32_t                             SkipThresholdArrayIndexn;
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix0ArrayIndexn;
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix135ArrayIndexn;
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix2ArrayIndexn;
+   uint32_t                             SICForwardTransformCoeffThresholdMatrix46ArrayIndexn;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_CONST_QPT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                  __attribute__((unused)) void * restrict dst,
+                                  __attribute__((unused)) const struct GFX125_VDENC_CONST_QPT_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->QPLambdaArrayIndexn, 0, 7);
+
+   dw[2] = 0;
+
+   dw[3] = 0;
+
+   dw[4] = 0;
+
+   dw[5] = 0;
+
+   dw[6] = 0;
+
+   dw[7] = 0;
+
+   dw[8] = 0;
+
+   dw[9] = 0;
+
+   dw[10] = 0;
+
+   dw[11] = 0;
+
+   dw[12] =
+      __gen_uint(values->SkipThresholdArrayIndexn, 0, 15);
+
+   dw[13] = 0;
+
+   dw[14] = 0;
+
+   dw[15] = 0;
+
+   dw[16] = 0;
+
+   dw[17] = 0;
+
+   dw[18] = 0;
+
+   dw[19] = 0;
+
+   dw[20] = 0;
+
+   dw[21] = 0;
+
+   dw[22] = 0;
+
+   dw[23] = 0;
+
+   dw[24] = 0;
+
+   dw[25] = 0;
+
+   dw[26] =
+      __gen_uint(values->SICForwardTransformCoeffThresholdMatrix0ArrayIndexn, 0, 15);
+
+   dw[27] = 0;
+
+   dw[28] = 0;
+
+   dw[29] = 0;
+
+   dw[30] = 0;
+
+   dw[31] = 0;
+
+   dw[32] = 0;
+
+   dw[33] = 0;
+
+   dw[34] = 0;
+
+   dw[35] = 0;
+
+   dw[36] = 0;
+
+   dw[37] = 0;
+
+   dw[38] = 0;
+
+   dw[39] = 0;
+
+   dw[40] =
+      __gen_uint(values->SICForwardTransformCoeffThresholdMatrix135ArrayIndexn, 0, 7);
+
+   dw[41] = 0;
+
+   dw[42] = 0;
+
+   dw[43] = 0;
+
+   dw[44] = 0;
+
+   dw[45] = 0;
+
+   dw[46] = 0;
+
+   dw[47] =
+      __gen_uint(values->SICForwardTransformCoeffThresholdMatrix2ArrayIndexn, 0, 7);
+
+   dw[48] = 0;
+
+   dw[49] = 0;
+
+   dw[50] = 0;
+
+   dw[51] = 0;
+
+   dw[52] = 0;
+
+   dw[53] = 0;
+
+   dw[54] =
+      __gen_uint(values->SICForwardTransformCoeffThresholdMatrix46ArrayIndexn, 0, 7);
+
+   dw[55] = 0;
+
+   dw[56] = 0;
+
+   dw[57] = 0;
+
+   dw[58] = 0;
+
+   dw[59] = 0;
+
+   dw[60] = 0;
+
+   dw[61] = 0;
+}
+
+#define GFX125_VDENC_DS_REF_SURFACE_STATE_length      6
+#define GFX125_VDENC_DS_REF_SURFACE_STATE_length_bias      2
+#define GFX125_VDENC_DS_REF_SURFACE_STATE_header\
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      3,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_DS_REF_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_VDENC_SURFACE_STATE_FIELDS _8XSurfaceState;
+   struct GFX125_VDENC_SURFACE_STATE_FIELDS _4XSurfaceState;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_DS_REF_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                       __attribute__((unused)) void * restrict dst,
+                                       __attribute__((unused)) const struct GFX125_VDENC_DS_REF_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] = 0;
+
+   GFX125_VDENC_SURFACE_STATE_FIELDS_pack(data, &dw[2], &values->_8XSurfaceState);
+}
+
+#define GFX125_VDENC_IMG_STATE_length         36
+#define GFX125_VDENC_IMG_STATE_length_bias      2
+#define GFX125_VDENC_IMG_STATE_header           \
+   .DWordLength                         =     34,  \
+   .SubOpcodeB                          =      5,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_IMG_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 BidirectionalMixDisable;
+   uint32_t                             VDENCPerfMode;
+#define Speed                                    1
+   bool                                 TimeBudgetOverflowCheck;
+   bool                                 VDEncExtendedPAK_OBJ_CMDEnable;
+   bool                                 Transform8x8;
+   uint32_t                             VDEncL1CachePriority;
+   uint32_t                             LambdaValueforTrellis;
+   bool                                 UnidirectionalMixDisable;
+   uint32_t                             PictureWidth;
+   uint32_t                             SubPelMode;
+   bool                                 ForwardTransformSkipCheckEnable;
+   bool                                 BlockBasedSkipEnable;
+   uint32_t                             InterSADMeasureAdjustment;
+#define ISMA_None                                0
+#define ISMA_HaarTransformAdjusted               2
+   uint32_t                             IntraSADMeasureAdjustment;
+#define ISMA_None                                0
+#define ISMA_HaarTransformAdjusted               2
+   uint32_t                             SubMBSubPartitionMask;
+   uint32_t                             BlockBasedSkipType;
+   uint32_t                             PictureHeight;
+   bool                                 CREPrefetchEnable;
+   bool                                 HMERef1Disable;
+   uint32_t                             MBSliceThresholdValue;
+   bool                                 ConstrainedIntraPrediction;
+   uint32_t                             PictureType;
+#define PI_I                                     0
+#define PI_P                                     1
+   uint32_t                             SliceMBHeight;
+   int32_t                              HME0XOffset;
+   int32_t                              HME0YOffset;
+   int32_t                              HME1XOffset;
+   int32_t                              HME1YOffset;
+   uint32_t                             LumaIntraPartitionMask;
+   uint32_t                             NonSkipZeroMVCostAdded;
+   uint32_t                             NonSkipMBModeCostAdded;
+   uint32_t                             MVCostScalingFactor;
+#define Qpel                                     0
+#define Hpel                                     1
+#define Pel                                      2
+#define _2pel                                    3
+   bool                                 BiLinearFilterEnable;
+   uint32_t                             RefIDCostModeSelect;
+   uint32_t                             Mode0Cost;
+   uint32_t                             Mode1Cost;
+   uint32_t                             Mode2Cost;
+   uint32_t                             Mode3Cost;
+   uint32_t                             Mode4Cost;
+   uint32_t                             Mode5Cost;
+   uint32_t                             Mode6Cost;
+   uint32_t                             Mode7Cost;
+   uint32_t                             Mode8Cost;
+   uint32_t                             Mode9Cost;
+   uint32_t                             RefIDCost;
+   uint32_t                             ChromaIntraModeCost;
+   struct GFX125_IMAGE_STATE_COST       MVCost;
+   uint32_t                             QpPrimeY;
+   uint32_t                             TargetSizeInWord;
+   uint32_t                             AVCIntra4x4ModeMask;
+   uint32_t                             AVCIntra8x8ModeMask;
+   uint32_t                             AVCIntra16x16ModeMask;
+   uint32_t                             AVCIntraChromaModeMask;
+   uint32_t                             IntraComputeType;
+   uint32_t                             PenaltyforIntra16x16NonDCPrediction;
+   uint32_t                             PenaltyforIntra8x8NonDCPrediction;
+   uint32_t                             PenaltyforIntra4x4NonDCPrediction;
+   uint32_t                             IntraRefreshMBPosition;
+   uint32_t                             IntraRefreshMBSize;
+   bool                                 IntraRefreshEnableRollingIEnable;
+   uint32_t                             IntraRefreshMode;
+#define RowBased                                 0
+#define ColumnBased                              1
+   int32_t                              QPAdjustmentforRollingI;
+   uint32_t                             PanicModeMBThreshold;
+   uint32_t                             SmallMbSizeInWord;
+   uint32_t                             LargeMbSizeInWord;
+   int32_t                              L0NumberofReferences;
+   int32_t                              L1NumberofReferences;
+   uint32_t                             MacroblockBudget;
+   uint32_t                             InitialTime;
+   uint32_t                             HMERefWindowsCombiningThreshold;
+   uint32_t                             MaxHorizontalMVRange;
+   uint32_t                             MaxVerticalMVRange;
+   struct GFX125_IMAGE_STATE_COST       HMEMVCost;
+   int32_t                              ROIQPAdjustmentforZone0;
+   int32_t                              ROIQPAdjustmentforZone1;
+   int32_t                              ROIQPAdjustmentforZone2;
+   int32_t                              ROIQPAdjustmentforZone3;
+   int32_t                              QPAdjustmentforShapeBestIntra4x4Winner;
+   int32_t                              QPAdjustmentforShapeBestIntra8x8Winner;
+   int32_t                              QPAdjustmentforShapeBestIntra16x16Winner;
+   int32_t                              BestDistortionQPAdjustmentforZone0;
+   int32_t                              BestDistortionQPAdjustmentforZone1;
+   int32_t                              BestDistortionQPAdjustmentforZone2;
+   int32_t                              BestDistortionQPAdjustmentforZone3;
+   uint32_t                             SadHaarThreshold0;
+   uint32_t                             SadHaarThreshold1;
+   uint32_t                             SadHaarThreshold2;
+   uint32_t                             MinQP;
+   uint32_t                             MaxQP;
+   uint32_t                             MaxDeltaQP;
+   bool                                 ROIEnable;
+   bool                                 FwdPredictor0MVEnable;
+   bool                                 BwdPredictor1MVEnable;
+   bool                                 MBLevelQPEnable;
+   bool                                 TargetSizeinWordsMBMaxSizeinWordsMBEnable;
+   bool                                 PPMVDisable;
+   bool                                 CoefficientClampEnable;
+   bool                                 LongTermReferenceFrameBwdRef0Indicator;
+   bool                                 LongTermReferenceFrameFwdRef2Indicator;
+   bool                                 LongTermReferenceFrameFwdRef1Indicator;
+   bool                                 LongTermReferenceFrameFwdRef0Indicator;
+   uint32_t                             MidpointSadHaar;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                            __attribute__((unused)) void * restrict dst,
+                            __attribute__((unused)) const struct GFX125_VDENC_IMG_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->BidirectionalMixDisable, 2, 2) |
+      __gen_uint(values->VDENCPerfMode, 3, 3) |
+      __gen_uint(values->TimeBudgetOverflowCheck, 4, 4) |
+      __gen_uint(values->VDEncExtendedPAK_OBJ_CMDEnable, 6, 6) |
+      __gen_uint(values->Transform8x8, 7, 7) |
+      __gen_uint(values->VDEncL1CachePriority, 8, 9) |
+      __gen_uint(values->LambdaValueforTrellis, 16, 31);
+
+   dw[2] =
+      __gen_uint(values->UnidirectionalMixDisable, 28, 28);
+
+   dw[3] =
+      __gen_uint(values->PictureWidth, 16, 31);
+
+   dw[4] =
+      __gen_uint(values->SubPelMode, 12, 13) |
+      __gen_uint(values->ForwardTransformSkipCheckEnable, 17, 17) |
+      __gen_uint(values->BlockBasedSkipEnable, 19, 19) |
+      __gen_uint(values->InterSADMeasureAdjustment, 20, 21) |
+      __gen_uint(values->IntraSADMeasureAdjustment, 22, 23) |
+      __gen_uint(values->SubMBSubPartitionMask, 24, 30) |
+      __gen_uint(values->BlockBasedSkipType, 31, 31);
+
+   dw[5] =
+      __gen_uint(values->PictureHeight, 0, 15) |
+      __gen_uint(values->CREPrefetchEnable, 16, 16) |
+      __gen_uint(values->HMERef1Disable, 17, 17) |
+      __gen_uint(values->MBSliceThresholdValue, 18, 21) |
+      __gen_uint(values->ConstrainedIntraPrediction, 26, 26) |
+      __gen_uint(values->PictureType, 29, 30);
+
+   dw[6] =
+      __gen_uint(values->SliceMBHeight, 0, 15);
+
+   dw[7] =
+      __gen_sint(values->HME0XOffset, 0, 7) |
+      __gen_sint(values->HME0YOffset, 8, 15) |
+      __gen_sint(values->HME1XOffset, 16, 23) |
+      __gen_sint(values->HME1YOffset, 24, 31);
+
+   dw[8] =
+      __gen_uint(values->LumaIntraPartitionMask, 0, 4) |
+      __gen_uint(values->NonSkipZeroMVCostAdded, 5, 5) |
+      __gen_uint(values->NonSkipMBModeCostAdded, 6, 6) |
+      __gen_uint(values->MVCostScalingFactor, 16, 17) |
+      __gen_uint(values->BiLinearFilterEnable, 18, 18) |
+      __gen_uint(values->RefIDCostModeSelect, 22, 22);
+
+   dw[9] =
+      __gen_uint(values->Mode0Cost, 0, 7) |
+      __gen_uint(values->Mode1Cost, 8, 15) |
+      __gen_uint(values->Mode2Cost, 16, 23) |
+      __gen_uint(values->Mode3Cost, 24, 31);
+
+   dw[10] =
+      __gen_uint(values->Mode4Cost, 0, 7) |
+      __gen_uint(values->Mode5Cost, 8, 15) |
+      __gen_uint(values->Mode6Cost, 16, 23) |
+      __gen_uint(values->Mode7Cost, 24, 31);
+
+   dw[11] =
+      __gen_uint(values->Mode8Cost, 0, 7) |
+      __gen_uint(values->Mode9Cost, 8, 15) |
+      __gen_uint(values->RefIDCost, 16, 23) |
+      __gen_uint(values->ChromaIntraModeCost, 24, 31);
+
+   GFX125_IMAGE_STATE_COST_pack(data, &dw[12], &values->MVCost);
+
+   dw[14] =
+      __gen_uint(values->QpPrimeY, 0, 7) |
+      __gen_uint(values->TargetSizeInWord, 24, 31);
+
+   dw[15] = 0;
+
+   dw[16] = 0;
+
+   dw[17] =
+      __gen_uint(values->AVCIntra4x4ModeMask, 0, 8) |
+      __gen_uint(values->AVCIntra8x8ModeMask, 16, 24);
+
+   dw[18] =
+      __gen_uint(values->AVCIntra16x16ModeMask, 0, 3) |
+      __gen_uint(values->AVCIntraChromaModeMask, 4, 7) |
+      __gen_uint(values->IntraComputeType, 8, 9);
+
+   dw[19] = 0;
+
+   dw[20] =
+      __gen_uint(values->PenaltyforIntra16x16NonDCPrediction, 0, 7) |
+      __gen_uint(values->PenaltyforIntra8x8NonDCPrediction, 8, 15) |
+      __gen_uint(values->PenaltyforIntra4x4NonDCPrediction, 16, 23);
+
+   dw[21] =
+      __gen_uint(values->IntraRefreshMBPosition, 0, 7) |
+      __gen_uint(values->IntraRefreshMBSize, 8, 15) |
+      __gen_uint(values->IntraRefreshEnableRollingIEnable, 16, 16) |
+      __gen_uint(values->IntraRefreshMode, 17, 17) |
+      __gen_sint(values->QPAdjustmentforRollingI, 24, 31);
+
+   dw[22] =
+      __gen_uint(values->PanicModeMBThreshold, 0, 15) |
+      __gen_uint(values->SmallMbSizeInWord, 16, 23) |
+      __gen_uint(values->LargeMbSizeInWord, 24, 31);
+
+   dw[23] =
+      __gen_sint(values->L0NumberofReferences, 0, 7) |
+      __gen_sint(values->L1NumberofReferences, 16, 23);
+
+   dw[24] =
+      __gen_uint(values->MacroblockBudget, 0, 15) |
+      __gen_uint(values->InitialTime, 16, 31);
+
+   dw[25] = 0;
+
+   dw[26] =
+      __gen_uint(values->HMERefWindowsCombiningThreshold, 8, 15);
+
+   dw[27] =
+      __gen_uint(values->MaxHorizontalMVRange, 0, 15) |
+      __gen_uint(values->MaxVerticalMVRange, 16, 31);
+
+   GFX125_IMAGE_STATE_COST_pack(data, &dw[28], &values->HMEMVCost);
+
+   dw[30] =
+      __gen_sint(values->ROIQPAdjustmentforZone0, 0, 3) |
+      __gen_sint(values->ROIQPAdjustmentforZone1, 4, 7) |
+      __gen_sint(values->ROIQPAdjustmentforZone2, 8, 11) |
+      __gen_sint(values->ROIQPAdjustmentforZone3, 12, 15) |
+      __gen_sint(values->QPAdjustmentforShapeBestIntra4x4Winner, 16, 19) |
+      __gen_sint(values->QPAdjustmentforShapeBestIntra8x8Winner, 20, 23) |
+      __gen_sint(values->QPAdjustmentforShapeBestIntra16x16Winner, 24, 27);
+
+   dw[31] =
+      __gen_sint(values->BestDistortionQPAdjustmentforZone0, 0, 3) |
+      __gen_sint(values->BestDistortionQPAdjustmentforZone1, 4, 7) |
+      __gen_sint(values->BestDistortionQPAdjustmentforZone2, 8, 11) |
+      __gen_sint(values->BestDistortionQPAdjustmentforZone3, 12, 15) |
+      __gen_uint(values->SadHaarThreshold0, 16, 31);
+
+   dw[32] =
+      __gen_uint(values->SadHaarThreshold1, 0, 15) |
+      __gen_uint(values->SadHaarThreshold2, 16, 31);
+
+   dw[33] =
+      __gen_uint(values->MinQP, 0, 7) |
+      __gen_uint(values->MaxQP, 8, 15) |
+      __gen_uint(values->MaxDeltaQP, 24, 27);
+
+   dw[34] =
+      __gen_uint(values->ROIEnable, 0, 0) |
+      __gen_uint(values->FwdPredictor0MVEnable, 1, 1) |
+      __gen_uint(values->BwdPredictor1MVEnable, 2, 2) |
+      __gen_uint(values->MBLevelQPEnable, 3, 3) |
+      __gen_uint(values->TargetSizeinWordsMBMaxSizeinWordsMBEnable, 4, 4) |
+      __gen_uint(values->PPMVDisable, 8, 8) |
+      __gen_uint(values->CoefficientClampEnable, 9, 9) |
+      __gen_uint(values->LongTermReferenceFrameBwdRef0Indicator, 10, 10) |
+      __gen_uint(values->LongTermReferenceFrameFwdRef2Indicator, 11, 11) |
+      __gen_uint(values->LongTermReferenceFrameFwdRef1Indicator, 12, 12) |
+      __gen_uint(values->LongTermReferenceFrameFwdRef0Indicator, 13, 13) |
+      __gen_uint(values->MidpointSadHaar, 16, 31);
+
+   dw[35] = 0;
+}
+
+#define GFX125_VDENC_PIPE_BUF_ADDR_STATE_length     38
+#define GFX125_VDENC_PIPE_BUF_ADDR_STATE_length_bias      2
+#define GFX125_VDENC_PIPE_BUF_ADDR_STATE_header \
+   .DWordLength                         =     36,  \
+   .SubOpcodeB                          =      4,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_PIPE_BUF_ADDR_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_VDENC_PICTURE          DSFWDREF0;
+   struct GFX125_VDENC_PICTURE          DSFWDREF1;
+   struct GFX125_VDENC_PICTURE          OriginalUncompressedPicture;
+   struct GFX125_VDENC_PICTURE          StreamInDataPicture;
+   struct GFX125_VDENC_PICTURE          RowStoreScratchBuffer;
+   struct GFX125_VDENC_PICTURE          ColocatedMVReadBuffer;
+   struct GFX125_VDENC_PICTURE          FWDREF0;
+   struct GFX125_VDENC_PICTURE          FWDREF1;
+   struct GFX125_VDENC_PICTURE          FWDREF2;
+   struct GFX125_VDENC_PICTURE          BWDREF0;
+   struct GFX125_VDENC_PICTURE          VDEncStatisticsStreamOut;
+   struct GFX125_VDENC_PICTURE          DSFWDREF04X;
+   struct GFX125_VDENC_PICTURE          DSFWDREF14X;
+   struct GFX125_VDENC_PICTURE          VDEncLCUPAK_OBJ_CMDBuffer;
+   struct GFX125_VDENC_PICTURE          ScaledReferenceSurface8X;
+   struct GFX125_VDENC_PICTURE          ScaledReferenceSurface4X;
+   struct GFX125_VDENC_PICTURE          VP9SegmentationMapStreamInBuffer;
+   struct GFX125_VDENC_PICTURE          VP9SegmentationMapStreamOutBuffer;
+   uint32_t                             WeightsHistogramStreamOutOffset;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                      __attribute__((unused)) void * restrict dst,
+                                      __attribute__((unused)) const struct GFX125_VDENC_PIPE_BUF_ADDR_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[1], &values->DSFWDREF0);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[4], &values->DSFWDREF1);
+
+   dw[7] = 0;
+
+   dw[8] = 0;
+
+   dw[9] = 0;
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[10], &values->OriginalUncompressedPicture);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[13], &values->StreamInDataPicture);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[16], &values->RowStoreScratchBuffer);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[19], &values->ColocatedMVReadBuffer);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[22], &values->FWDREF0);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[25], &values->FWDREF1);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[28], &values->FWDREF2);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[31], &values->BWDREF0);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[34], &values->VDEncStatisticsStreamOut);
+
+   GFX125_VDENC_PICTURE_pack(data, &dw[37], &values->DSFWDREF04X);
+}
+
+#define GFX125_VDENC_PIPE_MODE_SELECT_length      2
+#define GFX125_VDENC_PIPE_MODE_SELECT_length_bias      2
+#define GFX125_VDENC_PIPE_MODE_SELECT_header    \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_PIPE_MODE_SELECT {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             StandardSelect;
+#define SS_HEVC                                  0
+#define SS_VP9                                   1
+#define SS_AVC                                   2
+   bool                                 ScalabilityMode;
+   bool                                 FrameStatisticsStreamOutEnable;
+   bool                                 VDEncPAK_OBJ_CMDStreamOutEnable;
+   bool                                 TLBPrefetchEnable;
+   bool                                 PAKThresholdCheckEnable;
+   bool                                 VDEncStreamInEnable;
+   bool                                 DownScaled8xWriteDisable;
+   bool                                 DownScaled4xWriteDisable;
+   uint32_t                             BitDepth;
+#define _8bit                                    0
+#define _10bit                                   2
+   uint32_t                             PAKChromaSubSamplingType;
+#define _420                                     1
+#define _444                                     3
+   bool                                 OutputRangeControlAfterColorSpaceConversion;
+   bool                                 DisableSpeedModeFetchOptimization;
+   bool                                 HMERegionPrefetchEnable;
+   uint32_t                             TopPrefetchEnableMode;
+   bool                                 LeftPrefetchAtWrapAround;
+   uint32_t                             VerticalShift32Minus1;
+   uint32_t                             HzShift32Minus1;
+   uint32_t                             NumberofVerticalRequests;
+   uint32_t                             NumberofHorizontalRequests;
+   uint32_t                             PrefetchOffsetforReference;
+   bool                                 SourceLumaPackedDataTLBPrefetchEnable;
+   bool                                 SourceChromaTLBPrefetchEnable;
+   uint32_t                             VerticalShift32Minus1Src;
+   uint32_t                             HzShift32Minus1Src;
+   uint32_t                             NumberofVerticalRequestsforSource;
+   uint32_t                             NumberofHorizontalRequestforSource;
+   uint32_t                             PrefetchOffsetforSource;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
+                                   __attribute__((unused)) void * restrict dst,
+                                   __attribute__((unused)) const struct GFX125_VDENC_PIPE_MODE_SELECT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->StandardSelect, 0, 3) |
+      __gen_uint(values->ScalabilityMode, 4, 4) |
+      __gen_uint(values->FrameStatisticsStreamOutEnable, 5, 5) |
+      __gen_uint(values->VDEncPAK_OBJ_CMDStreamOutEnable, 6, 6) |
+      __gen_uint(values->TLBPrefetchEnable, 7, 7) |
+      __gen_uint(values->PAKThresholdCheckEnable, 8, 8) |
+      __gen_uint(values->VDEncStreamInEnable, 9, 9) |
+      __gen_uint(values->DownScaled8xWriteDisable, 10, 10) |
+      __gen_uint(values->DownScaled4xWriteDisable, 11, 11) |
+      __gen_uint(values->BitDepth, 12, 14) |
+      __gen_uint(values->PAKChromaSubSamplingType, 15, 16) |
+      __gen_uint(values->OutputRangeControlAfterColorSpaceConversion, 17, 17) |
+      __gen_uint(values->DisableSpeedModeFetchOptimization, 31, 31);
+}
+
+#define GFX125_VDENC_REF_SURFACE_STATE_length      6
+#define GFX125_VDENC_REF_SURFACE_STATE_length_bias      2
+#define GFX125_VDENC_REF_SURFACE_STATE_header   \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      2,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_REF_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_VDENC_SURFACE_STATE_FIELDS SurfaceState;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_REF_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_VDENC_REF_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] = 0;
+
+   GFX125_VDENC_SURFACE_STATE_FIELDS_pack(data, &dw[2], &values->SurfaceState);
+}
+
+#define GFX125_VDENC_SRC_SURFACE_STATE_length      6
+#define GFX125_VDENC_SRC_SURFACE_STATE_length_bias      2
+#define GFX125_VDENC_SRC_SURFACE_STATE_header   \
+   .DWordLength                         =      4,  \
+   .SubOpcodeB                          =      1,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_SRC_SURFACE_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   struct GFX125_VDENC_SURFACE_STATE_FIELDS SurfaceState;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_SRC_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                    __attribute__((unused)) void * restrict dst,
+                                    __attribute__((unused)) const struct GFX125_VDENC_SRC_SURFACE_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] = 0;
+
+   GFX125_VDENC_SURFACE_STATE_FIELDS_pack(data, &dw[2], &values->SurfaceState);
+}
+
+#define GFX125_VDENC_WALKER_STATE_length       2
+#define GFX125_VDENC_WALKER_STATE_length_bias      2
+#define GFX125_VDENC_WALKER_STATE_header        \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      7,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_WALKER_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   uint32_t                             MBLCUStartYPosition;
+   uint32_t                             MBLCUStartXPosition;
+   bool                                 FirstSuperSlice;
+   uint32_t                             NextSliceMBStartYPosition;
+   uint32_t                             NextSliceMBLCUStartXPosition;
+   uint32_t                             Log2WeightDenominatorLuma;
+   uint32_t                             HEVCVP9Log2WeightDenominatorLuma;
+   uint32_t                             NumberofParallelEngines;
+   uint32_t                             TileNumber;
+   uint32_t                             TileStartCTBY;
+   uint32_t                             TileStartCTBX;
+   uint32_t                             TileWidth;
+   uint32_t                             TileHeight;
+   bool                                 TileStreamInOffsetEnable;
+   uint32_t                             TileStreamInOffset;
+   bool                                 TileRowStoreOffsetEnable;
+   uint32_t                             TileRowStoreOffset;
+   bool                                 TileStreamOutOffsetEnable;
+   uint32_t                             TileStreamOutOffset;
+   bool                                 TileLCUStreamOutOffsetEnable;
+   uint32_t                             TileLCUStreamOutOffset;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_WALKER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                               __attribute__((unused)) void * restrict dst,
+                               __attribute__((unused)) const struct GFX125_VDENC_WALKER_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->MBLCUStartYPosition, 0, 8) |
+      __gen_uint(values->MBLCUStartXPosition, 16, 24) |
+      __gen_uint(values->FirstSuperSlice, 28, 28);
+}
+
+#define GFX125_VDENC_WEIGHTSOFFSETS_STATE_length      2
+#define GFX125_VDENC_WEIGHTSOFFSETS_STATE_length_bias      2
+#define GFX125_VDENC_WEIGHTSOFFSETS_STATE_header\
+   .DWordLength                         =      1,  \
+   .SubOpcodeB                          =      8,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpCode                  =      1,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VDENC_WEIGHTSOFFSETS_STATE {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpCode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   int32_t                              WeightsForwardReference0;
+   int32_t                              OffsetForwardReference0;
+   int32_t                              WeightsForwardReference1;
+   int32_t                              OffsetForwardReference1;
+   int32_t                              WeightsForwardReference2;
+   int32_t                              OffsetForwardReference2;
+   int32_t                              HEVCVP9WeightsBackwardReference0;
+   int32_t                              HEVCVP9OffsetBackwardReference0;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VDENC_WEIGHTSOFFSETS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
+                                       __attribute__((unused)) void * restrict dst,
+                                       __attribute__((unused)) const struct GFX125_VDENC_WEIGHTSOFFSETS_STATE * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpCode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_sint(values->WeightsForwardReference0, 0, 7) |
+      __gen_sint(values->OffsetForwardReference0, 8, 15) |
+      __gen_sint(values->WeightsForwardReference1, 16, 23) |
+      __gen_sint(values->OffsetForwardReference1, 24, 31);
+}
+
+#define GFX125_VD_PIPELINE_FLUSH_length        2
+#define GFX125_VD_PIPELINE_FLUSH_length_bias      2
+#define GFX125_VD_PIPELINE_FLUSH_header         \
+   .DWordLength                         =      0,  \
+   .SubOpcodeB                          =      0,  \
+   .SubOpcodeA                          =      0,  \
+   .MediaCommandOpcode                  =     15,  \
+   .Pipeline                            =      2,  \
+   .CommandType                         =      3
+
+struct GFX125_VD_PIPELINE_FLUSH {
+   uint32_t                             DWordLength;
+   uint32_t                             SubOpcodeB;
+   uint32_t                             SubOpcodeA;
+   uint32_t                             MediaCommandOpcode;
+   uint32_t                             Pipeline;
+   uint32_t                             CommandType;
+   bool                                 HEVCPipelineDone;
+   bool                                 VDENCPipelineDone;
+   bool                                 MFXPipelineDone;
+   bool                                 VDCommandMessageParserDone;
+   bool                                 HEVCPipelineCommandFlush;
+   bool                                 VDENCPipelineCommandFlush;
+   bool                                 MFXPipelineCommandFlush;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_VD_PIPELINE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_VD_PIPELINE_FLUSH * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 11) |
+      __gen_uint(values->SubOpcodeB, 16, 20) |
+      __gen_uint(values->SubOpcodeA, 21, 22) |
+      __gen_uint(values->MediaCommandOpcode, 23, 26) |
+      __gen_uint(values->Pipeline, 27, 28) |
+      __gen_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->HEVCPipelineDone, 0, 0) |
+      __gen_uint(values->VDENCPipelineDone, 1, 1) |
+      __gen_uint(values->MFXPipelineDone, 3, 3) |
+      __gen_uint(values->VDCommandMessageParserDone, 4, 4) |
+      __gen_uint(values->HEVCPipelineCommandFlush, 16, 16) |
+      __gen_uint(values->VDENCPipelineCommandFlush, 17, 17) |
+      __gen_uint(values->MFXPipelineCommandFlush, 19, 19);
+}
+
+#define GFX125_XY_BLOCK_COPY_BLT_length       22
+#define GFX125_XY_BLOCK_COPY_BLT_length_bias      2
+#define GFX125_XY_BLOCK_COPY_BLT_header         \
+   .DWordLength                         =     20,  \
+   .Opcode                              =     65,  \
+   .Client                              =      2
+
+struct GFX125_XY_BLOCK_COPY_BLT {
+   uint32_t                             DWordLength;
+   uint32_t                             SpecialModeofOperation;
+#define NONE                                     0
+#define FULL_RESOLVE                             1
+#define PARTIAL_RESOLVE                          2
+   uint32_t                             ColorDepth;
+#define XY_BPP_8_BIT                             0
+#define XY_BPP_16_BIT                            1
+#define XY_BPP_32_BIT                            2
+#define XY_BPP_64_BIT                            3
+#define XY_BPP_96_BIT                            4
+#define XY_BPP_128_BIT                           5
+   uint32_t                             Opcode;
+   uint32_t                             Client;
+   uint32_t                             DestinationPitch;
+   uint32_t                             DestinationAuxiliarySurfaceMode;
+#define XY_AUX_NONE                              0
+#define XY_AUX_CCS_E                             5
+   uint32_t                             DestinationMOCS;
+   uint32_t                             DestinationControlSurfaceType;
+   bool                                 DestinationCompressionEnable;
+   uint32_t                             DestinationTiling;
+#define XY_TILE_LINEAR                           0
+#define XY_TILE_X                                1
+#define XY_TILE_4                                2
+#define XY_TILE_64                               3
+   int32_t                              DestinationX1;
+   int32_t                              DestinationY1;
+   int32_t                              DestinationX2;
+   int32_t                              DestinationY2;
+   __gen_address_type                   DestinationBaseAddress;
+   uint32_t                             DestinationXOffset;
+   uint32_t                             DestinationYOffset;
+   uint32_t                             DestinationTargetMemory;
+#define XY_MEM_LOCAL                             0
+#define XY_MEM_SYSTEM                            1
+   int32_t                              SourceX1;
+   int32_t                              SourceY1;
+   uint32_t                             SourcePitch;
+   uint32_t                             SourceAuxiliarySurfaceMode;
+#define XY_NONE                                  0
+#define XY_CCS_E                                 5
+   uint32_t                             SourceMOCS;
+   uint32_t                             SourceControlSurfaceType;
+   bool                                 SourceCompressionEnable;
+   uint32_t                             SourceTiling;
+#define XY_TILE_LINEAR                           0
+#define XY_TILE_X                                1
+#define XY_TILE_4                                2
+#define XY_TILE_64                               3
+   __gen_address_type                   SourceBaseAddress;
+   uint32_t                             SourceXOffset;
+   uint32_t                             SourceYOffset;
+   uint32_t                             SourceTargetMemory;
+#define XY_MEM_LOCAL                             0
+#define XY_MEM_SYSTEM                            1
+   uint32_t                             SourceCompressionFormat;
+   bool                                 SourceClearValueEnable;
+   __gen_address_type                   SourceClearAddress;
+   uint32_t                             DestinationCompressionFormat;
+   bool                                 DestinationClearValueEnable;
+   __gen_address_type                   DestinationClearAddress;
+   uint32_t                             DestinationSurfaceHeight;
+   uint32_t                             DestinationSurfaceWidth;
+   uint32_t                             DestinationSurfaceType;
+#define XY_SURFTYPE_1D                           0
+#define XY_SURFTYPE_2D                           1
+#define XY_SURFTYPE_3D                           2
+#define XY_SURFTYPE_CUBE                         3
+   uint32_t                             DestinationLOD;
+   uint32_t                             DestinationSurfaceQPitch;
+   uint32_t                             DestinationSurfaceDepth;
+   uint32_t                             DestinationHorizontalAlign;
+#define HALIGN_16                                0
+#define HALIGN_32                                1
+#define HALIGN_64                                2
+#define HALIGN_128                               3
+   uint32_t                             DestinationVerticalAlign;
+#define VALIGN_4                                 1
+#define VALIGN_8                                 2
+#define VALIGN_16                                3
+   uint32_t                             DestinationMipTailStartLOD;
+   bool                                 DestinationDepthStencilResource;
+   uint32_t                             DestinationArrayIndex;
+   uint32_t                             SourceSurfaceHeight;
+   uint32_t                             SourceSurfaceWidth;
+   uint32_t                             SourceSurfaceType;
+#define XY_SURFTYPE_1D                           0
+#define XY_SURFTYPE_2D                           1
+#define XY_SURFTYPE_3D                           2
+#define XY_SURFTYPE_CUBE                         3
+   uint32_t                             SourceLOD;
+   uint32_t                             SourceSurfaceQPitch;
+   uint32_t                             SourceSurfaceDepth;
+   uint32_t                             SourceHorizontalAlign;
+#define HALIGN_16                                0
+#define HALIGN_32                                1
+#define HALIGN_64                                2
+#define HALIGN_128                               3
+   uint32_t                             SourceVerticalAlign;
+#define VALIGN_4                                 1
+#define VALIGN_8                                 2
+#define VALIGN_16                                3
+   uint32_t                             SourceMipTailStartLOD;
+   bool                                 SourceDepthStencilResource;
+   uint32_t                             SourceArrayIndex;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_XY_BLOCK_COPY_BLT_pack(__attribute__((unused)) __gen_user_data *data,
+                              __attribute__((unused)) void * restrict dst,
+                              __attribute__((unused)) const struct GFX125_XY_BLOCK_COPY_BLT * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      __gen_uint(values->DWordLength, 0, 7) |
+      __gen_uint(values->SpecialModeofOperation, 12, 13) |
+      __gen_uint(values->ColorDepth, 19, 21) |
+      __gen_uint(values->Opcode, 22, 28) |
+      __gen_uint(values->Client, 29, 31);
+
+   dw[1] =
+      __gen_uint(values->DestinationPitch, 0, 17) |
+      __gen_uint(values->DestinationAuxiliarySurfaceMode, 18, 20) |
+      __gen_uint_nonzero(values->DestinationMOCS, 21, 27) |
+      __gen_uint(values->DestinationControlSurfaceType, 28, 28) |
+      __gen_uint(values->DestinationCompressionEnable, 29, 29) |
+      __gen_uint(values->DestinationTiling, 30, 31);
+
+   dw[2] =
+      __gen_sint(values->DestinationX1, 0, 15) |
+      __gen_sint(values->DestinationY1, 16, 31);
+
+   dw[3] =
+      __gen_sint(values->DestinationX2, 0, 15) |
+      __gen_sint(values->DestinationY2, 16, 31);
+
+   const uint64_t v4_address =
+      __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 63);
+   dw[4] = v4_address;
+   dw[5] = v4_address >> 32;
+
+   dw[6] =
+      __gen_uint(values->DestinationXOffset, 0, 13) |
+      __gen_uint(values->DestinationYOffset, 16, 29) |
+      __gen_uint(values->DestinationTargetMemory, 31, 31);
+
+   dw[7] =
+      __gen_sint(values->SourceX1, 0, 15) |
+      __gen_sint(values->SourceY1, 16, 31);
+
+   dw[8] =
+      __gen_uint(values->SourcePitch, 0, 17) |
+      __gen_uint(values->SourceAuxiliarySurfaceMode, 18, 20) |
+      __gen_uint_nonzero(values->SourceMOCS, 21, 27) |
+      __gen_uint(values->SourceControlSurfaceType, 28, 28) |
+      __gen_uint(values->SourceCompressionEnable, 29, 29) |
+      __gen_uint(values->SourceTiling, 30, 31);
+
+   const uint64_t v9_address =
+      __gen_address(data, &dw[9], values->SourceBaseAddress, 0, 0, 63);
+   dw[9] = v9_address;
+   dw[10] = v9_address >> 32;
+
+   dw[11] =
+      __gen_uint(values->SourceXOffset, 0, 13) |
+      __gen_uint(values->SourceYOffset, 16, 29) |
+      __gen_uint(values->SourceTargetMemory, 31, 31);
+
+   const uint64_t v12 =
+      __gen_uint(values->SourceCompressionFormat, 0, 4) |
+      __gen_uint(values->SourceClearValueEnable, 5, 5);
+   const uint64_t v12_address =
+      __gen_address(data, &dw[12], values->SourceClearAddress, v12, 6, 47);
+   dw[12] = v12_address;
+   dw[13] = (v12_address >> 32) | (v12 >> 32);
+
+   const uint64_t v14 =
+      __gen_uint(values->DestinationCompressionFormat, 0, 4) |
+      __gen_uint(values->DestinationClearValueEnable, 5, 5);
+   const uint64_t v14_address =
+      __gen_address(data, &dw[14], values->DestinationClearAddress, v14, 6, 47);
+   dw[14] = v14_address;
+   dw[15] = (v14_address >> 32) | (v14 >> 32);
+
+   dw[16] =
+      __gen_uint(values->DestinationSurfaceHeight, 0, 13) |
+      __gen_uint(values->DestinationSurfaceWidth, 14, 27) |
+      __gen_uint(values->DestinationSurfaceType, 29, 31);
+
+   dw[17] =
+      __gen_uint(values->DestinationLOD, 0, 3) |
+      __gen_uint(values->DestinationSurfaceQPitch, 4, 18) |
+      __gen_uint(values->DestinationSurfaceDepth, 21, 31);
+
+   dw[18] =
+      __gen_uint(values->DestinationHorizontalAlign, 0, 1) |
+      __gen_uint(values->DestinationVerticalAlign, 3, 4) |
+      __gen_uint(values->DestinationMipTailStartLOD, 8, 11) |
+      __gen_uint(values->DestinationDepthStencilResource, 18, 18) |
+      __gen_uint(values->DestinationArrayIndex, 21, 31);
+
+   dw[19] =
+      __gen_uint(values->SourceSurfaceHeight, 0, 13) |
+      __gen_uint(values->SourceSurfaceWidth, 14, 27) |
+      __gen_uint(values->SourceSurfaceType, 29, 31);
+
+   dw[20] =
+      __gen_uint(values->SourceLOD, 0, 3) |
+      __gen_uint(values->SourceSurfaceQPitch, 4, 18) |
+      __gen_uint(values->SourceSurfaceDepth, 21, 31);
+
+   dw[21] =
+      __gen_uint(values->SourceHorizontalAlign, 0, 1) |
+      __gen_uint(values->SourceVerticalAlign, 3, 4) |
+      __gen_uint(values->SourceMipTailStartLOD, 8, 11) |
+      __gen_uint(values->SourceDepthStencilResource, 18, 18) |
+      __gen_uint(values->SourceArrayIndex, 21, 31);
 }
 
 #define GFX125_BCS_INSTDONE_num           0x2206c
@@ -11998,25 +25944,6 @@ GFX125_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
       __gen_uint(values->VMEMSOARB1Done, 29, 29) |
       __gen_uint(values->VMEML3REQARB0Done, 30, 30) |
       __gen_uint(values->VMEML3REQARB1Done, 31, 31);
-}
-
-#define GFX125_SAMPLER_MODE_num           0xe18c
-#define GFX125_SAMPLER_MODE_length             1
-struct GFX125_SAMPLER_MODE {
-   bool                                 HeaderlessMessageforPreemptableContexts;
-   bool                                 HeaderlessMessageforPreemptableContextsMask;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_SAMPLER_MODE_pack(__attribute__((unused)) __gen_user_data *data,
-                         __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GFX125_SAMPLER_MODE * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      __gen_uint(values->HeaderlessMessageforPreemptableContexts, 5, 5) |
-      __gen_uint(values->HeaderlessMessageforPreemptableContextsMask, 21, 21);
 }
 
 #define GFX125_SC_INSTDONE_num            0x7100

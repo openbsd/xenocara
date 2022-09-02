@@ -313,8 +313,11 @@ int r600_bytecode_add_output(struct r600_bytecode *bc,
 		const struct r600_bytecode_output *output);
 int r600_bytecode_add_pending_output(struct r600_bytecode *bc,
 		const struct r600_bytecode_output *output);
-void r600_bytecode_need_wait_ack(struct r600_bytecode *bc, boolean needed);
-boolean r600_bytecode_get_need_wait_ack(struct r600_bytecode *bc);
+
+void r600_bytecode_add_ack(struct r600_bytecode *bc);
+int r600_bytecode_wait_acks(struct r600_bytecode *bc);
+uint32_t r600_bytecode_write_export_ack_type(struct r600_bytecode *bc, bool indirect);
+
 int r600_bytecode_build(struct r600_bytecode *bc);
 int r600_bytecode_add_cf(struct r600_bytecode *bc);
 int r600_bytecode_add_cfinst(struct r600_bytecode *bc,
@@ -325,6 +328,7 @@ void r600_bytecode_special_constants(uint32_t value, unsigned *sel);
 void r600_bytecode_disasm(struct r600_bytecode *bc);
 void r600_bytecode_alu_read(struct r600_bytecode *bc,
 		struct r600_bytecode_alu *alu, uint32_t word0, uint32_t word1);
+int r600_load_ar(struct r600_bytecode *bc);
 
 int cm_bytecode_add_cf_end(struct r600_bytecode *bc);
 

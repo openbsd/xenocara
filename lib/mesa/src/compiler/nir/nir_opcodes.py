@@ -78,8 +78,6 @@ class Opcode(object):
       assert 0 <= output_size <= 5 or (output_size == 8) or (output_size == 16)
       for size in input_sizes:
          assert 0 <= size <= 5 or (size == 8) or (size == 16)
-         if output_size == 0:
-            assert size == 0
          if output_size != 0:
             assert size != 0
       self.name = name
@@ -368,6 +366,18 @@ unpack_4x8("snorm")
 unpack_2x16("unorm")
 unpack_4x8("unorm")
 unpack_2x16("half")
+
+# Convert two unsigned integers into a packed unsigned short (clamp is applied).
+unop_horiz("pack_uint_2x16", 1, tuint32, 2, tuint32, """
+dst.x = _mesa_unsigned_to_unsigned(src0.x, 16);
+dst.x |= _mesa_unsigned_to_unsigned(src0.y, 16) << 16;
+""")
+
+# Convert two signed integers into a packed signed short (clamp is applied).
+unop_horiz("pack_sint_2x16", 1, tint32, 2, tint32, """
+dst.x = _mesa_signed_to_signed(src0.x, 16) & 0xffff;
+dst.x |= _mesa_signed_to_signed(src0.y, 16) << 16;
+""")
 
 unop_horiz("pack_uvec2_to_uint", 1, tuint32, 2, tuint32, """
 dst.x = (src0.x & 0xffff) | (src0.y << 16);
@@ -669,6 +679,20 @@ if (nir_is_rounding_mode_rtz(execution_mode, bit_size)) {
    dst = src0 * src1;
 }
 """)
+
+# Unlike fmul, anything (even infinity or NaN) multiplied by zero is always zero.
+# fmulz(0.0, inf) and fmulz(0.0, nan) must be +/-0.0, even if
+# SIGNED_ZERO_INF_NAN_PRESERVE is not used. If SIGNED_ZERO_INF_NAN_PRESERVE is used, then
+# the result must be a positive zero if either operand is zero.
+binop("fmulz", tfloat32, _2src_commutative + associative, """
+if (src0 == 0.0 || src1 == 0.0)
+   dst = 0.0;
+else if (nir_is_rounding_mode_rtz(execution_mode, 32))
+   dst = _mesa_double_to_float_rtz((double)src0 * (double)src1);
+else
+   dst = src0 * src1;
+""")
+
 # low 32-bits of signed/unsigned integer multiply
 binop("imul", tint, _2src_commutative + associative, """
    /* Use 64-bit multiplies to prevent overflow of signed arithmetic */
@@ -738,13 +762,13 @@ binop("fdiv", tfloat, "", "src0 / src1")
 binop("idiv", tint, "", "src1 == 0 ? 0 : (src0 / src1)")
 binop("udiv", tuint, "", "src1 == 0 ? 0 : (src0 / src1)")
 
-# returns a boolean representing the carry resulting from the addition of
-# the two unsigned arguments.
+# returns an integer (1 or 0) representing the carry resulting from the
+# addition of the two unsigned arguments.
 
 binop_convert("uadd_carry", tuint, tuint, _2src_commutative, "src0 + src1 < src0")
 
-# returns a boolean representing the borrow resulting from the subtraction
-# of the two unsigned arguments.
+# returns an integer (1 or 0) representing the borrow resulting from the
+# subtraction of the two unsigned arguments.
 
 binop_convert("usub_borrow", tuint, tuint, "", "src0 < src1")
 
@@ -870,13 +894,13 @@ binop("ixor", tuint, _2src_commutative + associative, "src0 ^ src1")
 binop_reduce("fdot", 1, tfloat, tfloat, "{src0} * {src1}", "{src0} + {src1}",
              "{src}")
 
-binop_reduce("fdot", 4, tfloat, tfloat,
+binop_reduce("fdot", 0, tfloat, tfloat,
              "{src0} * {src1}", "{src0} + {src1}", "{src}",
              suffix="_replicated")
 
 opcode("fdph", 1, tfloat, [3, 4], [tfloat, tfloat], False, "",
        "src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w")
-opcode("fdph_replicated", 4, tfloat, [3, 4], [tfloat, tfloat], False, "",
+opcode("fdph_replicated", 0, tfloat, [3, 4], [tfloat, tfloat], False, "",
        "src0.x * src1.x + src0.y * src1.y + src0.z * src1.z + src1.w")
 
 binop("fmin", tfloat, _2src_commutative + associative, "fmin(src0, src1)")
@@ -960,6 +984,19 @@ if (nir_is_rounding_mode_rtz(execution_mode, bit_size)) {
 }
 """)
 
+# Unlike ffma, anything (even infinity or NaN) multiplied by zero is always zero.
+# ffmaz(0.0, inf, src2) and ffmaz(0.0, nan, src2) must be +/-0.0 + src2, even if
+# SIGNED_ZERO_INF_NAN_PRESERVE is not used. If SIGNED_ZERO_INF_NAN_PRESERVE is used, then
+# the result must be a positive zero plus src2 if either src0 or src1 is zero.
+triop("ffmaz", tfloat32, _2src_commutative, """
+if (src0 == 0.0 || src1 == 0.0)
+   dst = 0.0 + src2;
+else if (nir_is_rounding_mode_rtz(execution_mode, 32))
+   dst = _mesa_float_fma_rtz(src0, src1, src2);
+else
+   dst = fmaf(src0, src1, src2);
+""")
+
 triop("flrp", tfloat, "", "src0 * (1 - src2) + src1 * src2")
 
 # Ternary addition
@@ -982,8 +1019,8 @@ opcode("b16csel", 0, tuint, [0, 0, 0],
 opcode("b32csel", 0, tuint, [0, 0, 0],
        [tbool32, tuint, tuint], False, "", "src0 ? src1 : src2")
 
-triop("i32csel_gt", tint32, "", "(src0 > 0.0f) ? src1 : src2")
-triop("i32csel_ge", tint32, "", "(src0 >= 0.0f) ? src1 : src2")
+triop("i32csel_gt", tint32, "", "(src0 > 0) ? src1 : src2")
+triop("i32csel_ge", tint32, "", "(src0 >= 0) ? src1 : src2")
 
 triop("fcsel_gt", tfloat32, "", "(src0 > 0.0f) ? src1 : src2")
 triop("fcsel_ge", tfloat32, "", "(src0 >= 0.0f) ? src1 : src2")
@@ -1255,7 +1292,7 @@ binop("umul24_relaxed", tuint32, _2src_commutative + associative, "src0 * src1")
 
 unop_convert("fisnormal", tbool1, tfloat, "isnormal(src0)")
 unop_convert("fisfinite", tbool1, tfloat, "isfinite(src0)")
-unop_convert("fisfinite32", tint32, tfloat, "isfinite(src0)")
+unop_convert("fisfinite32", tbool32, tfloat, "isfinite(src0)")
 
 # vc4-specific opcodes
 

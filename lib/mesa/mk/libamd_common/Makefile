@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:37 jsg Exp $
 
 LIB=	amd_common
 
@@ -12,6 +12,7 @@ SRCS=	ac_binary.c \
 	ac_surface.c \
 	ac_debug.c \
 	ac_shadowed_regs.c \
+	ac_spm.c \
 	ac_sqtt.c \
 	ac_rgp.c \
 	ac_msgpack.c \
@@ -19,6 +20,7 @@ SRCS=	ac_binary.c \
 	ac_nir.c \
 	ac_nir_cull.c \
 	ac_nir_lower_esgs_io_to_mem.c \
+	ac_nir_lower_global_access.c \
 	ac_nir_lower_tess_io_to_mem.c \
 	ac_nir_lower_ngg.c \
 	amd_family.c \
@@ -28,7 +30,7 @@ SRCS+=	gfx10_format_table.c
 
 .include "../Makefile.inc"
 
-CFLAGS+=	${C_VIS_ARGS}
+CFLAGS+=	${C_VIS_ARGS} -DADDR_FASTCALL=
 CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \

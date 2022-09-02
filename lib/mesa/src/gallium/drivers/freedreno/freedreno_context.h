@@ -199,6 +199,8 @@ struct ir3_shader_key;
 struct fd_context {
    struct pipe_context base;
 
+   unsigned flags;      /* PIPE_CONTEXT_x */
+
    struct threaded_context *tc;
 
    struct list_head node; /* node in screen->context_list */
@@ -434,7 +436,7 @@ struct fd_context {
     */
    struct ir3_cache *shader_cache;
 
-   struct pipe_debug_callback debug;
+   struct util_debug_callback debug;
 
    struct u_trace_context trace_context dt;
 

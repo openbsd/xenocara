@@ -47,6 +47,7 @@
 #include "lp_query.h"
 #include "lp_setup.h"
 #include "lp_screen.h"
+#include "lp_fence.h"
 
 /* This is only safe if there's just one concurrent context */
 #ifdef EMBEDDED_DEVICE
@@ -56,8 +57,12 @@
 static void llvmpipe_destroy( struct pipe_context *pipe )
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context( pipe );
+   struct llvmpipe_screen *lp_screen = llvmpipe_screen(pipe->screen);
    uint i;
 
+   mtx_lock(&lp_screen->ctx_mutex);
+   list_del(&llvmpipe->list);
+   mtx_unlock(&lp_screen->ctx_mutex);
    lp_print_counters();
 
    if (llvmpipe->csctx) {
@@ -118,6 +123,16 @@ do_flush( struct pipe_context *pipe,
    llvmpipe_flush(pipe, fence, __FUNCTION__);
 }
 
+static void
+llvmpipe_fence_server_sync(struct pipe_context *pipe,
+                           struct pipe_fence_handle *fence)
+{
+   struct lp_fence *f = (struct lp_fence *)fence;
+
+   if (!f->issued)
+      return;
+   lp_fence_wait(f);
+}
 
 static void
 llvmpipe_render_condition(struct pipe_context *pipe,
@@ -148,7 +163,7 @@ llvmpipe_render_condition_mem(struct pipe_context *pipe,
 static void
 llvmpipe_texture_barrier(struct pipe_context *pipe, unsigned flags)
 {
-   llvmpipe_flush(pipe, NULL, __FUNCTION__);
+   llvmpipe_finish(pipe, "barrier");
 }
 
 static void lp_draw_disk_cache_find_shader(void *cookie,
@@ -178,8 +193,9 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
                         unsigned flags)
 {
    struct llvmpipe_context *llvmpipe;
+   struct llvmpipe_screen *lp_screen = llvmpipe_screen(screen);
 
-   if (!llvmpipe_screen_late_init(llvmpipe_screen(screen)))
+   if (!llvmpipe_screen_late_init(lp_screen))
       return NULL;
 
    llvmpipe = align_malloc(sizeof(struct llvmpipe_context), 16);
@@ -207,6 +223,7 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
    llvmpipe->pipe.render_condition = llvmpipe_render_condition;
    llvmpipe->pipe.render_condition_mem = llvmpipe_render_condition_mem;
 
+   llvmpipe->pipe.fence_server_sync = llvmpipe_fence_server_sync;
    llvmpipe->pipe.get_device_reset_status = llvmpipe_get_device_reset_status;
    llvmpipe_init_blend_funcs(llvmpipe);
    llvmpipe_init_clip_funcs(llvmpipe);
@@ -242,7 +259,7 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
       goto fail;
 
    draw_set_disk_cache_callbacks(llvmpipe->draw,
-                                 llvmpipe_screen(screen),
+                                 lp_screen,
                                  lp_draw_disk_cache_find_shader,
                                  lp_draw_disk_cache_insert_shader);
 
@@ -295,6 +312,9 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
     */
    llvmpipe->dirty |= LP_NEW_SCISSOR;
 
+   mtx_lock(&lp_screen->ctx_mutex);
+   list_addtail(&llvmpipe->list, &lp_screen->ctx_list);
+   mtx_unlock(&lp_screen->ctx_mutex);
    return &llvmpipe->pipe;
 
  fail:

@@ -65,28 +65,55 @@ static boolean set_scene_state( struct lp_setup_context *, enum setup_state,
                              const char *reason);
 static boolean try_update_scene_state( struct lp_setup_context *setup );
 
+static unsigned
+lp_setup_wait_empty_scene(struct lp_setup_context *setup)
+{
+   /* just use the first scene if we run out */
+   if (setup->scenes[0]->fence) {
+      debug_printf("%s: wait for scene %d\n",
+                   __FUNCTION__, setup->scenes[0]->fence->id);
+      lp_fence_wait(setup->scenes[0]->fence);
+      lp_scene_end_rasterization(setup->scenes[0]);
+   }
+   return 0;
+}
 
 static void
 lp_setup_get_empty_scene(struct lp_setup_context *setup)
 {
    assert(setup->scene == NULL);
+   unsigned i;
 
-   setup->scene_idx++;
-   setup->scene_idx %= ARRAY_SIZE(setup->scenes);
-
-   setup->scene = setup->scenes[setup->scene_idx];
-
-   if (setup->scene->fence) {
-      if (LP_DEBUG & DEBUG_SETUP)
-         debug_printf("%s: wait for scene %d\n",
-                      __FUNCTION__, setup->scene->fence->id);
-
-      lp_fence_wait(setup->scene->fence);
+   /* try and find a scene that isn't being used */
+   for (i = 0; i < setup->num_active_scenes; i++) {
+      if (setup->scenes[i]->fence) {
+         if (lp_fence_signalled(setup->scenes[i]->fence)) {
+            lp_scene_end_rasterization(setup->scenes[i]);
+            break;
+         }
+      } else
+         break;
    }
 
-   lp_scene_begin_binning(setup->scene, &setup->fb);
+   if (setup->num_active_scenes + 1 > MAX_SCENES)
+      i = lp_setup_wait_empty_scene(setup);
+   else if (i == setup->num_active_scenes) {
+      /* allocate a new scene */
+      struct lp_scene *scene = lp_scene_create(setup);
+      if (!scene) {
+         /* block and reuse scenes */
+         i = lp_setup_wait_empty_scene(setup);
+      } else {
+         LP_DBG(DEBUG_SETUP, "allocated scene: %d\n", setup->num_active_scenes);
+         setup->scenes[setup->num_active_scenes] = scene;
+         i = setup->num_active_scenes;
+         setup->num_active_scenes++;
+      }
+   }
 
+   setup->scene = setup->scenes[i];
    setup->scene->permit_linear_rasterizer = setup->permit_linear_rasterizer;
+   lp_scene_begin_binning(setup->scene, &setup->fb);
 }
 
 
@@ -180,28 +207,10 @@ lp_setup_rasterize_scene( struct lp_setup_context *setup )
 
    lp_scene_end_binning(scene);
 
-   lp_fence_reference(&setup->last_fence, scene->fence);
-
-   if (setup->last_fence)
-      setup->last_fence->issued = TRUE;
-
    mtx_lock(&screen->rast_mutex);
-
-   /* FIXME: We enqueue the scene then wait on the rasterizer to finish.
-    * This means we never actually run any vertex stuff in parallel to
-    * rasterization (not in the same context at least) which is what the
-    * multiple scenes per setup is about - when we get a new empty scene
-    * any old one is already empty again because we waited here for
-    * raster tasks to be finished. Ideally, we shouldn't need to wait here
-    * and rely on fences elsewhere when waiting is necessary.
-    * Certainly, lp_scene_end_rasterization() would need to be deferred too
-    * and there's probably other bits why this doesn't actually work.
-    */
    lp_rast_queue_scene(screen->rast, scene);
-   lp_rast_finish(screen->rast);
    mtx_unlock(&screen->rast_mutex);
 
-   lp_scene_end_rasterization(setup->scene);
    lp_setup_reset( setup );
 
    LP_DBG(DEBUG_SETUP, "%s done \n", __FUNCTION__);
@@ -373,17 +382,10 @@ fail:
 
 
 void
-lp_setup_flush( struct lp_setup_context *setup,
-                struct pipe_fence_handle **fence,
-                const char *reason)
+lp_setup_flush(struct lp_setup_context *setup,
+               const char *reason)
 {
-   set_scene_state( setup, SETUP_FLUSHED, reason );
-
-   if (fence) {
-      lp_fence_reference((struct lp_fence **)fence, setup->last_fence);
-      if (!*fence)
-         *fence = (struct pipe_fence_handle *)lp_fence_create(0);
-   }
+   set_scene_state(setup, SETUP_FLUSHED, reason);
 }
 
 
@@ -557,7 +559,7 @@ lp_setup_clear( struct lp_setup_context *setup,
    if (flags & PIPE_CLEAR_DEPTHSTENCIL) {
       unsigned flagszs = flags & PIPE_CLEAR_DEPTHSTENCIL;
       if (!lp_setup_try_clear_zs(setup, depth, stencil, flagszs)) {
-         lp_setup_flush(setup, NULL, __FUNCTION__);
+         set_scene_state( setup, SETUP_FLUSHED, __FUNCTION__ );
 
          if (!lp_setup_try_clear_zs(setup, depth, stencil, flagszs))
             assert(0);
@@ -569,7 +571,7 @@ lp_setup_clear( struct lp_setup_context *setup,
       for (i = 0; i < setup->fb.nr_cbufs; i++) {
          if ((flags & (1 << (2 + i))) && setup->fb.cbufs[i]) {
             if (!lp_setup_try_clear_color_buffer(setup, color, i)) {
-               lp_setup_flush(setup, NULL, __FUNCTION__);
+               set_scene_state( setup, SETUP_FLUSHED, __FUNCTION__ );
 
                if (!lp_setup_try_clear_color_buffer(setup, color, i))
                   assert(0);
@@ -679,7 +681,8 @@ lp_setup_set_fs_constants(struct lp_setup_context *setup,
 void
 lp_setup_set_fs_ssbos(struct lp_setup_context *setup,
                       unsigned num,
-                      struct pipe_shader_buffer *buffers)
+                      struct pipe_shader_buffer *buffers,
+                      uint32_t ssbo_write_mask)
 {
    unsigned i;
 
@@ -693,6 +696,7 @@ lp_setup_set_fs_ssbos(struct lp_setup_context *setup,
    for (; i < ARRAY_SIZE(setup->ssbos); i++) {
       util_copy_shader_buffer(&setup->ssbos[i].current, NULL);
    }
+   setup->ssbo_write_mask = ssbo_write_mask;
    setup->dirty |= LP_SETUP_NEW_SSBOS;
 }
 
@@ -922,10 +926,10 @@ lp_setup_set_viewports(struct lp_setup_context *setup,
    half_height = fabsf(viewports[0].scale[1]);
    x0 = viewports[0].translate[0] - viewports[0].scale[0];
    y0 = viewports[0].translate[1] - half_height;
-   setup->vpwh.x0 = (int)(x0 + 0.5f);
-   setup->vpwh.x1 = (int)(viewports[0].scale[0] * 2.0f + x0 - 0.5f);
-   setup->vpwh.y0 = (int)(y0 + 0.5f);
-   setup->vpwh.y1 = (int)(half_height * 2.0f + y0 - 0.5f);
+   setup->vpwh.x0 = (int)(x0 + 0.499f);
+   setup->vpwh.x1 = (int)(viewports[0].scale[0] * 2.0f + x0 - 0.501f);
+   setup->vpwh.y0 = (int)(y0 + 0.499f);
+   setup->vpwh.y1 = (int)(half_height * 2.0f + y0 - 0.501f);
    setup->dirty |= LP_SETUP_NEW_SCISSOR;
 
    /*
@@ -1035,7 +1039,8 @@ lp_setup_set_fragment_sampler_views(struct lp_setup_context *setup,
                   if (res->target == PIPE_TEXTURE_1D_ARRAY ||
                       res->target == PIPE_TEXTURE_2D_ARRAY ||
                       res->target == PIPE_TEXTURE_CUBE ||
-                      res->target == PIPE_TEXTURE_CUBE_ARRAY) {
+                      res->target == PIPE_TEXTURE_CUBE_ARRAY ||
+                      (res->target == PIPE_TEXTURE_3D && view->target == PIPE_TEXTURE_2D)) {
                      /*
                       * For array textures, we don't have first_layer, instead
                       * adjust last_layer (stored as depth) plus the mip level offsets
@@ -1052,7 +1057,10 @@ lp_setup_set_fragment_sampler_views(struct lp_setup_context *setup,
                         assert(jit_tex->depth % 6 == 0);
                      }
                      assert(view->u.tex.first_layer <= view->u.tex.last_layer);
-                     assert(view->u.tex.last_layer < res->array_size);
+                     if (res->target == PIPE_TEXTURE_3D)
+                        assert(view->u.tex.last_layer < res->depth0);
+                     else
+                        assert(view->u.tex.last_layer < res->array_size);
                   }
                }
                else {
@@ -1142,7 +1150,7 @@ unsigned
 lp_setup_is_resource_referenced( const struct lp_setup_context *setup,
                                 const struct pipe_resource *texture )
 {
-   unsigned i;
+   unsigned i, j;
 
    /* check the render targets */
    for (i = 0; i < setup->fb.nr_cbufs; i++) {
@@ -1153,21 +1161,22 @@ lp_setup_is_resource_referenced( const struct lp_setup_context *setup,
       return LP_REFERENCED_FOR_READ | LP_REFERENCED_FOR_WRITE;
    }
 
-   /* check textures referenced by the scene */
-   for (i = 0; i < ARRAY_SIZE(setup->scenes); i++) {
-      if (lp_scene_is_resource_referenced(setup->scenes[i], texture)) {
-         return LP_REFERENCED_FOR_READ;
+   /* check resources referenced by active scenes */
+   for (i = 0; i < setup->num_active_scenes; i++) {
+      struct lp_scene *scene = setup->scenes[i];
+      /* check the render targets */
+      for (j = 0; j < scene->fb.nr_cbufs; j++) {
+         if (scene->fb.cbufs[j] && scene->fb.cbufs[j]->texture == texture)
+            return LP_REFERENCED_FOR_READ | LP_REFERENCED_FOR_WRITE;
       }
-   }
-
-   for (i = 0; i < ARRAY_SIZE(setup->ssbos); i++) {
-      if (setup->ssbos[i].current.buffer == texture)
+      if (scene->fb.zsbuf && scene->fb.zsbuf->texture == texture) {
          return LP_REFERENCED_FOR_READ | LP_REFERENCED_FOR_WRITE;
-   }
+      }
 
-   for (i = 0; i < ARRAY_SIZE(setup->images); i++) {
-      if (setup->images[i].current.resource == texture)
-         return LP_REFERENCED_FOR_READ | LP_REFERENCED_FOR_WRITE;
+      /* check resources referenced by the scene */
+      unsigned ref = lp_scene_is_resource_referenced(scene, texture);
+      if (ref)
+         return ref;
    }
 
    return LP_UNREFERENCED;
@@ -1324,10 +1333,9 @@ try_update_scene_state( struct lp_setup_context *setup )
          struct pipe_resource *buffer = setup->ssbos[i].current.buffer;
          const ubyte *current_data = NULL;
 
-         if (!buffer)
-            continue;
          /* resource buffer */
-         current_data = (ubyte *) llvmpipe_resource_data(buffer);
+         if (buffer)
+            current_data = (ubyte *) llvmpipe_resource_data(buffer);
          if (current_data) {
             current_data += setup->ssbos[i].current.buffer_offset;
 
@@ -1376,7 +1384,30 @@ try_update_scene_state( struct lp_setup_context *setup )
             if (setup->fs.current_tex[i]) {
                if (!lp_scene_add_resource_reference(scene,
                                                     setup->fs.current_tex[i],
-                                                    new_scene)) {
+                                                    new_scene, false)) {
+                  assert(!new_scene);
+                  return FALSE;
+               }
+            }
+         }
+
+         for (i = 0; i < ARRAY_SIZE(setup->ssbos); i++) {
+            if (setup->ssbos[i].current.buffer) {
+               if (!lp_scene_add_resource_reference(scene,
+                                                    setup->ssbos[i].current.buffer,
+                                                    new_scene, setup->ssbo_write_mask & (1 << i))) {
+                  assert(!new_scene);
+                  return FALSE;
+               }
+            }
+         }
+
+         for (i = 0; i < ARRAY_SIZE(setup->images); i++) {
+            if (setup->images[i].current.resource) {
+               if (!lp_scene_add_resource_reference(scene,
+                                                    setup->images[i].current.resource,
+                                                    new_scene,
+                                                    setup->images[i].current.shader_access & PIPE_IMAGE_ACCESS_WRITE)) {
                   assert(!new_scene);
                   return FALSE;
                }
@@ -1535,7 +1566,7 @@ lp_setup_destroy( struct lp_setup_context *setup )
    }
 
    /* free the scenes in the 'empty' queue */
-   for (i = 0; i < ARRAY_SIZE(setup->scenes); i++) {
+   for (i = 0; i < setup->num_active_scenes; i++) {
       struct lp_scene *scene = setup->scenes[i];
 
       if (scene->fence)
@@ -1544,7 +1575,8 @@ lp_setup_destroy( struct lp_setup_context *setup )
       lp_scene_destroy(scene);
    }
 
-   lp_fence_reference(&setup->last_fence, NULL);
+   LP_DBG(DEBUG_SETUP, "number of scenes used: %d\n", setup->num_active_scenes);
+   slab_destroy(&setup->scene_slab);
 
    FREE( setup );
 }
@@ -1584,13 +1616,15 @@ lp_setup_create( struct pipe_context *pipe,
    draw_set_rasterize_stage(draw, setup->vbuf);
    draw_set_render(draw, &setup->base);
 
-   /* create some empty scenes */
-   for (i = 0; i < MAX_SCENES; i++) {
-      setup->scenes[i] = lp_scene_create( pipe );
-      if (!setup->scenes[i]) {
-         goto no_scenes;
-      }
+   slab_create(&setup->scene_slab,
+               sizeof(struct lp_scene),
+               INITIAL_SCENES);
+   /* create just one scene for starting point */
+   setup->scenes[0] = lp_scene_create( setup );
+   if (!setup->scenes[0]) {
+      goto no_scenes;
    }
+   setup->num_active_scenes++;
 
    setup->triangle = first_triangle;
    setup->line     = first_line;
@@ -1711,7 +1745,8 @@ lp_setup_end_query(struct lp_setup_context *setup, struct llvmpipe_query *pq)
       }
    }
    else {
-      lp_fence_reference(&pq->fence, setup->last_fence);
+      struct llvmpipe_screen *screen = llvmpipe_screen(setup->pipe->screen);
+      lp_rast_fence(screen->rast, &pq->fence);
    }
 
 fail:

@@ -38,6 +38,90 @@
 
 #include "main/menums.h" /* BITFIELD64_MASK */
 
+#ifndef NDEBUG
+uint32_t nir_debug = 0;
+bool nir_debug_print_shader[MESA_SHADER_KERNEL + 1] = { 0 };
+
+static const struct debug_named_value nir_debug_control[] = {
+   { "clone", NIR_DEBUG_CLONE,
+     "Test cloning a shader at each successful lowering/optimization call" },
+   { "serialize", NIR_DEBUG_SERIALIZE,
+     "Test serialize and deserialize shader at each successful lowering/optimization call" },
+   { "novalidate", NIR_DEBUG_NOVALIDATE,
+     "Disable shader validation at each successful lowering/optimization call" },
+   { "validate_ssa_dominance", NIR_DEBUG_VALIDATE_SSA_DOMINANCE,
+     "Validate SSA dominance in shader at each successful lowering/optimization call" },
+   { "validate_gc_list", NIR_DEBUG_VALIDATE_GC_LIST,
+     "Validate the instruction GC list at each successful lowering/optimization call" },
+   { "tgsi", NIR_DEBUG_TGSI,
+     "Dump NIR/TGSI shaders when doing a NIR<->TGSI translation" },
+   { "print", NIR_DEBUG_PRINT,
+     "Dump resulting shader after each successful lowering/optimization call" },
+   { "print_vs", NIR_DEBUG_PRINT_VS,
+     "Dump resulting vertex shader after each successful lowering/optimization call" },
+   { "print_tcs", NIR_DEBUG_PRINT_TCS,
+     "Dump resulting tessellation control shader after each successful lowering/optimization call" },
+   { "print_tes", NIR_DEBUG_PRINT_TES,
+     "Dump resulting tessellation evaluation shader after each successful lowering/optimization call" },
+   { "print_gs", NIR_DEBUG_PRINT_GS,
+     "Dump resulting geometry shader after each successful lowering/optimization call" },
+   { "print_fs", NIR_DEBUG_PRINT_FS,
+     "Dump resulting fragment shader after each successful lowering/optimization call" },
+   { "print_cs", NIR_DEBUG_PRINT_CS,
+     "Dump resulting compute shader after each successful lowering/optimization call" },
+   { "print_ts", NIR_DEBUG_PRINT_TS,
+     "Dump resulting task shader after each successful lowering/optimization call" },
+   { "print_ms", NIR_DEBUG_PRINT_MS,
+     "Dump resulting mesh shader after each successful lowering/optimization call" },
+   { "print_rgs", NIR_DEBUG_PRINT_RGS,
+     "Dump resulting raygen shader after each successful lowering/optimization call" },
+   { "print_ahs", NIR_DEBUG_PRINT_AHS,
+     "Dump resulting any-hit shader after each successful lowering/optimization call" },
+   { "print_chs", NIR_DEBUG_PRINT_CHS,
+     "Dump resulting closest-hit shader after each successful lowering/optimization call" },
+   { "print_mhs", NIR_DEBUG_PRINT_MHS,
+     "Dump resulting miss-hit shader after each successful lowering/optimization call" },
+   { "print_is", NIR_DEBUG_PRINT_IS,
+     "Dump resulting intersection shader after each successful lowering/optimization call" },
+   { "print_cbs", NIR_DEBUG_PRINT_CBS,
+     "Dump resulting callable shader after each successful lowering/optimization call" },
+   { "print_ks", NIR_DEBUG_PRINT_KS,
+     "Dump resulting kernel shader after each successful lowering/optimization call" },
+   { "print_consts", NIR_DEBUG_PRINT_CONSTS,
+     "Print const value near each use of const SSA variable" },
+   { NULL }
+};
+
+DEBUG_GET_ONCE_FLAGS_OPTION(nir_debug, "NIR_DEBUG", nir_debug_control, 0)
+
+static void
+nir_process_debug_variable_once(void)
+{
+   nir_debug = debug_get_option_nir_debug();
+   nir_debug_print_shader[MESA_SHADER_VERTEX]       = NIR_DEBUG(PRINT_VS);
+   nir_debug_print_shader[MESA_SHADER_TESS_CTRL]    = NIR_DEBUG(PRINT_TCS);
+   nir_debug_print_shader[MESA_SHADER_TESS_EVAL]    = NIR_DEBUG(PRINT_TES);
+   nir_debug_print_shader[MESA_SHADER_GEOMETRY]     = NIR_DEBUG(PRINT_GS);
+   nir_debug_print_shader[MESA_SHADER_FRAGMENT]     = NIR_DEBUG(PRINT_FS);
+   nir_debug_print_shader[MESA_SHADER_COMPUTE]      = NIR_DEBUG(PRINT_CS);
+   nir_debug_print_shader[MESA_SHADER_TASK]         = NIR_DEBUG(PRINT_TS);
+   nir_debug_print_shader[MESA_SHADER_MESH]         = NIR_DEBUG(PRINT_MS);
+   nir_debug_print_shader[MESA_SHADER_RAYGEN]       = NIR_DEBUG(PRINT_RGS);
+   nir_debug_print_shader[MESA_SHADER_ANY_HIT]      = NIR_DEBUG(PRINT_AHS);
+   nir_debug_print_shader[MESA_SHADER_CLOSEST_HIT]  = NIR_DEBUG(PRINT_CHS);
+   nir_debug_print_shader[MESA_SHADER_MISS]         = NIR_DEBUG(PRINT_MHS);
+   nir_debug_print_shader[MESA_SHADER_INTERSECTION] = NIR_DEBUG(PRINT_IS);
+   nir_debug_print_shader[MESA_SHADER_CALLABLE]     = NIR_DEBUG(PRINT_CBS);
+   nir_debug_print_shader[MESA_SHADER_KERNEL]       = NIR_DEBUG(PRINT_KS);
+}
+
+void
+nir_process_debug_variable(void)
+{
+   static once_flag flag = ONCE_FLAG_INIT;
+   call_once(&flag, nir_process_debug_variable_once);
+}
+#endif
 
 /** Return true if the component mask "mask" with bit size "old_bit_size" can
  * be re-interpreted to be used with "new_bit_size".
@@ -120,6 +204,10 @@ nir_shader_create(void *mem_ctx,
    nir_shader *shader = rzalloc(mem_ctx, nir_shader);
    ralloc_set_destructor(shader, nir_shader_destructor);
 
+#ifndef NDEBUG
+   nir_process_debug_variable();
+#endif
+
    exec_list_make_empty(&shader->variables);
 
    shader->options = options;
@@ -190,17 +278,16 @@ nir_shader_add_variable(nir_shader *shader, nir_variable *var)
    case nir_var_uniform:
    case nir_var_mem_ubo:
    case nir_var_mem_ssbo:
+   case nir_var_image:
    case nir_var_mem_shared:
    case nir_var_system_value:
    case nir_var_mem_push_const:
    case nir_var_mem_constant:
    case nir_var_shader_call_data:
    case nir_var_ray_hit_attrib:
-      break;
-
+   case nir_var_mem_task_payload:
    case nir_var_mem_global:
-      assert(!"nir_shader_add_variable cannot be used for global memory");
-      return;
+      break;
 
    default:
       assert(!"invalid mode");
@@ -336,6 +423,7 @@ nir_function_create(nir_shader *shader, const char *name)
    func->params = NULL;
    func->impl = NULL;
    func->is_entrypoint = false;
+   func->is_preamble = false;
 
    return func;
 }
@@ -451,6 +539,7 @@ nir_function_impl_create_bare(nir_shader *shader)
    nir_function_impl *impl = ralloc(shader, nir_function_impl);
 
    impl->function = NULL;
+   impl->preamble = NULL;
 
    cf_init(&impl->cf_node, nir_cf_node_function);
 
@@ -1388,6 +1477,43 @@ nir_instr_ssa_def(nir_instr *instr)
 }
 
 bool
+nir_instr_def_is_register(nir_instr *instr)
+{
+   switch (instr->type) {
+   case nir_instr_type_alu:
+      return !nir_instr_as_alu(instr)->dest.dest.is_ssa;
+
+   case nir_instr_type_deref:
+      return !nir_instr_as_deref(instr)->dest.is_ssa;
+
+   case nir_instr_type_tex:
+      return !nir_instr_as_tex(instr)->dest.is_ssa;
+
+   case nir_instr_type_intrinsic: {
+      nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+      return nir_intrinsic_infos[intrin->intrinsic].has_dest &&
+             !intrin->dest.is_ssa;
+   }
+
+   case nir_instr_type_phi:
+      return !nir_instr_as_phi(instr)->dest.is_ssa;
+
+   case nir_instr_type_parallel_copy:
+      unreachable("Parallel copies are unsupported by this function");
+
+   case nir_instr_type_load_const:
+   case nir_instr_type_ssa_undef:
+      return false;
+
+   case nir_instr_type_call:
+   case nir_instr_type_jump:
+      return false;
+   }
+
+   unreachable("Invalid instruction type");
+}
+
+bool
 nir_foreach_phi_src_leaving_block(nir_block *block,
                                   nir_foreach_src_cb cb,
                                   void *state)
@@ -1463,17 +1589,19 @@ nir_src_as_const_value(nir_src src)
 }
 
 /**
- * Returns true if the source is known to be dynamically uniform. Otherwise it
- * returns false which means it may or may not be dynamically uniform but it
- * can't be determined.
+ * Returns true if the source is known to be always uniform. Otherwise it
+ * returns false which means it may or may not be uniform but it can't be
+ * determined.
+ *
+ * For a more precise analysis of uniform values, use nir_divergence_analysis.
  */
 bool
-nir_src_is_dynamically_uniform(nir_src src)
+nir_src_is_always_uniform(nir_src src)
 {
    if (!src.is_ssa)
       return false;
 
-   /* Constants are trivially dynamically uniform */
+   /* Constants are trivially uniform */
    if (src.ssa->parent_instr->type == nir_instr_type_load_const)
       return true;
 
@@ -1481,9 +1609,12 @@ nir_src_is_dynamically_uniform(nir_src src)
       nir_intrinsic_instr *intr = nir_instr_as_intrinsic(src.ssa->parent_instr);
       /* As are uniform variables */
       if (intr->intrinsic == nir_intrinsic_load_uniform &&
-          nir_src_is_dynamically_uniform(intr->src[0]))
+          nir_src_is_always_uniform(intr->src[0]))
          return true;
-      /* Push constant loads always use uniform offsets. */
+      /* From the Vulkan specification 15.6.1. Push Constant Interface:
+       * "Any member of a push constant block that is declared as an array must
+       * only be accessed with dynamically uniform indices."
+       */
       if (intr->intrinsic == nir_intrinsic_load_push_constant)
          return true;
       if (intr->intrinsic == nir_intrinsic_load_deref &&
@@ -1491,13 +1622,11 @@ nir_src_is_dynamically_uniform(nir_src src)
          return true;
    }
 
-   /* Operating together dynamically uniform expressions produces a
-    * dynamically uniform result
-    */
+   /* Operating together uniform expressions produces a uniform result */
    if (src.ssa->parent_instr->type == nir_instr_type_alu) {
       nir_alu_instr *alu = nir_instr_as_alu(src.ssa->parent_instr);
       for (int i = 0; i < nir_op_infos[alu->op].num_inputs; i++) {
-         if (!nir_src_is_dynamically_uniform(alu->src[i].src))
+         if (!nir_src_is_always_uniform(alu->src[i].src))
             return false;
       }
 
@@ -1505,7 +1634,7 @@ nir_src_is_dynamically_uniform(nir_src src)
    }
 
    /* XXX: this could have many more tests, such as when a sampler function is
-    * called with dynamically uniform arguments.
+    * called with uniform arguments.
     */
    return false;
 }
@@ -2282,6 +2411,8 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_sample_id;
    case SYSTEM_VALUE_SAMPLE_POS:
       return nir_intrinsic_load_sample_pos;
+   case SYSTEM_VALUE_SAMPLE_POS_OR_CENTER:
+      return nir_intrinsic_load_sample_pos_or_center;
    case SYSTEM_VALUE_SAMPLE_MASK_IN:
       return nir_intrinsic_load_sample_mask_in;
    case SYSTEM_VALUE_LOCAL_INVOCATION_ID:
@@ -2290,6 +2421,8 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_local_invocation_index;
    case SYSTEM_VALUE_WORKGROUP_ID:
       return nir_intrinsic_load_workgroup_id;
+   case SYSTEM_VALUE_WORKGROUP_INDEX:
+      return nir_intrinsic_load_workgroup_index;
    case SYSTEM_VALUE_NUM_WORKGROUPS:
       return nir_intrinsic_load_num_workgroups;
    case SYSTEM_VALUE_PRIMITIVE_ID:
@@ -2372,6 +2505,8 @@ nir_intrinsic_from_system_value(gl_system_value val)
       return nir_intrinsic_load_ray_geometry_index;
    case SYSTEM_VALUE_RAY_INSTANCE_CUSTOM_INDEX:
       return nir_intrinsic_load_ray_instance_custom_index;
+   case SYSTEM_VALUE_MESH_VIEW_COUNT:
+      return nir_intrinsic_load_mesh_view_count;
    case SYSTEM_VALUE_FRAG_SHADING_RATE:
       return nir_intrinsic_load_frag_shading_rate;
    default:
@@ -2413,6 +2548,8 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_SAMPLE_ID;
    case nir_intrinsic_load_sample_pos:
       return SYSTEM_VALUE_SAMPLE_POS;
+   case nir_intrinsic_load_sample_pos_or_center:
+      return SYSTEM_VALUE_SAMPLE_POS_OR_CENTER;
    case nir_intrinsic_load_sample_mask_in:
       return SYSTEM_VALUE_SAMPLE_MASK_IN;
    case nir_intrinsic_load_local_invocation_id:
@@ -2423,6 +2560,8 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_NUM_WORKGROUPS;
    case nir_intrinsic_load_workgroup_id:
       return SYSTEM_VALUE_WORKGROUP_ID;
+   case nir_intrinsic_load_workgroup_index:
+      return SYSTEM_VALUE_WORKGROUP_INDEX;
    case nir_intrinsic_load_primitive_id:
       return SYSTEM_VALUE_PRIMITIVE_ID;
    case nir_intrinsic_load_tess_coord:
@@ -2511,6 +2650,8 @@ nir_system_value_from_intrinsic(nir_intrinsic_op intrin)
       return SYSTEM_VALUE_RAY_INSTANCE_CUSTOM_INDEX;
    case nir_intrinsic_load_frag_shading_rate:
       return SYSTEM_VALUE_FRAG_SHADING_RATE;
+   case nir_intrinsic_load_mesh_view_count:
+      return SYSTEM_VALUE_MESH_VIEW_COUNT;
    default:
       unreachable("intrinsic doesn't produce a system value");
    }
@@ -2807,4 +2948,572 @@ nir_ssa_scalar_chase_movs(nir_ssa_scalar s)
    }
 
    return s;
+}
+
+nir_alu_type
+nir_get_nir_type_for_glsl_base_type(enum glsl_base_type base_type)
+{
+   switch (base_type) {
+   case GLSL_TYPE_BOOL:
+      return nir_type_bool1;
+      break;
+   case GLSL_TYPE_UINT:
+      return nir_type_uint32;
+      break;
+   case GLSL_TYPE_INT:
+      return nir_type_int32;
+      break;
+   case GLSL_TYPE_UINT16:
+      return nir_type_uint16;
+      break;
+   case GLSL_TYPE_INT16:
+      return nir_type_int16;
+      break;
+   case GLSL_TYPE_UINT8:
+      return nir_type_uint8;
+   case GLSL_TYPE_INT8:
+      return nir_type_int8;
+   case GLSL_TYPE_UINT64:
+      return nir_type_uint64;
+      break;
+   case GLSL_TYPE_INT64:
+      return nir_type_int64;
+      break;
+   case GLSL_TYPE_FLOAT:
+      return nir_type_float32;
+      break;
+   case GLSL_TYPE_FLOAT16:
+      return nir_type_float16;
+      break;
+   case GLSL_TYPE_DOUBLE:
+      return nir_type_float64;
+      break;
+
+   case GLSL_TYPE_SAMPLER:
+   case GLSL_TYPE_TEXTURE:
+   case GLSL_TYPE_IMAGE:
+   case GLSL_TYPE_ATOMIC_UINT:
+   case GLSL_TYPE_STRUCT:
+   case GLSL_TYPE_INTERFACE:
+   case GLSL_TYPE_ARRAY:
+   case GLSL_TYPE_VOID:
+   case GLSL_TYPE_SUBROUTINE:
+   case GLSL_TYPE_FUNCTION:
+   case GLSL_TYPE_ERROR:
+      return nir_type_invalid;
+   }
+
+   unreachable("unknown type");
+}
+
+enum glsl_base_type
+nir_get_glsl_base_type_for_nir_type(nir_alu_type base_type)
+{
+   switch (base_type) {
+   case nir_type_bool1:
+      return GLSL_TYPE_BOOL;
+   case nir_type_uint32:
+      return GLSL_TYPE_UINT;
+   case nir_type_int32:
+      return GLSL_TYPE_INT;
+   case nir_type_uint16:
+      return GLSL_TYPE_UINT16;
+   case nir_type_int16:
+      return GLSL_TYPE_INT16;
+   case nir_type_uint8:
+      return GLSL_TYPE_UINT8;
+   case nir_type_int8:
+      return GLSL_TYPE_INT8;
+   case nir_type_uint64:
+      return GLSL_TYPE_UINT64;
+   case nir_type_int64:
+      return GLSL_TYPE_INT64;
+   case nir_type_float32:
+      return GLSL_TYPE_FLOAT;
+   case nir_type_float16:
+      return GLSL_TYPE_FLOAT16;
+   case nir_type_float64:
+      return GLSL_TYPE_DOUBLE;
+
+   default: unreachable("Not a sized nir_alu_type");
+   }
+}
+
+nir_op
+nir_op_vec(unsigned components)
+{
+   switch (components) {
+   case  1: return nir_op_mov;
+   case  2: return nir_op_vec2;
+   case  3: return nir_op_vec3;
+   case  4: return nir_op_vec4;
+   case  5: return nir_op_vec5;
+   case  8: return nir_op_vec8;
+   case 16: return nir_op_vec16;
+   default: unreachable("bad component count");
+   }
+}
+
+bool
+nir_op_is_vec(nir_op op)
+{
+   switch (op) {
+   case nir_op_mov:
+   case nir_op_vec2:
+   case nir_op_vec3:
+   case nir_op_vec4:
+   case nir_op_vec5:
+   case nir_op_vec8:
+   case nir_op_vec16:
+      return true;
+   default:
+      return false;
+   }
+}
+
+bool
+nir_alu_instr_channel_used(const nir_alu_instr *instr, unsigned src,
+                           unsigned channel)
+{
+   if (nir_op_infos[instr->op].input_sizes[src] > 0)
+      return channel < nir_op_infos[instr->op].input_sizes[src];
+
+   return (instr->dest.write_mask >> channel) & 1;
+}
+
+nir_component_mask_t
+nir_alu_instr_src_read_mask(const nir_alu_instr *instr, unsigned src)
+{
+   nir_component_mask_t read_mask = 0;
+   for (unsigned c = 0; c < NIR_MAX_VEC_COMPONENTS; c++) {
+      if (!nir_alu_instr_channel_used(instr, src, c))
+         continue;
+
+      read_mask |= (1 << instr->src[src].swizzle[c]);
+   }
+   return read_mask;
+}
+
+unsigned
+nir_ssa_alu_instr_src_components(const nir_alu_instr *instr, unsigned src)
+{
+   if (nir_op_infos[instr->op].input_sizes[src] > 0)
+      return nir_op_infos[instr->op].input_sizes[src];
+
+   return nir_dest_num_components(instr->dest.dest);
+}
+
+#define CASE_ALL_SIZES(op) \
+   case op: \
+   case op ## 8: \
+   case op ## 16: \
+   case op ## 32: \
+
+bool
+nir_alu_instr_is_comparison(const nir_alu_instr *instr)
+{
+   switch (instr->op) {
+   CASE_ALL_SIZES(nir_op_flt)
+   CASE_ALL_SIZES(nir_op_fge)
+   CASE_ALL_SIZES(nir_op_feq)
+   CASE_ALL_SIZES(nir_op_fneu)
+   CASE_ALL_SIZES(nir_op_ilt)
+   CASE_ALL_SIZES(nir_op_ult)
+   CASE_ALL_SIZES(nir_op_ige)
+   CASE_ALL_SIZES(nir_op_uge)
+   CASE_ALL_SIZES(nir_op_ieq)
+   CASE_ALL_SIZES(nir_op_ine)
+   case nir_op_i2b1:
+   case nir_op_i2b8:
+   case nir_op_i2b16:
+   case nir_op_i2b32:
+   case nir_op_f2b1:
+   case nir_op_f2b8:
+   case nir_op_f2b16:
+   case nir_op_f2b32:
+   case nir_op_inot:
+      return true;
+   default:
+      return false;
+   }
+}
+
+#undef CASE_ALL_SIZES
+
+unsigned
+nir_intrinsic_src_components(const nir_intrinsic_instr *intr, unsigned srcn)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[intr->intrinsic];
+   assert(srcn < info->num_srcs);
+   if (info->src_components[srcn] > 0)
+      return info->src_components[srcn];
+   else if (info->src_components[srcn] == 0)
+      return intr->num_components;
+   else
+      return nir_src_num_components(intr->src[srcn]);
+}
+
+unsigned
+nir_intrinsic_dest_components(nir_intrinsic_instr *intr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[intr->intrinsic];
+   if (!info->has_dest)
+      return 0;
+   else if (info->dest_components)
+      return info->dest_components;
+   else
+      return intr->num_components;
+}
+
+/**
+ * Helper to copy const_index[] from src to dst, without assuming they
+ * match in order.
+ */
+void
+nir_intrinsic_copy_const_indices(nir_intrinsic_instr *dst, nir_intrinsic_instr *src)
+{
+   if (src->intrinsic == dst->intrinsic) {
+      memcpy(dst->const_index, src->const_index, sizeof(dst->const_index));
+      return;
+   }
+
+   const nir_intrinsic_info *src_info = &nir_intrinsic_infos[src->intrinsic];
+   const nir_intrinsic_info *dst_info = &nir_intrinsic_infos[dst->intrinsic];
+
+   for (unsigned i = 0; i < NIR_INTRINSIC_NUM_INDEX_FLAGS; i++) {
+      if (src_info->index_map[i] == 0)
+         continue;
+
+      /* require that dst instruction also uses the same const_index[]: */
+      assert(dst_info->index_map[i] > 0);
+
+      dst->const_index[dst_info->index_map[i] - 1] =
+            src->const_index[src_info->index_map[i] - 1];
+   }
+}
+
+
+bool
+nir_tex_instr_need_sampler(const nir_tex_instr *instr)
+{
+   switch (instr->op) {
+   case nir_texop_txf:
+   case nir_texop_txf_ms:
+   case nir_texop_txs:
+   case nir_texop_query_levels:
+   case nir_texop_texture_samples:
+   case nir_texop_samples_identical:
+      return false;
+   default:
+      return true;
+   }
+}
+
+unsigned
+nir_tex_instr_result_size(const nir_tex_instr *instr)
+{
+   switch (instr->op) {
+   case nir_texop_txs: {
+      unsigned ret;
+      switch (instr->sampler_dim) {
+         case GLSL_SAMPLER_DIM_1D:
+         case GLSL_SAMPLER_DIM_BUF:
+            ret = 1;
+            break;
+         case GLSL_SAMPLER_DIM_2D:
+         case GLSL_SAMPLER_DIM_CUBE:
+         case GLSL_SAMPLER_DIM_MS:
+         case GLSL_SAMPLER_DIM_RECT:
+         case GLSL_SAMPLER_DIM_EXTERNAL:
+         case GLSL_SAMPLER_DIM_SUBPASS:
+            ret = 2;
+            break;
+         case GLSL_SAMPLER_DIM_3D:
+            ret = 3;
+            break;
+         default:
+            unreachable("not reached");
+      }
+      if (instr->is_array)
+         ret++;
+      return ret;
+   }
+
+   case nir_texop_lod:
+      return 2;
+
+   case nir_texop_texture_samples:
+   case nir_texop_query_levels:
+   case nir_texop_samples_identical:
+   case nir_texop_fragment_mask_fetch_amd:
+      return 1;
+
+   default:
+      if (instr->is_shadow && instr->is_new_style_shadow)
+         return 1;
+
+      return 4;
+   }
+}
+
+bool
+nir_tex_instr_is_query(const nir_tex_instr *instr)
+{
+   switch (instr->op) {
+   case nir_texop_txs:
+   case nir_texop_lod:
+   case nir_texop_texture_samples:
+   case nir_texop_query_levels:
+      return true;
+   case nir_texop_tex:
+   case nir_texop_txb:
+   case nir_texop_txl:
+   case nir_texop_txd:
+   case nir_texop_txf:
+   case nir_texop_txf_ms:
+   case nir_texop_txf_ms_fb:
+   case nir_texop_txf_ms_mcs_intel:
+   case nir_texop_tg4:
+      return false;
+   default:
+      unreachable("Invalid texture opcode");
+   }
+}
+
+bool
+nir_tex_instr_has_implicit_derivative(const nir_tex_instr *instr)
+{
+   switch (instr->op) {
+   case nir_texop_tex:
+   case nir_texop_txb:
+   case nir_texop_lod:
+      return true;
+   default:
+      return false;
+   }
+}
+
+nir_alu_type
+nir_tex_instr_src_type(const nir_tex_instr *instr, unsigned src)
+{
+   switch (instr->src[src].src_type) {
+   case nir_tex_src_coord:
+      switch (instr->op) {
+      case nir_texop_txf:
+      case nir_texop_txf_ms:
+      case nir_texop_txf_ms_fb:
+      case nir_texop_txf_ms_mcs_intel:
+      case nir_texop_samples_identical:
+      case nir_texop_fragment_fetch_amd:
+      case nir_texop_fragment_mask_fetch_amd:
+         return nir_type_int;
+
+      default:
+         return nir_type_float;
+      }
+
+   case nir_tex_src_lod:
+      switch (instr->op) {
+      case nir_texop_txs:
+      case nir_texop_txf:
+      case nir_texop_txf_ms:
+      case nir_texop_fragment_fetch_amd:
+      case nir_texop_fragment_mask_fetch_amd:
+         return nir_type_int;
+
+      default:
+         return nir_type_float;
+      }
+
+   case nir_tex_src_projector:
+   case nir_tex_src_comparator:
+   case nir_tex_src_bias:
+   case nir_tex_src_min_lod:
+   case nir_tex_src_ddx:
+   case nir_tex_src_ddy:
+   case nir_tex_src_backend1:
+   case nir_tex_src_backend2:
+      return nir_type_float;
+
+   case nir_tex_src_offset:
+   case nir_tex_src_ms_index:
+   case nir_tex_src_plane:
+      return nir_type_int;
+
+   case nir_tex_src_ms_mcs_intel:
+   case nir_tex_src_texture_deref:
+   case nir_tex_src_sampler_deref:
+   case nir_tex_src_texture_offset:
+   case nir_tex_src_sampler_offset:
+   case nir_tex_src_texture_handle:
+   case nir_tex_src_sampler_handle:
+      return nir_type_uint;
+
+   case nir_num_tex_src_types:
+      unreachable("nir_num_tex_src_types is not a valid source type");
+   }
+
+   unreachable("Invalid texture source type");
+}
+
+unsigned
+nir_tex_instr_src_size(const nir_tex_instr *instr, unsigned src)
+{
+   if (instr->src[src].src_type == nir_tex_src_coord)
+      return instr->coord_components;
+
+   /* The MCS value is expected to be a vec4 returned by a txf_ms_mcs_intel */
+   if (instr->src[src].src_type == nir_tex_src_ms_mcs_intel)
+      return 4;
+
+   if (instr->src[src].src_type == nir_tex_src_ddx ||
+       instr->src[src].src_type == nir_tex_src_ddy) {
+
+      if (instr->is_array && !instr->array_is_lowered_cube)
+         return instr->coord_components - 1;
+      else
+         return instr->coord_components;
+   }
+
+   if (instr->src[src].src_type == nir_tex_src_offset) {
+      if (instr->is_array)
+         return instr->coord_components - 1;
+      else
+         return instr->coord_components;
+   }
+
+   if (instr->src[src].src_type == nir_tex_src_backend1 ||
+       instr->src[src].src_type == nir_tex_src_backend2)
+      return nir_src_num_components(instr->src[src].src);
+
+   /* For AMD, this can be a vec8/vec4 image/sampler descriptor. */
+   if (instr->src[src].src_type == nir_tex_src_texture_handle ||
+       instr->src[src].src_type == nir_tex_src_sampler_handle)
+      return 0;
+
+   return 1;
+}
+
+/**
+ * Return which components are written into transform feedback buffers.
+ * The result is relative to 0, not "component".
+ */
+unsigned
+nir_instr_xfb_write_mask(nir_intrinsic_instr *instr)
+{
+   unsigned mask = 0;
+
+   if (nir_intrinsic_has_io_xfb(instr)) {
+      unsigned wr_mask = nir_intrinsic_write_mask(instr) <<
+                         nir_intrinsic_component(instr);
+      assert((wr_mask & ~0xf) == 0); /* only 4 components allowed */
+
+      unsigned iter_mask = wr_mask;
+      while (iter_mask) {
+         unsigned i = u_bit_scan(&iter_mask);
+         nir_io_xfb xfb = i < 2 ? nir_intrinsic_io_xfb(instr) :
+                                  nir_intrinsic_io_xfb2(instr);
+         if (xfb.out[i % 2].num_components)
+            mask |= BITFIELD_RANGE(i, xfb.out[i % 2].num_components) & wr_mask;
+      }
+   }
+
+   return mask;
+}
+
+/**
+ * Whether an output slot is consumed by fixed-function logic.
+ */
+bool
+nir_slot_is_sysval_output(gl_varying_slot slot)
+{
+   return slot == VARYING_SLOT_POS ||
+          slot == VARYING_SLOT_PSIZ ||
+          slot == VARYING_SLOT_EDGE ||
+          slot == VARYING_SLOT_CLIP_VERTEX ||
+          slot == VARYING_SLOT_CLIP_DIST0 ||
+          slot == VARYING_SLOT_CLIP_DIST1 ||
+          slot == VARYING_SLOT_CULL_DIST0 ||
+          slot == VARYING_SLOT_CULL_DIST1 ||
+          slot == VARYING_SLOT_LAYER ||
+          slot == VARYING_SLOT_VIEWPORT ||
+          slot == VARYING_SLOT_TESS_LEVEL_OUTER ||
+          slot == VARYING_SLOT_TESS_LEVEL_INNER ||
+          slot == VARYING_SLOT_BOUNDING_BOX0 ||
+          slot == VARYING_SLOT_BOUNDING_BOX1 ||
+          slot == VARYING_SLOT_VIEW_INDEX ||
+          slot == VARYING_SLOT_VIEWPORT_MASK ||
+          slot == VARYING_SLOT_PRIMITIVE_SHADING_RATE ||
+          slot == VARYING_SLOT_PRIMITIVE_COUNT ||
+          slot == VARYING_SLOT_PRIMITIVE_INDICES ||
+          slot == VARYING_SLOT_TASK_COUNT;
+}
+
+/**
+ * Whether an input/output slot is consumed by the next shader stage,
+ * or written by the previous shader stage.
+ */
+bool
+nir_slot_is_varying(gl_varying_slot slot)
+{
+   return slot >= VARYING_SLOT_VAR0 ||
+          slot == VARYING_SLOT_COL0 ||
+          slot == VARYING_SLOT_COL1 ||
+          slot == VARYING_SLOT_BFC0 ||
+          slot == VARYING_SLOT_BFC1 ||
+          slot == VARYING_SLOT_FOGC ||
+          (slot >= VARYING_SLOT_TEX0 && slot <= VARYING_SLOT_TEX7) ||
+          slot == VARYING_SLOT_PNTC ||
+          slot == VARYING_SLOT_CLIP_DIST0 ||
+          slot == VARYING_SLOT_CLIP_DIST1 ||
+          slot == VARYING_SLOT_CULL_DIST0 ||
+          slot == VARYING_SLOT_CULL_DIST1 ||
+          slot == VARYING_SLOT_PRIMITIVE_ID ||
+          slot == VARYING_SLOT_LAYER ||
+          slot == VARYING_SLOT_VIEWPORT ||
+          slot == VARYING_SLOT_TESS_LEVEL_OUTER ||
+          slot == VARYING_SLOT_TESS_LEVEL_INNER;
+}
+
+bool
+nir_slot_is_sysval_output_and_varying(gl_varying_slot slot)
+{
+   return nir_slot_is_sysval_output(slot) &&
+          nir_slot_is_varying(slot);
+}
+
+/**
+ * This marks the output store instruction as not feeding the next shader
+ * stage. If the instruction has no other use, it's removed.
+ */
+void nir_remove_varying(nir_intrinsic_instr *intr)
+{
+   nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+
+   if ((!sem.no_sysval_output && nir_slot_is_sysval_output(sem.location)) ||
+       nir_instr_xfb_write_mask(intr)) {
+      /* Demote the store instruction. */
+      sem.no_varying = true;
+      nir_intrinsic_set_io_semantics(intr, sem);
+   } else {
+      nir_instr_remove(&intr->instr);
+   }
+}
+
+/**
+ * This marks the output store instruction as not feeding fixed-function
+ * logic. If the instruction has no other use, it's removed.
+ */
+void nir_remove_sysval_output(nir_intrinsic_instr *intr)
+{
+   nir_io_semantics sem = nir_intrinsic_io_semantics(intr);
+
+   if ((!sem.no_varying && nir_slot_is_varying(sem.location)) ||
+       nir_instr_xfb_write_mask(intr)) {
+      /* Demote the store instruction. */
+      sem.no_sysval_output = true;
+      nir_intrinsic_set_io_semantics(intr, sem);
+   } else {
+      nir_instr_remove(&intr->instr);
+   }
 }

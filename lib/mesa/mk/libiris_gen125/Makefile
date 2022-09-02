@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2021/07/22 11:10:10 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:39 jsg Exp $
 
 GEN=	125
 LIB=	iris_gen${GEN}
@@ -18,6 +18,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DGFX_VERx10=${GEN}

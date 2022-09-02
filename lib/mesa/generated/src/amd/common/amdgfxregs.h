@@ -7903,6 +7903,7 @@
 #define   G_00B890_ADDR(x)                                            (((x) >> 0) & 0xFFFF)
 #define   C_00B890_ADDR                                               0xFFFF0000
 #define R_00B894_COMPUTE_SHADER_CHKSUM                                  0x00B894 /* gfx9 */
+#define R_00B894_COMPUTE_STATIC_THREAD_MGMT_SE4                         0x00B894 /* gfx9 */
 #define R_00B894_COMPUTE_USER_ACCUM_1                                   0x00B894 /* >= gfx10 */
 #define R_00B894_COMPUTE_WAVE_RESTORE_CONTROL                           0x00B894 /* gfx8, gfx81 */
 #define   S_00B894_ATC(x)                                             (((unsigned)(x) & 0x1) << 0)
@@ -7911,12 +7912,15 @@
 #define   S_00B894_MTYPE(x)                                           (((unsigned)(x) & 0x3) << 1)
 #define   G_00B894_MTYPE(x)                                           (((x) >> 1) & 0x3)
 #define   C_00B894_MTYPE                                              0xFFFFFFF9
+#define R_00B898_COMPUTE_STATIC_THREAD_MGMT_SE5                         0x00B898 /* gfx9 */
 #define R_00B898_COMPUTE_USER_ACCUM_2                                   0x00B898 /* >= gfx10 */
+#define R_00B89C_COMPUTE_STATIC_THREAD_MGMT_SE6                         0x00B89C /* gfx9 */
 #define R_00B89C_COMPUTE_USER_ACCUM_3                                   0x00B89C /* >= gfx10 */
 #define R_00B8A0_COMPUTE_PGM_RSRC3                                      0x00B8A0 /* >= gfx10 */
 #define   S_00B8A0_SHARED_VGPR_CNT(x)                                 (((unsigned)(x) & 0xF) << 0)
 #define   G_00B8A0_SHARED_VGPR_CNT(x)                                 (((x) >> 0) & 0xF)
 #define   C_00B8A0_SHARED_VGPR_CNT                                    0xFFFFFFF0
+#define R_00B8A0_COMPUTE_STATIC_THREAD_MGMT_SE7                         0x00B8A0 /* gfx9 */
 #define R_00B8A4_COMPUTE_DDID_INDEX                                     0x00B8A4 /* >= gfx10 */
 #define   S_00B8A4_INDEX(x)                                           (((unsigned)(x) & 0x7FF) << 0)
 #define   G_00B8A4_INDEX(x)                                           (((x) >> 0) & 0x7FF)
@@ -13907,10 +13911,8 @@
 #define   S_030800_SE_BROADCAST_WRITES(x)                             (((unsigned)(x) & 0x1) << 31)
 #define   G_030800_SE_BROADCAST_WRITES(x)                             (((x) >> 31) & 0x1)
 #define   C_030800_SE_BROADCAST_WRITES                                0x7FFFFFFF
-#define R_030900_VGT_ESGS_RING_SIZE                                     0x030900 /* gfx7, gfx8, gfx81 */
-#define R_030900_VGT_ESGS_RING_SIZE_UMD                                 0x030900 /* >= gfx10 */
-#define R_030904_VGT_GSVS_RING_SIZE                                     0x030904 /* gfx7, gfx8, gfx81, gfx9 */
-#define R_030904_VGT_GSVS_RING_SIZE_UMD                                 0x030904 /* >= gfx10 */
+#define R_030900_VGT_ESGS_RING_SIZE                                     0x030900 /* gfx7, gfx8, gfx81, >= gfx10 */
+#define R_030904_VGT_GSVS_RING_SIZE                                     0x030904 /* >= gfx7 */
 #define R_030908_VGT_PRIMITIVE_TYPE                                     0x030908 /* >= gfx7 */
 #define   S_030908_PRIM_TYPE(x)                                       (((unsigned)(x) & 0x3F) << 0)
 #define   G_030908_PRIM_TYPE(x)                                       (((x) >> 0) & 0x3F)
@@ -13977,31 +13979,28 @@
 #define R_03092C_VGT_MULTI_PRIM_IB_RESET_EN                             0x03092C /* gfx9 */
 #define R_030930_VGT_NUM_INDICES                                        0x030930 /* >= gfx7 */
 #define R_030934_VGT_NUM_INSTANCES                                      0x030934 /* >= gfx7 */
-#define R_030938_VGT_TF_RING_SIZE                                       0x030938 /* gfx7, gfx8, gfx81, gfx9 */
+#define R_030938_VGT_TF_RING_SIZE                                       0x030938 /* >= gfx7 */
 #define   S_030938_SIZE(x)                                            (((unsigned)(x) & 0xFFFF) << 0)
 #define   G_030938_SIZE(x)                                            (((x) >> 0) & 0xFFFF)
 #define   C_030938_SIZE                                               0xFFFF0000
-#define R_030938_VGT_TF_RING_SIZE_UMD                                   0x030938 /* >= gfx10 */
-#define R_03093C_VGT_HS_OFFCHIP_PARAM                                   0x03093C /* gfx7, gfx8, gfx81, gfx9 */
-#define   S_03093C_OFFCHIP_BUFFERING_GFX7(x)                          (((unsigned)(x) & 0x1FF) << 0)
+#define R_03093C_VGT_HS_OFFCHIP_PARAM                                   0x03093C /* >= gfx7 */
+#define   S_03093C_OFFCHIP_BUFFERING_GFX103(x)                        (((unsigned)(x) & 0x3FF) << 0) /* >= gfx103 */
+#define   G_03093C_OFFCHIP_BUFFERING_GFX103(x)                        (((x) >> 0) & 0x3FF)
+#define   C_03093C_OFFCHIP_BUFFERING_GFX103                           0xFFFFFC00
+#define   S_03093C_OFFCHIP_BUFFERING_GFX7(x)                          (((unsigned)(x) & 0x1FF) << 0) /* gfx7, gfx8, gfx81, gfx9, gfx10 */
 #define   G_03093C_OFFCHIP_BUFFERING_GFX7(x)                          (((x) >> 0) & 0x1FF)
 #define   C_03093C_OFFCHIP_BUFFERING_GFX7                             0xFFFFFE00
-#define   S_03093C_OFFCHIP_GRANULARITY_GFX7(x)                        (((unsigned)(x) & 0x3) << 9)
+#define   S_03093C_OFFCHIP_GRANULARITY_GFX7(x)                        (((unsigned)(x) & 0x3) << 9) /* gfx7, gfx8, gfx81, gfx9, gfx10 */
 #define   G_03093C_OFFCHIP_GRANULARITY_GFX7(x)                        (((x) >> 9) & 0x3)
 #define   C_03093C_OFFCHIP_GRANULARITY_GFX7                           0xFFFFF9FF
 #define     V_03093C_X_8K_DWORDS                                    0
 #define     V_03093C_X_4K_DWORDS                                    1
 #define     V_03093C_X_2K_DWORDS                                    2
 #define     V_03093C_X_1K_DWORDS                                    3
-#define R_03093C_VGT_HS_OFFCHIP_PARAM_UMD                               0x03093C /* >= gfx10 */
-#define   S_03093C_OFFCHIP_BUFFERING_GFX103(x)                        (((unsigned)(x) & 0x3FF) << 0) /* >= gfx103 */
-#define   G_03093C_OFFCHIP_BUFFERING_GFX103(x)                        (((x) >> 0) & 0x3FF)
-#define   C_03093C_OFFCHIP_BUFFERING_GFX103                           0xFFFFFC00
 #define   S_03093C_OFFCHIP_GRANULARITY_GFX103(x)                      (((unsigned)(x) & 0x3) << 10) /* >= gfx103 */
 #define   G_03093C_OFFCHIP_GRANULARITY_GFX103(x)                      (((x) >> 10) & 0x3)
 #define   C_03093C_OFFCHIP_GRANULARITY_GFX103                         0xFFFFF3FF
-#define R_030940_VGT_TF_MEMORY_BASE                                     0x030940 /* gfx7, gfx8, gfx81, gfx9 */
-#define R_030940_VGT_TF_MEMORY_BASE_UMD                                 0x030940 /* >= gfx10 */
+#define R_030940_VGT_TF_MEMORY_BASE                                     0x030940 /* >= gfx7 */
 #define R_030944_GE_DMA_FIRST_INDEX                                     0x030944 /* >= gfx10 */
 #define R_030944_VGT_TF_MEMORY_BASE_HI                                  0x030944 /* gfx9 */
 #define   S_030944_BASE_HI(x)                                         (((unsigned)(x) & 0xFF) << 0)
@@ -14086,7 +14085,7 @@
 #define   S_030980_NUM_PC_LINES(x)                                    (((unsigned)(x) & 0x3FF) << 1)
 #define   G_030980_NUM_PC_LINES(x)                                    (((x) >> 1) & 0x3FF)
 #define   C_030980_NUM_PC_LINES                                       0xFFFFF801
-#define R_030984_VGT_TF_MEMORY_BASE_HI_UMD                              0x030984 /* >= gfx10 */
+#define R_030984_VGT_TF_MEMORY_BASE_HI                                  0x030984 /* >= gfx10 */
 #define   S_030984_BASE_HI(x)                                         (((unsigned)(x) & 0xFF) << 0)
 #define   G_030984_BASE_HI(x)                                         (((x) >> 0) & 0xFF)
 #define   C_030984_BASE_HI                                            0xFFFFFF00

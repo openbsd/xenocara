@@ -26,7 +26,7 @@
  */
 
 
-#include "api_exec.h"
+#include "context.h"
 #include "glthread_marshal.h"
 #include "bufferobj.h"
 #include "dispatch.h"
@@ -2251,6 +2251,7 @@ _mesa_marshal_BindFramebuffer(GLenum target, GLuint framebuffer)
    cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_BindFramebuffer, cmd_size);
    cmd->target = target;
    cmd->framebuffer = framebuffer;
+   if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) ctx->GLThread.CurrentDrawFramebuffer = framebuffer;
 }
 
 
@@ -2281,12 +2282,14 @@ _mesa_marshal_DeleteFramebuffers(GLsizei n, const GLuint * framebuffers)
    if (unlikely(framebuffers_size < 0 || (framebuffers_size > 0 && !framebuffers) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
       _mesa_glthread_finish_before(ctx, "DeleteFramebuffers");
       CALL_DeleteFramebuffers(ctx->CurrentServerDispatch, (n, framebuffers));
+      _mesa_glthread_DeleteFramebuffers(ctx, n, framebuffers);
       return;
    }
    cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_DeleteFramebuffers, cmd_size);
    cmd->n = n;
    char *variable_data = (char *) (cmd + 1);
    memcpy(variable_data, framebuffers, framebuffers_size);
+   _mesa_glthread_DeleteFramebuffers(ctx, n, framebuffers);
 }
 
 
@@ -2305,6 +2308,7 @@ GLenum GLAPIENTRY
 _mesa_marshal_CheckFramebufferStatus(GLenum target)
 {
    GET_CURRENT_CONTEXT(ctx);
+   if (ctx->Const.GLThreadNopCheckFramebufferStatus) return GL_FRAMEBUFFER_COMPLETE;
    _mesa_glthread_finish_before(ctx, "CheckFramebufferStatus");
    return CALL_CheckFramebufferStatus(ctx->CurrentServerDispatch, (target));
 }

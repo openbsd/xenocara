@@ -295,24 +295,25 @@ const uint16_t isl_format_name_offsets[] = {
     [ISL_FORMAT_ASTC_HDR_2D_12X10_FLT16] = 7146, 
     [ISL_FORMAT_ASTC_HDR_2D_12X12_FLT16] = 7181, 
     [ISL_FORMAT_HIZ] = 7216, 
-    [ISL_FORMAT_MCS_2X] = 7231, 
-    [ISL_FORMAT_MCS_4X] = 7249, 
-    [ISL_FORMAT_MCS_8X] = 7267, 
-    [ISL_FORMAT_MCS_16X] = 7285, 
-    [ISL_FORMAT_GFX7_CCS_32BPP_X] = 7304, 
-    [ISL_FORMAT_GFX7_CCS_64BPP_X] = 7332, 
-    [ISL_FORMAT_GFX7_CCS_128BPP_X] = 7360, 
-    [ISL_FORMAT_GFX7_CCS_32BPP_Y] = 7389, 
-    [ISL_FORMAT_GFX7_CCS_64BPP_Y] = 7417, 
-    [ISL_FORMAT_GFX7_CCS_128BPP_Y] = 7445, 
-    [ISL_FORMAT_GFX9_CCS_32BPP] = 7474, 
-    [ISL_FORMAT_GFX9_CCS_64BPP] = 7500, 
-    [ISL_FORMAT_GFX9_CCS_128BPP] = 7526, 
-    [ISL_FORMAT_GFX12_CCS_8BPP_Y0] = 7553, 
-    [ISL_FORMAT_GFX12_CCS_16BPP_Y0] = 7582, 
-    [ISL_FORMAT_GFX12_CCS_32BPP_Y0] = 7612, 
-    [ISL_FORMAT_GFX12_CCS_64BPP_Y0] = 7642, 
-    [ISL_FORMAT_GFX12_CCS_128BPP_Y0] = 7672, 
+    [ISL_FORMAT_GFX125_HIZ] = 7231, 
+    [ISL_FORMAT_MCS_2X] = 7253, 
+    [ISL_FORMAT_MCS_4X] = 7271, 
+    [ISL_FORMAT_MCS_8X] = 7289, 
+    [ISL_FORMAT_MCS_16X] = 7307, 
+    [ISL_FORMAT_GFX7_CCS_32BPP_X] = 7326, 
+    [ISL_FORMAT_GFX7_CCS_64BPP_X] = 7354, 
+    [ISL_FORMAT_GFX7_CCS_128BPP_X] = 7382, 
+    [ISL_FORMAT_GFX7_CCS_32BPP_Y] = 7411, 
+    [ISL_FORMAT_GFX7_CCS_64BPP_Y] = 7439, 
+    [ISL_FORMAT_GFX7_CCS_128BPP_Y] = 7467, 
+    [ISL_FORMAT_GFX9_CCS_32BPP] = 7496, 
+    [ISL_FORMAT_GFX9_CCS_64BPP] = 7522, 
+    [ISL_FORMAT_GFX9_CCS_128BPP] = 7548, 
+    [ISL_FORMAT_GFX12_CCS_8BPP_Y0] = 7575, 
+    [ISL_FORMAT_GFX12_CCS_16BPP_Y0] = 7604, 
+    [ISL_FORMAT_GFX12_CCS_32BPP_Y0] = 7634, 
+    [ISL_FORMAT_GFX12_CCS_64BPP_Y0] = 7664, 
+    [ISL_FORMAT_GFX12_CCS_128BPP_Y0] = 7694, 
 };
 
 const char isl_format_names[] = {
@@ -585,6 +586,7 @@ const char isl_format_names[] = {
   "ISL_FORMAT_ASTC_HDR_2D_12X10_FLT16\0"
   "ISL_FORMAT_ASTC_HDR_2D_12X12_FLT16\0"
   "ISL_FORMAT_HIZ\0"
+  "ISL_FORMAT_GFX125_HIZ\0"
   "ISL_FORMAT_MCS_2X\0"
   "ISL_FORMAT_MCS_4X\0"
   "ISL_FORMAT_MCS_8X\0"
@@ -5972,6 +5974,26 @@ isl_format_layouts[] = {
     .bpb = 128,
     .bw = 8,
     .bh = 4,
+    .bd = 1,
+    .channels = {
+              .r = {},
+              .g = {},
+              .b = {},
+              .a = {},
+              .l = {},
+              .i = {},
+              .p = {},
+    },
+    .uniform_channel_type = ISL_VOID,
+    .colorspace = ISL_COLORSPACE_NONE,
+    .txc = ISL_TXC_HIZ,
+  },
+
+  [ISL_FORMAT_GFX125_HIZ] = {
+    .format = ISL_FORMAT_GFX125_HIZ,
+    .bpb = 128,
+    .bw = 8,
+    .bh = 8,
     .bd = 1,
     .channels = {
               .r = {},

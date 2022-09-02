@@ -129,6 +129,7 @@ struct glthread_attrib_node {
    GLbitfield Mask;
    int ActiveTexture;
    GLenum MatrixMode;
+   bool CullFace;
 };
 
 typedef enum {
@@ -207,6 +208,7 @@ struct glthread_state
    GLuint CurrentDrawIndirectBufferName;
    GLuint CurrentPixelPackBufferName;
    GLuint CurrentPixelUnpackBufferName;
+   GLuint CurrentQueryBufferName;
 
    /**
     * The batch index of the last occurence of glLinkProgram or
@@ -227,13 +229,17 @@ struct glthread_state
    struct glthread_attrib_node AttribStack[MAX_ATTRIB_STACK_DEPTH];
    int AttribStackDepth;
    int MatrixStackDepth[M_NUM_MATRIX_STACKS];
+
+   /** Enable states. */
+   bool CullFace;
+
+   GLuint CurrentDrawFramebuffer;
+   GLuint CurrentProgram;
 };
 
 void _mesa_glthread_init(struct gl_context *ctx);
-void _mesa_glthread_destroy(struct gl_context *ctx);
+void _mesa_glthread_destroy(struct gl_context *ctx, const char *reason);
 
-void _mesa_glthread_restore_dispatch(struct gl_context *ctx, const char *func);
-void _mesa_glthread_disable(struct gl_context *ctx, const char *func);
 void _mesa_glthread_flush_batch(struct gl_context *ctx);
 void _mesa_glthread_finish(struct gl_context *ctx);
 void _mesa_glthread_finish_before(struct gl_context *ctx, const char *func);

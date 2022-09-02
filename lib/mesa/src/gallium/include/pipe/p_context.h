@@ -45,7 +45,6 @@ struct pipe_blit_info;
 struct pipe_box;
 struct pipe_clip_state;
 struct pipe_constant_buffer;
-struct pipe_debug_callback;
 struct pipe_depth_stencil_alpha_state;
 struct pipe_device_reset_callback;
 struct pipe_draw_info;
@@ -81,6 +80,7 @@ union pipe_color_union;
 union pipe_query_result;
 struct u_log_context;
 struct u_upload_mgr;
+struct util_debug_callback;
 
 /**
  * Gallium rendering context.  Basically:
@@ -265,7 +265,7 @@ struct pipe_context {
     */
    void (*get_query_result_resource)(struct pipe_context *pipe,
                                      struct pipe_query *q,
-                                     bool wait,
+                                     enum pipe_query_flags flags,
                                      enum pipe_query_value_type result_type,
                                      int index,
                                      struct pipe_resource *resource,
@@ -321,6 +321,22 @@ struct pipe_context {
                                      uint32_t *data,
                                      uint32_t *bytes_written);
 
+   /*@}*/
+
+   /**
+    * \name GLSL shader/program functions.
+    */
+   /*@{*/
+   /**
+    * Called when a shader program is linked.
+    * \param handles  Array of shader handles attached to this program.
+    *                 The size of the array is \c PIPE_SHADER_TYPES, and each
+    *                 position contains the corresponding \c pipe_shader_state*
+    *                 or \c pipe_compute_state*, or \c NULL.
+    *                 E.g. You can retrieve the fragment shader handle with
+    *                      \c handles[PIPE_SHADER_FRAGMENT]
+    */
+   void (*link_shader)(struct pipe_context *, void** handles);
    /*@}*/
 
    /**
@@ -505,7 +521,7 @@ struct pipe_context {
     * set, otherwise a copy of the data should be made.
     */
    void (*set_debug_callback)(struct pipe_context *,
-                              const struct pipe_debug_callback *);
+                              const struct util_debug_callback *);
 
    /**
     * Bind an array of shader buffers that will be used by a shader.

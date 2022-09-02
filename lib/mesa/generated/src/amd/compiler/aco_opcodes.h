@@ -1148,6 +1148,7 @@ enum class aco_opcode : std::uint16_t {
    v_fmaak_f32,
    v_fmac_f16,
    v_fmac_f32,
+   v_fmac_legacy_f32,
    v_fmamk_f16,
    v_fmamk_f32,
    v_fract_f16,

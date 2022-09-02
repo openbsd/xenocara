@@ -335,16 +335,6 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_BlendColor,
    DISPATCH_CMD_BlendEquation,
    DISPATCH_CMD_DrawRangeElements,
-   DISPATCH_CMD_CopyColorTable,
-   DISPATCH_CMD_CopyColorSubTable,
-   DISPATCH_CMD_ConvolutionParameterf,
-   DISPATCH_CMD_ConvolutionParameteri,
-   DISPATCH_CMD_CopyConvolutionFilter1D,
-   DISPATCH_CMD_CopyConvolutionFilter2D,
-   DISPATCH_CMD_Histogram,
-   DISPATCH_CMD_Minmax,
-   DISPATCH_CMD_ResetHistogram,
-   DISPATCH_CMD_ResetMinmax,
    DISPATCH_CMD_TexImage3D,
    DISPATCH_CMD_TexSubImage3D,
    DISPATCH_CMD_CopyTexSubImage3D,
@@ -800,6 +790,8 @@ enum marshal_dispatch_cmd_id
    DISPATCH_CMD_DispatchComputeGroupSizeARB,
    DISPATCH_CMD_MultiDrawArraysIndirectCountARB,
    DISPATCH_CMD_MultiDrawElementsIndirectCountARB,
+   DISPATCH_CMD_TexPageCommitmentARB,
+   DISPATCH_CMD_TexturePageCommitmentEXT,
    DISPATCH_CMD_ClipControl,
    DISPATCH_CMD_TransformFeedbackBufferBase,
    DISPATCH_CMD_TransformFeedbackBufferRange,
@@ -2263,58 +2255,6 @@ void GLAPIENTRY _mesa_marshal_BlendEquation(GLenum mode);
 struct marshal_cmd_DrawRangeElements;
 uint32_t _mesa_unmarshal_DrawRangeElements(struct gl_context *ctx, const struct marshal_cmd_DrawRangeElements *cmd, const uint64_t *last);
 void GLAPIENTRY _mesa_marshal_DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices);
-void GLAPIENTRY _mesa_marshal_ColorTable(GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid * table);
-void GLAPIENTRY _mesa_marshal_ColorTableParameterfv(GLenum target, GLenum pname, const GLfloat * params);
-void GLAPIENTRY _mesa_marshal_ColorTableParameteriv(GLenum target, GLenum pname, const GLint * params);
-struct marshal_cmd_CopyColorTable;
-uint32_t _mesa_unmarshal_CopyColorTable(struct gl_context *ctx, const struct marshal_cmd_CopyColorTable *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_CopyColorTable(GLenum target, GLenum internalformat, GLint x, GLint y, GLsizei width);
-void GLAPIENTRY _mesa_marshal_GetColorTable(GLenum target, GLenum format, GLenum type, GLvoid * table);
-void GLAPIENTRY _mesa_marshal_GetColorTableParameterfv(GLenum target, GLenum pname, GLfloat * params);
-void GLAPIENTRY _mesa_marshal_GetColorTableParameteriv(GLenum target, GLenum pname, GLint * params);
-void GLAPIENTRY _mesa_marshal_ColorSubTable(GLenum target, GLsizei start, GLsizei count, GLenum format, GLenum type, const GLvoid * data);
-struct marshal_cmd_CopyColorSubTable;
-uint32_t _mesa_unmarshal_CopyColorSubTable(struct gl_context *ctx, const struct marshal_cmd_CopyColorSubTable *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_CopyColorSubTable(GLenum target, GLsizei start, GLint x, GLint y, GLsizei width);
-void GLAPIENTRY _mesa_marshal_ConvolutionFilter1D(GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid * image);
-void GLAPIENTRY _mesa_marshal_ConvolutionFilter2D(GLenum target, GLenum internalformat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * image);
-struct marshal_cmd_ConvolutionParameterf;
-uint32_t _mesa_unmarshal_ConvolutionParameterf(struct gl_context *ctx, const struct marshal_cmd_ConvolutionParameterf *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_ConvolutionParameterf(GLenum target, GLenum pname, GLfloat params);
-void GLAPIENTRY _mesa_marshal_ConvolutionParameterfv(GLenum target, GLenum pname, const GLfloat * params);
-struct marshal_cmd_ConvolutionParameteri;
-uint32_t _mesa_unmarshal_ConvolutionParameteri(struct gl_context *ctx, const struct marshal_cmd_ConvolutionParameteri *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_ConvolutionParameteri(GLenum target, GLenum pname, GLint params);
-void GLAPIENTRY _mesa_marshal_ConvolutionParameteriv(GLenum target, GLenum pname, const GLint * params);
-struct marshal_cmd_CopyConvolutionFilter1D;
-uint32_t _mesa_unmarshal_CopyConvolutionFilter1D(struct gl_context *ctx, const struct marshal_cmd_CopyConvolutionFilter1D *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_CopyConvolutionFilter1D(GLenum target, GLenum internalformat, GLint x, GLint y, GLsizei width);
-struct marshal_cmd_CopyConvolutionFilter2D;
-uint32_t _mesa_unmarshal_CopyConvolutionFilter2D(struct gl_context *ctx, const struct marshal_cmd_CopyConvolutionFilter2D *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_CopyConvolutionFilter2D(GLenum target, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height);
-void GLAPIENTRY _mesa_marshal_GetConvolutionFilter(GLenum target, GLenum format, GLenum type, GLvoid * image);
-void GLAPIENTRY _mesa_marshal_GetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat * params);
-void GLAPIENTRY _mesa_marshal_GetConvolutionParameteriv(GLenum target, GLenum pname, GLint * params);
-void GLAPIENTRY _mesa_marshal_GetSeparableFilter(GLenum target, GLenum format, GLenum type, GLvoid * row, GLvoid * column, GLvoid * span);
-void GLAPIENTRY _mesa_marshal_SeparableFilter2D(GLenum target, GLenum internalformat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * row, const GLvoid * column);
-void GLAPIENTRY _mesa_marshal_GetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values);
-void GLAPIENTRY _mesa_marshal_GetHistogramParameterfv(GLenum target, GLenum pname, GLfloat * params);
-void GLAPIENTRY _mesa_marshal_GetHistogramParameteriv(GLenum target, GLenum pname, GLint * params);
-void GLAPIENTRY _mesa_marshal_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values);
-void GLAPIENTRY _mesa_marshal_GetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat * params);
-void GLAPIENTRY _mesa_marshal_GetMinmaxParameteriv(GLenum target, GLenum pname, GLint * params);
-struct marshal_cmd_Histogram;
-uint32_t _mesa_unmarshal_Histogram(struct gl_context *ctx, const struct marshal_cmd_Histogram *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_Histogram(GLenum target, GLsizei width, GLenum internalformat, GLboolean sink);
-struct marshal_cmd_Minmax;
-uint32_t _mesa_unmarshal_Minmax(struct gl_context *ctx, const struct marshal_cmd_Minmax *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_Minmax(GLenum target, GLenum internalformat, GLboolean sink);
-struct marshal_cmd_ResetHistogram;
-uint32_t _mesa_unmarshal_ResetHistogram(struct gl_context *ctx, const struct marshal_cmd_ResetHistogram *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_ResetHistogram(GLenum target);
-struct marshal_cmd_ResetMinmax;
-uint32_t _mesa_unmarshal_ResetMinmax(struct gl_context *ctx, const struct marshal_cmd_ResetMinmax *cmd, const uint64_t *last);
-void GLAPIENTRY _mesa_marshal_ResetMinmax(GLenum target);
 struct marshal_cmd_TexImage3D;
 uint32_t _mesa_unmarshal_TexImage3D(struct gl_context *ctx, const struct marshal_cmd_TexImage3D *cmd, const uint64_t *last);
 void GLAPIENTRY _mesa_marshal_TexImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid * pixels);
@@ -3584,11 +3524,6 @@ void GLAPIENTRY _mesa_marshal_GetnTexImageARB(GLenum target, GLint level, GLenum
 struct marshal_cmd_ReadnPixelsARB;
 uint32_t _mesa_unmarshal_ReadnPixelsARB(struct gl_context *ctx, const struct marshal_cmd_ReadnPixelsARB *cmd, const uint64_t *last);
 void GLAPIENTRY _mesa_marshal_ReadnPixelsARB(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLsizei bufSize, GLvoid * data);
-void GLAPIENTRY _mesa_marshal_GetnColorTableARB(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid * table);
-void GLAPIENTRY _mesa_marshal_GetnConvolutionFilterARB(GLenum target, GLenum format, GLenum type, GLsizei bufSize, GLvoid * image);
-void GLAPIENTRY _mesa_marshal_GetnSeparableFilterARB(GLenum target, GLenum format, GLenum type, GLsizei rowBufSize, GLvoid * row, GLsizei columnBufSize, GLvoid * column, GLvoid * span);
-void GLAPIENTRY _mesa_marshal_GetnHistogramARB(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid * values);
-void GLAPIENTRY _mesa_marshal_GetnMinmaxARB(GLenum target, GLboolean reset, GLenum format, GLenum type, GLsizei bufSize, GLvoid * values);
 struct marshal_cmd_GetnCompressedTexImageARB;
 uint32_t _mesa_unmarshal_GetnCompressedTexImageARB(struct gl_context *ctx, const struct marshal_cmd_GetnCompressedTexImageARB *cmd, const uint64_t *last);
 void GLAPIENTRY _mesa_marshal_GetnCompressedTexImageARB(GLenum target, GLint lod, GLsizei bufSize, GLvoid * img);
@@ -3822,6 +3757,12 @@ void GLAPIENTRY _mesa_marshal_MultiDrawArraysIndirectCountARB(GLenum mode, GLint
 struct marshal_cmd_MultiDrawElementsIndirectCountARB;
 uint32_t _mesa_unmarshal_MultiDrawElementsIndirectCountARB(struct gl_context *ctx, const struct marshal_cmd_MultiDrawElementsIndirectCountARB *cmd, const uint64_t *last);
 void GLAPIENTRY _mesa_marshal_MultiDrawElementsIndirectCountARB(GLenum mode, GLenum type, GLintptr indirect, GLintptr drawcount, GLsizei maxdrawcount, GLsizei stride);
+struct marshal_cmd_TexPageCommitmentARB;
+uint32_t _mesa_unmarshal_TexPageCommitmentARB(struct gl_context *ctx, const struct marshal_cmd_TexPageCommitmentARB *cmd, const uint64_t *last);
+void GLAPIENTRY _mesa_marshal_TexPageCommitmentARB(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLboolean commit);
+struct marshal_cmd_TexturePageCommitmentEXT;
+uint32_t _mesa_unmarshal_TexturePageCommitmentEXT(struct gl_context *ctx, const struct marshal_cmd_TexturePageCommitmentEXT *cmd, const uint64_t *last);
+void GLAPIENTRY _mesa_marshal_TexturePageCommitmentEXT(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLboolean commit);
 struct marshal_cmd_ClipControl;
 uint32_t _mesa_unmarshal_ClipControl(struct gl_context *ctx, const struct marshal_cmd_ClipControl *cmd, const uint64_t *last);
 void GLAPIENTRY _mesa_marshal_ClipControl(GLenum origin, GLenum depth);

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:12 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:41 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -12,12 +12,14 @@ CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/vulkan/wsi \
+		-I${MESA_SRC}/src/vulkan/runtime \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/intel/vulkan \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
+		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
 		-DVK_USE_PLATFORM_XCB_KHR \
@@ -70,7 +72,8 @@ SLIBS=	libintel_compiler \
 	libintel_perf \
 	libintel_common \
 	libnir \
-	libcompiler
+	libcompiler \
+	libintel-driver-ds
 
 LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 
@@ -80,6 +83,7 @@ LDADD+=		${.CURDIR}/../libanv_common/${__objdir}/libanv_common.a
 LDADD+=		${.CURDIR}/../libanv_gen${gen}/${__objdir}/libanv_gen${gen}.a
 .endfor
 LDADD+=		${.CURDIR}/../libvulkan_util/${__objdir}/libvulkan_util.a
+LDADD+=		${.CURDIR}/../libvulkan_runtime/${__objdir}/libvulkan_runtime.a
 LDADD+=		-Wl,--no-whole-archive
 
 .for slib in ${SLIBS}

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:09 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2022/09/02 05:46:37 jsg Exp $
 
 GEN=	70
 LIB=	anv_gen${GEN}
@@ -22,14 +22,17 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/vulkan/runtime \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/vulkan/wsi \
 		-I${MESA_SRC}/src/compiler \
 		-I${MESA_SRC}/src/compiler/nir \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
+		-I${MESA_SRC}/generated/src/intel/ds \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
 		-I${MESA_SRC}/generated/src/util \
+		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DVK_USE_PLATFORM_XCB_KHR \

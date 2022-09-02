@@ -129,6 +129,8 @@ struct lp_rasterizer
 
    /** For synchronizing the rasterization threads */
    util_barrier barrier;
+
+   struct lp_fence *last_fence;
 };
 
 void

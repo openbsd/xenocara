@@ -185,7 +185,7 @@ struct etna_context {
       uint64_t rs_operations;
    } stats;
 
-   struct pipe_debug_callback debug;
+   struct util_debug_callback debug;
    int in_fence_fd;
 
    /* list of accumulated HW queries */
@@ -204,6 +204,8 @@ struct etna_context {
 
    /* resources that must be flushed implicitly at the context flush time */
    struct set *flush_resources;
+
+   bool is_noop;
 
    mtx_t lock;
 };

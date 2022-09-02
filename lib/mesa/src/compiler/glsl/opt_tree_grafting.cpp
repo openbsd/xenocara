@@ -177,8 +177,7 @@ ir_tree_grafting_visitor::check_graft(ir_instruction *ir, ir_variable *var)
 ir_visitor_status
 ir_tree_grafting_visitor::visit_leave(ir_assignment *ir)
 {
-   if (do_graft(&ir->rhs) ||
-       do_graft(&ir->condition))
+   if (do_graft(&ir->rhs))
       return visit_stop;
 
    /* If this assignment updates a variable used in the assignment
@@ -267,7 +266,8 @@ ir_tree_grafting_visitor::visit_enter(ir_texture *ir)
    if (do_graft(&ir->coordinate) ||
        do_graft(&ir->projector) ||
        do_graft(&ir->offset) ||
-       do_graft(&ir->shadow_comparator))
+       do_graft(&ir->shadow_comparator) ||
+       do_graft(&ir->clamp))
 	 return visit_stop;
 
    switch (ir->op) {

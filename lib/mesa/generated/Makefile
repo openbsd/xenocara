@@ -13,8 +13,10 @@ all:
 	mkdir -p src/compiler/nir
 	mkdir -p src/compiler/spirv
 	mkdir -p src/gallium/auxiliary
+	mkdir -p src/gallium/drivers/r300
 	mkdir -p src/gallium/drivers/r600
 	mkdir -p src/intel/compiler
+	mkdir -p src/intel/ds
 	mkdir -p src/intel/genxml
 	mkdir -p src/intel/isl
 	mkdir -p src/intel/perf
@@ -26,6 +28,7 @@ all:
 	mkdir -p src/mesa/main
 	mkdir -p src/mesa/program
 	mkdir -p src/util/format
+	mkdir -p src/vulkan/runtime
 	mkdir -p src/vulkan/util
 	mkdir -p src/vulkan/wsi
 	${PYTHON} ${MESA_SRC}/src/mapi/new/gen_gldispatch_mapi.py \
@@ -37,6 +40,18 @@ all:
 	${PYTHON} ${MESA_SRC}/src/mapi/mapi_abi.py --printer glapi \
 	    ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mapi/glapi/gen/glapi_mapi_tmp.h
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_exec_decl_h.py \
+	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
+	    > src/mapi/glapi/gen/api_exec_decl.h
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_save_h.py \
+	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
+	    > src/mapi/glapi/gen/api_save.h
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_save_init_h.py \
+	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
+	    > src/mapi/glapi/gen/api_save_init.h
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_vtxfmt_init_h.py \
+	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
+	    > src/mapi/glapi/gen/api_vtxfmt_init.h
 	${PYTHON} ${MESA_SRC}/src/mapi/mapi_abi.py --printer shared-glapi \
 	    ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mapi/shared-glapi/glapi_mapi_tmp.h
@@ -72,6 +87,7 @@ all:
 .for GEN in 4 45 5 6 7 75 8 9 11 12 125
 	${PYTHON} ${MESA_SRC}/src/intel/genxml/gen_pack_header.py \
 	    ${MESA_SRC}/src/intel/genxml/gen${GEN}.xml \
+	    --engines=render,blitter,video \
 	    > src/intel/genxml/gen${GEN}_pack.h
 .endfor
 	${PYTHON} ${MESA_SRC}/src/intel/genxml/gen_pack_header.py \
@@ -89,7 +105,12 @@ all:
 	    ${MESA_SRC}/src/intel/genxml/gen11.xml \
 	    ${MESA_SRC}/src/intel/genxml/gen12.xml \
 	    ${MESA_SRC}/src/intel/genxml/gen125.xml \
-	    -o src/intel/genxml/genX_bits.h
+	    -o src/intel/genxml/genX_bits.h \
+	    --include-symbols \
+	    'MI_BATCH_BUFFER_START::Batch Buffer Start Address,MI_REPORT_PERF_COUNT::Memory Address,MI_STORE_DATA_IMM::Address,MI_STORE_DATA_IMM::Immediate Data,MI_STORE_REGISTER_MEM::Memory Address,3DSTATE_DEPTH_BUFFER::Surface Base Address,3DSTATE_DEPTH_BUFFER::Surface Pitch,3DSTATE_STENCIL_BUFFER::Surface Base Address,3DSTATE_STENCIL_BUFFER::Surface Pitch,3DSTATE_HIER_DEPTH_BUFFER::Surface Base Address,3DSTATE_HIER_DEPTH_BUFFER::Surface Pitch,3DSTATE_CLEAR_PARAMS,3DSTATE_SO_BUFFER::Surface Base Address,3DSTATE_SO_BUFFER::Stream Offset,3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Base Address,3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Pitch,RENDER_SURFACE_STATE::Surface Base Address,RENDER_SURFACE_STATE::Surface Pitch,RENDER_SURFACE_STATE::Auxiliary Surface Base Address,RENDER_SURFACE_STATE::Auxiliary Surface Pitch,RENDER_SURFACE_STATE::Clear Value Address,RENDER_SURFACE_STATE::Red Clear Color,RENDER_SURFACE_STATE::Green Clear Color,RENDER_SURFACE_STATE::Blue Clear Color,RENDER_SURFACE_STATE::Alpha Clear Color,CLEAR_COLOR,VERTEX_BUFFER_STATE::Buffer Starting Address,CPS_STATE'
+	${PYTHON} ${MESA_SRC}/src/gallium/drivers/r300/compiler/r300_nir_algebraic.py \
+	    -p ${MESA_SRC}/src/compiler/nir/ \
+	    src/gallium/drivers/r300/r300_nir_algebraic.c
 	${PYTHON} ${MESA_SRC}/src/gallium/drivers/r600/egd_tables.py \
 	    ${MESA_SRC}/src/gallium/drivers/r600/evergreend.h \
 	    > src/gallium/drivers/r600/egd_tables.h
@@ -157,20 +178,30 @@ all:
 	${PYTHON} ${MESA_SRC}/src/compiler/spirv/vtn_generator_ids_h.py \
 	    ${MESA_SRC}/src/compiler/spirv/spir-v.xml \
 	    src/compiler/spirv/vtn_generator_ids.h
-	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/indices/u_indices_gen.py \
-	    > src/gallium/auxiliary/u_indices_gen.c
+	${PYTHON} ${MESA_SRC}/src/util/indices/u_indices_gen.py \
+	    > src/util/u_indices_gen.c
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/util/u_tracepoints.py \
 	    -p ${MESA_SRC}/src/util/perf/ \
 	    -C src/gallium/auxiliary/u_tracepoints.c
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/util/u_tracepoints.py \
 	    -p ${MESA_SRC}/src/util/perf/ \
 	    -H src/gallium/auxiliary/u_tracepoints.h
-	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/indices/u_unfilled_gen.py \
-	    > src/gallium/auxiliary/u_unfilled_gen.c
+	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/driver_trace/enums2names.py \
+	    ${MESA_SRC}/src/gallium/include/pipe/p_defines.h \
+	    -C src/gallium/auxiliary/tr_util.c \
+	    -H src/gallium/auxiliary/tr_util.h \
+	    -I tr_util.h
+	${PYTHON} ${MESA_SRC}/src/util/indices/u_unfilled_gen.py \
+	    > src/util/u_unfilled_gen.c
 	echo '#define MESA_GIT_SHA1 ""' > src/git_sha1.h
 	${PYTHON} ${MESA_SRC}/src/intel/compiler/brw_nir_trig_workarounds.py \
 	    -p ${MESA_SRC}/src/compiler/nir \
 	    > src/intel/compiler/brw_nir_trig_workarounds.c
+	${PYTHON} ${MESA_SRC}/src/intel/ds/intel_tracepoints.py \
+	    -p ${MESA_SRC}/src/util/perf \
+	    --utrace-hdr src/intel/ds/intel_tracepoints.h \
+	    --perfetto-hdr src/intel/ds/intel_tracepoints_perfetto.h \
+	    --utrace-src src/intel/ds/intel_tracepoints.c
 	${PYTHON} ${MESA_SRC}/src/intel/genxml/gen_zipped_file.py \
 	    ${MESA_SRC}/src/intel/genxml/gen4.xml \
 	    ${MESA_SRC}/src/intel/genxml/gen45.xml \
@@ -222,9 +253,9 @@ all:
 	    --device-prefix gfx11 \
 	    --device-prefix gfx12 \
 	    --device-prefix gfx125
-	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/gl_genexec.py \
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_exec_init.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
-	    > src/mapi/glapi/gen/api_exec.c
+	    > src/mapi/glapi/gen/api_exec_init.c
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/gl_enums.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/registry/gl.xml \
 	    > src/mapi/glapi/gen/enums.c
@@ -305,16 +336,27 @@ all:
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --proto --weak \
-	    --out-h src/vulkan/util/vk_common_entrypoints.h \
-	    --out-c src/vulkan/util/vk_common_entrypoints.c \
+	    --out-h src/vulkan/runtime/vk_common_entrypoints.h \
+	    --out-c src/vulkan/runtime/vk_common_entrypoints.c \
 	    --prefix vk_common
-	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_physical_device_features.py \
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
-	    --out-c src/vulkan/util/vk_physical_device_features.c
+	    --proto --weak \
+	    --out-h src/vulkan/runtime/vk_cmd_enqueue_entrypoints.h \
+	    --out-c src/vulkan/runtime/vk_cmd_enqueue_entrypoints.c \
+	    --prefix vk_cmd_enqueue \
+	    --prefix vk_cmd_enqueue_unless_primary
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_dispatch_trampolines_gen.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --out-c src/vulkan/runtime/vk_dispatch_trampolines.c \
+	    --out-h src/vulkan/runtime/vk_dispatch_trampolines.h
+	${PYTHON} ${MESA_SRC}/src/vulkan/runtime/vk_physical_device_features.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --out-c src/vulkan/runtime/vk_physical_device_features.c
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_cmd_queue_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
-	    --out-c src/vulkan/util/vk_cmd_queue.c \
-	    --out-h src/vulkan/util/vk_cmd_queue.h
+	    --out-c src/vulkan/runtime/vk_cmd_queue.c \
+	    --out-h src/vulkan/runtime/vk_cmd_queue.h
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_dispatch_table_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --out-c src/vulkan/util/vk_dispatch_table.c \
@@ -358,16 +400,20 @@ clean:
 	rm -f src/compiler/spirv/spirv_info.c
 	rm -f src/compiler/spirv/vtn_gather_types.c
 	rm -f src/compiler/spirv/vtn_generator_ids.h
-	rm -f src/gallium/auxiliary/u_indices_gen.c
+	rm -f src/gallium/auxiliary/tr_util.c
+	rm -f src/gallium/auxiliary/tr_util.h
 	rm -f src/gallium/auxiliary/u_tracepoints.c
 	rm -f src/gallium/auxiliary/u_tracepoints.h
-	rm -f src/gallium/auxiliary/u_unfilled_gen.c
+	rm -f src/gallium/drivers/r300/r300_nir_algebraic.c
 	rm -f src/gallium/drivers/r600/egd_tables.h
 	rm -f src/git_sha1.h
 	rm -f src/intel/compiler/brw_nir_trig_workarounds.c
 .for GEN in 4 45 5 6 7 75 8 9 11 12 125
 	rm -f src/intel/genxml/gen${GEN}_pack.h
 .endfor
+	rm -f src/intel/ds/intel_tracepoints.c
+	rm -f src/intel/ds/intel_tracepoints.h
+	rm -f src/intel/ds/intel_tracepoints_perfetto.h
 	rm -f src/intel/genxml/genX_bits.h
 	rm -f src/intel/genxml/genX_xml.h
 	rm -f src/intel/genxml/gen_rt_pack.h
@@ -379,7 +425,7 @@ clean:
 	rm -f src/intel/vulkan/intel_icd.json
 	rm -f src/mapi/es1api/glapi_mapi_tmp.h
 	rm -f src/mapi/es2api/glapi_mapi_tmp.h
-	rm -f src/mapi/glapi/gen/api_exec.c
+	rm -f src/mapi/glapi/gen/api_exec_init.c
 	rm -f src/mapi/glapi/gen/enums.c
 	rm -f src/mapi/glapi/gen/glapi_mapi_tmp.h
 	rm -f src/mapi/glapi/gen/indirect.c
@@ -390,6 +436,10 @@ clean:
 .for INDEX in 0 1 2 3 4 5 6 7
 	rm -f src/mapi/glapi/gen/marshal_generated${INDEX}.c
 .endfor
+	rm -f src/mapi/glapi/gen/api_exec_decl.h
+	rm -f src/mapi/glapi/gen/api_save.h
+	rm -f src/mapi/glapi/gen/api_save_init.h
+	rm -f src/mapi/glapi/gen/api_vtxfmt_init.h
 	rm -f src/mapi/glapi/glapitable.h
 	rm -f src/mapi/glapi/glapitemp.h
 	rm -f src/mapi/shared-glapi/glapi_mapi_tmp.h
@@ -406,10 +456,17 @@ clean:
 	rm -f src/util/format/u_format_pack.h
 	rm -f src/util/format/u_format_table.c
 	rm -f src/util/format_srgb.c
-	rm -f src/vulkan/util/vk_cmd_queue.c
-	rm -f src/vulkan/util/vk_cmd_queue.h
-	rm -f src/vulkan/util/vk_common_entrypoints.c
-	rm -f src/vulkan/util/vk_common_entrypoints.h
+	rm -f src/util/u_indices_gen.c
+	rm -f src/util/u_unfilled_gen.c
+	rm -f src/vulkan/runtime/vk_cmd_queue.c
+	rm -f src/vulkan/runtime/vk_cmd_queue.h
+	rm -f src/vulkan/runtime/vk_cmd_enqueue_entrypoints.h
+	rm -f src/vulkan/runtime/vk_cmd_enqueue_entrypoints.c
+	rm -f src/vulkan/runtime/vk_common_entrypoints.c
+	rm -f src/vulkan/runtime/vk_common_entrypoints.h
+	rm -f src/vulkan/runtime/vk_dispatch_trampolines.c
+	rm -f src/vulkan/runtime/vk_dispatch_trampolines.h
+	rm -f src/vulkan/runtime/vk_physical_device_features.c
 	rm -f src/vulkan/util/vk_dispatch_table.c
 	rm -f src/vulkan/util/vk_dispatch_table.h
 	rm -f src/vulkan/util/vk_enum_defines.h
@@ -417,6 +474,5 @@ clean:
 	rm -f src/vulkan/util/vk_enum_to_str.h
 	rm -f src/vulkan/util/vk_extensions.c
 	rm -f src/vulkan/util/vk_extensions.h
-	rm -f src/vulkan/util/vk_physical_device_features.c
 	rm -f src/vulkan/wsi/wsi_common_entrypoints.c
 	rm -f src/vulkan/wsi/wsi_common_entrypoints.h

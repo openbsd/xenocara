@@ -153,14 +153,12 @@ vc4_resource_transfer_map(struct pipe_context *pctx,
                 rsc->initialized_buffers = ~0;
         }
 
-        trans = slab_alloc(&vc4->transfer_pool);
+        trans = slab_zalloc(&vc4->transfer_pool);
         if (!trans)
                 return NULL;
 
         /* XXX: Handle DONTBLOCK, DISCARD_RANGE, PERSISTENT, COHERENT. */
 
-        /* slab_alloc_st() doesn't zero: */
-        memset(trans, 0, sizeof(*trans));
         ptrans = &trans->base;
 
         pipe_resource_reference(&ptrans->resource, prsc);
@@ -187,19 +185,8 @@ vc4_resource_transfer_map(struct pipe_context *pctx,
                 if (usage & PIPE_MAP_DIRECTLY)
                         return NULL;
 
-                if (format == PIPE_FORMAT_ETC1_RGB8) {
-                        /* ETC1 is arranged as 64-bit blocks, where each block
-                         * is 4x4 pixels.  Texture tiling operates on the
-                         * 64-bit block the way it would an uncompressed
-                         * pixels.
-                         */
-                        assert(!(ptrans->box.x & 3));
-                        assert(!(ptrans->box.y & 3));
-                        ptrans->box.x >>= 2;
-                        ptrans->box.y >>= 2;
-                        ptrans->box.width = (ptrans->box.width + 3) >> 2;
-                        ptrans->box.height = (ptrans->box.height + 3) >> 2;
-                }
+                /* Our load/store routines work on entire compressed blocks. */
+                u_box_pixels_to_blocks(&ptrans->box, &ptrans->box, format);
 
                 ptrans->stride = ptrans->box.width * rsc->cpp;
                 ptrans->layer_stride = ptrans->stride * ptrans->box.height;
@@ -1152,7 +1139,8 @@ vc4_resource_screen_init(struct pipe_screen *pscreen)
         pscreen->resource_destroy = vc4_resource_destroy;
         pscreen->transfer_helper = u_transfer_helper_create(&transfer_vtbl,
                                                             false, false,
-                                                            false, true);
+                                                            false, true,
+                                                            false);
 
         /* Test if the kernel has GET_TILING; it will return -EINVAL if the
          * ioctl does not exist, but -ENOENT if we pass an impossible handle.

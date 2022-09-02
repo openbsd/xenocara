@@ -46,6 +46,8 @@
 #include "r300_fs.h"
 #include "r300_texture.h"
 #include "r300_vs.h"
+#include "nir.h"
+#include "nir/nir_to_tgsi.h"
 
 /* r300_state: Functions used to initialize state context by translating
  * Gallium state objects into semi-native r300 state objects. */
@@ -1034,15 +1036,42 @@ r300_set_framebuffer_state(struct pipe_context* pipe,
 static void* r300_create_fs_state(struct pipe_context* pipe,
                                   const struct pipe_shader_state* shader)
 {
+    struct r300_context* r300 = r300_context(pipe);
     struct r300_fragment_shader* fs = NULL;
 
     fs = (struct r300_fragment_shader*)CALLOC_STRUCT(r300_fragment_shader);
 
     /* Copy state directly into shader. */
     fs->state = *shader;
-    fs->state.tokens = tgsi_dup_tokens(shader->tokens);
 
-    return (void*)fs;
+    if (fs->state.type == PIPE_SHADER_IR_NIR) {
+       if (r300->screen->caps.is_r500)
+           NIR_PASS_V(shader->ir.nir, r300_transform_fs_trig_input);
+       fs->state.tokens = nir_to_tgsi(shader->ir.nir, pipe->screen);
+    } else {
+       assert(fs->state.type == PIPE_SHADER_IR_TGSI);
+       /* we need to keep a local copy of the tokens */
+       fs->state.tokens = tgsi_dup_tokens(fs->state.tokens);
+    }
+
+    /* Precompile the fragment shader at creation time to avoid jank at runtime.
+     * In most cases we won't have anything in the key at draw time.
+     */
+    struct r300_fragment_program_external_state precompile_state;
+    memset(&precompile_state, 0, sizeof(precompile_state));
+
+    struct tgsi_shader_info info;
+    tgsi_scan_shader(fs->state.tokens, &info);
+    for (int i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
+        if (info.sampler_targets[i] == TGSI_TEXTURE_SHADOW1D ||
+            info.sampler_targets[i] == TGSI_TEXTURE_SHADOW2D) {
+            precompile_state.unit[i].compare_mode_enabled = true;
+            precompile_state.unit[i].texture_compare_func = PIPE_FUNC_LESS;
+        }
+    }
+    r300_pick_fragment_shader(r300, fs, &precompile_state);
+
+    return (void *)fs;
 }
 
 void r300_mark_fs_code_dirty(struct r300_context *r300)
@@ -1143,6 +1172,7 @@ static void* r300_create_rs_state(struct pipe_context* pipe,
 
     rs->rs.sprite_coord_enable = state->point_quad_rasterization *
                                  state->sprite_coord_enable;
+    r300_context(pipe)->is_point = false;
 
     /* Override some states for Draw. */
     rs->rs_draw.sprite_coord_enable = 0; /* We can do this in HW. */
@@ -1173,7 +1203,7 @@ static void* r300_create_rs_state(struct pipe_context* pipe,
          * Clamp to [0, max FB size] */
         float min_psiz = util_get_min_point_size(state);
         float max_psiz = pipe->screen->get_paramf(pipe->screen,
-                                        PIPE_CAPF_MAX_POINT_WIDTH);
+                                        PIPE_CAPF_MAX_POINT_SIZE);
         point_minmax =
             (pack_float_16_6x(min_psiz) << R300_GA_POINT_MINMAX_MIN_SHIFT) |
             (pack_float_16_6x(max_psiz) << R300_GA_POINT_MINMAX_MAX_SHIFT);
@@ -1914,10 +1944,38 @@ static void* r300_create_vs_state(struct pipe_context* pipe,
 
     /* Copy state directly into shader. */
     vs->state = *shader;
-    vs->state.tokens = tgsi_dup_tokens(shader->tokens);
 
+    if (vs->state.type == PIPE_SHADER_IR_NIR) {
+       static const struct nir_to_tgsi_options swtcl_options = {0};
+       static const struct nir_to_tgsi_options hwtcl_r300_options = {
+           .lower_cmp = true,
+           .lower_fabs = true,
+       };
+       static const struct nir_to_tgsi_options hwtcl_r500_options = {
+           .lower_cmp = true,
+       };
+       const struct nir_to_tgsi_options *ntt_options;
+       if (r300->screen->caps.has_tcl) {
+           if (r300->screen->caps.is_r500) {
+               ntt_options = &hwtcl_r500_options;
+               NIR_PASS_V(shader->ir.nir, r300_transform_vs_trig_input);
+           }
+            else
+               ntt_options = &hwtcl_r300_options;
+       } else {
+           ntt_options = &swtcl_options;
+       }
+       vs->state.tokens = nir_to_tgsi_options(shader->ir.nir, pipe->screen,
+                                              ntt_options);
+    } else {
+       assert(vs->state.type == PIPE_SHADER_IR_TGSI);
+       /* we need to keep a local copy of the tokens */
+       vs->state.tokens = tgsi_dup_tokens(vs->state.tokens);
+    }
+
+    if (!vs->first)
+        vs->first = vs->shader = CALLOC_STRUCT(r300_vertex_shader_code);
     if (r300->screen->caps.has_tcl) {
-        r300_init_vs_outputs(r300, vs);
         r300_translate_vertex_shader(r300, vs);
     } else {
         r300_draw_init_vertex_shader(r300, vs);
@@ -1946,17 +2004,17 @@ static void r300_bind_vs_state(struct pipe_context* pipe, void* shader)
     if (r300->screen->caps.has_tcl) {
         unsigned fc_op_dwords = r300->screen->caps.is_r500 ? 3 : 2;
         r300_mark_atom_dirty(r300, &r300->vs_state);
-        r300->vs_state.size = vs->code.length + 9 +
+        r300->vs_state.size = vs->shader->code.length + 9 +
 			(R300_VS_MAX_FC_OPS * fc_op_dwords + 4);
 
         r300_mark_atom_dirty(r300, &r300->vs_constants);
         r300->vs_constants.size =
                 2 +
-                (vs->externals_count ? vs->externals_count * 4 + 3 : 0) +
-                (vs->immediates_count ? vs->immediates_count * 4 + 3 : 0);
+                (vs->shader->externals_count ? vs->shader->externals_count * 4 + 3 : 0) +
+                (vs->shader->immediates_count ? vs->shader->immediates_count * 4 + 3 : 0);
 
         ((struct r300_constant_buffer*)r300->vs_constants.state)->remap_table =
-                vs->code.constants_remap_table;
+                vs->shader->code.constants_remap_table;
 
         r300_mark_atom_dirty(r300, &r300->pvs_flush);
     } else {
@@ -1971,8 +2029,13 @@ static void r300_delete_vs_state(struct pipe_context* pipe, void* shader)
     struct r300_vertex_shader* vs = (struct r300_vertex_shader*)shader;
 
     if (r300->screen->caps.has_tcl) {
-        rc_constants_destroy(&vs->code.constants);
-        FREE(vs->code.constants_remap_table);
+        while (vs->shader) {
+            rc_constants_destroy(&vs->shader->code.constants);
+            FREE(vs->shader->code.constants_remap_table);
+            vs->shader = vs->shader->next;
+            FREE(vs->first);
+            vs->first = vs->shader;
+	}
     } else {
         draw_delete_vertex_shader(r300->draw,
                 (struct draw_vertex_shader*)vs->draw_vs);
@@ -2024,8 +2087,7 @@ static void r300_set_constant_buffer(struct pipe_context *pipe,
 
     if (shader == PIPE_SHADER_VERTEX) {
         if (r300->screen->caps.has_tcl) {
-            struct r300_vertex_shader *vs =
-                    (struct r300_vertex_shader*)r300->vs_state.state;
+            struct r300_vertex_shader *vs = r300_vs(r300);
 
             if (!vs) {
                 cbuf->buffer_base = 0;
@@ -2033,9 +2095,9 @@ static void r300_set_constant_buffer(struct pipe_context *pipe,
             }
 
             cbuf->buffer_base = r300->vs_const_base;
-            r300->vs_const_base += vs->code.constants.Count;
+            r300->vs_const_base += vs->shader->code.constants.Count;
             if (r300->vs_const_base > R500_MAX_PVS_CONST_VECS) {
-                r300->vs_const_base = vs->code.constants.Count;
+                r300->vs_const_base = vs->shader->code.constants.Count;
                 cbuf->buffer_base = 0;
                 r300_mark_atom_dirty(r300, &r300->pvs_flush);
             }

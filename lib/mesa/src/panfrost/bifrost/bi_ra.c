@@ -246,6 +246,12 @@ bi_mark_interference(bi_block *block, struct lcra_state *l, uint8_t *live, uint6
                                                         bi_writemask(ins, d), i, live[i]);
                                 }
                         }
+
+                        unsigned node_first = bi_get_node(ins->dest[0]);
+                        if (d == 1 && node_first < node_count) {
+                                lcra_add_node_interference(l, node, bi_writemask(ins, 1),
+                                                           node_first, bi_writemask(ins, 0));
+                        }
                 }
 
                 /* Valhall needs >= 64-bit staging reads to be pair-aligned */
@@ -312,18 +318,22 @@ bi_allocate_registers(bi_context *ctx, bool *success, bool full_regs)
                 bi_foreach_dest(ins, d) {
                         unsigned dest = bi_get_node(ins->dest[d]);
 
-                        /* Blend shaders expect the src colour to be in r0-r3 */
-                        if (ins->op == BI_OPCODE_BLEND &&
-                            !ctx->inputs->is_blend) {
-                                unsigned node = bi_get_node(ins->src[0]);
-                                assert(node < node_count);
-                                l->solutions[node] = 0;
-                        }
-
                         if (dest < node_count)
                                 l->affinity[dest] = default_affinity;
                 }
 
+                /* Blend shaders expect the src colour to be in r0-r3 */
+                if (ins->op == BI_OPCODE_BLEND &&
+                    !ctx->inputs->is_blend) {
+                        unsigned node = bi_get_node(ins->src[0]);
+                        assert(node < node_count);
+                        l->solutions[node] = 0;
+
+                        /* Dual source blend input in r4-r7 */
+                        node = bi_get_node(ins->src[4]);
+                        if (node < node_count)
+                                l->solutions[node] = 4;
+                }
         }
 
         bi_compute_interference(ctx, l, full_regs);
@@ -364,6 +374,25 @@ bi_reg_from_index(bi_context *ctx, struct lcra_state *l, bi_index index)
         return new_index;
 }
 
+/* Dual texture instructions write to two sets of staging registers, modeled as
+ * two destinations in the IR. The first set is communicated with the usual
+ * staging register mechanism. The second set is encoded in the texture
+ * operation descriptor. This is quite unusual, and requires the following late
+ * fixup.
+ */
+static void
+bi_fixup_dual_tex_register(bi_instr *I)
+{
+        assert(I->dest[1].type == BI_INDEX_REGISTER);
+        assert(I->src[3].type == BI_INDEX_CONSTANT);
+
+        struct bifrost_dual_texture_operation desc = {
+                .secondary_register = I->dest[1].value
+        };
+
+        I->src[3].value |= bi_dual_tex_as_u32(desc);
+}
+
 static void
 bi_install_registers(bi_context *ctx, struct lcra_state *l)
 {
@@ -373,6 +402,9 @@ bi_install_registers(bi_context *ctx, struct lcra_state *l)
 
                 bi_foreach_src(ins, s)
                         ins->src[s] = bi_reg_from_index(ctx, l, ins->src[s]);
+
+                if (ins->op == BI_OPCODE_TEXC && !bi_is_null(ins->dest[1]))
+                        bi_fixup_dual_tex_register(ins);
         }
 }
 
@@ -442,6 +474,39 @@ bi_count_read_index(bi_instr *I, bi_index index)
         return max;
 }
 
+/*
+ * Wrappers to emit loads/stores to thread-local storage in an appropriate way
+ * for the target, so the spill/fill code becomes architecture-independent.
+ */
+
+static bi_index
+bi_tls_ptr(bool hi)
+{
+        return bi_fau(BIR_FAU_TLS_PTR, hi);
+}
+
+static bi_instr *
+bi_load_tl(bi_builder *b, unsigned bits, bi_index src, unsigned offset)
+{
+        if (b->shader->arch >= 9) {
+                return bi_load_to(b, bits, src, bi_tls_ptr(false),
+                                  bi_tls_ptr(true), BI_SEG_TL, offset);
+        } else {
+                return bi_load_to(b, bits, src, bi_imm_u32(offset), bi_zero(),
+                                  BI_SEG_TL, 0);
+        }
+}
+
+static void
+bi_store_tl(bi_builder *b, unsigned bits, bi_index src, unsigned offset)
+{
+        if (b->shader->arch >= 9) {
+                bi_store(b, bits, src, bi_tls_ptr(false), bi_tls_ptr(true), BI_SEG_TL, offset);
+        } else {
+                bi_store(b, bits, src, bi_imm_u32(offset), bi_zero(), BI_SEG_TL, 0);
+        }
+}
+
 /* Once we've chosen a spill node, spill it and returns bytes spilled */
 
 static unsigned
@@ -465,8 +530,7 @@ bi_spill_register(bi_context *ctx, bi_index index, uint32_t offset)
                         unsigned bits = count * 32;
 
                         b.cursor = bi_after_instr(I);
-                        bi_index loc = bi_imm_u32(offset + 4 * extra);
-                        bi_store(&b, bits, tmp, loc, bi_zero(), BI_SEG_TL);
+                        bi_store_tl(&b, bits, tmp, offset + 4 * extra);
 
                         ctx->spills++;
                         channels = MAX2(channels, extra + count);
@@ -479,8 +543,7 @@ bi_spill_register(bi_context *ctx, bi_index index, uint32_t offset)
                         unsigned bits = bi_count_read_index(I, index) * 32;
                         bi_rewrite_index_src_single(I, index, tmp);
 
-                        bi_instr *ld = bi_load_to(&b, bits, tmp,
-                                        bi_imm_u32(offset), bi_zero(), BI_SEG_TL);
+                        bi_instr *ld = bi_load_tl(&b, bits, tmp, offset);
                         ld->no_spill = true;
                         ctx->fills++;
                 }
@@ -498,15 +561,15 @@ bi_register_allocate(bi_context *ctx)
         unsigned iter_count = 1000; /* max iterations */
 
         /* Number of bytes of memory we've spilled into */
-        unsigned spill_count = ctx->info->tls_size;
+        unsigned spill_count = ctx->info.tls_size;
 
-        /* Try with reduced register pressure to improve thread count on v7 */
-        if (ctx->arch == 7) {
+        /* Try with reduced register pressure to improve thread count */
+        if (ctx->arch >= 7) {
                 bi_invalidate_liveness(ctx);
                 l = bi_allocate_registers(ctx, &success, false);
 
                 if (success) {
-                        ctx->info->work_reg_count = 32;
+                        ctx->info.work_reg_count = 32;
                 } else {
                         lcra_free(l);
                         l = NULL;
@@ -519,7 +582,7 @@ bi_register_allocate(bi_context *ctx)
                 l = bi_allocate_registers(ctx, &success, true);
 
                 if (success) {
-                        ctx->info->work_reg_count = 64;
+                        ctx->info.work_reg_count = 64;
                 } else {
                         signed spill_node = bi_choose_spill_node(ctx, l);
                         lcra_free(l);
@@ -537,7 +600,7 @@ bi_register_allocate(bi_context *ctx)
         assert(success);
         assert(l != NULL);
 
-        ctx->info->tls_size = spill_count;
+        ctx->info.tls_size = spill_count;
         bi_install_registers(ctx, l);
 
         lcra_free(l);

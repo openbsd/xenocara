@@ -41,7 +41,7 @@ struct vtn_builder;
 struct vtn_decoration;
 
 /* setjmp/longjmp is broken on MinGW: https://sourceforge.net/p/mingw-w64/bugs/406/ */
-#ifdef __MINGW32__
+#if defined(__MINGW32__) && !defined(_UCRT)
   #define vtn_setjmp __builtin_setjmp
   #define vtn_longjmp __builtin_longjmp
 #else
@@ -274,6 +274,7 @@ struct vtn_function {
 
    const uint32_t *end;
 
+   SpvLinkageType linkage;
    SpvFunctionControlMask control;
 };
 
@@ -336,6 +337,7 @@ enum vtn_base_type {
    vtn_base_type_sampler,
    vtn_base_type_sampled_image,
    vtn_base_type_accel_struct,
+   vtn_base_type_ray_query,
    vtn_base_type_function,
    vtn_base_type_event,
 };
@@ -498,6 +500,7 @@ enum vtn_variable_mode {
    vtn_variable_mode_push_constant,
    vtn_variable_mode_workgroup,
    vtn_variable_mode_cross_workgroup,
+   vtn_variable_mode_task_payload,
    vtn_variable_mode_generic,
    vtn_variable_mode_constant,
    vtn_variable_mode_input,
@@ -624,23 +627,34 @@ struct vtn_value {
 
 #define VTN_DEC_DECORATION -1
 #define VTN_DEC_EXECUTION_MODE -2
+#define VTN_DEC_STRUCT_MEMBER_NAME0 -3
 #define VTN_DEC_STRUCT_MEMBER0 0
 
 struct vtn_decoration {
    struct vtn_decoration *next;
 
-   /* Specifies how to apply this decoration.  Negative values represent a
-    * decoration or execution mode. (See the VTN_DEC_ #defines above.)
-    * Non-negative values specify that it applies to a structure member.
+   /* Different kinds of decorations are stored in a value,
+      the scope defines what decoration it refers to:
+
+      - VTN_DEC_DECORATION:
+            decoration associated with the value
+      - VTN_DEC_EXECUTION_MODE:
+            an execution mode associated with an entrypoint value
+      - VTN_DEC_STRUCT_MEMBER0 + m:
+            decoration associated with member m of a struct value
+      - VTN_DEC_STRUCT_MEMBER_NAME0 - m:
+            name of m'th member of a struct value
     */
    int scope;
 
+   uint32_t num_operands;
    const uint32_t *operands;
    struct vtn_value *group;
 
    union {
       SpvDecoration decoration;
       SpvExecutionMode exec_mode;
+      const char *member_name;
    };
 };
 
@@ -730,6 +744,10 @@ struct vtn_builder {
    /* memory model specified by OpMemoryModel */
    unsigned mem_model;
 };
+
+const char *
+vtn_string_literal(struct vtn_builder *b, const uint32_t *words,
+                   unsigned word_count, unsigned *words_used);
 
 nir_ssa_def *
 vtn_pointer_to_ssa(struct vtn_builder *b, struct vtn_pointer *ptr);

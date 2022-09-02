@@ -290,6 +290,7 @@ drm_create_adapter( int fd,
     driDestroyOptionCache(&userInitOptions);
     driDestroyOptionInfo(&defaultInitOptions);
 
+    sw_rendering |= debug_get_bool_option("D3D_ALWAYS_SOFTWARE", false);
     /* wrap it to create a software screen that can share resources */
     if (sw_rendering && pipe_loader_sw_probe_wrapped(&ctx->swdev, ctx->base.hal))
         ctx->base.ref = pipe_loader_create_screen(ctx->swdev);

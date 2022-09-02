@@ -26,7 +26,7 @@
  */
 
 
-#include "api_exec.h"
+#include "context.h"
 #include "glthread_marshal.h"
 #include "bufferobj.h"
 #include "dispatch.h"
@@ -40,6 +40,88 @@ UNUSED static inline int safe_mul(int a, int b)
     if (a > INT_MAX / b) return -1;
     return a * b;
 }
+
+/* GetCompressedTextureSubImage: marshalled asynchronously */
+struct marshal_cmd_GetCompressedTextureSubImage
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint texture;
+   GLint level;
+   GLint xoffset;
+   GLint yoffset;
+   GLint zoffset;
+   GLsizei width;
+   GLsizei height;
+   GLsizei depth;
+   GLsizei bufSize;
+   GLvoid * pixels;
+};
+uint32_t
+_mesa_unmarshal_GetCompressedTextureSubImage(struct gl_context *ctx, const struct marshal_cmd_GetCompressedTextureSubImage *cmd, const uint64_t *last)
+{
+   GLuint texture = cmd->texture;
+   GLint level = cmd->level;
+   GLint xoffset = cmd->xoffset;
+   GLint yoffset = cmd->yoffset;
+   GLint zoffset = cmd->zoffset;
+   GLsizei width = cmd->width;
+   GLsizei height = cmd->height;
+   GLsizei depth = cmd->depth;
+   GLsizei bufSize = cmd->bufSize;
+   GLvoid * pixels = cmd->pixels;
+   CALL_GetCompressedTextureSubImage(ctx->CurrentServerDispatch, (texture, level, xoffset, yoffset, zoffset, width, height, depth, bufSize, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_GetCompressedTextureSubImage), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+void GLAPIENTRY
+_mesa_marshal_GetCompressedTextureSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLsizei bufSize, GLvoid * pixels)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_GetCompressedTextureSubImage);
+   struct marshal_cmd_GetCompressedTextureSubImage *cmd;
+   if (_mesa_glthread_has_no_pack_buffer(ctx)) {
+      _mesa_glthread_finish_before(ctx, "GetCompressedTextureSubImage");
+      CALL_GetCompressedTextureSubImage(ctx->CurrentServerDispatch, (texture, level, xoffset, yoffset, zoffset, width, height, depth, bufSize, pixels));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_GetCompressedTextureSubImage, cmd_size);
+   cmd->texture = texture;
+   cmd->level = level;
+   cmd->xoffset = xoffset;
+   cmd->yoffset = yoffset;
+   cmd->zoffset = zoffset;
+   cmd->width = width;
+   cmd->height = height;
+   cmd->depth = depth;
+   cmd->bufSize = bufSize;
+   cmd->pixels = pixels;
+}
+
+
+/* TextureBarrierNV: marshalled asynchronously */
+struct marshal_cmd_TextureBarrierNV
+{
+   struct marshal_cmd_base cmd_base;
+};
+uint32_t
+_mesa_unmarshal_TextureBarrierNV(struct gl_context *ctx, const struct marshal_cmd_TextureBarrierNV *cmd, const uint64_t *last)
+{
+   CALL_TextureBarrierNV(ctx->CurrentServerDispatch, ());
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TextureBarrierNV), 8) / 8);
+   assert (cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+void GLAPIENTRY
+_mesa_marshal_TextureBarrierNV(void)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TextureBarrierNV);
+   struct marshal_cmd_TextureBarrierNV *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TextureBarrierNV, cmd_size);
+   (void) cmd;
+}
+
 
 /* BufferPageCommitmentARB: marshalled asynchronously */
 struct marshal_cmd_BufferPageCommitmentARB

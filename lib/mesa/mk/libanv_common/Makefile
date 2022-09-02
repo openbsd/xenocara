@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:37 jsg Exp $
 
 LIB=	anv_common
 
@@ -7,6 +7,7 @@ NOPROFILE=
 SRCS=	anv_allocator.c \
 	anv_batch_chain.c \
 	anv_blorp.c \
+	anv_bo_sync.c \
 	anv_cmd_buffer.c \
 	anv_descriptor_set.c \
 	anv_device.c \
@@ -19,16 +20,15 @@ SRCS=	anv_allocator.c \
 	anv_nir_lower_multiview.c \
 	anv_nir_lower_ubo_loads.c \
 	anv_nir_lower_ycbcr_textures.c \
-	anv_pass.c \
 	anv_perf.c \
 	anv_pipeline.c \
 	anv_pipeline_cache.c \
 	anv_queue.c \
 	anv_util.c \
+	anv_utrace.c \
 	anv_wsi.c
 
-SRCS+=	anv_wsi_display.c \
-	anv_android_stubs.c
+SRCS+=	anv_android_stubs.c
 
 SRCS+=	anv_entrypoints.c
 
@@ -40,6 +40,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/vulkan/runtime \
 		-I${MESA_SRC}/src/vulkan/util \
 		-I${MESA_SRC}/src/vulkan/wsi \
 		-I${MESA_SRC}/src/compiler \
@@ -48,6 +49,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/generated/src/intel \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
 		-I${MESA_SRC}/generated/src/util \
+		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-DVK_USE_PLATFORM_XCB_KHR \

@@ -93,7 +93,7 @@ hud_draw_colored_prims(struct hud_context *hud, unsigned prim,
    u_upload_unmap(hud->pipe->stream_uploader);
    vbuffer.stride = 2 * sizeof(float);
 
-   cso_set_vertex_buffers(cso, 0, 1, &vbuffer);
+   cso_set_vertex_buffers(cso, 0, 1, 0, false, &vbuffer);
    pipe_resource_reference(&vbuffer.buffer.resource, NULL);
    cso_set_fragment_shader_handle(hud->cso, hud->fs_color);
    cso_draw_arrays(cso, prim, 0, num_vertices);
@@ -562,7 +562,7 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
 
       pipe->set_constant_buffer(pipe, PIPE_SHADER_VERTEX, 0, false, &hud->constbuf);
 
-      cso_set_vertex_buffers(cso, 0, 1, &hud->bg.vbuf);
+      cso_set_vertex_buffers(cso, 0, 1, 0, false, &hud->bg.vbuf);
       cso_draw_arrays(cso, PIPE_PRIM_QUADS, 0, hud->bg.num_vertices);
    }
    pipe_resource_reference(&hud->bg.vbuf.buffer.resource, NULL);
@@ -570,7 +570,7 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
    /* draw accumulated vertices for text */
    if (hud->text.num_vertices) {
       cso_set_vertex_shader_handle(cso, hud->vs_text);
-      cso_set_vertex_buffers(cso, 0, 1, &hud->text.vbuf);
+      cso_set_vertex_buffers(cso, 0, 1, 0, false, &hud->text.vbuf);
       cso_set_fragment_shader_handle(hud->cso, hud->fs_text);
       cso_draw_arrays(cso, PIPE_PRIM_QUADS, 0, hud->text.num_vertices);
    }
@@ -594,7 +594,7 @@ hud_draw_results(struct hud_context *hud, struct pipe_resource *tex)
 
    if (hud->whitelines.num_vertices) {
       cso_set_vertex_shader_handle(cso, hud->vs_color);
-      cso_set_vertex_buffers(cso, 0, 1, &hud->whitelines.vbuf);
+      cso_set_vertex_buffers(cso, 0, 1, 0, false, &hud->whitelines.vbuf);
       cso_set_fragment_shader_handle(hud->cso, hud->fs_color);
       cso_draw_arrays(cso, PIPE_PRIM_LINES, 0, hud->whitelines.num_vertices);
    }
@@ -1682,11 +1682,11 @@ hud_set_draw_context(struct hud_context *hud, struct cso_context *cso,
          "FRAG\n"
          "DCL IN[0], GENERIC[0], LINEAR\n"
          "DCL SAMP[0]\n"
-         "DCL SVIEW[0], RECT, FLOAT\n"
+         "DCL SVIEW[0], 2D, FLOAT\n"
          "DCL OUT[0], COLOR[0]\n"
          "DCL TEMP[0]\n"
 
-         "TEX TEMP[0], IN[0], SAMP[0], RECT\n"
+         "TEX TEMP[0], IN[0], SAMP[0], 2D\n"
          "MOV OUT[0], TEMP[0].xxxx\n"
          "END\n"
       };
@@ -1753,6 +1753,7 @@ hud_set_draw_context(struct hud_context *hud, struct cso_context *cso,
          "DCL CONST[0][0..2]\n"
          "DCL TEMP[0]\n"
          "IMM[0] FLT32 { -1, 0, 0, 1 }\n"
+         "IMM[1] FLT32 { 0.0078125, 0.00390625, 1, 1 }\n" // 1.0 / 128, 1.0 / 256, 1, 1
 
          /* v = in * (xscale, yscale) + (xoffset, yoffset) */
          "MAD TEMP[0].xy, IN[0], CONST[0][2].xyyy, CONST[0][1].zwww\n"
@@ -1760,7 +1761,7 @@ hud_set_draw_context(struct hud_context *hud, struct cso_context *cso,
          "MAD OUT[0].xy, TEMP[0], CONST[0][1].xyyy, IMM[0].xxxx\n"
          "MOV OUT[0].zw, IMM[0]\n"
 
-         "MOV OUT[1], IN[1]\n"
+         "MUL OUT[1], IN[1], IMM[1]\n"
          "END\n"
       };
 
@@ -1935,7 +1936,7 @@ hud_create(struct cso_context *cso, struct st_context_iface *st,
    hud->font_sampler_state.wrap_s = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
    hud->font_sampler_state.wrap_t = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
    hud->font_sampler_state.wrap_r = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
-   hud->font_sampler_state.normalized_coords = 0;
+   hud->font_sampler_state.normalized_coords = 1;
 
    /* constants */
    hud->constbuf.buffer_size = sizeof(hud->constants);

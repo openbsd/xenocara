@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/02/24 02:29:48 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:38 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -38,6 +38,16 @@ GALLIUM_DRIVERS+=	radeonsi
 CPPFLAGS+=	-DGALLIUM_RADEONSI
 .endif
 
+.if ${WITH_GALLIUM_I915} == "yes"
+GALLIUM_DRIVERS+=	i915
+CPPFLAGS+=	-DGALLIUM_I915
+.endif
+
+.if ${WITH_GALLIUM_CROCUS} == "yes"
+GALLIUM_DRIVERS+=	crocus
+CPPFLAGS+=	-DGALLIUM_CROCUS
+.endif
+
 .if ${WITH_GALLIUM_IRIS} == "yes"
 GALLIUM_DRIVERS+=	iris
 CPPFLAGS+=	-DGALLIUM_IRIS
@@ -63,16 +73,13 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 SLIBS=	libdri \
-	libmesa_gallium \
-	libmesa_common \
+	libmesa \
 	libglsl \
 	libglcpp \
 	libmesa_util \
 	libmesa_format \
 	libnir \
 	libcompiler \
-	libdricommon \
-	libmegadriver_stub \
 	libgalliumvl \
 	libgallium \
 	libpipe_loader_static \
@@ -115,6 +122,23 @@ SLIBS+= libamdgpuwinsys \
 	libradeonsi
 .endif
 
+.if ${WITH_GALLIUM_I915} == "yes"
+SLIBS+=	libi915 \
+	libi915drm
+.endif
+
+.if ${WITH_GALLIUM_CROCUS} == "yes"
+SLIBS+=	libcrocus_per_hw_ver40 \
+	libcrocus_per_hw_ver45 \
+	libcrocus_per_hw_ver50 \
+	libcrocus_per_hw_ver60 \
+	libcrocus_per_hw_ver70 \
+	libcrocus_per_hw_ver75 \
+	libcrocus_per_hw_ver80 \
+	libcrocus \
+	libcrocuswinsys
+.endif
+
 .if ${WITH_GALLIUM_IRIS} == "yes"
 SLIBS+= libiris_gen80 \
 	libiris_gen90 \
@@ -139,6 +163,7 @@ SLIBS+= libiris_gen80 \
 	libblorp \
 	libintel_perf \
 	libintel_common \
+	libintel-driver-ds \
 	libiris \
 	libiriswinsys
 .endif
@@ -155,6 +180,10 @@ LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 LDADD+=		-L${.CURDIR}/../libglapi/${__objdir} -lglapi
 LDADD+=		-lelf -lLLVM -lexpat -lz -lm
 LDADD+=		-L${X11BASE}/lib -ldrm
+
+.if ${WITH_GALLIUM_I915} == "yes"
+LDADD+=		-ldrm_intel
+.endif
 
 .if ${WITH_GALLIUM_R300} == "yes" || ${WITH_GALLIUM_R600} == "yes"
 LDADD+=		-ldrm_radeon

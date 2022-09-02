@@ -42,6 +42,7 @@
 #define CONV_FORMAT(f) [PIPE_FORMAT_##f] = VIRGL_FORMAT_##f,
 
 static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
+   CONV_FORMAT(NONE)
    CONV_FORMAT(B8G8R8A8_UNORM)
    CONV_FORMAT(B8G8R8X8_UNORM)
    CONV_FORMAT(A8R8G8B8_UNORM)
@@ -52,6 +53,7 @@ static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
    CONV_FORMAT(R10G10B10A2_UNORM)
    CONV_FORMAT(L8_UNORM)
    CONV_FORMAT(A8_UNORM)
+   CONV_FORMAT(I8_UNORM)
    CONV_FORMAT(L8A8_UNORM)
    CONV_FORMAT(L16_UNORM)
    CONV_FORMAT(Z16_UNORM)
@@ -171,9 +173,11 @@ static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
    CONV_FORMAT(L16_SNORM)
    CONV_FORMAT(L16A16_SNORM)
    CONV_FORMAT(A16_FLOAT)
+   CONV_FORMAT(I16_FLOAT)
    CONV_FORMAT(L16_FLOAT)
    CONV_FORMAT(L16A16_FLOAT)
    CONV_FORMAT(A32_FLOAT)
+   CONV_FORMAT(I32_FLOAT)
    CONV_FORMAT(L32_FLOAT)
    CONV_FORMAT(L32A32_FLOAT)
    CONV_FORMAT(YV12)
@@ -206,21 +210,27 @@ static const enum virgl_formats virgl_formats_conv_table[PIPE_FORMAT_COUNT] = {
    CONV_FORMAT(R32G32B32_SINT)
    CONV_FORMAT(R32G32B32A32_SINT)
    CONV_FORMAT(A8_UINT)
+   CONV_FORMAT(I8_UINT)
    CONV_FORMAT(L8_UINT)
    CONV_FORMAT(L8A8_UINT)
    CONV_FORMAT(A8_SINT)
    CONV_FORMAT(L8_SINT)
+   CONV_FORMAT(I8_SINT)
    CONV_FORMAT(L8A8_SINT)
    CONV_FORMAT(A16_UINT)
+   CONV_FORMAT(I16_UINT)
    CONV_FORMAT(L16_UINT)
    CONV_FORMAT(L16A16_UINT)
    CONV_FORMAT(A16_SINT)
+   CONV_FORMAT(I16_SINT)
    CONV_FORMAT(L16_SINT)
    CONV_FORMAT(L16A16_SINT)
    CONV_FORMAT(A32_UINT)
+   CONV_FORMAT(I32_UINT)
    CONV_FORMAT(L32_UINT)
    CONV_FORMAT(L32A32_UINT)
    CONV_FORMAT(A32_SINT)
+   CONV_FORMAT(I32_SINT)
    CONV_FORMAT(L32_SINT)
    CONV_FORMAT(L32A32_SINT)
    CONV_FORMAT(R10G10B10A2_SSCALED)
@@ -551,6 +561,13 @@ int virgl_encode_shader_state(struct virgl_context *ctx,
 
    if (virgl_debug & VIRGL_DEBUG_TGSI)
       debug_printf("TGSI:\n---8<---\n%s\n---8<---\n", str);
+
+   /* virglrenderer before addbd9c5058dcc9d561b20ab747aed58c53499da mis-counts
+    * the tokens needed for a BARRIER, so ask it to allocate some more space.
+    */
+   const char *barrier = str;
+   while ((barrier = strstr(barrier + 1, "BARRIER")))
+      num_tokens++;
 
    shader_len = strlen(str) + 1;
 
@@ -1281,6 +1298,18 @@ int virgl_encoder_destroy_sub_ctx(struct virgl_context *ctx, uint32_t sub_ctx_id
    return 0;
 }
 
+int virgl_encode_link_shader(struct virgl_context *ctx, uint32_t *handles)
+{
+   virgl_encoder_write_cmd_dword(ctx, VIRGL_CMD0(VIRGL_CCMD_LINK_SHADER, 0, VIRGL_LINK_SHADER_SIZE));
+   virgl_encoder_write_dword(ctx->cbuf, handles[PIPE_SHADER_VERTEX]);
+   virgl_encoder_write_dword(ctx->cbuf, handles[PIPE_SHADER_FRAGMENT]);
+   virgl_encoder_write_dword(ctx->cbuf, handles[PIPE_SHADER_GEOMETRY]);
+   virgl_encoder_write_dword(ctx->cbuf, handles[PIPE_SHADER_TESS_CTRL]);
+   virgl_encoder_write_dword(ctx->cbuf, handles[PIPE_SHADER_TESS_EVAL]);
+   virgl_encoder_write_dword(ctx->cbuf, handles[PIPE_SHADER_COMPUTE]);
+   return 0;
+}
+
 int virgl_encode_bind_shader(struct virgl_context *ctx,
                              uint32_t handle, uint32_t type)
 {
@@ -1503,10 +1532,22 @@ void virgl_encode_copy_transfer(struct virgl_context *ctx,
 {
    uint32_t command;
    struct virgl_screen *vs = virgl_screen(ctx->base.screen);
+   // set always synchronized to 1, second bit is used for direction
+   uint32_t direction_and_synchronized = VIRGL_COPY_TRANSFER3D_FLAGS_SYNCHRONIZED;
 
+   if (vs->caps.caps.v2.capability_bits_v2 & VIRGL_CAP_V2_COPY_TRANSFER_BOTH_DIRECTIONS) {
+      if (trans->direction == VIRGL_TRANSFER_TO_HOST) {
+         // do nothing, as 0 means transfer to host
+      } else if (trans->direction == VIRGL_TRANSFER_FROM_HOST) {
+         direction_and_synchronized |= VIRGL_COPY_TRANSFER3D_FLAGS_READ_FROM_HOST;
+      } else {
+         // something wrong happened here
+         assert(0);
+      }
+   }
    assert(trans->copy_src_hw_res);
-
    command = VIRGL_CMD0(VIRGL_CCMD_COPY_TRANSFER3D, 0, VIRGL_COPY_TRANSFER3D_SIZE);
+   
    virgl_encoder_write_cmd_dword(ctx, command);
    /* Copy transfers need to explicitly specify the stride, since it may differ
     * from the image stride.
@@ -1514,8 +1555,7 @@ void virgl_encode_copy_transfer(struct virgl_context *ctx,
    virgl_encoder_transfer3d_common(vs, ctx->cbuf, trans, virgl_transfer3d_explicit_stride);
    vs->vws->emit_res(vs->vws, ctx->cbuf, trans->copy_src_hw_res, TRUE);
    virgl_encoder_write_dword(ctx->cbuf, trans->copy_src_offset);
-   /* At the moment all copy transfers are synchronized. */
-   virgl_encoder_write_dword(ctx->cbuf, 1);
+   virgl_encoder_write_dword(ctx->cbuf, direction_and_synchronized);
 }
 
 void virgl_encode_end_transfers(struct virgl_cmd_buf *buf)

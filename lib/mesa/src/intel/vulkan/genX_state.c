@@ -31,56 +31,20 @@
 
 #include "common/intel_aux_map.h"
 #include "common/intel_sample_positions.h"
+#include "common/intel_pixel_hash.h"
 #include "genxml/gen_macros.h"
 #include "genxml/genX_pack.h"
 
 #include "vk_util.h"
-
-/**
- * Compute an \p n x \p m pixel hashing table usable as slice, subslice or
- * pixel pipe hashing table.  The resulting table is the cyclic repetition of
- * a fixed pattern with periodicity equal to \p period.
- *
- * If \p index is specified to be equal to \p period, a 2-way hashing table
- * will be generated such that indices 0 and 1 are returned for the following
- * fractions of entries respectively:
- *
- *   p_0 = ceil(period / 2) / period
- *   p_1 = floor(period / 2) / period
- *
- * If \p index is even and less than \p period, a 3-way hashing table will be
- * generated such that indices 0, 1 and 2 are returned for the following
- * fractions of entries:
- *
- *   p_0 = (ceil(period / 2) - 1) / period
- *   p_1 = floor(period / 2) / period
- *   p_2 = 1 / period
- *
- * The equations above apply if \p flip is equal to 0, if it is equal to 1 p_0
- * and p_1 will be swapped for the result.  Note that in the context of pixel
- * pipe hashing this can be always 0 on Gfx12 platforms, since the hardware
- * transparently remaps logical indices found on the table to physical pixel
- * pipe indices from the highest to lowest EU count.
- */
-UNUSED static void
-calculate_pixel_hashing_table(unsigned n, unsigned m,
-                              unsigned period, unsigned index, bool flip,
-                              uint32_t *p)
-{
-   for (unsigned i = 0; i < n; i++) {
-      for (unsigned j = 0; j < m; j++) {
-         const unsigned k = (i + j) % period;
-         p[j + m * i] = (k == index ? 2 : (k & 1) ^ flip);
-      }
-   }
-}
 
 static void
 genX(emit_slice_hashing_state)(struct anv_device *device,
                                struct anv_batch *batch)
 {
 #if GFX_VER == 11
-   assert(device->info.ppipe_subslices[2] == 0);
+   /* Gfx11 hardware has two pixel pipes at most. */
+   for (unsigned i = 2; i < ARRAY_SIZE(device->info.ppipe_subslices); i++)
+      assert(device->info.ppipe_subslices[i] == 0);
 
    if (device->info.ppipe_subslices[0] == device->info.ppipe_subslices[1])
      return;
@@ -93,7 +57,7 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
       const bool flip = device->info.ppipe_subslices[0] <
                      device->info.ppipe_subslices[1];
       struct GENX(SLICE_HASH_TABLE) table;
-      calculate_pixel_hashing_table(16, 16, 3, 3, flip, table.Entry[0]);
+      intel_compute_pixel_hash_table_3way(16, 16, 3, 3, flip, table.Entry[0]);
 
       GENX(SLICE_HASH_TABLE_pack)(NULL, device->slice_hash.map, &table);
    }
@@ -113,12 +77,13 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
    unsigned ppipes_of[3] = {};
 
    for (unsigned n = 0; n < ARRAY_SIZE(ppipes_of); n++) {
-      for (unsigned p = 0; p < ARRAY_SIZE(device->info.ppipe_subslices); p++)
+      for (unsigned p = 0; p < 3; p++)
          ppipes_of[n] += (device->info.ppipe_subslices[p] == n);
    }
 
    /* Gfx12 has three pixel pipes. */
-   assert(ppipes_of[0] + ppipes_of[1] + ppipes_of[2] == 3);
+   for (unsigned p = 3; p < ARRAY_SIZE(device->info.ppipe_subslices); p++)
+      assert(device->info.ppipe_subslices[p] == 0);
 
    if (ppipes_of[2] == 3 || ppipes_of[0] == 2) {
       /* All three pixel pipes have the maximum number of active dual
@@ -131,16 +96,16 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
       p.SliceHashControl[0] = TABLE_0;
 
       if (ppipes_of[2] == 2 && ppipes_of[0] == 1)
-         calculate_pixel_hashing_table(8, 16, 2, 2, 0, p.TwoWayTableEntry[0]);
+         intel_compute_pixel_hash_table_3way(8, 16, 2, 2, 0, p.TwoWayTableEntry[0]);
       else if (ppipes_of[2] == 1 && ppipes_of[1] == 1 && ppipes_of[0] == 1)
-         calculate_pixel_hashing_table(8, 16, 3, 3, 0, p.TwoWayTableEntry[0]);
+         intel_compute_pixel_hash_table_3way(8, 16, 3, 3, 0, p.TwoWayTableEntry[0]);
 
       if (ppipes_of[2] == 2 && ppipes_of[1] == 1)
-         calculate_pixel_hashing_table(8, 16, 5, 4, 0, p.ThreeWayTableEntry[0]);
+         intel_compute_pixel_hash_table_3way(8, 16, 5, 4, 0, p.ThreeWayTableEntry[0]);
       else if (ppipes_of[2] == 2 && ppipes_of[0] == 1)
-         calculate_pixel_hashing_table(8, 16, 2, 2, 0, p.ThreeWayTableEntry[0]);
+         intel_compute_pixel_hash_table_3way(8, 16, 2, 2, 0, p.ThreeWayTableEntry[0]);
       else if (ppipes_of[2] == 1 && ppipes_of[1] == 1 && ppipes_of[0] == 1)
-         calculate_pixel_hashing_table(8, 16, 3, 3, 0, p.ThreeWayTableEntry[0]);
+         intel_compute_pixel_hash_table_3way(8, 16, 3, 3, 0, p.ThreeWayTableEntry[0]);
       else
          unreachable("Illegal fusing.");
    }
@@ -149,6 +114,47 @@ genX(emit_slice_hashing_state)(struct anv_device *device,
       p.SubsliceHashingTableEnable = true;
       p.SubsliceHashingTableEnableMask = true;
    }
+#elif GFX_VERx10 == 125
+   uint32_t ppipe_mask = 0;
+   for (unsigned p = 0; p < ARRAY_SIZE(device->info.ppipe_subslices); p++) {
+      if (device->info.ppipe_subslices[p])
+         ppipe_mask |= (1u << p);
+   }
+   assert(ppipe_mask);
+
+   if (!device->slice_hash.alloc_size) {
+      unsigned size = GENX(SLICE_HASH_TABLE_length) * 4;
+      device->slice_hash =
+         anv_state_pool_alloc(&device->dynamic_state_pool, size, 64);
+
+      struct GENX(SLICE_HASH_TABLE) table;
+
+      /* Note that the hardware expects an array with 7 tables, each
+       * table is intended to specify the pixel pipe hashing behavior
+       * for every possible slice count between 2 and 8, however that
+       * doesn't actually work, among other reasons due to hardware
+       * bugs that will cause the GPU to erroneously access the table
+       * at the wrong index in some cases, so in practice all 7 tables
+       * need to be initialized to the same value.
+       */
+      for (unsigned i = 0; i < 7; i++)
+         intel_compute_pixel_hash_table_nway(16, 16, ppipe_mask, table.Entry[i][0]);
+
+      GENX(SLICE_HASH_TABLE_pack)(NULL, device->slice_hash.map, &table);
+   }
+
+   anv_batch_emit(batch, GENX(3DSTATE_SLICE_TABLE_STATE_POINTERS), ptr) {
+      ptr.SliceHashStatePointerValid = true;
+      ptr.SliceHashTableStatePointer = device->slice_hash.offset;
+   }
+
+   anv_batch_emit(batch, GENX(3DSTATE_3D_MODE), mode) {
+      mode.SliceHashingTableEnable = true;
+      mode.SliceHashingTableEnableMask = true;
+      mode.CrossSliceHashingMode = (util_bitcount(ppipe_mask) > 1 ?
+				    hashing32x32 : NormalMode);
+      mode.CrossSliceHashingModeMask = -1;
+   }
 #endif
 }
 
@@ -156,7 +162,7 @@ static VkResult
 init_render_queue_state(struct anv_queue *queue)
 {
    struct anv_device *device = queue->device;
-   uint32_t cmds[64];
+   uint32_t cmds[128];
    struct anv_batch batch = {
       .start = cmds,
       .next = cmds,
@@ -182,6 +188,60 @@ init_render_queue_state(struct anv_queue *queue)
    }
 #endif
 
+#if GFX_VERx10 >= 125
+   /* GEN:BUG:1607854226:
+    *
+    *  Non-pipelined state has issues with not applying in MEDIA/GPGPU mode.
+    *  Fortunately, we always start the context off in 3D mode.
+    */
+   uint32_t mocs = device->isl_dev.mocs.internal;
+   anv_batch_emit(&batch, GENX(STATE_BASE_ADDRESS), sba) {
+      sba.GeneralStateBaseAddress = (struct anv_address) { NULL, 0 };
+      sba.GeneralStateBufferSize  = 0xfffff;
+      sba.GeneralStateMOCS = mocs;
+      sba.GeneralStateBaseAddressModifyEnable = true;
+      sba.GeneralStateBufferSizeModifyEnable = true;
+
+      sba.StatelessDataPortAccessMOCS = mocs;
+
+      sba.SurfaceStateBaseAddress =
+         (struct anv_address) { .offset = SURFACE_STATE_POOL_MIN_ADDRESS };
+      sba.SurfaceStateMOCS = mocs;
+      sba.SurfaceStateBaseAddressModifyEnable = true;
+
+      sba.DynamicStateBaseAddress =
+         (struct anv_address) { .offset = DYNAMIC_STATE_POOL_MIN_ADDRESS };
+      sba.DynamicStateBufferSize = DYNAMIC_STATE_POOL_SIZE / 4096;
+      sba.DynamicStateMOCS = mocs;
+      sba.DynamicStateBaseAddressModifyEnable = true;
+      sba.DynamicStateBufferSizeModifyEnable = true;
+
+      sba.IndirectObjectBaseAddress = (struct anv_address) { NULL, 0 };
+      sba.IndirectObjectBufferSize = 0xfffff;
+      sba.IndirectObjectMOCS = mocs;
+      sba.IndirectObjectBaseAddressModifyEnable = true;
+      sba.IndirectObjectBufferSizeModifyEnable = true;
+
+      sba.InstructionBaseAddress =
+         (struct anv_address) { .offset = INSTRUCTION_STATE_POOL_MIN_ADDRESS };
+      sba.InstructionBufferSize = INSTRUCTION_STATE_POOL_SIZE / 4096;
+      sba.InstructionMOCS = mocs;
+      sba.InstructionBaseAddressModifyEnable = true;
+      sba.InstructionBuffersizeModifyEnable = true;
+
+      sba.BindlessSurfaceStateBaseAddress =
+         (struct anv_address) { .offset = SURFACE_STATE_POOL_MIN_ADDRESS };
+      sba.BindlessSurfaceStateSize = (1 << 20) - 1;
+      sba.BindlessSurfaceStateMOCS = mocs;
+      sba.BindlessSurfaceStateBaseAddressModifyEnable = true;
+
+      sba.BindlessSamplerStateBaseAddress = (struct anv_address) { NULL, 0 };
+      sba.BindlessSamplerStateMOCS = mocs;
+      sba.BindlessSamplerStateBaseAddressModifyEnable = true;
+      sba.BindlessSamplerStateBufferSize = 0;
+   }
+#endif
+
    anv_batch_emit(&batch, GENX(3DSTATE_AA_LINE_PARAMETERS), aa);
 
    anv_batch_emit(&batch, GENX(3DSTATE_DRAWING_RECTANGLE), rect) {
@@ -196,7 +256,7 @@ init_render_queue_state(struct anv_queue *queue)
 #if GFX_VER >= 8
    anv_batch_emit(&batch, GENX(3DSTATE_WM_CHROMAKEY), ck);
 
-   genX(emit_sample_pattern)(&batch, 0, NULL);
+   genX(emit_sample_pattern)(&batch, NULL);
 
    /* The BDW+ docs describe how to use the 3DSTATE_WM_HZ_OP instruction in the
     * section titled, "Optimized Depth Buffer Clear and/or Stencil Buffer
@@ -256,7 +316,23 @@ init_render_queue_state(struct anv_queue *queue)
    anv_batch_write_reg(&batch, GENX(CS_CHICKEN1), cc1) {
       cc1.ReplayMode = MidcmdbufferPreemption;
       cc1.ReplayModeMask = true;
+
+#if GFX_VERx10 == 120
+      cc1.DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommand = true;
+      cc1.DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommandMask = true;
+#endif
    }
+
+#if GFX_VERx10 == 120
+   /* Wa_1806527549 says to disable the following HiZ optimization when the
+    * depth buffer is D16_UNORM. We've found the WA to help with more depth
+    * buffer configurations however, so we always disable it just to be safe.
+    */
+   anv_batch_write_reg(&batch, GENX(HIZ_CHICKEN), reg) {
+      reg.HZDepthTestLEGEOptimizationDisable = true;
+      reg.HZDepthTestLEGEOptimizationDisableMask = true;
+   }
+#endif
 
 #if GFX_VERx10 < 125
 #define AA_LINE_QUALITY_REG GENX(3D_CHICKEN3)
@@ -352,6 +428,111 @@ genX(init_device_state)(struct anv_device *device)
    return res;
 }
 
+#if GFX_VERx10 >= 125
+#define maybe_for_each_shading_rate_op(name) \
+   for (VkFragmentShadingRateCombinerOpKHR name = VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR; \
+        name <= VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MUL_KHR; \
+        name++)
+#elif GFX_VER >= 12
+#define maybe_for_each_shading_rate_op(name)
+#endif
+
+/* Rather than reemitting the CPS_STATE structure everything those changes and
+ * for as many viewports as needed, we can just prepare all possible cases and
+ * just pick the right offset from the prepacked states when needed.
+ */
+void
+genX(init_cps_device_state)(struct anv_device *device)
+{
+#if GFX_VER >= 12
+   void *cps_state_ptr = device->cps_states.map;
+
+   /* Disabled CPS mode */
+   for (uint32_t __v = 0; __v < MAX_VIEWPORTS; __v++) {
+      struct GENX(CPS_STATE) cps_state = {
+         .CoarsePixelShadingMode = CPS_MODE_CONSTANT,
+         .MinCPSizeX = 1,
+         .MinCPSizeY = 1,
+#if GFX_VERx10 >= 125
+         .Combiner0OpcodeforCPsize = PASSTHROUGH,
+         .Combiner1OpcodeforCPsize = PASSTHROUGH,
+#endif /* GFX_VERx10 >= 125 */
+
+      };
+
+      GENX(CPS_STATE_pack)(NULL, cps_state_ptr, &cps_state);
+      cps_state_ptr += GENX(CPS_STATE_length) * 4;
+   }
+
+   maybe_for_each_shading_rate_op(op0) {
+      maybe_for_each_shading_rate_op(op1) {
+         for (uint32_t x = 1; x <= 4; x *= 2) {
+            for (uint32_t y = 1; y <= 4; y *= 2) {
+               struct GENX(CPS_STATE) cps_state = {
+                  .CoarsePixelShadingMode = CPS_MODE_CONSTANT,
+                  .MinCPSizeX = x,
+                  .MinCPSizeY = y,
+               };
+
+#if GFX_VERx10 >= 125
+               static const uint32_t combiner_ops[] = {
+                  [VK_FRAGMENT_SHADING_RATE_COMBINER_OP_KEEP_KHR]    = PASSTHROUGH,
+                  [VK_FRAGMENT_SHADING_RATE_COMBINER_OP_REPLACE_KHR] = OVERRIDE,
+                  [VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MIN_KHR]     = HIGH_QUALITY,
+                  [VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MAX_KHR]     = LOW_QUALITY,
+                  [VK_FRAGMENT_SHADING_RATE_COMBINER_OP_MUL_KHR]     = RELATIVE,
+               };
+
+               cps_state.Combiner0OpcodeforCPsize = combiner_ops[op0];
+               cps_state.Combiner1OpcodeforCPsize = combiner_ops[op1];
+#endif /* GFX_VERx10 >= 125 */
+
+               for (uint32_t __v = 0; __v < MAX_VIEWPORTS; __v++) {
+                  GENX(CPS_STATE_pack)(NULL, cps_state_ptr, &cps_state);
+                  cps_state_ptr += GENX(CPS_STATE_length) * 4;
+               }
+            }
+         }
+      }
+   }
+#endif /* GFX_VER >= 12 */
+}
+
+#if GFX_VER >= 12
+static uint32_t
+get_cps_state_offset(struct anv_device *device, bool cps_enabled,
+                     const struct anv_dynamic_state *d)
+{
+   if (!cps_enabled)
+      return device->cps_states.offset;
+
+   uint32_t offset;
+   static const uint32_t size_index[] = {
+      [1] = 0,
+      [2] = 1,
+      [4] = 2,
+   };
+
+#if GFX_VERx10 >= 125
+   offset =
+      1 + /* skip disabled */
+      d->fragment_shading_rate.ops[0] * 5 * 3 * 3 +
+      d->fragment_shading_rate.ops[1] * 3 * 3 +
+      size_index[d->fragment_shading_rate.rate.width] * 3 +
+      size_index[d->fragment_shading_rate.rate.height];
+#else
+   offset =
+      1 + /* skip disabled */
+      size_index[d->fragment_shading_rate.rate.width] * 3 +
+      size_index[d->fragment_shading_rate.rate.height];
+#endif
+
+   offset *= MAX_VIEWPORTS * GENX(CPS_STATE_length) * 4;
+
+   return device->cps_states.offset + offset;
+}
+#endif /* GFX_VER >= 12 */
+
 void
 genX(emit_l3_config)(struct anv_batch *batch,
                      const struct anv_device *device,
@@ -415,11 +596,11 @@ genX(emit_l3_config)(struct anv_batch *batch,
     * client (URB for all validated configurations) set to the
     * lower-bandwidth 2-bank address hashing mode.
     */
-   const bool urb_low_bw = cfg->n[INTEL_L3P_SLM] && !devinfo->is_baytrail;
+   const bool urb_low_bw = cfg->n[INTEL_L3P_SLM] && devinfo->platform != INTEL_PLATFORM_BYT;
    assert(!urb_low_bw || cfg->n[INTEL_L3P_URB] == cfg->n[INTEL_L3P_SLM]);
 
    /* Minimum number of ways that can be allocated to the URB. */
-   const unsigned n0_urb = devinfo->is_baytrail ? 32 : 0;
+   const unsigned n0_urb = devinfo->platform == INTEL_PLATFORM_BYT ? 32 : 0;
    assert(cfg->n[INTEL_L3P_URB] >= n0_urb);
 
    anv_batch_write_reg(batch, GENX(L3SQCREG1), l3sqc) {
@@ -431,7 +612,7 @@ genX(emit_l3_config)(struct anv_batch *batch,
       l3sqc.L3SQGeneralPriorityCreditInitialization = SQGPCI_DEFAULT;
 #else
       l3sqc.L3SQGeneralPriorityCreditInitialization =
-         devinfo->is_baytrail ? BYT_SQGPCI_DEFAULT : SQGPCI_DEFAULT;
+         devinfo->platform == INTEL_PLATFORM_BYT ? BYT_SQGPCI_DEFAULT : SQGPCI_DEFAULT;
 #endif
       l3sqc.L3SQHighPriorityCreditInitialization = SQHPCI_DEFAULT;
    }
@@ -476,7 +657,7 @@ genX(emit_l3_config)(struct anv_batch *batch,
 
 void
 genX(emit_multisample)(struct anv_batch *batch, uint32_t samples,
-                       const VkSampleLocationEXT *locations)
+                       const struct intel_sample_position *positions)
 {
    anv_batch_emit(batch, GENX(3DSTATE_MULTISAMPLE), ms) {
       ms.NumberofMultisamples       = __builtin_ffs(samples) - 1;
@@ -490,41 +671,21 @@ genX(emit_multisample)(struct anv_batch *batch, uint32_t samples,
        */
       ms.PixelPositionOffsetEnable  = false;
 #else
-
-      if (locations) {
-         switch (samples) {
-         case 1:
-            INTEL_SAMPLE_POS_1X_ARRAY(ms.Sample, locations);
+      switch (samples) {
+      case 1:
+         INTEL_SAMPLE_POS_1X_ARRAY(ms.Sample, positions);
+         break;
+      case 2:
+         INTEL_SAMPLE_POS_2X_ARRAY(ms.Sample, positions);
+         break;
+      case 4:
+         INTEL_SAMPLE_POS_4X_ARRAY(ms.Sample, positions);
+         break;
+      case 8:
+         INTEL_SAMPLE_POS_8X_ARRAY(ms.Sample, positions);
+         break;
+      default:
             break;
-         case 2:
-            INTEL_SAMPLE_POS_2X_ARRAY(ms.Sample, locations);
-            break;
-         case 4:
-            INTEL_SAMPLE_POS_4X_ARRAY(ms.Sample, locations);
-            break;
-         case 8:
-            INTEL_SAMPLE_POS_8X_ARRAY(ms.Sample, locations);
-            break;
-         default:
-            break;
-         }
-      } else {
-         switch (samples) {
-         case 1:
-            INTEL_SAMPLE_POS_1X(ms.Sample);
-            break;
-         case 2:
-            INTEL_SAMPLE_POS_2X(ms.Sample);
-            break;
-         case 4:
-            INTEL_SAMPLE_POS_4X(ms.Sample);
-            break;
-         case 8:
-            INTEL_SAMPLE_POS_8X(ms.Sample);
-            break;
-         default:
-            break;
-         }
       }
 #endif
    }
@@ -532,53 +693,38 @@ genX(emit_multisample)(struct anv_batch *batch, uint32_t samples,
 
 #if GFX_VER >= 8
 void
-genX(emit_sample_pattern)(struct anv_batch *batch, uint32_t samples,
-                          const VkSampleLocationEXT *locations)
+genX(emit_sample_pattern)(struct anv_batch *batch,
+                          const struct anv_dynamic_state *d)
 {
    /* See the Vulkan 1.0 spec Table 24.1 "Standard sample locations" and
     * VkPhysicalDeviceFeatures::standardSampleLocations.
     */
    anv_batch_emit(batch, GENX(3DSTATE_SAMPLE_PATTERN), sp) {
-      if (locations) {
-         /* The Skylake PRM Vol. 2a "3DSTATE_SAMPLE_PATTERN" says:
-          *
-          *    "When programming the sample offsets (for NUMSAMPLES_4 or _8
-          *    and MSRASTMODE_xxx_PATTERN), the order of the samples 0 to 3
-          *    (or 7 for 8X, or 15 for 16X) must have monotonically increasing
-          *    distance from the pixel center. This is required to get the
-          *    correct centroid computation in the device."
-          *
-          * However, the Vulkan spec seems to require that the the samples
-          * occur in the order provided through the API. The standard sample
-          * patterns have the above property that they have monotonically
-          * increasing distances from the center but client-provided ones do
-          * not. As long as this only affects centroid calculations as the
-          * docs say, we should be ok because OpenGL and Vulkan only require
-          * that the centroid be some lit sample and that it's the same for
-          * all samples in a pixel; they have no requirement that it be the
-          * one closest to center.
-          */
-         switch (samples) {
-         case 1:
-            INTEL_SAMPLE_POS_1X_ARRAY(sp._1xSample, locations);
-            break;
-         case 2:
-            INTEL_SAMPLE_POS_2X_ARRAY(sp._2xSample, locations);
-            break;
-         case 4:
-            INTEL_SAMPLE_POS_4X_ARRAY(sp._4xSample, locations);
-            break;
-         case 8:
-            INTEL_SAMPLE_POS_8X_ARRAY(sp._8xSample, locations);
-            break;
+      /* The Skylake PRM Vol. 2a "3DSTATE_SAMPLE_PATTERN" says:
+       *
+       *    "When programming the sample offsets (for NUMSAMPLES_4 or _8
+       *    and MSRASTMODE_xxx_PATTERN), the order of the samples 0 to 3
+       *    (or 7 for 8X, or 15 for 16X) must have monotonically increasing
+       *    distance from the pixel center. This is required to get the
+       *    correct centroid computation in the device."
+       *
+       * However, the Vulkan spec seems to require that the the samples occur
+       * in the order provided through the API. The standard sample patterns
+       * have the above property that they have monotonically increasing
+       * distances from the center but client-provided ones do not. As long as
+       * this only affects centroid calculations as the docs say, we should be
+       * ok because OpenGL and Vulkan only require that the centroid be some
+       * lit sample and that it's the same for all samples in a pixel; they
+       * have no requirement that it be the one closest to center.
+       */
+      if (d) {
+         INTEL_SAMPLE_POS_1X_ARRAY(sp._1xSample,  d->sample_locations.locations_1);
+         INTEL_SAMPLE_POS_2X_ARRAY(sp._2xSample,  d->sample_locations.locations_2);
+         INTEL_SAMPLE_POS_4X_ARRAY(sp._4xSample,  d->sample_locations.locations_4);
+         INTEL_SAMPLE_POS_8X_ARRAY(sp._8xSample,  d->sample_locations.locations_8);
 #if GFX_VER >= 9
-         case 16:
-            INTEL_SAMPLE_POS_16X_ARRAY(sp._16xSample, locations);
-            break;
+         INTEL_SAMPLE_POS_16X_ARRAY(sp._16xSample, d->sample_locations.locations_16);
 #endif
-         default:
-            break;
-         }
       } else {
          INTEL_SAMPLE_POS_1X(sp._1xSample);
          INTEL_SAMPLE_POS_2X(sp._2xSample);
@@ -596,7 +742,6 @@ genX(emit_sample_pattern)(struct anv_batch *batch, uint32_t samples,
 void
 genX(emit_shading_rate)(struct anv_batch *batch,
                         const struct anv_graphics_pipeline *pipeline,
-                        struct anv_state cps_states,
                         struct anv_dynamic_state *dynamic_state)
 {
    const struct brw_wm_prog_data *wm_prog_data = get_wm_prog_data(pipeline);
@@ -606,28 +751,34 @@ genX(emit_shading_rate)(struct anv_batch *batch,
    anv_batch_emit(batch, GENX(3DSTATE_CPS), cps) {
       cps.CoarsePixelShadingMode = cps_enable ? CPS_MODE_CONSTANT : CPS_MODE_NONE;
       if (cps_enable) {
-         cps.MinCPSizeX = dynamic_state->fragment_shading_rate.width;
-         cps.MinCPSizeY = dynamic_state->fragment_shading_rate.height;
+         cps.MinCPSizeX = dynamic_state->fragment_shading_rate.rate.width;
+         cps.MinCPSizeY = dynamic_state->fragment_shading_rate.rate.height;
       }
    }
-#elif GFX_VER == 12
-   for (uint32_t i = 0; i < dynamic_state->viewport.count; i++) {
-      uint32_t *cps_state_dwords =
-         cps_states.map + GENX(CPS_STATE_length) * 4 * i;
-      struct GENX(CPS_STATE) cps_state = {
-         .CoarsePixelShadingMode = cps_enable ? CPS_MODE_CONSTANT : CPS_MODE_NONE,
-      };
-
-      if (cps_enable) {
-         cps_state.MinCPSizeX = dynamic_state->fragment_shading_rate.width;
-         cps_state.MinCPSizeY = dynamic_state->fragment_shading_rate.height;
-      }
-
-      GENX(CPS_STATE_pack)(NULL, cps_state_dwords, &cps_state);
+#elif GFX_VER >= 12
+   /* TODO: we can optimize this flush in the following cases:
+    *
+    *    In the case where the last geometry shader emits a value that is not
+    *    constant, we can avoid this stall because we can synchronize the
+    *    pixel shader internally with
+    *    3DSTATE_PS::EnablePSDependencyOnCPsizeChange.
+    *
+    *    If we know that the previous pipeline and the current one are using
+    *    the same fragment shading rate.
+    */
+   anv_batch_emit(batch, GENX(PIPE_CONTROL), pc) {
+#if GFX_VERx10 >= 125
+      pc.PSSStallSyncEnable = true;
+#else
+      pc.PSDSyncEnable = true;
+#endif
    }
 
    anv_batch_emit(batch, GENX(3DSTATE_CPS_POINTERS), cps) {
-      cps.CoarsePixelShadingStateArrayPointer = cps_states.offset;
+      struct anv_device *device = pipeline->base.device;
+
+      cps.CoarsePixelShadingStateArrayPointer =
+         get_cps_state_offset(device, cps_enable, dynamic_state);
    }
 #endif
 }
@@ -767,21 +918,30 @@ VkResult genX(CreateSampler)(
             (VkSamplerCustomBorderColorCreateInfoEXT *) ext;
          if (sampler->custom_border_color.map == NULL)
             break;
-         struct gfx8_border_color *cbc = sampler->custom_border_color.map;
-         if (custom_border_color->format == VK_FORMAT_B4G4R4A4_UNORM_PACK16) {
-            /* B4G4R4A4_UNORM_PACK16 is treated as R4G4B4A4_UNORM_PACK16 with
-             * a swizzle, but this does not carry over to the sampler for
-             * border colors, so we need to do the swizzle ourselves here.
-             */
-            cbc->uint32[0] = custom_border_color->customBorderColor.uint32[2];
-            cbc->uint32[1] = custom_border_color->customBorderColor.uint32[1];
-            cbc->uint32[2] = custom_border_color->customBorderColor.uint32[0];
-            cbc->uint32[3] = custom_border_color->customBorderColor.uint32[3];
-         } else {
-            /* Both structs share the same layout, so just copy them over. */
-            memcpy(cbc, &custom_border_color->customBorderColor,
-                   sizeof(VkClearColorValue));
+
+         union isl_color_value color = { .u32 = {
+            custom_border_color->customBorderColor.uint32[0],
+            custom_border_color->customBorderColor.uint32[1],
+            custom_border_color->customBorderColor.uint32[2],
+            custom_border_color->customBorderColor.uint32[3],
+         } };
+
+         const struct anv_format *format_desc =
+            custom_border_color->format != VK_FORMAT_UNDEFINED ?
+            anv_get_format(custom_border_color->format) : NULL;
+
+         /* For formats with a swizzle, it does not carry over to the sampler
+          * for border colors, so we need to do the swizzle ourselves here.
+          */
+         if (format_desc && format_desc->n_planes == 1 &&
+             !isl_swizzle_is_identity(format_desc->planes[0].swizzle)) {
+            const struct anv_format_plane *fmt_plane = &format_desc->planes[0];
+
+            assert(!isl_format_has_int_channel(fmt_plane->isl_format));
+            color = isl_color_value_swizzle(color, fmt_plane->swizzle, true);
          }
+
+         memcpy(sampler->custom_border_color.map, color.u32, sizeof(color));
          has_custom_color = true;
          break;
       }

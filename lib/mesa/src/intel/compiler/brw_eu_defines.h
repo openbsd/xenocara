@@ -356,6 +356,7 @@ enum opcode {
    SHADER_OPCODE_TXF_CMS_LOGICAL,
    SHADER_OPCODE_TXF_CMS_W,
    SHADER_OPCODE_TXF_CMS_W_LOGICAL,
+   SHADER_OPCODE_TXF_CMS_W_GFX12_LOGICAL,
    SHADER_OPCODE_TXF_UMS,
    SHADER_OPCODE_TXF_UMS_LOGICAL,
    SHADER_OPCODE_TXF_MCS,
@@ -393,8 +394,6 @@ enum opcode {
     * bits.
     */
    FS_OPCODE_PACK,
-
-   SHADER_OPCODE_SHADER_TIME_ADD,
 
    /**
     * Typed and untyped surface access opcodes.
@@ -502,12 +501,17 @@ enum opcode {
    SHADER_OPCODE_URB_WRITE_SIMD8_MASKED_PER_SLOT,
 
    /**
-    * Return the index of an arbitrary live channel (i.e. one of the channels
-    * enabled in the current execution mask) and assign it to the first
-    * component of the destination.  Expected to be used as input for the
-    * BROADCAST pseudo-opcode.
+    * Return the index of the first enabled live channel and assign it to
+    * to the first component of the destination.  Frequently used as input
+    * for the BROADCAST pseudo-opcode.
     */
    SHADER_OPCODE_FIND_LIVE_CHANNEL,
+
+   /**
+    * Return the index of the last enabled live channel and assign it to
+    * the first component of the destination.
+    */
+   SHADER_OPCODE_FIND_LAST_LIVE_CHANNEL,
 
    /**
     * Return the current execution mask in the specified flag subregister.
@@ -807,9 +811,10 @@ enum opcode {
    TES_OPCODE_CREATE_INPUT_READ_HEADER,
    TES_OPCODE_ADD_INDIRECT_URB_OFFSET,
 
-   SHADER_OPCODE_GET_DSS_ID,
    SHADER_OPCODE_BTD_SPAWN_LOGICAL,
    SHADER_OPCODE_BTD_RETIRE_LOGICAL,
+
+   SHADER_OPCODE_READ_SR_REG,
 
    RT_OPCODE_TRACE_RAY_LOGICAL,
 };
@@ -938,6 +943,34 @@ enum surface_logical_srcs {
    SURFACE_LOGICAL_SRC_ALLOW_SAMPLE_MASK,
 
    SURFACE_LOGICAL_NUM_SRCS
+};
+
+enum a64_logical_srcs {
+   /** Address the A64 message operates on */
+   A64_LOGICAL_ADDRESS,
+   /** Source for the operation (unused of LOAD ops) */
+   A64_LOGICAL_SRC,
+   /** Per-opcode immediate argument. Number of dwords, bit size, or atomic op. */
+   A64_LOGICAL_ARG,
+   /**
+    * Some instructions do want to run on helper lanes (like ray queries).
+    */
+   A64_LOGICAL_ENABLE_HELPERS,
+
+   A64_LOGICAL_NUM_SRCS
+};
+
+enum rt_logical_srcs {
+   /** Address of the globals */
+   RT_LOGICAL_SRC_GLOBALS,
+   /** Level at which the tracing should start */
+   RT_LOGICAL_SRC_BVH_LEVEL,
+   /** Type of tracing operation */
+   RT_LOGICAL_SRC_TRACE_RAY_CONTROL,
+   /** Synchronous tracing (ray query) */
+   RT_LOGICAL_SRC_SYNCHRONOUS,
+
+   RT_LOGICAL_NUM_SRCS
 };
 
 #ifdef __cplusplus
@@ -1301,6 +1334,9 @@ enum brw_message_target {
 #define BRW_SAMPLER_RETURN_FORMAT_UINT32      2
 #define BRW_SAMPLER_RETURN_FORMAT_SINT32      3
 
+#define GFX8_SAMPLER_RETURN_FORMAT_32BITS    0
+#define GFX8_SAMPLER_RETURN_FORMAT_16BITS    1
+
 #define BRW_SAMPLER_MESSAGE_SIMD8_SAMPLE              0
 #define BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE             0
 #define BRW_SAMPLER_MESSAGE_SIMD16_SAMPLE_BIAS        0
@@ -1349,6 +1385,9 @@ enum brw_message_target {
 #define BRW_SAMPLER_SIMD_MODE_SIMD8                     1
 #define BRW_SAMPLER_SIMD_MODE_SIMD16                    2
 #define BRW_SAMPLER_SIMD_MODE_SIMD32_64                 3
+
+#define GFX10_SAMPLER_SIMD_MODE_SIMD8H                  5
+#define GFX10_SAMPLER_SIMD_MODE_SIMD16H                 6
 
 /* GFX9 changes SIMD mode 0 to mean SIMD8D, but lets us get the SIMD4x2
  * behavior by setting bit 22 of dword 2 in the message header. */
@@ -1957,6 +1996,11 @@ enum PACKED lsc_flush_type {
     * Flush "RW" section of the L3 cache, but leave L1 and L2 caches untouched.
     */
    LSC_FLUSH_TYPE_L3ONLY = 5,
+   /*
+    * HW maps this flush type internally to NONE.
+    */
+   LSC_FLUSH_TYPE_NONE_6 = 6,
+
 };
 
 enum PACKED lsc_backup_fence_routing {

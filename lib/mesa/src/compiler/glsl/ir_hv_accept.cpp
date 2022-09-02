@@ -190,6 +190,12 @@ ir_texture::accept(ir_hierarchical_visitor *v)
 	 return (s == visit_continue_with_parent) ? visit_continue : s;
    }
 
+   if (this->clamp) {
+      s = this->clamp->accept(v);
+      if (s != visit_continue)
+         return (s == visit_continue_with_parent) ? visit_continue : s;
+   }
+
    switch (this->op) {
    case ir_tex:
    case ir_lod:
@@ -305,9 +311,6 @@ ir_assignment::accept(ir_hierarchical_visitor *v)
    s = this->rhs->accept(v);
    if (s != visit_continue)
       return (s == visit_continue_with_parent) ? visit_continue : s;
-
-   if (this->condition)
-      s = this->condition->accept(v);
 
    return (s == visit_stop) ? s : v->visit_leave(this);
 }

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:48 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:38 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -67,7 +67,6 @@ SRCS=	cso_cache.c \
 	hud_sensors_temp.c \
 	hud_driver_query.c \
 	hud_fps.c \
-	u_primconvert.c \
 	os_process.c \
 	pb_buffer_fenced.c \
 	pb_bufmgr_cache.c \
@@ -161,12 +160,12 @@ SRCS=	cso_cache.c \
 	u_vertex_state_cache.c \
 	tgsi_to_nir.c \
 	nir_to_tgsi.c \
-	nir_draw_helpers.c
+	nir_draw_helpers.c \
+	nir_helpers.c
 
-SRCS+=	renderonly.c
-
-SRCS+=	u_indices_gen.c \
-	u_unfilled_gen.c
+SRCS+=	renderonly.c \
+	tr_util.c \
+	u_tracepoints.c
 
 .if ${WITH_LLVM} == "yes"
 SRCS+=	lp_bld_arit.c \
@@ -193,6 +192,7 @@ SRCS+=	lp_bld_arit.c \
 	lp_bld_logic.c \
 	lp_bld_misc.cpp \
 	lp_bld_nir.c \
+	lp_bld_nir_aos.c \
 	lp_bld_nir_soa.c \
 	lp_bld_pack.c \
 	lp_bld_printf.c \
@@ -252,6 +252,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary/util \
 		-I${MESA_SRC}/src/gallium/auxiliary/nir \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/src/util \
 		-I${MESA_SRC}/generated/src/gallium/auxiliary \
 		-I${MESA_SRC}/generated/src/compiler/nir
 #llvm
