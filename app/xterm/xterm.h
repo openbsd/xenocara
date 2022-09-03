@@ -1180,7 +1180,7 @@ extern Window WMFrameWindow (XtermWidget /* xw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
-extern XVisualInfo *getVisualInfo (XtermWidget /* xw */);
+extern int getVisualInfo (XtermWidget /* xw */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool /* warning */);

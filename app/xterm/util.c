@@ -2953,7 +2953,7 @@ getXftColor(XtermWidget xw, Pixel pixel)
     if (!found) {
 	i = oldest;
 	color.pixel = pixel;
-	(void) QueryOneColor(xw, &color);
+	XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &color);
 	cache[i].color.color.red = color.red;
 	cache[i].color.color.green = color.green;
 	cache[i].color.color.blue = color.blue;
@@ -5075,10 +5075,10 @@ getXtermForeground(XtermWidget xw, unsigned attr_flags, int color)
 	    && ((color >= 0)
 		|| (result != (Pixel) color))) {
 	    XColor work;
-	    last_in = result;
 	    work.pixel = result;
-	    if (QueryOneColor(xw, &work)) {
-		DIM_IT(red);
+            last_in = result;
+            if (XQueryColor(TScreenOf(xw)->display, xw->core.colormap, &work)) {
+	        DIM_IT(red);
 		DIM_IT(green);
 		DIM_IT(blue);
 		if (allocateBestRGB(xw, &work)) {

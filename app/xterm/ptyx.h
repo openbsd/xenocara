@@ -552,6 +552,10 @@ typedef enum {
 #define OPT_COLOR_CLASS 1 /* true if xterm uses separate color-resource classes */
 #endif
 
+#ifndef OPT_COLOR_RES
+#define OPT_COLOR_RES   1 /* true if xterm delays color-resource evaluation */
+#endif
+
 #ifndef OPT_DABBREV
 #define OPT_DABBREV 0	/* dynamic abbreviations */
 #endif
