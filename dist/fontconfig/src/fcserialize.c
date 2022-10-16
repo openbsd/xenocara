@@ -120,7 +120,8 @@ FcSerializeFind (const FcSerialize *serialize, const void *object)
     uintptr_t hash = FcSerializeHashPtr (object);
     size_t buckets_count = serialize->buckets_count;
     size_t index = hash & (buckets_count-1);
-    for (size_t n = 0; n < buckets_count; ++n) {
+    size_t n;
+    for (n = 0; n < buckets_count; ++n) {
 	FcSerializeBucket* bucket = &serialize->buckets[index];
 	if (bucket->hash == 0) {
 	    return NULL;
@@ -138,7 +139,8 @@ FcSerializeUncheckedSet (FcSerialize *serialize, FcSerializeBucket* insert) {
     const void *object = insert->object;
     size_t buckets_count = serialize->buckets_count;
     size_t index = insert->hash & (buckets_count-1);
-    for (size_t n = 0; n < buckets_count; ++n) {
+    size_t n;
+    for (n = 0; n < buckets_count; ++n) {
 	FcSerializeBucket* bucket = &serialize->buckets[index];
 	if (bucket->hash == 0) {
 	    *bucket = *insert;
@@ -164,18 +166,19 @@ FcSerializeResize (FcSerialize *serialize, size_t new_count)
     size_t old_count = serialize->buckets_count;
     FcSerializeBucket *old_buckets = serialize->buckets;
     FcSerializeBucket *old_buckets_end = old_buckets + old_count;
+    FcSerializeBucket *b;
 
     FcSerializeBucket *new_buckets = malloc (new_count * sizeof (*old_buckets));
     if (!new_buckets)
 	return FcFalse;
     FcSerializeBucket *new_buckets_end = new_buckets + new_count;
-    for (FcSerializeBucket *b = new_buckets; b < new_buckets_end; ++b)
+    for (b = new_buckets; b < new_buckets_end; ++b)
 	b->hash = 0;
 
     serialize->buckets = new_buckets;
     serialize->buckets_count = new_count;
     serialize->buckets_used = 0;
-    for (FcSerializeBucket *b = old_buckets; b < old_buckets_end; ++b)
+    for (b = old_buckets; b < old_buckets_end; ++b)
 	if (b->hash != 0 && !FcSerializeUncheckedSet (serialize, b))
 	{
 	    serialize->buckets = old_buckets;
