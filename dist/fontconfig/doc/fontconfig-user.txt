@@ -835,11 +835,11 @@ See Also
 
 Version
 
-   Fontconfig version 2.13.94
+   Fontconfig version 2.14.0
 
 References
 
    Visible links
-   1. file:///tmp/html-e7ECCG#DEBUG
-   2. file:///tmp/html-e7ECCG#DEBUG
+   1. file:///tmp/html-79mk3c#DEBUG
+   2. file:///tmp/html-79mk3c#DEBUG
    3. https://reproducible-builds.org/specs/source-date-epoch/

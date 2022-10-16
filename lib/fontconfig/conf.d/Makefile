@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.14 2021/11/20 10:55:13 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.15 2022/10/16 15:41:27 matthieu Exp $
 
 FONTCONFIG =	${.CURDIR}/../../../dist/fontconfig
 CONFIGDIR =	/etc/fonts/conf.d
@@ -19,6 +19,7 @@ CONF_LINKS = \
 	40-nonlatin.conf \
 	45-generic.conf \
 	45-latin.conf \
+	48-spacing.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
@@ -54,6 +55,7 @@ AVAIL_FILES =				\
 	40-nonlatin.conf		\
 	45-generic.conf			\
 	45-latin.conf			\
+	48-spacing.conf			\
 	49-sansserif.conf		\
 	50-user.conf			\
 	51-local.conf			\

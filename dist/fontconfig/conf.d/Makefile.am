@@ -32,11 +32,13 @@ DOC_FILES = $(DOC_SOURCES:.in=)
 CONF_LINKS = \
 	10-hinting-$(PREFERRED_HINTING).conf	\
 	10-scale-bitmap-fonts.conf \
+	11-lcdfilter-default.conf \
 	20-unhint-small-vera.conf \
 	30-metric-aliases.conf \
 	40-nonlatin.conf \
 	45-generic.conf \
 	45-latin.conf \
+	48-spacing.conf \
 	49-sansserif.conf \
 	50-user.conf \
 	51-local.conf \
@@ -80,6 +82,7 @@ template_DATA =				\
 	40-nonlatin.conf		\
 	45-generic.conf			\
 	45-latin.conf			\
+	48-spacing.conf			\
 	49-sansserif.conf		\
 	50-user.conf			\
 	51-local.conf			\

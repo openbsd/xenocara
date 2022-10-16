@@ -152,16 +152,16 @@ FC_ASSERT_STATIC (sizeof (FcRef) == sizeof (int));
 #define FcIsEncodedOffset(p)	((((intptr_t) (p)) & 1) != 0)
 
 /* Encode offset in a pointer of type t */
-#define FcOffsetEncode(o,t)	((t *) ((o) | 1))
+#define FcOffsetEncode(o,t)	((t *) (intptr_t) ((o) | 1))
 
 /* Decode a pointer into an offset */
 #define FcOffsetDecode(p)	(((intptr_t) (p)) & ~1)
 
 /* Compute pointer offset */
-#define FcPtrToOffset(b,p)	((intptr_t) (p) - (intptr_t) (b))
+#define FcPtrToOffset(b,p)	((ptrdiff_t) ((intptr_t) (p) - (intptr_t) (b)))
 
 /* Given base address, offset and type, return a pointer */
-#define FcOffsetToPtr(b,o,t)	((t *) ((intptr_t) (b) + (o)))
+#define FcOffsetToPtr(b,o,t)	((t *) ((intptr_t) (b) + (ptrdiff_t) (o)))
 
 /* Given base address, encoded offset and type, return a pointer */
 #define FcEncodedOffsetToPtr(b,p,t) FcOffsetToPtr(b,FcOffsetDecode(p),t)
@@ -438,8 +438,6 @@ struct _FcCache {
  * Used while constructing a directory cache object
  */
 
-#define FC_SERIALIZE_HASH_SIZE	8191
-
 typedef union _FcAlign {
     double	d;
     int		i;
@@ -449,9 +447,9 @@ typedef union _FcAlign {
 } FcAlign;
 
 typedef struct _FcSerializeBucket {
-    struct _FcSerializeBucket *next;
-    const void	*object;
-    intptr_t	offset;
+    const void	*object; /* key */
+    uintptr_t	hash;    /* hash of key */
+    intptr_t	offset;  /* value */
 } FcSerializeBucket;
 
 typedef struct _FcCharSetFreezer FcCharSetFreezer;
@@ -460,7 +458,10 @@ typedef struct _FcSerialize {
     intptr_t		size;
     FcCharSetFreezer	*cs_freezer;
     void		*linear;
-    FcSerializeBucket	*buckets[FC_SERIALIZE_HASH_SIZE];
+    FcSerializeBucket	*buckets;
+    size_t		buckets_count;
+    size_t		buckets_used;
+    size_t		buckets_used_max;
 } FcSerialize;
 
 /*
@@ -1344,6 +1345,9 @@ FcStrHashIgnoreCase (const FcChar8 *s);
 
 FcPrivate FcChar32
 FcStrHashIgnoreBlanksAndCase (const FcChar8 *s);
+
+FcPrivate FcChar8 *
+FcStrRealPath (const FcChar8 *path);
 
 FcPrivate FcChar8 *
 FcStrCanonFilename (const FcChar8 *s);

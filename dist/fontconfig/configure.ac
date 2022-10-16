@@ -33,7 +33,7 @@ dnl This is the package version number, not the shared library
 dnl version.  This same version number must appear in fontconfig/fontconfig.h
 dnl Yes, it is a pain to synchronize version numbers.  Unfortunately, it's
 dnl not possible to extract the version number here from fontconfig.h
-AC_INIT([fontconfig], [2.13.94], [https://gitlab.freedesktop.org/fontconfig/fontconfig/issues/new])
+AC_INIT([fontconfig], [2.14.0], [https://gitlab.freedesktop.org/fontconfig/fontconfig/issues/new])
 AM_INIT_AUTOMAKE([1.11 parallel-tests dist-xz])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
@@ -486,7 +486,7 @@ AC_ARG_WITH(default-fonts,
 case "$default_fonts" in
 yes)
 	if test "$os_win32" = "yes"; then
-		default_fonts="WINDOWSFONTDIR"
+		default_fonts="WINDOWSFONTDIR,WINDOWSUSERFONTDIR"
 	elif test "$os_darwin" = "yes"; then
 		default_fonts="/System/Library/Fonts,/Library/Fonts,~/Library/Fonts,/System/Library/Assets/com_apple_MobileAsset_Font3,/System/Library/Assets/com_apple_MobileAsset_Font4"
 	else
@@ -499,8 +499,11 @@ FC_DEFAULT_FONTS=""
 if test x${default_fonts+set} = xset; then
 	fc_IFS=$IFS
 	IFS=","
-	for p in "$default_fonts"; do
-		FC_DEFAULT_FONTS="$FC_DEFAULT_FONTS\t<dir>$p</dir>\n"
+	for p in $default_fonts; do
+		if test x"$FC_DEFAULT_FONTS" != x; then
+			FC_DEFAULT_FONTS="$FC_DEFAULT_FONTS "
+		fi
+		FC_DEFAULT_FONTS="$FC_DEFAULT_FONTS<dir>$p</dir>"
 	done
 	IFS=$fc_IFS
 fi
@@ -663,6 +666,22 @@ dnl ===========================================================================
 # Thread-safety primitives
 #
 
+AC_CACHE_CHECK([stdatomic.h atomic primitives], fc_cv_have_stdatomic_atomic_primitives, [
+	fc_cv_have_stdatomic_atomic_primitives=false
+	AC_TRY_LINK([
+		#include <stdatomic.h>
+
+		void memory_barrier (void) { atomic_thread_fence (memory_order_acq_rel); }
+		int atomic_add (atomic_int *i) { return atomic_fetch_add_explicit (i, 1, memory_order_relaxed); }
+		int mutex_trylock (atomic_flag *m) { return atomic_flag_test_and_set_explicit (m, memory_order_acquire); }
+		void mutex_unlock (atomic_flag *m) { atomic_flag_clear_explicit (m, memory_order_release); }
+		], [], fc_cv_have_stdatomic_atomic_primitives=true
+	)
+])
+if $fc_cv_have_stdatomic_atomic_primitives; then
+	AC_DEFINE(HAVE_STDATOMIC_PRIMITIVES, 1, [Have Intel __sync_* atomic primitives])
+fi
+
 AC_CACHE_CHECK([for Intel atomic primitives], fc_cv_have_intel_atomic_primitives, [
 	fc_cv_have_intel_atomic_primitives=false
 	AC_TRY_LINK([
@@ -754,6 +773,19 @@ else
 	DOCMAN3=""
 fi
 AC_SUBST(DOCMAN3)
+
+dnl ===========================================================================
+default_cache_build="yes"
+if test $cross_compiling = "yes"; then
+	default_cache_build="no"
+fi
+AC_ARG_ENABLE(cache-build,
+	[AC_HELP_STRING([--disable-cache-build],
+			[Don't run fc-cache during the build])],
+	,
+	enable_cache_build=$default_cache_build)
+
+AM_CONDITIONAL(ENABLE_CACHE_BUILD, test "x$enable_cache_build" = xyes)
 
 
 dnl Figure out what cache format suffix to use for this architecture

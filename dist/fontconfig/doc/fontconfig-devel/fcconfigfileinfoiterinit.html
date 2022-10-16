@@ -142,6 +142,10 @@ NAME="AEN3812"
 >Initialize 'iter' with the first iterator in the config file information list.
     </P
 ><P
+>The config file information list is stored in numerical order for filenames
+i.e. how fontconfig actually read them.
+    </P
+><P
 >This function isn't MT-safe. <TT
 CLASS="FUNCTION"
 >FcConfigReference</TT
@@ -156,7 +160,7 @@ values are no longer referenced.
 ><DIV
 CLASS="REFSECT1"
 ><A
-NAME="AEN3818"
+NAME="AEN3819"
 ></A
 ><H2
 >Since</H2

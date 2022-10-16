@@ -83,7 +83,7 @@ configdir = $(CONFIGDIR)
 xmldir = $(XMLDIR)
 xml_DATA = fonts.dtd
 
-if CROSS_COMPILING
+if !ENABLE_CACHE_BUILD
   RUN_FC_CACHE_TEST=false
 else
   RUN_FC_CACHE_TEST=test -z "$(DESTDIR)"
@@ -114,7 +114,7 @@ FC_CONFIGDIR = $(subst $(BASECONFIGDIR)/,,$(CONFIGDIR))
 fonts.conf: fonts.conf.in Makefile
 	sed \
 		-e 's,@FC_CACHEDIR\@,$(FC_CACHEDIR),g' \
-		-e 's,@FC_DEFAULT_FONTS\@,$(FC_DEFAULT_FONTS),g' \
+		-e 's,@FC_DEFAULT_FONTS\@,	$(FC_DEFAULT_FONTS),g' \
 		-e 's,@FC_FONTPATH\@,$(FC_FONTPATH),g' \
 		-e 's,@CONFIGDIR\@,$(FC_CONFIGDIR),g' \
 		-e 's,@PACKAGE\@,$(PACKAGE),g' \
@@ -174,7 +174,7 @@ debuild-dirs: distdir
 DISTCHECK_CONFIGURE_FLAGS =
 
 check-versions:
-	@$(GREP) -e '^\s*version\s*:\s*.'$(VERSION)'.,' $(srcdir)/meson.build >/dev/null || { \
+	@$(GREP) -e "^[[:space:]]*version[[:space:]]*:[[:space:]]*'$(VERSION)'," $(srcdir)/meson.build >/dev/null || { \
 	  echo "======================================================================================"; \
 	  echo "Meson version does not seem to match autotools version $(VERSION), update meson.build!"; \
 	  echo "======================================================================================"; \
