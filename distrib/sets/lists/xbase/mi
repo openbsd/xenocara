@@ -35,6 +35,7 @@
 ./etc/fonts/conf.avail/42-luxi-mono.conf
 ./etc/fonts/conf.avail/45-generic.conf
 ./etc/fonts/conf.avail/45-latin.conf
+./etc/fonts/conf.avail/48-spacing.conf
 ./etc/fonts/conf.avail/49-sansserif.conf
 ./etc/fonts/conf.avail/50-user.conf
 ./etc/fonts/conf.avail/51-local.conf

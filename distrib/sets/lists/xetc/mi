@@ -24,6 +24,7 @@
 ./etc/fonts/conf.d/42-luxi-mono.conf
 ./etc/fonts/conf.d/45-generic.conf
 ./etc/fonts/conf.d/45-latin.conf
+./etc/fonts/conf.d/48-spacing.conf
 ./etc/fonts/conf.d/49-sansserif.conf
 ./etc/fonts/conf.d/50-user.conf
 ./etc/fonts/conf.d/51-local.conf
