@@ -112,7 +112,7 @@ XftDrawBitsPerPixel (XftDraw	*draw)
 
 	    for (i = 0; i < nformats; i++)
 	    {
-		if (formats[i].depth == depth)
+		if ((unsigned) formats[i].depth == depth)
 		{
 		    draw->bits_per_pixel = (unsigned)formats[i].bits_per_pixel;
 		    break;
@@ -132,7 +132,7 @@ XftDrawCreate (Display   *dpy,
 {
     XftDraw	*draw;
 
-    draw = (XftDraw *) malloc (sizeof (XftDraw));
+    draw = malloc (sizeof (XftDraw));
     if (!draw)
 	return NULL;
 
@@ -158,7 +158,7 @@ XftDrawCreateBitmap (Display	*dpy,
 {
     XftDraw	*draw;
 
-    draw = (XftDraw *) malloc (sizeof (XftDraw));
+    draw = malloc (sizeof (XftDraw));
     if (!draw)
 	return NULL;
     draw->dpy = dpy;
@@ -184,7 +184,7 @@ XftDrawCreateAlpha (Display *dpy,
 {
     XftDraw	*draw;
 
-    draw = (XftDraw *) malloc (sizeof (XftDraw));
+    draw = malloc (sizeof (XftDraw));
     if (!draw)
 	return NULL;
     draw->dpy = dpy;
@@ -324,8 +324,8 @@ XftDrawSrcPicture (XftDraw *draw, _Xconst XftColor *color)
     {
 	if (info->colors[i].pict &&
 	    info->colors[i].screen == draw->screen &&
-	    !memcmp ((void *) &color->color,
-		     (void *) &info->colors[i].color,
+	    !memcmp ((const void *) &color->color,
+		     (const void *) &info->colors[i].color,
 		     sizeof (XRenderColor)))
 	    return info->colors[i].pict;
     }
@@ -525,7 +525,7 @@ XftDrawString8 (XftDraw		    *draw,
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
+	glyphs = AllocUIntArray (len);
 	if (!glyphs)
 	    return;
     }
@@ -548,11 +548,14 @@ XftDrawString16 (XftDraw	    *draw,
     FT_UInt	    *glyphs, glyphs_local[NUM_LOCAL];
     int		    i;
 
+    if (len <= 0)
+	return;
+
     if (len <= NUM_LOCAL)
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
+	glyphs = AllocUIntArray (len);
 	if (!glyphs)
 	    return;
     }
@@ -576,11 +579,14 @@ XftDrawString32 (XftDraw	    *draw,
     FT_UInt	    *glyphs, glyphs_local[NUM_LOCAL];
     int		    i;
 
+    if (len <= 0)
+	return;
+
     if (len <= NUM_LOCAL)
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc ((size_t)len * sizeof (FT_UInt));
+	glyphs = AllocUIntArray (len);
 	if (!glyphs)
 	    return;
     }
@@ -607,6 +613,9 @@ XftDrawStringUtf8 (XftDraw	    *draw,
     int		    l;
     int		    size;
 
+    if (len <= 0)
+	return;
+
     i = 0;
     glyphs = glyphs_local;
     size = NUM_LOCAL;
@@ -614,7 +623,7 @@ XftDrawStringUtf8 (XftDraw	    *draw,
     {
 	if (i == size)
 	{
-	    glyphs_new = malloc ((size_t)size * 2 * sizeof (FT_UInt));
+	    glyphs_new = AllocUIntArray (size * 2);
 	    if (!glyphs_new)
 	    {
 		if (glyphs != glyphs_local)
@@ -652,6 +661,9 @@ XftDrawStringUtf16 (XftDraw		*draw,
     int		    l;
     int		    size;
 
+    if (len <= 0)
+	return;
+
     i = 0;
     glyphs = glyphs_local;
     size = NUM_LOCAL;
@@ -659,7 +671,7 @@ XftDrawStringUtf16 (XftDraw		*draw,
     {
 	if (i == size)
 	{
-	    glyphs_new = malloc ((size_t)size * 2 * sizeof (FT_UInt));
+	    glyphs_new = AllocUIntArray (size * 2);
 	    if (!glyphs_new)
 	    {
 		if (glyphs != glyphs_local)
@@ -755,11 +767,14 @@ XftDrawCharSpec (XftDraw		*draw,
     XftGlyphSpec    *glyphs, glyphs_local[NUM_LOCAL];
     int		    i;
 
+    if (len <= 0)
+	return;
+
     if (len <= NUM_LOCAL)
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc ((size_t)len * sizeof (XftGlyphSpec));
+	glyphs = AllocGlyphSpecArray (len);
 	if (!glyphs)
 	    return;
     }
@@ -784,11 +799,14 @@ XftDrawCharFontSpec (XftDraw			*draw,
     XftGlyphFontSpec	*glyphs, glyphs_local[NUM_LOCAL];
     int			i;
 
+    if (len <= 0)
+	return;
+
     if (len <= NUM_LOCAL)
 	glyphs = glyphs_local;
     else
     {
-	glyphs = malloc ((size_t)len * sizeof (XftGlyphFontSpec));
+	glyphs = AllocGlyphFontSpecArray (len);
 	if (!glyphs)
 	    return;
     }

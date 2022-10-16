@@ -22,10 +22,12 @@
 
 #include "xftint.h"
 
+#define BtoS(b) ((b) ? "true" : "false")
+
 _X_HIDDEN XftDisplayInfo	*_XftDisplayInfo;
 
 static int
-_XftCloseDisplay (Display *dpy, XExtCodes *codes)
+_XftCloseDisplay (Display *dpy, XExtCodes *codes _X_UNUSED)
 {
     XftDisplayInfo  *info, **prev;
 
@@ -51,7 +53,8 @@ _XftCloseDisplay (Display *dpy, XExtCodes *codes)
     for (prev = &_XftDisplayInfo; (info = *prev); prev = &(*prev)->next)
 	if (info->display == dpy)
 	    break;
-    *prev = info->next;
+    if (info != NULL)
+	*prev = info->next;
 
     free (info);
     return 0;
@@ -85,7 +88,7 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
     if (!createIfNecessary)
 	return NULL;
 
-    info = (XftDisplayInfo *) malloc (sizeof (XftDisplayInfo));
+    info = malloc (sizeof (XftDisplayInfo));
     if (!info)
 	goto bail0;
     info->codes = XAddExtension (dpy);
@@ -169,7 +172,7 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 						   XFT_MAX_GLYPH_MEMORY, 0,
 						   XFT_DPY_MAX_GLYPH_MEMORY);
     if (XftDebug () & XFT_DBG_CACHE)
-	printf ("global max cache memory %ld\n", info->max_glyph_memory);
+	printf ("global max cache memory %lu\n", info->max_glyph_memory);
 
 
     info->num_unref_fonts = 0;
@@ -177,7 +180,14 @@ _XftDisplayInfoGet (Display *dpy, FcBool createIfNecessary)
 						  XFT_MAX_UNREF_FONTS, 0,
 						  XFT_DPY_MAX_UNREF_FONTS);
     if (XftDebug() & XFT_DBG_CACHE)
-	printf ("global max unref fonts %d\n", info->max_unref_fonts);
+	printf ("global max unref fonts  %d\n", info->max_unref_fonts);
+
+    info->track_mem_usage = FcFalse;
+    info->track_mem_usage = XftDefaultGetBool (dpy,
+					       XFT_TRACK_MEM_USAGE, 0,
+					       FcFalse);
+    if (XftDebug() & XFT_DBG_CACHE)
+	printf ("global track mem usage  %s\n", BtoS(info->track_mem_usage));
 
     memset (info->fontHash, '\0', sizeof (XftFont *) * XFT_NUM_FONT_HASH);
     return info;
@@ -210,7 +220,7 @@ _XftDisplayValidateMemory (XftDisplayInfo *info)
 	glyph_memory += font->glyph_memory;
     }
     if (glyph_memory != info->glyph_memory)
-	printf ("Display glyph cache incorrect has %ld bytes, should have %ld\n",
+	printf ("Display glyph cache incorrect has %lu bytes, should have %lu\n",
 		info->glyph_memory, glyph_memory);
 }
 
@@ -227,7 +237,7 @@ _XftDisplayManageMemory (Display *dpy)
     if (XftDebug () & XFT_DBG_CACHE)
     {
 	if (info->glyph_memory > info->max_glyph_memory)
-	    printf ("Reduce global memory from %ld to %ld\n",
+	    printf ("Reduce global memory from %lu to %lu\n",
 		    info->glyph_memory, info->max_glyph_memory);
 	_XftDisplayValidateMemory (info);
     }
@@ -272,16 +282,29 @@ XftDefaultSet (Display *dpy, FcPattern *defaults)
     if (info->defaults)
 	FcPatternDestroy (info->defaults);
     info->defaults = defaults;
+
     if (!info->max_glyph_memory)
 	info->max_glyph_memory = XFT_DPY_MAX_GLYPH_MEMORY;
     info->max_glyph_memory = (unsigned long)XftDefaultGetInteger (dpy,
 						   XFT_MAX_GLYPH_MEMORY, 0,
 						   (int)info->max_glyph_memory);
+    if (XftDebug () & XFT_DBG_CACHE)
+	printf ("update max cache memory %lu\n", info->max_glyph_memory);
+
     if (!info->max_unref_fonts)
 	info->max_unref_fonts = XFT_DPY_MAX_UNREF_FONTS;
     info->max_unref_fonts = XftDefaultGetInteger (dpy,
 						  XFT_MAX_UNREF_FONTS, 0,
 						  info->max_unref_fonts);
+    if (XftDebug() & XFT_DBG_CACHE)
+	printf ("update max unref fonts  %d\n", info->max_unref_fonts);
+
+    info->track_mem_usage = XftDefaultGetBool (dpy,
+					       XFT_TRACK_MEM_USAGE, 0,
+					       info->track_mem_usage);
+    if (XftDebug() & XFT_DBG_CACHE)
+	printf ("update track mem usage  %s\n", BtoS(info->track_mem_usage));
+
     return True;
 }
 

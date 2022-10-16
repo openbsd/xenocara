@@ -23,11 +23,11 @@
 #include "xftint.h"
 
 _X_EXPORT Bool
-XftColorAllocName (Display  *dpy,
-		   _Xconst Visual   *visual,
-		   Colormap cmap,
+XftColorAllocName (Display          *dpy,
+		   _Xconst Visual   *visual _X_UNUSED,
+		   Colormap          cmap,
 		   _Xconst char	    *name,
-		   XftColor *result)
+		   XftColor         *result)
 {
     XColor  screen, exact;
 

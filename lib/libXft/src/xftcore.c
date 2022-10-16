@@ -233,7 +233,7 @@ typedef void (*XftSharpGlyph) (XftDraw	*draw,
 			       int	y);
 
 static XftSharpGlyph
-_XftSharpGlyphFind (XftDraw *draw, XftFont *public)
+_XftSharpGlyphFind (XftDraw *draw _X_UNUSED, XftFont *public)
 {
     XftFontInt *font = (XftFontInt *) public;
 
@@ -390,7 +390,10 @@ _XftSmoothGlyphMono (XImage		*image,
 			     ((((s) << 9) & 0xf80000) | (((s) << 4) & 0x70000)))
 
 
-#define XftIntMult(a,b,t,cast) ( ((t) = (cast)((a) * (b) + 0x80)), ( ( ( (t)>>8 ) + (t) )>>8 ) )
+#define XftIntMult(a,b,t,cast) \
+        ( ((t) = (cast)((a) * (b) + 0x80)), \
+          ( ( ( (t) >> 8 ) + (t) ) >> 8 ) )
+
 #define XftIntDiv(a,b)	 (((CARD16) (a) * 255) / (b))
 
 #define XftGet8(v,i)   ((CARD16) (CARD8) ((v) >> i))
@@ -403,30 +406,37 @@ _XftSmoothGlyphMono (XImage		*image,
  * this difference will have two versions using the same convention.
  */
 
-#define XftOverU(x,y,i,a,t) ((t) = (CARD16) XftIntMult(XftGet8(y,i),(a),(t),CARD16) + XftGet8(x,i),\
-			     (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
+#define XftOverU(x,y,i,a,t) \
+        ((t) = (CARD16) XftIntMult(XftGet8(y,i),(a),(t),CARD16) + \
+               XftGet8(x,i),\
+         (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
-#define XftOverC(x,y,i,a,t) ((t) = (CARD16) XftIntMult(XftGet8(y,i),XftGet8(a,i),(t),CARD16) + XftGet8(x,i),\
-			    (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
+#define XftOverC(x,y,i,a,t) \
+        ((t) = (CARD16) XftIntMult(XftGet8(y,i),XftGet8(a,i),(t),CARD16) + \
+               XftGet8(x,i),\
+         (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
-#define XftInU(x,i,a,t) ((CARD32) XftIntMult(XftGet8(x,i),(a),(t),CARD16) << (i))
+#define XftInU(x,i,a,t) \
+        ((CARD32) XftIntMult(XftGet8(x,i),(a),(t),CARD16) << (i))
 
-#define XftInC(x,i,a,t) ((CARD32) XftIntMult(XftGet8(x,i),XftGet8(a,i),(t),CARD32) << (i))
+#define XftInC(x,i,a,t) \
+        ((CARD32) XftIntMult(XftGet8(x,i),XftGet8(a,i),(t),CARD32) << (i))
 
-#define XftGen(x,y,i,ax,ay,t,u,v) ((t) = (XftIntMult(XftGet8(y,i),ay,(u),CARD32) + \
-					  XftIntMult(XftGet8(x,i),ax,(v),CARD32)),\
-				  (CARD32) ((CARD8) ((t) | \
-						     (0 - ((t) >> 8)))) << (i))
+#define XftGen(x,y,i,ax,ay,t,u,v) \
+        ((t) = (XftIntMult(XftGet8(y,i),ay,(u),CARD32) + \
+                XftIntMult(XftGet8(x,i),ax,(v),CARD32)),\
+         (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
-#define XftAdd(x,y,i,t)	((t) = XftGet8(x,i) + XftGet8(y,i), \
-			 (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
+#define XftAdd(x,y,i,t)	\
+        ((t) = XftGet8(x,i) + XftGet8(y,i), \
+         (CARD32) ((CARD8) ((t) | (0 - ((t) >> 8)))) << (i))
 
 
 static CARD32
 fbOver24 (CARD32 x, CARD32 y)
 {
     CARD16  a = (CARD16)(~x >> 24);
-    CARD16  t;
+    CARD16  t = 0;
     CARD32  m,n,o;
 
     m = XftOverU(x,y,0,a,t);
@@ -923,7 +933,7 @@ _XftGlyphDefault (Display *dpy, XftFont   *public)
     return font->glyphs[0];
 }
 
-static int XftGetImageErrorHandler (Display *dpy, XErrorEvent *error_event)
+static int XftGetImageErrorHandler (Display *dpy _X_UNUSED, XErrorEvent *error_event _X_UNUSED)
 {
     return 0;
 }

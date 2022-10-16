@@ -1,3 +1,535 @@
+commit 7d3bcd3b9ae3ffbfcd4f31c8f1db2254df90bc33
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Sep 10 09:59:49 2022 -0400
+
+    libXft 2.3.6
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5e0ed11a43e37e50ba0937beaa40851c2d864981
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Sep 7 19:25:06 2022 -0400
+
+    fix gcc12 warning about malloc size
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ab2df0af3dc7c594d44ccccfa0e7ddeeefb1e70e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Sep 7 19:21:38 2022 -0400
+
+    revised fix for gcc 12 compiler warnings in xftextent.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 95284856783b824a714b7506762f4adce3bb17ce
+Author: Adam Sampson <ats@offog.org>
+Date:   Wed Sep 7 00:31:10 2022 +0100
+
+    Fix length check in XftTextExtents*.
+    
+    Commit 06a3c0ab6520e368ac936cb1ef172f19957db0fa added length checks of
+    the form "if (len <= 0) return;" to various Xft functions. However,
+    while rendering an empty string is equivalent to doing nothing, asking
+    for the extents of an empty string isn't -- it still needs to fill in
+    the extents structure. This broke text rendering in some applications
+    (e.g. xpdf's Motif GUI).
+    
+    Check for len < 0 in XftTextExtents* instead.
+
+commit c6309d4c8fcb5f4879cc25cf81b649f5eb665413
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Sep 5 15:23:18 2022 -0400
+
+    libXft 2.3.5
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4356b583f8c23575a9ac25d49e7d224930107ef5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jul 9 12:25:28 2022 -0400
+
+    update copyright notice
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 1f610967afc221b296036849d0c17aea495ab50c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jul 9 12:23:57 2022 -0400
+
+    add a null-pointer check
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 16b87600d545b7c0e8f4b6629f553eb235f19f0c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jul 9 09:58:58 2022 -0400
+
+    fix new gcc warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a87be5ae94148f163a7b009df3d41a26a478d800
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jul 9 09:28:29 2022 -0400
+
+    build-fix
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 3ca7a7c375a8c022c068e2534c5a6861e547eaef
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jul 9 09:04:18 2022 -0400
+
+    merge changes by Christian Werner
+    
+    see note in libXft merge-request #1 at #note_1222314
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c53a1bc27c11e0c3cdf54e2beffd6cc220703a0b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 30 20:11:14 2022 -0400
+
+    cleanup new compiler warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 68c6a862409028d9b62ca601df02f345d60f969e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 30 18:30:55 2022 -0400
+
+    build-fix for c89
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6a08279ee80dbd1a226592d7f18c862c2e4a7d3a
+Author: Maxime Coste <mawww@kakoune.org>
+Date:   Tue Oct 22 22:46:49 2019 +1100
+
+    Add support for BGRA glyphs display and scaling
+    
+    Display is done using an XRender Picture, as XRender
+    glyphs are incompatible with BGRA rendering due to
+    their use of the glyph bitmap as a mask.
+    
+    Scaling is done by averaging all relevant pixel, which gives
+    much better result than nearest pixel sampling while staying
+    simple enough and not too computationally expensive.
+    
+    This enables color emoji rendering support.
+    
+    Fixes: #6
+    
+    Signed-off-by: Maxime Coste <mawww@kakoune.org>
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 2cbb9597e0b10d87fa9fc506910f69b9199320f0
+Author: Maxime Coste <mawww@kakoune.org>
+Date:   Thu Jan 28 20:05:13 2021 +1100
+
+    Introduce a _XftCompositeText helper function
+    
+    Dispatch to XRenderCompositeText{8,16,32} based off the given width.
+    
+    Signed-off-by: Maxime Coste <mawww@kakoune.org>
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit cac2fd528dd0ba9ed2308f6dda4598993c51cf64
+Author: Maxime Coste <mawww@kakoune.org>
+Date:   Thu Jan 28 19:59:10 2021 +1100
+
+    Introduce a _XftCompositeString helper function
+    
+    Dispatch to XRenderCompositeString{8,16,32} based off the given width.
+    
+    Signed-off-by: Maxime Coste <mawww@kakoune.org>
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 10b53d1fa37615e81d1e3b6e4d2d2e25e4342c15
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 5 20:13:42 2022 -0400
+
+    errata (cppcheck, clang --analyze, manpage credit)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6fc03611ed2b103b6b5a2f0c6b610087879325e4
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jul 5 04:14:07 2022 -0400
+
+    document new features for glyph memory-tracking
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 36a8474813aba2be263f9de88ad9adfe85c0daf1
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 20:08:58 2022 -0400
+
+    improve glyph management by relinking to unload least-recently used glyphs
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 01d44d70e9bd770ac365c88e09c5e432d2e517ad
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 18:31:24 2022 -0400
+
+    when tracking glyph memory usage, unload the oldest glyph rather than randomly
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 698e205b657f9192df07962e7823a2eae80e1c17
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 18:10:32 2022 -0400
+
+    cppcheck/gcc-stricter warnings about printf-formats and operator precedence
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 949295d665b030eb451fa590940293ada84c9bfe
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 15:30:24 2022 -0400
+
+    fix delinkage of last glyph in font, improve debug-trace
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 058d7237068b2a698098c68c171bbbfd04a51b48
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 07:56:46 2022 -0400
+
+    add asserts (to help with debugging), update copyright notices
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 318c6984baba0ea02147dc72a97e331234b6baf7
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 07:41:12 2022 -0400
+
+    refactor _XftFontUncacheGlyph, separate the two types of loop for readability
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 33c1e1e3a5c08b690e145cc193d52fc13869af7b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jul 3 20:53:23 2022 -0400
+
+    validate linked-list updates with _XftValidateGlyphUsage
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 114db90eac2c0f32f6b662d916a5af6a8990bf36
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jul 1 04:25:10 2022 -0400
+
+    add option for tracking glyph memory-usage on a linked list
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 442bbb084a1316aa6b25b29e17889bc71c1e4235
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jun 27 03:54:58 2022 -0400
+
+    add "trackmemusage" property to use in improved _XftFontUncacheGlyph
+    
+    The linear search used for randomly selecting a glyph to discard is
+    inefficient.  This commit provides for a doubly-linked list which
+    could be maintained by the library to quickly discard the least
+    recently used glyph.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit d4a554c9795b109085ec31eedacba6532c18d802
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jun 24 20:26:31 2022 -0400
+
+    reduce clutter with macros for allocating arrays
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 42c6616499e6ca193a0b764576a6ed8650dd3d7b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 21 20:29:05 2022 -0400
+
+    add debugging trace for XftDefaultSet()
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 908a5e43bc37ea3b80985683369a27b4e607aecf
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jun 13 15:59:12 2022 -0400
+
+    add section of functions managing XftColor
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5f809521ad2d1080710670602619582de8fd6b0c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jun 11 10:55:40 2022 -0400
+
+    add a section on the XFT_DEBUG environment variable
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5a1768ac1071bd05a731d9e744dbf8bb20ccf2b0
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jun 11 10:24:26 2022 -0400
+
+    add a table of the "families" of functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 936bbafb612c5fb2ac838e94fb4e9a92da1d600c
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jun 11 09:50:28 2022 -0400
+
+    document XftGlyphFontSpecRender() and related functions.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c76339229144ab6342315a27ee67a7ade1f43464
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jun 10 10:08:10 2022 -0400
+
+    reduce clutter for external data-types by documenting them one time
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 58b1fed139c6dfd1a20a8b6090181f43aaffcc59
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Fri Jun 10 09:27:36 2022 -0400
+
+    document the clipping-functions
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 73e1c4dc886079e87b0aaa6e3b6fa468b9ba2af2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 8 20:11:25 2022 -0400
+
+    add section on manipulating font data
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5ac7ca85151515f5f03f5c0389f96f202e9cd6bb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 8 04:27:48 2022 -0400
+
+    add section on manipulating font patterns
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 57892d1b735dcb5e019790b271df79d7a4b89e61
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 8 04:01:50 2022 -0400
+
+    remove remaining internal prototypes for obsolete xftcompat.c
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 81944f3796dc1cc1a9529233cec3f3b2c2d546b3
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jun 8 03:52:47 2022 -0400
+
+    move prototype for XftNameUnparse to Xft.h
+    
+    This entrypoint has "always" been exported, but not declared publicly.
+    It is used for debugging in xterm.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 5b191b7db9e6a785ed566c82419b11540c240423
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 7 18:45:55 2022 -0400
+
+    document XftFontOpenXlfd and XftXlfdParse
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b22b2b73ed1c9ed216b98ec33c3258030a34d0d2
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Jun 7 04:18:48 2022 -0400
+
+    add overview for text-extents section
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c3fc93be50d2f7e5c197afd47928d9338fca1618
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jun 6 20:18:07 2022 -0400
+
+    change data-types to subsections to help with readability
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 04d5b339f42d90f51b9294552558fae181bc48d8
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jun 6 04:14:55 2022 -0400
+
+    consistently bold "Xft"
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 18c74d39dd202e385d57415007ba6e803ac6f89a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 5 20:28:07 2022 -0400
+
+    initial draft of initialization-functions documentation
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 48eb5a7cb0a7aaacfcb77eba035c5c47d082ab88
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Jun 5 12:25:38 2022 -0400
+
+    amend rule for creating manpage aliases
+    
+    eliminate too-specific gzip step, rely upon packaging system to do this.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 765e2d2154946a6a9422c0470d6e57fbaf64182b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Jun 4 06:15:39 2022 -0400
+
+    cleanup manpage comments
+    
+    cleanup comments used as reminders to mention functions,
+    leaving comments used as reminders to add new paragraphs.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 48d2353317db2b16b68633c88d5ecd4a583b234e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 2 20:35:28 2022 -0400
+
+    install man-aliases for all of the exported symbols
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 724978961ff3b6e4f5043be07160487bc681fda1
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 2 18:37:09 2022 -0400
+
+    corrected prototypes in manpage, matching Xft.h
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4591cdd1c0f0c8afb8eac9cc908aa7c7d141dc6d
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Thu Jun 2 18:28:07 2022 -0400
+
+    reuse macros from Xcursor.man to fix ragged layout of typedefs and prototypes
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 06a3c0ab6520e368ac936cb1ef172f19957db0fa
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 30 15:15:11 2022 -0400
+
+    fix warnings by gcc 11; check if length <= zero
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4342ea4b4b87790004f6883a0d5b36fdff7c0443
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 30 10:39:39 2022 -0400
+
+    formatting fix, for clarity (no object change)
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit b4ed18f1dc398ea39d9f76da556306fe02f26c97
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 30 09:23:37 2022 -0400
+
+    quiet compiler warning with cast
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit f2583758d3e5c65f372387d1c67433856682c3fb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon May 30 09:21:28 2022 -0400
+
+    quiet compiler warning with cast
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit c3ad9cf5b11772fbc9ff4dd793f0a7e897b5df5a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 29 20:37:26 2022 -0400
+
+    change the internal memory-allocator to use size_t
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit a9ce40d7f51dd20533d25e2a252afb1d09194d3f
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 29 19:44:16 2022 -0400
+
+    quiet warnings with casts
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4edfca0cb839e51bca29f5c382c311c08db49b33
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 29 18:26:13 2022 -0400
+
+    promote font->num_glyphs to FT_UInt or Glyph to fix warnings
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit ef896b2106fa171707a4087be506259f578ff3a5
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 29 18:05:10 2022 -0400
+
+    fix missing-initializer warning
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 768f43c04b5587d3b49ccd2d2f0133630c6a093b
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 29 17:51:07 2022 -0400
+
+    cleanup warnings about discarding const
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4dadf0ed93624a09b4a2f7403b79103b50681391
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun May 29 17:40:25 2022 -0400
+
+    quiet unused-parameter warnings with _X_UNUSED
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit bafdc86cf32af60448db28ed03aa8230e7a14019
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 3 11:32:55 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6cf073c11705cf576c3b7618a32ae121eaf14579
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 3 11:24:18 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0dd423a89305e040ed20a8f449203ef091507790
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 3 11:22:22 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 98b121f22c3477b508dd17aa5db99f2ebf36ade4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Aug 1 17:49:42 2021 -0700
@@ -888,7 +1420,7 @@ Date:   Fri Jul 29 21:22:51 2005 +0000
     - Update modular Xorg version
 
 commit 0dd89a9e7ba09ed0c3f90a415b506a4ed89b91bb
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 21:48:38 2005 +0000
 
     Build system for Xft
@@ -927,14 +1459,14 @@ Date:   Tue May 17 08:10:10 2005 +0000
         which however is not visible outside the DDX) (Bugzilla #3268).
 
 commit 0161d08ecd543c80e5625bf63d0091dbccd95f4e
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Aug 13 19:03:15 2004 +0000
 
     Fri Aug 13 21:01:34 2004 Soeren Sandmann <sandmann@daimi.au.dk>
     Fix the build
 
 commit 0641e99b21eead5aaee0c1136dd2d640028f6783
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Fri Aug 13 18:24:06 2004 +0000
 
     Fri Aug 13 19:53:10 2004 Soeren Sandmann <sandmann@redhat.com>
