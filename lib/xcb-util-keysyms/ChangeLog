@@ -1,3 +1,117 @@
+commit 85e093f14b0ade2956e0a5d1c37cfde06d8b1ba6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 18 18:26:19 2022 -0700
+
+    xcb-util-keysyms 0.4.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 439be15cde3c7b5ba07b175dcf7b724d155d30aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Aug 3 13:15:40 2022 -0700
+
+    Add COPYING file
+    
+    Fixes: #2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 07b8ad33ca9af45b330401e9e8e911391d7e5095
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4bb8f74f4af62b37db5d6df3a89a5745beeca57c
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 267beff89e9099f942c5c10e153d274860bb9b9c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c82fcb380468d0806fcbad0edc9c877e9fea490a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 696899a84ba22a86c80f136277e9b872fd43715a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f26aee94623e7f60eb0ed6dcbcee3ea1ea67496
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:15:32 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8af9f05e931cd6368207730adbc837327fdb8a95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:14:42 2022 -0700
+
+    Update m4 to xorg/util/xcb-util-m4@c617eee22ae5c285e79e81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 915821d47c7d6638a4c4cdfa766a540c3c6045aa
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 18 10:22:06 2022 -0700
+
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters
+    
+    configure.ac:12: warning: AC_OUTPUT should be used without arguments.
+    configure.ac:12: You should run autoupdate.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b23e729d0e3553366af241f0583e6b7cccea57a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 18 10:21:52 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 691515491a4a3c119adc6c769c29de264b3f3806
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 10:59:51 2019 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 0e51ee5570a6a80bdf98770b975dfe8a57f4eeb1
 Author: Arnaud Fontaine <arnau@debian.org>
 Date:   Wed Sep 24 20:03:48 2014 +0900
@@ -39,29 +153,29 @@ Date:   Sat Nov 16 12:33:40 2013 +0100
     
       int main()
       {
-      	xcb_connection_t *c = xcb_connect(NULL, NULL);
-      	xcb_key_symbols_t *syms = xcb_key_symbols_alloc(c);
-      	/* The above sent a GetKeyboardMapping request. Let's now break the
-      	 * connection so that it cannot get the reply.
-      	 */
-      	uint32_t max = xcb_get_maximum_request_length(c);
-      	xcb_screen_t *s = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
-      	size_t len = (max << 2) * 2;
-      	void *p = malloc(len);
+            xcb_connection_t *c = xcb_connect(NULL, NULL);
+            xcb_key_symbols_t *syms = xcb_key_symbols_alloc(c);
+            /* The above sent a GetKeyboardMapping request. Let's now break the
+             * connection so that it cannot get the reply.
+             */
+            uint32_t max = xcb_get_maximum_request_length(c);
+            xcb_screen_t *s = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
+            size_t len = (max << 2) * 2;
+            void *p = malloc(len);
     
-      	printf("Sending request of length %d*2=%d\n",
-      			xcb_get_maximum_request_length(c), len);
-      	xcb_change_property(c, XCB_PROP_MODE_REPLACE, s->root,
-      			XCB_ATOM_STRING, XCB_ATOM_STRING, 8, len, p);
-      	free(p);
+            printf("Sending request of length %d*2=%d\n",
+                            xcb_get_maximum_request_length(c), len);
+            xcb_change_property(c, XCB_PROP_MODE_REPLACE, s->root,
+                            XCB_ATOM_STRING, XCB_ATOM_STRING, 8, len, p);
+            free(p);
     
-      	if (!xcb_connection_has_error(c))
-      		puts("Connection did not break :(");
+            if (!xcb_connection_has_error(c))
+                    puts("Connection did not break :(");
     
-      	/* Crash? */
-      	free(xcb_key_symbols_get_keycode(syms, 0xff14));
+            /* Crash? */
+            free(xcb_key_symbols_get_keycode(syms, 0xff14));
     
-      	return 0;
+            return 0;
       }
     
     Reference: https://awesome.naquadah.org/bugs/index.php?do=details&task_id=1195

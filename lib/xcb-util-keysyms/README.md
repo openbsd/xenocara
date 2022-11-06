@@ -13,12 +13,11 @@ you're using and why you aren't in a mental hospital yet. We'd welcome
 patches/suggestions for enhancement and new libraries; Please report any
 issues you find to the freedesktop.org bug tracker, at:
 
-  <https://bugs.freedesktop.org/enter_bug.cgi?product=XCB>
+  https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms/issues
 
 Discussion about XCB occurs on the XCB mailing list:
 
-  <mailto:xcb at lists.freedesktop.org>
-  <http://lists.freedesktop.org/mailman/listinfo/xcb>
+  http://lists.freedesktop.org/mailman/listinfo/xcb
 
 About XCB util-keysyms module
 =============================
@@ -28,10 +27,12 @@ XCB util-keysyms module provides the following library:
   - keysyms: Standard X key constants and conversion to/from keycodes.
 
 You can obtain the latest development versions of XCB util-keysyms
-using GIT. For anonymous checkouts, use:
+using GIT from <https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms>.
 
-  git clone --recursive git://anongit.freedesktop.org/git/xcb/util-keysyms
+  For anonymous checkouts, use:
 
-For developers, use:
+    git clone --recursive https://gitlab.freedesktop.org/xorg/lib/libxcb-keysyms.git
 
-  git clone --recursive git+ssh://git.freedesktop.org/git/xcb/util-keysyms
+  For developers, use:
+
+    git clone --recursive git@gitlab.freedesktop.org:xorg/lib/libxcb-keysyms.git
