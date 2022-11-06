@@ -1,3 +1,151 @@
+commit 36db00ecdce06709d7590f338eda7e2e7d96839a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 09:40:43 2022 -0700
+
+    smproxy 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f92f80fbb8926d980a6a46c488f7f60a35c9bf9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 10:41:39 2022 -0700
+
+    CheckFullyQuantifiedName: improve gethostname() handling
+    
+    Handle errors and use HOST_NAME_MAX for the buffer size if it is
+    defined by <limits.h>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5bf2e626a25f0ac1503effbf89c01573392ea658
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 10:15:06 2022 -0700
+
+    CheckFullyQuantifiedName: return unqualified name if alloc fails
+    
+    Makes a failure to allocate by asprintf() match other failure
+    cases and return the unqualified name instead of NULL.
+    
+    Fixes gcc warning:
+    smproxy.c: In function ‘FinishSaveYourself’:
+    smproxy.c:269:31: warning: ‘%s’ directive argument is null [-Wformat-truncation=]
+                       "rstart-rsh/%s", fullyQuantifiedName);
+                                   ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 88262a274bdd850e14cc27dd3d421182bbc157d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 10:10:23 2022 -0700
+
+    Use calloc instead of malloc to allocate arrays
+    
+    Most important in ReadProxyFileEntry, if we goto give_up before we
+    finish initializing the array, makes sure we don't try to free
+    uninitialized pointers during cleanup pass.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c55e2eabe6755b88de9835da8185a52b7712847
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 10:04:12 2022 -0700
+
+    Remove or correct obsolete casts
+    
+    Bring code up to C89 levels
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5fdd590f9b9a9f5aa3a60e44fe8f010c43f8c54e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 09:49:22 2022 -0700
+
+    NullIceErrorHandler: make arg names match between definition & declaration
+    
+    Solves cppcheck warning:
+    [smproxy.c:73] -> [smproxy.c:448]: (style, inconclusive)
+      Function 'NullIceErrorHandler' argument 3 names different:
+        declaration 'offendingMinorOpCode' definition 'offendingMinorOpcode'.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f4800d0cfbadf9fc50dddbe2b1eb8d62548d7fe5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 09:47:41 2022 -0700
+
+    Reduce variable scopes as suggested by cppcheck
+    
+    [save.c:203]: (style) The scope of the variable 'i' can be reduced.
+    [save.c:457]: (style) The scope of the variable 'i' can be reduced.
+    [smproxy.c:101]: (style) The scope of the variable 'i' can be reduced.
+    [smproxy.c:1114]: (style) The scope of the variable 'client_window' can be reduced.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f72bea9644450a3492349236a2d57610c7c78bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:05:43 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ef7d5344e9d96f4a6632f5a6f353ee809bef1001
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:05:39 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c60568de14fb3953b3cfe42ee32352298572fd8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:57:31 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9c0047416eff09519bfe6a8088817c270f91d0a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:49:33 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94d925a449d5ea22c14ed0261389787a76c026ef
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit d914bd6488ba53f648df442af9e182236cf63983
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit eb3eabf9d910270026a2705afca1a8ceb385ea3f
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 31b7fe5cc4e3f39f7265800a78a397935163990b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 22:32:22 2015 -0700
@@ -491,7 +639,7 @@ Date:   Sat Jul 16 21:59:14 2005 +0000
         against tempfile race conditions in many places)
 
 commit 05ef9ba24d0b1b5c17e04036d03770a44efd6b78
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 17:25:57 2005 +0000
 
     Build system for smproxy

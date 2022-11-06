@@ -89,7 +89,7 @@ asprintf(char ** ret, const char *format, ...)
 static int
 write_byte (FILE *file, unsigned char b)
 {
-    if (fwrite ((char *) &b, 1, 1, file) != 1)
+    if (fwrite (&b, 1, 1, file) != 1)
 	return 0;
     return 1;
 }
@@ -102,7 +102,7 @@ write_short (FILE *file, unsigned short s)
 
     file_short[0] = (s & (unsigned)0xff00) >> 8;
     file_short[1] = s & 0xff;
-    if (fwrite ((char *) file_short, (int) sizeof (file_short), 1, file) != 1)
+    if (fwrite (file_short, sizeof (file_short), 1, file) != 1)
 	return 0;
     return 1;
 }
@@ -113,11 +113,11 @@ write_counted_string(FILE *file, char *string)
 {
     if (string)
     {
-	unsigned char count = strlen (string);
+	size_t count = strlen (string);
 
-	if (write_byte (file, count) == 0)
+	if (write_byte (file, (unsigned char)count) == 0)
 	    return 0;
-	if (fwrite (string, (int) sizeof (char), (int) count, file) != count)
+	if (fwrite (string, sizeof (char), count, file) != count)
 	    return 0;
     }
     else
@@ -134,7 +134,7 @@ write_counted_string(FILE *file, char *string)
 static int
 read_byte(FILE *file, unsigned char *bp)
 {
-    if (fread ((char *) bp, 1, 1, file) != 1)
+    if (fread (bp, 1, 1, file) != 1)
 	return 0;
     return 1;
 }
@@ -145,7 +145,7 @@ read_short(FILE *file, unsigned short *shortp)
 {
     unsigned char   file_short[2];
 
-    if (fread ((char *) file_short, (int) sizeof (file_short), 1, file) != 1)
+    if (fread (file_short, sizeof (file_short), 1, file) != 1)
 	return 0;
     *shortp = file_short[0] * 256 + file_short[1];
     return 1;
@@ -163,10 +163,10 @@ read_counted_string(FILE *file, char **stringp)
     if (len == 0) {
 	data = NULL;
     } else {
-    	data = (char *) malloc ((unsigned) len + 1);
+	data = malloc ((size_t) len + 1);
     	if (!data)
 	    return 0;
-    	if (fread (data, (int) sizeof (char), (int) len, file) != len) {
+	if (fread (data, sizeof (char), (size_t) len, file) != len) {
 	    free (data);
 	    return 0;
     	}
@@ -200,8 +200,6 @@ read_counted_string(FILE *file, char **stringp)
 int
 WriteProxyFileEntry(FILE *proxyFile, WinInfo *theWindow)
 {
-    int i;
-
     if (!write_counted_string (proxyFile, theWindow->client_id))
 	return 0;
     if (!write_counted_string (proxyFile, theWindow->class.res_name))
@@ -220,7 +218,7 @@ WriteProxyFileEntry(FILE *proxyFile, WinInfo *theWindow)
     {
 	if (!write_byte (proxyFile, (char) theWindow->wm_command_count))
 	    return 0;
-	for (i = 0; i < theWindow->wm_command_count; i++)
+	for (int i = 0; i < theWindow->wm_command_count; i++)
 	    if (!write_counted_string (proxyFile, theWindow->wm_command[i]))
 		return 0;
     }
@@ -236,8 +234,7 @@ ReadProxyFileEntry(FILE *proxyFile, ProxyFileEntry **pentry)
     unsigned char byte;
     int i;
 
-    *pentry = entry = (ProxyFileEntry *) malloc (
-	sizeof (ProxyFileEntry));
+    *pentry = entry = malloc (sizeof (ProxyFileEntry));
     if (!*pentry)
 	return 0;
 
@@ -266,8 +263,7 @@ ReadProxyFileEntry(FILE *proxyFile, ProxyFileEntry **pentry)
 	entry->wm_command = NULL;
     else
     {
-	entry->wm_command = (char **) malloc (entry->wm_command_count *
-	    sizeof (char *));
+	entry->wm_command = calloc (entry->wm_command_count, sizeof (char *));
 
 	if (!entry->wm_command)
 	    goto give_up;
@@ -297,10 +293,10 @@ give_up:
 	        if (entry->wm_command[i])
 		    free (entry->wm_command[i]);
         }
-	free ((char *) entry->wm_command);
+	free (entry->wm_command);
     }
 
-    free ((char *) entry);
+    free (entry);
     *pentry = NULL;
 
     return 0;
@@ -454,10 +450,10 @@ LookupClientID(WinInfo *theWindow)
 	    strcmp (theWindow->class.res_class, ptr->class.res_class) == 0 &&
 	    strcmp (theWindow->wm_name, ptr->wm_name) == 0)
 	{
-	    int i;
-
 	    if (theWindow->wm_command_count == ptr->wm_command_count)
 	    {
+		int i;
+
 		for (i = 0; i < theWindow->wm_command_count; i++)
 		    if (strcmp (theWindow->wm_command[i],
 			ptr->wm_command[i]) != 0)

@@ -22,13 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([smproxy], [1.0.6],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [smproxy])
+AC_INIT([smproxy], [1.0.7],
+        [https://gitlab.freedesktop.org/xorg/app/smproxy/issues], [smproxy])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Set common system defines for POSIX extensions, such as _GNU_SOURCE
 # Must be called before any macros that run the compiler (like

@@ -28,6 +28,11 @@ Author:  Ralph Mor, X Consortium
 #include "smproxy.h"
 #include <unistd.h>
 #include <X11/Xmu/WinUtil.h>
+#include <limits.h>
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 256
+#endif
 
 static XtAppContext appContext;
 static Display *disp;
@@ -70,7 +75,7 @@ static void SaveCompleteCB ( SmcConn smcConn, SmPointer clientData );
 static void ShutdownCancelledCB ( SmcConn smcConn, SmPointer clientData );
 static void ProcessIceMsgProc ( XtPointer client_data, int *source, XtInputId *id );
 static void NullIceErrorHandler ( IceConn iceConn, Bool swap, 
-			   int offendingMinorOpCode, 
+			   int offendingMinorOpcode,
 			   unsigned long offendingSequence, 
 			   int errorClass, int severity, IcePointer values );
 static void ConnectClientToSM ( WinInfo *winInfo );
@@ -98,7 +103,7 @@ HasSaveYourself(Window window)
 {
     Atom *protocols;
     int numProtocols;
-    int i, found;
+    int found;
 
     protocols = NULL;
 
@@ -109,9 +114,10 @@ HasSaveYourself(Window window)
 
     if (protocols != NULL)
     {
-	for (i = 0; i < numProtocols; i++)
+	for (int i = 0; i < numProtocols; i++) {
 	    if (protocols[i] == wmSaveYourselfAtom)
 		found = 1;
+	}
 
 	XFree (protocols);
     }
@@ -198,7 +204,8 @@ CheckFullyQuantifiedName(char *name, int *newstring)
      * will have a WM_CLIENT_MACHINE that is not fully quantified.
      * For example, we might get "excon" instead of "excon.x.org".
      * This really stinks.  The best we can do is tag on our own
-     * domain name.
+     * domain name, if we can - if not, the unquantified name is
+     * better than nothing.
      */
 
     if (strchr (name, '.') != NULL)
@@ -208,11 +215,13 @@ CheckFullyQuantifiedName(char *name, int *newstring)
     }
     else
     {
-	char hostnamebuf[80];
+	char hostnamebuf[HOST_NAME_MAX + 1] = { 0 };
 	char *firstDot;
 
-	gethostname (hostnamebuf, sizeof hostnamebuf);
-	firstDot = strchr (hostnamebuf, '.');
+	if (gethostname (hostnamebuf, sizeof hostnamebuf) == 0)
+	    firstDot = strchr (hostnamebuf, '.');
+	else
+	    firstDot = NULL;
 
 	if (!firstDot)
 	{
@@ -225,7 +234,7 @@ CheckFullyQuantifiedName(char *name, int *newstring)
 
 	    if (asprintf (&newptr, "%s.%s", name, firstDot + 1) == -1) {
                 *newstring = 0;
-                return NULL;
+                return (name);
             }
 	    *newstring = 1;
 	    return (newptr);
@@ -240,7 +249,6 @@ FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
 {
     SmProp prop1, prop2, prop3, *props[3];
     SmPropValue prop1val, prop2val, prop3val;
-    int i;
 
     if (!winInfo->got_first_save_yourself)
     {
@@ -290,8 +298,7 @@ FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
     prop1.type = SmLISTofARRAY8;
     prop1.num_vals = winInfo->wm_command_count;
     
-    prop1.vals = (SmPropValue *) malloc (
-	winInfo->wm_command_count * sizeof (SmPropValue));
+    prop1.vals = calloc (winInfo->wm_command_count, sizeof (SmPropValue));
     
     if (!prop1.vals)
     {
@@ -299,7 +306,7 @@ FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
 	return;
     }
 
-    for (i = 0; i < winInfo->wm_command_count; i++)
+    for (int i = 0; i < winInfo->wm_command_count; i++)
     {
 	prop1.vals[i].value = (SmPointer) winInfo->wm_command[i];
 	prop1.vals[i].length = strlen (winInfo->wm_command[i]);
@@ -315,7 +322,7 @@ FinishSaveYourself(WinInfo *winInfo, Bool has_WM_SAVEYOURSELF)
     
     SmcSetProperties (winInfo->smc_conn, 2, props);
     
-    free ((char *) prop1.vals);
+    free (prop1.vals);
     
     /*
      * If the client doesn't support WM_SAVE_YOURSELF, we should
@@ -574,7 +581,7 @@ AddNewWindow(Window window)
     if (LookupWindow (window, NULL, NULL))
 	return (NULL);
 
-    newptr = (WinInfo *) malloc (sizeof (WinInfo));
+    newptr = malloc (sizeof (WinInfo));
 
     if (newptr == NULL)
 	return (NULL);
@@ -884,7 +891,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
     SmProp prop1, prop2, prop3, *props[3];
     SmPropValue prop1val, prop2val, prop3val;
     char *discardCommand;
-    int numVals, i;
+    int numVals;
     static int first_time = 1;
 
     if (first_time)
@@ -932,8 +939,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
     prop1.name = SmRestartCommand;
     prop1.type = SmLISTofARRAY8;
 
-    prop1.vals = (SmPropValue *) malloc (
-	(Argc + 4) * sizeof (SmPropValue));
+    prop1.vals = calloc ((Argc + 4), sizeof (SmPropValue));
 
     if (!prop1.vals)
     {
@@ -943,7 +949,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
 
     numVals = 0;
 
-    for (i = 0; i < Argc; i++)
+    for (int i = 0; i < Argc; i++)
     {
 	if (strcmp (Argv[i], "-clientId") == 0 ||
 	    strcmp (Argv[i], "-restore") == 0)
@@ -987,7 +993,7 @@ ProxySaveYourselfPhase2CB(SmcConn smcConn, SmPointer clientData)
     props[1] = &prop2;
 
     SmcSetProperties (smcConn, 2, props);
-    free ((char *) prop1.vals);
+    free (prop1.vals);
     free (discardCommand);
 
  finishUp:
@@ -1111,9 +1117,8 @@ ConnectProxyToSM(char *previous_id)
 static void
 CheckForExistingWindows(Window root)
 {
-    Window dontCare1, dontCare2, *children, client_window;
+    Window dontCare1, dontCare2, *children;
     unsigned int nchildren, i;
-    XCreateWindowEvent event;
 
     /*
      * We query the root tree for all windows created thus far.
@@ -1126,7 +1131,8 @@ CheckForExistingWindows(Window root)
 
     for (i = 0; i < nchildren; i++)
     {
-	event.window = children[i];
+	Window client_window;
+	XCreateWindowEvent event = { .window = children[i] };
 
 	HandleCreate (&event);
 
