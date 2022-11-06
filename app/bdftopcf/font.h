@@ -60,7 +60,6 @@ typedef int DrawDirection;
 
 #define NO_SUCH_CHAR	-1
 
-
 #define	FontAliasType	0x1000
 
 #define	AllocError	80
@@ -72,7 +71,7 @@ typedef int DrawDirection;
 #define	BadFontPath	86
 #define	BadCharRange	87
 #define	BadFontFormat	88
-#define	FPEResetFailed	89	/* for when an FPE reset won't work */
+#define	FPEResetFailed	89      /* for when an FPE reset won't work */
 
 /* OpenFont flags */
 #define FontLoadInfo	0x0001
@@ -99,10 +98,10 @@ extern int glyphCachingMode;
 struct _Client;
 
 extern int StartListFontsWithInfo(
-    struct _Client * /*client*/,
-    int /*length*/,
-    unsigned char * /*pattern*/,
-    int /*max_names*/
+    struct _Client * /*client */,
+    int /* length */,
+    unsigned char * /* pattern */,
+    int /* max_names */
 );
 
 extern FontNamesPtr MakeFontNamesRecord(
@@ -110,35 +109,33 @@ extern FontNamesPtr MakeFontNamesRecord(
 );
 
 extern void FreeFontNames(
-    FontNamesPtr /* pFN*/
+    FontNamesPtr /* pFN */
 );
 
-extern int  AddFontNamesName(
+extern int AddFontNamesName(
     FontNamesPtr /* names */,
     char * /* name */,
     int /* length */
 );
 
-#if 0 /* unused */
-extern int  FontToFSError();
+#if 0                           /* unused */
+extern int FontToFSError();
 extern FontResolutionPtr GetClientResolution();
 #endif
 
-typedef struct _FontPatternCache    *FontPatternCachePtr;
+typedef struct _FontPatternCache *FontPatternCachePtr;
 
-extern FontPatternCachePtr  MakeFontPatternCache (
-    void
-);
+extern FontPatternCachePtr MakeFontPatternCache(void);
 
-extern void		    FreeFontPatternCache (
+extern void FreeFontPatternCache(
     FontPatternCachePtr /* cache */
 );
 
-extern void		    EmptyFontPatternCache (
+extern void EmptyFontPatternCache(
     FontPatternCachePtr /* cache */
 );
 
-extern void		    CacheFontPattern (
+extern void CacheFontPattern(
     FontPatternCachePtr /* cache */,
     const char * /* pattern */,
     int /* patlen */,
@@ -148,19 +145,19 @@ extern FontResolutionPtr GetClientResolutions(
     int * /* num */
 );
 
-extern FontPtr		    FindCachedFontPattern (
+extern FontPtr FindCachedFontPattern(
     FontPatternCachePtr /* cache */,
     const char * /* pattern */,
     int /* patlen */
 );
 
-extern void		    RemoveCachedFontPattern (
+extern void RemoveCachedFontPattern(
     FontPatternCachePtr /* cache */,
     FontPtr /* pFont */
 );
 
 typedef enum {
     Linear8Bit, TwoD8Bit, Linear16Bit, TwoD16Bit
-}           FontEncoding;
+} FontEncoding;
 
-#endif				/* FONT_H */
+#endif                          /* FONT_H */

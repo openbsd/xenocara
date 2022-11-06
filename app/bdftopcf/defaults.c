@@ -65,7 +65,7 @@ in this Software without prior written authorization from The Open Group.
 #include "fntfilst.h"
 
 void
-FontDefaultFormat (int *bit, int *byte, int *glyph, int *scan)
+FontDefaultFormat(int *bit, int *byte, int *glyph, int *scan)
 {
     *bit = DEFAULT_BIT_ORDER;
     *byte = DEFAULT_BYTE_ORDER;

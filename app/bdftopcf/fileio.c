@@ -41,26 +41,25 @@ in this Software without prior written authorization from The Open Group.
 #endif
 
 FontFilePtr
-FontFileOpen (const char *name)
+FontFileOpen(const char *name)
 {
-    int		fd;
-    BufFilePtr	raw;
+    int fd;
+    BufFilePtr raw;
 
-    fd = open (name, O_BINARY|O_CLOEXEC);
+    fd = open(name, O_BINARY | O_CLOEXEC);
     if (fd < 0)
-	return 0;
-    raw = BufFileOpenRead (fd);
-    if (!raw)
-    {
-	close (fd);
-	return 0;
+        return 0;
+    raw = BufFileOpenRead(fd);
+    if (!raw) {
+        close(fd);
+        return 0;
     }
 
     return (FontFilePtr) raw;
 }
 
 int
-FontFileClose (FontFilePtr f)
+FontFileClose(FontFilePtr f)
 {
-    return BufFileClose ((BufFilePtr) f, TRUE);
+    return BufFileClose((BufFilePtr) f, TRUE);
 }

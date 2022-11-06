@@ -8,23 +8,15 @@ slowly) on other machines.
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
+  https://lists.x.org/mailman/listinfo/xorg
 
-Please submit bug reports to the Xorg bugzilla:
+The primary development code repository can be found at:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+  https://gitlab.freedesktop.org/xorg/util/bdftopcf
 
-The master development code repository can be found at:
-
-        git://anongit.freedesktop.org/git/xorg/app/bdftopcf
-
-        http://cgit.freedesktop.org/xorg/app/bdftopcf
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
+  https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 

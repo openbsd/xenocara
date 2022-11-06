@@ -46,13 +46,9 @@ int
 main(int argc, char *argv[])
 {
     FontRec font = { 0 };
-
     FontFilePtr input, output;
-
     char *input_name = NULL, *output_name = NULL;
-
     char *program_name;
-
     int bit, byte, glyph, scan;
 
     FontDefaultFormat(&bit, &byte, &glyph, &scan);

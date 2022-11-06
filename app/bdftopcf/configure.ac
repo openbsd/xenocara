@@ -22,13 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([bdftopcf], [1.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [bdftopcf])
+AC_INIT([bdftopcf], [1.1.1],
+        [https://gitlab.freedesktop.org/xorg/util/bdftopcf/-/issues], [bdftopcf])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -37,6 +37,8 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 XORG_WITH_LINT
+
+PKG_CHECK_MODULES(BDFTOPCF, [xproto >= 7.0.22 fontsproto >= 2.1.3])
 
 PKG_CHECK_MODULES(BDFTOPCF, [xproto fontsproto])
 

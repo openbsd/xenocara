@@ -1,3 +1,189 @@
+commit 84eaf7f1bdd402661a83db7ad914eb7f8d5dc627
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 11:53:35 2022 -0700
+
+    bdftopcf 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 200c891ed4a3d364aebdb18ed116ebbfd8101afe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 24 09:45:57 2022 -0700
+
+    Remove weak symbol setup from Atom code
+    
+    Not needed here, since this isn't a library and there is no
+    other source of these functions we link against.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7e29b1d29c6d7cbabe1bad536f7b8f644bffcd4f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 16:05:28 2022 -0700
+
+    Remove unnecessary cast of strlen result in malloc argument
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 949da2db3e9357d8256863475a8c63409a8fc7b9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 15:58:21 2022 -0700
+
+    Fix -Wsign-compare warnings
+    
+    atom.c: In function ‘MakeAtom’:
+    atom.c:161:65: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+                 if (hashTable[h]->hash == hash && hashTable[h]->len == len &&
+                                                                     ^~
+    atom.c:172:69: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+                     if (hashTable[h]->hash == hash && hashTable[h]->len == len &&
+                                                                         ^~
+    atom.c:207:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         if (reverseMapSize <= a->atom) {
+                            ^~
+    bitmap.c: In function ‘bitmapGetMetrics’:
+    bitmap.c:154:31: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+                 for (int i = 0; i < *glyphCount; i++) {
+                                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0fb322b8d53e3f9fdffbba8c733c78ff3d50c85
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 15:50:53 2022 -0700
+
+    Remove redundant null-pointer check
+    
+    As warned by cppcheck:
+    
+    bdfread.c:130:18: style: Condition '!line' is always false [knownConditionTrueFalse]
+                if ((!line) || (bdfIsPrefix(line, "ENDCHAR")))
+                     ^
+    bdfread.c:126:13: note: Assuming condition '!line' is false
+            if (!line)
+                ^
+    bdfread.c:130:18: note: Condition '!line' is always false
+                if ((!line) || (bdfIsPrefix(line, "ENDCHAR")))
+                     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d3e6a823537bb451be60febb6bfc769135fe5b35
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 15:46:57 2022 -0700
+
+    Remove redundant assignment
+    
+    As warned by cppcheck:
+    bdfutils.c:164:17: style: Variable 'pp' is reassigned a value before the old one has been used. [redundantAssignment]
+            for (pp = s; *pp; pp++)
+                    ^
+    bdfutils.c:162:12: note: pp is assigned
+            pp = s;
+               ^
+    bdfutils.c:164:17: note: pp is overwritten
+            for (pp = s; *pp; pp++)
+                    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa8eed6deefbb96d9d3e2af1b23b9fff193bda92
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 15:41:31 2022 -0700
+
+    Make some functions static that aren't called from other files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 746899671c4d6f9d8b7fb25bb17109b331a1b2ed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 15:23:36 2022 -0700
+
+    Delete functions identified as unused by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d526c90729d1b66da6c2546ad3ae794ff0f7751
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 14:34:41 2022 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 548998994665241967a43e583f5d0f00ee089289
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 13:20:48 2022 -0700
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b66daf529d60196422ba71e77bb95ce74277447
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Sep 16 13:17:52 2022 -0700
+
+    Adopt X.Org standard coding style (via x-indent-all.sh)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 65861022b037b0262529c1e1eedecd0e00afb02d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 12:00:57 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c9b595bc61dc5519349a47c2ba07bf7309066657
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 11:59:32 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33edfaac0e8ddd9d125bdae8d3025f79642151d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 13:48:34 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a9d318d64c85a9000f8baeb23c267ac8629c6c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:38:42 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 91d4da2a278b28c4d9fda0832b23fd6309d925fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 19:20:06 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit abf4bc86b696a41eb9183432bc1bbe84ae037194
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun Dec 10 13:48:00 2017 +0100
+
+    Depend on xproto and fsproto that are now used.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Matt Turner <mattst88@gmail.com>
+
 commit c0b7d0b4a8436145f3fddc78d2452d7c720cce8b
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Tue Nov 7 14:10:52 2017 -0500
@@ -484,7 +670,7 @@ Date:   Fri Oct 14 00:25:40 2005 +0000
     Use sed to fill in variables in man page
 
 commit 1367d1093078bb49e4f1b5f1453fea41ae6f2b25
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Fri Sep 23 20:39:52 2005 +0000
 
     Fill these in.

@@ -51,7 +51,6 @@ bdftopcf_SOURCES = \
 	pcf.h \
 	pcfwrite.c \
 	private.c \
-	stubs.h \
 	utilbitmap.c \
 	bdftopcf.c
 
@@ -74,3 +73,5 @@ ALL_LINT_FLAGS=$(LINT_FLAGS) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 lint:
 	$(LINT) $(ALL_LINT_FLAGS) $(bdftopcf_SOURCES)
 endif LINT
+
+EXTRA_DIST = README.md

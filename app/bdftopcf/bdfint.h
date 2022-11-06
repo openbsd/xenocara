@@ -63,25 +63,21 @@ typedef struct BDFSTAT {
     BOOL        haveFontAscent;
     BOOL        haveFontDescent;
     BOOL        haveDefaultCh;
-}           bdfFileState;
+} bdfFileState;
 
-extern void bdfError ( const char * message, ... ) _X_ATTRIBUTE_PRINTF(1, 2);
-extern void bdfWarning ( const char *message, ... ) _X_ATTRIBUTE_PRINTF(1, 2);
-extern unsigned char * bdfGetLine ( FontFilePtr file, unsigned char *buf,
-				    int len );
-extern Atom bdfForceMakeAtom ( const char *str, int *size );
-extern Atom bdfGetPropertyValue ( char *s );
-extern int bdfIsInteger ( char *str );
-extern unsigned char bdfHexByte ( unsigned char *s );
-extern Bool bdfSpecialProperty ( FontPtr pFont, FontPropPtr prop,
-				 char isString, bdfFileState *bdfState );
-extern int bdfReadFont( FontPtr pFont, FontFilePtr file,
-			int bit, int byte, int glyph, int scan );
-extern int bdfReadFontInfo( FontInfoPtr pFontInfo, FontFilePtr file );
+extern void bdfError(const char *message, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern void bdfWarning(const char *message, ...) _X_ATTRIBUTE_PRINTF(1, 2);
+extern unsigned char *bdfGetLine(FontFilePtr file, unsigned char *buf, int len);
+extern Atom bdfForceMakeAtom(const char *str, int *size);
+extern Atom bdfGetPropertyValue(char *s);
+extern int bdfIsInteger(char *str);
+extern unsigned char bdfHexByte(unsigned char *s);
+extern Bool bdfSpecialProperty(FontPtr pFont, FontPropPtr prop,
+                               char isString, bdfFileState *bdfState);
+extern int bdfReadFont(FontPtr pFont, FontFilePtr file,
+                       int bit, int byte, int glyph, int scan);
 
-extern void FontCharInkMetrics ( FontPtr pFont, CharInfoPtr pCI,
-				 xCharInfo *pInk );
-extern void FontCharReshape ( FontPtr pFont, CharInfoPtr pSrc,
-			      CharInfoPtr pDst );
+extern void FontCharInkMetrics(FontPtr pFont, CharInfoPtr pCI, xCharInfo *pInk);
+extern void FontCharReshape(FontPtr pFont, CharInfoPtr pSrc, CharInfoPtr pDst);
 
-#endif				/* BDFINT_H */
+#endif                          /* BDFINT_H */

@@ -40,29 +40,29 @@ in this Software without prior written authorization from The Open Group.
 #include "fntfil.h"
 
 typedef struct _FontName {
-    char	*name;
-    short	length;
-    short	ndashes;
+    char       *name;
+    short       length;
+    short       ndashes;
 } FontNameRec;
 
 typedef struct _FontScaled {
-    FontScalableRec	vals;
-    FontEntryPtr	bitmap;
-    FontPtr		pFont;
+    FontScalableRec     vals;
+    FontEntryPtr        bitmap;
+    FontPtr             pFont;
 } FontScaledRec;
 
 typedef struct _FontScalableExtra {
-    FontScalableRec	defaults;
-    int			numScaled;
-    int			sizeScaled;
-    FontScaledPtr	scaled;
-    pointer		private;
+    FontScalableRec     defaults;
+    int                 numScaled;
+    int                 sizeScaled;
+    FontScaledPtr       scaled;
+    pointer             private;
 } FontScalableExtraRec;
 
 typedef struct _FontScalableEntry {
-    FontRendererPtr	    renderer;
-    char		    *fileName;
-    FontScalableExtraPtr   extra;
+    FontRendererPtr      renderer;
+    char                *fileName;
+    FontScalableExtraPtr extra;
 } FontScalableEntryRec;
 
 /*
@@ -72,122 +72,122 @@ typedef struct _FontScalableEntry {
  */
 
 typedef struct _FontScaleAliasEntry {
-    char		*resolved;
+    char               *resolved;
 } FontScaleAliasEntryRec;
 
 typedef struct _FontBitmapEntry {
-    FontRendererPtr	renderer;
-    char		*fileName;
-    FontPtr		pFont;
+    FontRendererPtr     renderer;
+    char               *fileName;
+    FontPtr             pFont;
 } FontBitmapEntryRec;
 
 typedef struct _FontAliasEntry {
-    char	*resolved;
+    char               *resolved;
 } FontAliasEntryRec;
 
 typedef struct _FontBCEntry {
-    FontScalableRec	    vals;
-    FontEntryPtr	    entry;
+    FontScalableRec     vals;
+    FontEntryPtr        entry;
 } FontBCEntryRec;
 
 typedef struct _FontEntry {
-    FontNameRec	name;
-    int		type;
+    FontNameRec         name;
+    int                 type;
     union _FontEntryParts {
-	FontScalableEntryRec	scalable;
-	FontBitmapEntryRec	bitmap;
-	FontAliasEntryRec	alias;
-	FontBCEntryRec		bc;
+        FontScalableEntryRec    scalable;
+        FontBitmapEntryRec      bitmap;
+        FontAliasEntryRec       alias;
+        FontBCEntryRec          bc;
     } u;
 } FontEntryRec;
 
 typedef struct _FontTable {
-    int		    used;
-    int		    size;
-    FontEntryPtr    entries;
-    Bool	    sorted;
+    int                 used;
+    int                 size;
+    FontEntryPtr        entries;
+    Bool                sorted;
 } FontTableRec;
 
 typedef struct _FontDirectory {
-    char	    *directory;
-    unsigned long   dir_mtime;
-    unsigned long   alias_mtime;
-    FontTableRec    scalable;
-    FontTableRec    nonScalable;
-    char	    *attributes;
+    char               *directory;
+    unsigned long       dir_mtime;
+    unsigned long       alias_mtime;
+    FontTableRec        scalable;
+    FontTableRec        nonScalable;
+    char               *attributes;
 } FontDirectoryRec;
 
 /* Capability bits: for definition of capabilities bitmap in the
    FontRendererRec to indicate support of XLFD enhancements */
 
-#define CAP_MATRIX		0x1
-#define CAP_CHARSUBSETTING	0x2
+#define CAP_MATRIX              0x1
+#define CAP_CHARSUBSETTING      0x2
 
 typedef struct _FontRenderer {
-    const char    *fileSuffix;
-    int	    fileSuffixLen;
-    int	    (*OpenBitmap)(FontPathElementPtr /* fpe */,
-			  FontPtr * /* pFont */,
-			  int /* flags */,
-			  FontEntryPtr /* entry */,
-			  char * /* fileName */,
-			  fsBitmapFormat /* format */,
-			  fsBitmapFormatMask /* mask */,
-			  FontPtr /* non_cachable_font */);
-    int	    (*OpenScalable)(FontPathElementPtr /* fpe */,
-			    FontPtr * /* pFont */,
-			    int /* flags */,
-			    FontEntryPtr /* entry */,
-			    char * /* fileName */,
-			    FontScalablePtr /* vals */,
-			    fsBitmapFormat /* format */,
-			    fsBitmapFormatMask /* fmask */,
-			    FontPtr /* non_cachable_font */);
-    int	    (*GetInfoBitmap)(FontPathElementPtr /* fpe */,
-			     FontInfoPtr /* pFontInfo */,
-			     FontEntryPtr /* entry */,
-			     char * /*fileName */);
-    int	    (*GetInfoScalable)(FontPathElementPtr /* fpe */,
-			       FontInfoPtr /* pFontInfo */,
-			       FontEntryPtr /* entry */,
-			       FontNamePtr /* fontName */,
-			       char * /* fileName */,
-			       FontScalablePtr /* vals */);
-    int	    number;
-    int     capabilities;	/* Bitmap components defined above */
+    const char         *fileSuffix;
+    int                 fileSuffixLen;
+    int                 (*OpenBitmap)(FontPathElementPtr /* fpe */,
+                                      FontPtr * /* pFont */,
+                                      int /* flags */,
+                                      FontEntryPtr /* entry */,
+                                      char * /* fileName */,
+                                      fsBitmapFormat /* format */,
+                                      fsBitmapFormatMask /* mask */,
+                                      FontPtr /* non_cachable_font */);
+    int                 (*OpenScalable)(FontPathElementPtr /* fpe */,
+                                        FontPtr * /* pFont */,
+                                        int /* flags */,
+                                        FontEntryPtr /* entry */,
+                                        char * /* fileName */,
+                                        FontScalablePtr /* vals */,
+                                        fsBitmapFormat /* format */,
+                                        fsBitmapFormatMask /* fmask */,
+                                        FontPtr /* non_cachable_font */);
+    int                 (*GetInfoBitmap)(FontPathElementPtr /* fpe */,
+                                         FontInfoPtr /* pFontInfo */,
+                                         FontEntryPtr /* entry */,
+                                         char * /*fileName */);
+    int                 (*GetInfoScalable)(FontPathElementPtr /* fpe */,
+                                           FontInfoPtr /* pFontInfo */,
+                                           FontEntryPtr /* entry */,
+                                           FontNamePtr /* fontName */,
+                                           char * /* fileName */,
+                                           FontScalablePtr /* vals */);
+    int                 number;
+    int                 capabilities;   /* Bitmap components defined above */
 } FontRendererRec;
 
 typedef struct _FontRenders {
-    int		    number;
+    int                 number;
     struct _FontRenderersElement {
         /* In order to preserve backward compatibility, the
            priority field is made invisible to renderers */
         FontRendererPtr renderer;
-        int priority;
+        int             priority;
     } *renderers;
 } FontRenderersRec, *FontRenderersPtr;
 
 typedef struct _BitmapInstance {
-    FontScalableRec	vals;
-    FontBitmapEntryPtr	bitmap;
+    FontScalableRec     vals;
+    FontBitmapEntryPtr  bitmap;
 } BitmapInstanceRec, *BitmapInstancePtr;
 
 typedef struct _BitmapScalablePrivate {
-    int			numInstances;
-    BitmapInstancePtr	instances;
+    int                 numInstances;
+    BitmapInstancePtr   instances;
 } BitmapScalablePrivateRec, *BitmapScalablePrivatePtr;
 
 typedef struct _BitmapSources {
-    FontPathElementPtr	*fpe;
-    int			size;
-    int			count;
+    FontPathElementPtr *fpe;
+    int                 size;
+    int                 count;
 } BitmapSourcesRec, *BitmapSourcesPtr;
 
-extern BitmapSourcesRec	FontFileBitmapSources;
+extern BitmapSourcesRec FontFileBitmapSources;
 
 /* Defines for FontFileFindNamesInScalableDir() behavior */
-#define NORMAL_ALIAS_BEHAVIOR		0
+#define NORMAL_ALIAS_BEHAVIOR           0
 #define LIST_ALIASES_AND_TARGET_NAMES   (1<<0)
-#define IGNORE_SCALABLE_ALIASES		(1<<1)
+#define IGNORE_SCALABLE_ALIASES         (1<<1)
 
-#endif /* _FONTFILEST_H_ */
+#endif                          /* _FONTFILEST_H_ */

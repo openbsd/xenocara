@@ -68,14 +68,14 @@ int bdfFileLineNum;
 /***====================================================================***/
 
 void
-bdfError(const char* message, ...)
+bdfError(const char *message, ...)
 {
     va_list args;
 
-    va_start (args, message);
+    va_start(args, message);
     fprintf(stderr, "BDF Error on line %d: ", bdfFileLineNum);
     vfprintf(stderr, message, args);
-    va_end (args);
+    va_end(args);
 }
 
 /***====================================================================***/
@@ -85,10 +85,10 @@ bdfWarning(const char *message, ...)
 {
     va_list args;
 
-    va_start (args, message);
+    va_start(args, message);
     fprintf(stderr, "BDF Warning on line %d: ", bdfFileLineNum);
     vfprintf(stderr, message, args);
-    va_end (args);
+    va_end(args);
 }
 
 /*
@@ -99,27 +99,26 @@ bdfWarning(const char *message, ...)
 unsigned char *
 bdfGetLine(FontFilePtr file, unsigned char *buf, int len)
 {
-    int         c;
-    unsigned char *b;
-
     for (;;) {
-	b = buf;
-	while ((c = FontFileGetc(file)) != FontFileEOF) {
-	    if (c == '\r')
-		continue;
-	    if (c == '\n') {
-		bdfFileLineNum++;
-		break;
-	    }
-	    if (b - buf >= (len - 1))
-		break;
-	    *b++ = c;
-	}
-	*b = '\0';
-	if (c == FontFileEOF)
-	    return NULL;
-	if (b != buf && !bdfIsPrefix(buf, "COMMENT"))
-	    break;
+        int c;
+        unsigned char *b = buf;
+
+        while ((c = FontFileGetc(file)) != FontFileEOF) {
+            if (c == '\r')
+                continue;
+            if (c == '\n') {
+                bdfFileLineNum++;
+                break;
+            }
+            if (b - buf >= (len - 1))
+                break;
+            *b++ = c;
+        }
+        *b = '\0';
+        if (c == FontFileEOF)
+            return NULL;
+        if (b != buf && !bdfIsPrefix(buf, "COMMENT"))
+            break;
     }
     return buf;
 }
@@ -133,10 +132,10 @@ bdfForceMakeAtom(const char *str, int *size)
     Atom the_atom;
 
     if (size != NULL)
-	*size += len + 1;
+        *size += len + 1;
     the_atom = MakeAtom(str, len, TRUE);
     if (the_atom == None)
-      bdfError("Atom allocation failed\n");
+        bdfError("Atom allocation failed\n");
     return the_atom;
 }
 
@@ -149,49 +148,48 @@ bdfForceMakeAtom(const char *str, int *size)
 Atom
 bdfGetPropertyValue(char *s)
 {
-    register char *p,
-               *pp;
+    register char *p, *pp;
     char *orig_s = s;
-    Atom        atom;
+    Atom atom;
 
     /* strip leading white space */
     while (*s && (*s == ' ' || *s == '\t'))
-	s++;
+        s++;
     if (*s == 0) {
-	return bdfForceMakeAtom(s, NULL);
+        return bdfForceMakeAtom(s, NULL);
     }
     if (*s != '"') {
-	pp = s;
-	/* no white space in value */
-	for (pp = s; *pp; pp++)
-	    if (*pp == ' ' || *pp == '\t' || *pp == '\015' || *pp == '\n') {
-		*pp = 0;
-		break;
-	    }
-	return bdfForceMakeAtom(s, NULL);
+        /* no white space in value */
+        for (pp = s; *pp; pp++)
+            if (*pp == ' ' || *pp == '\t' || *pp == '\015' || *pp == '\n') {
+                *pp = 0;
+                break;
+            }
+        return bdfForceMakeAtom(s, NULL);
     }
     /* quoted string: strip outer quotes and undouble inner quotes */
     s++;
-    pp = p = malloc((unsigned) strlen(s) + 1);
+    pp = p = malloc(strlen(s) + 1);
     if (pp == NULL) {
-	bdfError("Couldn't allocate property value string (%d)\n",
-		 (int) strlen(s) + 1);
-	return None;
+        bdfError("Couldn't allocate property value string (%d)\n",
+                 (int) strlen(s) + 1);
+        return None;
     }
     while (*s) {
-	if (*s == '"') {
-	    if (*(s + 1) != '"') {
-		*p++ = 0;
-		atom = bdfForceMakeAtom(pp, NULL);
-		free(pp);
-		return atom;
-	    } else {
-		s++;
-	    }
-	}
-	*p++ = *s++;
+        if (*s == '"') {
+            if (*(s + 1) != '"') {
+                *p++ = 0;
+                atom = bdfForceMakeAtom(pp, NULL);
+                free(pp);
+                return atom;
+            }
+            else {
+                s++;
+            }
+        }
+        *p++ = *s++;
     }
-    free (pp);
+    free(pp);
     bdfError("unterminated quoted string property: %s\n", orig_s);
     return None;
 }
@@ -204,15 +202,15 @@ bdfGetPropertyValue(char *s)
 int
 bdfIsInteger(char *str)
 {
-    char        c;
+    char c;
 
     c = *str++;
-    if (!(isdigit((unsigned char)c) || c == '-' || c == '+'))
-	return (FALSE);
+    if (!(isdigit((unsigned char) c) || c == '-' || c == '+'))
+        return (FALSE);
 
     while ((c = *str++))
-	if (!isdigit((unsigned char)c))
-	    return (FALSE);
+        if (!isdigit((unsigned char) c))
+            return (FALSE);
 
     return (TRUE);
 }
@@ -227,19 +225,18 @@ unsigned char
 bdfHexByte(unsigned char *s)
 {
     unsigned char b = 0;
-    register char c;
-    int         i;
 
-    for (i = 2; i; i--) {
-	c = *s++;
-	if ((c >= '0') && (c <= '9'))
-	    b = (b << 4) + (c - '0');
-	else if ((c >= 'A') && (c <= 'F'))
-	    b = (b << 4) + 10 + (c - 'A');
-	else if ((c >= 'a') && (c <= 'f'))
-	    b = (b << 4) + 10 + (c - 'a');
-	else
-	    bdfError("bad hex char '%c'", c);
+    for (int i = 2; i; i--) {
+        char c = *s++;
+
+        if ((c >= '0') && (c <= '9'))
+            b = (b << 4) + (c - '0');
+        else if ((c >= 'A') && (c <= 'F'))
+            b = (b << 4) + 10 + (c - 'A');
+        else if ((c >= 'a') && (c <= 'f'))
+            b = (b << 4) + 10 + (c - 'a');
+        else
+            bdfError("bad hex char '%c'", c);
     }
     return b;
 }
@@ -278,60 +275,60 @@ static const char *SpecialAtoms[] = {
 
 Bool
 bdfSpecialProperty(FontPtr pFont, FontPropPtr prop,
-		   char isString, bdfFileState *bdfState)
+                   char isString, bdfFileState *bdfState)
 {
-    const char      **special;
-    const char       *name;
+    const char **special;
+    const char *name;
 
     name = NameForAtom(prop->name);
     for (special = SpecialAtoms; *special; special++)
-	if (!strcmp(name, *special))
-	    break;
+        if (!strcmp(name, *special))
+            break;
 
     switch (special - SpecialAtoms) {
     case BDF_FONT_ASCENT:
-	if (!isString) {
-	    pFont->info.fontAscent = prop->value;
-	    bdfState->haveFontAscent = TRUE;
-	}
-	return TRUE;
+        if (!isString) {
+            pFont->info.fontAscent = prop->value;
+            bdfState->haveFontAscent = TRUE;
+        }
+        return TRUE;
     case BDF_FONT_DESCENT:
-	if (!isString) {
-	    pFont->info.fontDescent = prop->value;
-	    bdfState->haveFontDescent = TRUE;
-	}
-	return TRUE;
+        if (!isString) {
+            pFont->info.fontDescent = prop->value;
+            bdfState->haveFontDescent = TRUE;
+        }
+        return TRUE;
     case BDF_DEFAULT_CHAR:
-	if (!isString) {
-	    pFont->info.defaultCh = prop->value;
-	    bdfState->haveDefaultCh = TRUE;
-	}
-	return TRUE;
+        if (!isString) {
+            pFont->info.defaultCh = prop->value;
+            bdfState->haveDefaultCh = TRUE;
+        }
+        return TRUE;
     case BDF_POINT_SIZE:
-	bdfState->pointSizeProp = prop;
-	return FALSE;
+        bdfState->pointSizeProp = prop;
+        return FALSE;
     case BDF_RESOLUTION:
-	bdfState->resolutionProp = prop;
-	return FALSE;
+        bdfState->resolutionProp = prop;
+        return FALSE;
     case BDF_X_HEIGHT:
-	bdfState->xHeightProp = prop;
-	return FALSE;
+        bdfState->xHeightProp = prop;
+        return FALSE;
     case BDF_WEIGHT:
-	bdfState->weightProp = prop;
-	return FALSE;
+        bdfState->weightProp = prop;
+        return FALSE;
     case BDF_QUAD_WIDTH:
-	bdfState->quadWidthProp = prop;
-	return FALSE;
+        bdfState->quadWidthProp = prop;
+        return FALSE;
     case BDF_FONT:
-	bdfState->fontProp = prop;
-	return FALSE;
+        bdfState->fontProp = prop;
+        return FALSE;
     case BDF_RESOLUTION_X:
-	bdfState->resolutionXProp = prop;
-	return FALSE;
+        bdfState->resolutionXProp = prop;
+        return FALSE;
     case BDF_RESOLUTION_Y:
-	bdfState->resolutionYProp = prop;
-	return FALSE;
+        bdfState->resolutionYProp = prop;
+        return FALSE;
     default:
-	return FALSE;
+        return FALSE;
     }
 }

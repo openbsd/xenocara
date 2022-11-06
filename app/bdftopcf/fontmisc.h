@@ -52,49 +52,24 @@ in this Software without prior written authorization from The Open Group.
 #define FALSE 0
 #endif
 
-extern Atom MakeAtom ( const char *string, unsigned len, int makeit );
-extern int ValidAtom ( Atom atom );
-extern char *NameForAtom (Atom atom);
+extern Atom MakeAtom(const char *string, unsigned len, int makeit);
+extern char *NameForAtom(Atom atom);
 
 #define lowbit(x) ((x) & (~(x) + 1))
 
 #undef assert
 #define assert(x)	((void)0)
 
-extern void
-BitOrderInvert(
-    register unsigned char *,
-    register int
-);
-
-extern void
-TwoByteSwap(
-    register unsigned char *,
-    register int
-);
-
-extern void
-FourByteSwap(
-    register unsigned char *,
-    register int
-);
-
-extern int
-RepadBitmap (
-    char*,
-    char*,
-    unsigned,
-    unsigned,
-    int,
-    int
-);
+extern void BitOrderInvert(register unsigned char *, register int);
+extern void TwoByteSwap(register unsigned char *, register int);
+extern void FourByteSwap(register unsigned char *, register int);
 
 extern void CopyISOLatin1Lowered(
-    char * /*dest*/,
-    const char * /*source*/,
-    int /*length*/
+    char * /* dest */,
+    const char * /* source */,
+    int    /* length */
 );
 
 extern void register_fpe_functions(void);
 
-#endif /* _FONTMISC_H_ */
+#endif                          /* _FONTMISC_H_ */

@@ -47,16 +47,11 @@ static unsigned char ink_mask_lsb[8] = {
 };
 
 void
-FontCharInkMetrics(FontPtr pFont, CharInfoPtr pCI, xCharInfo *pInk)
+FontCharInkMetrics(FontPtr pFont, CharInfoPtr pCI, xCharInfo * pInk)
 {
-    int         leftBearing,
-                ascent,
-                descent;
-    register int vpos,
-                hpos,
-                bpos = 0;
-    int         bitmapByteWidth,
-                bitmapByteWidthPadded;
+    int         leftBearing, ascent, descent;
+    register int vpos, hpos, bpos = 0;
+    int         bitmapByteWidth, bitmapByteWidthPadded;
     int         bitmapBitWidth;
     int         span;
     register unsigned char *p;
@@ -65,9 +60,9 @@ FontCharInkMetrics(FontPtr pFont, CharInfoPtr pCI, xCharInfo *pInk)
     register unsigned char charbits;
 
     if (pFont->bit == MSBFirst)
-	ink_mask = ink_mask_msb;
+        ink_mask = ink_mask_msb;
     else if (pFont->bit == LSBFirst)
-	ink_mask = ink_mask_lsb;
+        ink_mask = ink_mask_lsb;
     pInk->characterWidth = pCI->metrics.characterWidth;
     pInk->attributes = pCI->metrics.attributes;
 
@@ -81,11 +76,11 @@ FontCharInkMetrics(FontPtr pFont, CharInfoPtr pCI, xCharInfo *pInk)
 
     p = (unsigned char *) pCI->bits;
     for (vpos = descent + ascent; --vpos >= 0;) {
-	for (hpos = bitmapByteWidth; --hpos >= 0;) {
-	    if (*p++ != 0)
-		goto found_ascent;
-	}
-	p += span;
+        for (hpos = bitmapByteWidth; --hpos >= 0;) {
+            if (*p++ != 0)
+                goto found_ascent;
+        }
+        p += span;
     }
     /*
      * special case -- font with no bits gets all zeros
@@ -95,57 +90,57 @@ FontCharInkMetrics(FontPtr pFont, CharInfoPtr pCI, xCharInfo *pInk)
     pInk->ascent = 0;
     pInk->descent = 0;
     return;
-found_ascent:
+ found_ascent:
     pInk->ascent = vpos - descent + 1;
 
     p = ((unsigned char *) pCI->bits) + bitmapByteWidthPadded *
-	(descent + ascent - 1) + bitmapByteWidth;
+        (descent + ascent - 1) + bitmapByteWidth;
 
     for (vpos = descent + ascent; --vpos >= 0;) {
-	for (hpos = bitmapByteWidth; --hpos >= 0;) {
-	    if (*--p != 0)
-		goto found_descent;
-	}
-	p -= span;
+        for (hpos = bitmapByteWidth; --hpos >= 0;) {
+            if (*--p != 0)
+                goto found_descent;
+        }
+        p -= span;
     }
-found_descent:
+ found_descent:
     pInk->descent = vpos - ascent + 1;
 
     bmax = 8;
     for (hpos = 0; hpos < bitmapByteWidth; hpos++) {
-	charbits = 0;
-	p = (unsigned char *) pCI->bits + hpos;
-	for (vpos = descent + ascent; --vpos >= 0; p += bitmapByteWidthPadded)
-	    charbits |= *p;
-	if (charbits) {
-	    if (hpos == bitmapByteWidth - 1)
-		bmax = bitmapBitWidth - (hpos << 3);
-	    p = ink_mask;
-	    for (bpos = bmax; --bpos >= 0;) {
-		if (charbits & *p++)
-		    goto found_left;
-	    }
-	}
+        charbits = 0;
+        p = (unsigned char *) pCI->bits + hpos;
+        for (vpos = descent + ascent; --vpos >= 0; p += bitmapByteWidthPadded)
+            charbits |= *p;
+        if (charbits) {
+            if (hpos == bitmapByteWidth - 1)
+                bmax = bitmapBitWidth - (hpos << 3);
+            p = ink_mask;
+            for (bpos = bmax; --bpos >= 0;) {
+                if (charbits & *p++)
+                    goto found_left;
+            }
+        }
     }
-found_left:
+ found_left:
     pInk->leftSideBearing = leftBearing + (hpos << 3) + bmax - bpos - 1;
 
     bmax = bitmapBitWidth - ((bitmapByteWidth - 1) << 3);
     for (hpos = bitmapByteWidth; --hpos >= 0;) {
-	charbits = 0;
-	p = (unsigned char *) pCI->bits + hpos;
-	for (vpos = descent + ascent; --vpos >= 0; p += bitmapByteWidthPadded)
-	    charbits |= *p;
-	if (charbits) {
-	    p = ink_mask + bmax;
-	    for (bpos = bmax; --bpos >= 0;) {
-		if (charbits & *--p)
-		    goto found_right;
-	    }
-	}
-	bmax = 8;
+        charbits = 0;
+        p = (unsigned char *) pCI->bits + hpos;
+        for (vpos = descent + ascent; --vpos >= 0; p += bitmapByteWidthPadded)
+            charbits |= *p;
+        if (charbits) {
+            p = ink_mask + bmax;
+            for (bpos = bmax; --bpos >= 0;) {
+                if (charbits & *--p)
+                    goto found_right;
+            }
+        }
+        bmax = 8;
     }
-found_right:
+ found_right:
     pInk->rightSideBearing = leftBearing + (hpos << 3) + bpos + 1;
 }
 
@@ -160,21 +155,12 @@ found_right:
 void
 FontCharReshape(FontPtr pFont, CharInfoPtr pSrc, CharInfoPtr pDst)
 {
-    int         x,
-                y;
-    unsigned char *in_line,
-               *out_line;
-    unsigned char *oldglyph,
-               *newglyph;
+    unsigned char *in_line, *out_line;
+    unsigned char *oldglyph, *newglyph;
     int         inwidth;
-    int         outwidth,
-                outheight;
-    int         out_bytes,
-                in_bytes;
-    int         y_min,
-                y_max,
-                x_min,
-                x_max;
+    int         outwidth, outheight;
+    int         out_bytes, in_bytes;
+    int         y_min, y_max, x_min, x_max;
 
     newglyph = (unsigned char *) pDst->bits;
     outwidth = pDst->metrics.rightSideBearing - pDst->metrics.leftSideBearing;
@@ -195,22 +181,23 @@ FontCharReshape(FontPtr pFont, CharInfoPtr pSrc, CharInfoPtr pDst)
     in_line += (y_min + pSrc->metrics.ascent) * in_bytes;
     out_line += (y_min + pDst->metrics.ascent) * out_bytes;
     if (pFont->bit == MSBFirst) {
-	for (y = y_min; y < y_max; y++) {
-	    for (x = x_min; x < x_max; x++) {
-		if (ISBITONMSB(x - pSrc->metrics.leftSideBearing, in_line))
-		    SETBITMSB(x - pDst->metrics.leftSideBearing, out_line);
-	    }
-	    in_line += in_bytes;
-	    out_line += out_bytes;
-	}
-    } else {
-	for (y = y_min; y < y_max; y++) {
-	    for (x = x_min; x < x_max; x++) {
-		if (ISBITONLSB(x - pSrc->metrics.leftSideBearing, in_line))
-		    SETBITLSB(x - pDst->metrics.leftSideBearing, out_line);
-	    }
-	    in_line += in_bytes;
-	    out_line += out_bytes;
-	}
+        for (int y = y_min; y < y_max; y++) {
+            for (int x = x_min; x < x_max; x++) {
+                if (ISBITONMSB(x - pSrc->metrics.leftSideBearing, in_line))
+                    SETBITMSB(x - pDst->metrics.leftSideBearing, out_line);
+            }
+            in_line += in_bytes;
+            out_line += out_bytes;
+        }
+    }
+    else {
+        for (int y = y_min; y < y_max; y++) {
+            for (int x = x_min; x < x_max; x++) {
+                if (ISBITONLSB(x - pSrc->metrics.leftSideBearing, in_line))
+                    SETBITLSB(x - pDst->metrics.leftSideBearing, out_line);
+            }
+            in_line += in_bytes;
+            out_line += out_bytes;
+        }
     }
 }

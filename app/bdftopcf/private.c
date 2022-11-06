@@ -34,71 +34,10 @@ in this Software without prior written authorization from The Open Group.
 #include    "fontmisc.h"
 #include    <X11/fonts/fontstruct.h>
 
-static int _FontPrivateAllocateIndex = 0;
-
-int
-AllocateFontPrivateIndex (void)
-{
-    return _FontPrivateAllocateIndex++;
-}
-
-FontPtr
-CreateFontRec (void)
-{
-    FontPtr pFont;
-    int size;
-
-    size = sizeof(FontRec) + (sizeof(pointer) * _FontPrivateAllocateIndex);
-
-    pFont = malloc(size);
-
-    if(pFont) {
-	bzero((char*)pFont, size);
-	pFont->maxPrivate = _FontPrivateAllocateIndex - 1;
-	if(_FontPrivateAllocateIndex)
-	    pFont->devPrivates = (pointer)(&pFont[1]);
-    }
-
-    return pFont;
-}
-
 void
-DestroyFontRec (FontPtr pFont)
+DestroyFontRec(FontPtr pFont)
 {
-   if (pFont->devPrivates && pFont->devPrivates != (pointer)(&pFont[1]))
-	free(pFont->devPrivates);
-   free(pFont);
-}
-
-void
-ResetFontPrivateIndex (void)
-{
-    _FontPrivateAllocateIndex = 0;
-}
-
-Bool
-_FontSetNewPrivate (FontPtr pFont, int n, pointer ptr)
-{
-    pointer *new;
-
-    if (n > pFont->maxPrivate) {
-	if (pFont->devPrivates && pFont->devPrivates != (pointer)(&pFont[1])) {
-	    new = realloc (pFont->devPrivates, (n + 1) * sizeof (pointer));
-	    if (!new)
-		return FALSE;
-	} else {
-	    /* omg realloc */
-	    new = malloc ((n + 1) * sizeof (pointer));
-	    if (!new)
-		return FALSE;
-	    if (pFont->devPrivates)
-		memcpy (new, pFont->devPrivates, (pFont->maxPrivate + 1) * sizeof (pointer));
-	}
-	pFont->devPrivates = new;
-	/* zero out new, uninitialized privates */
-	while(++pFont->maxPrivate < n)
-	    pFont->devPrivates[pFont->maxPrivate] = (pointer)0;
-    }
-    pFont->devPrivates[n] = ptr;
-    return TRUE;
+    if (pFont->devPrivates && pFont->devPrivates != (pointer) (&pFont[1]))
+        free(pFont->devPrivates);
+    free(pFont);
 }
