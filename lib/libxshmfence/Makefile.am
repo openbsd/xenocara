@@ -25,7 +25,7 @@ SUBDIRS = src test
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = xshmfence.pc
 
-EXTRA_DIST = xshmfence.pc.in ChangeLog
+EXTRA_DIST = xshmfence.pc.in ChangeLog README.md
 MAINTAINERCLEANFILES = ChangeLog
 
 .PHONY: ChangeLog

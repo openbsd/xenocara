@@ -30,6 +30,8 @@
 #define __MAP_NOFAULT		0
 #endif
 
+#include <fcntl.h>
+
 #if !HAVE_MEMFD_CREATE
 #if HAVE_DECL___NR_MEMFD_CREATE
 #include <asm/unistd.h>
@@ -72,9 +74,16 @@ xshmfence_alloc_shm(void)
 {
 	char	template[] = SHMDIR "/shmfd-XXXXXX";
 	int	fd;
+#ifndef HAVE_MKOSTEMP
+	int	flags;
+#endif
 
 #if HAVE_MEMFD_CREATE
 	fd = memfd_create("xshmfence", MFD_CLOEXEC|MFD_ALLOW_SEALING);
+	if (fd < 0)
+#endif
+#ifdef SHM_ANON
+	fd = shm_open(SHM_ANON, O_RDWR|O_CLOEXEC, 0600);
 	if (fd < 0)
 #endif
 	{
@@ -83,10 +92,21 @@ xshmfence_alloc_shm(void)
 		if (fd < 0)
 #endif
 		{
+#ifdef HAVE_MKOSTEMP
+			fd = mkostemp(template, O_CLOEXEC);
+#else
 			fd = mkstemp(template);
+#endif
 			if (fd < 0)
 				return fd;
 			unlink(template);
+#ifndef HAVE_MKOSTEMP
+			flags = fcntl(fd, F_GETFD);
+			if (flags != -1) {
+				flags |= FD_CLOEXEC;
+				fcntl(fd, F_SETFD, &flags);
+			}
+#endif
 		}
 	}
 	if (ftruncate(fd, sizeof (struct xshmfence)) < 0) {

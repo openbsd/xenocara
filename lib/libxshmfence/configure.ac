@@ -23,15 +23,16 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([libxshmfence], [1.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libxshmfence])
+AC_INIT([libxshmfence], [1.3.1],
+	[https://gitlab.freedesktop.org/xorg/lib/libxshmfence/-/issues],
+	[libxshmfence])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 AM_MAINTAINER_MODE
 
 # Initialize libtool
@@ -49,7 +50,7 @@ LINT_FLAGS="${LINT_FLAGS} ${FONTENC_CFLAGS}"
 
 		  
 dnl
-dnl Locate a suitable tmp file system for creating shared memeory files
+dnl Locate a suitable tmp file system for creating shared memory files
 dnl
 
 AC_ARG_ENABLE(futex,	AS_HELP_STRING([--enable-futex], [Enable futexes (default: auto)]),
@@ -99,7 +100,7 @@ AC_SUBST([XPROTO_CFLAGS])
 
 CFLAGS="$CFLAGS $XPROTO_CFLAGS"
 
-AC_CHECK_FUNCS(memfd_create)
+AC_CHECK_FUNCS(memfd_create mkostemp)
 
 AC_CHECK_DECLS([__NR_memfd_create], [], [], [[#include <asm/unistd.h>]])
 
