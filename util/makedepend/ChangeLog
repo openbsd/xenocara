@@ -1,3 +1,70 @@
+commit d62a9e49c6b83f05c5692bbe4b80c485d08ecfd3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 19:28:57 2022 -0700
+
+    makedepend 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 542a6dd61ce334924494af2fcf8a4613ef86aace
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 18 09:50:04 2022 -0700
+
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters
+    
+    configure.ac:32: warning: AC_OUTPUT should be used without arguments.
+    configure.ac:32: You should run autoupdate.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3dc64b0b0a7d4e14ccea6b9d1d11bf871c47a7e0
+Author: Thibault DUPONCHELLE <thibault.duponchelle@gmail.com>
+Date:   Wed Mar 20 09:26:47 2019 +0100
+
+    Add test case for bug #1 + proposed fix.
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/util/makedepend/issues/1
+
+commit 54559e73e27e532535dea2a60e615f99c694343f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 10 09:32:55 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c2ffd57727e5f02b94f1c46392a740e404d4c270
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 10 09:18:41 2022 -0700
+
+    Close fd for reading old Makefile when done, instead of leaking it
+    
+    Found by Oracle Parfait:
+    
+    Error: File Leak
+       File Leak [file-ptr-leak]:
+          Leaked File fdin
+            at line 799 of main.c in function 'redirect'.
+              fdin initialized at line 769 with fopen
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 093d33fb6bc108030539b38c4bfa202b148d3c7a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:44:38 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9b11c9bdf94e620a58e4402f7c2a98e7fc01e859
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:43:28 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e4971e9507f989d68c97a92edd1e6e1881ad1d55
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 16:39:07 2019 -0700
@@ -510,7 +577,7 @@ Date:   Fri May 14 21:14:44 2010 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 8522c314da7537169996476fe5ba411f720a09fe
-Author: Martin Pärtel <lagitus@mbnet.fi>
+Author: Martin Pärtel  <lagitus@mbnet.fi>
 Date:   Fri May 14 21:00:15 2010 -0700
 
     Bug 28045 - makedepend fails on directory named like an include file

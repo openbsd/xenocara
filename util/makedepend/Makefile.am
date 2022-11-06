@@ -71,3 +71,7 @@ TESTS_ENVIRONMENT += test_srcdir="$(TEST_SRCDIR_PATH)/tests"
 # Test for https://bugs.freedesktop.org/show_bug.cgi?id=28045
 TESTS += tests/28045/makedep.sh
 EXTRA_DIST += tests/28045/makedep.sh tests/28045/foo.cpp
+
+# Test
+TESTS += tests/1/makedep.sh
+EXTRA_DIST += tests/1/makedep.sh tests/1/one.cpp tests/1/two.cpp

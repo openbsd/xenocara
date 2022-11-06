@@ -155,9 +155,9 @@ am__remove_distdir = \
       || { sleep 5 && rm -rf "$(distdir)"; }; \
   else :; fi
 am__post_remove_distdir = $(am__remove_distdir)
-DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
+DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.xz
 GZIP_ENV = --best
-DIST_TARGETS = dist-bzip2 dist-gzip
+DIST_TARGETS = dist-xz dist-gzip
 distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
@@ -279,6 +279,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -301,7 +302,8 @@ AM_CPPFLAGS = -DOBJSUFFIX=\".${OBJEXT}\" -DINCLUDEDIR=\"/usr/include\" \
 	$(X_CFLAGS)
 AM_CFLAGS = $(CWARNFLAGS)
 EXTRA_DIST = autogen.sh makedepend.man README.md ChangeLog \
-	tests/28045/makedep.sh tests/28045/foo.cpp
+	tests/28045/makedep.sh tests/28045/foo.cpp tests/1/makedep.sh \
+	tests/1/one.cpp tests/1/two.cpp
 
 # Man page
 appmandir = $(APP_MAN_DIR)
@@ -317,7 +319,9 @@ MAINTAINERCLEANFILES = ChangeLog
 ### Test cases - mostly for bug fixes submitted with a test case so far
 
 # Test for https://bugs.freedesktop.org/show_bug.cgi?id=28045
-TESTS = tests/28045/makedep.sh
+
+# Test
+TESTS = tests/28045/makedep.sh tests/1/makedep.sh
 
 # Absolute path to srcdir & builddir top that test scripts can reference
 TEST_BUILDDIR_PATH = `cd $(top_builddir) && pwd`
@@ -691,6 +695,7 @@ distdir: $(DISTFILES)
 dist-gzip: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
 	$(am__post_remove_distdir)
+
 dist-bzip2: distdir
 	tardir=$(distdir) && $(am__tar) | BZIP2=$${BZIP2--9} bzip2 -c >$(distdir).tar.bz2
 	$(am__post_remove_distdir)
@@ -698,7 +703,6 @@ dist-bzip2: distdir
 dist-lzip: distdir
 	tardir=$(distdir) && $(am__tar) | lzip -c $${LZIP_OPT--9} >$(distdir).tar.lz
 	$(am__post_remove_distdir)
-
 dist-xz: distdir
 	tardir=$(distdir) && $(am__tar) | XZ_OPT=$${XZ_OPT--e} xz -c >$(distdir).tar.xz
 	$(am__post_remove_distdir)

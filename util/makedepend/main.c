@@ -790,6 +790,7 @@ redirect(const char *line, const char *makefile)
 		fputs(buf, fdout);
 	    }
 	}
+	fclose(fdin);
 	fflush(fdout);
 #ifndef HAVE_FCHMOD
 	chmod(makefile, st.st_mode);

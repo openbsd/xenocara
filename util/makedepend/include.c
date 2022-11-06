@@ -241,8 +241,38 @@ inc_path(const char *file, const char *include, int type)
 	for (; ip->i_file; ip++) {
 		if ((strcmp(ip->i_incstring, include) == 0) &&
 		    !(ip->i_flags & INCLUDED_SYM)) {
-			inclistnext = ip + 1;
-			return ip;
+			/*
+			 * Same filename but same file ?
+			 */
+			char r_include[PATHMAX+1];
+			char r_saved_path[PATHMAX+1];
+			char* ptr;
+			ptr = realpath(include, r_include);
+			ptr = realpath(ip->i_file, r_saved_path);
+			if (!strcmp(r_include, r_saved_path)) {
+				inclistnext = ip + 1;
+				return ip;
+			}
+
+			/*
+			 * Check if we have a header in the same dir
+			 */
+			for (p=file+strlen(file); p>file; p--)
+				if (*p == '/')
+					break;
+			if (p == file) {
+				strcpy(path, include);
+			} else {
+				strncpy(path, file, (p-file) + 1);
+				path[ (p-file) + 1 ] = '\0';
+				strcpy(path + (p-file) + 1, include);
+			}
+			remove_dotdot(path);
+			ptr = realpath(path, r_include);
+			if (!strcmp(r_include, r_saved_path)) {
+				inclistnext = ip + 1;
+				return ip;
+			}
 		}
 	}
 

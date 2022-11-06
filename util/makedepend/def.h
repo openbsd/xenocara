@@ -42,6 +42,7 @@ in this Software without prior written authorization from The Open Group.
 #define MAXFILES	2048
 #define MAXINCFILES	128	/* "-include" files */
 #define MAXDIRS		512	/* -I flags */
+#define PATHMAX		4096    /* realpath */
 #define SYMTABINC	10	/* must be > 1 for define() to work right */
 #define	TRUE		1
 #define	FALSE		0
