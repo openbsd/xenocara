@@ -98,11 +98,11 @@ create_text_choice(Widget w, int type, int length, int width)
   /* label uses type to find out what its title is */
   label = XtCreateManagedWidget(labels[type],labelWidgetClass,w,
 				labelargs,XtNumber(labelargs));
-  
+
   /* text uses type to find out what its string is */
   switch (type) {
   case TForeground:
-    snprintf(textstrings[type],sizeof textstrings[type], 
+    snprintf(textstrings[type],sizeof textstrings[type],
 	"%d",(int) X.gcv.foreground);
     snprintf(oldtextstrings[type],sizeof oldtextstrings[type],
 	"%d",(int) X.gcv.foreground);
@@ -153,7 +153,7 @@ WriteText(Widget w, XEvent *event, String *params, Cardinal *num_params)
   }
   if (strcmp(textstrings[type],oldtextstrings[type])) {
     strcpy(oldtextstrings[type],textstrings[type]);
-    snprintf(mbuf,sizeof mbuf,"%s%s\n", 
+    snprintf(mbuf,sizeof mbuf,"%s%s\n",
 	names[type],		/* the right first half */
 	textstrings[type]);	/* the right second half */
     interpret(mbuf);		/* send it off */

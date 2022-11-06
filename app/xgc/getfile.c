@@ -39,7 +39,7 @@ get_filename(
   ** confirm the user's choice.  Other keys which would move out of
   ** the range of a one-line window are disabled. */
 
-  static const char *translationtable = 
+  static const char *translationtable =
     "Ctrl<Key>J:    KillPopup() Done()\n\
      Ctrl<Key>M:    KillPopup() Done()\n\
      <Key>Linefeed: KillPopup() Done()\n\
@@ -99,10 +99,10 @@ get_filename(
 
   (void) XQueryPointer(X.dpy,XtWindow(topform),&dummy1,&dummy2,&x1,&y1,
 		       &x2,&y2,&mask);
-  
+
   popupshellargs[0].value = (XtArgVal) x2;
   popupshellargs[1].value = (XtArgVal) y2;
-  
+
   popupshell = XtCreatePopupShell("popup",overrideShellWidgetClass,
 			 topform,popupshellargs,XtNumber(popupshellargs));
 

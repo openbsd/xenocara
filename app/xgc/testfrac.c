@@ -50,7 +50,7 @@ slider_jump(Widget w, caddr_t data, caddr_t position)
   ** hits the end of the scrollbar, not the left edge.  When the right edge
   ** is at 1.0, the left edge is at 1.0 - SLIDER_LENGTH.  Normalize
   ** accordingly.  */
-   
+
   newpercent = oldpercent / (1.0 - SLIDER_LENGTH);
 
   /* If the slider's partially out of the scrollbar, move it back in. */
@@ -73,7 +73,7 @@ slider_jump(Widget w, caddr_t data, caddr_t position)
 
 /* slider_scroll(w,data,position)
 ** ------------------------------
-** This function is called when the user does incremental scrolling, 
+** This function is called when the user does incremental scrolling,
 ** generally with the left or right button.  Right now it just ignores it.
 */
 
@@ -144,7 +144,7 @@ create_testfrac_choice(Widget w)
     {XtNjumpProc,        (XtArgVal) NULL},
     {XtNscrollProc,      (XtArgVal) NULL}
   };
-    
+
   static const char *translationtable = "<Leave>: Update()";
 
   static XtActionsRec actiontable[] = {

@@ -70,7 +70,7 @@ MenuLine contains these Commands:
        - read from file until EOF
    Quit
        - quit
-   
+
 The toggling command buttons exist in pairs, of which only one is visible at
 any one point.  This makes callbacks/names of buttons easier to implement.
 
@@ -84,7 +84,7 @@ BenchmarkOptions contains:
        - call disable_gc_choices() with the GC field flags
    Iterations (text) the number of times to run.
        - put "iterations <>" in buffer
-   
+
 ---
 
 GraphicsOptions (form) describing graphics options (owned by Toplevel?)
@@ -134,9 +134,9 @@ Description (text) describing the current test (owned by Toplevel?)
 I really need to find out how to use sources and sinks for Text widgets -
 the documentation does not say how to do it.
 
-Every test will have a block of text associated with it.  When a new 
+Every test will have a block of text associated with it.  When a new
 benchmark is chosen, its associated text will become the source for the
-Description widget.  Note that we don't have to worry about whether 
+Description widget.  Note that we don't have to worry about whether
 Description is mapped or not; we're just setting a source.
 
 ---
@@ -165,9 +165,9 @@ When the user presses Playback, pretty much all we have to do is to
 1) change the buffer to the file that he wants, and 2) start reading.
 The rest should be taken care of the buffer-interpreting module.
 
-RecordingOn changes the output buffer _and_ the input buffer to the 
+RecordingOn changes the output buffer _and_ the input buffer to the
 desired file.
-       
+
 RecordingOff changes them both back to the usual.
 
 

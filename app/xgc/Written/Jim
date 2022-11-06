@@ -55,8 +55,8 @@ document.
 
 The Graphics Options area would contain the following entries:
 
-    Function - one-of { clear, and, andReverse, copy, andInverted, noop, xor, 
-		        or, nor, equiv, invert, orReverse, copyInverted, 
+    Function - one-of { clear, and, andReverse, copy, andInverted, noop, xor,
+		        or, nor, equiv, invert, orReverse, copyInverted,
 		        orInverted, nand, set }
     PlaneMask - unsigned value or many-of-n representing bits
     Foreground - unsigned value in range 0..2^nplanes
@@ -158,7 +158,7 @@ sophisticated as what is provided in many UIMS's, it would be nice to keep
 the application section of the benchmark as separate as possible from the
 user interface.
 
-    test  { CopyArea, CopyPlane, PolyPoint, PolyLine, PolySegment, 
+    test  { CopyArea, CopyPlane, PolyPoint, PolyLine, PolySegment,
 	    PolyRectangle, PolyArc, FillPolygon, PolyFillRect, PolyFillArc,
 	    PutImage, GetImage, ImageText8, PolyText8, ImageText16,
 	    PolyText16 }
@@ -177,7 +177,7 @@ user interface.
 	-  specifies the name of the file into which commands are recorded.
 
     describe  BOOLEAN
-	-  indicates whether or not a description of the test should be 
+	-  indicates whether or not a description of the test should be
 	   displayed whenever a test is selected (or when this option is
 	   specified).
 
@@ -194,11 +194,11 @@ user interface.
 	   colormap is being used, the RGB value for this slot may be changed.
 
     forecolor COLORNAME
-	-  specifies the RGB value or name of the color to be used for the 
+	-  specifies the RGB value or name of the color to be used for the
 	   foreground pixel, if settable.
 
     backcolor COLORNAME
-	-  specifies the RGB value or name of the color to be used for the 
+	-  specifies the RGB value or name of the color to be used for the
 	   background pixel, if settable.
 
     linewidth NUMBER

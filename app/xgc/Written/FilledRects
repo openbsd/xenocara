@@ -26,11 +26,11 @@ Things to look for:
 	Otherwise, the speed of a single rectangle should be about
 	equal to its size.
 
-Data: 
+Data:
 	Pixels per second.
 	Average size of rectangle.
 
-GC fields: 
+GC fields:
 	function:
 	Tiling: likely to be a lot slower, although for whole words
 		you're just setting it to a certain value, rather than 0.
@@ -58,7 +58,7 @@ GC fields:
 		more thought has to be given to what is drawn or not.
 		Software vs. hardware, I suppose.
 
-Possibly 
+Possibly
 	foreground: similar to plane-mask in its effect, I would think.
 
 	tile: "nice" width tiles would probably be better.  A width which
@@ -72,7 +72,7 @@ Possibly
 	stipple: like tile
 
 Other:
-	alignment on word bounaries: fastest when one is changing whole
+	alignment on word boundaries: fastest when one is changing whole
 	words at a time.  That way, you're just setting whole words to
 	0 or ~0 and not doing any computation.  A 32x1 rectangle should
 	be much faster than a 1x32 rectangle.

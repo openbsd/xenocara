@@ -1,5 +1,5 @@
 What we need is a widget which presents a collection of buttons.  The user
-can select only one of them at a time.  When one is selected, its 
+can select only one of them at a time.  When one is selected, its
 foreground and background colors should be reversed and stay that way
 until another one is selected.  Exactly one button can be selected at
 any one time.

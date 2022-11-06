@@ -42,9 +42,9 @@ toggle_recordbutton(Widget w, caddr_t closure, caddr_t call_data)
   static Arg recordargs[] = {
     {XtNlabel,        (XtArgVal) NULL}
   };
-  
+
   char tmp[20];			/* new label */
-  
+
   if (!recording) {
     start_recording();
   }
@@ -65,7 +65,7 @@ toggle_recordbutton(Widget w, caddr_t closure, caddr_t call_data)
 */
 
 static void
-start_recording(void) 
+start_recording(void)
 {
   get_filename(done_choosing_filename,cancel_record);
 }
@@ -76,7 +76,7 @@ start_recording(void)
 */
 
 static void
-stop_recording(void) 
+stop_recording(void)
 {
   fclose(recordfile);
 }
@@ -87,7 +87,7 @@ stop_recording(void)
 */
 
 static void
-cancel_record(void) 
+cancel_record(void)
 {
 }
 
@@ -99,7 +99,7 @@ cancel_record(void)
 */
 
 static void
-done_choosing_filename(void) 
+done_choosing_filename(void)
 {
   static Arg recordargs[] = {
     {XtNlabel,        (XtArgVal) NULL},
@@ -138,7 +138,7 @@ print_if_recording(const char *str)
 ** If we're recording, stop.
 */
 
-void 
+void
 close_file_if_recording(void)
 {
   if (recording)
@@ -217,7 +217,7 @@ print_out_gc_values(void)
   fprintf(recordfile,"planemask %ld\n",X.gcv.plane_mask);
   fprintf(recordfile,"dashlist %d\n",X.gcv.dashes);
   fprintf(recordfile,"font %s\n",X.fontname);
-}  
+}
 
 /********************************************/
 

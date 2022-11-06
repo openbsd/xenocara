@@ -52,8 +52,8 @@ create_choice(Widget w, XgcStuff *info)
 				** toggle widget is selected. */
 
   /* ArgList for the label widget */
-  static Arg labelargs[] = {	
-    {XtNborderWidth,  (XtArgVal) 0}, 
+  static Arg labelargs[] = {
+    {XtNborderWidth,  (XtArgVal) 0},
     {XtNjustify,      (XtArgVal) XtJustifyRight},
     {XtNvertDistance, (XtArgVal) 4}
   };
@@ -76,7 +76,7 @@ create_choice(Widget w, XgcStuff *info)
 
   /* Allocate space for the widgets and initialize choice */
   choice = (ChoiceDesc *) XtMalloc(sizeof(ChoiceDesc));
-  choice->widgets = (WidgetList) XtMalloc(sizeof(Widget) * 
+  choice->widgets = (WidgetList) XtMalloc(sizeof(Widget) *
 					  info->choice.num_toggles);
   choice->size = info->choice.num_toggles;
   choice->label = XtCreateManagedWidget(info->choice.name,labelWidgetClass,w,
@@ -97,8 +97,8 @@ create_choice(Widget w, XgcStuff *info)
     else {
       toggleargs[4].value = (XtArgVal) choice->widgets[0];
 				/* are we starting a new row? */
-      if (info->choice.columns > 0 && 
-	  i > 1 && 
+      if (info->choice.columns > 0 &&
+	  i > 1 &&
 	  (i % (info->choice.columns) == 0)) {
 	toggleargs[0].value = (XtArgVal) choice->label;
 	/* under the appropriate toggle */
@@ -130,15 +130,15 @@ create_choice(Widget w, XgcStuff *info)
     strcat(text, (info->data)[i].text);
     strcat(text, "\n");
     callbacklist[0].closure = (caddr_t) text;
-    
+
     /* Create it finally */
-    choice->widgets[i] = XtCreateManagedWidget((info->data[i]).name, 
+    choice->widgets[i] = XtCreateManagedWidget((info->data[i]).name,
 					       toggleWidgetClass,
 					       w,
 					       toggleargs,
 					       XtNumber(toggleargs));
   }
-  
+
   /* The toggle widgets have all been created;
   ** now make the all the same width if that's
   ** what we want to do.                    */

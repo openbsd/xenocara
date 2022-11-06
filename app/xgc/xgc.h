@@ -36,7 +36,7 @@ typedef struct {
     char name[40];		/* name as it will appear on the screen */
     char text[40];   		/* Xgc command it translates to */
   } command_data[MAXCHOICES];
-} ChoiceStuff;			/* All the info needed to deal with a 
+} ChoiceStuff;			/* All the info needed to deal with a
 				   choice widget */
 typedef struct {
   const char *name;

@@ -38,7 +38,7 @@ interpret(const char *string)
 
     /* So word1 is the first word on the line and word2 is the second.
        Now the fun begins... */
-    
+
     if (!strcmp(word1,TestStuff.choice.text))  {
       for (i=0;i<NUM_TESTS;++i) {
 	if (!strcmp(word2,(TestStuff.data)[i].text)) {
@@ -105,7 +105,7 @@ interpret(const char *string)
 	}
       }
     }
-    else if (!strcmp(word1,"planemask")) 
+    else if (!strcmp(word1,"planemask"))
       GC_change_planemask((unsigned long) atoi(word2),FALSE);
     else if (!strcmp(word1,"dashlist"))
       GC_change_dashlist(atoi(word2),FALSE);
@@ -126,7 +126,7 @@ void
 interpret(const char *instring)
 {
   FILE *inend;
-  
+
   print_if_recording(instring);
   yyin = outend;
   inend = fdopen(fildes[1],"w");
@@ -264,15 +264,15 @@ GC_change_arcmode(int arcmode, Boolean feedback)
 */
 
 void
-GC_change_dashlist(int dashlist, Boolean feedback) 
+GC_change_dashlist(int dashlist, Boolean feedback)
 {
-  char dasharray[DASHLENGTH];	/* what we're gonna pass to XSetDashes */
+  char dasharray[DASHLENGTH];	/* what we're going to pass to XSetDashes */
   int dashnumber = 0;		/* which element of dasharray we're currently
 				   modifying */
   int i;			/* which bit of the dashlist we're on */
   int state = 1;		/* whether the list bit we checked was
 				   on (1) or off (0) */
-				  
+
   /* Initialize the dasharray */
 
   for (i = 0; i < DASHLENGTH; ++i) dasharray[i] = 0;
@@ -294,11 +294,11 @@ GC_change_dashlist(int dashlist, Boolean feedback)
 
     if (((dashlist&1<<i) && state) || (!(dashlist&1<<i) && !state))
       ++dasharray[dashnumber];
-    else {			
+    else {
       state = state^1;		/* reverse the state */
       ++dasharray[++dashnumber]; /* start a new dash */
     }
-  } 
+  }
 
   XSetDashes(X.dpy,X.gc,0,dasharray,dashnumber+1);
   X.gcv.dashes = dashlist;
@@ -315,7 +315,7 @@ GC_change_planemask(unsigned long planemask, Boolean feedback)
 }
 
 void
-change_test(int test, Boolean feedback) 
+change_test(int test, Boolean feedback)
 {
   X.test = test;
   if (feedback) select_button(testchoicedesc,test);

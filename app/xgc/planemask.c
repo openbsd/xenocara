@@ -20,7 +20,7 @@
 
 static void choose_plane(Widget, caddr_t, caddr_t);
 
-static unsigned long planemask;	
+static unsigned long planemask;
 static Widget *pm;
 
 /* create_planemask_choice(w)
@@ -67,7 +67,7 @@ create_planemask_choice(Widget w)
   int i, num_planes;
 
   char buf[40];
-  char name[12];
+  char name[20];
 
   num_planes = PlanesOfScreen(X.scr);
 

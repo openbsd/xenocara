@@ -46,23 +46,23 @@ stmts		: /* empty */
 		;
 
 stmt		: error
-		| RUN 
-	{ run_test(); }  
-		| TEST TESTTYPE 
+		| RUN
+	{ run_test(); }
+		| TEST TESTTYPE
 	{ change_test ($2, TRUE); }
-		| FUNCTION FUNCTIONTYPE 
+		| FUNCTION FUNCTIONTYPE
 	{ GC_change_function ($2, TRUE); }
-		| LINESTYLE LINESTYLETYPE 
+		| LINESTYLE LINESTYLETYPE
 	{ GC_change_linestyle ($2, TRUE); }
 		| LINESTYLE SOLID
 	{ GC_change_linestyle (LineSolid, TRUE); }
-		| CAPSTYLE CAPSTYLETYPE 
+		| CAPSTYLE CAPSTYLETYPE
 	{ GC_change_capstyle ($2, TRUE); }
-		| CAPSTYLE ROUND 
+		| CAPSTYLE ROUND
 	{ GC_change_capstyle (CapRound, TRUE); }
-		| JOINSTYLE JOINSTYLETYPE 
+		| JOINSTYLE JOINSTYLETYPE
 	{ GC_change_joinstyle ($2, TRUE); }
-		| JOINSTYLE ROUND 
+		| JOINSTYLE ROUND
 	{ GC_change_joinstyle (JoinRound, TRUE); }
 		| FILLSTYLE FILLSTYLETYPE
 	{ GC_change_fillstyle ($2, TRUE); }

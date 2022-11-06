@@ -136,15 +136,15 @@ change_dashlist(Widget w, caddr_t closure, caddr_t call_data)
   XtGetValues(w,args,XtNumber(args));
 
   /* modify the dashlist as appropriate. */
-  if (on) {			
-    dashlist |= 1<<num;		
+  if (on) {
+    dashlist |= 1<<num;
   }
-  else {			
-    dashlist &= ~(1<<num);	
+  else {
+    dashlist &= ~(1<<num);
   }
 
   /* now tell interpret() about it */
-  snprintf(buf, sizeof buf, "dashlist %d\n",dashlist); 
+  snprintf(buf, sizeof buf, "dashlist %d\n",dashlist);
   interpret(buf);
 }
 

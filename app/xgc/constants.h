@@ -21,7 +21,7 @@
 
 #define MAXCHOICES 16           /* Max # of choices for any option */
 
-#define Black BlackPixel(X.dpy,0) 
+#define Black BlackPixel(X.dpy,0)
 #define White WhitePixel(X.dpy,0)
 
 #define CopyArea      0		/* different tests */

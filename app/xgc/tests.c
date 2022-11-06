@@ -52,7 +52,7 @@ timer(int flag)
 
   switch (flag) {
     case StartTimer:                       /* store initial values */
-      gettimeofday(&starttime,&tz);       
+      gettimeofday(&starttime,&tz);
 #if !defined(__UNIXOS2__) && !defined(QNX4)
       getrusage(RUSAGE_SELF,&startusage);
 #endif
@@ -63,8 +63,8 @@ timer(int flag)
       getrusage(RUSAGE_SELF,&endusage);
 #endif
 
-  /* all the following line does is use the formula 
-     elapsed time = ending time - starting time, but there are three 
+  /* all the following line does is use the formula
+     elapsed time = ending time - starting time, but there are three
      different timers and two different units of time, ack... */
 
 #if !defined(__UNIXOS2__) && !defined(QNX4)
@@ -79,15 +79,15 @@ timer(int flag)
       elapsedtime = (long)( ((long)endtime.tv_sec-(long)starttime.tv_sec)*1000000
 			   +((long)endtime.tv_usec-(long)starttime.tv_usec));
 #endif
-      return(elapsedtime);                
+      return(elapsedtime);
 
-    default:                              
+    default:
       fprintf(stderr,"Invalid flag in timer()\n");
       return((long) NULL);
     }
 #else
   static time_t starttime;
-  
+
   switch (flag) {
     case StartTimer:
       time(&starttime);
@@ -233,7 +233,7 @@ polysegment_test(void)
   XDrawSegments(X.dpy,X.win,X.gc,segments,num_segments);
   XSync(X.dpy,0);
   totaltime = end_timer();
-  
+
   snprintf(buf,sizeof buf,"%d segments in %.3f seconds.",num_segments,
 	  (double)totaltime/1000000.);
   show_result(buf);
@@ -249,7 +249,7 @@ polypoint_test(void)
   long totaltime;
   char buf[80];
   int i;
-  
+
   num_points *= X.percent;
 
   points = (XPoint *) malloc(sizeof(XPoint) * num_points);
@@ -586,7 +586,7 @@ run_test(void)
   XClearWindow(X.dpy,X.win);
 
   print_if_recording("run\n");
-  
+
   switch (X.test) {
     case CopyArea:      copyarea_test();           break;
     case CopyPlane:     copyplane_test();          break;

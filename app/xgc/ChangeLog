@@ -1,3 +1,123 @@
+commit 7883d1c27a12320b2c3a03aeca573259cb60b3b0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 10:17:34 2022 -0700
+
+    xgc 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3424f4c7c7e1aba33d0a117ea90dd5412530f45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 16:08:14 2022 -0700
+
+    Fix -Wformat-truncation warning
+    
+    planemask.c: In function ‘create_planemask_choice’:
+    planemask.c:109:43: warning: ‘%d’ directive output may be truncated writing between 1 and 10 bytes into a region of size 3 [-Wformat-truncation=]
+         snprintf(name, sizeof name, "planemask%d",i);
+                                               ^~
+    planemask.c:109:33: note: directive argument in the range [0, 2147483647]
+         snprintf(name, sizeof name, "planemask%d",i);
+                                     ^~~~~~~~~~~~~
+    planemask.c:109:5: note: ‘snprintf’ output between 11 and 20 bytes into a destination of size 12
+         snprintf(name, sizeof name, "planemask%d",i);
+         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c3e109f0bb814f2a0e3385bdada58a52473397ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 3 16:04:34 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 57 out of 61 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 609dfb80abafeea1d4e757403f1cef90c87cde02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:45:35 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 949a0d32c94b54ecfaad80ea90dc8bbf74bb04d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:45:31 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 684e4321fa7e96a61f45dc133816ab92a173a52d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:40:19 2021 -0800
+
+    Trim trailing whitespace from lines
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63e7fce72d704036016258b2cb55c5624f571d92
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:39:06 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 233611e5a2bc11cb0a965040166c2e4787b946a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:06:08 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4786164fba556c753ba8ba2b1ffd98c1f1c70322
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:14:35 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4c03e97932752295558f0f64c76bd23d26423e26
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 0d35119c5015fb47c2ec96e102f5c8dab1ead026
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d1757a5d69fbc11121bb84739359599964d13efb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 54f109228e566759799894ff4d6ef4bac74c9aac
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:25:45 2015 -0700
@@ -582,13 +702,13 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 23e06fb205c2494dc8c44e976e27ca0a30c30ed2
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 14 22:40:16 2005 +0000
 
     Add _BSD_SOURCE to lots of applications - patch from Stefan Dirsch
 
 commit 07ed043059d5fc7e8d694f6814eb1ba63946d646
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 21:11:37 2005 +0000
 
     Add build system for xgc

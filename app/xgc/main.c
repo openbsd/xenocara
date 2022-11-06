@@ -79,7 +79,7 @@ static XgcData FunctionData[NUM_FUNCTIONS] = {
   {"orInverted",   "orInverted",   GXorInverted},
   {"nand",         "nand",         GXnand},
   {"set",          "set",          GXset}
-}; 
+};
 
 /* The two rows in the XgcStuff structure are:
 **   name of label, xgc syntax text, # of toggles, # of columns of toggles
@@ -252,7 +252,7 @@ main(int argc, char *argv[])
     {XtNinput, 	      (XtArgVal) True}
   };
 
-  static Arg testformargs[] = {	
+  static Arg testformargs[] = {
     {XtNfromVert,     (XtArgVal) NULL} /* put it under GCform */
   };
 
@@ -377,7 +377,7 @@ main(int argc, char *argv[])
   backgroundchoice = XtCreateManagedWidget("background",formWidgetClass,GCform,
 				   gcchoiceargs,XtNumber(gcchoiceargs));
   backgroundtext = create_text_choice(backgroundchoice,TBackground,9,50);
-  
+
   gcchoiceargs[1].value = (XtArgVal) NULL;
   gcchoiceargs[0].value = (XtArgVal) foregroundchoice;
   percentchoice = XtCreateManagedWidget("testpercent",formWidgetClass,GCform,
@@ -392,7 +392,7 @@ main(int argc, char *argv[])
   testformargs[0].value = (XtArgVal) GCform;
   Testform = XtCreateManagedWidget("Testform",formWidgetClass,topform,
 				   testformargs,XtNumber(testformargs));
-  
+
   testchoiceform = XtCreateManagedWidget("testchoiceform",formWidgetClass,
 			     Testform,testchoiceargs,XtNumber(testchoiceargs));
   testchoicedesc = create_choice(testchoiceform,Everything[CTest]);
@@ -445,7 +445,7 @@ main(int argc, char *argv[])
 
   choose_defaults(GCdescs,(int)XtNumber(GCdescs));
   choose_defaults(&testchoicedesc,1);
-  
+
   /* Loop forever, dealing with events */
 
   XtAppMainLoop(appcontext);
@@ -553,8 +553,8 @@ fill_up_commandform(Widget w)
   quitargs[1].value = (XtArgVal) keyinputbutton; /* under */
   (void) XtCreateManagedWidget("Quit",commandWidgetClass,
 			       w,quitargs,XtNumber(quitargs));
-    
-}    
+
+}
 /* quit()
 ** ------
 ** Leave the program nicely.
@@ -571,7 +571,7 @@ static void quitAction(Widget w, XEvent *e, String *p, Cardinal *n)
 {
     if (e->type == ClientMessage && e->xclient.data.l[0] != wm_delete_window)
 	XBell(XtDisplay(w), 0);
-    else 
+    else
 	quit();
 }
 

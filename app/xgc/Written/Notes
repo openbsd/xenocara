@@ -8,8 +8,8 @@ credit to servers for optimizing small ones.
 
 Data: Pixels per second.
       Breaking that down into large and small areas would probably not
-        be userful.
-      
+        be useful.
+
 GC Fields: None.
 
 
@@ -22,7 +22,7 @@ We probably want to see what happens when the source area is clipped,
 as that as mentioned specifically in the protocol document.
 
 Data: Pixels per second.
-      
+
 GC Fields: function             (*)
            plane-mask
 	   subwindow-mode
@@ -64,7 +64,7 @@ Data: Lines per second.
       Pixels per second (is this valid - do lines that are twice as
         long take twice as long to draw? Also, is it valid to compare
         thin lines and fat lines?)
- 
+
 GC fields: function             (*)
            plane-mask
            line-width           (*)
