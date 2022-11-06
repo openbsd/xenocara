@@ -1,3 +1,6 @@
+libXtst - library for XTEST & RECORD extensions
+-----------------------------------------------
+
 libXtst provides the Xlib-based client API for the XTEST & RECORD extensions.
 
 The XTEST extension is a minimal set of client and server extensions
@@ -11,23 +14,15 @@ core X protocol and arbitrary X extension protocol.
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
+  https://lists.x.org/mailman/listinfo/xorg
 
-Please submit bug reports to the Xorg bugzilla:
+The primary development code repository can be found at:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+  https://gitlab.freedesktop.org/xorg/lib/libXtst
 
-The master development code repository can be found at:
-
-        git://anongit.freedesktop.org/git/xorg/lib/libXtst
-
-        http://cgit.freedesktop.org/xorg/lib/libXtst
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
+  https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 
