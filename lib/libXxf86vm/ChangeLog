@@ -1,3 +1,117 @@
+commit 7fe2d41f164d3015216c1079cc7fbce1eea90c98
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 17:48:52 2022 -0700
+
+    libXxf86vm 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8cb2b07b8f83bc6385c41c7cdd6051a66dced0ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 20 11:07:02 2022 -0700
+
+    Update GetOldReq to use _XGetRequest()
+    
+    Requires libX11 1.5 or later, but configure.ac already requires x11 >= 1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca196d7545020037ed5533ff1cb3ebb52823af8e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 20 10:57:24 2022 -0700
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f6854c919c27c7bf640000a3c0851116779f7a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 20 10:45:07 2022 -0700
+
+    Fix -Wsign-compare warning
+    
+    XF86VMode.c: In function ‘XF86VidModeGetModeLine’:
+    XF86VMode.c:270:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      if (modeline->privsize < (INT_MAX / sizeof(INT32)))
+                             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e27589966d6653e63b56e29b0bea83f722c4c33
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 19:05:03 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0dd3ebf9f0f698491361d2087a01d81d2a06499e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 19:04:10 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e86dfd828c4ca24ae3f0ed6c78f87b0466564f2a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 19:03:18 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7f43cd2a905e7b93b83c9ce81dabb768f6fa2bc7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:58:38 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3e396bee684f716eb4b567aba639944b2d52d377
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:57:37 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3c167ac0e7d66bcb0bd8794ba865bb3b69517f76
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 471fc6eb7af5a01e1061354e56814aee00ddb157
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit f542662908d8d344ca217bd76aeede08e9d403a4
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 92d18649e92566ccc3abeba244adabda249cce1b
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Feb 23 23:01:54 2015 -0800
@@ -665,7 +779,7 @@ Date:   Thu Oct 13 01:20:52 2005 +0000
         that document multiple functions.
 
 commit 72995528798d388422e6e09ee26a0edaffadb779
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Sep 26 20:55:17 2005 +0000
 
     Simple whitespace change to change ownership of ,v file on server. Required
@@ -698,7 +812,7 @@ Date:   Fri Jul 1 16:16:15 2005 +0000
     spell freedesktop.org correctly
 
 commit a26154988a9367521a15e0876939d8ff7810cd81
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 22:38:47 2005 +0000
 
     Apply patch from Jeff Smith (whydoubt@yahoo.com):
