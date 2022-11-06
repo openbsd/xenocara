@@ -41,6 +41,7 @@ RGB_DB_DEFINES = -DRGB_DB=\"$(db_dir)/$(db_file)\"
 AM_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES) $(CWARNFLAGS)
 
 EXTRA_DIST= \
+	README.md \
 	rgb.txt \
 	others/README \
 	others/old-rgb.txt \

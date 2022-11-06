@@ -94,7 +94,7 @@ dumprgb (const char *filename)
 	if (value.dptr) {
 	    RGB rgb;
 	    unsigned short r, g, b;
-	    memcpy( (char *)&rgb, value.dptr, sizeof rgb);
+	    memcpy(&rgb, value.dptr, sizeof rgb);
 #define N(x) (((x) >> 8) & 0xff)
 	    r = N(rgb.red);
 	    g = N(rgb.green);
@@ -130,7 +130,7 @@ dumprgb (const char *filename)
         exit (1);
     }
 #else
-    path = (char *)malloc(strlen(filename) + 5);
+    path = malloc(strlen(filename) + 5);
     strcpy(path, filename);
     strcat(path, ".txt");
 #endif

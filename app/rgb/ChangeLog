@@ -1,3 +1,143 @@
+commit 06cf6fa78bfec2ea4c9dc061900079f2cc9c9dd1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 29 10:31:35 2022 -0700
+
+    rgb 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5db536d77f99e9f425b5363af71f2abcdbbc4f4c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 12:28:36 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa59e95ca40aab93388f8b27b1c1a36acee8f4ec
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 13 16:52:31 2022 -0700
+
+    gitlab CI: build all 3 --with-rgb-db-type=(text|dbm|ndbm) options
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c4e6767272fd37b6464f67b4dde387895297eb63
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 13 16:47:47 2022 -0700
+
+    configure: Add --with-rgb-db-library option
+    
+    Allows builders to choose a specific database library instead of relying
+    on the default auto-detection, which can allow use of libraries we don't
+    normally search for (like gdbm_compat) or to bypass libraries we do
+    normally search for (like Berkeley db).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit af3f9bd84de98baff8df88cf51fe2750829254c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 7 18:00:11 2022 -0700
+
+    README: provide more information on --with-rgb-db-type
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd561bf3a80a9a23c130f11d26e93a4fded6d464
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 20:01:29 2022 -0700
+
+    rgb.c: if filename is too long, report error instead of truncating
+    
+    Avoid possibly creating a file of unknown name/location
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be9658d3380bbdee73a687d74a18ae22c8272ac5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 19:53:56 2022 -0700
+
+    rgb.c: fix -Wdiscarded-qualifiers warning
+    
+    rgb.c: In function ‘main’:
+    rgb.c:81:9: warning: assignment discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+      dbname = RGB_DB;
+             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a413f34351b6e72100bdbef7ae32d1266dfa8942
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 6 19:49:15 2022 -0700
+
+    Remove unnecessary casts from malloc() & memcpy() calls
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0d6e69279eaeb71a3e36b5cf40ba8384b1ec84c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:28:26 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a22ca19fa8920f3d28f6676b009ef9ea0770d06b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:28:22 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97820e748eb496a1f6d3fc3bf89688f0ce1f64f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:56:07 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3da8f3109f063952516b0782949a96f0c92a092f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 20:38:15 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 33a89951afcc53a591294de24b08fee581d31c3c
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit ea85c550234b928ac4add45f14bffba163d7684b
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2e5ed74deddd8f2c2fe7742f991a632e437dd03d
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 41599a3703e7b95c73a44c548d2ba074aa3eb3d8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Nov 8 11:31:26 2014 -0800
@@ -499,7 +639,7 @@ Date:   Thu Jul 28 15:57:12 2005 +0000
     Fix distcheck for remaining apps
 
 commit 794993251c8700061f84246f87ec3c060f2ffb37
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 19:40:28 2005 +0000
 
     Check for xproto
@@ -526,7 +666,7 @@ Date:   Thu Jul 21 04:20:35 2005 +0000
         site.h & rgb.h from Xserver/includes)
 
 commit 7a676fdf168ed250baef3b99393f3dccbda91a7e
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 18:20:16 2005 +0000
 
     Add build system for rgb symlink.sh: Link pmconfig.cpp, link various text

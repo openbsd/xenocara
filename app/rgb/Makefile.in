@@ -76,7 +76,7 @@ host_triplet = @host@
 bin_PROGRAMS = showrgb$(EXEEXT) $(am__EXEEXT_1)
 @RGB_DB_TRUE@am__append_1 = rgb
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure AUTHORS COPYING ChangeLog INSTALL \
 	compile config.guess config.sub depcomp install-sh missing
@@ -214,9 +214,9 @@ am__relativize = \
     dir1=`echo "$$dir1" | sed -e "$$sed_rest"`; \
   done; \
   reldir="$$dir2"
-DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.bz2
+DIST_ARCHIVES = $(distdir).tar.gz $(distdir).tar.xz
 GZIP_ENV = --best
-DIST_TARGETS = dist-bzip2 dist-gzip
+DIST_TARGETS = dist-xz dist-gzip
 distuninstallcheck_listfiles = find . -type f -print
 am__distuninstallcheck_listfiles = $(distuninstallcheck_listfiles) \
   | sed 's|^\./|$(prefix)/|' | grep -v '$(infodir)/dir$$'
@@ -340,6 +340,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -356,6 +357,7 @@ rgb_DATA = $(db_file).txt $(RGB_DB_FILES)
 RGB_DB_DEFINES = -DRGB_DB=\"$(db_dir)/$(db_file)\"
 AM_CFLAGS = $(RGB_CFLAGS) $(RGB_DB_DEFINES) $(CWARNFLAGS)
 EXTRA_DIST = \
+	README.md \
 	rgb.txt \
 	others/README \
 	others/old-rgb.txt \
@@ -714,6 +716,7 @@ distdir: $(DISTFILES)
 dist-gzip: distdir
 	tardir=$(distdir) && $(am__tar) | GZIP=$(GZIP_ENV) gzip -c >$(distdir).tar.gz
 	$(am__post_remove_distdir)
+
 dist-bzip2: distdir
 	tardir=$(distdir) && $(am__tar) | BZIP2=$${BZIP2--9} bzip2 -c >$(distdir).tar.bz2
 	$(am__post_remove_distdir)
@@ -721,7 +724,6 @@ dist-bzip2: distdir
 dist-lzip: distdir
 	tardir=$(distdir) && $(am__tar) | lzip -c $${LZIP_OPT--9} >$(distdir).tar.lz
 	$(am__post_remove_distdir)
-
 dist-xz: distdir
 	tardir=$(distdir) && $(am__tar) | XZ_OPT=$${XZ_OPT--e} xz -c >$(distdir).tar.xz
 	$(am__post_remove_distdir)

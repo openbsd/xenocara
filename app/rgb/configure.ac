@@ -23,14 +23,14 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([rgb], [1.0.6],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [rgb])
+AC_INIT([rgb], [1.1.0],
+	[https://gitlab.freedesktop.org/xorg/app/rgb/-/issues], [rgb])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -63,6 +63,11 @@ AC_MSG_RESULT([$db_type])
 
 RGB_DB_TYPE=$db_type
 
+AC_ARG_WITH([rgb-db-library],
+	AS_HELP_STRING([--with-rgb-db-library=<library-name>],
+		[rgb database library (default is to search for one)]),
+	[db_lib=$withval], [db_lib="auto"])
+
 case $db_type in
 	text)
 		RGB_DB_FILES=""
@@ -70,8 +75,11 @@ case $db_type in
 			[Define to 1 to use plain text files for rgb database])
 		;;
 	dbm)
-		AC_SEARCH_LIBS([dbminit], [db dbm nsl], [],
-				AC_MSG_ERROR([dbm requested but dbminit() not found in any libraries]))
+		AS_IF([test "x$db_lib" = "xauto"],
+		  [AC_SEARCH_LIBS([dbminit], [db dbm nsl], [],
+		     AC_MSG_ERROR([dbm requested but dbminit() not found in any libraries]))],
+		  [AC_CHECK_LIB([$db_lib], [dbminit], [],
+		     AC_MSG_ERROR([dbm requested but dbminit() not found when linking with -l$db_lib]))])
 		AC_CHECK_HEADER([dbm.h], [DBM_HEADER='<dbm.h>'],
 		  [AC_CHECK_HEADER([rpcsvc/dbm.h], [DBM_HEADER='<rpcsvc/dbm.h>'],
 		    [AC_MSG_ERROR([dbm requested but dbm.h not found])])])
@@ -81,10 +89,13 @@ case $db_type in
 		;;
 	ndbm)
 		# Find a dbm or ndbm implementation
-		AC_SEARCH_LIBS([dbm_open], [db ndbm dbm],
-				AC_DEFINE([NDBM], [1],
-				 [Define to 1 if you have ndbm.h interfaces]),
-				AC_MSG_ERROR([ndbm requested but dbm_open() not found in any libraries]))
+		AS_IF([test "x$db_lib" = "xauto"],
+		  [AC_SEARCH_LIBS([dbm_open], [db ndbm dbm], [],
+		     AC_MSG_ERROR([ndbm requested but dbm_open() not found in any libraries]))],
+		  [AC_CHECK_LIB([$db_lib], [dbm_open], [],
+		     AC_MSG_ERROR([ndbm requested but dbm_open() not found when linking with -l$db_lib]))])
+		AC_DEFINE([NDBM], [1],
+			  [Define to 1 if you have ndbm.h interfaces])
 		DBM_HEADER='<ndbm.h>'
 		PKG_CHECK_MODULES(XORG, [xorg-server])
 		RGB_CFLAGS="$RGB_CFLAGS $XORG_CFLAGS"

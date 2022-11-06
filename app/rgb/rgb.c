@@ -57,7 +57,7 @@ static char *ProgramName;
 int
 main(int argc, char **argv)
 {
-    char *dbname;
+    const char *dbname;
     char line[512];
     int red, green, blue;
     RGB rgb;
@@ -79,6 +79,13 @@ main(int argc, char **argv)
 	dbname = argv[1];
     else
 	dbname = RGB_DB;
+
+    if (strlen(dbname) > (sizeof(name) - 5)) {
+        fprintf (stderr,
+		 "%s:  dbm file name too long: \"%s\" (%lu max allowed)\n",
+		 ProgramName, dbname, sizeof(name) - 5);
+	exit (1);
+    }
 
     snprintf (name, sizeof(name), "%s.dir", dbname);
     fd = open (name, O_WRONLY|O_CREAT, 0666);
