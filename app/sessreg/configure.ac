@@ -22,15 +22,15 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([sessreg], [1.1.2],
-	[https://gitlab.freedesktop.org/xorg/app/sessreg/issues], [sessreg])
+AC_INIT([sessreg], [1.1.3],
+	[https://gitlab.freedesktop.org/xorg/app/sessreg/-/issues], [sessreg])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_USE_SYSTEM_EXTENSIONS
 AC_SYS_LARGEFILE
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -66,7 +66,7 @@ AC_CHECK_TYPES([
 # Checks for library functions.
 AC_CHECK_FUNCS([pututline updwtmpx utmpxname])
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(SESSREG, [xproto >= 7.0.25])
 
 AC_CONFIG_FILES([

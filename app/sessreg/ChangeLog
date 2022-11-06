@@ -1,3 +1,89 @@
+commit 1649c040f8123b96a9a5f1784555d433b07d09e6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 29 10:51:07 2022 -0700
+
+    sessreg 1.1.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1649bbf0300c086d98b855c03b1867e962883e9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 09:29:35 2022 -0700
+
+    Fix -Wstringop-truncation warnings in safe_strncpy()
+    
+    In function ‘safe_strncpy’,
+        inlined from ‘set_utmpx’ at sessreg.c:540:3,
+        inlined from ‘main’ at sessreg.c:357:2:
+    sessreg.c:204:11: warning: ‘strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+      204 |     (void)strncpy(dest, src, n);
+          |           ^~~~~~~~~~~~~~~~~~~~~
+    In function ‘safe_strncpy’,
+        inlined from ‘set_utmpx’ at sessreg.c:530:4,
+        inlined from ‘main’ at sessreg.c:357:2:
+    sessreg.c:204:11: warning: ‘strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+      204 |     (void)strncpy(dest, src, n);
+          |           ^~~~~~~~~~~~~~~~~~~~~
+    In function ‘safe_strncpy’,
+        inlined from ‘set_utmpx’ at sessreg.c:532:3,
+        inlined from ‘main’ at sessreg.c:357:2:
+    sessreg.c:204:11: warning: ‘strncpy’ specified bound 257 equals destination size [-Wstringop-truncation]
+      204 |     (void)strncpy(dest, src, n);
+          |           ^~~~~~~~~~~~~~~~~~~~~
+    In function ‘safe_strncpy’,
+        inlined from ‘set_utmpx’ at sessreg.c:540:3,
+        inlined from ‘main’ at sessreg.c:357:2:
+    sessreg.c:204:11: warning: ‘strncpy’ specified bound 32 equals destination size [-Wstringop-truncation]
+      204 |     (void)strncpy(dest, src, n);
+          |           ^~~~~~~~~~~~~~~~~~~~~
+    In function ‘safe_strncpy’,
+        inlined from ‘main’ at sessreg.c:423:5:
+    sessreg.c:204:11: warning: ‘strncpy’ specified bound 8 equals destination size [-Wstringop-truncation]
+      204 |     (void)strncpy(dest, src, n);
+          |           ^~~~~~~~~~~~~~~~~~~~~
+    In function ‘safe_strncpy’,
+        inlined from ‘main’ at sessreg.c:425:5:
+    sessreg.c:204:11: warning: ‘strncpy’ specified bound 16 equals destination size [-Wstringop-truncation]
+      204 |     (void)strncpy(dest, src, n);
+          |           ^~~~~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5e791f5e412de52c2e110c38f3091102afb4a8a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f25e9a59be6b25d52e35036bb357c14f86155df8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:32:40 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a96dae0fa4754875d71a73e212faeb60516f11b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 16:32:34 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d66d6c70b33380ae4d3008ce62971825da8e8fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:53:09 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3a91ab7d228f4c1a28970e447cff7d1a960db2fe
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jun 9 11:39:22 2019 -0700
@@ -965,7 +1051,7 @@ Date:   Mon Oct 3 17:18:44 2005 +0000
         wtmpx/lastlogs Set version string in man page
 
 commit 26e33eae6ff593878b1402ef6d5596dc1f7c7fe3
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Tue Sep 27 18:07:40 2005 +0000
 
     Add ChangeLog so autogen.sh will run.

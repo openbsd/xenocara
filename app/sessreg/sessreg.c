@@ -201,9 +201,10 @@ sysnerr (int x, const char *s)
 static void
 safe_strncpy(char *dest, const char *src, size_t n)
 {
-    (void)strncpy(dest, src, n);
-    if (n > 0)
+    if (n > 0) {
+        strncpy(dest, src, n - 1);
         dest[n - 1] = '\0';
+    }
 }
 
 int
@@ -603,7 +604,7 @@ set_utmpx (struct utmpx *u, const char *line, const char *user,
  * compute the slot-number for an X display.  This is computed
  * by counting the lines in /etc/ttys and adding the line-number
  * that the display appears on in Xservers.  This is a poor
- * design, but is limited by the non-existant interface to utmp.
+ * design, but is limited by the non-existent interface to utmp.
  * If host_name is non-NULL, assume it contains the display name,
  * otherwise use the tty_line argument (i.e., the tty name).
  */
@@ -658,7 +659,7 @@ Xslot (char *ttys_file, char *servers_file, char *tty_line, char *host_name,
 			column0 = 1;
 	}
 	/*
-	 * display not found in Xservers file - allocate utmp entry dinamically
+	 * display not found in Xservers file - allocate utmp entry dynamically
 	 */
 	return findslot (tty_line, host_name, addp, slot);
 }
