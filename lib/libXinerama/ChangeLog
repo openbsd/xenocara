@@ -1,3 +1,75 @@
+commit 71dfee64feb84f907016940263b235a61c9e8960
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 19:11:15 2022 -0700
+
+    libXinerama 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d79fed500bac57b41446fb1e3c5017c8607e58a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 16:59:57 2022 -0700
+
+    Remove "register" type qualifier from variable declarations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23bbb667935de678fadb16e254f319a8c24ac71a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 14 16:54:53 2022 -0700
+
+    XineramaQueryScreens: fix -Wsign-compare warning
+    
+    Xinerama.c: In function ‘XineramaQueryScreens’:
+    Xinerama.c:308:16: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+      for (i = 0; i < rep.number; i++) {
+                    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7c9b2cdd92cfcc1fcf0eb94c7fc5daaed2786f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:21:04 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 389b352dad70c714386cab600b538de4fcee47b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:19:21 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c195abbb5f072cf2c5a575fe482bf1cf23531f14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:18:14 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c5187f076d16601c15c59c5a2f05c0513d9f042b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:43:32 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b5dd2bf7d141850a3bca41bfd198f8fab13812b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:24:46 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c3ab2361f13154921df2992f9eacc1ea1b3f946b
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Thu Jul 5 11:42:49 2018 -0400
@@ -669,7 +741,7 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit 2a6c0aa8f36dad9ff49385ef15c3dfc2529483b8
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 19:33:53 2005 +0000
 
     util/modular/modularizelibrary.sh: use rm -f instead of rm in one place
