@@ -1522,6 +1522,14 @@
 ./usr/X11R6/man/man3/XPoint.3
 ./usr/X11R6/man/man3/XPointInRegion.3
 ./usr/X11R6/man/man3/XPolygonRegion.3
+./usr/X11R6/man/man3/XPresentFreeInput.3
+./usr/X11R6/man/man3/XPresentNotifyMSC.3
+./usr/X11R6/man/man3/XPresentPixmap.3
+./usr/X11R6/man/man3/XPresentQueryCapabilities.3
+./usr/X11R6/man/man3/XPresentQueryExtension.3
+./usr/X11R6/man/man3/XPresentQueryVersion.3
+./usr/X11R6/man/man3/XPresentSelectInput.3
+./usr/X11R6/man/man3/XPresentVersion.3
 ./usr/X11R6/man/man3/XProcessInternalConnection.3
 ./usr/X11R6/man/man3/XPropertyEvent.3
 ./usr/X11R6/man/man3/XPutBackEvent.3
