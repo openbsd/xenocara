@@ -1,3 +1,152 @@
+commit 3d7e713e85af18d7e52cafdc9d20a2715048dee7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 18 09:58:51 2022 -0700
+
+    xcb-util-cursor 0.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 738e534b2f9aef1d904b71b23c36e9844050cb69
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63c57d4f7b26581375df0d9888d41b1028c23123
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 778404a17ccd5b40240f9612030985a55a560ffd
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7fda90f679f2947e1461b40f0ea46b41c0970d95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5082184aae8f91b26358eede77338afbf5ba48e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5df962f6450bcefe70da26b6ec34f45b853ea512
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 14:24:18 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4cc525e107fafa71aaa2d1bdc80c3495b641d53d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 14:21:54 2022 -0700
+
+    Update m4 to xorg/util/xcb-util-m4@c617eee22ae5c285e79e81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 186fbd9c6faa817f5faf7b7fd287aa9af4dcd143
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 18 10:16:46 2022 -0700
+
+    Use AC_CONFIG_FILES to replace the deprecated AC_OUTPUT with parameters
+    
+    configure.ac:37: warning: AC_OUTPUT should be used without arguments.
+    configure.ac:37: You should run autoupdate.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3892bf22557a8203027714ef18693e347947c7ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 18 10:16:33 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a655a15f83c5623f65fa8e0676f71094991ea29
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 10:51:21 2019 -0800
+
+    Add README.md to EXTRA_DIST
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f692153dd0a9e2b9e0a03cfda91f5147c7e7b5be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 10:27:56 2019 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f75e4be03d284539eda5e0dae291da41fc576a44
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Tue Jun 17 23:51:19 2014 +0200
+
+    Fix out-of-source builds
+    
+    When building something out-of-source, make's VPATH mechanism is used so that
+    files in the source directory are also found. This makes make automatically
+    check that other directory for needed files and use those when needed.
+    
+    However, make doesn't magically copy those files over. We have to explicitly use
+    the file that make found. Do so by using $< for refering to shape_to_id.gperf
+    instead of hardcoding the name of the source file.
+    
+    This fixes out-of-source git builds.
+    
+    Out-of-source release builds already worked before this, because releases come
+    with a pre-generated shape_to_id.c.
+    
+    This fixes https://bugs.freedesktop.org/show_bug.cgi?id=80153
+    
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+
+commit 947eaba9ff0bf6e6b595cd5a065b5f126611fdb7
+Author: Uli Schlachter <psychon@znc.in>
+Date:   Sun Jul 9 12:03:06 2017 +0200
+
+    documentation: Call xcb_free_cursor() when done
+    
+    The documentation for xcb_cursor_load_cursor() say that the resulting
+    cursor must be freed, but the example in the documentation does not do
+    so. It does not matter much for this example, but I think it is a good
+    idea to use it to hint to this requirement. Also, the example already
+    uses xcb_cursor_context_free(), so it tries to clean up after itself.
+    
+    Signed-off-by: Uli Schlachter <psychon@znc.in>
+
 commit 95b9a8fd876fdbbc854cdf3d90317be3846c7417
 Author: Michael Stapelberg <michael@stapelberg.de>
 Date:   Thu May 12 09:53:03 2016 +0200
@@ -21,7 +170,7 @@ Date:   Wed Mar 25 23:06:23 2015 +0100
     set version to 0.1.2
 
 commit cf26479ece9ab9e04616bc10ba674d88a284e5b0
-Author: Martin Gräßlin <mgraesslin@kde.org>
+Author: Martin Gräßlin < <mgraesslin@kde.org>
 Date:   Tue Mar 17 18:41:07 2015 +0100
 
     Perform safety check before trying to load glyph cursor
@@ -210,7 +359,7 @@ Date:   Sat Aug 10 16:11:40 2013 +0200
     check that checks for <endian.h> (Linux) and <sys/endian.h> (FreeBSD),
     and include the right file based on this check.
     
-    Signed-off-by:	Niclas Zeising <zeising@daemonic.se>
+    Signed-off-by:  Niclas Zeising <zeising@daemonic.se>
 
 commit 73ea12734b8ecf520938620eedba1e87416a7132
 Author: Michael Stapelberg <michael@stapelberg.de>

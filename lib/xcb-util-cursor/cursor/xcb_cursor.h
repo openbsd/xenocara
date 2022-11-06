@@ -56,6 +56,7 @@ extern "C" {
  *
  * xcb_screen_t *screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
  * xcb_change_window_attributes(conn, screen->root, XCB_CW_CURSOR, (uint32_t[]){ cid });
+ * xcb_free_cursor(conn, cid);
  * xcb_flush(conn);
  *
  * xcb_cursor_context_free(ctx);

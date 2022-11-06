@@ -1,6 +1,7 @@
 dnl XCB_UTIL_M4_WITH_INCLUDE_PATH requires Autoconf >= 2.62
 AC_PREREQ(2.62)
-AC_INIT([xcb-util-cursor],0.1.3,[xcb@lists.freedesktop.org])
+AC_INIT([xcb-util-cursor],[0.1.4],
+        [https://gitlab.freedesktop.org/xorg/lib/libxcb-cursor/-/issues])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -9,8 +10,7 @@ AC_CONFIG_MACRO_DIR([m4])
 # to avoid autoconf errors.
 AC_USE_SYSTEM_EXTENSIONS
 
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 AC_TYPE_SSIZE_T
 
@@ -34,7 +34,8 @@ AC_ARG_WITH(cursorpath,
 	[XCURSORPATH="$DEF_CURSORPATH"])
 AC_DEFINE_UNQUOTED([XCURSORPATH], ["$XCURSORPATH"])
 
-AC_OUTPUT([Makefile
+AC_CONFIG_FILES([Makefile
 	cursor/Makefile cursor/xcb-cursor.pc
 	xcb_util_intro
 	])
+AC_OUTPUT

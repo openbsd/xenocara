@@ -13,4 +13,4 @@ ChangeLog:
 dist-hook: ChangeLog INSTALL
 
 SUBDIRS = cursor
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = autogen.sh README.md
