@@ -1,3 +1,98 @@
+commit b2b611960b5f11740cb3ca66c6dcd0a3688a82ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 09:53:33 2022 -0700
+
+    viewres 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04afb2de50ff3f7d074299a83f70ba779502eac6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 10 14:26:28 2022 -0700
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7c75ce13299af68b73563714ca366f891f6a9eb8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 10 14:13:58 2022 -0700
+
+    set_node_labels: move dereference of node to after the NULL check
+    
+    Found by cppcheck:
+    
+    viewres.c:815:22: warning: Either the condition '!node' is redundant or there is possible null pointer dereference: node. [nullPointerRedundantCheck]
+        ViewresData *d = VData(node);
+                         ^
+    viewres.c:817:9: note: Assuming that condition '!node' is not redundant
+        if (!node)
+            ^
+    viewres.c:815:22: note: Null pointer dereference
+        ViewresData *d = VData(node);
+                         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73f73d21c22b0220403bc036c6175fb7c2bfafee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 12:07:10 2022 -0700
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 49c9ace57166a4014fafa36ff5cb373846a9b4cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 11:54:50 2022 -0700
+
+    Remove obsolete casts on calloc & malloc calls
+    
+    Not needed in C89 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f03145544e4390e0bcd462ac5c154a4c474c46ee
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 14 11:47:02 2022 -0700
+
+    Apply X.Org standard coding style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3eca4f7fa432b21db94429cfa8b9c4c71dfeebfd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:59:54 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit baf57b3540ff5a23ecfb3f6c37726cd13875ae95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:27:12 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 89f7c7eb3501abf4506b7374d9f4f45c0f2e990d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:27:08 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 5661dfdc04572cdbb6ed4e641049657c4ba39252
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Aug 25 16:11:01 2019 -0700
@@ -551,7 +646,7 @@ Date:   Sun Jul 17 20:11:01 2005 +0000
     fix rules to work with non-GNU make and outside of $srcdir
 
 commit ce1447d0a8b2a7fc3a36f11eed69cd14be397ffe
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 19:22:16 2005 +0000
 
     Build system for viewres
