@@ -32,16 +32,16 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xpresent.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXpresent, [1.0.0],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXpresent])
+AC_INIT(libXpresent, [1.0.1],
+	[https://gitlab.freedesktop.org/xorg/lib/libxpresent/-/issues],
+	[libXpresent])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([m4])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -57,8 +57,8 @@ XORG_DEFAULT_OPTIONS
 PRESENTEXT_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 AC_SUBST(PRESENTEXT_VERSION)
 
-# Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(PRESENTEXT, xproto [presentproto >= $PRESENTEXT_VERSION] xextproto x11)
+# Obtain compiler/linker options for dependencies
+PKG_CHECK_MODULES(PRESENTEXT, xproto [presentproto >= $PRESENTEXT_VERSION] xextproto x11 xext xfixes xrandr)
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile

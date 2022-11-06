@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2005, 2022, Oracle and/or its affiliates.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -23,7 +23,15 @@
 
 libmandir = $(LIB_MAN_DIR)
 
-libman_PRE = Xpresent.man
+libman_PRE = Xpresent.man \
+	XPresentFreeInput.man \
+	XPresentNotifyMSC.man \
+	XPresentPixmap.man \
+	XPresentQueryCapabilities.man \
+	XPresentQueryExtension.man \
+	XPresentQueryVersion.man \
+	XPresentSelectInput.man \
+	XPresentVersion.man
 
 libman_DATA = $(libman_PRE:man=@LIB_MAN_SUFFIX@)
 

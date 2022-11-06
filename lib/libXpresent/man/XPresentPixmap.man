@@ -1,0 +1,167 @@
+.\"
+.\"
+.\" Copyright © 2013 Keith Packard
+.\"
+.\" Permission to use, copy, modify, distribute, and sell this software and its
+.\" documentation for any purpose is hereby granted without fee, provided that
+.\" the above copyright notice appear in all copies and that both that copyright
+.\" notice and this permission notice appear in supporting documentation, and
+.\" that the name of the copyright holders not be used in advertising or
+.\" publicity pertaining to distribution of the software without specific,
+.\" written prior permission.  The copyright holders make no representations
+.\" about the suitability of this software for any purpose.  It is provided "as
+.\" is" without express or implied warranty.
+.\"
+.\" THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+.\" INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+.\" EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+.\" CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+.\" DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+.\" TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+.\" OF THIS SOFTWARE.
+.\"
+.de TQ
+.br
+.ns
+.TP \\$1
+..
+.TH XPresentPixmap __libmansuffix__ __xorgversion__
+.SH NAME
+XPresentPixmap \- provide pixmap for presentation as window contents
+.SH SYNTAX
+\&#include <X11/extensions/Xpresent.h>
+.nf
+.sp
+void XPresentPixmap \^(\^Display *\fIdisplay\fP,
+	Window \fIwindow\fP,
+	Pixmap \fIpixmap\fP,
+	uint32_t \fIserial\fP,
+	XserverRegion \fIvalid\fP,
+	XserverRegion \fIupdate\fP,
+	int \fIx_off\fP,
+	int \fIy_off\fP,
+	RRCrtc \fItarget_crtc\fP,
+	XSyncFence \fIwait_fence\fP,
+	XSyncFence \fIidle_fence\fP,
+	uint32_t \fIoptions\fP,
+	uint64_t \fItarget_msc\fP,
+	uint64_t \fIdivisor\fP,
+	uint64_t \fIremainder\fP,
+	XPresentNotify \fI*notifies\fP,
+	int \fInnotifies\^\fP)\^;
+.fi
+.SH DESCRIPTION
+.B XPresentPixmap
+provides new content for the specified \fIwindow\fP, on the X server
+specified by \fIdisplay\fP, to be made
+visible at the specified time (defined by \fItarget-msc\fP, \fIdivisor\fP
+and \fIremainder\fP). If the depth of \fIpixmap\fP and \fIwindow\fP do not
+match, a Match error will be generated.
+.PP
+\fIserial\fP is an arbitrary client-specified value which will
+be returned in the associated \fBPresentCompleteNotify\fP event so
+that the client can associate the event and request.
+.PP
+\fIvalid-area\fP defines the portion of \fIpixmap\fP which contains
+valid window contents, or None if the pixmap contains valid
+contents for the whole window.
+.PP
+\fIupdate-area\fP defines the subset of the window to be updated,
+or None if the whole window is to be updated.
+.PP
+.B XPresentPixmap
+may use any region of \fIpixmap\fP which contains
+\fIupdate-area\fP and which is contained by \fIvalid-area\fP. In other
+words, areas inside \fIupdate-area\fP will be presented from
+\fIpixmap\fP, areas outside \fIvalid-area\fP will not be presented
+from \fIpixmap\fP and areas inside \fIvalid-area\fP but outside
+\fIupdate-area\fP may or may not be presented at the discretion of
+the X server.
+.PP
+\fIx-off\fP and \fIy-off\fP define the location in the window where
+the 0,0 location of the pixmap will be presented.  \fIvalid-area\fP
+and \fIupdate-area\fP are relative to the pixmap.
+.PP
+\fIwait-fence\fP and \fIidle-fence\fP are fences from the XSync
+extension, which may be created with \fBXSyncCreateFence\fP().
+.PP
+The X server will block the presentation action until \fIwait-fence\fP
+is triggered, but the
+.B XPresentPixmap
+function returns immediately.
+.PP
+When the X server has finished using \fIpixmap\fP for this
+operation, it will send a \fBPresentIdleNotify\fP event and arrange
+for any \fIidle-fence\fP to be triggered. This may be at any time
+following the \fBPresentPixmap\fP request -- the contents may be
+immediately copied to another buffer, copied just in time for
+the vblank interrupt or the pixmap may be used directly for
+display (in which case it will be busy until some future
+\fBPresentPixmap\fP operation).
+.PP
+If \fIidle-fence\fP is not None, then the client guarantees to the
+X server that it will wait for that fence to be signalled
+before it uses the pixmap again. If \fIidle-fence\fP is None, then
+the X server must arrange for the pixmap to be re-usable by
+the client as soon as the \fBPresentIdleNotify\fP event has been
+received. Note that if \fBPresentCapabilityFence\fP is set for the
+associated CRTC, then clients should use fences to improve
+overall system performance. If \fBPresentCapabilityFence\fP is not
+set, then using fences offers no benefit, but also no cost.
+.PP
+If \fItarget-msc\fP is greater than the current msc for \fIwindow\fP,
+the presentation will occur at (or after) the \fItarget-msc\fP
+field. Otherwise, the presentation will occur after the next
+field where msc % \fIdivisor\fP == \fIremainder\fP.
+.PP
+If \fItarget-crtc\fP is None, then the X server will choose a
+suitable CRTC for synchronization.
+.PP
+If \fIoptions\fP contains \fBPresentOptionAsync\fP, and the \fItarget-msc\fP
+is less than or equal to the current Media Stream Counter (msc) for
+\fIwindow\fP, then the operation will be performed as soon as possible, not
+necessarily waiting for the next vertical blank interval.
+.PP
+If \fIoptions\fP contains \fBPresentOptionCopy\fP, then \fIpixmap\fP will be
+idle, and \fIidle-fence\fP triggered as soon as the operation occurs.
+If \fIoptions\fP contains \fBPresentOptionUST\fP, then \fItarget-msc\fP,
+\fIdivisor\fP, and \fIremainder\fP will all be interpreted as UST values
+instead of MSC values and the frame update will be scheduled
+for the specified UST time, If the \fItarget-crtc\fP supports
+\fBPresentCapabilityUST\fP, then the swap time will be as close to
+the target time as the driver can manage. Otherwise, the
+server will take the target UST time and convert it to a
+suitable target MSC value.
+.PP
+If \fIoptions\fP contains \fBPresentOptionSuboptimal\fP, then the
+\fBPresentCompleteNotify\fP event can have mode
+\fBPresentCompleteModeSuboptimalCopy\fP as the client supports it.
+.PP
+After the presentation occurs, a \fBPresentCompleteNotify\fP event
+with kind \fBPresentCompleteKindPixmap\fP will be generated, both to
+\fIwindow\fP as well as all members of \fInotifies\fP.
+\fInotifies\fP is specified as an array of \fBXPresentNotify\fP structures
+with \fInnotifies\fP members in the array.
+.PP
+If \fIwindow\fP is destroyed before the presentation occurs, then
+the presentation action will not be completed.
+.PP
+The X server holds a reference to \fIpixmap\fP until the
+presentation occurs, so \fIpixmap\fP may be immediately freed
+after the request executes, even if that is before the
+presentation occurs.
+.PP
+If \fIidle-fence\fP is destroyed before the presentation occurs,
+then \fIidle-fence\fP will not be signaled but the presentation will
+occur normally.
+.PP
+If \fIwait-fence\fP is destroyed before it becomes triggered, then
+the presentation operation will no longer wait for it and will
+occur when the other conditions are satisfied.
+.SH SEE ALSO
+.BR Xpresent (__libmansuffix__),
+.BR XPresentNotifyMSC (__libmansuffix__),
+.BR XPresentQueryCapabilities (__libmansuffix__),
+.BR XPresentSelectInput (__libmansuffix__)
+.SH AUTHORS
+Keith Packard, Intel

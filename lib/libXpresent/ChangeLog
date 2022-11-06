@@ -1,3 +1,136 @@
+commit 37507b5f44332accfb1064ee69a4f6a833994747
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 15:17:59 2022 -0700
+
+    libXpresent 1.0.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f552d3278444be151e6944f47ae76bc71c6cc25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 27 14:19:56 2022 -0700
+
+    Add man pages for libXpresent
+    
+    Fixes: #1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f795cfa21b9e32624b8133cefdd082c4251ce41
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f00f347931117646af256df2a11e0e886e358b8b
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68d234cb2e6ac67b6802ef3139c32da2edee46b7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c25edf60b90d6a9aea5c92ec1cead7ef910a33d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 24 12:01:39 2022 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 93bb002b5509516e2020884e5ad6b71700b25e00
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:03:54 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad25ed0ec1796e9fd09dba82b784724ecfb4ac8e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:01:39 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1946a575323c268f937e753dac413861e234ca9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:00:50 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 121f070acf0ebaa2cfff37cea5c5758c90ded374
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:48:02 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9d31d2162af3b50a6d7c0175d7abc680da9aec76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:33:49 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd6771cdf6f04cde37eb14891573c0e55be83241
+Author: Julien Cristau <jcristau@debian.org>
+Date:   Sun Apr 26 17:53:15 2015 +0200
+
+    configure, xpresent.pc: require xext, xfixes and xrandr
+    
+    include/X11/extensions/Xpresent.h:#include <X11/extensions/Xfixes.h>
+    include/X11/extensions/Xpresent.h:#include <X11/extensions/Xrandr.h>
+    include/X11/extensions/Xpresent.h:#include <X11/extensions/sync.h>
+    
+    v2: also add requirement in xpresent.pc since we include those in our
+        public header
+    
+    Signed-off-by: Julien Cristau <jcristau@debian.org>
+
+commit 97a81b6f10ddb38bf6c3d9736db76833d49df206
+Author: Daphne Pfister <daphnediane@mac.com>
+Date:   Tue May 5 16:04:29 2015 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Fixes: https://bugs.freedesktop.org/show_bug.cgi?id=90326
+    
+    Signed-off-by: Daphne Pfister <daphne.pfister@genband.com>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ced59e4373b7ad8f89ba222b3f489fb22050b991
 Author: Keith Packard <keithp@keithp.com>
 Date:   Fri Apr 17 11:39:11 2015 -0700

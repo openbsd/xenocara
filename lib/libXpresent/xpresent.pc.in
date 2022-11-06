@@ -7,6 +7,6 @@ Name: Xpresent
 Description: X Present  Library
 Version: @PACKAGE_VERSION@
 Requires: xproto presentproto >= @PRESENTEXT_VERSION@
-Requires.private: x11
+Requires.private: x11 xext xfixes xrandr
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXpresent

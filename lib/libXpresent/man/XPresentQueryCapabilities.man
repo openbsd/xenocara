@@ -1,0 +1,73 @@
+.\"
+.\"
+.\" Copyright © 2013 Keith Packard
+.\"
+.\" Permission to use, copy, modify, distribute, and sell this software and its
+.\" documentation for any purpose is hereby granted without fee, provided that
+.\" the above copyright notice appear in all copies and that both that copyright
+.\" notice and this permission notice appear in supporting documentation, and
+.\" that the name of the copyright holders not be used in advertising or
+.\" publicity pertaining to distribution of the software without specific,
+.\" written prior permission.  The copyright holders make no representations
+.\" about the suitability of this software for any purpose.  It is provided "as
+.\" is" without express or implied warranty.
+.\"
+.\" THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+.\" INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+.\" EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+.\" CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE,
+.\" DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER
+.\" TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE
+.\" OF THIS SOFTWARE.
+.\"
+.de TQ
+.br
+.ns
+.TP \\$1
+..
+.TH XPresentQueryCapabilities __libmansuffix__ __xorgversion__
+.SH NAME
+XPresentQueryCapabilities \- query capabilities of a CRTC
+.SH SYNTAX
+\&#include <X11/extensions/Xpresent.h>
+.nf
+.sp
+uint32_t XPresentQueryCapabilities \^(\^Display *\fIdisplay\fP,	XID \fItarget\fP\^)\^;
+.fi
+.SH DESCRIPTION
+.B XPresentQueryCapabilities
+returns a bitmask of the supported capabilities for the target CRTC.  If
+\fItarget\fP is a CRTC, then it is used as the target CRTC.  If
+\fItarget\fP is a WINDOW, then the target CRTC is selected by the
+X server from among the CRTCs on the screen specified by the window.
+.PP
+\fBPresentCapabilityAsync\fP means that the target device can flip
+the scanout buffer mid-frame instead of waiting for a vertical
+blank interval. The precise latency between the flip request
+and the actual scanout transition is not defined by this
+specification, but is intended to be no more than a few
+scanlines.
+.PP
+\fBPresentCapabilityFence\fP means that the target device can take
+advantage of SyncFences in the \fBPresent\fP operations to improve
+GPU throughput. The driver must operate correctly in the
+absence of fences, but may have reduced performance. Using
+fences for drivers not advertising this capability should have
+no performance impact.
+.PP
+\fBPresentCapabilityUST\fP means that the target device can scanout
+the image at an arbitrary UST time value, and is not driven by
+a periodic scanout timer. Applications specifying UST times for
+.BR XPresentPixmap (__libmansuffix__)
+can expect that their image will appear to
+the user within a short amount of time from that specified in
+the request. The precise accuracy of the scanout time is not
+defined by the extension, but is expected to be on the order
+of milliseconds or less.
+.SH SEE ALSO
+.BR Xpresent (__libmansuffix__),
+.BR XPresentNotifyMSC (__libmansuffix__),
+.BR XPresentPixmap (__libmansuffix__),
+.BR XPresentSelectInput (__libmansuffix__)
+.SH AUTHORS
+Keith Packard, Intel

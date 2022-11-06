@@ -33,36 +33,51 @@ Xpresent \- X Present Extension
 \&#include <X11/extensions/Xpresent.h>
 .nf
 .sp
-Bool XPresentQueryExtension \^(\^Display *\fIdpy\fP,
+Bool XPresentQueryExtension \^(\^Display *\fIdpy\fP, int *\fImajor_opcode_return\fP,
 	int *\fIevent_base_return\fP, int *\fIerror_base_return\fP\^);
 .sp
 Status XPresentQueryVersion \^(\^Display *\fIdpy\fP,
 	int *\fImajor_version_return\fP,
 	int *\fIminor_version_return\fP\^);
 .sp
-void XPresentRegion \^(\^Display *dpy,
-	Window \fIwindow\fP,
-	Pixmap \fIpixmap\fP,
-	uint32_t serial,
-	XserverRegion valid,
-	XserverRegion update,
-	int x_off,
-	int y_off,
-	XID idle_fence,
-	XID target_crtc,
-	uint64_t target_msc,
-	uint64_t divisor,
-	uint64_t remainder);
+int XPresentVersion (void);
 .fi
 .SH ARGUMENTS
-.IP \fIdisplay\fP 1i
+.IP \fIdpy\fP 1i
 Specifies the connection to the X server.
-.IP \fIwindow\fP 1i
-Specifies which window.
 .SH DESCRIPTION
 .B Xpresent
-is a library designed to interface the X Present
-Extension.
+is a library designed to interface the X Present Extension.
+The Present extension provides a way for applications to update their
+window contents from a pixmap in a well defined fashion, synchronizing
+with the display refresh and potentially using a more efficient
+mechanism than copying the contents of the source pixmap.
+The
+.B XPresentQueryExtension
+function checks if the X server specified by \fIdpy\fP supports the X Present
+extension.  If the server does not support the extension, it returns False.
+If the server does support the extension, it returns True, and sets the
+values of \fImajor_opcode_return\fP, \fIevent_base_return\fP, and
+\fIerror_base_return\fP if the pointers are not NULL.
+.PP
+Clients must call the 
+.B XPresentQueryExtension
+function to verify the server supports the extension before calling any other
+function for this extension.
+The
+.B XPresentQueryVersion
+function sets the values pointed to by \fImajor_version_return\fP and
+\fIminor_version_return\fP to the version of the extension supported
+by the X server specified by \fIdpy\fP.
+The
+.B XPresentQueryVersion
+function returns the version of the libXpresent library in use, as defined
+by the \fBPRESENT_VERSION\fP macro in <X11/extensions/Xpresent.h>.
+.SH SEE ALSO
+.BR XPresentNotifyMSC (__libmansuffix__),
+.BR XPresentPixmap (__libmansuffix__),
+.BR XPresentQueryCapabilities (__libmansuffix__),
+.BR XPresentSelectInput (__libmansuffix__)
 .SH RESTRICTIONS
 .B Xpresent
 will remain upward compatible after the 1.0 release.
