@@ -1,3 +1,110 @@
+commit 0c6681e465c9cc7b1fbb60778ba1eaa61ab01a14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Oct 18 19:01:07 2022 -0700
+
+    xcb-util-wm 0.4.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c4ec9a6b927df1d0e7364994b7eb300e3027ca1
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80e52c063e1136542fdd51daeb07b3100e3de2df
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a7cf3ad9ec7a83cec29018e333f0a253207252ae
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63400a253d79f13bda73de30899e6ae95b5e0479
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fbc6bf6183b47338aec46ba98c3ca2b11f181ccc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fac9e1bc60a17e1ac1ebab0bd0b4047f43dfebd4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:41:49 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bac661edf564b0cf83a0f213fd71b07077ded4c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:40:41 2022 -0700
+
+    Update m4 to xorg/util/xcb-util-m4@c617eee22ae5c285e79e81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dbb4df470dbe8ec142218fac4c7563a5772ff07c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:40:21 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1940f41819198195d793dc810a4a0efc8c477406
+Author: Alexander Gottwald <ago@starnet.com>
+Date:   Thu Sep 17 19:14:45 2020 +0200
+
+    Update .gitmodules for gitlab submodule
+
+commit 177d933f04d822deb7ec0a7bb13148701eec3e55
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 11:49:45 2019 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82a77443e6c1590f7e7328a50d30184d10e6a3d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 11:41:06 2019 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 24eb17df2e1245885e72c9d4bbb0a0f69f0700f2
 Author: Arnaud Fontaine <arnau@debian.org>
 Date:   Wed Feb 19 20:23:08 2014 +0900
