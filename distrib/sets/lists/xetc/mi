@@ -28,6 +28,7 @@
 ./etc/fonts/conf.d/49-sansserif.conf
 ./etc/fonts/conf.d/50-user.conf
 ./etc/fonts/conf.d/51-local.conf
+./etc/fonts/conf.d/59-latin-obsd.conf
 ./etc/fonts/conf.d/60-generic.conf
 ./etc/fonts/conf.d/60-latin.conf
 ./etc/fonts/conf.d/65-fonts-persian.conf
