@@ -103,7 +103,7 @@ static unsigned long tableLength;
 static NodePtr *nodeTable;
 
 static Atom
-_XkbMakeAtom(const char *string, unsigned len, Bool makeit)
+_XkbMakeAtom(const char *string, size_t len, Bool makeit)
 {
     register NodePtr *np;
     unsigned i;
@@ -121,7 +121,7 @@ _XkbMakeAtom(const char *string, unsigned len, Bool makeit)
         else if (fp > (*np)->fingerPrint)
             np = &((*np)->right);
         else {                  /* now start testing the strings */
-            comp = strncmp(string, (*np)->string, (int) len);
+            comp = strncmp(string, (*np)->string, len);
             if ((comp < 0) || ((comp == 0) && (len < strlen((*np)->string))))
                 np = &((*np)->left);
             else if (comp > 0)
@@ -136,13 +136,19 @@ _XkbMakeAtom(const char *string, unsigned len, Bool makeit)
         nd = (NodePtr) _XkbAlloc(sizeof(NodeRec));
         if (!nd)
             return BAD_RESOURCE;
+#ifdef HAVE_STRNDUP
+        nd->string = strndup(string, len);
+#else
         nd->string = (char *) _XkbAlloc(len + 1);
+#endif
         if (!nd->string) {
             _XkbFree(nd);
             return BAD_RESOURCE;
         }
-        strncpy(nd->string, string, (int) len);
+#ifndef HAVE_STRNDUP
+        strncpy(nd->string, string, len);
         nd->string[len] = 0;
+#endif
         if ((lastAtom + 1) >= tableLength) {
             NodePtr *table;
 

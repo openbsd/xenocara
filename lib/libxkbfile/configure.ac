@@ -22,13 +22,14 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxkbfile], [1.1.0],
-        [https://gitlab.freedesktop.org/xorg/lib/libxkbfile/issues], [libxkbfile])
+AC_INIT([libxkbfile], [1.1.1],
+        [https://gitlab.freedesktop.org/xorg/lib/libxkbfile/-/issues],
+        [libxkbfile])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -40,12 +41,11 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for library functions.
-AC_CHECK_FUNC(strcasecmp, [], AC_DEFINE([NEED_STRCASECMP], 1,
-                                        [Do not have 'strcasecmp'.]))
+AC_CHECK_FUNCS([strcasecmp strndup])
 AC_CHECK_FUNC(getc_unlocked, AC_DEFINE([HAVE_UNLOCKED_STDIO], 1,
 				       ['Unlocked stdio']), [])
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XKBFILE, x11 kbproto)
 
 AC_CONFIG_FILES([Makefile

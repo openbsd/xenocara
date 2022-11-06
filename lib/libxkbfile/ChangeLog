@@ -1,3 +1,114 @@
+commit f855ea9cf3aecc74c3b07da924ff2e36944e4be1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 19:00:30 2022 -0700
+
+    libxkbfile 1.1.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04336c9260b2d130f57fcf3dedc3ba73bb45889d
+Author: Ran Benita <ran234@gmail.com>
+Date:   Wed Aug 29 12:33:33 2012 +0300
+
+    Fix check for appending '|' character when applying rules
+    
+    There are two ways to separate multiple files in XKB include statements:
+    '+' will cause the later file to override the first in case of conflict,
+    while '|' will cause it augment it (this is done by xkbcomp). '!' is
+    unrelated here.
+    Currently, if someone tries to use '|' in a rule instead of '+', it
+    won't have any effect. Since '|' is practically never used, this wasn't
+    noticed.
+    
+    Signed-off-by: Ran Benita <ran234@gmail.com>
+
+commit 6fa239504743475d566f53c278dae0f651ea199c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:41:39 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4939a3e9d584ab46f1d082f6a61b3cd307614150
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:40:34 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 849d0b22ec46bee1f72170722bde8d493ce163ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:39:10 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e51e5c704c5bd7a91233b37f0cf4beaef6f06a5d
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Jun 5 09:15:05 2022 +0200
+
+    fix an off-by-one error in copying the name of a virtual modifier
+    
+    This fixes issue #9.
+    
+    Bug existed since commit 816a8db326 from sixteen years ago.
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 8e45c7f55dcb35ae710a223a28fb6d6443c711c6
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Wed Sep 2 14:19:44 2020 +1000
+
+    unifdef NOTYET
+    
+    This has been ifdef'd out since at least 2003, time to accept that it won't be
+    handled. One part was unreachable code anyway, the second part affects
+    GeomDoodads which are unnecessary and barely used anyway.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 81e8b72daf3ad0a3f36e4ae0ef6b38e427e251b5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jun 19 14:34:51 2020 +1000
+
+    Escape non-printable characters correctly
+    
+    This is the equivalent patch to xserver commit
+    eaf1f72ed8994b708d94ec2de7b1a99f5c4a39b8:
+    
+     XkbStringText escapes non-printable characters using octal numbers. Such escape
+     sequence would be at most 5 characters long ("\0123"), so it reserves 5 bytes
+     in the buffer. Due to char->unsigned int conversion, it would print much longer
+     string for negative numbers.
+    
+    Fixes https://gitlab.freedesktop.org/xorg/lib/libxkbfile/-/issues/8
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6c4de3386ee102040fc567708958a60a9d254b02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 29 19:07:43 2019 -0700
+
+    Convert check for strcasecmp to normal autoconf style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d017a68e12acf2463edc9cfbdae0aea3ce477b1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 29 19:02:51 2019 -0700
+
+    Use strndup if available to avoid -Wstringop-overflow warning from gcc 9
+    
+    Reported in https://gitlab.freedesktop.org/xorg/lib/libxkbfile/issues/5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 261992d42905f209cd5bf6afcf8a7ae3aa30b3ff
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 11:30:41 2019 -0700
@@ -131,7 +242,7 @@ Date:   Thu Apr 30 22:24:39 2015 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9fa04388dcbb5bf205319569f540a62c03754688
-Author: Jörg Sonnenberger <joerg@NetBSD.org>
+Author: Jörg Sonnenberger  <joerg@NetBSD.org>
 Date:   Wed Nov 26 14:33:38 2014 +0100
 
     Remove unnecessary check.
@@ -766,20 +877,20 @@ Date:   Sat Jul 2 06:35:04 2005 +0000
     Add appropriate lib*_CFLAGS to Makefile.am's -- fixes build problems
 
 commit e5ddd6b3020045b7d8426618fd2515bc02ca045d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 22:54:28 2005 +0000
 
     Makefile.am: Add $(top_srcdir)/include to INCLUDES
 
 commit 019fc282d476d3dd8f79e0472d3868f6a0785a56
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 21:51:46 2005 +0000
 
     Add xkbfile to symlink.sh, conditionally include "config.h" in
         xc/lib/xkbfile
 
 commit 43a2d4898c64c11101b500ab12466570d747ce5f
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 21:49:05 2005 +0000
 
     - Add xkbfile build system

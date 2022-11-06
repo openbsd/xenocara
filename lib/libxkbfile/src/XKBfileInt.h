@@ -69,7 +69,7 @@ _XkbDupString(const char *s)
 
 #define _XkbStrCaseEqual(s1,s2)	(_XkbStrCaseCmp(s1,s2)==0)
 
-#ifdef NEED_STRCASECMP
+#ifndef HAVE_STRCASECMP
 extern int _XkbStrCaseCmp(char *s1, char *s2);
 #else
 #define _XkbStrCaseCmp strcasecmp

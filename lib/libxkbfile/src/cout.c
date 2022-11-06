@@ -826,10 +826,6 @@ WriteCHdrGeomSections(FILE *file, XkbDescPtr xkb, XkbGeometryPtr geom)
     for (s = 0, section = geom->sections; s < geom->num_sections;
          s++, section++) {
         WriteCHdrGeomRows(file, xkb, section, s);
-#ifdef NOTYET
-        if (section->num_doodads > 0)
-            WriteCHdrGeomDoodads(file, xkb, geom, section, s);
-#endif
         if (section->num_overlays > 0)
             WriteCHdrGeomOverlays(file, xkb, section, s);
     }

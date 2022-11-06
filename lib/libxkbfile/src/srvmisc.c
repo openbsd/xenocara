@@ -51,10 +51,6 @@ XkbWriteToServer(XkbFileInfo *result)
         return False;
     if (!XkbSetIndicatorMap(dpy, ~0, xkb))
         return False;
-#ifdef NOTYET
-    if (!XkbSetControls(dpy, XkbAllControlsMask, xkb))
-        return False;
-#endif
     if (!XkbSetCompatMap(dpy, XkbAllCompatMask, xkb, True))
         return False;
     if (!XkbSetNames(dpy, XkbAllNamesMask, 0, xkb->map->num_types, xkb))
@@ -64,23 +60,6 @@ XkbWriteToServer(XkbFileInfo *result)
             return False;
     }
     return True;
-#ifdef NOTYET
-    switch (result->type) {
-    case XkmSemanticsFile:
-        func = WriteCHdrSemantics;
-        break;
-    case XkmLayoutFile:
-        func = WriteCHdrLayout;
-        break;
-    case XkmKeymapFile:
-        func = WriteCHdrKeymap;
-        break;
-    default:
-        _XkbLibError(_XkbErrIllegalContents, "XkbWriteToServer", result->type);
-        break;
-    }
-    return ok;
-#endif
 }
 
 unsigned

@@ -684,7 +684,7 @@ XkbNameMatchesPattern(char *name, char *ptrn)
     return (name[0] == '\0');
 }
 
-#ifdef NEED_STRCASECMP
+#ifndef HAVE_STRCASECMP
 _X_HIDDEN int
 _XkbStrCaseCmp(char *str1, char *str2)
 {
