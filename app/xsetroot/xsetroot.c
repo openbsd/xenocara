@@ -117,13 +117,12 @@ main(int argc, char *argv[])
     char *bitmap_file = NULL;
     int mod_x = 0;
     int mod_y = 0;
-    register int i;
     unsigned int ww, hh;
     Pixmap bitmap;
 
     program_name=argv[0];
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	if (!strcmp ("-display", argv[i]) || !strcmp ("-d", argv[i])) {
 	    if (++i>=argc) usage ("-display requires an argument");
 	    display_name = argv[i];
@@ -399,12 +398,14 @@ CreateCursorFromFiles(char *cursor_file, char *mask_file)
     unsigned int width, height, ww, hh;
     int x_hot, y_hot;
     Cursor cursor;
-    XColor fg, bg, temp;
+    XColor fg, bg;
 
     fg = NameToXColor(fore_color, BlackPixel(dpy, screen));
     bg = NameToXColor(back_color, WhitePixel(dpy, screen));
     if (reverse) {
-	temp = fg; fg = bg; bg = temp;
+	XColor temp = fg;
+	fg = bg;
+	bg = temp;
     }
 
     cursor_bitmap = ReadBitmapFile(cursor_file, &width, &height, &x_hot, &y_hot);
@@ -422,8 +423,8 @@ CreateCursorFromFiles(char *cursor_file, char *mask_file)
 	x_hot = BITMAP_HOT_DEFAULT;
 	y_hot = BITMAP_HOT_DEFAULT;
     }
-    if ((x_hot < 0) || (x_hot >= width) ||
-	(y_hot < 0) || (y_hot >= height)) {
+    if ((x_hot < 0) || ((unsigned int)x_hot >= width) ||
+	(y_hot < 0) || ((unsigned int)y_hot >= height)) {
 	fprintf(stderr, "%s: hotspot is outside cursor bounds\n", program_name);
 	exit(1);
 	/*NOTREACHED*/
@@ -440,14 +441,16 @@ CreateCursorFromFiles(char *cursor_file, char *mask_file)
 static Cursor
 CreateCursorFromName(char *name)
 {
-    XColor fg, bg, temp;
+    XColor fg, bg;
     int	    i;
     Font    fid;
 
     fg = NameToXColor(fore_color, BlackPixel(dpy, screen));
     bg = NameToXColor(back_color, WhitePixel(dpy, screen));
     if (reverse) {
-	temp = fg; fg = bg; bg = temp;
+	XColor temp = fg;
+	fg = bg;
+	bg = temp;
     }
     i = XmuCursorNameToIndex (name);
     if (i == -1)
@@ -465,15 +468,14 @@ CreateCursorFromName(char *name)
 static Pixmap 
 MakeModulaBitmap(int mod_x, int mod_y)
 {
-    int i;
     long pattern_line = 0;
     char modula_data[16*16/8];
 
-    for (i=16; i--; ) {
+    for (int i = 16; i--; ) {
 	pattern_line <<=1;
 	if ((i % mod_x) == 0) pattern_line |= 0x0001;
     }
-    for (i=0; i<16; i++) {
+    for (int i = 0; i < 16; i++) {
 	if ((i % mod_y) == 0) {
 	    modula_data[i*2] = (char)0xff;
 	    modula_data[i*2+1] = (char)0xff;
