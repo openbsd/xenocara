@@ -61,17 +61,6 @@ from The Open Group.
 #include <X11/extensions/record.h>
 #include <limits.h>
 
-#ifndef HAVE__XEATDATAWORDS
-static inline void _XEatDataWords(Display *dpy, unsigned long n)
-{
-# ifndef LONG64
-    if (n >= (ULONG_MAX >> 2))
-        _XIOError(dpy);
-# endif
-    _XEatData (dpy, n << 2);
-}
-#endif
-
 static XExtensionInfo _xrecord_info_data;
 static XExtensionInfo *xrecord_info = &_xrecord_info_data;
 static const char *xrecord_extension_name = RECORD_NAME;
@@ -177,7 +166,7 @@ static XPointer alloc_mem_cache(void)
     struct mem_cache_str *cache;
 
     /* note that an error will go unnoticed */
-    cache = (struct mem_cache_str *) Xmalloc(sizeof(struct mem_cache_str));
+    cache = Xmalloc(sizeof(struct mem_cache_str));
     if (cache) {
 	cache->display_closed = False;
 	cache->inter_data = NULL;
@@ -328,7 +317,7 @@ XRecordCreateContext(Display *dpy, int datum_flags,
 XRecordRange *
 XRecordAllocRange(void)
 {
-    return (XRecordRange*)Xcalloc(1, sizeof(XRecordRange));
+    return Xcalloc(1, sizeof(XRecordRange));
 }
 
 Status
@@ -420,7 +409,7 @@ XRecordGetContext(Display *dpy, XRecordContext context,
     XExtDisplayInfo 	*info = find_display (dpy);
     register 		xRecordGetContextReq   	*req;
     xRecordGetContextReply 	rep;
-    unsigned int	count, i, rn;
+    unsigned int	count;
     xRecordRange   	xrange;
     xRecordClientInfo   xclient_inf;
     XRecordState	*ret;
@@ -438,7 +427,7 @@ XRecordGetContext(Display *dpy, XRecordContext context,
     }
     count = rep.nClients;
 
-    ret = (XRecordState*)Xmalloc(sizeof(XRecordState));
+    ret = Xmalloc(sizeof(XRecordState));
     if (!ret) {
 	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay(dpy);
@@ -470,7 +459,7 @@ XRecordGetContext(Display *dpy, XRecordContext context,
 	   SyncHandle();
 	   return 0;
         }
-        for(i = 0; i < count; i++)
+        for (unsigned int i = 0; i < count; i++)
         {
 	    client_inf[i] = &(client_inf_str[i]);
             _XRead(dpy, (char *)&xclient_inf, (long)sizeof(xRecordClientInfo));
@@ -498,7 +487,7 @@ XRecordGetContext(Display *dpy, XRecordContext context,
 		    SyncHandle();
 		    return 0;
 		}
-		for (rn=0; rn<xclient_inf.nRanges; rn++) {
+		for (unsigned int rn = 0; rn < xclient_inf.nRanges; rn++) {
 		    client_inf_str[i].ranges[rn] = &(ranges[rn]);
 		    _XRead(dpy, (char *)&xrange, (long)sizeof(xRecordRange));
 		    WireToLibRange(&xrange, &(ranges[rn]));
@@ -521,9 +510,7 @@ XRecordGetContext(Display *dpy, XRecordContext context,
 void
 XRecordFreeState(XRecordState *state)
 {
-    int i;
-
-    for(i=0; i<state->nclients; i++) {
+    for (unsigned long i = 0; i < state->nclients; i++) {
 	if (state->client_info[i]->ranges) {
 	    if (state->client_info[i]->ranges[0])
 		Xfree(state->client_info[i]->ranges[0]);
@@ -571,10 +558,10 @@ static struct reply_buffer *alloc_reply_buffer(
     /*
      * nothing available; malloc a new struct
      */
-    rbp = (struct reply_buffer *)Xmalloc(sizeof(struct reply_buffer));
+    rbp = Xmalloc(sizeof(struct reply_buffer));
     if (!rbp)
 	return NULL;
-    rbp->buf = (unsigned char *)Xmalloc(nbytes);
+    rbp->buf = Xmalloc(nbytes);
     if (!rbp->buf) {
 	Xfree(rbp);
 	return NULL;
@@ -598,7 +585,7 @@ static XRecordInterceptData *alloc_inter_data(XExtDisplayInfo *info)
 	return &iq->data;
     }
     /* allocate a new one */
-    iq = (struct intercept_queue *)Xmalloc(sizeof(struct intercept_queue));
+    iq = Xmalloc(sizeof(struct intercept_queue));
     if (!iq)
 	return NULL;
     iq->cache = cache;
@@ -738,14 +725,13 @@ parse_reply_call_callback(
     XRecordInterceptProc callback,
     XPointer		 closure)
 {
-    int current_index;
+    unsigned int current_index;
     int datum_bytes = 0;
-    XRecordInterceptData *data;
 
     /* call the callback for each protocol element in the reply */
     current_index = 0;
     do {
-	data = alloc_inter_data(info);
+	XRecordInterceptData *data = alloc_inter_data(info);
 	if (!data)
 	    return Error;
 
@@ -883,7 +869,6 @@ XRecordEnableContext(Display *dpy, XRecordContext context,
     register xRecordEnableContextReq   	*req;
     xRecordEnableContextReply 	rep;
     struct reply_buffer *reply;
-    enum parser_return status;
 
     XRecordCheckExtension (dpy, info, 0);
     LockDisplay(dpy);
@@ -895,6 +880,8 @@ XRecordEnableContext(Display *dpy, XRecordContext context,
 
     while (1)
     {
+	enum parser_return status;
+
 	/* This code should match that in XRecordEnableContextAsync */
 	if (!_XReply (dpy, (xReply *)&rep, 0, xFalse))
 	{
@@ -1028,8 +1015,7 @@ XRecordEnableContextAsync(Display *dpy, XRecordContext context,
     record_async_state *async_state;
 
     XRecordCheckExtension (dpy, info, 0);
-    async = (_XAsyncHandler *)Xmalloc(sizeof(_XAsyncHandler) +
-	sizeof(record_async_state));
+    async = Xmalloc(sizeof(_XAsyncHandler) + sizeof(record_async_state));
     if (!async)
 	return 0;
     async_state = (record_async_state *)(async + 1);

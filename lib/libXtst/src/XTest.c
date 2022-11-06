@@ -99,10 +99,11 @@ XTestQueryExtension (Display *dpy,
 		     int *major_return, int *minor_return)
 {
     XExtDisplayInfo *info = find_display (dpy);
-    register xXTestGetVersionReq *req;
     xXTestGetVersionReply rep;
 
     if (XextHasExtension(info)) {
+	xXTestGetVersionReq *req;
+
 	LockDisplay(dpy);
 	GetReq(XTestGetVersion, req);
 	req->reqType = info->codes->major_opcode;
@@ -259,7 +260,6 @@ send_axes(
     int n_axes)
 {
     deviceValuator ev;
-    int n;
 
     req->deviceid |= MORE_EVENTS;
     req->length += ((n_axes + 5) / 6) * (SIZEOF(xEvent) >> 2);
@@ -267,19 +267,24 @@ send_axes(
     ev.deviceid = dev->device_id;
     ev.first_valuator = first_axis;
     while (n_axes > 0) {
-	n = n_axes > 6 ? 6 : n_axes;
+	int n = n_axes > 6 ? 6 : n_axes;
 	ev.num_valuators = n;
 	switch (n) {
 	case 6:
 	    ev.valuator5 = *(axes+5);
+	    /* fallthrough */
 	case 5:
 	    ev.valuator4 = *(axes+4);
+	    /* fallthrough */
 	case 4:
 	    ev.valuator3 = *(axes+3);
+	    /* fallthrough */
 	case 3:
 	    ev.valuator2 = *(axes+2);
+	    /* fallthrough */
 	case 2:
 	    ev.valuator1 = *(axes+1);
+	    /* fallthrough */
 	case 1:
 	    ev.valuator0 = *axes;
 	}
@@ -428,11 +433,10 @@ Status
 XTestDiscard(Display *dpy)
 {
     Bool something;
-    register char *ptr;
 
     LockDisplay(dpy);
     if ((something = (dpy->bufptr != dpy->buffer))) {
-	for (ptr = dpy->buffer;
+	for (char *ptr = dpy->buffer;
 	     ptr < dpy->bufptr;
 	     ptr += (((xReq *)ptr)->length << 2))
 	    dpy->request--;

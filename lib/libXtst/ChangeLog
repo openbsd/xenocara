@@ -1,3 +1,239 @@
+commit 99b89c3bcb0ebb0b6dd86bfdc9d276715eaea889
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 26 18:07:24 2022 -0700
+
+    libXtst 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 14a44d0e3e6c3d9e757e2fdd143587efe532f1e9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 20 10:39:35 2022 -0700
+
+    Remove obsolete casts from Xmalloc() and Xcalloc() calls
+    
+    Not needed in C89 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit afc015217221acd8667a96111b147f3a742a2c4e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 18 19:12:42 2022 -0700
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ff3456b04e1b42fd77e0db061bf7a563108b5868
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 18 19:02:35 2022 -0700
+
+    Resolve -Wsign-compare warnings
+    
+    XRecord.c: In function ‘XRecordFreeState’:
+    XRecord.c:515:15: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         for(i=0; i<state->nclients; i++) {
+                   ^
+    XRecord.c: In function ‘parse_reply_call_callback’:
+    XRecord.c:752:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (current_index + 4 > rep->length << 2)
+                             ^
+    XRecord.c:759:28: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+          if (current_index + 1 > rep->length << 2)
+                                ^
+    XRecord.c:763:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (current_index + 8 > rep->length << 2)
+                             ^
+    XRecord.c:777:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (current_index + 4 > rep->length << 2)
+                             ^
+    XRecord.c:785:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (current_index + 4 > rep->length << 2)
+                             ^
+    XRecord.c:792:28: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+          if (current_index + 4 > rep->length<<2)
+                                ^
+    XRecord.c:797:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (current_index + 8 > rep->length << 2)
+                             ^
+    XRecord.c:810:28: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+          if (current_index + 8 > rep->length << 2)
+                                ^
+    XRecord.c:818:25: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+       if (current_index + 4 > rep->length << 2)
+                             ^
+    XRecord.c:824:31: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+          } else if (current_index < rep->length << 2)
+                                   ^
+    XRecord.c:830:24: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+          if (current_index < rep->length << 2)
+                            ^
+    XRecord.c:859:27: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+         } while (current_index<rep->length<<2);
+                               ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f8a2329d8a24c0901d945986232267c02f080fc4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 18 18:52:40 2022 -0700
+
+    send_axes: Mark switch statement fallthrough as intentional
+    
+    Quiets gcc warnings:
+    XTest.c: In function ‘send_axes’:
+    XTest.c:274:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
+          ev.valuator5 = *(axes+5);
+          ~~~~~~~~~~~~~^~~~~~~~~~~
+    XTest.c:275:2: note: here
+      case 5:
+      ^~~~
+    XTest.c:276:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
+          ev.valuator4 = *(axes+4);
+          ~~~~~~~~~~~~~^~~~~~~~~~~
+    XTest.c:277:2: note: here
+      case 4:
+      ^~~~
+    XTest.c:278:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
+          ev.valuator3 = *(axes+3);
+          ~~~~~~~~~~~~~^~~~~~~~~~~
+    XTest.c:279:2: note: here
+      case 3:
+      ^~~~
+    XTest.c:280:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
+          ev.valuator2 = *(axes+2);
+          ~~~~~~~~~~~~~^~~~~~~~~~~
+    XTest.c:281:2: note: here
+      case 2:
+      ^~~~
+    XTest.c:282:19: warning: this statement may fall through [-Wimplicit-fallthrough=]
+          ev.valuator1 = *(axes+1);
+          ~~~~~~~~~~~~~^~~~~~~~~~~
+    XTest.c:283:2: note: here
+      case 1:
+      ^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80c35fd74d99039949be2522f18f4040e2f6eec3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:23:10 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0077e7828bd26869d7a3e9ec6158ab09bf646ef3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:21:31 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 63dc5cc8fe89807c7945949d1d86da44ce69687a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:20:38 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 769598f20386845f5839fbc68dfed1f4245197be
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:54:52 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9d20b76d717add6401d66f272656d3cf763d7130
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:46:44 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7e083f2e618ce063d1ab2885671a0c5ca8472772
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit c051091cecad4c22dab362f3d3b7463ad2a52754
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a4994d5f8bc949eabe2c9d8a1a7af4bfcb68df9c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 9f5621a410f18149d4c76b02daa7f1a98b4a2c16
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Tue Oct 4 21:28:17 2016 +0200
+
+    libXtst 1.2.3
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 9556ad67af3129ec4a7a4f4b54a0d59701beeae3
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Sun Sep 25 21:37:01 2016 +0200
+
+    Out of boundary access and endless loop in libXtst
+    
+    A lack of range checks in libXtst allows out of boundary accesses.
+    The checks have to be done in-place here, because it cannot be done
+    without in-depth knowledge of the read data.
+    
+    If XRecordStartOfData, XRecordEndOfData, or XRecordClientDied
+    without a client sequence have attached data, an endless loop would
+    occur. The do-while-loop continues until the current index reaches
+    the end. But in these cases, the current index would not be
+    incremented, leading to an endless processing.
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 48d2656fa1dd98e9d88b31211fa4f09f813e7b30
+Author: Michael Joost <mehl@michael-joost.de>
+Date:   Mon Nov 18 16:11:26 2013 +0100
+
+    Remove fallback for _XEatDataWords, require libX11 1.6 for it
+    
+    _XEatDataWords was orignally introduced with the May 2013 security
+    patches, and in order to ease the process of delivering those,
+    fallback versions of _XEatDataWords were included in the X extension
+    library patches so they could be applied to older versions that didn't
+    have libX11 1.6 yet.   Now that we're past that hurdle, we can drop
+    the fallbacks and just require libX11 1.6 for building new versions
+    of the extension libraries.
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cdc04f06325e55916e0c95b61db626d22b76e2ff
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu May 30 19:09:42 2013 -0700
@@ -968,7 +1204,7 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit dbedf673f50e0baf6d5af60f60dbd16368071ed4
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 19:44:25 2005 +0000
 
     - Add Xtst to symlink.sh
