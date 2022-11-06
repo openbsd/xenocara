@@ -44,8 +44,6 @@ ComputeSizes(XParms xp, Parms p)
 int 
 CreateParents(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-
     ComputeSizes(xp, p);
 
     parentcolumns = WIDTH / parentwidth;
@@ -59,8 +57,8 @@ CreateParents(XParms xp, Parms p, int64_t reps)
     /* We will do parentwindows sets of childwindows, in order to get better
        timing accuracy.  Creating 4 windows at a millisecond apiece or so
        is a bit faster than the 60 Hz clock. */
-    isolates = (Window *)malloc(parentwindows * sizeof(Window));
-    parents = (Window *)malloc(parentwindows * sizeof(Window));
+    isolates = malloc(parentwindows * sizeof(Window));
+    parents = malloc(parentwindows * sizeof(Window));
 
     /*
      *  Create isolation windows for the parents, and then the parents
@@ -70,7 +68,7 @@ CreateParents(XParms xp, Parms p, int64_t reps)
      *  the number of children we are trying to get benchmarks on.
      */
 
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	isolates[i] = XCreateSimpleWindow(xp->d, xp->w,
 	    (i/parentrows)*parentwidth, (i%parentrows)*parentheight,
 	    parentwidth, parentheight, 0, xp->background, xp->background);
@@ -86,9 +84,7 @@ CreateParents(XParms xp, Parms p, int64_t reps)
 void 
 MapParents(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	XMapWindow(xp->d, parents[i]);
     }
 }
@@ -96,9 +92,7 @@ MapParents(XParms xp, Parms p, int64_t reps)
 void 
 MapParentsCleanup(XParms xp, Parms p)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	XMapWindow(xp->d, parents[i]);
     }
 }
@@ -115,9 +109,7 @@ InitCreate(XParms xp, Parms p, int64_t reps)
 static void 
 CreateChildGroup(XParms xp, Parms p, Window parent)
 {
-    int j;
-
-    for (j = 0; j != childwindows; j++) {
+    for (int j = 0; j != childwindows; j++) {
 	(void) XCreateSimpleWindow (xp->d, parent,
 		(CHILDSIZE+CHILDSPACE) * (j/childrows) + CHILDSPACE/2,
 		(CHILDSIZE+CHILDSPACE) * (j%childrows) + CHILDSPACE/2,
@@ -131,9 +123,7 @@ CreateChildGroup(XParms xp, Parms p, Window parent)
 void 
 CreateChildren(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	CreateChildGroup(xp, p, parents[i]);
     } /* end i */
 }
@@ -141,9 +131,7 @@ CreateChildren(XParms xp, Parms p, int64_t reps)
 void 
 DestroyChildren(XParms xp, Parms p)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	XDestroySubwindows(xp->d, parents[i]);
     }
 }
@@ -168,9 +156,7 @@ InitMap(XParms xp, Parms p, int64_t reps)
 void 
 UnmapParents(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	XUnmapWindow(xp->d, parents[i]);
     }
 }
@@ -178,9 +164,7 @@ UnmapParents(XParms xp, Parms p, int64_t reps)
 void 
 UnmapParentsCleanup(XParms xp, Parms p)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	XUnmapWindow(xp->d, parents[i]);
     }
 }
@@ -197,9 +181,7 @@ InitDestroy(XParms xp, Parms p, int64_t reps)
 void 
 DestroyParents(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	XDestroyWindow(xp->d, parents[i]);
     }
 }
@@ -208,9 +190,7 @@ DestroyParents(XParms xp, Parms p, int64_t reps)
 void 
 RenewParents(XParms xp, Parms p)
 {
-    int i;
-
-    for (i = 0; i != parentwindows; i++) {
+    for (int i = 0; i != parentwindows; i++) {
 	parents[i] = XCreateSimpleWindow(xp->d, isolates[i],
 	    0, 0, parentwidth, parentheight, 0, xp->background, xp->background);
     }
@@ -262,8 +242,7 @@ InitPopups(XParms xp, Parms p, int64_t reps)
 void 
 DoPopUps(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         XMapWindow(xp->d, popup);
 	XUnmapWindow(xp->d, popup);
 	CheckAbort ();

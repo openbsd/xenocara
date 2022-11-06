@@ -38,7 +38,7 @@ static GC       pgc;
 int 
 InitComplexPoly(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j, numPoints;
+    int     numPoints;
     int     x, y;
     int     size, iradius;
     double  phi, phiinc, radius, delta, phi2;
@@ -67,12 +67,12 @@ InitComplexPoly(XParms xp, Parms p, int64_t reps)
     iradius = (int) radius + 1;
 
     numPoints = (p->objects) * NUM_POINTS;  
-    points = (XPoint *)malloc(numPoints * sizeof(XPoint));
+    points = malloc(numPoints * sizeof(XPoint));
     curPoint = points;
     x = iradius;
     y = iradius;
-    for (i = 0; i != p->objects; i++) {
-	for (j = 0; j != NUM_ANGLES; j++) {
+    for (int i = 0; i != p->objects; i++) {
+	for (int j = 0; j != NUM_ANGLES; j++) {
 	    phi2 = phi + ((double) j) * delta;
 	    curPoint->x = (int) ((double)x + (radius * cos(phi2)) + 0.5);
 	    curPoint->y = (int) ((double)y + (radius * sin(phi2)) + 0.5);
@@ -98,12 +98,9 @@ InitComplexPoly(XParms xp, Parms p, int64_t reps)
 void 
 DoComplexPoly(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
-    XPoint  *curPoint;
-
-    for (i = 0; i != reps; i++) {
-        curPoint = points;
-        for (j = 0; j != p->objects; j++) {
+    for (int i = 0; i != reps; i++) {
+        XPoint  *curPoint = points;
+        for (int j = 0; j != p->objects; j++) {
             XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Complex, 
 			 CoordModeOrigin);
             curPoint += NUM_POINTS;
@@ -125,7 +122,7 @@ EndComplexPoly(XParms xp, Parms p)
 int 
 InitGeneralPoly(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j, numPoints;
+    int     numPoints;
     int	    nsides;
     int	    x, y;
     int     size, iradius;
@@ -142,14 +139,14 @@ InitGeneralPoly(XParms xp, Parms p, int64_t reps)
     inner_radius = size / sqrt (nsides * tan (PI / nsides));
     outer_radius = inner_radius / cos (PI / (2 * nsides));
     numPoints = p->objects * nsides;
-    points = (XPoint *) malloc (numPoints * sizeof (XPoint));
+    points = malloc (numPoints * sizeof (XPoint));
     curPoint = points;
     iradius = outer_radius + 1;
     x = iradius;
     y = iradius;
-    for (i = 0; i < p->objects; i++) {
+    for (int i = 0; i < p->objects; i++) {
 	phi2 = phi;
-	for (j = 0; j < nsides; j++) {
+	for (int j = 0; j < nsides; j++) {
 	    curPoint->x = x + (outer_radius * cos(phi2) + 0.5);
 	    curPoint->y = y + (outer_radius * sin(phi2) + 0.5);
 	    curPoint++;
@@ -171,16 +168,14 @@ InitGeneralPoly(XParms xp, Parms p, int64_t reps)
 void 
 DoGeneralPoly(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
     int	    nsides;
     int	    mode;
-    XPoint  *curPoint;
 
     nsides = (long) p->font;
     mode = (long) p->bfont;
-    for (i = 0; i != reps; i++) {
-        curPoint = points;
-        for (j = 0; j != p->objects; j++) {
+    for (int i = 0; i != reps; i++) {
+        XPoint  *curPoint = points;
+        for (int j = 0; j != p->objects; j++) {
             XFillPolygon(xp->d, xp->w, pgc, curPoint, nsides, mode, 
 			 CoordModeOrigin);
             curPoint += nsides;

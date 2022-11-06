@@ -37,10 +37,10 @@ static XSegment *segsa2, *segsb2;
 static void 
 InitBltLines(void)
 {
-    int i, x, y;
+    int x, y;
 
     points[0].x = points[0].y = y = 0;
-    for (i = 1; i != NUMPOINTS/2; i++) {    
+    for (int i = 1; i != NUMPOINTS/2; i++) {
 	if (i & 1) {
 	    points[i].x = WIDTH-1;
 	} else {
@@ -51,7 +51,7 @@ InitBltLines(void)
     }
     
     x = 0;
-    for (i = NUMPOINTS/2; i!= NUMPOINTS; i++) {
+    for (int i = NUMPOINTS/2; i!= NUMPOINTS; i++) {
 	if (i & 1) {
 	    points[i].y = HEIGHT-1;
 	} else {
@@ -73,7 +73,7 @@ InitScroll(XParms xp, Parms p, int64_t reps)
 void 
 DoScroll(XParms xp, Parms p, int64_t reps)
 {
-    int i, size, x, y, xorg, yorg, delta;
+    int size, x, y, xorg, yorg, delta;
 
     size = p->special;
     xorg = 0;   yorg = 0;
@@ -88,7 +88,7 @@ DoScroll(XParms xp, Parms p, int64_t reps)
 	delta = 13;
     }
 
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XCopyArea(xp->d, xp->w, xp->w, xp->fggc, x, y + delta,
 	    size, size, x, y);
 	y += size;
@@ -127,7 +127,7 @@ static void
 InitCopyLocations(int size, int mul, int div, 
 		  int64_t reps, XSegment **ap, XSegment **bp)
 {
-    int x1, y1, x2, y2, i;
+    int x1, y1, x2, y2;
     int xinc, yinc;
     int width, height;
     XSegment *a, *b;
@@ -149,9 +149,9 @@ InitCopyLocations(int size, int mul, int div,
     x2 = width;
     y2 = height;
     
-    *ap = a = (XSegment *)malloc(reps * sizeof(XSegment));
-    *bp = b = (XSegment *)malloc(reps * sizeof(XSegment));
-    for (i = 0; i != reps; i++) {
+    *ap = a = malloc(reps * sizeof(XSegment));
+    *bp = b = malloc(reps * sizeof(XSegment));
+    for (int i = 0; i != reps; i++) {
 	a[i].x1 = x1 * div / mul;
 	a[i].y1 = y1 * div / mul;
 	a[i].x2 = x2 * div / mul;
@@ -716,7 +716,7 @@ EndCompositeWin (XParms xp, Parms p)
 static void 
 CompositeArea(XParms xp, Parms p, int64_t reps, Picture src, Picture dst)
 {
-    int i, size;
+    int size;
     XSegment *sa, *sb;
     XSegment *sa2, *sb2;
     
@@ -726,7 +726,7 @@ CompositeArea(XParms xp, Parms p, int64_t reps, Picture src, Picture dst)
     sb = segsb;
     sa2 = segsa2 ? segsa2 : segsa;
     sb2 = segsb2 ? segsb2 : segsb;
-    for (i = 0; i < reps; i++) {
+    for (int i = 0; i < reps; i++) {
 	XRenderComposite (xp->d, xp->func,
 			  src, None, dst,
 			  sa2->x1, sa2->y1, 0, 0, sa->x2, sa->y2, size, size);

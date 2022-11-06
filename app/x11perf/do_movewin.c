@@ -36,21 +36,19 @@ static int delta1;		/* Private global data for DoResizeWindows */
 int 
 InitMoveWindows(XParms xp, Parms p, int64_t reps)
 {
-    int     i = 0;
-
     rows = (p->objects + MAXCOLS - 1) / MAXCOLS;
     
     x_offset = 0;
     y_offset = 0;
     delta1   = 1;
 
-    children = (Window *) malloc (p->objects*sizeof (Window));
-    positions = (XPoint *) malloc(p->objects*sizeof(XPoint));
+    children = malloc(p->objects * sizeof (Window));
+    positions = malloc(p->objects * sizeof(XPoint));
 
     xmax = (CHILDSIZE+CHILDSPACE) * (rows > 1 ? MAXCOLS : p->objects);
     ymax = rows * (CHILDSIZE+CHILDSPACE);
 
-    for (i = 0; i != p->objects; i++) {
+    for (int i = 0; i != p->objects; i++) {
 	positions[i].x = (CHILDSIZE+CHILDSPACE) * (i/rows) + CHILDSPACE/2;
 	positions[i].y = (CHILDSIZE+CHILDSPACE) * (i%rows) + CHILDSPACE/2;
 	children[i] = XCreateSimpleWindow(xp->d, xp->w,
@@ -65,16 +63,14 @@ InitMoveWindows(XParms xp, Parms p, int64_t reps)
 void 
 DoMoveWindows(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	x_offset += 1;
 	y_offset += 3;
 	if (y_offset + ymax > HEIGHT)
 	    y_offset = 0;
 	if (x_offset + xmax > WIDTH)
 	    x_offset = 0;
-	for (j = 0; j != p->objects; j++) {
+	for (int j = 0; j != p->objects; j++) {
 	    XMoveWindow(xp->d, children[j],
 	    positions[j].x + x_offset, positions[j].y + y_offset);
 	}
@@ -92,12 +88,12 @@ EndMoveWindows(XParms xp, Parms p)
 void 
 DoResizeWindows(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j, delta2;
+    for (int i = 0; i != reps; i++) {
+	int	delta2;
 
-    for (i = 0; i != reps; i++) {
 	delta1 = -delta1;
 	delta2 = delta1;
-	for (j = 0; j != p->objects; j++) {
+	for (int j = 0; j != p->objects; j++) {
 	    delta2 = -delta2;
 	    XResizeWindow(xp->d, children[j],
 		CHILDSIZE+delta2, CHILDSIZE-delta2);
@@ -109,14 +105,10 @@ DoResizeWindows(XParms xp, Parms p, int64_t reps)
 int
 InitCircWindows(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-    int     pos;
-    int     color;
-
-    children = (Window *) malloc (p->objects * sizeof (Window));
-    for (i = 0; i != p->objects; i++) {
-	pos = i % STACK;
-	color = (i & 1 ? xp->foreground : xp->background);
+    children = malloc (p->objects * sizeof (Window));
+    for (int i = 0; i != p->objects; i++) {
+	int pos = i % STACK;
+	int color = (i & 1 ? xp->foreground : xp->background);
 	children[i] = XCreateSimpleWindow (xp->d, xp->w, 
 	    pos*CHILDSIZE/4 + (i/STACK)*2*CHILDSIZE, pos*CHILDSIZE/4,
 	    CHILDSIZE, CHILDSIZE, 0, color, color);
@@ -129,11 +121,9 @@ InitCircWindows(XParms xp, Parms p, int64_t reps)
 void 
 DoCircWindows(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
-
-    for (i = 0; i != reps; i++)
+    for (int i = 0; i != reps; i++)
     {
-	for (j = 0; j != p->objects; j++)
+	for (int j = 0; j != p->objects; j++)
 	    XCirculateSubwindows (xp->d, xp->w, RaiseLowest);
 	CheckAbort ();
     }
@@ -149,16 +139,14 @@ EndCircWindows(XParms xp, Parms p)
 int 
 InitMoveTree(XParms xp, Parms p, int64_t reps)
 {
-    int     i = 0;
-
     rows = (p->objects + MAXCOLS - 1) / MAXCOLS;
     
     x_offset = 0;
     y_offset = 0;
     delta1   = 1;
 
-    children = (Window *) malloc (p->objects*sizeof (Window));
-    positions = (XPoint *) malloc(p->objects*sizeof(XPoint));
+    children = malloc(p->objects * sizeof (Window));
+    positions = malloc(p->objects * sizeof(XPoint));
 
     xmax = (CHILDSIZE+CHILDSPACE) * (rows > 1 ? MAXCOLS : p->objects);
     ymax = rows * (CHILDSIZE+CHILDSPACE);
@@ -167,7 +155,7 @@ InitMoveTree(XParms xp, Parms p, int64_t reps)
 				0, 0, xmax, ymax, 0,
 				xp->background, xp->background);
 				
-    for (i = 0; i != p->objects; i++) {
+    for (int i = 0; i != p->objects; i++) {
 	positions[i].x = (CHILDSIZE+CHILDSPACE) * (i/rows) + CHILDSPACE/2;
 	positions[i].y = (CHILDSIZE+CHILDSPACE) * (i%rows) + CHILDSPACE/2;
 	children[i] = XCreateSimpleWindow(xp->d, cover,
@@ -182,9 +170,7 @@ InitMoveTree(XParms xp, Parms p, int64_t reps)
 void 
 DoMoveTree(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	x_offset += 1;
 	y_offset += 3;
 	if (y_offset + ymax > HEIGHT)

@@ -31,7 +31,7 @@ static GC      pgc;
 int 
 InitTrapezoids(XParms xp, Parms p, int64_t reps)
 {
-    int     i, numPoints;
+    int     numPoints;
     int     rows;
     int     x, y;
     int     size, skew;
@@ -41,14 +41,14 @@ InitTrapezoids(XParms xp, Parms p, int64_t reps)
 
     size = p->special;
     numPoints = (p->objects) * NUM_POINTS;  
-    points = (XPoint *)malloc(numPoints * sizeof(XPoint));
+    points = malloc(numPoints * sizeof(XPoint));
     curPoint = points;
     x = size;
     y = 0;
     rows = 0;
     skew = size;
 
-    for (i = 0; i != p->objects; i++, curPoint += NUM_POINTS) {
+    for (int i = 0; i != p->objects; i++, curPoint += NUM_POINTS) {
 	curPoint[0].x = x - skew;
 	curPoint[0].y = y;
 	curPoint[1].x = x - skew + size;
@@ -80,12 +80,9 @@ InitTrapezoids(XParms xp, Parms p, int64_t reps)
 void 
 DoTrapezoids(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
-    XPoint  *curPoint;
-
-    for (i = 0; i != reps; i++) {
-        curPoint = points;
-        for (j = 0; j != p->objects; j++) {
+    for (int i = 0; i != reps; i++) {
+        XPoint  *curPoint = points;
+        for (int j = 0; j != p->objects; j++) {
             XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Convex, 
 			 CoordModeOrigin);
             curPoint += NUM_POINTS;
@@ -120,7 +117,7 @@ static Picture		    mask;
 int
 InitFixedTraps(XParms xp, Parms p, int64_t reps)
 {
-    int     i, numTraps;
+    int     numTraps;
     int     rows;
     int     x, y;
     int     size, skew;
@@ -139,7 +136,7 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
 
     size = p->special;
     numTraps = p->objects;
-    traps = (XTrap *)malloc(numTraps * sizeof(XTrap));
+    traps = malloc(numTraps * sizeof(XTrap));
     curTrap = traps;
     x = size;
     y = 0;
@@ -168,6 +165,8 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
 	break;
     }
     maskFormat = XRenderFindStandardFormat (xp->d, std_fmt);
+    if (!maskFormat)
+	return 0;
     
     maskPixmap = XCreatePixmap (xp->d, xp->w, WIDTH, HEIGHT, depth);
 
@@ -202,7 +201,7 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
 
     if (width == 0)
 	width = size;
-    for (i = 0; i != p->objects; i++, curTrap ++) {
+    for (int i = 0; i != p->objects; i++, curTrap ++) {
 	curTrap->top.y = XDoubleToFixed (y);
 	curTrap->top.left = XDoubleToFixed (x - skew);
 	curTrap->top.right = XDoubleToFixed (x - skew + width);
@@ -232,7 +231,6 @@ InitFixedTraps(XParms xp, Parms p, int64_t reps)
 void 
 DoFixedTraps(XParms xp, Parms p, int64_t reps)
 {
-    int		i;
     Picture	white, black, src, dst;
 
     white = XftDrawSrcPicture (aadraw, &aawhite);
@@ -240,7 +238,7 @@ DoFixedTraps(XParms xp, Parms p, int64_t reps)
     dst = XftDrawPicture (aadraw);
 
     src = black;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XRenderFillRectangle (xp->d, PictOpSrc, mask, &transparent,
 			      0, 0, WIDTH, HEIGHT);
 	XRenderAddTraps (xp->d, mask, 0, 0, traps, p->objects);
@@ -266,7 +264,7 @@ EndFixedTraps (XParms xp, Parms p)
 int
 InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 {
-    int     i, numTraps;
+    int     numTraps;
     int     rows;
     int     x, y;
     int     size, skew;
@@ -277,7 +275,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 
     size = p->special;
     numTraps = p->objects;
-    trapezoids = (XTrapezoid *)malloc(numTraps * sizeof(XTrapezoid));
+    trapezoids = malloc(numTraps * sizeof(XTrapezoid));
     curTrap = trapezoids;
     x = size;
     y = 0;
@@ -330,7 +328,7 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 	return 0;
     }
 
-    for (i = 0; i != p->objects; i++, curTrap ++) {
+    for (int i = 0; i != p->objects; i++, curTrap++) {
 	curTrap->top = XDoubleToFixed (y);
 	curTrap->bottom = XDoubleToFixed (y + size);
 	curTrap->left.p1.x = XDoubleToFixed (x - skew);
@@ -366,7 +364,6 @@ InitFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 void 
 DoFixedTrapezoids(XParms xp, Parms p, int64_t reps)
 {
-    int		i;
     Picture	white, black, src, dst;
 
     white = XftDrawSrcPicture (aadraw, &aawhite);
@@ -374,7 +371,7 @@ DoFixedTrapezoids(XParms xp, Parms p, int64_t reps)
     dst = XftDrawPicture (aadraw);
 
     src = black;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XRenderCompositeTrapezoids (xp->d, PictOpOver, src, dst, maskFormat,
 				    0, 0, trapezoids, p->objects);
         if (src == black)

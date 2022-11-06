@@ -50,7 +50,7 @@ GenerateSegments(XParms xp, Parms p, Bool ddashed)
     size8 = 8 * size;
     half = (size + 19) / 20;
 
-    segments = (XSegment *)malloc((p->objects) * sizeof(XSegment));
+    segments = malloc((p->objects) * sizeof(XSegment));
 
     /* All this x, x1, etc. stuff is to create a pattern that
 	(1) scans down the screen vertically, with each new segment going
@@ -225,7 +225,7 @@ InitHorizSegments(XParms xp, Parms p, int64_t reps)
     size = p->special;
     half = (size + 19) / 20;
 
-    segments = (XSegment *)malloc((p->objects) * sizeof(XSegment));
+    segments = malloc((p->objects) * sizeof(XSegment));
 
     x = half;
     y = half;
@@ -298,7 +298,7 @@ InitVertSegments(XParms xp, Parms p, int64_t reps)
     size = p->special;
     half = (size + 19) / 20;
 
-    segments = (XSegment *)malloc((p->objects) * sizeof(XSegment));
+    segments = malloc((p->objects) * sizeof(XSegment));
 
     x = half;
     y = half;

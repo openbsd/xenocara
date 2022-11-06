@@ -343,7 +343,7 @@ drawing speed for lines, polygons, text, etc.
 
 Since workstations are not used as standalone graphics engines, but as
 super-terminals, x11perf measures window management performance as well as
-traditional graphics performace.  x11perf includes benchmarks for the time it
+traditional graphics performance.  x11perf includes benchmarks for the time it
 takes to create and map windows (as when you start up an application); to map a
 pre-existing set of windows onto the screen (as when you deiconify an
 application or pop up a menu); and to rearrange windows (as when you slosh

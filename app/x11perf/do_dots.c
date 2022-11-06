@@ -29,13 +29,11 @@ static GC       pgc;
 int 
 InitDots(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
     pgc = xp->fggc;
 
-    points = (XPoint *)malloc(p->objects * sizeof(XPoint));
+    points = malloc(p->objects * sizeof(XPoint));
 
-    for (i = 0; i != p->objects; i++) {
+    for (int i = 0; i != p->objects; i++) {
 	points[i].x = 2 * (i/MAXROWS);
 	points[i].y = 2 * (i%MAXROWS);
     }
@@ -45,9 +43,7 @@ InitDots(XParms xp, Parms p, int64_t reps)
 void 
 DoDots(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         XDrawPoints(xp->d, xp->w, pgc, points, p->objects, CoordModeOrigin);
         if (pgc == xp->bggc)
             pgc = xp->fggc;

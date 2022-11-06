@@ -30,7 +30,6 @@ static GC	    pgc;
 int 
 InitRectangles(XParms xp, Parms p, int64_t reps)
 {
-    int i;
     int size = p->special;
     int step;
     int x, y;
@@ -48,7 +47,7 @@ InitRectangles(XParms xp, Parms p, int64_t reps)
 	lw = (lw >> 1) + 1;
     }
 
-    rects = (XRectangle *)malloc(p->objects * sizeof(XRectangle));
+    rects = malloc(p->objects * sizeof(XRectangle));
     x = lw;
     y = lw;
     rows = 0;
@@ -61,7 +60,7 @@ InitRectangles(XParms xp, Parms p, int64_t reps)
 	step = size + 1 + (size % 2);
     }
 
-    for (i = 0; i != p->objects; i++) {
+    for (int i = 0; i != p->objects; i++) {
 	rects[i].x = x;
         rects[i].y = y;
 	rects[i].width = rects[i].height = size;
@@ -86,9 +85,7 @@ InitRectangles(XParms xp, Parms p, int64_t reps)
 void 
 DoRectangles(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         XFillRectangles(xp->d, xp->w, pgc, rects, p->objects);
         if (pgc == xp->bggc)
             pgc = xp->fggc;
@@ -101,9 +98,7 @@ DoRectangles(XParms xp, Parms p, int64_t reps)
 void 
 DoOutlineRectangles(XParms xp, Parms  p, int64_t reps)
 {
-    int	i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XDrawRectangles (xp->d, xp->w, pgc, rects, p->objects);
         if (pgc == xp->bggc)
             pgc = xp->fggc;

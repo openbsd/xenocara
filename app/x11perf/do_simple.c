@@ -34,9 +34,7 @@ static Atom XA_PK_TEMP;
 void 
 DoNoOp(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XNoOp(xp->d);
 	CheckAbort ();
     }
@@ -46,11 +44,8 @@ DoNoOp(XParms xp, Parms p, int64_t reps)
 void 
 DoGetAtom(XParms xp, Parms p, int64_t reps)
 {
-    char    *atom;
-    int     i;
-
-    for (i = 0; i != reps; i++) {
-	atom = XGetAtomName (xp->d, 1);
+    for (int i = 0; i != reps; i++) {
+	char    *atom = XGetAtomName (xp->d, 1);
  	XFree(atom); /* fix XBUG 6480 */
 	CheckAbort ();
     }
@@ -59,12 +54,11 @@ DoGetAtom(XParms xp, Parms p, int64_t reps)
 void 
 DoQueryPointer(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-    Window  w;
-    int     x;
-    unsigned int m;
+    for (int i = 0; i != reps; i++) {
+	Window	w;
+	int	x;
+	unsigned int m;
 
-    for (i = 0; i != reps; i++) {
 	XQueryPointer (xp->d, xp->w, &w, &w, &x, &x, &x, &x, &m);
 	CheckAbort ();
     }
@@ -89,14 +83,12 @@ InitGetProperty(XParms xp, Parms p, int64_t reps)
 void 
 DoGetProperty(XParms xp, Parms p, int64_t reps)
 {
-    int     i;
-    int     actual_format;
-    unsigned long actual_length, bytes_remaining;
-    unsigned char *prop;
-    
-    Atom actual_type;
+    for (int i = 0; i != reps; i++) {
+	int		actual_format;
+	unsigned long	actual_length, bytes_remaining;
+	unsigned char  *prop;
+	Atom		actual_type;
 
-    for (i = 0; i != reps; i++) {
 	XGetWindowProperty (
 		xp->d, xp->w, XA_PK_TEMP, 0, 4,
 		False, AnyPropertyType, &actual_type, &actual_format,

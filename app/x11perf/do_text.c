@@ -37,8 +37,6 @@ static int charsPerLine, totalLines;
 int 
 InitText(XParms xp, Parms p, int64_t reps)
 {
-    int		i, j;
-    char	ch;
     XGCValues   gcv;
 
     font = XLoadQueryFont(xp->d, p->font);
@@ -74,14 +72,16 @@ InitText(XParms xp, Parms p, int64_t reps)
     totalLines = '\177' - ' ' + 1;
     if (totalLines > reps) totalLines = reps;
 
-    charBuf = (char **) malloc(totalLines*sizeof (char *));
+    charBuf = malloc(totalLines * sizeof (char *));
     if (p->special)
-	items = (XTextItem *) malloc(totalLines*SEGS*sizeof (XTextItem));
+	items = malloc(totalLines * SEGS * sizeof (XTextItem));
 
-    for (i = 0; i != totalLines; i++) {
-	charBuf[i] = (char *) malloc (sizeof (char)*charsPerLine);
+    for (int i = 0; i != totalLines; i++) {
+	char	ch;
+
+	charBuf[i] = malloc (sizeof (char) * charsPerLine);
 	ch = i + ' ';
-	for (j = 0; j != charsPerLine; j++) {
+	for (int j = 0; j != charsPerLine; j++) {
 	    charBuf[i][j] = ch;
 	    if (ch == '\177') ch = ' '; else ch++;
 	}
@@ -121,8 +121,6 @@ InitText(XParms xp, Parms p, int64_t reps)
 int 
 InitText16(XParms xp, Parms p, int64_t reps)
 {
-    register int	i, j;
-    register char	*pbuf0, *pbuf1, *pbuf2;
     XGCValues   	gcv;
     int			rows, columns, totalChars, ch;
     int			brows, bcolumns = 0, btotalChars = 0, bch = 0;
@@ -171,25 +169,27 @@ InitText16(XParms xp, Parms p, int64_t reps)
 	charsPerLine = (charsPerLine + 3) & ~3;	/* make a multiple of four */
 	p->objects = charsPerLine;
 
-	items = (XTextItem *) malloc(totalLines*SEGS*sizeof (XTextItem));
+	items = malloc(totalLines * SEGS * sizeof (XTextItem));
 
-	for (i = 0; i < totalLines; i++) {
+	for (int i = 0; i < totalLines; i++) {
+	    char	*pbuf0, *pbuf1, *pbuf2;
+
 	    pbuf0 = items[i*SEGS+0].chars =
-			    (char *) malloc (sizeof (char)*charsPerLine/2);
+                malloc (sizeof (char) * charsPerLine/2);
 	    items[i*SEGS+0].nchars = charsPerLine/4;
 	    items[i*SEGS+0].delta = 0;
 	    items[i*SEGS+0].font = font->fid;
 	    pbuf1 = items[i*SEGS+1].chars =
-			    (char *) malloc (sizeof (char)*charsPerLine);
+                malloc (sizeof (char) * charsPerLine);
 	    items[i*SEGS+1].nchars = charsPerLine/2;
 	    items[i*SEGS+1].delta = 3;
 	    items[i*SEGS+1].font = bfont->fid;
 	    pbuf2 = items[i*SEGS+2].chars =
-			    (char *) malloc (sizeof (char)*charsPerLine/2);
+                malloc (sizeof (char) * charsPerLine/2);
 	    items[i*SEGS+2].nchars = charsPerLine/4;
 	    items[i*SEGS+2].delta = 3;
 	    items[i*SEGS+2].font = font->fid;
-	    for (j = 0; j < charsPerLine/4; j++) {
+	    for (int j = 0; j < charsPerLine/4; j++) {
 		GetRealChar(font, totalChars, ch);
 		*pbuf0++ = ch / columns + font->min_byte1;
 		*pbuf0++ = ch % columns + font->min_char_or_byte2;
@@ -197,17 +197,18 @@ InitText16(XParms xp, Parms p, int64_t reps)
 		*pbuf2++ = ch / columns + font->min_byte1;
 		*pbuf2++ = ch % columns + font->min_char_or_byte2;
 	    }
-	    for (j = 0; j < charsPerLine/2; j++) {
+	    for (int j = 0; j < charsPerLine/2; j++) {
 		GetRealChar(bfont, btotalChars, bch);
 		*pbuf1++ = bch / bcolumns + bfont->min_byte1;
 		*pbuf1++ = bch % bcolumns + bfont->min_char_or_byte2;
 	    }
 	}
     } else {
-	charBuf = (char **) malloc(totalLines*sizeof (char *));
-	for (i = 0; i < totalLines; i++) {
-	    pbuf0 = charBuf[i] = (char *) malloc (sizeof (char)*charsPerLine*2);
-	    for (j = 0; j < charsPerLine; j++) {
+	charBuf = malloc(totalLines * sizeof (char *));
+	for (int i = 0; i < totalLines; i++) {
+	    char *pbuf0 = charBuf[i] =
+                malloc (sizeof (char) * charsPerLine * 2);
+	    for (int j = 0; j < charsPerLine; j++) {
 		GetRealChar(font, totalChars, ch);
 		*pbuf0++ = ch / columns + font->min_byte1;
 		*pbuf0++ = ch % columns + font->min_char_or_byte2;
@@ -220,11 +221,11 @@ InitText16(XParms xp, Parms p, int64_t reps)
 void 
 DoText(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XDrawString(
 	    xp->d, xp->w, xp->fggc, XPOS, ypos, charBuf[line], charsPerLine);
 	ypos += height;
@@ -242,11 +243,11 @@ DoText(XParms xp, Parms p, int64_t reps)
 void 
 DoText16(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i < reps; i++) {
+    for (int i = 0; i < reps; i++) {
 	XDrawString16(
 	    xp->d, xp->w, xp->fggc, XPOS, ypos, (XChar2b *)charBuf[line], charsPerLine);
 	ypos += height;
@@ -264,11 +265,11 @@ DoText16(XParms xp, Parms p, int64_t reps)
 void 
 DoPolyText(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XDrawText(
 	    xp->d, xp->w, xp->fggc, XPOS, ypos, &items[line*SEGS], SEGS);
 	ypos += height;
@@ -286,11 +287,11 @@ DoPolyText(XParms xp, Parms p, int64_t reps)
 void 
 DoPolyText16(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XDrawText16(
 	    xp->d, xp->w, xp->fggc, XPOS, ypos, (XTextItem16 *)&items[line*SEGS], SEGS);
 	ypos += height;
@@ -308,11 +309,11 @@ DoPolyText16(XParms xp, Parms p, int64_t reps)
 void 
 DoImageText(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XDrawImageString(
 	    xp->d, xp->w, xp->fggc, XPOS, ypos, charBuf[line], charsPerLine);
 	ypos += height;
@@ -330,11 +331,11 @@ DoImageText(XParms xp, Parms p, int64_t reps)
 void 
 DoImageText16(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XDrawImageString16(
 	    xp->d, xp->w, xp->fggc, XPOS, ypos, (XChar2b *)charBuf[line], charsPerLine);
 	ypos += height;
@@ -358,10 +359,8 @@ ClearTextWin(XParms xp, Parms p)
 void 
 EndText(XParms xp, Parms p)
 {
-    int i;
-
     if(font==NULL)return;
-    for (i = 0; i != totalLines; i++)
+    for (int i = 0; i != totalLines; i++)
 	free(charBuf[i]);
     free(charBuf);
     if (p->special)
@@ -374,18 +373,16 @@ EndText(XParms xp, Parms p)
 void 
 EndText16(XParms xp, Parms p)
 {
-    int i;
-
     if(font==NULL)return;
     if (p->special) {
-	for (i = 0; i < totalLines; i++) {
+	for (int i = 0; i < totalLines; i++) {
 	    free(items[i*SEGS+0].chars);
 	    free(items[i*SEGS+1].chars);
 	    free(items[i*SEGS+2].chars);
 	}
 	free(items);
     } else {
-	for (i = 0; i < totalLines; i++) {
+	for (int i = 0; i < totalLines; i++) {
 	    free(charBuf[i]);
 	}
 	free(charBuf);
@@ -407,7 +404,6 @@ static XftColor	aacolor;
 int 
 InitAAText(XParms xp, Parms p, int64_t reps)
 {
-    int			i, j;
     char		ch;
     XRenderColor	color;
 
@@ -457,12 +453,12 @@ InitAAText(XParms xp, Parms p, int64_t reps)
     totalLines = '\177' - ' ' + 1;
     if (totalLines > reps) totalLines = reps;
 
-    charBuf = (char **) malloc(totalLines*sizeof (char *));
+    charBuf = malloc(totalLines * sizeof (char *));
 
-    for (i = 0; i != totalLines; i++) {
-	charBuf[i] = (char *) malloc (sizeof (char)*charsPerLine);
+    for (int i = 0; i != totalLines; i++) {
+	charBuf[i] = malloc (sizeof (char) * charsPerLine);
 	ch = i + ' ';
-	for (j = 0; j != charsPerLine; j++) {
+	for (int j = 0; j != charsPerLine; j++) {
 	    charBuf[i][j] = ch;
 	    if (ch == '\177') ch = ' '; else ch++;
 	}
@@ -473,11 +469,11 @@ InitAAText(XParms xp, Parms p, int64_t reps)
 void 
 DoAAText(XParms xp, Parms p, int64_t reps)
 {
-    int     i, line, startLine;
+    int     line, startLine;
 
     startLine = 0;
     line = 0;
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	XftDrawString8 (aadraw, &aacolor, aafont, 
 		       XPOS, ypos, (unsigned char *) charBuf[line], charsPerLine);
 	ypos += height;
@@ -495,10 +491,8 @@ DoAAText(XParms xp, Parms p, int64_t reps)
 void 
 EndAAText(XParms xp, Parms p)
 {
-    int i;
-
     if(!aadraw)return;
-    for (i = 0; i != totalLines; i++)
+    for (int i = 0; i != totalLines; i++)
 	free(charBuf[i]);
     free(charBuf);
     XftDrawDestroy (aadraw);

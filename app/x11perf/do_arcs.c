@@ -31,7 +31,6 @@ static GC   pgc;
 static void 
 GenerateCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 {
-    int     i;
     int     rows;       /* Number of rows filled in current column	    */
     int     x, y;       /* base of square to draw the circle in		    */
     int     xorg, yorg; /* Used to get from column to column or row to row  */
@@ -46,13 +45,13 @@ GenerateCircles(XParms xp, Parms p, Bool partialArcs, Bool ddashed)
 
     size = p->special;
     half = (size + 19) / 20;
-    arcs = (XArc *)malloc((p->objects) * sizeof(XArc));
+    arcs = malloc((p->objects) * sizeof(XArc));
     x = xorg = half; y = yorg = half;
     rows = 0;
     startAngle = DegreesToX(0);
     arcAngle = DegreesToX(360);
 
-    for (i = 0; i != p->objects; i++) {    
+    for (int i = 0; i != p->objects; i++) {
 	arcs[i].x = x;
 	arcs[i].y = y;
 	arcs[i].width = size;
@@ -239,7 +238,6 @@ GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
     int     size;
     int     half;
     int     rows;       /* Number of rows filled in current column	    */
-    int     i;
     int     x, y;	    /* base of square to draw ellipse in	    */
     int     vsize, vsizeinc;
     int     dir;
@@ -252,7 +250,7 @@ GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
 
     size = p->special;
     half = (size + 19) / 20;
-    arcs = (XArc *)malloc((p->objects) * sizeof(XArc));
+    arcs = malloc((p->objects) * sizeof(XArc));
     vsize = 1;
     vsizeinc = (size - 1) / (p->objects - 1);
     if (vsizeinc == 0) vsizeinc = 1;
@@ -263,7 +261,7 @@ GenerateEllipses(XParms xp, Parms p, int partialArcs, Bool ddashed)
     startAngle = DegreesToX(0);
     arcAngle = DegreesToX(360);
 
-    for (i = 0; i != p->objects; i++) {    
+    for (int i = 0; i != p->objects; i++) {
 	arcs[i].x = x;
 	arcs[i].y = y;
 	if ((i & 1) ^ dir) {
@@ -454,9 +452,7 @@ InitWideDoubleDashedEllipses(XParms xp, Parms p, int64_t reps)
 void 
 DoArcs(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         XDrawArcs(xp->d, xp->w, pgc, arcs, p->objects);
         if (pgc == xp->ddbggc)
             pgc = xp->ddfggc;
@@ -473,9 +469,7 @@ DoArcs(XParms xp, Parms p, int64_t reps)
 void 
 DoFilledArcs(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         XFillArcs(xp->d, xp->w, pgc, arcs, p->objects);
         if (pgc == xp->ddbggc)
             pgc = xp->ddfggc;

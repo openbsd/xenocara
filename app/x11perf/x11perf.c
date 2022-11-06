@@ -289,12 +289,10 @@ RoundTo3Digits(double d)
 static void 
 ReportTimes(double usecs, int64_t n, char *str, int average)
 {
-    double msecsperobj, objspersec;
-
     if(usecs != 0.0)
     {
-        msecsperobj = usecs / (1000.0 * (double)n);
-        objspersec = (double) n * 1000000.0 / usecs;
+        double msecsperobj = usecs / (1000.0 * (double)n);
+        double objspersec = (double) n * 1000000.0 / usecs;
 
         /* Round obj/sec to 3 significant digits.  Leave msec untouched, to
 	   allow averaging results from several repetitions. */
@@ -324,7 +322,7 @@ static char *program_name;
 static void usage(void) _X_NORETURN;
 
 /*
- * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
+ * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obsolete)
  * If found, remove it from command line.  Don't go past a lone -.
  */
 static char *
@@ -334,9 +332,8 @@ Get_Display_Name(int *pargc, /* MODIFIED */
     int     argc = *pargc;
     char    **pargv = argv+1;
     char    *displayname = NULL;
-    int     i;
 
-    for (i = 1; i != argc; i++) {
+    for (int i = 1; i != argc; i++) {
 	char *arg = argv[i];
 
 	if (!strcmp (arg, "-display") || !strcmp (arg, "-d")) {
@@ -370,10 +367,9 @@ GetVersion(int *pargc, /* MODIFIED */
     int     argc = *pargc;
     char    **pargv = argv+1;
     Version version = VERSION1_6;
-    int     i;
     Bool    found = False;
 
-    for (i = 1; i != argc; i++) {
+    for (int i = 1; i != argc; i++) {
 	char *arg = argv[i];
 
 	if (!strcmp (arg, "-v1.2")) {
@@ -549,9 +545,7 @@ HardwareSync(XParms xp)
 static void 
 DoHardwareSync(XParms xp, Parms p, int64_t reps)    
 {
-    int i;
-    
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
 	HardwareSync(xp);
 	CheckAbort ();
     }
@@ -600,12 +594,11 @@ CreatePerfWindow(XParms xp, int x, int y, int width, int height)
 static void 
 CreateClipWindows(XParms xp, int clips)
 {
-    int j;
     XWindowAttributes    xwa;
 
     (void) XGetWindowAttributes(xp->d, xp->w, &xwa);
     if (clips > MAXCLIP) clips = MAXCLIP;
-    for (j = 0; j != clips; j++) {
+    for (int j = 0; j != clips; j++) {
 	clipWindows[j] = CreatePerfWindow(xp,
 	    xwa.x + ws[j].x, xwa.y + ws[j].y, ws[j].width, ws[j].height);
     }
@@ -615,10 +608,8 @@ CreateClipWindows(XParms xp, int clips)
 static void 
 DestroyClipWindows(XParms xp, int clips)
 {
-    int j;
-
     if (clips > MAXCLIP) clips = MAXCLIP;
-    for (j = 0; j != clips; j++) {
+    for (int j = 0; j != clips; j++) {
 	XDestroyWindow(xp->d, clipWindows[j]);
     }
 } /* DestroyClipWindows */
@@ -832,7 +823,6 @@ ProcessTest(XParms xp, Test *test, int func, unsigned long pm, char *label)
 {
     double  time, totalTime;
     long long reps;
-    int     j;
 
     xp->planemask = pm;
     xp->func = func;
@@ -862,7 +852,7 @@ ProcessTest(XParms xp, Test *test, int func, unsigned long pm, char *label)
 	CreateClipWindows(xp, test->clips);
 
 	totalTime = 0.0;
-	for (j = 0; j != repeat; j++) {
+	for (int j = 0; j != repeat; j++) {
 	    DisplayStatus(xp->d, "Testing", label, j+1);
 	    time = DoTest(xp, test, reps);
 	    if (abortTest)
@@ -911,7 +901,7 @@ main(int argc, char *argv[])
 
     /* Save away argv, argc, for usage to print out */
     saveargc = argc;
-    saveargv = (char **) malloc(argc * sizeof(char *));
+    saveargv = malloc(argc * sizeof(char *));
     for (i = 0; i != argc; i++) {
 	saveargv[i] = argv[i];
     }
@@ -922,7 +912,7 @@ main(int argc, char *argv[])
 
     /* Count number of tests */
     ForEachTest(numTests);
-    doit = (Bool *)calloc(numTests, sizeof(Bool));
+    doit = calloc(numTests, sizeof(Bool));
 
     /* Parse arguments */
     program_name = argv[0];
@@ -1119,7 +1109,6 @@ main(int argc, char *argv[])
 	/* Just print out list of tests for use with .sh programs that
 	   assemble data from different x11perf runs into a nice format */
 	ForEachTest (i) {
-	    int child;
 	    if (doit[i]) {
 		switch (test[i].testType) {
 		    case NONROP:
@@ -1162,7 +1151,7 @@ main(int argc, char *argv[])
 			break;
 		    
 		    case WINDOW:
-			for (child = 0; child != numSubWindows; child++) {
+			for (int child = 0; child != numSubWindows; child++) {
 			    printf ("%s (%ld kids)\n",
 				LABELP(i), subWindows[child]);
 			}
@@ -1327,7 +1316,6 @@ main(int argc, char *argv[])
     printf("Sync time adjustment is %6.4f msecs.\n\n", syncTime/1000);
 
     ForEachTest (i) {
-	int child;
 	char label[200];
 
 	if (doit[i] && (test[i].versions & xparms.version)) {
@@ -1379,7 +1367,7 @@ main(int argc, char *argv[])
 		
 		case WINDOW:
 		    /* Loop through number of children array */
-		    for (child = 0; child != numSubWindows; child++) {
+		    for (int child = 0; child != numSubWindows; child++) {
 			test[i].parms.objects = subWindows[child];
 			sprintf(label, "%s (%d kids)",
 			    LABELP(i), test[i].parms.objects);
@@ -1468,12 +1456,10 @@ GetNumbers (int argi, int argc, char **argv, unsigned long *intsp, int *nump)
 {
     char    *words[256];
     int	    count;
-    int	    i;
-    int	    flip;
 
     count = GetWords (argi, argc, argv, words, nump);
-    for (i = 0; i < count; i++) {
-	flip = 0;
+    for (int i = 0; i < count; i++) {
+	int flip = 0;
 	if (!strncmp (words[i], "~", 1)) {
 	    words[i]++;
 	    flip = ~0;
@@ -1491,11 +1477,10 @@ GetRops (int argi, int argc, char **argv, int *ropsp, int *nump)
 {
     char    *words[256];
     int	    count;
-    int	    i;
     int	    rop;
 
     count = GetWords (argi, argc, argv, words, nump);
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
 	if (!strncmp (words[i], "GX", 2))
 	    words[i] += 2;
 	if (!strcmp (words[i], "all")) {
@@ -1563,8 +1548,7 @@ FormatFromName (char *name)
 static const char *
 NameFromFormat (int format)
 {
-    int i;
-    for (i = 0; i < NUM_FORMATS; i++)
+    for (int i = 0; i < NUM_FORMATS; i++)
 	if (formatNames[i].rop == format)
 	    return formatNames[i].name;
     return NULL;
@@ -1576,10 +1560,11 @@ GetFormats (int argi, int argc, char **argv, int *formatsp, int *nump)
     char    *words[256];
     int	    count;
     int	    i;
-    int	    format;
 
     count = GetWords (argi, argc, argv, words, nump);
     for (i = 0; i < count; i++) {
+        int format;
+
 	if (!strcmp (words[i], "all")) {
 	    for (i = 0; i < NUM_FORMATS; i++)
 		formatsp[i] = formatNames[i].rop;

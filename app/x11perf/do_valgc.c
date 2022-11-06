@@ -44,10 +44,9 @@ InitGC(XParms xp, Parms p, int64_t reps)
 void 
 DoChangeGC(XParms xp, Parms p, int64_t reps)
 {
-    int		i;
     XGCValues   gcv;
 
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         gcv.foreground = xp->foreground;
         XChangeGC(xp->d, xp->fggc, GCForeground , &gcv);
         XDrawPoint(xp->d, win[0], xp->fggc, 5, 5);       

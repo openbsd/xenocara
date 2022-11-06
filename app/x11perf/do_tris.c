@@ -1,3 +1,6 @@
+
+
+
 /*****************************************************************************
 Copyright 1988, 1989 by Digital Equipment Corporation, Maynard, Massachusetts.
 
@@ -58,7 +61,7 @@ Distance(XPoint p1, XPoint p2)
 int 
 InitTriangles(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j, numPoints;
+    int     numPoints;
     int     rows;
     int     x, y;
     int     size, iradius;
@@ -88,15 +91,15 @@ InitTriangles(XParms xp, Parms p, int64_t reps)
     iradius = (int) (radius + 0.5);
 
     numPoints = (p->objects) * NUM_POINTS;  
-    points = (XPoint *)malloc(numPoints * sizeof(XPoint));
+    points = malloc(numPoints * sizeof(XPoint));
     curPoint = points;
     x = iradius;
     y = iradius;
     rows = 0;
     aarea = 0.0;
 
-    for (i = 0; i != p->objects; i++) {
-	for (j = 0; j != NUM_POINTS; j++) {
+    for (int i = 0; i != p->objects; i++) {
+	for (int j = 0; j != NUM_POINTS; j++) {
 	    phi2 = phi + ((double) j) * delta;
 	    curPoint->x = (int) ((double)x + (radius * cos(phi2)) + 0.5);
 	    curPoint->y = (int) ((double)y + (radius * sin(phi2)) + 0.5);
@@ -134,12 +137,9 @@ InitTriangles(XParms xp, Parms p, int64_t reps)
 void 
 DoTriangles(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
-    XPoint  *curPoint;
-
-    for (i = 0; i != reps; i++) {
-        curPoint = points;
-        for (j = 0; j != p->objects; j++) {
+    for (int i = 0; i != reps; i++) {
+        XPoint  *curPoint = points;
+        for (int j = 0; j != p->objects; j++) {
             XFillPolygon(xp->d, xp->w, pgc, curPoint, NUM_POINTS, Convex, 
 			 CoordModeOrigin);
             curPoint += NUM_POINTS;
@@ -209,10 +209,7 @@ XPolyTriangle(register Display *dpy,
 void 
 DoTriangles(XParms xp, Parms p, int64_t reps)
 {
-    int     i, j;
-    XPoint  *curPoint;
-
-    for (i = 0; i != reps; i++) {
+    for (int i = 0; i != reps; i++) {
         XPolyTriangle (xp->d, xp->w, pgc, points, p->objects, Convex, 
 			 CoordModeOrigin);
         if (pgc == xp->bggc)

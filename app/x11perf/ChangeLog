@@ -1,3 +1,72 @@
+commit 95ff3954dea7deb1cc995c09c404ebb22b6f18a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 19:19:52 2022 -0700
+
+    x11perf 1.6.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 74b90ae3c226295a6ff196b71273983da3e1a70e
+Author: Aaron Plattner <aplattner@nvidia.com>
+Date:   Wed Sep 14 10:20:47 2022 -0700
+
+    tests: Skip trapezoids for unsupported XRender formats
+    
+    xserver commit 436fd7e8b4966c305ea9c43f3c14c2ca04c35539 removed support
+    for PictStandardA4. x11perf assumes this format always exists, so trying
+    to run the -aa4trap* tests causes a segmentation fault when
+    `XRenderFindStandardFormat (xp->d, PictStandardA4)` returns NULL.
+    
+    Since the server change was intentional, skip the tests if
+    XRenderFindStandardFormat() returns NULL.
+    
+    See also: https://gitlab.freedesktop.org/xorg/xserver/-/commit/436fd7e8b4966c305ea9c43f3c14c2ca04c35539
+
+commit c420f450d0a2b1f26d4043334bb8b6524fea4b07
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 13:10:52 2022 -0700
+
+    Stop casting return value of malloc() and calloc()
+    
+    Not needed in C89 and later, and may hide errors
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2900d7a7e7929414268cb142bf00c57d370e1396
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 13:00:22 2022 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f021fe33579e75bd19e7b5784858be14c3e3c4b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 21 15:57:38 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7d9ca95f3afacd4d14eccc9d3492d651b8936fe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 21 15:52:42 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8527d4cf67018d793e8912f66fde0cd8a19d30a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 13:02:18 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ed96e6ce90f8a2177db00c56c2af9311bc167cc4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 15:49:38 2019 -0700
@@ -641,7 +710,7 @@ Date:   Thu Dec 6 16:37:08 2007 -0500
     Replace static ChangeLog with dist-hook to generate from git log
 
 commit b1c5b72bb4bb5f3e116255f9d04b368137ff25f7
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Nov 1 09:13:43 2007 +0100
 
     Fix typos in descriptions of -compwinwin{1,5}00.
@@ -874,7 +943,7 @@ Date:   Sat Jul 16 23:29:38 2005 +0000
         correctly
 
 commit 68ebb5b755791822c2f1d9f9659c2ee94bb63f1c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 29 20:41:01 2005 +0000
 
     Add x11perf build system Add some x11perf shell script to symlink.sh

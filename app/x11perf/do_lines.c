@@ -31,7 +31,6 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
 {
     int size;
     int half;		/* Half of width if wide line		        */
-    int i;
     int     rows;       /* Number of rows filled in current column      */
     int x, y;		/* Next point					*/
     int xdir, ydir;	/* Which direction x, y are going		*/
@@ -51,7 +50,7 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
     size4 = 4 * (size+1);
     half = (size + 19) / 20;
 
-    points = (XPoint *)malloc((p->objects+1) * sizeof(XPoint));
+    points = malloc((p->objects+1) * sizeof(XPoint));
 
     /* All this x, x1, x1inc, etc. stuff is to create a pattern that
 	(1) scans down the screen vertically
@@ -76,7 +75,7 @@ GenerateLines(XParms xp, Parms p, Bool ddashed)
     points[0].x = x;
     points[0].y = y;
 
-    for (i = 1; i != (p->objects+1); i++) {    
+    for (int i = 1; i != (p->objects+1); i++) {
 	phase = phasef;
 	switch (phase / (size+1)) {
 	case 0:
@@ -275,9 +274,7 @@ InitWideDoubleDashedLines(XParms xp, Parms p, int64_t reps)
 void 
 DoLines(XParms xp, Parms p, int64_t reps)
 {
-    int i;
-
-    for (i = 0; i != reps; i++)
+    for (int i = 0; i != reps; i++)
     {
         XDrawLines(xp->d, xp->w, pgc, points, p->objects+1, CoordModeOrigin);
         if (pgc == xp->ddbggc)
