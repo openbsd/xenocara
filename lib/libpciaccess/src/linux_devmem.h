@@ -30,5 +30,10 @@
  * \author Ian Romanick <idr@us.ibm.com>
  */
 
+#ifndef LINUX_DEVMEM_H
+#define LINUX_DEVMEM_H
+
 extern int pci_device_linux_devmem_read_rom(struct pci_device *dev,
 					    void *buffer);
+
+#endif

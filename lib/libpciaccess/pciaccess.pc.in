@@ -8,3 +8,4 @@ Description: Library providing generic access to the PCI bus and devices.
 Version: @PACKAGE_VERSION@
 Cflags: -I${includedir}
 Libs: -L${libdir} -lpciaccess
+Libs.Private: @PCIACCESS_LIBS@

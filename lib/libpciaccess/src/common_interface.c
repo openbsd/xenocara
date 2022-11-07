@@ -70,6 +70,24 @@
 # define HTOLE_32(x)   (x)
 #endif /* Solaris */
 
+#elif defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+
+#define htobe16(x) OSSwapHostToBigInt16(x)
+#define htole16(x) OSSwapHostToLittleInt16(x)
+#define be16toh(x) OSSwapBigToHostInt16(x)
+#define le16toh(x) OSSwapLittleToHostInt16(x)
+
+#define htobe32(x) OSSwapHostToBigInt32(x)
+#define htole32(x) OSSwapHostToLittleInt32(x)
+#define be32toh(x) OSSwapBigToHostInt32(x)
+#define le32toh(x) OSSwapLittleToHostInt32(x)
+
+#define htobe64(x) OSSwapHostToBigInt64(x)
+#define htole64(x) OSSwapHostToLittleInt64(x)
+#define be64toh(x) OSSwapBigToHostInt64(x)
+#define le64toh(x) OSSwapLittleToHostInt64(x)
+
 #else
 
 #include <sys/endian.h>
@@ -656,6 +674,16 @@ pci_device_enable(struct pci_device *dev)
 
     if (pci_sys->methods->enable)
 	pci_sys->methods->enable(dev);
+}
+
+void
+pci_device_disable(struct pci_device *dev)
+{
+	if (dev == NULL)
+		return;
+
+	if (pci_sys->methods->disable)
+		pci_sys->methods->disable(dev);
 }
 
 /**

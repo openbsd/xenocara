@@ -27,3 +27,5 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/src
 LDADD =  $(top_builddir)/src/libpciaccess.la
 
 scanpci_SOURCES = scanpci.c
+
+EXTRA_DIST = meson.build

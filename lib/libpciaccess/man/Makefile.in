@@ -195,6 +195,8 @@ STRICT_CFLAGS = @STRICT_CFLAGS@
 STRIP = @STRIP@
 VERSION = @VERSION@
 XORG_MAN_PAGE = @XORG_MAN_PAGE@
+ZLIB_CFLAGS = @ZLIB_CFLAGS@
+ZLIB_LIBS = @ZLIB_LIBS@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
 abs_top_builddir = @abs_top_builddir@
@@ -239,6 +241,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -249,7 +252,10 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 appman_PRE = scanpci.man
 noinst_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = \
+	$(appman_PRE) \
+	meson.build
+
 CLEANFILES = $(noinst_DATA)
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure

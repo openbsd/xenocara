@@ -33,9 +33,12 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <strings.h>
+#include <mach.h>
 #include <hurd.h>
 #include <hurd/pci.h>
 #include <hurd/paths.h>
+#include <hurd/fs.h>
+#include <device/device.h>
 
 #include "x86_pci.h"
 #include "pciaccess.h"
@@ -52,7 +55,10 @@
 
 /* File names */
 #define FILE_CONFIG_NAME "config"
+#define FILE_REGION_NAME "region"
 #define FILE_ROM_NAME "rom"
+
+#define LEGACY_REGION -1
 
 /* Level in the fs tree */
 typedef enum {
@@ -65,6 +71,7 @@ typedef enum {
 
 struct pci_system_hurd {
     struct pci_system system;
+    mach_port_t root;
 };
 
 static int
@@ -146,8 +153,167 @@ pci_device_hurd_probe(struct pci_device *dev)
     return 0;
 }
 
+static void
+pci_system_hurd_destroy(void)
+{
+    struct pci_system_hurd *pci_sys_hurd = (struct pci_system_hurd *)pci_sys;
+
+    x86_disable_io();
+    mach_port_deallocate(mach_task_self(), pci_sys_hurd->root);
+}
+
+static int
+pci_device_hurd_map_range(struct pci_device *dev,
+    struct pci_device_mapping *map)
+{
+#if 0
+    struct pci_device_private *d = (struct pci_device_private *)dev;
+#endif
+    struct pci_system_hurd *pci_sys_hurd = (struct pci_system_hurd *)pci_sys;
+    int err = 0;
+    file_t file = MACH_PORT_NULL;
+    memory_object_t robj, wobj, pager;
+    vm_offset_t offset;
+    vm_prot_t prot = VM_PROT_READ;
+    const struct pci_mem_region *region;
+    const struct pci_mem_region rom_region = {
+#if 0
+    /* FIXME: We should be doing this: */
+        .base_addr = d->rom_base,
+    /* But currently pci-arbiter cannot get rom_base from libpciaccess, so we
+       are here assuming the caller is mapping from the rom base */
+#else
+        .base_addr = map->base,
+#endif
+        .size = dev->rom_size,
+    };
+    int flags = O_RDONLY;
+    char server[NAME_MAX];
+
+    if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE) {
+        prot |= VM_PROT_WRITE;
+        flags = O_RDWR;
+    }
+
+    if (map->region != LEGACY_REGION) {
+      region = &dev->regions[map->region];
+      snprintf(server, NAME_MAX, "%04x/%02x/%02x/%01u/%s%01u",
+	       dev->domain, dev->bus, dev->dev, dev->func,
+	       FILE_REGION_NAME, map->region);
+    } else {
+      region = &rom_region;
+      snprintf(server, NAME_MAX, "%04x/%02x/%02x/%01u/%s",
+	       dev->domain, dev->bus, dev->dev, dev->func,
+	       FILE_ROM_NAME);
+      if (map->base < region->base_addr ||
+	  map->base + map->size > region->base_addr + region->size)
+	return EINVAL;
+    }
+
+    file = file_name_lookup_under (pci_sys_hurd->root, server, flags, 0);
+    if (! MACH_PORT_VALID (file)) {
+        return errno;
+    }
+
+    err = io_map (file, &robj, &wobj);
+    mach_port_deallocate (mach_task_self(), file);
+    if (err)
+        return err;
+
+    switch (prot & (VM_PROT_READ|VM_PROT_WRITE)) {
+    case VM_PROT_READ:
+        pager = robj;
+        if (wobj != MACH_PORT_NULL)
+            mach_port_deallocate (mach_task_self(), wobj);
+        break;
+    case VM_PROT_READ|VM_PROT_WRITE:
+        if (robj == wobj) {
+            if (robj == MACH_PORT_NULL)
+                return EPERM;
+
+            pager = wobj;
+            /* Remove extra reference.  */
+            mach_port_deallocate (mach_task_self (), pager);
+        }
+        else {
+            if (robj != MACH_PORT_NULL)
+                mach_port_deallocate (mach_task_self (), robj);
+            if (wobj != MACH_PORT_NULL)
+                mach_port_deallocate (mach_task_self (), wobj);
+
+            return EPERM;
+        }
+        break;
+    default:
+        return EINVAL;
+    }
+
+    offset = map->base - region->base_addr;
+    err = vm_map (mach_task_self (), (vm_address_t *)&map->memory, map->size,
+                  0, 1,
+                  pager, /* a memory object proxy containing only the region */
+                  offset, /* offset from region start */
+                  0, prot, VM_PROT_ALL, VM_INHERIT_SHARE);
+    mach_port_deallocate (mach_task_self(), pager);
+
+    return err;
+}
+
+static int
+pci_device_hurd_unmap_range(struct pci_device *dev,
+    struct pci_device_mapping *map)
+{
+    int err;
+    err = pci_device_generic_unmap_range(dev, map);
+    map->memory = NULL;
+
+    return err;
+}
+
+static int
+pci_device_hurd_map_legacy(struct pci_device *dev, pciaddr_t base,
+    pciaddr_t size, unsigned map_flags, void **addr)
+{
+    struct pci_device_mapping map;
+    int err;
+
+    if (base >= 0xC0000 && base < 0x100000) {
+      /* FIXME: We would rather know for sure from d->rom_base whether this is
+         the ROM or not but currently pci-arbiter cannot get rom_base from
+         libpciaccess, so we are here assuming the caller is mapping from the
+         rom base */
+      map.base = base;
+      map.size = size;
+      map.flags = map_flags;
+      map.region = LEGACY_REGION;
+      err = pci_device_hurd_map_range(dev, &map);
+      *addr = map.memory;
+
+      if (!err)
+	return 0;
+    }
+
+    /* This is probably not the ROM, this is probably something like VRam or
+       the interrupt table, just map it by hand.  */
+    return pci_system_x86_map_dev_mem(addr, base, size, !!(map_flags & PCI_DEV_MAP_FLAG_WRITABLE));
+}
+
+static int
+pci_device_hurd_unmap_legacy(struct pci_device *dev, void *addr,
+    pciaddr_t size)
+{
+    struct pci_device_mapping map;
+
+    map.size = size;
+    map.flags = 0;
+    map.region = LEGACY_REGION;
+    map.memory = addr;
+
+    return pci_device_hurd_unmap_range(dev, &map);
+}
+
 /*
- * Read `nbytes' bytes from `reg' in device's configuretion space
+ * Read `nbytes' bytes from `reg' in device's configuration space
  * and store them in `buf'.
  *
  * It's assumed that `nbytes' bytes are allocated in `buf'
@@ -162,7 +328,7 @@ pciclient_cfg_read(mach_port_t device_port, int reg, char *buf,
 
     data = buf;
     nread = *nbytes;
-    err = pci_conf_read(device_port, reg, &data, &nread, *nbytes);
+    err = __pci_conf_read(device_port, reg, &data, &nread, *nbytes);
     if (err)
         return err;
 
@@ -189,7 +355,7 @@ pciclient_cfg_write(mach_port_t device_port, int reg, char *buf,
     int err;
     size_t nwrote;
 
-    err = pci_conf_write(device_port, reg, buf, *nbytes, &nwrote);
+    err = __pci_conf_write(device_port, reg, buf, *nbytes, &nwrote);
 
     if (!err)
         *nbytes = nwrote;
@@ -295,32 +461,54 @@ pci_device_hurd_read_rom(struct pci_device * dev, void * buffer)
  * Deallocate the port before destroying the device.
  */
 static void
-pci_device_hurd_destroy(struct pci_device *dev)
+pci_device_hurd_destroy_device(struct pci_device *dev)
 {
     struct pci_device_private *d = (struct pci_device_private*) dev;
 
     mach_port_deallocate (mach_task_self (), d->device_port);
 }
 
+static struct dirent64 *
+simple_readdir(mach_port_t port, uint32_t *first_entry)
+{
+    char *data;
+    int nentries = 0;
+    vm_size_t size;
+
+    dir_readdir (port, &data, &size, *first_entry, 1, 0, &nentries);
+
+    if (nentries == 0) {
+        return NULL;
+    }
+
+    *first_entry = *first_entry + 1;
+    return (struct dirent64 *)data;
+}
+
 /* Walk through the FS tree to see what is allowed for us */
 static int
-enum_devices(const char *parent, struct pci_device_private **device,
-                int domain, int bus, int dev, int func, tree_level lev)
+enum_devices(mach_port_t pci_port, const char *parent, int domain,
+             int bus, int dev, int func, tree_level lev)
 {
     int err, ret;
-    DIR *dir;
-    struct dirent *entry;
+    struct dirent64 *entry = NULL;
     char path[NAME_MAX];
     char server[NAME_MAX];
-    uint32_t reg;
+    uint32_t reg, count = 0;
     size_t toread;
-    mach_port_t device_port;
+    mach_port_t cwd_port, device_port;
+    struct pci_device_private *d, *devices;
 
-    dir = opendir(parent);
-    if (!dir)
-        return errno;
+    if (lev > LEVEL_FUNC + 1) {
+        return 0;
+    }
+    cwd_port = file_name_lookup_under (pci_port, parent,
+                                       O_DIRECTORY | O_RDONLY | O_EXEC, 0);
+    if (cwd_port == MACH_PORT_NULL) {
+        return 0;
+    }
 
-    while ((entry = readdir(dir)) != 0) {
+    while ((entry = simple_readdir(cwd_port, &count)) != NULL) {
         snprintf(path, NAME_MAX, "%s/%s", parent, entry->d_name);
         if (entry->d_type == DT_DIR) {
             if (!strncmp(entry->d_name, ".", NAME_MAX)
@@ -329,8 +517,9 @@ enum_devices(const char *parent, struct pci_device_private **device,
 
             errno = 0;
             ret = strtol(entry->d_name, 0, 16);
-            if (errno)
+            if (errno) {
                 return errno;
+            }
 
             /*
              * We found a valid directory.
@@ -350,79 +539,104 @@ enum_devices(const char *parent, struct pci_device_private **device,
                 func = ret;
                 break;
             default:
-                return -1;
+                return 0;
             }
 
-            err = enum_devices(path, device, domain, bus, dev, func, lev+1);
-            if (err == EPERM)
-                continue;
-        }
-        else {
+            err = enum_devices(pci_port, path, domain, bus, dev, func, lev+1);
+            if (err && err != EPERM && err != EACCES) {
+                return 0;
+            }
+        } else {
             if (strncmp(entry->d_name, FILE_CONFIG_NAME, NAME_MAX))
                 /* We are looking for the config file */
                 continue;
 
             /* We found an available virtual device, add it to our list */
-            snprintf(server, NAME_MAX, "%s/%04x/%02x/%02x/%01u/%s",
-                     _SERVERS_BUS_PCI, domain, bus, dev, func,
+            snprintf(server, NAME_MAX, "./%04x/%02x/%02x/%01u/%s",
+                     domain, bus, dev, func,
                      entry->d_name);
-            device_port = file_name_lookup(server, 0, 0);
-            if (device_port == MACH_PORT_NULL)
-                return errno;
+            device_port = file_name_lookup_under(pci_port, server, O_RDONLY, 0);
+            if (device_port == MACH_PORT_NULL) {
+                return 0;
+            }
 
             toread = sizeof(reg);
             err = pciclient_cfg_read(device_port, PCI_VENDOR_ID, (char*)&reg,
                                      &toread);
-            if (err)
+            if (err) {
+                mach_port_deallocate (mach_task_self (), device_port);
                 return err;
-            if (toread != sizeof(reg))
+            }
+            if (toread != sizeof(reg)) {
+                mach_port_deallocate (mach_task_self (), device_port);
                 return -1;
+            }
 
-            (*device)->base.domain = domain;
-            (*device)->base.bus = bus;
-            (*device)->base.dev = dev;
-            (*device)->base.func = func;
-            (*device)->base.vendor_id = PCI_VENDOR(reg);
-            (*device)->base.device_id = PCI_DEVICE(reg);
+            devices = realloc(pci_sys->devices, (pci_sys->num_devices + 1)
+                              * sizeof(struct pci_device_private));
+            if (!devices) {
+                mach_port_deallocate (mach_task_self (), device_port);
+                return ENOMEM;
+            }
+
+            d = devices + pci_sys->num_devices;
+            memset(d, 0, sizeof(struct pci_device_private));
+
+            d->base.domain = domain;
+            d->base.bus = bus;
+            d->base.dev = dev;
+            d->base.func = func;
+            d->base.vendor_id = PCI_VENDOR(reg);
+            d->base.device_id = PCI_DEVICE(reg);
 
             toread = sizeof(reg);
             err = pciclient_cfg_read(device_port, PCI_CLASS, (char*)&reg,
                                      &toread);
-            if (err)
+            if (err) {
+                mach_port_deallocate (mach_task_self (), device_port);
                 return err;
-            if (toread != sizeof(reg))
+            }
+            if (toread != sizeof(reg)) {
+                mach_port_deallocate (mach_task_self (), device_port);
                 return -1;
+            }
 
-            (*device)->base.device_class = reg >> 8;
-            (*device)->base.revision = reg & 0xFF;
+            d->base.device_class = reg >> 8;
+            d->base.revision = reg & 0xFF;
 
             toread = sizeof(reg);
             err = pciclient_cfg_read(device_port, PCI_SUB_VENDOR_ID,
                                      (char*)&reg, &toread);
-            if (err)
+            if (err) {
+                mach_port_deallocate (mach_task_self (), device_port);
                 return err;
-            if (toread != sizeof(reg))
+            }
+            if (toread != sizeof(reg)) {
+                mach_port_deallocate (mach_task_self (), device_port);
                 return -1;
+            }
 
-            (*device)->base.subvendor_id = PCI_VENDOR(reg);
-            (*device)->base.subdevice_id = PCI_DEVICE(reg);
+            d->base.subvendor_id = PCI_VENDOR(reg);
+            d->base.subdevice_id = PCI_DEVICE(reg);
 
-            (*device)->device_port = device_port;
+            d->device_port = device_port;
 
-            (*device)++;
+            pci_sys->devices = devices;
+            pci_sys->num_devices++;
         }
     }
+    mach_port_deallocate (mach_task_self (), cwd_port);
 
     return 0;
 }
 
 static const struct pci_system_methods hurd_pci_methods = {
-    .destroy = pci_system_x86_destroy,
-    .destroy_device = pci_device_hurd_destroy,
+    .destroy = pci_system_hurd_destroy,
+    .destroy_device = pci_device_hurd_destroy_device,
     .read_rom = pci_device_hurd_read_rom,
     .probe = pci_device_hurd_probe,
-    .map_range = pci_device_x86_map_range,
-    .unmap_range = pci_device_x86_unmap_range,
+    .map_range = pci_device_hurd_map_range,
+    .unmap_range = pci_device_hurd_unmap_range,
     .read = pci_device_hurd_read,
     .write = pci_device_hurd_write,
     .fill_capabilities = pci_fill_capabilities_generic,
@@ -434,24 +648,35 @@ static const struct pci_system_methods hurd_pci_methods = {
     .write32 = pci_device_x86_write32,
     .write16 = pci_device_x86_write16,
     .write8 = pci_device_x86_write8,
-    .map_legacy = pci_device_x86_map_legacy,
-    .unmap_legacy = pci_device_x86_unmap_legacy,
+    .map_legacy = pci_device_hurd_map_legacy,
+    .unmap_legacy = pci_device_hurd_unmap_legacy,
 };
+
+/* Get the name of the server using libpciaccess if any */
+extern char *netfs_server_name;
+#pragma weak netfs_server_name
 
 _pci_hidden int
 pci_system_hurd_create(void)
 {
-    struct pci_device_private *device;
     int err;
     struct pci_system_hurd *pci_sys_hurd;
-    size_t ndevs;
-    mach_port_t pci_server_port;
+    mach_port_t device_master;
+    mach_port_t pci_port = MACH_PORT_NULL;
+    mach_port_t root = MACH_PORT_NULL;
 
-    /* If we can open pci cfg io ports on hurd,
-     * we are the arbiter, therefore try x86 method first */
-    err = pci_system_x86_create();
-    if (!err)
-        return 0;
+    if (&netfs_server_name && netfs_server_name
+        && !strcmp(netfs_server_name, "pci-arbiter")) {
+      /* We are a PCI arbiter, try the x86 way */
+      err = pci_system_x86_create();
+      if (!err)
+          return 0;
+    }
+
+    /*
+     * From this point on, we are either a client or a nested arbiter.
+     * Both will connect to a master arbiter.
+     */
 
     pci_sys_hurd = calloc(1, sizeof(struct pci_system_hurd));
     if (pci_sys_hurd == NULL) {
@@ -462,35 +687,36 @@ pci_system_hurd_create(void)
 
     pci_sys->methods = &hurd_pci_methods;
 
-    pci_server_port = file_name_lookup(_SERVERS_BUS_PCI, 0, 0);
-    if (!pci_server_port) {
-        /* Fall back to x86 access method */
-        return pci_system_x86_create();
+    pci_sys->num_devices = 0;
+
+    err = get_privileged_ports (NULL, &device_master);
+
+    if(!err && device_master != MACH_PORT_NULL) {
+        err = device_open (device_master, D_READ, "pci", &pci_port);
+	mach_port_deallocate (mach_task_self (), device_master);
     }
 
-    /* The server gives us the number of available devices for us */
-    err = pci_get_ndevs (pci_server_port, &ndevs);
+    if (!err && pci_port != MACH_PORT_NULL) {
+        root = file_name_lookup_under (pci_port, ".", O_DIRECTORY | O_RDONLY | O_EXEC, 0);
+        device_close (pci_port);
+        mach_port_deallocate (mach_task_self (), pci_port);
+    }
+
+    if (root == MACH_PORT_NULL) {
+        root = file_name_lookup (_SERVERS_BUS_PCI, O_RDONLY, 0);
+    }
+
+    if (root == MACH_PORT_NULL) {
+        pci_system_cleanup();
+        return errno;
+    }
+
+    pci_sys_hurd->root = root;
+    err = enum_devices (root, ".", -1, -1, -1, -1, LEVEL_DOMAIN);
     if (err) {
-        mach_port_deallocate (mach_task_self (), pci_server_port);
-        /* Fall back to x86 access method */
-        return pci_system_x86_create();
+        pci_system_cleanup();
+        return err;
     }
-    mach_port_deallocate (mach_task_self (), pci_server_port);
-
-    pci_sys->num_devices = ndevs;
-    pci_sys->devices = calloc(ndevs, sizeof(struct pci_device_private));
-    if (pci_sys->devices == NULL) {
-        x86_disable_io();
-        free(pci_sys_hurd);
-        pci_sys = NULL;
-        return ENOMEM;
-    }
-
-    device = pci_sys->devices;
-    err = enum_devices(_SERVERS_BUS_PCI, &device, -1, -1, -1, -1,
-                       LEVEL_DOMAIN);
-    if (err)
-        return pci_system_x86_create();
 
     return 0;
 }

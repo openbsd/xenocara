@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2018 Damien Zammit
  * Copyright (c) 2017 Joan Lledó
- * Copyright (c) 2009, 2012 Samuel Thibault
+ * Copyright (c) 2009, 2012, 2020 Samuel Thibault
  * Heavily inspired from the freebsd, netbsd, and openbsd backends
  * (C) Copyright Eric Anholt 2006
  * (C) Copyright IBM Corporation 2006
@@ -210,6 +210,108 @@ outl(uint32_t value, uint16_t port)
 #error How to enable IO ports on this system?
 
 #endif
+
+static int cmp_devices(const void *dev1, const void *dev2)
+{
+    const struct pci_device *d1 = dev1;
+    const struct pci_device *d2 = dev2;
+
+    if (d1->bus != d2->bus) {
+        return (d1->bus > d2->bus) ? 1 : -1;
+    }
+
+    if (d1->dev != d2->dev) {
+        return (d1->dev > d2->dev) ? 1 : -1;
+    }
+
+    return (d1->func > d2->func) ? 1 : -1;
+}
+
+static void
+sort_devices(void)
+{
+    qsort(pci_sys->devices, pci_sys->num_devices,
+          sizeof (pci_sys->devices[0]), &cmp_devices);
+}
+
+#if defined(__GNU__)
+#include <mach.h>
+#include <hurd.h>
+#include <device/device.h>
+#endif
+
+int
+pci_system_x86_map_dev_mem(void **dest, size_t mem_offset, size_t mem_size, int write)
+{
+#if defined(__GNU__)
+    int err;
+    mach_port_t master_device;
+    mach_port_t devmem;
+    mach_port_t pager;
+    dev_mode_t mode = D_READ;
+    vm_prot_t prot = VM_PROT_READ;
+    int pagesize;
+
+    if (get_privileged_ports (NULL, &master_device)) {
+        *dest = 0;
+        return EPERM;
+    }
+
+    if (write) {
+        mode |= D_WRITE;
+        prot |= VM_PROT_WRITE;
+    }
+
+    err = device_open (master_device, mode, "mem", &devmem);
+    mach_port_deallocate (mach_task_self (), master_device);
+    if (err)
+        return err;
+
+    pagesize = getpagesize();
+    if (mem_size % pagesize)
+        mem_size += pagesize - (mem_size % pagesize);
+
+    err = device_map (devmem, prot, mem_offset, mem_size, &pager, 0);
+    device_close (devmem);
+    mach_port_deallocate (mach_task_self (), devmem);
+    if (err)
+        return err;
+
+    err = vm_map (mach_task_self (), (vm_address_t *)dest, mem_size,
+                  (vm_address_t) 0, /* mask */
+                  1, /* anywhere? */
+                  pager, 0,
+                  0, /* copy */
+                  prot, VM_PROT_ALL, VM_INHERIT_SHARE);
+    mach_port_deallocate (mach_task_self (), pager);
+    if (err)
+        return err;
+
+    return err;
+#else
+    int prot = PROT_READ;
+    int flags = O_RDONLY;
+    int memfd;
+
+    if (write) {
+        prot |= PROT_WRITE;
+	flags = O_RDWR;
+    }
+    memfd = open("/dev/mem", flags | O_CLOEXEC);
+    if (memfd == -1)
+	return errno;
+
+    *dest = mmap(NULL, mem_size, prot, MAP_SHARED, memfd, mem_offset);
+    if (*dest == MAP_FAILED) {
+	close(memfd);
+	*dest = NULL;
+	return errno;
+    }
+
+    close(memfd);
+    return 0;
+#endif
+}
 
 static int
 pci_system_x86_conf1_probe(void)
@@ -437,25 +539,15 @@ pci_nfuncs(struct pci_device *dev, uint8_t *nfuncs)
 static error_t
 pci_device_x86_read_rom(struct pci_device *dev, void *buffer)
 {
-    void *bios;
-    int memfd;
+    void *bios = NULL;
     struct pci_device_private *d = (struct pci_device_private *)dev;
 
-    memfd = open("/dev/mem", O_RDONLY | O_CLOEXEC);
-    if (memfd == -1)
-	return errno;
-
-    bios = mmap(NULL, dev->rom_size, PROT_READ, MAP_SHARED, memfd, d->rom_base);
-    if (bios == MAP_FAILED) {
-	close(memfd);
-	return errno;
-    }
+    int err;
+    if ( (err = pci_system_x86_map_dev_mem(&bios, d->rom_base, dev->rom_size, 0)) )
+        return err;
 
     memcpy(buffer, bios, dev->rom_size);
-
     munmap(bios, dev->rom_size);
-    close(memfd);
-
     return 0;
 }
 
@@ -515,7 +607,6 @@ pci_device_x86_region_probe (struct pci_device *dev, int reg_num)
     error_t err;
     uint8_t offset;
     uint32_t reg, addr, testval;
-    int memfd;
 
     offset = PCI_BAR_ADDR_0 + 0x4 * reg_num;
 
@@ -573,9 +664,6 @@ pci_device_x86_region_probe (struct pci_device *dev, int reg_num)
             if (err)
                 return err;
         }
-
-        /* Clear the map pointer */
-        dev->regions[reg_num].memory = 0;
     }
     else if (dev->regions[reg_num].size > 0)
     {
@@ -592,22 +680,10 @@ pci_device_x86_region_probe (struct pci_device *dev, int reg_num)
             if (err)
                 return err;
         }
-
-        /* Map the region in our space */
-        memfd = open ("/dev/mem", O_RDWR | O_CLOEXEC);
-        if (memfd == -1)
-            return errno;
-
-        dev->regions[reg_num].memory =
-         mmap (NULL, dev->regions[reg_num].size, PROT_READ | PROT_WRITE, MAP_SHARED,
-               memfd, dev->regions[reg_num].base_addr);
-        if (dev->regions[reg_num].memory == MAP_FAILED)
-        {
-            dev->regions[reg_num].memory = 0;
-            close (memfd);
-            return errno;
-        }
     }
+
+    /* Clear the map pointer */
+    dev->regions[reg_num].memory = 0;
 
     return 0;
 }
@@ -772,10 +848,6 @@ pci_system_x86_scan_bus (uint8_t bus)
 
             d->base.device_class = reg >> 8;
 
-            err = pci_device_x86_probe (&d->base);
-            if (err)
-                return err;
-
             pci_sys->devices = devices;
             pci_sys->num_devices++;
 
@@ -841,32 +913,27 @@ pci_device_x86_unmap_range(struct pci_device *dev,
 
 #else
 
-int
+static int
 pci_device_x86_map_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
-    int memfd = open("/dev/mem", O_RDWR | O_CLOEXEC);
-    int prot = PROT_READ;
+    int err;
+    if ( (err = pci_system_x86_map_dev_mem(&map->memory, map->base, map->size,
+                            map->flags & PCI_DEV_MAP_FLAG_WRITABLE)))
+        return err;
 
-    if (memfd == -1)
-	return errno;
-
-    if (map->flags & PCI_DEV_MAP_FLAG_WRITABLE)
-	prot |= PROT_WRITE;
-
-    map->memory = mmap(NULL, map->size, prot, MAP_SHARED, memfd, map->base);
-    if (map->memory == MAP_FAILED) {
-    	close(memfd);
-	return errno;
-    }
     return 0;
 }
 
-int
+static int
 pci_device_x86_unmap_range(struct pci_device *dev,
     struct pci_device_mapping *map)
 {
-    return pci_device_generic_unmap_range(dev, map);
+    int err;
+    err = pci_device_generic_unmap_range(dev, map);
+    map->memory = NULL;
+
+    return err;
 }
 
 #endif
@@ -1037,7 +1104,7 @@ pci_device_x86_write8(struct pci_io_handle *handle, uint32_t reg,
     outb(data, reg + handle->base);
 }
 
-int
+static int
 pci_device_x86_map_legacy(struct pci_device *dev, pciaddr_t base,
     pciaddr_t size, unsigned map_flags, void **addr)
 {
@@ -1053,7 +1120,7 @@ pci_device_x86_map_legacy(struct pci_device *dev, pciaddr_t base,
     return err;
 }
 
-int
+static int
 pci_device_x86_unmap_legacy(struct pci_device *dev, void *addr,
     pciaddr_t size)
 {
@@ -1162,10 +1229,15 @@ pci_system_x86_create(void)
     if (err)
     {
         x86_disable_io ();
+        if (pci_sys->num_devices)
+        {
+            free (pci_sys->devices);
+        }
         free (pci_sys);
         pci_sys = NULL;
         return err;
     }
 
+    sort_devices ();
     return 0;
 }

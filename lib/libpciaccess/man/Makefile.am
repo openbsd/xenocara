@@ -24,7 +24,10 @@
 appman_PRE = scanpci.man
 noinst_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
 
-EXTRA_DIST = $(appman_PRE)
+EXTRA_DIST = \
+	$(appman_PRE) \
+	meson.build
+
 CLEANFILES = $(noinst_DATA)
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure

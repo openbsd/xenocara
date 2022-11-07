@@ -338,6 +338,8 @@ pci_system_openbsd_destroy(void)
 	for (domain = 0; domain < ndomains; domain++)
 		close(pcifd[domain]);
 	ndomains = 0;
+	free(pci_sys);
+	pci_sys = NULL;
 }
 
 static int
@@ -598,29 +600,31 @@ pci_device_openbsd_unmap_legacy(struct pci_device *dev, void *addr,
 }
 
 static const struct pci_system_methods openbsd_pci_methods = {
-	pci_system_openbsd_destroy,
-	NULL,
-	pci_device_openbsd_read_rom,
-	pci_device_openbsd_probe,
-	pci_device_openbsd_map_range,
-	pci_device_openbsd_unmap_range,
-	pci_device_openbsd_read,
-	pci_device_openbsd_write,
-	pci_fill_capabilities_generic,
-	NULL,
-	pci_device_openbsd_boot_vga,
-	NULL,
-	NULL,
-	pci_device_openbsd_open_legacy_io,
-	NULL,
-	pci_device_openbsd_read32,
-	pci_device_openbsd_read16,
-	pci_device_openbsd_read8,
-	pci_device_openbsd_write32,
-	pci_device_openbsd_write16,
-	pci_device_openbsd_write8,
-	pci_device_openbsd_map_legacy,
-	pci_device_openbsd_unmap_legacy
+	.destroy = pci_system_openbsd_destroy,
+	.destroy_device = NULL,
+	.read_rom = pci_device_openbsd_read_rom,
+	.probe = pci_device_openbsd_probe,
+	.map_range = pci_device_openbsd_map_range,
+	.unmap_range = pci_device_openbsd_unmap_range,
+
+	.read = pci_device_openbsd_read,
+	.write = pci_device_openbsd_write,
+
+	.fill_capabilities = pci_fill_capabilities_generic,
+
+	.boot_vga = pci_device_openbsd_boot_vga,
+
+	.open_legacy_io = pci_device_openbsd_open_legacy_io,
+
+	.read32 = pci_device_openbsd_read32,
+	.read16 = pci_device_openbsd_read16,
+	.read8 = pci_device_openbsd_read8,
+	.write32 = pci_device_openbsd_write32,
+	.write16 = pci_device_openbsd_write16,
+	.write8 = pci_device_openbsd_write8,
+
+	.map_legacy = pci_device_openbsd_map_legacy,
+	.unmap_legacy = pci_device_openbsd_unmap_legacy
 };
 
 int
@@ -651,8 +655,10 @@ pci_system_openbsd_create(void)
 		ndomains++;
 	}
 
-	if (ndomains == 0)
+	if (ndomains == 0) {
+		pci_system_openbsd_destroy();
 		return ENXIO;
+	}
 
 	ndevs = 0;
 	for (domain = 0; domain < ndomains; domain++) {
@@ -676,11 +682,7 @@ pci_system_openbsd_create(void)
 	pci_sys->num_devices = ndevs;
 	pci_sys->devices = calloc(ndevs, sizeof(struct pci_device_private));
 	if (pci_sys->devices == NULL) {
-		free(pci_sys);
-		pci_sys = NULL;
-		for (domain = 0; domain < ndomains; domain++)
-			close(pcifd[domain]);
-		ndomains = 0;
+		pci_system_openbsd_destroy();
 		return ENOMEM;
 	}
 

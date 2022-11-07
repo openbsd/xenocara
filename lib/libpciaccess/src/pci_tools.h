@@ -165,7 +165,7 @@ typedef struct pcitool_intr_get {
 #define	PCITOOL_IGET_SIZE(num_devs) \
 	(sizeof (pcitool_intr_get_t) - \
 	sizeof (pcitool_intr_dev_t) + \
-	(num_devs * sizeof (pcitool_intr_dev_t)))
+	((num_devs) * sizeof (pcitool_intr_dev_t)))
 
 /*
  * Size and endian fields for acc_attr bitmask.
@@ -175,12 +175,12 @@ typedef struct pcitool_intr_get {
 #define	PCITOOL_ACC_ATTR_SIZE_2		0x1
 #define	PCITOOL_ACC_ATTR_SIZE_4		0x2
 #define	PCITOOL_ACC_ATTR_SIZE_8		0x3
-#define	PCITOOL_ACC_ATTR_SIZE(x)	(1 << (x & PCITOOL_ACC_ATTR_SIZE_MASK))
+#define	PCITOOL_ACC_ATTR_SIZE(x)	(1 << ((x) & PCITOOL_ACC_ATTR_SIZE_MASK))
 
 #define	PCITOOL_ACC_ATTR_ENDN_MASK	0x100
 #define	PCITOOL_ACC_ATTR_ENDN_LTL	0x0
 #define	PCITOOL_ACC_ATTR_ENDN_BIG	0x100
-#define	PCITOOL_ACC_IS_BIG_ENDIAN(x)	(x & PCITOOL_ACC_ATTR_ENDN_BIG)
+#define	PCITOOL_ACC_IS_BIG_ENDIAN(x)	((x) & PCITOOL_ACC_ATTR_ENDN_BIG)
 
 /*
  * Data structure to read and write to pci device registers.

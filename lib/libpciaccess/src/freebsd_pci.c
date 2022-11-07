@@ -663,12 +663,14 @@ pci_system_freebsd_create( void )
 
     if ( ioctl( pcidev, PCIOCGETCONF, &pciconfio ) == -1) {
 	free( pci_sys );
+	pci_sys = NULL;
 	close( pcidev );
 	return errno;
     }
 
     if (pciconfio.status == PCI_GETCONF_ERROR ) {
 	free( pci_sys );
+	pci_sys = NULL;
 	close( pcidev );
 	return EINVAL;
     }

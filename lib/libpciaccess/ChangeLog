@@ -1,3 +1,324 @@
+commit 935f0b4d6983f77c4f35e6d492f9f2c2d1ed57f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 18:41:02 2022 -0700
+
+    libpciaccess 0.17
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d193fa690415333420b435edb5782789a6f3ea57
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Tue Aug 23 19:27:27 2022 +0200
+
+    hurd: Fix pci_device_hurd_map_legacy
+    
+    It was not passing a proper region number to pci_device_hurd_map_range,
+    and that would not make sense anyway since the rom is not a region for
+    instance, and the video memory, interrupt vector etc. aren't a region or
+    the rom.
+    
+    So this uses pci_device_hurd_map_range for the rom, and
+    pci_system_x86_map_dev_mem for non-rom. Unfortunately pci-arbiter
+    currently cannot get the rom_base from libpciaccess, so we can only
+    guess that we are trying to map a rom.
+
+commit 361356b08003f5e3c606e16eeb6a17fe02ff2726
+Author: Moritz Fischer <moritzf@google.com>
+Date:   Mon Mar 8 12:02:33 2021 -0800
+
+    Add pci_device_disable() function
+    
+    This implements a pci_device_disable() function, currently only for
+    the linux_sysfs() backend.
+    
+    This mirrors the implementation for pci_device_enable()
+    
+    Signed-off-by: Moritz Fischer <moritzf@google.com>
+
+commit a8abf913ad6b60492ef7b6ae512c4f879604a6a7
+Author: zhanghongtao <zhanghongtao22@huawei.com>
+Date:   Mon Aug 1 16:20:28 2022 +0800
+
+    Delete redundant symbols ';'
+    
+    Signed-off-by: zhanghongtao <zhanghongtao22@huawei.com>
+
+commit ab475c645ff9fc40e18af739eb4b81a5eb7f783c
+Author: zhanghongtao <zhanghongtao22@huawei.com>
+Date:   Mon Aug 1 16:13:40 2022 +0800
+
+    Add header protection macro in linux_devmem.h
+    
+    Signed-off-by: zhanghongtao <zhanghongtao22@huawei.com>
+
+commit b8de959615449fdf5b58ef08d881a77d397e86e2
+Author: zhanghongtao <zhanghongtao22@huawei.com>
+Date:   Mon Aug 1 15:53:57 2022 +0800
+
+    pci_sys set NULL after free
+    
+    Signed-off-by: zhanghongtao <zhanghongtao22@huawei.com>
+
+commit f93c0dae5a837404a48ea7f3609c6c5c30691a7b
+Author: zhanghongtao <zhanghongtao22@huawei.com>
+Date:   Mon Aug 1 15:28:14 2022 +0800
+
+    Add parentheses to the macro definition
+    
+    Signed-off-by: zhanghongtao <zhanghongtao22@huawei.com>
+
+commit 1fa5d4bdfcc6fea44f9abf353d25f3a5d013f5d7
+Author: Satadru Pramanik <satadru@umich.edu>
+Date:   Tue Jun 21 20:44:30 2022 +0000
+
+    Add support for building on macOS w/o X11, using endian code from "portable_endian.h"...
+
+commit 22a93f8b9b4a79eefbdd0b2c412526f6141ac7a8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 6 11:46:45 2022 -0700
+
+    configure.ac: Use pkg-config to find zlib dependency info
+    
+    Matches what we already do in meson.build
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ae62706c34e4abc581d4c42ce9807e2898fac1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Apr 6 16:30:51 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 831b467b2e3876c4e0c307d1e3eae2746ce805a7
+Author: Chester Gillon <chester.gillon@metronet.co.uk>
+Date:   Sun Sep 5 13:37:56 2021 +0100
+
+    Obtain correct value of is_64 and is_prefetchable PCI device fields
+    
+    Correct setting of the is_64 and is_prefetchable pci_device fields in
+    pci_device_linux_sysfs_probe().
+    The pci_device struct defines is_64 and is_prefetchable as single bits,
+    but the previous code was attempting to store the result of a bit-masked
+    field in a single bit which always resulted in is_64 and is_prefetchable
+    being zero regardless of the actual capabilities of the PCI device.
+    
+    Fixes: #15
+    
+    Signed-off-by: Chester Gillon <chester.gillon@metronet.co.uk>
+
+commit 28d6dd72e5d6fa907dbccd310cc516e7012a60bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 16:00:56 2022 -0700
+
+    gitlab CI: add a basic build test for both autotools and meson
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 465aecdce47040a211fddc29186a4b1aa2ad5648
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 15:27:10 2022 -0700
+
+    meson: install man page in mandir/man1/, not mandir/1/
+    
+    But don't install it by default, since neither meson nor autotools
+    installs the scanpci program by default
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5cf85c28ad5f0811d53e5d70eac384dfe8e86cd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 14:54:06 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ad16d4da14905abfac50e41105dd1ceba877b07
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 14:44:13 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 21aa2bf6edda711cc4a883e89fd4d3c337c76d6b
+Author: Joan Lledó  <jlledom@member.fsf.org>
+Date:   Sat Mar 12 19:28:04 2022 +0100
+
+    Hurd: Fix initialization order
+    
+    This allows non-root programs to to rely on /servers/bus/pci
+    
+    Message-Id: <20220312182804.9318-2-jlledom@mailfence.com>
+    
+    Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 4ef1660667425c0f171949aacae9d07b10a40d7f
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Tue Feb 15 06:44:23 2022 +0000
+
+    hurd: Don't necessarily look up _SERVERS_BUS_PCI
+    
+    This allows the fallback mechanism in the hurd create method to be
+    used in the map range method by reusing the mach port that
+    corresponds to the root of the pci filesystem.
+    
+    Message-Id: <20220215064411.68671-1-damien@zamaudio.com>
+    
+    Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 740d2f29700af38b01ca68e3e834db164cc1b789
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Sun Jan 9 01:09:04 2022 +0100
+
+    hurd: Restore initialization order
+    
+    3e0d1cde0187 ("hurd: Implement device memory mapping") was making
+    root-running processes insist on using the pci device, and never try the
+    fs-provided translator. This reverts back to trying the pci device
+    first, but completely, and then revert to the fs-provided translator.
+
+commit 3e0d1cde01872d605c267c61094e44315a3e7467
+Author: Joan Lledó  <jlledom@member.fsf.org>
+Date:   Wed Jan 5 13:08:01 2022 +0100
+
+    hurd: Implement device memory mapping
+    
+    * src/hurd_pci.c:
+            * Implement device memory mapping functions
+                    * pci_device_hurd_map_range
+                    * pci_device_hurd_unmap_range
+                    * pci_device_hurd_map_legacy
+                    * pci_device_hurd_unmap_legacy
+    * src/x86_pci.h:
+            * Remove unused declarations
+                    * pci_device_x86_map_range()
+                    * pci_device_x86_unmap_range()
+                    * pci_device_x86_map_legacy()
+                    * pci_device_x86_unmap_legacy()
+    * src/x86_pci.c:
+            * Fix port leaks
+            * Make mapping function static again
+            * map_dev_mem(): use device_map() support for offsets
+    Message-Id: <20220105120802.14008-2-jlledom@mailfence.com>
+    
+    Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 9c01fdd7c02d8b9b5003e659ebca0b3643bd47c4
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Wed Apr 7 18:29:13 2021 +1000
+
+    x86: Sort devices by B/D/F due to recursive scan
+
+commit 50e7de7a81be35bb4e5799cb5562d18683c05ade
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sun Mar 7 10:32:33 2021 +1100
+
+    hurd: device_open(pci), /servers/bus/pci fallback
+    
+    Reviewed-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit b4bde8fe4e2872be8d0c527f5c9e155603f5d01f
+Author: Petr Ovtchenkov <ptr@void-ptr.info>
+Date:   Wed Dec 2 10:52:28 2020 +0300
+
+    missed library installation in meson
+    
+    Signed-off-by: Petr Ovtchenkov <ptr@void-ptr.info>
+    Reviewed-by: Dylan Baker <dylan@pnwbakers.com>
+
+commit f51e2f1e96db2acd426ac3f6bb066f314a7eee46
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Sun Oct 25 11:14:56 2020 -0700
+
+    autoconf: Add meson files to dist tarball
+    
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
+commit 89fcd717a60e7a6440b56ff7c82b5eeb80b92a2f
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Wed Sep 19 16:15:41 2018 -0700
+
+    Add a meson build system
+    
+    I believe this is correct and complete, but I could have missed
+    something on non-linux OSes.
+    
+    Reviewed-by: Eric Anholt <eric@anholt.net>
+
+commit 1ebcfe918a0da46a5b7ab44fc3ec0e6c65f98043
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Sep 10 00:20:33 2020 +0200
+
+    hurd: Fix map_dev_mem from non-zero address
+    
+    device_map needs to create a big-enough object so it can then be mapped.
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit b82b779247b2adb164afed85a7e06cf3ca0d8ade
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Sep 10 00:19:41 2020 +0200
+
+    hurd: Fix letting map_dev_mem map anywhere
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 790ef9888a23fc257a66e742baf3b162b8c1f7c5
+Author: Samuel Thibault <samuel.thibault@ens-lyon.org>
+Date:   Thu Sep 10 00:18:12 2020 +0200
+
+    hurd: Add missing round up size in map_dev_mem
+    
+    Signed-off-by: Samuel Thibault <samuel.thibault@ens-lyon.org>
+
+commit 3e5ae795a265b8843c09cba310a5582c909f97a4
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sat Aug 22 22:31:11 2020 +1000
+
+    x86: Remove probe during create, other backends don't do this
+
+commit 9effa77676207d547dc869ecb8c342869e14ef70
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Fri May 8 10:22:34 2020 +1000
+
+    x86: Remove mapping of regions during probe - otherwise remapping later fails
+
+commit b37ffbd94b4a270e62b752bdced882ce12b7610c
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Fri May 8 10:19:23 2020 +1000
+
+    x86: Use gnumach device instead of /dev/mem on GNU systems && factorise ifdefs
+
+commit 6c0eebdf3a72d372de9aa1226ce889bdf56440b0
+Author: Damien Zammit <damien@zamaudio.com>
+Date:   Sun Mar 15 12:42:51 2020 +1100
+
+    hurd_pci: Use __pci_conf_ variants of pci_conf_
+
+commit 1a7dab7b7c36b73d2a2d7e8b5c288c71542de11e
+Author: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+Date:   Fri Oct 25 19:03:32 2019 +0200
+
+    pciaccess.pc.in: add Libs.Private
+    
+    Add Libs.Private in pciaccess.pc.in so applications that wants to link
+    statically with pciaccess will know that they have to link with its
+    dependencies such as -lz
+    
+    Signed-off-by: Fabrice Fontaine <fontaine.fabrice@gmail.com>
+
+commit 73901e7f7c03a5cdea317fd3d36feb978ef34a02
+Author: Joan Lledó  <jlledom@member.fsf.org>
+Date:   Sun Nov 24 11:17:30 2019 +0100
+
+    Hurd: avoid using the deprecated RPC pci_get_ndevs()
+
 commit fbd1f0fe79ba25b72635f8e36a6c33d7e0ca19f6
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Wed Jul 17 12:24:48 2019 -0400
@@ -3152,7 +3473,7 @@ Date:   Fri Mar 24 16:57:17 2006 +0000
         everything now.
 
 commit d890ded5312dc88455fd332e03a4f212ba587e9d
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Mar 20 20:13:34 2006 +0000
 
     Add scanpci as a noinst target.

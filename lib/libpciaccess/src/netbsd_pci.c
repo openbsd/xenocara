@@ -942,6 +942,7 @@ pci_system_netbsd_create(void)
 		for (i = 0; i < nbuses; i++)
 			close(buses[i].fd);
 		free(pci_sys);
+		pci_sys = NULL;
 		return ENOMEM;
 	}
 
