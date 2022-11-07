@@ -41,7 +41,7 @@ in this Software without prior written authorization from The Open Group.
 
 
 /*
- * Based on an optimized version provided by Jim Becker, Auguest 5, 1988.
+ * Based on an optimized version provided by Jim Becker, August 5, 1988.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -144,7 +144,7 @@ NextInt(FILE *fstream)
  * The data returned by the following routine is always in left-most byte
  * first and left-most bit first.  If it doesn't return BitmapSuccess then
  * its arguments won't have been touched.  This routine should look as much
- * like the Xlib routine XReadBitmapfile as possible.
+ * like the Xlib routine XReadBitmapFile as possible.
  */
 int
 XmuReadBitmapData(FILE *fstream, unsigned int *width, unsigned int *height,
@@ -226,7 +226,7 @@ XmuReadBitmapData(FILE *fstream, unsigned int *width, unsigned int *height,
 	bytes_per_line = (ww+7)/8 + padding;
 
 	size = bytes_per_line * hh;
-	data = (unsigned char *) Xmalloc ((unsigned int) size);
+	data = Xmalloc ((unsigned int) size);
 	if (!data)
 	  RETURN (BitmapNoMemory);
 

@@ -53,7 +53,7 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = src
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	$(top_srcdir)/depcomp
+	$(top_srcdir)/depcomp reallocarray.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -92,7 +92,7 @@ am__uninstall_files_from_dir = { \
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libXmu_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libXmu_la_DEPENDENCIES = $(LTLIBOBJS) $(am__DEPENDENCIES_1)
 am__objects_1 = ClientWin.lo CursorName.lo DefErrMsg.lo GetHost.lo \
 	Lower.lo
 am_libXmu_la_OBJECTS = $(am__objects_1) AllCmap.lo Atoms.lo Clip.lo \
@@ -307,6 +307,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -320,12 +321,12 @@ BITMAP_DEFINES = -DBITMAPDIR=\"$(includedir)/X11/bitmaps\"
 AM_CPPFLAGS = \
 	-I${top_srcdir}/include \
 	-I${top_srcdir}/include/X11/Xmu \
-	$(BITMAP_DEFINES) -D_BSD_SOURCE
+	$(BITMAP_DEFINES) -D_CONST_X_STRING -D_BSD_SOURCE
 
 AM_CFLAGS = $(CWARNFLAGS) $(XMU_CFLAGS)
 libXmu_la_LDFLAGS = -version-number 6:2:0 -no-undefined
 libXmuu_la_LDFLAGS = -version-number 1:0:0 -no-undefined
-libXmu_la_LIBADD = $(XMU_LIBS)
+libXmu_la_LIBADD = $(LTLIBOBJS) $(XMU_LIBS)
 libXmuu_la_LIBADD = $(XMUU_LIBS)
 libXmuu_la_SOURCES = \
 	ClientWin.c \
@@ -336,6 +337,7 @@ libXmuu_la_SOURCES = \
 
 libXmu_la_SOURCES = \
 	$(libXmuu_la_SOURCES) \
+	Xmuint.h \
 	AllCmap.c \
 	Atoms.c \
 	Clip.c \
@@ -460,6 +462,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/reallocarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/AllCmap.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Atoms.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ClientWin.Plo@am__quote@
@@ -692,7 +695,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -738,7 +741,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 

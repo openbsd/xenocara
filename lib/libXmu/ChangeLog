@@ -1,3 +1,221 @@
+commit b29c739b577ee142877e69eb3fb07c7312d81557
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 14:05:25 2022 -0700
+
+    libXmu 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52db31f9e388cf9781a68e5e7d33c3cbb22d412c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 17 08:48:08 2022 -0700
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 749d9bb10245985a25ee2a6a3262b8d882b8a889
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 18:46:43 2022 -0700
+
+    Add simple test cases for _XEditRes{Put,Get}* functions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 35831b86d10dfbe7af05040fae1fa4a6181ebfc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 18:45:25 2022 -0700
+
+    _XEditResGet32: Fix casts to avoid unexpected sign extension in 64-bit
+    
+    Like _XEditResGet16 we need to cast to our destination type, not
+    the source type, before combining the upper & lower halves.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe87eb4099416be52b0fc9a0a1e8a52b65dfa23c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 16:31:40 2022 -0700
+
+    Handle -Wmissing-field-initializers warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7185a8a484de41c878149e23848c903893936e14
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 16:28:37 2022 -0700
+
+    Handle -Wsign-compare warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b63db9adf687e360a1e348aabbbc16265104fc2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 16:20:53 2022 -0700
+
+    Clear some more -Wdiscarded-qualifiers warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d35c1ce67641e9b6ab2c329570a8270b5c73d255
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 16:11:14 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 11 out of 58 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1d85b2960cd4bf761cc359db61f2727f19b1560c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 13:33:22 2022 -0700
+
+    Use memcpy instead of memmove when buffers are known not to overlap
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb9adbd41bbd200be1a6baa1e05cecd41dd89f46
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Sep 13 12:58:29 2022 -0700
+
+    More typo fixes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b4e47d3807da4f204dbee8682dac98318f913bd0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Aug 21 11:21:52 2022 -0700
+
+    get_os_name: Use autoconf to detect uname() support
+    
+    Stop maintaining a list of #ifdefs for ancient platforms
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bcc112ca1ba3505899d97ef0502fcb0fb4d6e0a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Aug 15 15:56:32 2022 -0700
+
+    XmuGetHostname: Drop support for ancient USG systems
+    
+    USG was defined for a handful of pre-SVR4 systems based on
+    AT&T's Unix System Group releases in the old imake configs
+    and has never been defined in X11R7 modular builds.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e3cad27560774ca1a5587d26900c1bd09bad7dfc
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Jan 14 22:23:15 2020 +0100
+
+    Remove support for XA_IP_ADDRESS
+    
+    This code has a number of issues:
+    - It doesn't support IPv6 https://bugs.freedesktop.org/show_bug.cgi?id=7611
+    - The IP address is set by the selection owner so it doesn't bring any
+      security for anyone querying the selection
+    - The extra DNS query that it does is problematic in some sandboxed
+      environments (like OpenBSD's pledge
+      https://marc.info/?l=openbsd-bugs&m=157842725819911&w=2)
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 71f24beca39c957c9f54e77b3d2fc54cd89400b1
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Jan 14 23:32:46 2020 +0100
+
+    Fix OWNER_OS in XmuConvertStandardSelection() on Linux
+    
+    It used to return BSD
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6b4f114d4cc76c0f3b1a49ed05db305f0b96bdfe
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Tue Jan 14 22:23:16 2020 +0100
+
+    Unifdef SYSVNET
+    
+    This has not been set by configure since the switch to autotools.
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0fa4a55d396201974177735cb736a607596130e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 16:15:52 2022 -0700
+
+    Convert code to use Xmumallocarray() & reallocarray()
+    
+    Provides automatic integer overflow checking in allocation size calculations
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 621f61f7d3f5955a84e6aa8b7458699870fdee45
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 15:38:58 2022 -0700
+
+    Import reallocarray() from libX11 (originally from OpenBSD)
+    
+    Wrapper for realloc() that checks for overflow when multiplying
+    arguments together, so we don't have to add overflow checks to
+    every single call.  For documentation on usage, see:
+    http://www.openbsd.org/cgi-bin/man.cgi/OpenBSD-current/man3/calloc.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 05ee465685aba409800523c6615392a867366818
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 15:17:27 2022 -0700
+
+    Remove unnnecessary casts from *alloc() and free() calls
+    
+    These are not needed in C89 and later.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f84dcc7fef5e0842e6408f059c13d73975114ec4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 16:20:28 2022 -0700
+
+    COPYING: correct source file path names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ba043b0cac8b675f72825606702ccdc97b5beaa5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:59:53 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 25053af7cc9307090fa1a444d9679ad729ce6f50
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:56:49 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa9b4d7d144c6ddd989b40c826c4bee9808f6cba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 15:52:16 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e9efe2d027b4c46cf6834cc532222f8ad1d1d3c3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 11:40:41 2019 -0700
@@ -1041,7 +1259,7 @@ Date:   Wed Oct 5 19:57:36 2005 +0000
     Add missing file to EXTRA_DIST
 
 commit bf4087e453d8fd83630976cd6e7e31c63737a4a1
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Oct 3 20:55:36 2005 +0000
 
     Remvoe README file that is symlinked from monolith
@@ -1116,13 +1334,13 @@ Date:   Thu May 19 00:10:08 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 2e403190ff21b0bb277391a73741cfc6d5005ac3
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 18 19:38:36 2005 +0000
 
     - Add Xmu build system
 
 commit 7cea083d37cfaaad321bddca0fb75b3308956938
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 18 19:30:41 2005 +0000
 
     - Add Xmu to symlink.sh
