@@ -1,5 +1,5 @@
 /*
- * Copyright © 2007-2008 Peter Hutterer
+ * Copyright (c) 2015, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -19,39 +19,26 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- *
- * Authors: Peter Hutterer, University of South Australia, NICTA
- *
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
-/* XGE Client interfaces */
-
-#ifndef _XGE_H_
-#define _XGE_H_
-
-#include <X11/Xlib.h>
+#include <sys/types.h>
+#include <stdlib.h>
 #include <X11/Xfuncproto.h>
 
-_XFUNCPROTOBEGIN
+#ifndef HAVE_REALLOCARRAY
+extern _X_HIDDEN void *xreallocarray(void *optr, size_t nmemb, size_t size);
+# define reallocarray(ptr, n, size)	xreallocarray((ptr), (size_t)(n), (size_t)(size))
+#endif
 
-/**
- * Generic Event mask.
- * To be used whenever a list of masks per extension has to be provided.
- *
- * But, don't actually use the CARD{8,16,32} types.  We can't get them them
- * defined here without polluting the namespace.
- */
-typedef struct {
-    unsigned char       extension;
-    unsigned char       pad0;
-    unsigned short      pad1;
-    unsigned int      evmask;
-} XGenericEventMask;
+#if defined(MALLOC_0_RETURNS_NULL) || defined(__clang_analyzer__)
+# define Xreallocarray(ptr, n, size) \
+    reallocarray((ptr), ((n) == 0 ? 1 : (n)), size)
+#else
+# define Xreallocarray(ptr, n, size)	reallocarray((ptr), (n), (size))
+#endif
 
-Bool XGEQueryExtension(Display* dpy, int *event_basep, int *err_basep);
-Bool XGEQueryVersion(Display* dpy, int *major, int* minor);
-
-_XFUNCPROTOEND
-
-#endif /* _XGE_H_ */
+#define Xmallocarray(n, size)		Xreallocarray(NULL, (n), (size))

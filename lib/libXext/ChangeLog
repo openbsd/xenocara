@@ -1,3 +1,146 @@
+commit 67e82cc395f44faddd83ec3d0d21624fe91c6fc0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 18:54:39 2022 -0700
+
+    libXext 1.3.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81a3d082b1c73393a59131aa57fe32bb0d76e149
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 13:49:46 2022 -0700
+
+    COPYING: Add info for Xge.* and reallocarray.* files
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b6929c143e8372eb6838a331942d34a8d2b13b7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 13:46:57 2022 -0700
+
+    Remove "All rights reserved" from Oracle copyright notices.
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c6eded76e212419518bd955cad58c96b8653840e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 13:00:37 2022 -0700
+
+    configure: Use AC_USE_SYSTEM_EXTENSIONS to set GNU_SOURCE & other defines
+    
+    Fixes: #4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 178b95c486a1abcf2395157600dc1a2da7e67441
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 11 10:26:19 2022 -0700
+
+    Convert calls to Xmalloc arrays to use Xmallocarray instead
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d965a1a8ce9331d2aaf1c697a29455ad55171b36
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 11 10:00:29 2022 -0700
+
+    Import reallocarray() from libX11
+    
+    Originally from OpenBSD, based on libx11@bcf7b5aa
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6ff50b4634f2f2211997444a73d35277a0608d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 16:21:59 2022 -0700
+
+    Use calloc instead of malloc if we may not initialize all the bytes
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bba869e4ff5826d48ea409b4a8bf4ff7ad414453
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 16:16:22 2022 -0700
+
+    Remove unnecessary (char *) casts from Xfree() arguments
+    
+    These also haven't been needed since C89
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ace42fef753c1444cfc208da6bb282abbbc279ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 15:44:45 2022 -0700
+
+    Remove unnecessary casts of malloc/calloc results
+    
+    These aren't needed in C89 and later, but can hide missing prototypes
+    that generate broken code on platforms where pointers are larger than ints.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f12be5ac59a48249c77b8e61e78bceb9ad782542
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 15:08:37 2022 -0700
+
+    Add extutilP.h header for xgeExtRegister() prototype
+    
+    Clears gcc warning:
+    
+    Xge.c:302:11: warning: no previous prototype for ‘xgeExtRegister’
+     [-Wmissing-prototypes]
+     _X_HIDDEN xgeExtRegister(Display* dpy, int offset, XExtensionHooks* callbacks)
+               ^~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6844509526a83a20f60a5b62191bfbc1e6f09227
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 10:47:19 2022 -0700
+
+    Xge.c, Xge.h: convert from ISO-8859-1 to UTF-8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 260449831c006b563d2a746452e1d3097565441a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 10:12:19 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 34e454b17466ad2d79fb51ab040906dfe9ccc3f3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 10:08:26 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5da41666a4a5bef637a9bb0c04357b7ab2de323d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 10 10:02:33 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 47904063048fa6ef6e8e16219ddef4d14d5d9a4b
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Sun Mar 17 14:29:13 2019 +0100
+
+    add ACLOCAL_AMFLAGS = -I m4 to make aclocal pick ax_gcc_builtin.m4
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ebb167f34a3514783966775fb12573c4ed209625
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 10:37:14 2019 -0700
@@ -2035,7 +2178,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit dc7cb253ba14b78ef0f863995bd0fc5a6a0ee017
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 18 18:52:39 2005 +0000
 
     - Link Xext to /lib/Xext/src rather than /lib/Xext
@@ -2043,13 +2186,13 @@ Date:   Wed May 18 18:52:39 2005 +0000
     - Remove unnecessary include of ImUtil.h from XShm.c
 
 commit 279e13a6a36bfeb3c8aa4272fdd6d4bcef9723a6
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 18 18:50:58 2005 +0000
 
     Add man/Makefile.am and src/Makefile.am
 
 commit 3dde0d733cad58f01c3d667d7e6bc0dd6ca40608
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 18 18:50:23 2005 +0000
 
     - Add build system for Xext

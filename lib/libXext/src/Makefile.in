@@ -54,7 +54,7 @@ build_triplet = @build@
 host_triplet = @host@
 subdir = src
 DIST_COMMON = $(libXextinclude_HEADERS) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in $(top_srcdir)/depcomp
+	$(srcdir)/Makefile.in $(top_srcdir)/depcomp reallocarray.c
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/ax_gcc_builtin.m4 \
 	$(top_srcdir)/m4/libtool.m4 $(top_srcdir)/m4/ltoptions.m4 \
@@ -97,7 +97,7 @@ am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(lintlibdir)" \
 	"$(DESTDIR)$(libXextincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
-libXext_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
+libXext_la_DEPENDENCIES = $(LTLIBOBJS) $(am__DEPENDENCIES_1)
 am_libXext_la_OBJECTS = DPMS.lo MITMisc.lo XAppgroup.lo XEVI.lo \
 	XLbx.lo XMultibuf.lo XSecurity.lo XShape.lo XShm.lo XSync.lo \
 	XTestExt1.lo Xcup.lo Xdbe.lo Xge.lo extutil.lo globals.lo
@@ -299,6 +299,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -315,7 +316,7 @@ AM_CPPFLAGS = \
 
 AM_CFLAGS = $(CWARNFLAGS)
 libXext_la_LDFLAGS = -version-number $(XEXT_SOREV) -no-undefined
-libXext_la_LIBADD = $(XEXT_LIBS)
+libXext_la_LIBADD = $(LTLIBOBJS) $(XEXT_LIBS)
 libXext_la_SOURCES = \
 	DPMS.c \
 	MITMisc.c \
@@ -332,7 +333,9 @@ libXext_la_SOURCES = \
 	Xdbe.c \
         Xge.c \
 	extutil.c \
-	globals.c
+	extutilP.h \
+	reallocarray.h \
+        globals.c
 
 libXextincludedir = $(includedir)/X11/extensions
 libXextinclude_HEADERS = $(top_srcdir)/include/X11/extensions/dpms.h \
@@ -434,6 +437,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@$(DEPDIR)/reallocarray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/DPMS.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/MITMisc.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/XAppgroup.Plo@am__quote@
@@ -659,7 +663,7 @@ clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
 	mostlyclean-am
 
 distclean: distclean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
 	distclean-tags
@@ -705,7 +709,7 @@ install-ps-am:
 installcheck-am:
 
 maintainer-clean: maintainer-clean-am
-	-rm -rf ./$(DEPDIR)
+	-rm -rf $(DEPDIR) ./$(DEPDIR)
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic
 
