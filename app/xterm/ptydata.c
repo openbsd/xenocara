@@ -1,7 +1,7 @@
-/* $XTermId: ptydata.c,v 1.150 2020/10/12 18:46:28 tom Exp $ */
+/* $XTermId: ptydata.c,v 1.158 2022/10/10 19:27:56 tom Exp $ */
 
 /*
- * Copyright 1999-2019,2020 by Thomas E. Dickey
+ * Copyright 1999-2020,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -68,8 +68,8 @@
 Bool
 decodeUtf8(TScreen *screen, PtyData *data)
 {
-    int i;
-    int length = (int) (data->last - data->next);
+    size_t i;
+    size_t length = (size_t) (data->last - data->next);
     int utf_count = 0;
     unsigned utf_char = 0;
 
@@ -226,8 +226,8 @@ decodeUtf8(TScreen *screen, PtyData *data)
 #if OPT_TRACE > 1
     TRACE(("UTF-8 char %04X [%d..%d]\n",
 	   data->utf_data,
-	   (int) (data->next - data->buffer),
-	   (int) (data->next - data->buffer + data->utf_size - 1)));
+	   (size_t) (data->next - data->buffer),
+	   (size_t) (data->next - data->buffer + data->utf_size - 1)));
 #endif
 
     return (data->utf_size != 0);
@@ -410,10 +410,10 @@ trimPtyData(XtermWidget xw, PtyData *data)
     FlushLog(xw);
 
     if (data->next != data->buffer) {
-	int i;
-	int n = (int) (data->last - data->next);
+	size_t i;
+	size_t n = (size_t) (data->last - data->next);
 
-	TRACE(("shifting buffer down by %d\n", n));
+	TRACE(("shifting buffer down by %lu\n", (unsigned long) n));
 	for (i = 0; i < n; ++i) {
 	    data->buffer[i] = data->next[i];
 	}
@@ -428,16 +428,16 @@ trimPtyData(XtermWidget xw, PtyData *data)
  * and nextPtyData() will return that.
  */
 void
-fillPtyData(XtermWidget xw, PtyData *data, const char *value, int length)
+fillPtyData(XtermWidget xw, PtyData *data, const char *value, size_t length)
 {
-    int size;
-    int n;
+    size_t size;
+    size_t n;
 
     /* remove the used portion of the buffer */
     trimPtyData(xw, data);
 
     VTbuffer->last += length;
-    size = (int) (VTbuffer->last - VTbuffer->next);
+    size = (size_t) (VTbuffer->last - VTbuffer->next);
 
     /* shift the unused portion up to make room */
     for (n = size; n >= length; --n)
@@ -605,20 +605,19 @@ isValidUTF8(Char *lp)
  * Write data back to the PTY
  */
 void
-writePtyData(int f, IChar *d, unsigned len)
+writePtyData(int f, IChar *d, size_t len)
 {
-    unsigned n = (len << 1);
+    size_t n = (len << 1);
 
     if (VTbuffer->write_len <= len) {
 	VTbuffer->write_len = n;
-	VTbuffer->write_buf = (Char *) XtRealloc((char *)
-						 VTbuffer->write_buf, VTbuffer->write_len);
+	VTbuffer->write_buf = realloc(VTbuffer->write_buf, VTbuffer->write_len);
     }
 
     for (n = 0; n < len; n++)
 	VTbuffer->write_buf[n] = (Char) d[n];
 
-    TRACE(("writePtyData %u:%s\n", n,
+    TRACE(("writePtyData %lu:%s\n", (unsigned long) n,
 	   visibleChars(VTbuffer->write_buf, n)));
     v_write(f, VTbuffer->write_buf, n);
 }
@@ -668,7 +667,7 @@ FlushLog(XtermWidget xw)
 #endif
 
 void
-v_write(int f, const Char *data, unsigned len)
+v_write(int f, const Char *data, size_t len)
 {
     (void) f;
     (void) data;
@@ -923,8 +922,8 @@ do_range(const char *source)
 			    c_in, c_out);
 		} else if (message_level > 1) {
 		    *next = '\0';
-		    printf("TEST %04X (%d:%s) ->%04X\n", c_in,
-			   (int) (next - buffer),
+		    printf("TEST %04X (%lu:%s) ->%04X\n", c_in,
+			   (unsigned long) (next - buffer),
 			   buffer,
 			   c_out);
 		    fflush(stdout);
@@ -937,8 +936,8 @@ do_range(const char *source)
 		data->last = next;
 		decodeUtf8(&screen, data);
 		if (message_level > 1) {
-		    printf("TEST %04X (%d:%s) ->%04X\n", c_in,
-			   (int) (next - data->buffer),
+		    printf("TEST %04X (%lu:%s) ->%04X\n", c_in,
+			   (unsigned long) (next - data->buffer),
 			   data->buffer,
 			   data->utf_data);
 		    fflush(stdout);

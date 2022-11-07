@@ -1,4 +1,4 @@
-/* $XTermId: cursor.c,v 1.82 2022/02/13 18:20:53 tom Exp $ */
+/* $XTermId: cursor.c,v 1.83 2022/09/23 08:13:43 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -378,13 +378,14 @@ CursorSave(XtermWidget xw)
  * DEC 070 does mention the ANSI color text extension saying that it, too, is
  * saved/restored.
  */
+#define ALL_FLAGS (IFlags)(~0)
 #define DECSC_FLAGS (ATTRIBUTES|ORIGIN|PROTECTED)
 
 /*
  * Restore Cursor and Attributes
  */
-void
-CursorRestore2(XtermWidget xw, SavedCursor * sc)
+static void
+CursorRestoreFlags(XtermWidget xw, SavedCursor * sc, IFlags our_flags)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -399,8 +400,8 @@ CursorRestore2(XtermWidget xw, SavedCursor * sc)
 	resetCharsets(screen);
     }
 
-    UIntClr(xw->flags, DECSC_FLAGS);
-    UIntSet(xw->flags, sc->flags & DECSC_FLAGS);
+    UIntClr(xw->flags, our_flags);
+    UIntSet(xw->flags, sc->flags & our_flags);
     if ((xw->flags & ORIGIN)) {
 	CursorSet(screen,
 		  sc->row - screen->top_marg,
@@ -421,11 +422,23 @@ CursorRestore2(XtermWidget xw, SavedCursor * sc)
 #endif
 }
 
+/*
+ * Use this entrypoint for the status-line.
+ */
+void
+CursorRestore2(XtermWidget xw, SavedCursor * sc)
+{
+    CursorRestoreFlags(xw, sc, ALL_FLAGS);
+}
+
+/*
+ * Use this entrypoint for the VT100 window.
+ */
 void
 CursorRestore(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    CursorRestore2(xw, &screen->sc[screen->whichBuf]);
+    CursorRestoreFlags(xw, &screen->sc[screen->whichBuf], DECSC_FLAGS);
 }
 
 /*

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_sixel.c,v 1.36 2022/02/21 23:13:48 tom Exp $ */
+/* $XTermId: graphics_sixel.c,v 1.38 2022/10/10 15:09:41 tom Exp $ */
 
 /*
  * Copyright 2014-2021,2022 by Ross Combs
@@ -109,15 +109,24 @@ typedef struct {
     int col;			/* context used during parsing */
 } SixelContext;
 
-/* sixel scrolling:
- * VK100/GIGI ? (did it even support Sixel?)
- * VT125      unsupported
- * VT240      unsupported
- * VT241      unsupported
- * VT330      mode setting
- * VT382      ?
- * VT340      mode setting
- * dxterm     ?
+/* SIXEL SCROLLING, which is on by default in VT3xx terminals, can be
+ * turned off to better emulate VT2xx terminals by setting Sixel
+ * Display Mode (DECSDM)
+ *
+ *		SIXEL DISPLAY MODE	SIXEL SCROLLING
+ * VT125	Always on		Unsupported
+ * VT240	Always on		Unsupported
+ * VT241	Always on		Unsupported
+ * VT330	Available via DECSDM	Default mode
+ * VT382	Available via DECSDM	Default mode
+ * VT340	Available via DECSDM	Default mode
+ * VK100/GIGI	No sixel support	No sixel support
+ *
+ * dxterm (DECterm) emulated a VT100 series terminal, and supported sixels
+ * according to 1995 posting to comp.os.vms:
+ *	https://groups.google.com/g/comp.os.vms/c/XAUMmLtC8Yk
+ * though not DRCS according to
+ *	http://odl.sysworks.biz/disk$axpdocdec023/office/dwmot126/vmsdw126/relnotes/6470pro_004.html
  */
 
 static void
@@ -250,17 +259,26 @@ finished_parsing(XtermWidget xw, Graphic *graphic)
 			   + FontWidth(screen) - 1)
 			  / FontWidth(screen)));
 	} else {
-	    /* FIXME: At least of the VT382 the vertical position appears to be
-	     * truncated (rounded toward zero after converting to character row.
-	     * This code rounds up, which seems more useful, but it would be
-	     * better to be compatible.  Verify this is true on a VT3[34]0 as
-	     * well.
+	    /* NOTE: XTerm follows the VT382 behavior in text cursor
+	     * placement.  The VT382's vertical position appears to be
+	     * truncated (rounded toward zero) after converting to character
+	     * row.  While rounding up is more often what is desired, so as to
+	     * not overwrite the image, doing so automatically would cause text
+	     * or graphics to scroll off the top of the screen.  Therefore,
+	     * applications must add their own newline character, if desired,
+	     * after a sixel image.
+	     *
+	     * FIXME: The VT340 also rounds down, but it seems to have a
+	     * strange behavior where, on rare occasions, two newlines are
+	     * required to advance beyond the end of the image.  This appears
+	     * to be a firmware bug, but it should be added as an option for
+	     * compatibility.
 	     */
-	    new_row = (graphic->charrow
+	    new_row = (graphic->charrow - 1
 		       + (((graphic->actual_height * graphic->pixh)
 			   + FontHeight(screen) - 1)
 			  / FontHeight(screen)));
-	    new_col = 0;
+	    new_col = graphic->charcol;
 	}
 
 	TRACE(("setting text position after %dx%d\t%.1f start (%d %d): cursor (%d,%d)\n",

@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.886 2022/02/22 23:35:41 tom Exp $ */
+/* $XTermId: main.c,v 1.889 2022/07/13 07:57:08 Brendan.O.Dea Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -1189,8 +1189,8 @@ DATA("-sm",		"*sessionMgt",	XrmoptionNoArg,		"on"),
 DATA("+sm",		"*sessionMgt",	XrmoptionNoArg,		"off"),
 #endif
 #if OPT_TOOLBAR
-DATA("-tb",		"*"XtNtoolBar,	XrmoptionNoArg,		"on"),
-DATA("+tb",		"*"XtNtoolBar,	XrmoptionNoArg,		"off"),
+DATA("-tb",		"*" XtNtoolBar,	XrmoptionNoArg,		"on"),
+DATA("+tb",		"*" XtNtoolBar,	XrmoptionNoArg,		"off"),
 #endif
 #if OPT_MAXIMIZE
 DATA("-maximized",	"*maximized",	XrmoptionNoArg,		"on"),
@@ -1537,7 +1537,7 @@ parseArg(int *num, char **argv, char **valuep)
 {
     /* table adapted from XtInitialize, used here to improve abbreviations */
     /* *INDENT-OFF* */
-#define DATA(option,kind) { (char *) option, NULL, kind, (XtPointer) NULL }
+#define DATA(option,kind) { (char *) option, NULL, kind, (XPointer) 0 }
     static XrmOptionDescRec opTable[] = {
 	DATA("+synchronous",	   XrmoptionNoArg),
 	DATA("-background",	   XrmoptionSepArg),
@@ -2911,7 +2911,7 @@ main(int argc, char *argv[]ENVP_ARG)
 #endif
 
     {
-#if OPT_EXEC_XTERM
+#if OPT_EXEC_SELECTION
 	String data = NULL;
 	getKeymapResources(SHELL_OF(term), "vt100", "VT100", XtRString, &data, sizeof(data));
 	if (data &&
@@ -2922,7 +2922,7 @@ main(int argc, char *argv[]ENVP_ARG)
 		exit(1);
 	    }
 	} else
-#endif /* OPT_EXEC_XTERM */
+#endif /* OPT_EXEC_SELECTION */
 	{
 	    char *env;
 
@@ -3619,7 +3619,7 @@ findValidShell(const char *haystack, const char *needle)
 	have = (size_t) (t - s);
 
 	if ((have >= want) && (*s != '#')) {
-	    char *p = malloc(have + 1);
+	    char *p = (char *) malloc(have + 1);
 
 	    if (p != 0) {
 		char *q;
@@ -3757,24 +3757,38 @@ static void
 xtermTrimEnv(void)
 {
 #define DATA(wild,name) { wild, #name }
+    /* *INDENT-OFF* */
     static struct {
 	int wild;
 	const char *name;
     } table[] = {
+	DATA(0, COLUMNS),
 	DATA(0, DEFAULT_COLORS),
-	    DATA(0, DESKTOP_STARTUP_ID),
-	    DATA(0, WCWIDTH_CJK_LEGACY),
-	    DATA(0, XCURSOR_PATH),
-	    DATA(1, COLORFGBG),
-	    DATA(1, COLORTERM),
-	    DATA(1, ITERM2_),
-	    DATA(1, MC_),
-	    DATA(1, PUTTY),
-	    DATA(1, RXVT_),
-	    DATA(1, URXVT_),
-	    DATA(1, VTE_),
+	DATA(0, DESKTOP_STARTUP_ID),
+	DATA(0, LINES),
+	DATA(0, SHLVL),		/* ksh, bash */
+	DATA(0, STY),		/* screen */
+	DATA(0, TERMCAP),
+	DATA(0, TMUX),
+	DATA(0, TMUX_PANE),
+	DATA(0, WCWIDTH_CJK_LEGACY),
+	DATA(0, WINDOW),	/* screen */
+	DATA(0, XCURSOR_PATH),
+	DATA(1, COLORFGBG),
+	DATA(1, COLORTERM),
+	DATA(1, GIO_LAUNCHED_),
+	DATA(1, ITERM2_),
+	DATA(1, MC_),
+	DATA(1, MINTTY_),
+	DATA(1, PUTTY),
+	DATA(1, RXVT_),
+	DATA(1, TERM_),
+	DATA(1, URXVT_),
+	DATA(1, VTE_),
+	DATA(1, XTERM_),
     };
 #undef DATA
+    /* *INDENT-ON* */
     Cardinal n;
 
     for (n = 0; n < XtNumber(table); ++n) {
@@ -3788,7 +3802,7 @@ xtermTrimEnv(void)
 		    char *my_var;
 		    if (dstend != NULL &&
 			(dstlen = (size_t) (dstend - environ[s])) >= srclen &&
-			!strncmp(table[n].name, environ[s], dstlen) &&
+			!strncmp(table[n].name, environ[s], srclen) &&
 			(my_var = x_strdup(environ[s])) != NULL) {
 			my_var[dstlen] = '\0';
 			xtermUnsetenv(my_var);
@@ -5224,7 +5238,7 @@ spawnXTerm(XtermWidget xw, unsigned line_speed)
 	    signal(SIGHUP, SIG_DFL);
 #endif
 
-	    if ((shname_minus = malloc(strlen(shname) + 2)) != 0) {
+	    if ((shname_minus = (char *) malloc(strlen(shname) + 2)) != 0) {
 		(void) strcpy(shname_minus, "-");
 		(void) strcat(shname_minus, shname);
 	    } else {

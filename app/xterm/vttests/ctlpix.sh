@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: ctlpix.sh,v 1.2 2019/05/02 22:02:06 tom Exp $
+# $XTermId: ctlpix.sh,v 1.6 2022/04/25 08:03:21 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2022 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -31,11 +31,13 @@
 # sale, use or other dealings in this Software without prior written
 # authorization.
 # -----------------------------------------------------------------------------
+PATH="$(dirname "$(readlink -f "$0")"):$PATH"
+export PATH
 clear
 lo=9216
 hi=9232
 for n in `seq $lo $hi`
 do
-	vxt-utf8 $n
+	utf8.pl "$n"
 done
-vxt-altchars
+altchars.sh

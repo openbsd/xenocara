@@ -1,4 +1,4 @@
-# $XTermId: terminfo,v 1.203 2022/02/01 00:35:15 tom Exp $
+# $XTermId: terminfo,v 1.204 2022/06/20 23:37:59 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
@@ -2772,7 +2772,7 @@ xterm-r5|xterm R5 version,
 dec+sl|DEC VTxx status line,
 	eslok,
 	hs,
-	dsl=\E[1$~,
+	dsl=\E[0$~,
 	fsl=\E[0$},
 	tsl=\E[2$~\E[1$}\E[%i%p1%d`,
 #

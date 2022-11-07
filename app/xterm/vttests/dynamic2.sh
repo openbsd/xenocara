@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: dynamic2.sh,v 1.8 2022/02/13 14:35:30 tom Exp $
+# $XTermId: dynamic2.sh,v 1.11 2022/04/25 08:19:38 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -39,14 +39,15 @@ OSC="${ESC}]"
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=`(mktemp) 2>/dev/null` || TMP=/tmp/xterm$$
+: "${TMPDIR=/tmp}"
+TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-{ test ! -f $TMP || test -s $TMP; } &&
+{ test ! -f "$TMP" || test -s "$TMP"; } &&
 for verb in "printf" "print" ; do
-    rm -f $TMP
+    rm -f "$TMP"
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
-    if test -f $TMP ; then
-	if test ! -s $TMP ; then
+    if test -f "$TMP" ; then
+	if test ! -s "$TMP" ; then
 	    CMD="$verb"
 	    OPT=
 	    SUF='\c'
@@ -54,7 +55,7 @@ for verb in "printf" "print" ; do
 	fi
     fi
 done
-rm -f $TMP
+rm -f "$TMP"
 
 LIST="00 30 80 d0 ff"
 FULL="10 11 12 13 14 15 16 17 18"
@@ -69,7 +70,7 @@ original=
 for N in $FULL
 do
     $CMD $OPT "${OSC}$N;?${SUF}" > /dev/tty
-    read reply
+    read -r reply
     eval original"$N"='${reply}${SUF}'
     original=${original}${reply}${SUF}
 done

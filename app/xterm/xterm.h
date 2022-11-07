@@ -1,4 +1,4 @@
-/* $XTermId: xterm.h,v 1.910 2022/03/09 00:39:01 tom Exp $ */
+/* $XTermId: xterm.h,v 1.918 2022/10/06 19:48:28 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -516,6 +516,7 @@ extern char **environ;
 #define XtNfaceName		"faceName"
 #define XtNfaceNameDoublesize	"faceNameDoublesize"
 #define XtNfaceSize		"faceSize"
+#define XtNfaintIsRelative	"faintIsRelative"
 #define XtNfastScroll		"fastScroll"
 #define XtNfont1		"font1"
 #define XtNfont2		"font2"
@@ -645,6 +646,9 @@ extern char **environ;
 #define XtNwideBoldFont		"wideBoldFont"
 #define XtNwideChars		"wideChars"
 #define XtNwideFont		"wideFont"
+#define XtNxftMaxGlyphMemory	"xftMaxGlyphMemory"
+#define XtNxftMaxUnrefFonts	"xftMaxUnrefFonts"
+#define XtNxftTrackMemUsage	"xftTrackMemUsage"
 #define XtNximFont		"ximFont"
 #define XtNxmcAttributes	"xmcAttributes"	/* ncurses-testing */
 #define XtNxmcGlitch		"xmcGlitch"	/* ncurses-testing */
@@ -726,6 +730,7 @@ extern char **environ;
 #define XtCFaceName		"FaceName"
 #define XtCFaceNameDoublesize	"FaceNameDoublesize"
 #define XtCFaceSize		"FaceSize"
+#define XtCFaintIsRelative	"FaintIsRelative"
 #define XtCFastScroll		"FastScroll"
 #define XtCFont1		"Font1"
 #define XtCFont2		"Font2"
@@ -845,6 +850,9 @@ extern char **environ;
 #define XtCWideBoldFont		"WideBoldFont"
 #define XtCWideChars		"WideChars"
 #define XtCWideFont		"WideFont"
+#define XtCXftMaxGlyphMemory	"XftMaxGlyphMemory"
+#define XtCXftMaxUnrefFonts	"XftMaxUnrefFonts"
+#define XtCXftTrackMemUsage	"XftTrackMemUsage"
 #define XtCXimFont		"XimFont"
 #define XtCXmcAttributes	"XmcAttributes"	/* ncurses-testing */
 #define XtCXmcGlitch		"XmcGlitch"	/* ncurses-testing */
@@ -1005,7 +1013,7 @@ extern void FindFontSelection (XtermWidget /* xw */, const char * /* atom_name *
 extern void HideCursor (XtermWidget /* xw */);
 extern void RestartBlinking(XtermWidget /* xw */);
 extern void ShowCursor (XtermWidget /* xw */);
-extern void SwitchBufPtrs (TScreen * /* screen */, int /* toBuf */);
+extern void SwitchBufPtrs (XtermWidget /* xw */, int /* toBuf */);
 extern void ToggleAlternate (XtermWidget /* xw */);
 extern void VTInitTranslations (void);
 extern GCC_NORETURN void VTReset (XtermWidget /* xw */, int /* full */, int /* saved */);
@@ -1028,7 +1036,7 @@ extern void unparseputc1 (XtermWidget /* xw */, int  /* c */);
 extern void unparseputn (XtermWidget /* xw */, unsigned /* n */);
 extern void unparseputs (XtermWidget /* xw */, const char * /* s */);
 extern void unparseseq (XtermWidget /* xw */, ANSI * /* ap */);
-extern void v_write (int  /* f */, const Char * /* d */, unsigned  /* len */);
+extern void v_write (int  /* f */, const Char * /* d */, size_t  /* len */);
 extern void xtermAddInput (Widget  /* w */);
 extern void xtermDecodeSCS (XtermWidget /* xw */, int /* which */, int /* sgroup */, int /* prefix */, int /* suffix */);
 
@@ -1104,7 +1112,7 @@ extern void xterm_ResetDouble(XtermWidget /* xw */);
 #if OPT_DEC_CHRSET
 extern GC xterm_DoubleGC(XTermDraw * /* params */, GC /* old_gc */, int * /* inxp */);
 #if OPT_RENDERFONT
-extern XftFont * xterm_DoubleFT(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
+extern XTermXftFonts * xterm_DoubleFT(XTermDraw * /* params */, unsigned /* chrset */, unsigned /* attr_flags */);
 extern void freeall_DoubleFT(XtermWidget /* xw */);
 #endif
 #endif
@@ -1180,7 +1188,7 @@ extern Window WMFrameWindow (XtermWidget /* xw */);
 extern XtInputMask xtermAppPending (void);
 extern XrmOptionDescRec * sortedOptDescs (XrmOptionDescRec *, Cardinal);
 extern XtermWidget getXtermWidget (Widget /* w */);
-extern int getVisualInfo (XtermWidget /* xw */);
+extern XVisualInfo *getVisualInfo (XtermWidget /* xw */);
 extern char *udk_lookup (XtermWidget /* xw */, int /* keycode */, int * /* len */);
 extern char *xtermEnvEncoding (void);
 extern char *xtermFindShell (char * /* leaf */, Bool /* warning */);
@@ -1384,7 +1392,7 @@ extern void xtermDumpSvg (XtermWidget /* xw */);
 
 extern Bool decodeUtf8 (TScreen * /* screen */, PtyData * /* data */);
 extern int readPtyData (XtermWidget /* xw */, PtySelect * /* select_mask */, PtyData * /* data */);
-extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, int  /* length */);
+extern void fillPtyData (XtermWidget /* xw */, PtyData * /* data */, const char * /* value */, size_t  /* length */);
 extern void initPtyData (PtyData ** /* data */);
 extern void trimPtyData (XtermWidget /* xw */, PtyData * /* data */);
 
@@ -1399,7 +1407,7 @@ extern Char *convertFromUTF8 (Char * /* lp */, unsigned * /* cp */);
 extern IChar nextPtyData (TScreen * /* screen */, PtyData * /* data */);
 extern PtyData * fakePtyData (PtyData * /* result */, Char * /* next */, Char * /* last */);
 extern void switchPtyData (TScreen * /* screen */, int  /* f */);
-extern void writePtyData (int  /* f */, IChar * /* d */, unsigned  /* len */);
+extern void writePtyData (int  /* f */, IChar * /* d */, size_t  /* len */);
 
 #define morePtyData(screen, data) \
 	(((data)->last > (data)->next) \

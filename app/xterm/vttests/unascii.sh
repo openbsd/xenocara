@@ -1,9 +1,9 @@
 #!/bin/bash
-# $XTermId: unascii.sh,v 1.2 2013/09/02 21:54:06 tom Exp $
+# $XTermId: unascii.sh,v 1.4 2022/04/25 07:58:15 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2013 by Thomas E. Dickey
+# Copyright 2013,2022 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -32,17 +32,18 @@
 # authorization.
 # -----------------------------------------------------------------------------
 # display the characters recognized by xterm in AsciiEquivs
-export PATH=$(dirname $(readlink -f $0)):$PATH
-vxt-utf8 0x2010
-vxt-utf8 0x2011
-vxt-utf8 0x2012
-vxt-utf8 0x2013
-vxt-utf8 0x2014
-vxt-utf8 0x2015
-vxt-utf8 0x2212
-vxt-utf8 0x2018
-vxt-utf8 0x2019
-vxt-utf8 0x201C
-vxt-utf8 0x201D
-vxt-utf8 0x2329
-vxt-utf8 0x232a
+PATH="$(dirname "$(readlink -f "$0")"):$PATH"
+export PATH
+utf8.pl 0x2010
+utf8.pl 0x2011
+utf8.pl 0x2012
+utf8.pl 0x2013
+utf8.pl 0x2014
+utf8.pl 0x2015
+utf8.pl 0x2212
+utf8.pl 0x2018
+utf8.pl 0x2019
+utf8.pl 0x201C
+utf8.pl 0x201D
+utf8.pl 0x2329
+utf8.pl 0x232a

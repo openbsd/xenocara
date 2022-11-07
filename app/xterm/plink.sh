@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: plink.sh,v 1.16 2022/02/13 14:30:17 tom Exp $
+# $XTermId: plink.sh,v 1.17 2022/03/13 18:27:29 Ryan.Schmidt Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -44,13 +44,15 @@ case "$*" in
 	;;
 esac
 
+: "${TMPDIR=/tmp}"
+
 while [ $# != 0 ]
 do
 	if [ $ASNEED = no ] && [ -n "$LINKIT" ]
 	then
 		ASNEED=yes
 		OPT=-Wl,-as-needed
-		warned=`mktemp`
+		warned=`mktemp "$TMPDIR/xterm.XXXXXXXX"`
 		trap "rm -f $warned; exit 1" 1 2 3 15
 		trap "rm -f $warned" 0
 		if ( eval $LINKIT $OPT $NO_LTO "$@" >"$warned" 2>&1 )

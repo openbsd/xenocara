@@ -1,4 +1,4 @@
-/* $XTermId: vms.c,v 1.14 2020/01/18 18:32:45 tom Exp $ */
+/* $XTermId: vms.c,v 1.15 2022/10/06 19:35:35 tom Exp $ */
 
 /*  vms.c
  *
@@ -390,7 +390,7 @@ static void tt_echo_ast(TT_BUF_STRUCT *buff_addr)
 
  */
 
-int tt_write(const char *tt_write_buf, int size)
+int tt_write(const char *tt_write_buf, size_t size)
 {
   int status;
   TT_BUF_STRUCT *echoBuff;

@@ -1,4 +1,4 @@
-dnl $XTermId: configure.in,v 1.383 2022/02/20 14:18:05 tom Exp $
+dnl $XTermId: configure.in,v 1.390 2022/10/10 16:33:01 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
@@ -104,6 +104,7 @@ AC_CHECK_FUNCS( \
 	waitpid \
 	wcswidth \
 	wcwidth )
+CF_MKSTEMP
 CF_UTMP
 CF_STRUCT_LASTLOG
 CF_POSIX_SAVED_IDS
@@ -443,8 +444,8 @@ if test "$cf_tic_prog" = yes ; then
 	fi
 	SET_TERMINFO=
 	if test -n "$TERMINFO_DIR" ; then
-		TERMINFO_DIR='$(DESTDIR)'$TERMINFO_DIR
-		SET_TERMINFO='TERMINFO=$(TERMINFO_DIR)'
+		TERMINFO_DIR='${DESTDIR}'$TERMINFO_DIR
+		SET_TERMINFO='TERMINFO=${TERMINFO_DIR}'
 	fi
 	no_ticprog=
 else
@@ -632,6 +633,16 @@ CF_ARG_DISABLE(boxchars,
 	[enable_boxchars=yes])
 AC_MSG_RESULT($enable_boxchars)
 test "$enable_boxchars" = no && AC_DEFINE(OPT_BOX_CHARS,0,[Define to 0 to disable fallback-support for box chars])
+
+AC_MSG_CHECKING(if you want to allow spawning commands to process selections)
+CF_ARG_DISABLE(exec-selection,
+	[  --disable-exec-selection disable "exec-formatted" and "exec-selection" actions],
+	[enable_exec_selection=no],
+	[enable_exec_selection=yes])
+AC_MSG_RESULT($enable_exec_selection)
+if test "$enable_exec_selection" = no ; then
+	AC_DEFINE(OPT_EXEC_SELECTION,0,[Define to 0 to disable "exec-selection" action])
+fi
 
 AC_MSG_CHECKING(if you want to allow spawning new xterms)
 CF_ARG_ENABLE(exec-xterm,
@@ -1193,5 +1204,5 @@ then
 fi
 
 ###	output xtermcfg.h, etc
-AC_CONFIG_FILES([Makefile df-install minstall:minstall.in])
+AC_CONFIG_FILES([Makefile df-install minstall:minstall.in run-tic.sh:run-tic.in])
 AC_OUTPUT

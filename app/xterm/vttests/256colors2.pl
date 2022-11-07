@@ -1,9 +1,9 @@
 #!/usr/bin/env perl
-# $XTermId: 256colors2.pl,v 1.25 2020/06/07 22:52:05 tom Exp $
+# $XTermId: 256colors2.pl,v 1.26 2022/10/10 17:22:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1999-2018,2020 by Thomas E. Dickey
+# Copyright 1999-2020,2022 by Thomas E. Dickey
 # Copyright 2002 by Steve Wall
 # Copyright 1999 by Todd Larason
 #
@@ -140,9 +140,16 @@ if ($opt_C) {
 }
 
 if ( $opt_8 and $opt_u ) {
-    my $lc_ctype = `locale 2>/dev/null | fgrep LC_CTYPE | sed -e 's/^.*=//'`;
-    if ( $lc_ctype =~ /utf.?8/i ) {
-        binmode( STDOUT, ":utf8" );
+    if ( open( FP, "locale 2>/dev/null |" ) ) {
+        my (@locale) = <FP>;
+        chomp @locale;
+        close(FP);
+        for my $n ( 0 .. $#locale ) {
+            if ( $locale[$n] =~ /^LC_CTYPE=/ ) {
+                binmode( STDOUT, ":utf8" ) if ( $locale[$n] =~ /utf.?8/i );
+                last;
+            }
+        }
     }
 }
 

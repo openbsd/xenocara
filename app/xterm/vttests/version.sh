@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: version.sh,v 1.1 2020/04/25 20:47:48 tom Exp $
+# $XTermId: version.sh,v 1.6 2022/04/25 22:47:07 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2020 by Thomas E. Dickey
+# Copyright 2020,2022 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -37,14 +37,14 @@ ESC=""
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=/tmp/xterm$$
+TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-( test ! -f $TMP || test -s $TMP ) &&
+( test ! -f "$TMP" || test -s "$TMP" ) &&
 for verb in printf print ; do
-    rm -f $TMP
-    eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
-    if test -f $TMP ; then
-	if test ! -s $TMP ; then
+    rm -f "$TMP"
+    eval '$verb "\c" >"$TMP" || echo fail >"$TMP"' 2>/dev/null
+    if test -f "$TMP" ; then
+	if test ! -s "$TMP" ; then
 	    CMD="$verb"
 	    OPT=
 	    SUF='\c'
@@ -52,14 +52,14 @@ for verb in printf print ; do
 	fi
     fi
 done
-rm -f $TMP
+rm -f "$TMP"
 
 exec </dev/tty
 old=`stty -g`
 stty raw -echo min 0  time 5
 
 $CMD $OPT "${ESC}[>0q${SUF}" > /dev/tty
-read version
+read -r version
 
 stty $old
 echo "$version" |cat -v

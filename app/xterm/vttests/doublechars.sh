@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: doublechars.sh,v 1.22 2022/02/13 14:34:47 tom Exp $
+# $XTermId: doublechars.sh,v 1.26 2022/04/25 23:25:41 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -42,14 +42,15 @@ CSI="${ESC}["
 CMD='/bin/echo'
 OPT='-n'
 SUF=''
-TMP=`(mktemp) 2>/dev/null` || TMP=/tmp/xterm$$
+: "${TMPDIR=/tmp}"
+TMP=`(mktemp "$TMPDIR/xterm.XXXXXXXX") 2>/dev/null` || TMP="$TMPDIR/xterm$$"
 eval '$CMD $OPT >$TMP || echo fail >$TMP' 2>/dev/null
-{ test ! -f $TMP || test -s $TMP; } &&
+{ test ! -f "$TMP" || test -s "$TMP"; } &&
 for verb in "printf" "print" ; do
-    rm -f $TMP
+    rm -f "$TMP"
     eval '$verb "\c" >$TMP || echo fail >$TMP' 2>/dev/null
-    if test -f $TMP ; then
-	if test ! -s $TMP ; then
+    if test -f "$TMP" ; then
+	if test ! -s "$TMP" ; then
 	    CMD="$verb"
 	    OPT=
 	    SUF='\c'
@@ -57,16 +58,21 @@ for verb in "printf" "print" ; do
 	fi
     fi
 done
-rm -f $TMP
+rm -f "$TMP"
 
+ITAL=no
 SAVE=yes
 WRAP=no
 if test $# != 0 ; then
     while test $# != 0
     do
     	case $1 in
+	-i)	ITAL=yes ;;
 	-n)	SAVE=no ;;
 	-w)	WRAP=yes ;;
+	*)
+		echo "usage: $0 [-i] [-n] [-w]"
+		exit 1
 	esac
 	shift
     done
@@ -78,7 +84,7 @@ if test $SAVE = yes ; then
     stty raw -echo min 0  time 5
 
     $CMD $OPT "${CSI}18t${SUF}" > /dev/tty
-    IFS=';' read junk high wide
+    IFS=';' read -r junk high wide
 
     stty $old
 
@@ -103,6 +109,7 @@ fi
 for SGR in 0 1 4 5 7
 do
 	$CMD $OPT "${CSI}0;${SGR}m" >/dev/tty
+	test "$ITAL" = yes && $CMD $OPT "${CSI}3m" >/dev/tty
 	for DBL in 5 3 4 6 5
 	do
 		$CMD $OPT "${ESC}#${DBL}" >/dev/tty

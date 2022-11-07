@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.80 2022/01/31 00:42:27 tom Exp $ */
+/* $XTermId: main.h,v 1.81 2022/07/07 09:44:28 tom Exp $ */
 
 /*
  * Copyright 2000-2021,2022 by Thomas E. Dickey
@@ -237,6 +237,10 @@
 
 #ifndef DEF_TI_XTRA_SCROLL
 #define DEF_TI_XTRA_SCROLL	"False"
+#endif
+
+#ifndef DEF_TRACK_USAGE
+#define DEF_TRACK_USAGE		True
 #endif
 
 #ifndef DEF_XFT_CACHE

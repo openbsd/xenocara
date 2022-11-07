@@ -1,7 +1,7 @@
-/* $XTermId: Tekproc.c,v 1.246 2021/12/27 18:07:35 tom Exp $ */
+/* $XTermId: Tekproc.c,v 1.249 2022/10/06 19:41:47 tom Exp $ */
 
 /*
- * Copyright 2001-2020,2021 by Thomas E. Dickey
+ * Copyright 2001-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1337,9 +1337,9 @@ TekEnq(TekWidget tw,
     if (tekscr->gin_terminator == GIN_TERM_EOT)
 	cplot[len++] = '\004';
 #ifdef VMS
-    tt_write(cplot + adj, len - adj);
+    tt_write(cplot + adj, (size_t) (len - adj));
 #else /* VMS */
-    v_write(screen->respond, cplot + adj, (unsigned) (len - adj));
+    v_write(screen->respond, cplot + adj, (size_t) (len - adj));
 #endif /* VMS */
 }
 
@@ -2015,6 +2015,7 @@ TekSimulatePageButton(TekWidget tw, Bool reset)
 void
 TekCopy(TekWidget tw)
 {
+#ifdef ALLOWLOGGING
     if (tw != 0) {
 	TekScreen *tekscr = TekScreenOf(tw);
 	TScreen *screen = TScreenOf(tw->vt);
@@ -2052,6 +2053,9 @@ TekCopy(TekWidget tw)
 	    close(tekcopyfd);
 	}
     }
+#else
+    (void) tw;
+#endif /* ALLOWLOGGING */
 }
 
 /*ARGSUSED*/

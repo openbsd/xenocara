@@ -1,4 +1,4 @@
-/* $XFree86: xc/programs/xterm/vms.h,v 1.1 2000/02/08 17:19:45 dawes Exp $ */
+/* $XTermId: vms.h,v 1.6 2022/10/06 19:37:30 tom Exp $ */
 
 /* vms.h
  */
@@ -38,4 +38,4 @@ static struct	    items {
 	int		return_addr;
 } itemlist[MAXITEMLIST];
 
-int tt_write(const char *tt_write_buf,int size);
+int tt_write(const char *tt_write_buf, size_t size);

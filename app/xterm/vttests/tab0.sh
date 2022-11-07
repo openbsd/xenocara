@@ -1,7 +1,7 @@
 #!/bin/sh
-# $XTermId: tab0.sh,v 1.2 2019/06/01 16:03:03 tom Exp $
+# $XTermId: tab0.sh,v 1.6 2022/04/25 22:49:46 tom Exp $
 # -----------------------------------------------------------------------------
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -31,44 +31,44 @@
 # -----------------------------------------------------------------------------
 # Demonstrate hard-tabs.
 
-: ${TABS:=tabs}
-: ${TPUT:=tput}
+: "${TABS:=tabs}"
+: "${TPUT:=tput}"
 
 show() {
-	printf "Tabs $1:"
-	read ignore
+	printf "Tabs %s:" "$1"
+	read -r ignore
 	p=0
-	while [ $p -lt $wide ]
+	while [ "$p" -lt "$wide" ]
 	do
-		printf "%s+----%d" "----" `expr 1 + \( $p / 10 \)`
+		printf "%s+----%d" "----" "`expr 1 + \( "$p" / 10 \)`"
 		p=`expr $p + 10`
 	done
-	printf "\n"
+	printf '\n'
 	p=1
 	printf " "
-	while [ $p -lt $wide ]
+	while [ "$p" -lt "$wide" ]
 	do
-		printf "%*s" $1 "*"
-		p=`expr $p + $1`
+		printf "%*s" "$1" "*"
+		p=`expr "$p" + "$1"`
 	done
-	printf "\n"
+	printf '\n'
 	p=0
-	while [ $p -lt $wide ]
+	while [ "$p" -lt "$wide" ]
 	do
-		printf "\t+"
-		p=`expr $p + $1`
+		printf '\t+'
+		p=`expr "$p" + "$1"`
 	done
-	printf "\n"
+	printf '\n'
 	printf "...done"
-	read ignore
+	read -r ignore
 }
 
 # enable hard tabs, disable autowrap.
 initialize() {
-	$TPUT $1
+	"$TPUT" "$1"
 	clear
 	stty tabs
-	printf "\033[?7l"
+	printf '\033[?7l'
 }
 
 setup() {
@@ -78,7 +78,7 @@ setup() {
 # Turn hard tabs off, reenable autowrap.
 restore() {
 	stty -tabs
-	printf "\033[?7h"
+	printf '\033[?7h'
 }
 
 wide=`$TPUT cols`
@@ -98,7 +98,7 @@ do
 	if [ -n "$value" ]
 	then
 		initialize $name
-		printf "Testing after tput $name\r\n"
+		printf 'Testing after tput %s\r\n' "$name"
 		show	8
 		break
 	fi

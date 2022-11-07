@@ -1,7 +1,7 @@
-/* $XTermId: print.c,v 1.172 2021/03/02 00:19:13 tom Exp $ */
+/* $XTermId: print.c,v 1.173 2022/09/18 21:00:08 tom Exp $ */
 
 /*
- * Copyright 1997-2020,2021 by Thomas E. Dickey
+ * Copyright 1997-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -325,16 +325,16 @@ xtermPrintEverything(XtermWidget xw, PrinterFlags *p)
 	    printLines(xw, -screen->savedlines, -(screen->topline + 1), p);
 	}
 	if (p->print_everything & 4) {
-	    SwitchBufPtrs(screen, 1);
+	    SwitchBufPtrs(xw, 1);
 	    done_which |= 2;
 	    printLines(xw, 0, screen->max_row, p);
-	    SwitchBufPtrs(screen, save_which);
+	    SwitchBufPtrs(xw, save_which);
 	}
 	if (p->print_everything & 2) {
-	    SwitchBufPtrs(screen, 0);
+	    SwitchBufPtrs(xw, 0);
 	    done_which |= 1;
 	    printLines(xw, 0, screen->max_row, p);
-	    SwitchBufPtrs(screen, save_which);
+	    SwitchBufPtrs(xw, save_which);
 	}
 	if (p->print_everything & 1) {
 	    if (!(done_which & (1 << screen->whichBuf))) {

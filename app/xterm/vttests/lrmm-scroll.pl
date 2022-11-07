@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
-# $XTermId: lrmm-scroll.pl,v 1.12 2019/07/10 08:22:48 tom Exp $
+# $XTermId: lrmm-scroll.pl,v 1.14 2022/10/10 17:07:48 tom Exp $
 # -----------------------------------------------------------------------------
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -40,7 +40,7 @@ use diagnostics;
 use Term::ReadKey;
 use Getopt::Std;
 
-# do this so outout from successive calls to this script won't get in the
+# do this so output from successive calls to this script won't get in the
 # wrong order:
 use IO::Handle;
 STDERR->autoflush(1);
@@ -52,20 +52,36 @@ our ( $term_height, $term_width );
 
 our $CSI = "\033[";
 
+our @resize;
+
+sub read_resize($) {
+    my $field  = shift;
+    my $result = shift;
+    if ( $#resize < 0 ) {
+        open( FP, "resize -u |" ) or exit $!;
+        @resize = <FP>;
+        chomp @resize;
+        close(FP);
+    }
+    for my $n ( 0 .. $#resize ) {
+        if ( $resize[$n] =~ /^$field=/ ) {
+            $result = $resize[$n];
+            $result =~ s/^[^=]*=//;
+            $result =~ s/;.*//;
+            last;
+        }
+    }
+    return $result;
+}
+
 # returns the number of rows in the screen
 sub screen_height() {
-    my $data = `resize -u |fgrep LINES=`;
-    $data =~ s/LINES=//;
-    $data =~ s/;//;
-    return $data;
+    return &read_resize( "LINES", 24 );
 }
 
 # returns the number of columns in the screen
 sub screen_width() {
-    my $data = `resize -u |fgrep COLUMNS=`;
-    $data =~ s/COLUMNS=//;
-    $data =~ s/;//;
-    return $data;
+    return &read_resize( "COLUMNS", 80 );
 }
 
 sub set_color($) {

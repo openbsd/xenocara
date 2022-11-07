@@ -1,9 +1,9 @@
 #!/bin/sh
-# $XTermId: minstall.in,v 1.26 2021/01/27 01:36:06 tom Exp $
+# $XTermId: minstall.in,v 1.27 2022/10/02 20:13:11 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2001-2019,2021 by Thomas E. Dickey
+# Copyright 2001-2021,2022 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -126,8 +126,8 @@ X_MANSECT=`man $X_MANPAGE 2>&1 | grep $X_MANPAGE'([^)]*)' | head -n 1 | tr '\012
 test -z "$X_MANSECT" && X_MANSECT=$suffix
 
 VERSION_H=`echo "$OLD_FILE" | sed -e 's,/[^/]*$,/version.h,' -e s',^[^/]*$,version.h,'`
-PATCH_NUM=`${FGREP-fgrep} XTERM_PATCH "$VERSION_H" | sed -e 's/[^0-9]*//g'`
-PATCH_YMD=`${FGREP-fgrep} XTERM_DATE  "$VERSION_H" | sed -e 's,[^0-9/.-]*,,g'`
+PATCH_NUM=`@FGREP@ XTERM_PATCH "$VERSION_H" | sed -e 's/[^0-9]*//g'`
+PATCH_YMD=`@FGREP@ XTERM_DATE  "$VERSION_H" | sed -e 's,[^0-9/.-]*,,g'`
 
 # Make capitalization variants
 APP_chr0=`echo "$APP_name" | sed -e 's/^\(.\).*/\1/' | tr "$lower" "$upper"`

@@ -1,9 +1,9 @@
 #!/bin/bash
-# $XTermId: dl.sh,v 1.2 2019/11/18 10:13:03 tom Exp $
+# $XTermId: dl.sh,v 1.4 2022/04/25 08:25:37 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 2019 by Thomas E. Dickey
+# Copyright 2019,2022 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -53,7 +53,7 @@ reset_margins() {
 
 finish_test() {
 	printf '\033[10;1H'
-	read -p "$*"
+	read -r -p "$*"
 }
 
 start_test

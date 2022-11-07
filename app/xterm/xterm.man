@@ -1,5 +1,5 @@
 '\" t
-.\" $XTermId: xterm.man,v 1.856 2022/02/22 09:11:42 tom Exp $
+.\" $XTermId: xterm.man,v 1.864 2022/10/08 00:17:27 tom Exp $
 .\"
 .\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
@@ -2260,11 +2260,14 @@ The default is \*(``false\*(''.
 .TP 8
 .B "allowPasteControls\fP (class\fB AllowPasteControls\fP)"
 If true, allow control characters such as BEL and CAN to be pasted.
-Formatting characters (tab, newline) are always allowed.
+Formatting characters (tab, newline) are normally allowed,
+unless suppressed via the \fBdisallowedPasteControls\fP resource.
 Other C0 control characters are suppressed unless this resource is enabled.
 The exact set of control characters (C0 and C1)
 depends upon whether UTF-8 encoding is used,
-as well as the \fBallowC1Printable\fP resource.
+as well as
+the \fBallowC1Printable\fP
+and \fBdisallowedPasteControls\fP resources.
 The default is \*(``false\*(''.
 .TP 8
 .B "allowScrollLock\fP (class\fB AllowScrollLock\fP)"
@@ -3195,12 +3198,11 @@ This overrides the \fBalternateScroll\fP resource.
 .RE
 .TP 8
 .B "disallowedPasteControls\fP (class\fB DisallowedPasteControls\fP)"
-The \fBallowPasteControls\fP resource is normally used to prevent
-pasting C1 controls, as well as non-formatting C0 controls such
-as the ASCII escape character.
-Those characters are simply ignored.
-This resource further extends the set of control characters
+Use this resource to disallow pasting specific C0 control characters
+when the \fBallowPasteControls\fP resource is false (i.e., the default).
+This resource defines the set of control characters
 which cannot be pasted, converting each into a space.
+Other C0 controls are pasted without change.
 .IP
 The resource value is a comma-separated list of names.
 \fI\*N\fP ignores capitalization.
@@ -3476,6 +3478,10 @@ For example,
 XTerm*faceName: x:fixed,xft:Bitstream Vera Sans Mono
 .NE
 .IP
+Two TrueType fonts can be specified in this way.
+The first is the primary font;
+the second acts as a manual override to the fontconfig fontset.
+.IP
 If no \fBfaceName\fP resource is specified,
 or if there is no match for both TrueType normal and bold fonts,
 \fI\*n\fR uses the XLFD (bitmap) \fBfont\fP and related resources.
@@ -3562,6 +3568,14 @@ Specifies the pointsize of the sixth alternative font.
 .TP 8
 .B "faceSize7\fP (class\fB FaceSize7\fP)"
 Specifies the pointsize of the seventh alternative font.
+.TP 8
+.B "faintIsRelative\fP (class\fB FaintIsRelative\fP)"
+Faint colors are derived from the current text color, e.g., the ANSI colors,
+by scaling the red, green and blue components.
+Use this resource to specify whether that is done relative to the
+current background color,
+or as an absolute value.
+The default is \*(``false\*(''.
 .TP 8
 .B "fastScroll\fP (class\fB FastScroll\fP)"
 Modifies the effect of jump scroll (\fBjumpScroll\fP)
@@ -3962,8 +3976,9 @@ which change character sets.
 The default is \*(``B\*('', which corresponds to US ASCII.
 .TP 8
 .B "limitFontsets\fP (class\fB LimitFontsets\fP)"
-Limits the number of TrueType fallback fonts (i.e., fontset) which can be used.
+Limits the number of TrueType fallback fonts (i.e., fontset) which can be tested.
 The default is \*(``50\*(''.
+No more than \*(``255\*('' will be scanned.
 .IP
 This limits the number of fallback fonts
 which \fI\*n\fP uses to display characters.
@@ -5113,7 +5128,10 @@ If \fI\*n\fR is configured to support SIXEL graphics,
 this resource tells it whether to
 scroll up one line at a time when sixels would be written
 past the bottom line on the window.
-The default is \*(``false\*('' which enables scrolling.
+The default is \*(``true\*('' which enables scrolling.
+.IP
+Sixel scrolling is the opposite of DEC Sixel Display Mode (DECSDM):
+when one is on, the other is off.
 .TP 8
 .B "sixelScrollsRight\fP (class\fB SixelScrollsRight\fP)"
 If \fI\*n\fR is configured to support SIXEL graphics,
@@ -5476,6 +5494,24 @@ it will attempt to use a font twice as wide as the font that will be used to
 draw normal text.
 If no double-width font is found, it will improvise, by stretching
 the normal font.
+.TP 8
+.B "xftMaxGlyphMemory\fP (class\fB XftMaxGlyphMemory\fP)"
+Set the Xft library's limit on glyph memory (typically 4Mb).
+When it reaches this limit, it discards \*(``randomly chosen\*(''
+glyphs to make room for new ones.
+The default is \*(``0\*('' to use Xft's default value.
+.TP 8
+.B "xftMaxUnrefFonts\fP (class\fB XftMaxUnrefFonts\fP)"
+Set the Xft library's limit on fonts which have been loaded (typically 16),
+e.g., matching patterns for fallback searches,
+but are not actually used.
+The default is \*(``0\*('' to use Xft's default value.
+.TP 8
+.B "xftTrackMemUsage\fP (class\fB XftTrackMemUsage\fP)"
+Enables glyph memory tracking (introduced in Xft 2.3.5),
+which allows Xft to efficiently discard obsolete data when running
+short of memory.
+The default is \*(``true\*(''.
 .TP 8
 .B "ximFont\fP (class\fB XimFont\fP)"
 This option specifies the font to be used for displaying the preedit string
@@ -6661,15 +6697,29 @@ This corresponds to the \fB\-ai\fP option and the \fBactiveIcon\fP resource.
 .
 .TP
 .B Sixel Scrolling\fP (resource \fBsixelScrolling\fP)
-When enabled,
-sixel graphics are positioned at the current text cursor location, scroll
-the image vertically if larger than the screen, and leave the text cursor
-at the start of the next complete line after the image when returning to text
-mode (this is the default).
-When disabled,
-sixel graphics are positioned at the upper left of the screen, are
-cropped to fit the screen, and do not affect the text cursor location.
 This corresponds to the \fBsixelScrolling\fP resource.
+It can also be turned off and on using the private mode DECSDM
+(Sixel Display Mode).
+.RS
+.bP
+When enabled,
+\fI\*n\fR draws sixel graphics at the current text cursor location,
+scrolling the image vertically if it is larger than the screen,
+and leaving the text cursor
+at the same column in the next complete line after the image when
+returning to text mode
+.IP
+This is the default,
+which corresponds to the \fIreset\fP state of DECSDM.
+.bP
+When disabled,
+\fI\*n\fR draws sixel graphics starting at the upper left of the screen,
+cropping to fit the screen,
+and does not alter the text cursor location.
+.IP
+This corresponds to the \fIset\fP state of DECSDM.
+.RE
+.IP
 There is no corresponding command-line option.
 .
 .TP
@@ -8918,7 +8968,7 @@ Steve Pitschke (Stellar), Ron Newman (MIT-Athena), Jim Fulton (MIT X
 Consortium), Dave Serisky (HP), Jonathan Kamens (MIT-Athena).
 .PP
 Beginning with XFree86, there were far more identifiable contributors.
-The \fITHANKS\fP file in \fI\*n\fP's source lists 234 in August 2021.
+The \fITHANKS\fP file in \fI\*n\fP's source lists 243 in June 2022.
 Keep in mind these:
 Jason Bacon,
 Jens Schweikhardt,

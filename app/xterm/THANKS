@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.33 2022/02/22 21:42:29 tom Exp $
+-- $XTermId: THANKS,v 1.35 2022/09/12 21:10:13 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -39,10 +39,12 @@ Bertram Felgenhauer
 Bill Nottingham
 Bjarni Ingi Gislason
 Bob Maynard
+Boian Bonev
 Brad Town
 Bradd W Szonye
 Bram Moolenaar
 Branden Robinson
+Brendan O' Dea
 Bruno Haible
 Cade Foster
 Caetano Jimenez Carezzato
@@ -200,6 +202,7 @@ Rajesh Mandalemula
 Richard Braakman
 Richard Griswold
 Richard Tollerton
+Richard de Boer
 Rob Braun
 Robert Brady
 Robert Earl
@@ -209,6 +212,7 @@ Romain Francoise
 Ross Combs
 Ross Paterson
 Ryan Johnson
+Ryan Schmidt
 Sam Stephenson
 Samuel Thibault
 Scott Sewall

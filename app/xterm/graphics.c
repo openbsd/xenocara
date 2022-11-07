@@ -1,4 +1,4 @@
-/* $XTermId: graphics.c,v 1.117 2022/02/24 09:28:54 tom Exp $ */
+/* $XTermId: graphics.c,v 1.118 2022/05/16 23:35:50 tom Exp $ */
 
 /*
  * Copyright 2013-2021,2022 by Ross Combs
@@ -816,7 +816,7 @@ save_allocated_color(const ColorRegister *reg, XtermWidget xw, Pixel *pix)
     } else {
 	*pix = xcolor.pixel;
 
-	if (!(new_color = malloc(sizeof(*new_color)))) {
+	if (!(new_color = TypeMalloc(AllocatedColorRegister))) {
 	    TRACE(("unable to save pixel %lu\n", (unsigned long) *pix));
 	    return 0;
 	} else {
@@ -1252,8 +1252,8 @@ AllocGraphicsBuffer(TScreen *screen,
     int const refresh_h = nrows * FontHeight(screen);
     ColorRegister *buffer;
 
-    if (!(buffer = malloc(sizeof(ColorRegister) *
-			  (unsigned) refresh_w * (unsigned) refresh_h))) {
+    if (!(buffer = TypeMallocN(ColorRegister,
+			         (unsigned) refresh_w * (unsigned) refresh_h))) {
 	TRACE(("unable to allocate %dx%d buffer for graphics refresh\n",
 	       refresh_w, refresh_h));
     } else {
@@ -1577,7 +1577,7 @@ refresh_graphics(XtermWidget xw,
 	    free(buffer);
 	    return;
 	}
-	imgdata = malloc((size_t) (image_h * (unsigned) image->bytes_per_line));
+	imgdata = TypeMallocN(char, (size_t)(image_h * (unsigned)image->bytes_per_line));
 	if (!imgdata) {
 	    TRACE(("unable to allocate XImage for graphics refresh\n"));
 	    XDestroyImage(image);

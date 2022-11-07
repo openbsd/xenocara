@@ -20,8 +20,8 @@
 
                              Thomas Dickey
                       XFree86 Project (1996-2006)
-                    invisible-island.net (2006-2021)
-               updated for XTerm Patch #371 (2021/12/26)
+                    invisible-island.net (2006-2022)
+               updated for XTerm Patch #374 (2022/10/10)
 
 
 
@@ -793,7 +793,8 @@ CSI ? Pm h
           VT420.  This sets the backarrowKey resource to "true".
             Ps = 6 9  -> Enable left and right margin mode (DECLRMM),
           VT420 and up.
-            Ps = 8 0  -> Disable Sixel Scrolling (DECSDM).
+            Ps = 8 0  -> Enable Sixel Display Mode (DECSDM), VT330,
+          VT340, VT382.
             Ps = 9 5  -> Do not clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Send Mouse X & Y on button press and
@@ -922,7 +923,9 @@ CSI ? Pm l
           VT420.  This sets the backarrowKey resource to "false".
             Ps = 6 9  -> Disable left and right margin mode (DECLRMM),
           VT420 and up.
-            Ps = 8 0  -> Enable Sixel Scrolling (DECSDM).
+            Ps = 8 0  -> Disable Sixel Display Mode (DECSDM), VT330,
+          VT340, VT382.  Turns on ``Sixel Scrolling''.  See the section
+          Sixel Graphics and mode 8 4 5 2 .
             Ps = 9 5  -> Clear screen when DECCOLM is set/reset
           (DECNCSM), VT510 and up.
             Ps = 1 0 0 0  -> Don't send Mouse X & Y on button press and
@@ -2387,6 +2390,10 @@ in text.  When bracketed paste mode is set, the program will receive:
    ESC [ 2 0 0 ~ ,
 followed by the pasted text, followed by
    ESC [ 2 0 1 ~ .
+For background and discussion, see the FAQ:
+
+  XTerm - bracketed-paste
+
 
 
 Title Modes
@@ -2724,25 +2731,26 @@ Sixel Graphics
 
 If xterm is configured as VT240, VT241, VT330, VT340 or VT382 using the
 decTerminalID or decGraphicsID resource, it supports Sixel Graphics
-controls, a palleted bitmap graphics system using sets of six vertical
+controls, a paletted bitmap graphics system using sets of six vertical
 pixels as the basic element.
 
-CSI Ps c  Send Device Attributes (Primary DA), xterm.  xterm responds to
-          Send Device Attributes (Primary DA) with these additional
-          codes:
+CSI Ps c  Send Device Attributes (Primary DA), DEC graphics terminals,
+          xterm.  xterm responds to Send Device Attributes (Primary DA)
+          with these additional codes:
             Ps = 4  -> Sixel graphics.
 
 CSI ? Pm h
-          Set Mode, xterm.  xterm has these additional private Set Mode
-          values:
-            Ps = 8 0  -> Sixel scrolling.
+          Set Mode (with corresponding Reset Mode CSI ? Pm l ):
+            Ps = 8 0  -> Sixel Display Mode (DECSDM), VT330, VT340,
+          VT382.
             Ps = 1 0 7 0  -> use private color registers for each
-          graphic.
+          graphic, xterm.
             Ps = 8 4 5 2  -> Sixel scrolling leaves cursor to right of
-          graphic.
+          graphic, RLogin, xterm.
 
 DCS Pa ; Pb ; Ph q  Ps..Ps ST
-          Send SIXEL image, DEC graphics terminals, xterm.  See:
+          Send SIXEL image, DEC graphics terminals, VT330, VT340, VT382.
+          See:
 
              VT330/VT340 Programmer Reference Manual Volume 2:
              Graphics Programming
@@ -2962,10 +2970,39 @@ o   Sometimes the manuals are simply incorrect.  For example, testing a
     DEC VT420 in 1996 showed that the documented code for a valid or
     invalid response to DECRQSS was reversed.
 
-    The VT420 test results were incorporated into vttest program.  At
-    the time, DEC STD 070 was not available, but it also agrees with
+    The VT420 test results were incorporated into the vttest program.
+    At the time, DEC STD 070 was not available, but it also agrees with
     vttest.  Later, documentation for the DEC VT525 was shown to have
     the same flaw.
+
+o   The VT330/VT340 reference manual for graphics programming documents
+    sixel graphics in some detail in chapter 14.  Overlooked in the
+    first edition, the second edition mentions Sixel Scrolling.  The
+    VT382 Kanji and Thai manuals provide less information, about sixel
+    graphics, but do mention DECSDM.  They differ in their comment about
+    the private mode DECSDM (CSI ? 8 0 h ), which each manual agrees
+    should set the Sixel Scrolling feature.  The VT330/VT340 graphics
+    programming manual (second edition, March 1988) says
+
+        When sixel display mode is set, the Sixel Scrolling feature is
+        enabled.
+        When sixel display mode is reset, the Sixel Scrolling feature is
+        disabled.
+
+    while the VT382 Kanji manual (page 6-6, undated) says
+
+        Disable sixel scroll
+
+    and the VT382 Thai manual (page C-30, August 1989) says
+
+        No Sixel scrolling
+
+    The standard (DEC STD 070) in chapter 9 (August 3, 1990) states on
+    page 17 that video devices will scroll when advancing the Sixel
+    active position past the bottom margin, but on page 19, in the
+    section on deviations, states that VT125 and VT240 did not scroll in
+    this situation.  The standard does not mention VT330/VT340 or VT382.
+    Nor does it document DECSDM.
 
 o   Not all details are clear even in DEC STD 070 (which is more than
     twice the length of the VT520 programmer's reference manual, and
@@ -3018,7 +3055,7 @@ o   VT330/VT340 Programmer Reference Manual
 
 o   VT382 Kanji Display Terminal
     Programmer Reference Manual.
-    Digital Equipment Corporation (EK-VT382-RM-001).
+    Digital Equipment Corporation (EK-VT382-RM-001, undated).
 
 o   VT382 Thai Display Terminal
     Installing and Using Manual.
@@ -3138,31 +3175,6 @@ o   The VT320, VT420, VT520 manuals claim that DECSCL does a hard reset
     Both the VT220 manual and DEC STD 070 (which documents levels 1-4 in
     detail) state that it is a soft reset, e.g., DECSTR.
 
-o   The VT330/VT340 reference manual for graphics programming documents
-    sixel scrolling in some detail in chapter 14.  The VT382 Kanji and
-    Thai manuals provide less information, but differ in their comment
-    about the private mode DECSDM (CSI ? 8 0 h ), which each manual
-    agrees should set the Sixel Scrolling feature.  However, the
-    VT330/VT340 manual says
-
-              When sixel display mode is set, the Sixel Scrolling
-              feature is enabled.
-
-    while the VT382 Kanji manual (page 6-6) says
-
-              Disable sixel scroll
-
-    and the VT382 Thai manual (page C-30) says
-
-              No Sixel scrolling
-
-    The standard (DEC STD 070) in chapter 9 (August 3, 1990) states on
-    page 17 that video devices will scroll when advancing the Sixel
-    active position past the bottom margin, but on page 19, in the
-    section on deviations, states that VT125 and VT240 did not scroll in
-    this situation.  The standard does not mention VT330/VT340 or VT382.
-    Nor does it document DECSDM.
-
 Here are the relevant standards:
 
 o   Additional Controls for Use with American National Standard Code for
@@ -3280,44 +3292,44 @@ o   The SCOSC/SCORC control sequences for saving/restoring the cursor
         be used in termcap for vi, for example, to turn off saving of
         lines, but restore whatever the original state was on exit.
 
-    while the SCOSC/SCORC  pair  was  added  in  1995  by  XFree86  (and
+    while  the  SCOSC/SCORC  pair  was  added  in  1995  by XFree86 (and
     documented long afterwards).
 
-    The  SCO  ANSI  console  terminal  descriptions  did  not  use these
-    controls (they used the VT100-compatible SC/RC  pair).   SCOSC/SCORC
-    were  an artifact of DOS 2.00 (January 1983), by Microsoft and later
+    The SCO  ANSI  console  terminal  descriptions  did  not  use  these
+    controls  (they  used the VT100-compatible SC/RC pair).  SCOSC/SCORC
+    were an artifact of DOS 2.00 (January 1983), by Microsoft and  later
     supported by SCO and other vendors.
 
-    The SCOSC/SCORC pair is considered a private mode because the  final
+    The  SCOSC/SCORC pair is considered a private mode because the final
     characters (s  and u ) fall in the range from "`" to "~" (octal 0140
-    to octal 0176).  Other private control sequences can be  constructed
+    to  octal 0176).  Other private control sequences can be constructed
     by using octets 074 to 077 (characters "<", "=", ">", or "?") at the
     beginning  of  the  parameter  string.   The  XTSAVE  and  XTRESTORE
     controls use "?") in this manner.
 
     Because  the  XTSAVE  and  XTRESTORE  controls  are  private,  other
-    terminals may behave differently.  For example, DEC  (a  contributor
-    to  the  early xterm as well as a manufacturer of terminals) used an
-    incompatible private control in one of its terminals more than  five
+    terminals  may  behave differently.  For example, DEC (a contributor
+    to the early xterm as well as a manufacturer of terminals)  used  an
+    incompatible  private control in one of its terminals more than five
     years later (for the VT420 PCTerm, announced in February 1992).
 
-    In  that  model  of  the  VT420,  CSI ? Pm; Pc r selects the PC TERM
-    emulation mode.  When this mode is enabled, the keyboard sends  scan
-    codes  rather than characters (analogous to X keyboard events).  The
-    first parameter of this private control enables or disables PC  TERM
+    In that model of the VT420, CSI ? Pm;  Pc  r  selects  the  PC  TERM
+    emulation  mode.  When this mode is enabled, the keyboard sends scan
+    codes rather than characters (analogous to X keyboard events).   The
+    first  parameter of this private control enables or disables PC TERM
     mode, while the second selects a character set.  An ambiguity arises
     if an application omits the second parameter.  In that special case,
-    it  cannot  be  distinguished from XTRESTORE.  DEC did not take this
+    it cannot be distinguished from XTRESTORE.  DEC did  not  take  this
     into account when designing the feature.
 
-    If there were potential users, xterm could  accommodate  this  by  a
-    resource  setting.   In  retrospect (thirty years later), there have
-    been no uses of PC TERM, while the XTRESTORE  feature  is  still  in
+    If  there  were  potential  users, xterm could accommodate this by a
+    resource setting.  In retrospect (thirty years  later),  there  have
+    been  no  uses  of  PC TERM, while the XTRESTORE feature is still in
     use.
 
 o   The aixterm manual page gives the format of the control sequence for
-    foreground and background colors 8-15, but  does  not  specify  what
-    those  colors  are.  That is implied by the description's mention of
+    foreground  and  background  colors  8-15, but does not specify what
+    those colors are.  That is implied by the description's  mention  of
     HFT:
 
         The aixterm command provides a standard terminal type for
@@ -3327,7 +3339,7 @@ o   The aixterm manual page gives the format of the control sequence for
         the -v flag.
 
     Unlike xterm, there are no resource names for the 16 colors, leaving
-    the  reader  to  assume that the mapping is hard-coded.  The control
-    sequences for colors 8-15 are not specified by ECMA-48,  but  rather
-    (as  done  in  other instances by xterm) chosen to not conflict with
+    the reader to assume that the mapping is  hard-coded.   The  control
+    sequences  for  colors 8-15 are not specified by ECMA-48, but rather
+    (as done in other instances by xterm) chosen to  not  conflict  with
     current or future standards.

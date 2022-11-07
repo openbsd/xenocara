@@ -1,7 +1,7 @@
-/* $XTermId: linedata.c,v 1.101 2021/12/27 23:43:28 tom Exp $ */
+/* $XTermId: linedata.c,v 1.102 2022/09/18 21:17:43 tom Exp $ */
 
 /*
- * Copyright 2009-2019,2021 by Thomas E. Dickey
+ * Copyright 2009-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -70,7 +70,7 @@ getLineData(TScreen *screen, int row)
 void
 copyLineData(LineData *dst, CLineData *src)
 {
-    if (dst == NULL || src == NULL)
+    if (dst == NULL || src == NULL || dst == src)
 	return;
 
     dst->bufHead = src->bufHead;

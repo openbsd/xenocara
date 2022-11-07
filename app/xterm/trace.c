@@ -1,4 +1,4 @@
-/* $XTermId: trace.c,v 1.236 2022/02/18 08:48:47 tom Exp $ */
+/* $XTermId: trace.c,v 1.239 2022/10/06 20:43:02 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -309,17 +309,17 @@ visibleScsCode(DECNRCM_codes chrset)
 }
 
 const char *
-visibleChars(const Char *buf, unsigned len)
+visibleChars(const Char *buf, size_t len)
 {
     static char *result;
-    static unsigned used;
+    static size_t used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 8) + 1;
+	size_t limit = ((len + 1) * 8) + 1;
 
 	if (limit > used) {
 	    used = limit;
-	    result = XtRealloc(result, used);
+	    result = realloc(result, used);
 	}
 	if (result != 0) {
 	    char *dst = result;
@@ -359,17 +359,17 @@ visibleEventMode(EventMode value)
 }
 
 const char *
-visibleIChars(const IChar *buf, unsigned len)
+visibleIChars(const IChar *buf, size_t len)
 {
     static char *result;
-    static unsigned used;
+    static size_t used;
 
     if (buf != 0) {
-	unsigned limit = ((len + 1) * 12) + 1;
+	size_t limit = ((len + 1) * 12) + 1;
 
 	if (limit > used) {
 	    used = limit;
-	    result = XtRealloc(result, used);
+	    result = realloc(result, used);
 	}
 	if (result != 0) {
 	    char *dst = result;
@@ -484,6 +484,7 @@ visibleNotifyDetail(int code)
     return result;
 }
 
+#if OPT_TEK4014
 const char *
 visibleSelectionTarget(Display *d, Atom a)
 {
@@ -545,6 +546,7 @@ visibleVTparse(int code)
     }
     return result;
 }
+#endif
 
 const char *
 visibleXError(int code)
@@ -904,9 +906,9 @@ TraceEvent(const char *tag, XEvent *ev, String *params, Cardinal *num_params)
 	    for (j = 0; j < XtNumber(ev->xkeymap.key_vector); ++j) {
 		if (ev->xkeymap.key_vector[j] != 0) {
 		    Cardinal k;
-		    for (k = 0; k < 8; ++k) {
+		    for (k = 0; k < CHAR_BIT; ++k) {
 			if (ev->xkeymap.key_vector[j] & (1 << k)) {
-			    TRACE((" key%u", (j * 8) + k));
+			    TRACE((" key%u", (j * CHAR_BIT) + k));
 			}
 		    }
 		}

@@ -1,4 +1,4 @@
-/* $XTermId: graphics_regis.c,v 1.129 2022/02/21 13:33:08 tom Exp $ */
+/* $XTermId: graphics_regis.c,v 1.130 2022/05/16 23:31:18 tom Exp $ */
 
 /*
  * Copyright 2014-2021,2022 by Ross Combs
@@ -538,8 +538,8 @@ draw_or_save_patterned_pixel(RegisGraphicsContext *context, int x, int y)
 static int
 sort_points(void const *l, void const *r)
 {
-    RegisPoint const *const lp = l;
-    RegisPoint const *const rp = r;
+    RegisPoint const *const lp = (RegisPoint const *)l;
+    RegisPoint const *const rp = (RegisPoint const *)r;
 
     if (lp->y < rp->y)
 	return -1;
@@ -1696,7 +1696,7 @@ get_xft_glyph_dimensions(XtermWidget xw, XftFont *font, unsigned *w,
 	workh = (unsigned) font->height + 2U;
     }
 
-    if (!(pixels = malloc((size_t) (workw * workh)))) {
+    if (!(pixels = TypeMallocN(Char, (size_t) (workw * workh)))) {
 	*w = 0U;
 	*h = 0U;
 #ifdef DEBUG_COMPUTED_FONT_METRICS
@@ -6838,12 +6838,12 @@ parse_regis_option(RegisParseState *state, RegisGraphicsContext *context)
 static int
 expand_macrographs(RegisDataFragment *input, RegisGraphicsContext const *context)
 {
-    char operator;
+    char op;
     char name;
 
     (void) context;		/* to be used later */
-    operator = get_fragment(input, 0U);
-    if (operator != '@')
+    op = get_fragment(input, 0U);
+    if (op != '@')
 	return 0;
     name = get_fragment(input, 1U);
     if (islower(CharOf(name)))
@@ -7304,7 +7304,7 @@ parse_regis_items(RegisParseState *state, RegisGraphicsContext *context)
 		* context->alphabets[state->load_index].pixh;
 	    if (context->alphabets[state->load_index].bytes == NULL) {
 		if (!(context->alphabets[state->load_index].bytes =
-		      calloc((size_t) (MAX_GLYPHS * glyph_size), sizeof(Char)))) {
+		      TypeCallocN(Char, (size_t) (MAX_GLYPHS * glyph_size)))) {
 		    TRACE(("ERROR: unable to allocate %u bytes for glyph storage\n",
 			   MAX_GLYPHS * glyph_size));
 		    return 0;
@@ -7605,7 +7605,7 @@ parse_regis(XtermWidget xw, ANSI *params, char const *string)
 
     init_fragment(&state->input, string);
     state->templen = (unsigned) strlen(string) + 1U;
-    if (!(state->temp = malloc((size_t) state->templen))) {
+    if (!(state->temp = TypeMallocN(char, (size_t) state->templen))) {
 	TRACE(("Unable to allocate temporary buffer of size %u\n",
 	       state->templen));
 	return;

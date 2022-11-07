@@ -1,4 +1,4 @@
-/* $XTermId: xtermcfg.hin,v 1.225 2022/02/13 13:50:45 tom Exp $ */
+/* $XTermId: xtermcfg.hin,v 1.227 2022/09/11 19:26:01 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -84,6 +84,7 @@
 #undef HAVE_LIB_XAWPLUS		/* CF_X_ATHENA(--with-XawPlus) */
 #undef HAVE_LIB_XCURSOR		/* AC_CHECK_LIB(Xcursor) */
 #undef HAVE_MKDTEMP		/* AC_CHECK_FUNCS(mkdtemp) */
+#undef HAVE_MKSTEMP		/* CF_MKSTEMP */
 #undef HAVE_NCURSES_CURSES_H	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 #undef HAVE_NCURSES_TERM_H	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #undef HAVE_PATHS_H		/* CF_LASTLOG */
@@ -157,6 +158,7 @@
 #undef OPT_DEC_RECTOPS		/* CF_ARG_DISABLE(rectangles) */
 #undef OPT_DIRECT_COLOR		/* CF_ARG_ENABLE(direct-color) */
 #undef OPT_DOUBLE_BUFFER	/* CF_ARG_ENABLE(double-buffer) */
+#undef OPT_EXEC_SELECTION	/* CF_ARG_ENABLE(exec-selection) */
 #undef OPT_EXEC_XTERM		/* CF_ARG_ENABLE(exec-xterm) */
 #undef OPT_GRAPHICS		/* CF_ARG_ENABLE(graphics) */
 #undef OPT_HIGHLIGHT_COLOR	/* CF_ARG_DISABLE(highlighting) */

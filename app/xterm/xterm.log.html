@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2406 2022/03/10 01:00:00 tom Exp $
+  $XTermId: xterm.log.html,v 1.2447 2022/10/11 00:04:21 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -70,6 +70,10 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_374">Patch #374 - 2022/10/10</a></li>
+
+    <li><a href="#xterm_373">Patch #373 - 2022/09/25</a></li>
+
     <li><a href="#xterm_372">Patch #372 - 2022/03/09</a></li>
 
     <li><a href="#xterm_371">Patch #371 - 2022/02/24</a></li>
@@ -1020,6 +1024,165 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_374" id="xterm_374">Patch #374 -
+  2022/10/10</a></h1>
+
+  <ul>
+    <li>eliminate use of grep aliases from vttests scripts.</li>
+
+    <li>amend discussion of <code>DECSDM</code> versus <em>Sixel
+    Scrolling</em> in <code>ctlseqs.ms</code> (reports by Hayaki
+    Saito, Ben Wong).</li>
+
+    <li>change default for <code>sixelScrolling</code> resource to
+    better match VT330/VT340 <code>DECSDM</code> setting (patch by
+    Ben Wong).</li>
+
+    <li>fix some gcc and coverity warnings.</li>
+
+    <li>improve memory usage for <tt>OSC&nbsp;52</tt> (report by
+    David Leadbeater).</li>
+
+    <li>fix regression in <a href="#xterm_373">xterm-373</a> change
+    adding resources <tt>xftTrackMemUsage</tt> to
+    <tt>xftMaxGlyphMemory</tt>, which did not first cache the
+    server's resource-settings (report/testcase by Gabor Hauzer, as
+    well as Debian #1021243).</li>
+
+    <li>fix regression in <a href="#xterm_373">xterm-373</a> change
+    for status-line vs alternate screen (report by Rajeev V.
+    Pillai).</li>
+
+    <li>configure script improvements:
+      <ul>
+        <li>modify <tt>CF_XOPEN_SOURCE</tt> to handle more special
+        cases of Linux (reports by Adam Sampson, Sven
+        Joachim).</li>
+
+        <li>modify checks for egrep/fgrep aliases to work around
+        warning messages from GNU grep 3.8</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h1><a name="xterm_373" id="xterm_373">Patch #373 -
+  2022/09/25</a></h1>
+
+  <ul>
+    <li>improve rendering of TrueType fonts:
+      <ul>
+        <li>add resource <tt>xftTrackMemUsage</tt> to
+        enable/disable a new feature of Xft which improves
+        performance.</li>
+
+        <li>add resources <tt>xftMaxGlyphMemory</tt> and
+        <tt>xftMaxUnrefFonts</tt> to customize memory-usage of Xft
+        and fontconfig.</li>
+
+        <li>provide for display of colored fonts in libXft
+        2.3.5</li>
+
+        <li>allow for an extra TrueType font to be specified using
+        the <code>-fa</code> option, as an override to the
+        <em>fontconfig</em> scheme of fallback fonts (request by
+        Nickolas Raymond Kaczynski).</li>
+
+        <li>improve caching of TrueType missing-glyph tests.</li>
+
+        <li>allow no more than 255 fonts to be scanned for a
+        fontset.</li>
+
+        <li>eliminate a table-lookup in <tt>findXftGlyph</tt></li>
+      </ul>
+    </li>
+
+    <li>improvements status-line feature:
+      <ul>
+        <li>save/restore wraparound flag when updating the
+        status-line (report by Rajeev V. Pillai).</li>
+
+        <li>avoid clearing the status-line when switching between
+        normal and alternate screens (report by Valtteri
+        Vuorikoski).</li>
+
+        <li>remove adjustment from <tt>update_winsize</tt> leftover
+        from initial work (report by Valtteri Vuorikoski).</li>
+      </ul>
+    </li>
+
+    <li>modify <tt>wcwidth</tt> tables to separate Unicode
+    <em>Cf</em> category as <em>formatting</em> control-characters,
+    to better match the guideline for <a href=
+    "http://www.unicode.org/faq/unsup_char.html">unsupported
+    characters</a> (report by Tim Chase).</li>
+
+    <li>add configure option
+    <tt>--disable-exec-selection</tt>.</li>
+
+    <li>use <tt>mkstemp</tt> where <tt>mkdtemp</tt> is unavailable,
+    when initializing colored cursor.</li>
+
+    <li>adapt fixes from OpenBSD xenocara:
+      <ul>
+        <li>improve ifdef's for a few optional features.</li>
+
+        <li>correct <tt>#ifdef</tt> to <tt>#if</tt> in a few uses
+        of <tt>OPT_PRINT_ON_EXIT</tt>.</li>
+      </ul>
+    </li>
+
+    <li>set <tt>StartupWMClass</tt> in
+    &ldquo;<tt>.desktop</tt>&rdquo; files, e.g., to help
+    <tt>cinnamon-session</tt> notice that xterm sets
+    <tt>WM_CLASS</tt> and use its icon (patch by Richard de
+    Boer).</li>
+
+    <li>disable pixel computation when rgb width is greater than 8,
+    to work with depth 30 (patch by Denis Kaganovich).</li>
+
+    <li>improve color-computation for SGR 2 faint/dim (patch by
+    Boian Bonev). Add resource <tt>faintIsRelative</tt> to specify
+    if the modified computation should be used (prompted by
+    discussion with Matthieu Herrb).</li>
+
+    <li>correct comparison-length for environment variable cleanup
+    (patch by Brendan O' Dea).</li>
+
+    <li>correct <tt>dsl</tt> capability for <tt>dec+sl</tt> block
+    in terminfo (report by Rajeev V. Pillai).</li>
+
+    <li>improve output formatting by <tt>vttests/utf8.pl</tt></li>
+
+    <li>repair test/demo scripts still using "vxt-" prefix, some
+    cleanup with shellcheck.</li>
+
+    <li>enable page-number for <tt>DECXCPR</tt> response in
+    VT330.</li>
+
+    <li>amend change for combining characters in <a href=
+    "#xterm_371">patch #371</a> to limit it to the
+    currently-defined codes (report by Thomas Wolff).</li>
+
+    <li>add directory-template parameter to <tt>mktemp</tt> in
+    shell-scripts to improve portability to older systems (patch by
+    Ryan Schmidt).</li>
+
+    <li>mention webpage <a href=
+    "https://invisible-island.net/xterm/xterm-paste64.html"><em>XTerm
+    &ndash; bracketed-paste</em></a> in
+    <code>ctlseqs.ms</code></li>
+
+    <li>update manual-page descriptions for
+    <code>allowPasteControls</code> and
+    <code>disallowedPasteControls</code> (<a href=
+    "#xterm_363">patch #363</a>).</li>
+
+    <li>further extended list of environment variables to purge on
+    startup (suggested by Thomas Wolff).</li>
+
+    <li>update config.guess, config.sub</li>
   </ul>
 
   <h1><a name="xterm_372" id="xterm_372">Patch #372 -

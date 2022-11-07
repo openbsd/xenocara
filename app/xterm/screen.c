@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.623 2022/03/09 01:20:09 tom Exp $ */
+/* $XTermId: screen.c,v 1.626 2022/09/19 23:08:41 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -632,7 +632,7 @@ ChangeToWide(XtermWidget xw)
 	 * data in the alternate buffer.
 	 */
 	if (screen->whichBuf)
-	    SwitchBufPtrs(screen, 0);
+	    SwitchBufPtrs(xw, 0);
 
 	ReallocateFifoIndex(xw);
 
@@ -659,7 +659,7 @@ ChangeToWide(XtermWidget xw)
 	 * Switch the pointers back before we start painting on the screen.
 	 */
 	if (whichBuf)
-	    SwitchBufPtrs(screen, whichBuf);
+	    SwitchBufPtrs(xw, whichBuf);
 
 	update_font_utf8_mode();
 	SetVTFont(xw, screen->menu_font_number, True, NULL);
@@ -1985,27 +1985,35 @@ ScreenResize(XtermWidget xw,
 	cols = 1;
 
 #if OPT_STATUS_LINE
+    /*
+     * The dimensions passed to this function include the status-line.
+     * Discount that here (to obtain the actual rows/columns), and save
+     * the contents of the status-line, to repaint it after resizing.
+     */
     TRACE(("...StatusShown %d/%d\n", IsStatusShown(screen), screen->status_shown));
     if (IsStatusShown(screen)) {
 	int oldRow = MaxRows(screen);
+	int newRow = rows - StatusLineRows;
+	LineData *oldLD;
 	TRACE(("...status line is currently on row %d(%d-%d) vs %d\n",
 	       oldRow,
 	       MaxRows(screen),
 	       (screen->status_shown ? 0 : StatusLineRows),
 	       rows));
-	if (1 || rows != oldRow) {
-	    LineData *oldLD = getLineData(screen, oldRow);
-	    TRACE(("...will move status-line from row %d to %d\n",
-		   oldRow,
-		   rows));
-	    savedStatus = allocLineData(screen, oldLD);
-	    copyLineData(savedStatus, oldLD);
-	    TRACE(("...copied::%s\n",
-		   visibleIChars(savedStatus->charData,
-				 savedStatus->lineSize)));
-	}
+	oldLD = getLineData(screen, oldRow);
+	TRACE(("...copying:%s\n",
+	       visibleIChars(oldLD->charData,
+			     oldLD->lineSize)));
+	TRACE(("...will move status-line from row %d to %d\n",
+	       oldRow,
+	       newRow));
+	savedStatus = allocLineData(screen, oldLD);
+	copyLineData(savedStatus, oldLD);
+	TRACE(("...copied::%s\n",
+	       visibleIChars(savedStatus->charData,
+			     savedStatus->lineSize)));
 	TRACE(("...discount a row for status-line\n"));
-	rows -= StatusLineRows;
+	rows = newRow;
 	height -= FontHeight(screen) * StatusLineRows;
     }
 #endif
@@ -2240,6 +2248,9 @@ ScreenResize(XtermWidget xw,
 	TRACE(("...status line is currently on row %d\n",
 	       LastRowNumber(screen)));
 	copyLineData(newLD, savedStatus);
+	TRACE(("...copied::%s\n",
+	       visibleIChars(newLD->charData,
+			     newLD->lineSize)));
 	freeLineData(screen, savedStatus);
     }
 #endif

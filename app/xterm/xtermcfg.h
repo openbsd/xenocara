@@ -84,6 +84,7 @@
 /* #undef HAVE_LIB_XAWPLUS */		/* CF_X_ATHENA(--with-XawPlus) */
 #define HAVE_LIB_XCURSOR 1	/* AC_CHECK_LIB(Xcursor) */
 #define HAVE_MKDTEMP 1		/* AC_CHECK_FUNCS(mkdtemp) */
+#define HAVE_MKSTEMP		/* CF_MKSTEMP */
 /* #undef HAVE_NCURSES_CURSES_H	*/	/* AC_CHECK_HEADERS(ncurses/curses.h) */
 /* #undef HAVE_NCURSES_TERM_H */	/* AC_CHECK_HEADERS(ncurses/term.h) */
 #define HAVE_PATHS_H 1		/* CF_LASTLOG */
@@ -98,6 +99,7 @@
 #define HAVE_SETPGID		/* AC_CHECK_FUNCS(setpgid) */
 #define HAVE_STDINT_H 1		/* AC_PROG_CC_STDC */
 #define HAVE_STDLIB_H 1		/* AC_CHECK_HEADERS(stdlib.h) */
+#undef HAVE_STDNORETURN_H	/* CF_C11_NORETURN */
 #define HAVE_STRFTIME 1		/* AC_CHECK_FUNCS(strftime) */
 /* #undef HAVE_SYS_TIME_H */		/* AC_HEADER_TIME */
 #define HAVE_SYS_TTYDEFAULTS_H 1	/* AC_CHECK_HEADERS(sys/ttydefaults.h) */
@@ -156,6 +158,7 @@
 /* #define OPT_DEC_RECTOPS */		/* CF_ARG_DISABLE(rectangles) */
 #define OPT_DIRECT_COLOR 1		/* CF_ARG_ENABLE(direct-color) */
 /* #undef OPT_DOUBLE_BUFFER */		/* CF_ARG_ENABLE(double-buffer) */
+#define OPT_EXEC_SELECTION 0		/* CF_ARG_ENABLE(exec-selection) */
 /* #undef OPT_EXEC_XTERM */		/* CF_ARG_ENABLE(exec-xterm) */
 /* #undef OPT_GRAPHICS */		/* CF_ARG_ENABLE(graphics) */
 /* #undef OPT_HIGHLIGHT_COLOR */	/* CF_ARG_DISABLE(highlighting) */
@@ -199,6 +202,7 @@
 /* #undef PROCFS_ROOT */		/* CF_ARG_ENABLE(exec-xterm) */
 #define SCROLLBAR_RIGHT 1		/* CF_ARG_ENABLE(rightbar) */
 #define SIG_ATOMIC_T volatile sig_atomic_t		/* CF_SIG_ATOMIC_T */
+#undef STDC_NORETURN			/* CF_C11_NORETURN */
 /* #undef SVR4 */			/* CF_SVR4, imake */
 /* #undef SYSV */			/* CF_SYSV, imake */
 #define TIME_WITH_SYS_TIME 1	/* AC_HEADER_TIME */

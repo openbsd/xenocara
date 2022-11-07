@@ -1,4 +1,4 @@
-/* $XTermId: version.h,v 1.522 2022/03/10 00:58:00 tom Exp $ */
+/* $XTermId: version.h,v 1.527 2022/10/10 16:31:27 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -38,8 +38,8 @@
  * version of X to which this version of xterm has been built.  The resulting
  * number in parentheses is my patch number (Thomas E. Dickey).
  */
-#define XTERM_PATCH   372
-#define XTERM_DATE    2022-03-09
+#define XTERM_PATCH   374
+#define XTERM_DATE    2022-10-10
 
 #ifndef __vendorversion__
 #define __vendorversion__ "XTerm/OpenBSD"

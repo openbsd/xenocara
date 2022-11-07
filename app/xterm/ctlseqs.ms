@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
 .\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.636 2021/12/26 21:57:14 tom Exp $
+.\" $XTermId: ctlseqs.ms,v 1.641 2022/10/10 14:18:26 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2020,2021 by Thomas E. Dickey
+.\" Copyright 1996-2021,2022 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #371
-.ds RF 2021/12/26
+.ds LF Patch #374
+.ds RF 2022/10/10
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2021)
+invisible-island.net (2006-2022)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -1341,7 +1341,7 @@ This may be disabled by the \fBtiteInhibit\fP resource.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
-  \*(Ps = \*8\*0 \(-> Disable \fISixel Scrolling\fP (DECSDM).
+  \*(Ps = \*8\*0 \(-> Enable \fISixel Display Mode\fP (DECSDM), VT330, VT340, VT382. 
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset
 (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
@@ -1476,7 +1476,9 @@ This is normally disabled by a compile-time option.
 This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),
 VT420 and up.
-  \*(Ps = \*8\*0 \(-> Enable \fISixel Scrolling\fP (DECSDM).
+  \*(Ps = \*8\*0 \(-> Disable \fISixel Display Mode\fP (DECSDM), VT330, VT340, VT382.
+Turns on ``Sixel Scrolling''.
+See the section \fBSixel Graphics\fP and mode \*8\*4\*5\*2.
   \*(Ps = \*9\*5 \(-> Clear screen when DECCOLM is set/reset (DECNCSM),
 VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Don't send Mouse X & Y on button press and
@@ -3218,6 +3220,12 @@ the program will receive:
 .br
 followed by the pasted text, followed by
    \*(Es\*([[\*2\*0\*1\*~.
+.br
+For background and discussion, see the FAQ:
+.ID 2
+.\" https://invisible-island.net/xterm/xterm-paste64.html
+\fIXTerm - bracketed-paste\fP
+.DE
 .
 .Sh "Title Modes"
 .LP
@@ -3598,24 +3606,23 @@ using the
 \fBdecTerminalID\fP or
 \fBdecGraphicsID\fP
 resource,
-it supports Sixel Graphics controls, a palleted bitmap graphics system
+it supports Sixel Graphics controls, a paletted bitmap graphics system
 using sets of six vertical pixels as the basic element.
 .St
 .IP \\*(Cs\\*(Ps\\*s\\*c
-Send Device Attributes (Primary DA), \fI\*(xt\fP.
+Send Device Attributes (Primary DA), DEC graphics terminals, \fI\*(xt\fP.
 \fI\*(xt\fP responds to Send Device Attributes (Primary DA) with these
 additional codes:
   \*(Ps = \*4 \(-> Sixel graphics.
 .iP
 .IP \\*(Cs\\*?\\*(Pm\\*s\\*h
-Set Mode, \fI\*(xt\fP.
-\fI\*(xt\fP has these additional private Set Mode values:
-  \*(Ps = \*8\*0 \(-> Sixel scrolling.
-  \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic.
-  \*(Ps = \*8\*4\*5\*2 \(-> Sixel scrolling leaves cursor to right of graphic.
+Set Mode (with corresponding Reset Mode \*(Cs\*?\*(Pm\*s\*l):
+  \*(Ps = \*8\*0 \(-> Sixel Display Mode (DECSDM), VT330, VT340, VT382.
+  \*(Ps = \*1\*0\*7\*0 \(-> use private color registers for each graphic, \fI\*(xt\fP.
+  \*(Ps = \*8\*4\*5\*2 \(-> Sixel scrolling leaves cursor to right of graphic, RLogin, \fI\*(xt\fP.
 .iP
 .IP \\*(Dc\\*(Pa\\*s\\*;\\*(Pb\\*s\\*;\\*(Ph\\*s\\*q\\*s\\*(Ps..\\*(Ps\fP\\*s\\*(ST
-Send SIXEL image, DEC graphics terminals, \fI\*(xt\fP.
+Send SIXEL image, DEC graphics terminals, VT330, VT340, VT382.
 See:
 .ID 3
 \fIVT330/VT340 Programmer Reference Manual Volume 2:\fP
@@ -3905,10 +3912,49 @@ Sometimes the manuals are simply incorrect.
 For example, testing a DEC VT420 in 1996 showed that the documented
 code for a valid or invalid response to DECRQSS was reversed.
 .IP
-The VT420 test results were incorporated into \fIvttest\fP program.
+The VT420 test results were incorporated into the \fIvttest\fP program.
 At the time, DEC STD 070 was not available,
 but it also agrees with \fIvttest\fP.
 Later, documentation for the DEC VT525 was shown to have the same flaw.
+.bP
+The VT330/VT340 reference manual for graphics programming
+documents sixel graphics in some detail in chapter 14.
+Overlooked in the first edition, the second edition mentions
+.\" https://vt100.net/docs/vt3xx-gp/chapter14.html#S14.4
+\fISixel Scrolling\fP.
+The VT382 Kanji and Thai manuals provide less information,
+about sixel graphics,
+but do mention DECSDM.
+They differ in their comment about the private mode
+DECSDM (\*(Cs\*?\*8\*0\*h),
+which each manual agrees should \fIset\fP the Sixel Scrolling feature.
+The VT330/VT340 graphics programming manual (second edition, March 1988) says
+.RS 5
+.sp
+When sixel display mode is set, the \fISixel Scrolling\fP feature is enabled. 
+.br
+When sixel display mode is reset, the \fISixel Scrolling\fP feature is disabled.
+.RE
+.IP
+while the VT382 Kanji manual (page 6-6, undated) says
+.RS
+.sp
+Disable sixel scroll
+.RE
+.sp
+and the VT382 Thai manual (page C-30, August 1989) says
+.RS
+.sp
+No Sixel scrolling
+.RE
+.IP
+The standard (DEC STD 070) in chapter 9 (August 3, 1990)
+states on page 17 that video devices will scroll
+when advancing the Sixel active position past the bottom margin,
+but on page 19, in the section on deviations,
+states that VT125 and VT240 did not scroll in this situation.
+The standard does not mention VT330/VT340 or VT382.
+Nor does it document DECSDM.
 .bP
 Not all details are clear even in DEC STD 070
 (which is more than twice the length of the
@@ -4010,7 +4056,7 @@ Digital Equipment Corporation
 \fIProgrammer Reference Manual\fP.
 .br
 Digital Equipment Corporation
-(EK-VT382-RM-001).
+(EK-VT382-RM-001, undated).
 .bP
 .\" https://vt100.net/dec/ek-vt38t-ug-001.pdf
 \fIVT382 Thai Display Terminal\fP
@@ -4174,38 +4220,7 @@ hard reset (RIS).
 .IP
 Both the VT220 manual and DEC STD 070 (which documents
 levels 1-4 in detail) state that it is a soft reset, e.g., DECSTR.
-.bP
-The VT330/VT340 reference manual for graphics programming
-documents sixel scrolling in some detail in chapter 14.
-The VT382 Kanji and Thai manuals provide less information,
-but differ in their comment about the private mode
-DECSDM (\*(Cs\*?\*8\*0\*h),
-which each manual agrees should \fIset\fP the Sixel Scrolling feature.
-However, the VT330/VT340 manual says
-.RS
-.IP
-When sixel display mode is set, the Sixel Scrolling feature is enabled. 
-.RE
-.IP
-while the VT382 Kanji manual (page 6-6) says
-.RS
-.IP
-Disable sixel scroll
-.RE
-.IP
-and the VT382 Thai manual (page C-30) says
-.RS
-.IP
-No Sixel scrolling
-.RE
-.IP
-The standard (DEC STD 070) in chapter 9 (August 3, 1990)
-states on page 17 that video devices will scroll
-when advancing the Sixel active position past the bottom margin,
-but on page 19, in the section on deviations,
-states that VT125 and VT240 did not scroll in this situation.
-The standard does not mention VT330/VT340 or VT382.
-Nor does it document DECSDM.
+.
 .LP
 Here are the relevant standards:
 .bP

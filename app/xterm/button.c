@@ -1,7 +1,7 @@
-/* $XTermId: button.c,v 1.638 2021/11/26 01:27:25 tom Exp $ */
+/* $XTermId: button.c,v 1.642 2022/10/06 16:52:06 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2332,7 +2332,7 @@ base64_flush(TScreen *screen)
  * Translate ISO-8859-1 or UTF-8 data to NRCS.
  */
 static void
-ToNational(XtermWidget xw, Char *buffer, unsigned *length)
+ToNational(XtermWidget xw, Char *buffer, size_t *length)
 {
     TScreen *screen = TScreenOf(xw);
     DECNRCM_codes gsetL = screen->gsets[screen->curgl];
@@ -2346,7 +2346,7 @@ ToNational(XtermWidget xw, Char *buffer, unsigned *length)
 	memset(data, 0, sizeof(*data));
 	data->next = data->buffer;
 	data->last = data->buffer + *length;
-	memcpy(data->buffer, buffer, (size_t) *length);
+	memcpy(data->buffer, buffer, *length);
 	p = buffer;
 	while (data->next < data->last) {
 	    unsigned chr, out, gl, gr;
@@ -2365,14 +2365,14 @@ ToNational(XtermWidget xw, Char *buffer, unsigned *length)
 	    }
 	    *p++ = (Char) ((out < 256) ? out : ' ');
 	}
-	*length = (unsigned) (p - buffer);
+	*length = (size_t) (p - buffer);
 	free(data);
     } else
 #endif
     {
 	Char *p;
 
-	for (p = buffer; (int) (p - buffer) < (int) *length; ++p) {
+	for (p = buffer; (size_t) (p - buffer) < *length; ++p) {
 	    unsigned gl, gr;
 	    unsigned chr = *p;
 	    unsigned out = chr;
@@ -2387,7 +2387,7 @@ ToNational(XtermWidget xw, Char *buffer, unsigned *length)
 }
 
 static void
-_qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
+_qWriteSelectionData(XtermWidget xw, Char *lag, size_t length)
 {
     TScreen *screen = TScreenOf(xw);
 
@@ -2409,7 +2409,9 @@ _qWriteSelectionData(XtermWidget xw, Char *lag, unsigned length)
 	Char buf[64];
 	unsigned x = 0;
 
-	TRACE(("convert to base64 %d:%s\n", length, visibleChars(p, length)));
+	TRACE(("convert to base64 %lu:%s\n",
+	       (unsigned long) length,
+	       visibleChars(p, length)));
 
 	/*
 	 * Handle the case where the selection is from _this_ xterm, which
@@ -2497,7 +2499,7 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
 
 #if OPT_PASTE64
     if (screen->base64_paste) {
-	_qWriteSelectionData(xw, lag, (unsigned) (end - lag));
+	_qWriteSelectionData(xw, lag, (size_t) (end - lag));
 	base64_flush(screen);
     } else
 #endif
@@ -2507,14 +2509,14 @@ _WriteSelectionData(XtermWidget xw, Char *line, size_t length)
 	    for (cp = line; cp != end; cp++) {
 		if (*cp == '\n') {
 		    *cp = '\r';
-		    _qWriteSelectionData(xw, lag, (unsigned) (cp - lag + 1));
+		    _qWriteSelectionData(xw, lag, (size_t) (cp - lag + 1));
 		    lag = cp + 1;
 		}
 	    }
 	}
 
 	if (lag != end) {
-	    _qWriteSelectionData(xw, lag, (unsigned) (end - lag));
+	    _qWriteSelectionData(xw, lag, (size_t) (end - lag));
 	}
     }
 #ifdef VMS
@@ -5666,6 +5668,7 @@ getDataFromScreen(XtermWidget xw, XEvent *event, String method, CELL *start, CEL
     return result;
 }
 
+#if OPT_EXEC_SELECTION
 /*
  * Split-up the format before substituting data, to avoid quoting issues.
  * The resource mechanism has a limited ability to handle escapes.  We take
@@ -5753,6 +5756,7 @@ tokenizeFormat(String format)
 
     return result;
 }
+#endif /* OPT_EXEC_SELECTION */
 
 static void
 formatVideoAttrs(XtermWidget xw, char *buffer, CELL *cell)
@@ -5935,7 +5939,7 @@ expandFormat(XtermWidget xw,
     return result;
 }
 
-#if OPT_EXEC_XTERM
+#if OPT_EXEC_SELECTION
 /* execute the command after forking.  The main process frees its data */
 static void
 executeCommand(pid_t pid, char **argv)
@@ -6039,7 +6043,7 @@ HandleExecSelectable(Widget w,
 	}
     }
 }
-#endif /* OPT_EXEC_XTERM */
+#endif /* OPT_EXEC_SELECTION */
 
 static void
 reallyInsertFormatted(Widget w, char *format, char *data, CELL *start, CELL *finish)
