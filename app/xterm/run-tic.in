@@ -1,5 +1,5 @@
 #!/bin/sh
-# $XTermId: run-tic.sh,v 1.15 2022/02/13 14:30:33 tom Exp $
+# $XTermId: run-tic.in,v 1.1 2022/10/02 21:42:36 tom Exp $
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
@@ -130,9 +130,9 @@ $TIC_PROG $OPT "$PASS2" 2>"$STDERR"
 RET=$?
 
 sed -e "s%$PASS2%$PASS1%" "$STDERR" | \
-${FGREP-fgrep} -v 'Unknown Capability' | \
-${FGREP-fgrep} -v 'Capability is not recognized:' | \
-${FGREP-fgrep} -v 'tic: Warning near line ' >&2
+@FGREP@ -v 'Unknown Capability' | \
+@FGREP@ -v 'Capability is not recognized:' | \
+@FGREP@ -v 'tic: Warning near line ' >&2
 rm -f "$STDERR"
 
 exit $RET
