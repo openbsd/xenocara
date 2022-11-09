@@ -745,7 +745,7 @@ pci_system_openbsd_init_dev_mem(int fd)
 int
 pci_device_vgaarb_init(void)
 {
-	struct pci_device *dev = pci_sys->vga_target;
+	struct pci_device *dev;
 	struct pci_device_iterator *iter;
 	struct pci_id_match vga_match = {
 		PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY, PCI_MATCH_ANY,
@@ -754,12 +754,16 @@ pci_device_vgaarb_init(void)
 	};
 	struct pci_vga pv;
 	int err;
-
 #ifdef CPU_ALLOWAPERTURE
 	int mib[2];
 	int allowaperture;
 	size_t len;
+#endif
 
+	if (pci_sys == NULL)
+		return ENXIO;
+
+#ifdef CPU_ALLOWAPERTURE
 	mib[0] = CTL_MACHDEP;
 	mib[1] = CPU_ALLOWAPERTURE;
 	len = sizeof(allowaperture);
@@ -770,7 +774,7 @@ pci_device_vgaarb_init(void)
 		return 0;
 	}
 #endif
-
+	dev = pci_sys->vga_target;
 	pv.pv_sel.pc_bus = 0;
 	pv.pv_sel.pc_dev = 0;
 	pv.pv_sel.pc_func = 0;
