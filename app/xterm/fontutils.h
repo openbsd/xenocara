@@ -1,4 +1,4 @@
-/* $XTermId: fontutils.h,v 1.140 2022/05/05 22:24:02 tom Exp $ */
+/* $XTermId: fontutils.h,v 1.142 2022/10/23 14:47:45 tom Exp $ */
 
 /*
  * Copyright 1998-2021,2022 by Thomas E. Dickey
@@ -37,7 +37,7 @@
 /* *INDENT-OFF* */
 
 extern Bool xtermLoadDefaultFonts (XtermWidget /* xw */);
-extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, Bool /* force */);
+extern Bool xtermOpenFont (XtermWidget /* xw */, const char */* name */, XTermFonts * /* result */, XTermFonts * /* current */, Bool /* force */);
 extern XFontStruct * xtermLoadQueryFont(XtermWidget /* xw */, const char * /*name */);
 extern XTermFonts * getDoubleFont (TScreen * /* screen */, int /* which */);
 extern XTermFonts * getItalicFont (TScreen * /* screen */, int /* which */);
@@ -51,7 +51,7 @@ extern int lookupRelativeFontSize (XtermWidget /* xw */, int /* old */, int /* r
 extern int xtermGetFont (const char * /* param */);
 extern int xtermLoadFont (XtermWidget /* xw */, const VTFontNames */* fonts */, Bool /* doresize */, int /* fontnum */);
 extern void HandleSetFont PROTO_XT_ACTIONS_ARGS;
-extern void SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
+extern Bool SetVTFont (XtermWidget /* xw */, int /* i */, Bool /* doresize */, const VTFontNames */* fonts */);
 extern void allocFontList (XtermWidget /* xw */, const char * /* name */, XtermFontNames * /* target */, VTFontEnum /* which */, const char * /* source */, Bool /* ttf */);
 extern void copyFontList (char *** /* targetp */, char ** /* source */);
 extern void initFontLists (XtermWidget /* xw */);

@@ -1,4 +1,4 @@
-/* $XTermId: doublechr.c,v 1.107 2022/05/05 22:23:43 tom Exp $ */
+/* $XTermId: doublechr.c,v 1.108 2022/10/23 14:46:14 tom Exp $ */
 
 /*
  * Copyright 1997-2021,2022 by Thomas E. Dickey
@@ -295,7 +295,7 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 	    temp.flags = (params->attr_flags & BOLD);
 	    temp.warn = fwResource;
 
-	    if (!xtermOpenFont(params->xw, name, &temp, False)) {
+	    if (!xtermOpenFont(params->xw, name, &temp, NULL, False)) {
 		XTermDraw local = *params;
 		char *nname;
 
@@ -304,7 +304,7 @@ xterm_DoubleGC(XTermDraw * params, GC old_gc, int *inxp)
 		nname = xtermSpecialFont(&local);
 		if (nname != 0) {
 		    found = (Boolean) xtermOpenFont(params->xw, nname, &temp,
-						    False);
+						    NULL, False);
 		    free(nname);
 		}
 	    } else {

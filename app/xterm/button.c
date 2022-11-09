@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.642 2022/10/06 16:52:06 tom Exp $ */
+/* $XTermId: button.c,v 1.645 2022/10/23 22:59:52 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2012,7 +2012,7 @@ _SelectionTargets(Widget w)
     return result;
 }
 
-#define isSELECT(value) (!strcmp(value, "SELECT"))
+#define isSELECT(value) (!strcmp(NonNull(value), "SELECT"))
 
 static int
 DefaultSelection(TScreen *screen)
@@ -2051,13 +2051,8 @@ void
 UnmapSelections(XtermWidget xw)
 {
     TScreen *screen = TScreenOf(xw);
-    Cardinal n;
 
-    if (screen->mappedSelect) {
-	for (n = 0; screen->mappedSelect[n] != 0; ++n)
-	    free((void *) screen->mappedSelect[n]);
-	FreeAndNull(screen->mappedSelect);
-    }
+    FreeAndNull(screen->mappedSelect);
 }
 
 /*
@@ -2093,14 +2088,11 @@ MapSelections(XtermWidget xw, String *params, Cardinal num_params)
 	    if ((result = TypeMallocN(String, num_params + 1)) != 0) {
 		result[num_params] = 0;
 		for (j = 0; j < num_params; ++j) {
-		    result[j] = x_strdup((isSELECT(params[j])
+		    result[j] = (String) (isSELECT(params[j])
 					  ? mapTo
-					  : params[j]));
+					  : params[j]);
 		    if (result[j] == 0) {
 			UnmapSelections(xw);
-			while (j != 0) {
-			    free((void *) result[--j]);
-			}
 			FreeAndNull(result);
 			break;
 		    }

@@ -1,4 +1,4 @@
-/* $XTermId: charproc.c,v 1.1906 2022/10/10 15:42:50 tom Exp $ */
+/* $XTermId: charproc.c,v 1.1908 2022/10/23 20:34:18 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -13662,7 +13662,6 @@ DoSetSelectedFont(Widget w,
 	Bell(xw, XkbBI_MinorError, 0);
     } else {
 	Boolean failed = False;
-	int oldFont = TScreenOf(xw)->menu_font_number;
 	char *save = TScreenOf(xw)->SelectFontName();
 	char *val;
 	char *test;
@@ -13707,10 +13706,6 @@ DoSetSelectedFont(Widget w,
 		failed = True;
 	    }
 	    if (failed) {
-		(void) xtermLoadFont(xw,
-				     xtermFontName(TScreenOf(xw)->MenuFontName(oldFont)),
-				     True,
-				     oldFont);
 		Bell(xw, XkbBI_MinorError, 0);
 	    }
 	    free(used);
@@ -13719,7 +13714,7 @@ DoSetSelectedFont(Widget w,
     }
 }
 
-void
+Bool
 FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 {
     TScreen *screen = TScreenOf(xw);
@@ -13759,7 +13754,7 @@ FindFontSelection(XtermWidget xw, const char *atom_name, Bool justprobe)
 			    DoSetSelectedFont, NULL,
 			    XtLastTimestampProcessed(XtDisplay(xw)));
     }
-    return;
+    return (screen->SelectFontName() != NULL) ? True : False;
 }
 
 Bool

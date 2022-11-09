@@ -1,4 +1,4 @@
-/* $XTermId: misc.c,v 1.1028 2022/10/06 22:24:07 tom Exp $ */
+/* $XTermId: misc.c,v 1.1030 2022/10/23 22:56:44 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -3955,9 +3955,9 @@ ChangeFontRequest(XtermWidget xw, String buf)
 	    {
 		memset(&fonts, 0, sizeof(fonts));
 		fonts.f_n = name;
-		SetVTFont(xw, num, True, &fonts);
-		if (num == screen->menu_font_number &&
-		    num != fontMenu_fontescape) {
+		if (SetVTFont(xw, num, True, &fonts)
+		    && num == screen->menu_font_number
+		    && num != fontMenu_fontescape) {
 		    screen->EscapeFontName() = x_strdup(name);
 		}
 	    }
@@ -6436,7 +6436,6 @@ xtermSetenv(const char *var, const char *value)
 
 	    found = envindex;
 	    environ[found + 1] = NULL;
-	    environ = environ;
 	}
 
 	environ[found] = malloc(2 + len + strlen(value));

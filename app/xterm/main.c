@@ -1,4 +1,4 @@
-/* $XTermId: main.c,v 1.889 2022/07/13 07:57:08 Brendan.O.Dea Exp $ */
+/* $XTermId: main.c,v 1.891 2022/10/21 23:02:38 tom Exp $ */
 
 /*
  * Copyright 2002-2021,2022 by Thomas E. Dickey
@@ -3756,62 +3756,73 @@ resetShell(char *oldPath)
 static void
 xtermTrimEnv(void)
 {
-#define DATA(wild,name) { wild, #name }
+#define KEEP(wild,name) { 0, wild, #name }
+#define TRIM(wild,name) { 1, wild, #name }
     /* *INDENT-OFF* */
-    static struct {
+    static const struct {
+	int trim;
 	int wild;
 	const char *name;
     } table[] = {
-	DATA(0, COLUMNS),
-	DATA(0, DEFAULT_COLORS),
-	DATA(0, DESKTOP_STARTUP_ID),
-	DATA(0, LINES),
-	DATA(0, SHLVL),		/* ksh, bash */
-	DATA(0, STY),		/* screen */
-	DATA(0, TERMCAP),
-	DATA(0, TMUX),
-	DATA(0, TMUX_PANE),
-	DATA(0, WCWIDTH_CJK_LEGACY),
-	DATA(0, WINDOW),	/* screen */
-	DATA(0, XCURSOR_PATH),
-	DATA(1, COLORFGBG),
-	DATA(1, COLORTERM),
-	DATA(1, GIO_LAUNCHED_),
-	DATA(1, ITERM2_),
-	DATA(1, MC_),
-	DATA(1, MINTTY_),
-	DATA(1, PUTTY),
-	DATA(1, RXVT_),
-	DATA(1, TERM_),
-	DATA(1, URXVT_),
-	DATA(1, VTE_),
-	DATA(1, XTERM_),
+	TRIM(0, COLUMNS),
+	TRIM(0, DEFAULT_COLORS),
+	TRIM(0, DESKTOP_STARTUP_ID),
+	TRIM(0, LINES),
+	TRIM(0, SHLVL),		/* ksh, bash */
+	TRIM(0, STY),		/* screen */
+	TRIM(0, TERMCAP),
+	TRIM(0, TMUX),
+	TRIM(0, TMUX_PANE),
+	TRIM(0, WCWIDTH_CJK_LEGACY),
+	TRIM(0, WINDOW),	/* screen */
+	TRIM(0, XCURSOR_PATH),
+	KEEP(0, MC_XDG_OPEN),
+	TRIM(1, COLORFGBG),
+	TRIM(1, COLORTERM),
+	TRIM(1, GIO_LAUNCHED_),
+	TRIM(1, ITERM2_),
+	TRIM(1, MC_),
+	TRIM(1, MINTTY_),
+	TRIM(1, PUTTY),
+	TRIM(1, RXVT_),
+	TRIM(1, TERM_),
+	TRIM(1, URXVT_),
+	TRIM(1, VTE_),
+	TRIM(1, XTERM_),
     };
-#undef DATA
+#undef TRIM
     /* *INDENT-ON* */
-    Cardinal n;
+    Cardinal j, k;
 
-    for (n = 0; n < XtNumber(table); ++n) {
-	int s;
-	if (table[n].wild) {
-	    size_t srclen = strlen(table[n].name);
-	    for (s = 0; environ[s] != NULL; ++s) {
-		size_t dstlen = strlen(environ[s]);
-		if (dstlen > srclen) {
-		    char *dstend = strchr(environ[s], '=');
+    for (j = 0; environ[j] != NULL; ++j) {
+	char *equals = strchr(environ[j], '=');
+	size_t dstlen = strlen(environ[j]);
+
+	if (equals == NULL)
+	    equals = (environ[j] + dstlen);
+	else
+	    dstlen = (size_t) (equals - environ[j]);
+
+	for (k = 0; k < XtNumber(table); ++k) {
+	    size_t srclen = strlen(table[k].name);
+	    if (table[k].wild) {
+		if (dstlen >= srclen &&
+		    !strncmp(environ[j], table[k].name, srclen)) {
 		    char *my_var;
-		    if (dstend != NULL &&
-			(dstlen = (size_t) (dstend - environ[s])) >= srclen &&
-			!strncmp(table[n].name, environ[s], srclen) &&
-			(my_var = x_strdup(environ[s])) != NULL) {
+		    if (table[k].trim &&
+			(my_var = x_strdup(environ[j])) != NULL) {
 			my_var[dstlen] = '\0';
 			xtermUnsetenv(my_var);
 			free(my_var);
 		    }
+		    break;
 		}
+	    } else if (dstlen == srclen &&
+		       !strncmp(environ[j], table[k].name, srclen)) {
+		if (table[k].trim)
+		    xtermUnsetenv(table[k].name);
+		break;
 	    }
-	} else if (getenv(table[n].name) != NULL) {
-	    xtermUnsetenv(table[n].name);
 	}
     }
 }

@@ -1,4 +1,4 @@
-/* $XTermId: screen.c,v 1.626 2022/09/19 23:08:41 tom Exp $ */
+/* $XTermId: screen.c,v 1.627 2022/10/23 22:57:40 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -1454,7 +1454,7 @@ ScrnRefresh(XtermWidget xw,
 	maxrow += StatusLineRows;
     }
 #endif
-
+    (void) recurse;
     ++recurse;
 
     if (screen->cursorp.col >= leftcol

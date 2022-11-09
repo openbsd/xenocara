@@ -1,24 +1,13 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #374 - 2022/10/10
+                            Patch #375 - 2022/10/23
 
-     * eliminate use of grep aliases from vttests scripts.
-     * amend  discussion  of  DECSDM  versus Sixel Scrolling in ctlseqs.ms
-       (reports by Hayaki Saito, Ben Wong).
-     * change   default   for  sixelScrolling  resource  to  better  match
-       VT330/VT340 DECSDM setting (patch by Ben Wong).
-     * fix some gcc and coverity warnings.
-     * improve memory usage for OSC 52 (report by David Leadbeater).
-     * fix    regression    in    xterm-373    change   adding   resources
-       xftTrackMemUsage  to  xftMaxGlyphMemory,  which did not first cache
-       the server's resource-settings (report/testcase by Gabor Hauzer, as
-       well as Debian #1021243).
-     * fix  regression  in  xterm-373  change for status-line vs alternate
-       screen (report by Rajeev V. Pillai).
-     * configure script improvements:
-          + modify  CF_XOPEN_SOURCE  to handle more special cases of Linux
-            (reports by Adam Sampson, Sven Joachim).
-          + modify  checks  for egrep/fgrep aliases to work around warning
-            messages from GNU grep 3.8
+     * improve  error-recovery  when  setting  a bitmap font for the VT100
+       window,  e.g.,  in  case  OSC 50  failed, restoring the most recent
+       valid  font  so  that  a  subsequent  OSC 50 reports this correctly
+       (report by David Leadbeater).
+     * exclude  MC_XDG_OPEN  from environment variables trimmed on startup
+       (report by Gabor Hauzer).
+     * check for null pointer in isSelect() (report by Column Paget).
 
