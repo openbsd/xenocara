@@ -3902,7 +3902,7 @@ update_menu_allowBoldFonts(void)
 static void
 enable_allow_xxx_ops(Bool enable)
 {
-    SetItemSensitivity(fontMenuEntries[fontMenu_allowFontOps].widget, enable);
+    SetItemSensitivity(fontMenuEntries[fontMenu_allowFontOps].widget, False);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowMouseOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowTcapOps].widget, enable);
     SetItemSensitivity(fontMenuEntries[fontMenu_allowTitleOps].widget, enable);

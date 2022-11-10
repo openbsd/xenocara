@@ -10151,7 +10151,7 @@ VTInitialize(Widget wrequest,
     screen->allowPasteControls = screen->allowPasteControl0;
     screen->allowSendEvents = screen->allowSendEvent0;
     screen->allowColorOps = screen->allowColorOp0;
-    screen->allowFontOps = screen->allowFontOp0;
+    screen->allowFontOps = False;
     screen->allowMouseOps = screen->allowMouseOp0;
     screen->allowTcapOps = screen->allowTcapOp0;
     screen->allowTitleOps = screen->allowTitleOp0;
