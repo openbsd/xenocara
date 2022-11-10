@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.42 2022/11/10 17:36:42 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.43 2022/11/10 17:38:58 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -60,6 +60,8 @@
 #include "xf86cmap.h"
 #include "shadow.h"
 #include "dgaproc.h"
+
+#include <xf86Priv.h>
 
 /* For visuals */
 #include "fb.h"
@@ -298,10 +300,14 @@ wsfb_open(const char *dev)
 		/* Second: environment variable. */
 		dev = getenv("XDEVICE");
 		if (dev == NULL || ((fd = priv_open_device(dev)) == -1)) {
-			/* Last try: default device. */
-			dev = WSFB_DEFAULT_DEV;
-			if ((fd = priv_open_device(dev)) == -1) {
-				return -1;
+			if (xf86Info.consoleFd > 0) {
+				fd = xf86Info.consoleFd;
+			} else {
+				/* Last try: default device. */
+				dev = WSFB_DEFAULT_DEV;
+				if ((fd = priv_open_device(dev)) == -1) {
+					return -1;
+				}
 			}
 		}
 	}
