@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.41 2022/07/16 21:14:40 kettenis Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.42 2022/11/10 17:36:42 matthieu Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -1268,11 +1268,12 @@ WsfbSaveScreen(ScreenPtr pScreen, int mode)
 	if (!pScrn->vtSema)
 		return TRUE;
 
-	if (mode != SCREEN_SAVER_FORCER) {
-		state = xf86IsUnblank(mode)?WSDISPLAYIO_VIDEO_ON:
-					    WSDISPLAYIO_VIDEO_OFF;
-		ioctl(fPtr->fd,
-		      WSDISPLAYIO_SVIDEO, &state);
+	state = xf86IsUnblank(mode)?WSDISPLAYIO_VIDEO_ON:
+	    WSDISPLAYIO_VIDEO_OFF;
+	if (ioctl(fPtr->fd,
+		WSDISPLAYIO_SVIDEO, &state) < 0) {
+		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+		    "error in WSDISPLAY_SVIDEO %s\n", strerror(errno));
 	}
 	TRACE_EXIT("SaveScreen");
 	return TRUE;
