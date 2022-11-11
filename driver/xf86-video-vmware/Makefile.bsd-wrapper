@@ -1,3 +1,5 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.2 2006/11/27 19:30:45 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.3 2022/11/11 01:12:13 jsg Exp $
+
+CONFIGURE_ARGS=	--without-libudev
 
 .include <bsd.xorg.mk>
