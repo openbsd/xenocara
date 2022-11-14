@@ -20,100 +20,75 @@
 
 option(
   'intel',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for Intel's KMS API.''',
 )
 option(
   'radeon',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for radeons's KMS API.''',
 )
 option(
   'amdgpu',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for amdgpu's KMS API.''',
 )
 option(
   'nouveau',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for nouveau's KMS API.''',
 )
 option(
   'vmwgfx',
-  type : 'combo',
-  value : 'true',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for vmgfx's KMS API.''',
 )
 option(
   'omap',
-  type : 'combo',
-  value : 'false',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
+  value : 'disabled',
   description : '''Enable support for OMAP's experimental KMS API.''',
 )
 option(
   'exynos',
-  type : 'combo',
-  value : 'false',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
+  value : 'disabled',
   description : '''Enable support for EXYNOS's experimental KMS API.''',
 )
 option(
   'freedreno',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for freedreno's KMS API.''',
 )
 option(
   'tegra',
-  type : 'combo',
-  value : 'false',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
+  value : 'disabled',
   description : '''Enable support for Tegra's experimental KMS API.''',
 )
 option(
   'vc4',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : '''Enable support for vc4's KMS API.''',
 )
 option(
   'etnaviv',
-  type : 'combo',
-  value : 'false',
-  choices : ['true', 'false', 'auto'],
-  description : '''Enable support for etnaviv's experimental KMS API.''',
+  type : 'feature',
+  description : '''Enable support for etnaviv's KMS API.''',
 )
 option(
   'cairo-tests',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : 'Enable support for Cairo rendering in tests.',
 )
 option(
   'man-pages',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : 'Enable manpage generation and installation.',
 )
 option(
   'valgrind',
-  type : 'combo',
-  value : 'auto',
-  choices : ['true', 'false', 'auto'],
+  type : 'feature',
   description : 'Build libdrm with valgrind support.',
 )
 option(
@@ -133,4 +108,10 @@ option(
   type : 'boolean',
   value : false,
   description : 'Enable support for using udev instead of mknod.',
+)
+option(
+  'tests',
+  type : 'boolean',
+  value : true,
+  description : 'Build test programs.',
 )

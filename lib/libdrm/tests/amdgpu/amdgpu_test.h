@@ -282,12 +282,6 @@ CU_BOOL suite_cp_dma_tests_enable(void);
  */
 extern CU_TestInfo cp_dma_tests[];
 
-void amdgpu_dispatch_hang_helper(amdgpu_device_handle device_handle, uint32_t ip_type);
-void amdgpu_dispatch_hang_slow_helper(amdgpu_device_handle device_handle, uint32_t ip_type);
-void amdgpu_memcpy_draw_test(amdgpu_device_handle device_handle, uint32_t ring,
-			     int version, int hang);
-void amdgpu_memcpy_draw_hang_slow_test(amdgpu_device_handle device_handle, uint32_t ring, int version);
-
 /**
  * Initialize security test suite
  */
@@ -314,7 +308,12 @@ amdgpu_command_submission_write_linear_helper_with_secure(amdgpu_device_handle
 							  unsigned ip_type,
 							  bool secure);
 
-
+extern void amdgpu_test_dispatch_helper(amdgpu_device_handle device_handle, unsigned ip);
+extern void amdgpu_test_dispatch_hang_helper(amdgpu_device_handle device_handle, uint32_t ip);
+extern void amdgpu_test_dispatch_hang_slow_helper(amdgpu_device_handle device_handle, uint32_t ip);
+extern void amdgpu_test_draw_helper(amdgpu_device_handle device_handle);
+extern void amdgpu_test_draw_hang_helper(amdgpu_device_handle device_handle);
+extern void amdgpu_test_draw_hang_slow_helper(amdgpu_device_handle device_handle);
 
 /**
  * Initialize hotunplug test suite

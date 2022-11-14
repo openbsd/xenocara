@@ -56,7 +56,7 @@ with open(towrite, "w") as f:
    that script instead of adding here entries manually! */
 static const struct drmFormatModifierInfo drm_format_modifier_table[] = {
 ''')
-    f.write('    { DRM_MODIFIER_INVALID(NONE, INVALID_MODIFIER) },\n')
+    f.write('    { DRM_MODIFIER_INVALID(NONE, INVALID) },\n')
     f.write('    { DRM_MODIFIER_LINEAR(NONE, LINEAR) },\n')
 
     for entry in fm_re['intel']:

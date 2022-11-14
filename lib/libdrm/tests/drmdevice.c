@@ -142,7 +142,7 @@ main(void)
         for (int j = 0; j < DRM_NODE_MAX; j++) {
             if (devices[i]->available_nodes & 1 << j) {
                 printf("--- Opening device node %s ---\n", devices[i]->nodes[j]);
-                fd = open(devices[i]->nodes[j], O_RDONLY | O_CLOEXEC, 0);
+                fd = open(devices[i]->nodes[j], O_RDONLY | O_CLOEXEC);
                 if (fd < 0) {
                     printf("Failed - %s (%d)\n", strerror(errno), errno);
                     continue;

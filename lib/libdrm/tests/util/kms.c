@@ -96,33 +96,6 @@ const char *util_lookup_connector_status_name(unsigned int status)
 				     ARRAY_SIZE(connector_status_names));
 }
 
-static const struct type_name connector_type_names[] = {
-	{ DRM_MODE_CONNECTOR_Unknown, "unknown" },
-	{ DRM_MODE_CONNECTOR_VGA, "VGA" },
-	{ DRM_MODE_CONNECTOR_DVII, "DVI-I" },
-	{ DRM_MODE_CONNECTOR_DVID, "DVI-D" },
-	{ DRM_MODE_CONNECTOR_DVIA, "DVI-A" },
-	{ DRM_MODE_CONNECTOR_Composite, "composite" },
-	{ DRM_MODE_CONNECTOR_SVIDEO, "s-video" },
-	{ DRM_MODE_CONNECTOR_LVDS, "LVDS" },
-	{ DRM_MODE_CONNECTOR_Component, "component" },
-	{ DRM_MODE_CONNECTOR_9PinDIN, "9-pin DIN" },
-	{ DRM_MODE_CONNECTOR_DisplayPort, "DP" },
-	{ DRM_MODE_CONNECTOR_HDMIA, "HDMI-A" },
-	{ DRM_MODE_CONNECTOR_HDMIB, "HDMI-B" },
-	{ DRM_MODE_CONNECTOR_TV, "TV" },
-	{ DRM_MODE_CONNECTOR_eDP, "eDP" },
-	{ DRM_MODE_CONNECTOR_VIRTUAL, "Virtual" },
-	{ DRM_MODE_CONNECTOR_DSI, "DSI" },
-	{ DRM_MODE_CONNECTOR_DPI, "DPI" },
-};
-
-const char *util_lookup_connector_type_name(unsigned int type)
-{
-	return util_lookup_type_name(type, connector_type_names,
-				     ARRAY_SIZE(connector_type_names));
-}
-
 static const char * const modules[] = {
 	"i915",
 	"amdgpu",
@@ -150,6 +123,8 @@ static const char * const modules[] = {
 	"komeda",
 	"imx-dcss",
 	"mxsfb-drm",
+	"simpledrm",
+	"imx-lcdif",
 };
 
 int util_open(const char *device, const char *module)

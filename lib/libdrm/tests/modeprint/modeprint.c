@@ -135,7 +135,7 @@ static int printConnector(int fd, drmModeResPtr res, drmModeConnectorPtr connect
 	drmModePropertyPtr props;
 	const char *connector_type_name = NULL;
 
-	connector_type_name = util_lookup_connector_type_name(connector->connector_type);
+	connector_type_name = drmModeGetConnectorTypeName(connector->connector_type);
 
 	if (connector_type_name)
 		printf("Connector: %s-%d\n", connector_type_name,

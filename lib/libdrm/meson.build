@@ -21,11 +21,15 @@
 project(
   'libdrm',
   ['c'],
-  version : '2.4.111',
+  version : '2.4.114',
   license : 'MIT',
   meson_version : '>= 0.53',
-  default_options : ['buildtype=debugoptimized', 'c_std=c99'],
+  default_options : ['buildtype=debugoptimized', 'c_std=c11'],
 )
+
+if ['windows', 'darwin'].contains(host_machine.system())
+  error('unsupported OS: @0@'.format(host_machine.system()))
+endif
 
 pkg = import('pkgconfig')
 
@@ -34,6 +38,7 @@ config = configuration_data()
 config.set10('UDEV', get_option('udev'))
 with_freedreno_kgsl = get_option('freedreno-kgsl')
 with_install_tests = get_option('install-test-programs')
+with_tests = get_option('tests')
 
 if ['freebsd', 'dragonfly', 'netbsd'].contains(host_machine.system())
   dep_pthread_stubs = dependency('pthread-stubs', version : '>= 0.4')
@@ -82,57 +87,59 @@ endif
 config.set10('HAVE_LIBDRM_ATOMIC_PRIMITIVES', intel_atomics)
 config.set10('HAVE_LIB_ATOMIC_OPS', lib_atomics)
 
+dep_pciaccess = dependency('pciaccess', version : '>= 0.10', required : get_option('intel'))
+
 with_intel = false
 _intel = get_option('intel')
-if _intel != 'false'
-  if _intel == 'true' and not with_atomics
+if not _intel.disabled()
+  if _intel.enabled() and not with_atomics
     error('libdrm_intel requires atomics.')
   else
-    with_intel = _intel == 'true' or host_machine.cpu_family().startswith('x86')
+    with_intel = (_intel.enabled() or host_machine.cpu_family().startswith('x86')) and with_atomics and dep_pciaccess.found()
   endif
 endif
 summary('Intel', with_intel)
 
 with_radeon = false
 _radeon = get_option('radeon')
-if _radeon != 'false'
-  if _radeon == 'true' and not with_atomics
+if not _radeon.disabled()
+  if _radeon.enabled() and not with_atomics
     error('libdrm_radeon requires atomics.')
   endif
-  with_radeon = true
+  with_radeon = with_atomics
 endif
 summary('Radeon', with_radeon)
 
 with_amdgpu = false
 _amdgpu = get_option('amdgpu')
-if _amdgpu != 'false'
-  if _amdgpu == 'true' and not with_atomics
+if not _amdgpu.disabled()
+  if _amdgpu.enabled() and not with_atomics
     error('libdrm_amdgpu requires atomics.')
   endif
-  with_amdgpu = true
+  with_amdgpu = with_atomics
 endif
 summary('AMDGPU', with_amdgpu)
 
 with_nouveau = false
 _nouveau = get_option('nouveau')
-if _nouveau != 'false'
-  if _nouveau == 'true' and not with_atomics
+if not _nouveau.disabled()
+  if _nouveau.enabled() and not with_atomics
     error('libdrm_nouveau requires atomics.')
   endif
-  with_nouveau = true
+  with_nouveau = with_atomics
 endif
 summary('Nouveau', with_nouveau)
 
 with_vmwgfx = false
 _vmwgfx = get_option('vmwgfx')
-if _vmwgfx != 'false'
+if not _vmwgfx.disabled()
   with_vmwgfx = true
 endif
 summary('vmwgfx', with_vmwgfx)
 
 with_omap = false
 _omap = get_option('omap')
-if _omap == 'true'
+if _omap.enabled()
   if not with_atomics
     error('libdrm_omap requires atomics.')
   endif
@@ -142,11 +149,11 @@ summary('OMAP', with_omap)
 
 with_freedreno = false
 _freedreno = get_option('freedreno')
-if _freedreno != 'false'
-  if _freedreno == 'true' and not with_atomics
+if not _freedreno.disabled()
+  if _freedreno.enabled() and not with_atomics
     error('libdrm_freedreno requires atomics.')
   else
-    with_freedreno = _freedreno == 'true' or ['arm', 'aarch64'].contains(host_machine.cpu_family())
+    with_freedreno = (_freedreno.enabled() or ['arm', 'aarch64'].contains(host_machine.cpu_family())) and with_atomics
   endif
 endif
 summary('Freedreno', with_freedreno)
@@ -154,7 +161,7 @@ summary('Freedreon-kgsl', with_freedreno_kgsl)
 
 with_tegra = false
 _tegra = get_option('tegra')
-if _tegra == 'true'
+if _tegra.enabled()
   if not with_atomics
     error('libdrm_tegra requires atomics.')
   endif
@@ -164,21 +171,26 @@ summary('Tegra', with_tegra)
 
 with_etnaviv = false
 _etnaviv = get_option('etnaviv')
-if _etnaviv == 'true'
-  if not with_atomics
+if not _etnaviv.disabled()
+  if _etnaviv.enabled() and not with_atomics
     error('libdrm_etnaviv requires atomics.')
   endif
-  with_etnaviv = true
+  with_etnaviv = _etnaviv.enabled() or (
+    with_atomics and [
+      'loongarch64', 'mips', 'mips64',
+      'arm', 'aarch64', 'arc',
+    ].contains(host_machine.cpu_family())
+  )
 endif
 summary('Etnaviv', with_etnaviv)
 
-with_exynos = get_option('exynos') == 'true'
+with_exynos = get_option('exynos').enabled()
 summary('EXYNOS', with_exynos)
 
 with_vc4 = false
 _vc4 = get_option('vc4')
-if _vc4 != 'false'
-  with_vc4 = _vc4 == 'true' or ['arm', 'aarch64'].contains(host_machine.cpu_family())
+if not _vc4.disabled()
+  with_vc4 = _vc4.enabled() or ['arm', 'aarch64'].contains(host_machine.cpu_family())
 endif
 summary('VC4', with_vc4)
 
@@ -234,32 +246,19 @@ libdrm_c_args = cc.get_supported_arguments([
   '-Wno-unused-parameter', '-Wno-attributes', '-Wno-long-long',
   '-Wno-missing-field-initializers'])
 
-dep_pciaccess = dependency('pciaccess', version : '>= 0.10', required : with_intel)
 dep_cunit = dependency('cunit', version : '>= 2.1', required : false)
-_cairo_tests = get_option('cairo-tests')
-if _cairo_tests != 'false'
-  dep_cairo = dependency('cairo', required : _cairo_tests == 'true')
-  with_cairo_tests = dep_cairo.found()
-else
-  dep_cairo = []
-  with_cairo_tests = false
-endif
-_valgrind = get_option('valgrind')
-if _valgrind != 'false'
-  if with_freedreno
-    dep_valgrind = dependency('valgrind', required : _valgrind == 'true', version : '>=3.10.0')
-  else
-    dep_valgrind = dependency('valgrind', required : _valgrind == 'true')
-  endif
-  with_valgrind = dep_valgrind.found()
-else
-  dep_valgrind = []
-  with_valgrind = false
-endif
+dep_cairo = dependency('cairo', required : get_option('cairo-tests'))
+with_cairo_tests = dep_cairo.found()
 
-with_man_pages = get_option('man-pages')
-prog_rst2man = find_program('rst2man', 'rst2man.py', required: with_man_pages == 'true')
-with_man_pages = with_man_pages != 'false' and prog_rst2man.found()
+valgrind_version = []
+if with_freedreno
+  valgrind_version = '>=3.10.0'
+endif
+dep_valgrind = dependency('valgrind', required : get_option('valgrind'), version : valgrind_version)
+with_valgrind = dep_valgrind.found()
+
+prog_rst2man = find_program('rst2man', 'rst2man.py', required: get_option('man-pages'))
+with_man_pages = prog_rst2man.found()
 
 config.set10('HAVE_VISIBILITY', cc.has_function_attribute('visibility:hidden'))
 
@@ -391,4 +390,6 @@ if with_man_pages
   subdir('man')
 endif
 subdir('data')
-subdir('tests')
+if with_tests
+  subdir('tests')
+endif

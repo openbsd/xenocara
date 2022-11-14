@@ -103,11 +103,14 @@ drmModeAtomicGetCursor
 drmModeAtomicMerge
 drmModeAtomicSetCursor
 drmModeAttachMode
+drmModeConnectorGetPossibleCrtcs
 drmModeConnectorSetProperty
+drmModeCreateDumbBuffer
 drmModeCreateLease
 drmModeCreatePropertyBlob
 drmModeCrtcGetGamma
 drmModeCrtcSetGamma
+drmModeDestroyDumbBuffer
 drmModeDestroyPropertyBlob
 drmModeDetachMode
 drmModeDirtyFB
@@ -126,6 +129,7 @@ drmModeFreePropertyBlob
 drmModeFreeResources
 drmModeGetConnector
 drmModeGetConnectorCurrent
+drmModeGetConnectorTypeName
 drmModeGetCrtc
 drmModeGetEncoder
 drmModeGetFB
@@ -137,6 +141,7 @@ drmModeGetProperty
 drmModeGetPropertyBlob
 drmModeGetResources
 drmModeListLessees
+drmModeMapDumbBuffer
 drmModeMoveCursor
 drmModeObjectGetProperties
 drmModeObjectSetProperty
@@ -201,3 +206,4 @@ drmUpdateDrawableInfo
 drmWaitVBlank
 drmGetFormatModifierName
 drmGetFormatModifierVendor
+drmGetFormatName

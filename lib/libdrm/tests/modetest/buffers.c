@@ -37,6 +37,7 @@
 
 #include "libdrm_macros.h"
 #include "xf86drm.h"
+#include "xf86drmMode.h"
 
 #include "buffers.h"
 
@@ -44,10 +45,9 @@ struct bo
 {
 	int fd;
 	void *ptr;
-	size_t size;
-	size_t offset;
-	size_t pitch;
-	unsigned handle;
+	uint64_t size;
+	uint32_t pitch;
+	uint32_t handle;
 };
 
 /* -----------------------------------------------------------------------------
@@ -57,7 +57,6 @@ struct bo
 static struct bo *
 bo_create_dumb(int fd, unsigned int width, unsigned int height, unsigned int bpp)
 {
-	struct drm_mode_create_dumb arg;
 	struct bo *bo;
 	int ret;
 
@@ -67,12 +66,8 @@ bo_create_dumb(int fd, unsigned int width, unsigned int height, unsigned int bpp
 		return NULL;
 	}
 
-	memset(&arg, 0, sizeof(arg));
-	arg.bpp = bpp;
-	arg.width = width;
-	arg.height = height;
-
-	ret = drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &arg);
+	ret = drmModeCreateDumbBuffer(fd, width, height, bpp, 0, &bo->handle,
+				      &bo->pitch, &bo->size);
 	if (ret) {
 		fprintf(stderr, "failed to create dumb buffer: %s\n",
 			strerror(errno));
@@ -81,28 +76,22 @@ bo_create_dumb(int fd, unsigned int width, unsigned int height, unsigned int bpp
 	}
 
 	bo->fd = fd;
-	bo->handle = arg.handle;
-	bo->size = arg.size;
-	bo->pitch = arg.pitch;
 
 	return bo;
 }
 
 static int bo_map(struct bo *bo, void **out)
 {
-	struct drm_mode_map_dumb arg;
 	void *map;
 	int ret;
+	uint64_t offset;
 
-	memset(&arg, 0, sizeof(arg));
-	arg.handle = bo->handle;
-
-	ret = drmIoctl(bo->fd, DRM_IOCTL_MODE_MAP_DUMB, &arg);
+	ret = drmModeMapDumbBuffer(bo->fd, bo->handle, &offset);
 	if (ret)
 		return ret;
 
 	map = drm_mmap(0, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED,
-		       bo->fd, arg.offset);
+		       bo->fd, offset);
 	if (map == MAP_FAILED)
 		return -EINVAL;
 
@@ -340,13 +329,9 @@ bo_create(int fd, unsigned int format,
 
 void bo_destroy(struct bo *bo)
 {
-	struct drm_mode_destroy_dumb arg;
 	int ret;
 
-	memset(&arg, 0, sizeof(arg));
-	arg.handle = bo->handle;
-
-	ret = drmIoctl(bo->fd, DRM_IOCTL_MODE_DESTROY_DUMB, &arg);
+	ret = drmModeDestroyDumbBuffer(bo->fd, bo->handle);
 	if (ret)
 		fprintf(stderr, "failed to destroy dumb buffer: %s\n",
 			strerror(errno));

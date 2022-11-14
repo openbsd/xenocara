@@ -187,11 +187,9 @@ static bit_name_fn(mode_flag)
 
 static void dump_fourcc(uint32_t fourcc)
 {
-	printf(" %c%c%c%c",
-		fourcc,
-		fourcc >> 8,
-		fourcc >> 16,
-		fourcc >> 24);
+	char *name = drmGetFormatName(fourcc);
+	printf(" %s", name);
+	free(name);
 }
 
 static void dump_encoders(struct device *dev)
@@ -656,7 +654,7 @@ static struct resources *get_resources(struct device *dev)
 		int num;
 
 		num = asprintf(&connector->name, "%s-%u",
-			 util_lookup_connector_type_name(conn->connector_type),
+			 drmModeGetConnectorTypeName(conn->connector_type),
 			 conn->connector_type_id);
 		if (num < 0)
 			goto error;

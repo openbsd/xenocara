@@ -86,7 +86,8 @@ static void
 compare_batch(struct drm_intel_decode *ctx, const char *batch_filename)
 {
 	FILE *out = NULL;
-	void *ptr, *ref_ptr, *batch_ptr;
+	char *ptr;
+	void *ref_ptr, *batch_ptr;
 #if HAVE_OPEN_MEMSTREAM
 	size_t size;
 #endif
@@ -106,7 +107,7 @@ compare_batch(struct drm_intel_decode *ctx, const char *batch_filename)
 	 * inside of an automake project's test infrastructure.
 	 */
 #if HAVE_OPEN_MEMSTREAM
-	out = open_memstream((char **)&ptr, &size);
+	out = open_memstream(&ptr, &size);
 #else
 	fprintf(stderr, "platform lacks open_memstream, skipping.\n");
 	exit(77);

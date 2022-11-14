@@ -192,7 +192,7 @@ static void listConnectorProperties(void)
 		}
 
 		printf("Connector %u (%s-%u)\n", c->connector_id,
-		       util_lookup_connector_type_name(c->connector_type),
+		       drmModeGetConnectorTypeName(c->connector_type),
 		       c->connector_type_id);
 
 		listObjectProperties(c->connector_id,
