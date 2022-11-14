@@ -305,7 +305,7 @@ creq.height = 1080;
 creq.bpp = 32;
 ret = drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &creq);
 if (ret < 0) {
-    /* buffer creation failed; see "errno" for more error codes */
+    /* buffer creation failed; see \(dqerrno\(dq for more error codes */
     ...
 }
 /* creq.pitch, creq.handle and creq.size are filled by this ioctl with
@@ -314,17 +314,17 @@ if (ret < 0) {
 /* create framebuffer object for the dumb\-buffer */
 ret = drmModeAddFB(fd, 1920, 1080, 24, 32, creq.pitch, creq.handle, &fb);
 if (ret) {
-    /* frame buffer creation failed; see "errno" */
+    /* frame buffer creation failed; see \(dqerrno\(dq */
     ...
 }
-/* the framebuffer "fb" can now used for scanout with KMS */
+/* the framebuffer \(dqfb\(dq can now used for scanout with KMS */
 
 /* prepare buffer for memory mapping */
 memset(&mreq, 0, sizeof(mreq));
 mreq.handle = creq.handle;
 ret = drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq);
 if (ret) {
-    /* DRM buffer preparation failed; see "errno" */
+    /* DRM buffer preparation failed; see \(dqerrno\(dq */
     ...
 }
 /* mreq.offset now contains the new offset that can be used with mmap() */
@@ -332,7 +332,7 @@ if (ret) {
 /* perform actual memory mapping */
 map = mmap(0, creq.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mreq.offset);
 if (map == MAP_FAILED) {
-    /* memory\-mapping failed; see "errno" */
+    /* memory\-mapping failed; see \(dqerrno\(dq */
     ...
 }
 

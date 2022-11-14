@@ -201,12 +201,12 @@ static int modeset_find_crtc(int fd, drmModeRes *res, drmModeConnector *conn)
 
 
             /* Here you need to check that no other connector
-             * currently uses the CRTC with id "crtc". If you intend
+             * currently uses the CRTC with id \(dqcrtc\(dq. If you intend
              * to drive one connector only, then you can skip this
              * step. Otherwise, simply scan your list of configured
              * connectors and CRTCs whether this CRTC is already
              * used. If it is, then simply continue the search here. */
-            if (res\->crtcs[j] "is unused") {
+            if (res\->crtcs[j] \(dqis unused\(dq) {
                 drmModeFreeEncoder(enc);
                 return res\->crtcs[j];
             }

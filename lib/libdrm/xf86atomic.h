@@ -108,7 +108,7 @@ static inline int atomic_add_unless(atomic_t *v, int add, int unless)
 	c = atomic_read(v);
 	while (c != unless && (old = atomic_cmpxchg(v, c, c + add)) != c)
 		c = old;
-	return c == unless;
+	return c != unless;
 }
 
 #endif

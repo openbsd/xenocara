@@ -610,6 +610,29 @@ drm_public drmModeConnectorPtr drmModeGetConnectorCurrent(int fd, uint32_t conne
 	return _drmModeGetConnector(fd, connector_id, 0);
 }
 
+drm_public uint32_t drmModeConnectorGetPossibleCrtcs(int fd,
+                                                     const drmModeConnector *connector)
+{
+	drmModeEncoder *encoder;
+	int i;
+	uint32_t possible_crtcs;
+
+	possible_crtcs = 0;
+	for (i = 0; i < connector->count_encoders; i++) {
+		encoder = drmModeGetEncoder(fd, connector->encoders[i]);
+		if (!encoder) {
+			return 0;
+		}
+
+		possible_crtcs |= encoder->possible_crtcs;
+		drmModeFreeEncoder(encoder);
+	}
+
+	if (possible_crtcs == 0)
+		errno = ENOENT;
+	return possible_crtcs;
+}
+
 drm_public int drmModeAttachMode(int fd, uint32_t connector_id, drmModeModeInfoPtr mode_info)
 {
 	struct drm_mode_mode_cmd res;
@@ -1348,7 +1371,7 @@ drm_public drmModeAtomicReqPtr drmModeAtomicAlloc(void)
 	return req;
 }
 
-drm_public drmModeAtomicReqPtr drmModeAtomicDuplicate(drmModeAtomicReqPtr old)
+drm_public drmModeAtomicReqPtr drmModeAtomicDuplicate(const drmModeAtomicReqPtr old)
 {
 	drmModeAtomicReqPtr new;
 
@@ -1378,7 +1401,7 @@ drm_public drmModeAtomicReqPtr drmModeAtomicDuplicate(drmModeAtomicReqPtr old)
 }
 
 drm_public int drmModeAtomicMerge(drmModeAtomicReqPtr base,
-                                  drmModeAtomicReqPtr augment)
+                                  const drmModeAtomicReqPtr augment)
 {
 	uint32_t i;
 
@@ -1411,7 +1434,7 @@ drm_public int drmModeAtomicMerge(drmModeAtomicReqPtr base,
 	return 0;
 }
 
-drm_public int drmModeAtomicGetCursor(drmModeAtomicReqPtr req)
+drm_public int drmModeAtomicGetCursor(const drmModeAtomicReqPtr req)
 {
 	if (!req)
 		return -EINVAL;
@@ -1480,7 +1503,7 @@ static int sort_req_list(const void *misc, const void *other)
 		return first->cursor - second->cursor;
 }
 
-drm_public int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
+drm_public int drmModeAtomicCommit(int fd, const drmModeAtomicReqPtr req,
                                    uint32_t flags, void *user_data)
 {
 	drmModeAtomicReqPtr sorted;
@@ -1746,4 +1769,106 @@ drmModeGetFB2(int fd, uint32_t fb_id)
 drm_public void drmModeFreeFB2(drmModeFB2Ptr ptr)
 {
 	drmFree(ptr);
+}
+
+drm_public const char *
+drmModeGetConnectorTypeName(uint32_t connector_type)
+{
+	/* Keep the strings in sync with the kernel's drm_connector_enum_list in
+	 * drm_connector.c. */
+	switch (connector_type) {
+	case DRM_MODE_CONNECTOR_Unknown:
+		return "Unknown";
+	case DRM_MODE_CONNECTOR_VGA:
+		return "VGA";
+	case DRM_MODE_CONNECTOR_DVII:
+		return "DVI-I";
+	case DRM_MODE_CONNECTOR_DVID:
+		return "DVI-D";
+	case DRM_MODE_CONNECTOR_DVIA:
+		return "DVI-A";
+	case DRM_MODE_CONNECTOR_Composite:
+		return "Composite";
+	case DRM_MODE_CONNECTOR_SVIDEO:
+		return "SVIDEO";
+	case DRM_MODE_CONNECTOR_LVDS:
+		return "LVDS";
+	case DRM_MODE_CONNECTOR_Component:
+		return "Component";
+	case DRM_MODE_CONNECTOR_9PinDIN:
+		return "DIN";
+	case DRM_MODE_CONNECTOR_DisplayPort:
+		return "DP";
+	case DRM_MODE_CONNECTOR_HDMIA:
+		return "HDMI-A";
+	case DRM_MODE_CONNECTOR_HDMIB:
+		return "HDMI-B";
+	case DRM_MODE_CONNECTOR_TV:
+		return "TV";
+	case DRM_MODE_CONNECTOR_eDP:
+		return "eDP";
+	case DRM_MODE_CONNECTOR_VIRTUAL:
+		return "Virtual";
+	case DRM_MODE_CONNECTOR_DSI:
+		return "DSI";
+	case DRM_MODE_CONNECTOR_DPI:
+		return "DPI";
+	case DRM_MODE_CONNECTOR_WRITEBACK:
+		return "Writeback";
+	case DRM_MODE_CONNECTOR_SPI:
+		return "SPI";
+	case DRM_MODE_CONNECTOR_USB:
+		return "USB";
+	default:
+		return NULL;
+	}
+}
+
+drm_public int
+drmModeCreateDumbBuffer(int fd, uint32_t width, uint32_t height, uint32_t bpp,
+                        uint32_t flags, uint32_t *handle, uint32_t *pitch,
+                        uint64_t *size)
+{
+	int ret;
+	struct drm_mode_create_dumb create = {
+		.width = width,
+		.height = height,
+		.bpp = bpp,
+		.flags = flags,
+	};
+
+	ret = DRM_IOCTL(fd, DRM_IOCTL_MODE_CREATE_DUMB, &create);
+	if (ret != 0)
+		return ret;
+
+	*handle = create.handle;
+	*pitch = create.pitch;
+	*size = create.size;
+	return 0;
+}
+
+drm_public int
+drmModeDestroyDumbBuffer(int fd, uint32_t handle)
+{
+	struct drm_mode_destroy_dumb destroy = {
+		.handle = handle,
+	};
+
+	return DRM_IOCTL(fd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroy);
+}
+
+drm_public int
+drmModeMapDumbBuffer(int fd, uint32_t handle, uint64_t *offset)
+{
+	int ret;
+	struct drm_mode_map_dumb map = {
+		.handle = handle,
+	};
+
+	ret = DRM_IOCTL(fd, DRM_IOCTL_MODE_MAP_DUMB, &map);
+	if (ret != 0)
+		return ret;
+
+	*offset = map.offset;
+	return 0;
 }
