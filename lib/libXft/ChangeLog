@@ -1,3 +1,57 @@
+commit 1463255cd4f537baabf8f2c65270e4924d4ed656
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Tue Nov 15 03:39:55 2022 -0500
+
+    libXft 2.3.7
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 4f704b700beb6486213e1096b0e702f4a9067184
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Nov 14 18:42:47 2022 -0500
+
+    libxft issue #16
+    
+            https://gitlab.freedesktop.org/xorg/lib/libxft/-/issues/16
+    
+    Stack gets smashed in fonts with colors when calling XftGlyphRender
+    
+            BGRA changes made incorrect comparison for local vs allocated
+            buffer in XftGlyphSpecRender
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit de4592a18bba0bfc88232f6f4ecad7c2fa5e616e
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 13 05:56:12 2022 -0500
+
+    fix compiler warning
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 98e27ba4b2c3a4825a3497cd481992374a9c9e98
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sat Nov 12 12:48:08 2022 -0500
+
+    libxft issue #15
+    
+            https://gitlab.freedesktop.org/xorg/lib/libxft/-/issues/15
+    
+    XftFontLoadGlyphs for mono font returns wrong info in extents from
+    XftTextExtentsUtf8 for variable chars
+    
+    Patch by Scott Mcdermott, based on
+    
+            https://github.com/googlefonts/Inconsolata/issues/42
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 6d246534bd156e5cb901b2cc9e2b9d473cf73506
+Author: ericLemanissier <eric.lemanissier@gmail.com>
+Date:   Fri Sep 23 07:59:55 2022 +0000
+
+    stdint.h header is needed for SIZE_MAX
+
 commit 7d3bcd3b9ae3ffbfcd4f31c8f1db2254df90bc33
 Author: Thomas E. Dickey <dickey@invisible-island.net>
 Date:   Sat Sep 10 09:59:49 2022 -0400

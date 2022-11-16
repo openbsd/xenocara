@@ -21,6 +21,7 @@
  */
 
 #include "xftint.h"
+#include <stdint.h>
 
 #define NUM_LOCAL	1024
 #define NUM_ELT_LOCAL	128
@@ -364,7 +365,7 @@ XftGlyphSpecRender (Display		    *dpy,
     }
 
     elts = elts_local;
-    if (!font->info.color && nelt > NUM_ELT_LOCAL)
+    if (nelt > NUM_ELT_LOCAL)
     {
 	elts = AllocGlyphElt8Array (nelt);
 	if (!elts)

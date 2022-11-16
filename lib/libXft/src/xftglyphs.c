@@ -847,11 +847,11 @@ XftFontLoadGlyphs (Display	    *dpy,
 		if (font->info.load_flags & FT_LOAD_VERTICAL_LAYOUT)
 		{
 		    xftg->metrics.xOff = 0;
-		    xftg->metrics.yOff = (short)(-font->public.max_advance_width);
+		    xftg->metrics.yOff = (short)(-TRUNC(ROUND(glyphslot->advance.y)));
 		}
 		else
 		{
-		    xftg->metrics.xOff = (short)(font->public.max_advance_width);
+		    xftg->metrics.xOff = (short)(TRUNC(ROUND(glyphslot->advance.x)));
 		    xftg->metrics.yOff = 0;
 		}
 	    }
