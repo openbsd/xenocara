@@ -23,16 +23,15 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-mach64],
-        [6.9.6],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [6.9.7],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-mach64/issues],
         [xf86-video-mach64])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -166,7 +165,13 @@ fi
 AC_MSG_CHECKING([whether to enable EXA support])
 if test "x$EXA" = xyes; then
         AC_MSG_RESULT(yes)
-	AC_CHECK_FILE(${sdkdir}/exa.h, [have_exa_h="yes"], [have_exa_h="no"])
+
+        SAVE_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+        AC_CHECK_HEADER(exa.h,
+                       [have_exa_h="yes"], [have_exa_h="no"],
+                       [#include <xorg-server.h>])
+        CPPFLAGS="$SAVE_CPPFLAGS"
 else
         AC_MSG_RESULT(no)
 fi 
@@ -176,8 +181,8 @@ CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
 if test "x$have_exa_h" = xyes; then
         AC_MSG_CHECKING([whether EXA version is at least 2.0.0])
         AC_PREPROC_IFELSE([AC_LANG_PROGRAM([[
-#include "xorg-server.h"
-#include "exa.h"
+#include <xorg-server.h>
+#include <exa.h>
 #if EXA_VERSION_MAJOR < 2
 #error OLD EXA!
 #endif

@@ -76,9 +76,9 @@
  * any ordering constraints the engine might impose.  Groups larger than 16
  * outf()'s should be split up into two or more groups as needed (but not
  * necessarily wanted).  The outf() groups that result should be immediately
- * preceeded by an ATIMach64WaitForFIFO(n) call, where "n" is the number of
+ * preceded by an ATIMach64WaitForFIFO(n) call, where "n" is the number of
  * outf()'s in the group with the exception that groups containing a single
- * outf() should not be thus preceeded.  This means "n" should not be less than
+ * outf() should not be thus preceded.  This means "n" should not be less than
  * 2, nor larger than 16.
  */
 

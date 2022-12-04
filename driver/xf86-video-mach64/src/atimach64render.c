@@ -77,8 +77,8 @@
  *
  * A texture unit combines the fragment color (VERTEX_?_ARGB) coming in from
  * triangle rasterization with the texel from the texture according to the
- * texture environment (TEX_LIGHT_FCN_). "1x1 R" textures may come in as frag-
- * ment colors, eliminating the need for multitexturing in all interesting
+ * texture environment (TEX_LIGHT_FCN_). "1x1 R" textures may come in as 
+ * fragment colors, eliminating the need for multitexturing in all interesting
  * cases (via also uses this optimization).
  *
  * Texture registers are saved/restored and cached (see atimach64.c). TEX_CNTL
@@ -88,7 +88,7 @@
  *
  * Vertex registers are not saved/restored. This shouldn't be a problem though
  * either for DRI or VT switch because vertex registers are set and used within
- * a signle acceleration hook. Synchronization between the DDX and DRI is based
+ * a single acceleration hook. Synchronization between the DDX and DRI is based
  * on calling ATIDRISync() at the beginning of each DDX acceleration hook,
  * which suggests the assumption that individual acceleration hooks are not
  * interrupted.
@@ -701,8 +701,8 @@ Mach64PrepareComposite
             break;
     }
     if (i == MACH64_NR_TEX_FORMATS)
-        MACH64_FALLBACK(("Unsupported picture format 0x%x\n",
-                        (int)pPict->format));
+        MACH64_FALLBACK(("Unsupported dst format 0x%x\n",
+                        (int)pDstPicture->format));
     dstFormat = Mach64TexFormats[i].dstFormat;
 
     m3d->dp_pix_width = SetBits(dstFormat, DP_DST_PIX_WIDTH) |
@@ -814,8 +814,12 @@ Mach64Composite
     float ooa;
     CARD32 col;
     PictVector v;
-    int srcXend, srcYend;
+    struct vertcoords {
+        int x;
+        int y;
+    } srcvert[4];
     float dxy = 0.0, dwh = 0.0;
+    int i;
 
     ATIDRISync(pScreenInfo);
 
@@ -830,22 +834,23 @@ Mach64Composite
     }
 
     /* Handle transform */
-    srcXend = srcX + w;
-    srcYend = srcY + h;
+    srcvert[0].x = srcX;
+    srcvert[0].y = srcY;
+    srcvert[1].x = srcX + w;
+    srcvert[1].y = srcY;
+    srcvert[2].x = srcX + w;
+    srcvert[2].y = srcY + h;
+    srcvert[3].x = srcX;
+    srcvert[3].y = srcY + h;
     if (m3d->transform) {
-        v.vector[0] = IntToxFixed(srcX);
-        v.vector[1] = IntToxFixed(srcY);
-        v.vector[2] = xFixed1;
-        PictureTransformPoint(m3d->transform, &v);
-        srcX = xFixedToInt(v.vector[0]);
-        srcY = xFixedToInt(v.vector[1]);
-
-        v.vector[0] = IntToxFixed(srcXend);
-        v.vector[1] = IntToxFixed(srcYend);
-        v.vector[2] = xFixed1;
-        PictureTransformPoint(m3d->transform, &v);
-        srcXend = xFixedToInt(v.vector[0]);
-        srcYend = xFixedToInt(v.vector[1]);
+        for (i = 0; i < 4; i++) {
+            v.vector[0] = IntToxFixed(srcvert[i].x);
+            v.vector[1] = IntToxFixed(srcvert[i].y);
+            v.vector[2] = xFixed1;
+            PictureTransformPoint(m3d->transform, &v);
+            srcvert[i].x = xFixedToInt(v.vector[0]);
+            srcvert[i].y = xFixedToInt(v.vector[1]);
+        }
 
 #if 0
         /* Bilinear needs manipulation of texture coordinates */
@@ -857,10 +862,10 @@ Mach64Composite
     }
 
     /* Create vertices in clock-wise order */
-    VTX_SET(v0, col, dstX,     dstY,     srcX, dxy,    srcY, dxy);
-    VTX_SET(v1, col, dstX + w, dstY,     srcXend, dwh, srcY, dxy);
-    VTX_SET(v2, col, dstX + w, dstY + h, srcXend, dwh, srcYend, dwh);
-    VTX_SET(v3, col, dstX,     dstY + h, srcX, dxy,    srcYend, dwh);
+    VTX_SET(v0, col, dstX,     dstY,     srcvert[0].x, dxy, srcvert[0].y, dxy);
+    VTX_SET(v1, col, dstX + w, dstY,     srcvert[1].x, dwh, srcvert[1].y, dxy);
+    VTX_SET(v2, col, dstX + w, dstY + h, srcvert[2].x, dwh, srcvert[2].y, dwh);
+    VTX_SET(v3, col, dstX,     dstY + h, srcvert[3].x, dxy, srcvert[3].y, dwh);
 
     /* Setup upper triangle (v0, v1, v3) */
     VTX_OUT(v0, 1);

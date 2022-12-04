@@ -240,7 +240,7 @@ ATIMach64SetupMemXAA
 	scanlines = total / widthBytes;
 	if (scanlines > ATIMach64MaxY) scanlines = ATIMach64MaxY;
 
-	/* Recalculate the texture offset and size to accomodate any
+	/* Recalculate the texture offset and size to accommodate any
 	 * rounding to a whole number of scanlines.
 	 * FIXME: Is this actually needed?
 	 */

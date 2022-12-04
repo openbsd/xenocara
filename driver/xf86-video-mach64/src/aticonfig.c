@@ -311,6 +311,10 @@ ATIProcessOptions
 
     (void)memcpy(PublicOption, ATIPublicOptions, ATIPublicOptionSize);
 
+#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 25
+# define boolean bool
+#endif
+    
 #   define ProbeSparse   PublicOption[ATI_OPTION_PROBE_SPARSE].value.boolean
 #   define Accel         PublicOption[ATI_OPTION_ACCEL].value.boolean
 #   define BIOSDisplay   PrivateOption[ATI_OPTION_BIOS_DISPLAY].value.boolean
@@ -360,7 +364,7 @@ ATIProcessOptions
     ReferenceClock = ((double)157500000.0) / ((double)11.0);
 #ifdef __sparc__
     if (pATI->Chip == ATI_CHIP_264XL || pATI->Chip == ATI_CHIP_MOBILITY)
-	    ReferenceClock = 29500000.0;
+           ReferenceClock = 29500000.0;
 #endif
 
     ShadowFB = TRUE;
@@ -446,7 +450,7 @@ ATIProcessOptions
         pATI->OptionDMAMode = MACH64_MODE_MMIO;
     else {
         xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING,
-		   "Unkown dma_mode: '%s'\n", DMAMode);
+		   "Unknown dma_mode: '%s'\n", DMAMode);
 	xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING, 
 		   "Valid dma_mode options are: 'async','sync','mmio'\n");
         xf86DrvMsg(pScreenInfo->scrnIndex, X_WARNING, 

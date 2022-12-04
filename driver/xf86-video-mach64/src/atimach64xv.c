@@ -307,7 +307,7 @@ ATIMach64SetDefaultAttributes
 }
 
 /*
- * There is a one-to-one correspondance between elements of the following array
+ * There is a one-to-one correspondence between elements of the following array
  * and those of ATIMach64Attribute.
  */
 static ATIMach64AttributeRec ATIMach64AttributeInfo[nATIMach64Attribute] =

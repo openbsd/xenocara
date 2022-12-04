@@ -754,7 +754,7 @@
   If you are experiencing problems that are not already recorded in this
   document, first ensure that you have the latest current release of
   this driver and the Xorg X server.  Check the server's log (usually
-  found in /var/log/Xorg.0.log) and http://www.x.org/releases/individual/
+  found in /var/log/Xorg.0.log) and https://www.x.org/releases/individual/
   if you are uncertain.
 
   Secondly, please check Xorg's doc directory for additional
@@ -762,7 +762,7 @@
 
   Thirdly, a scan through the comp.windows.x.i386unix and
   comp.os.linux.x newsgroups, the xorg mailing list archives at
-  http://lists.freedesktop.org/mailman/listinfo/xorg, and the Xorg bug
+  https://lists.x.org/mailman/listinfo/xorg, and the Xorg bug
   database at https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
   can also prove useful in resolving problems.
 
@@ -827,27 +827,20 @@
   The introduction of version 6 is a first swipe at porting the driver
   to non-Intel architectures.
 
+  -----------------------------------------------------------------------
+
 All questions regarding this software should be directed at the
 Xorg mailing list:
 
-        http://lists.freedesktop.org/mailman/listinfo/xorg
+        https://lists.freedesktop.org/mailman/listinfo/xorg
 
-Please submit bug reports to the Xorg bugzilla:
+The primary development code repository can be found at:
 
-        https://bugs.freedesktop.org/enter_bug.cgi?product=xorg
+        https://gitlab.freedesktop.org/xorg/driver/xf86-video-mach64
 
-The master development code repository can be found at:
-
-        git://anongit.freedesktop.org/git/xorg/driver/xf86-video-mach64
-
-        http://cgit.freedesktop.org/xorg/driver/xf86-video-mach64
+Please submit bug reports and requests to merge patches there.
 
 For patch submission instructions, see:
 
-	http://www.x.org/wiki/Development/Documentation/SubmittingPatches
-
-For more information on the git code manager, see:
-
-        http://wiki.x.org/wiki/GitPage
-
+	https://www.x.org/wiki/Development/Documentation/SubmittingPatches
 

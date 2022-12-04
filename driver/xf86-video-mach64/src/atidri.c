@@ -1321,7 +1321,7 @@ Bool ATIDRIFinishScreenInit( ScreenPtr pScreen )
  * an extraction of the hardware-affecting bits from mach64_do_init_drm()
  * (see atidrm.c)
  * I am assuming here that pATI->pDRIServerInfo doesn't change
- * elsewhere in incomaptible ways.
+ * elsewhere in incompatible ways.
  * How will this code react to resuming after a failed resumeor pci based dri ?
  */
 void ATIDRIResume( ScreenPtr pScreen )

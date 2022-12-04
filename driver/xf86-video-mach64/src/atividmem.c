@@ -47,7 +47,7 @@ const char *ATIMemoryTypeNames_88800CX[] =
     "DRAM (256Kx4, x8, x16)",
     "EDO DRAM (256Kx4, x8, x16)",
     "Unknown video memory type",
-    "DRAM (256Kx16 with assymetric RAS/CAS)",
+    "DRAM (256Kx16 with asymmetric RAS/CAS)",
     "Unknown video memory type",
     "Unknown video memory type",
     "Unknown video memory type",

@@ -38,7 +38,7 @@
 
 extern void ATISetVGAIOBase(ATIPtr, const CARD8);
 
-/* Odds and ends to ease reading and writting of indexed registers */
+/* Odds and ends to ease reading and writing of indexed registers */
 #define GetReg(_Register, _Index) \
     (                             \
         outb(_Register, _Index),  \
