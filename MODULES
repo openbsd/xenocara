@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.494 2022/12/04 08:05:36 matthieu Exp $
+# $OpenBSD: MODULES,v 1.495 2022/12/04 18:43:19 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -38,7 +38,7 @@ app/xedit		1.2.3
 app/xev			1.2.5
 app/xeyes		1.2.0
 app/xf86dga		1.0.3
-app/xfd			1.1.4		needs-update
+app/xfd			1.1.4
 app/xfontsel		1.1.0
 app/xgamma		1.0.7		needs-update
 app/xgc			1.0.6
@@ -97,7 +97,7 @@ driver/xf86-video-cirrus	1.6.0		needs-update
 driver/xf86-video-dummy		0.4.0
 driver/xf86-video-geode		2.11.20		needs-update
 driver/xf86-video-intel		2.99.917	needs-update
-driver/xf86-video-mach64	6.9.7		needs-update
+driver/xf86-video-mach64	6.9.7
 driver/xf86-video-mga		2.0.1
 driver/xf86-video-nv		2.1.22		needs-update
 driver/xf86-video-openchrome	0.6.179		needs-update
