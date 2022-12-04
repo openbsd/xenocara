@@ -30,6 +30,7 @@ in this Software without prior written authorization from The Open Group.
 # include "config.h"
 #endif
 
+#include <X11/Xfuncproto.h>
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Xos.h>
@@ -69,7 +70,7 @@ static XrmOptionDescRec xfd_options[] = {
 {"-columns",	"*grid.cellColumns", XrmoptionSepArg,	(caddr_t) NULL },
 };
 
-static void usage(void);
+static void usage(void) _X_NORETURN _X_COLD;
 static void SelectChar(Widget w, XtPointer closure, XtPointer data);
 static void do_quit(Widget w, XEvent *event, String *params,
 		    Cardinal *num_params) _X_NORETURN;
@@ -343,7 +344,7 @@ main(int argc, char *argv[])
 
 /*ARGSUSED*/
 static void
-SelectChar(Widget w, XtPointer closure, XtPointer data)
+SelectChar(Widget w, XtPointer closure _X_UNUSED, XtPointer data)
 {
     FontGridCharRec *p = (FontGridCharRec *) data;
     XFontStruct *fs = p->thefont;
@@ -421,7 +422,8 @@ SelectChar(Widget w, XtPointer closure, XtPointer data)
 
 /*ARGSUSED*/
 static void
-do_quit (Widget w, XEvent *event, String *params, Cardinal *num_params)
+do_quit (Widget w _X_UNUSED, XEvent *event _X_UNUSED,
+	 String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     exit (0);
 }
@@ -431,7 +433,6 @@ change_page(int page)
 {
     long oldstart, newstart;
     int ncols, nrows;
-    char buf[256];
     Arg arg;
 
     arg.name = XtNstartChar;
@@ -453,6 +454,7 @@ change_page(int page)
     if (!page || newstart != oldstart) {
 	unsigned int row = (unsigned int) ((newstart >> 8));
 	unsigned int col = (unsigned int) (newstart & 0xff);
+	char buf[256];
 
 	XtSetArg (arg, XtNlabel, buf);
 	snprintf (buf, sizeof(buf), xfd_resources.start_format,
@@ -488,14 +490,16 @@ set_button_state(void)
 
 /* ARGSUSED */
 static void
-do_prev16(Widget w, XEvent *event, String *params, Cardinal *num_params)
+do_prev16(Widget w _X_UNUSED, XEvent *event _X_UNUSED,
+	  String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     change_page (-16);
 }
 
 
 static void
-do_prev(Widget w, XEvent *event, String *params, Cardinal *num_params)
+do_prev(Widget w _X_UNUSED, XEvent *event _X_UNUSED,
+	String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     change_page (-1);
 }
@@ -503,14 +507,16 @@ do_prev(Widget w, XEvent *event, String *params, Cardinal *num_params)
 
 /* ARGSUSED */
 static void
-do_next(Widget w, XEvent *event, String *params, Cardinal *num_params)
+do_next(Widget w _X_UNUSED, XEvent *event _X_UNUSED,
+	String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     change_page (1);
 }
 
 /* ARGSUSED */
 static void
-do_next16(Widget w, XEvent *event, String *params, Cardinal *num_params)
+do_next16(Widget w _X_UNUSED, XEvent *event _X_UNUSED,
+	  String *params _X_UNUSED, Cardinal *num_params _X_UNUSED)
 {
     change_page (16);
 }

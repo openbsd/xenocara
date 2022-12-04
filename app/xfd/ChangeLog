@@ -1,3 +1,118 @@
+commit a70254dac5e63fbe4f8aa89433189a613a509e1f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 13:46:02 2022 -0800
+
+    xfd 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 09834f092c6fb5ac4945bfd1b7b5bb228e42e04d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 12 15:23:52 2022 -0800
+
+    Tag unused arguments to callback functions as _X_UNUSED
+    
+    Gets rid of 33 -Wunused-parameter warnings from clang
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d9ba30a6f56b2bb7e6f1b125a3d2eaa871c96eba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 12 13:05:24 2022 -0800
+
+    Handle -Wextra-semi-stmt warnings from clang
+    
+    Use do {...} while (0) idiom for pre-processor macros that define
+    code blocks so that trailing semi-colons don't appear to be extraneous
+    
+    grid.c:305:38: warning: empty expression statement has no effect;
+      remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                CI_GET_CHAR_INFO_1D (fs, ch, cs);
+                                                ^
+    grid.c:311:40: warning: empty expression statement has no effect;
+      remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                CI_GET_CHAR_INFO_2D (fs, r, c, cs);
+                                                  ^
+    grid.c:488:46: warning: empty expression statement has no effect;
+      remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        donestr (XftColor, xftColor, XtRXftColor);
+                                                 ^
+    grid.c:546:42: warning: empty expression statement has no effect;
+      remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        donestr (XftFont *, font, XtRXftFont);
+                                             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0be214afe5eeddc6d5e6cdcae9b7242d4e11b3cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ffeff68a6774675b1741655fa7a22c7af93c2ac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 11:00:38 2022 -0700
+
+    Mark usage() as _X_NORETURN _X_COLD
+    
+    Raises minimum xproto requirement to 7.0.25 from Nov. 2013
+    to get the _X_COLD definition in <X11/Xfuncproto.h>
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 122fa8689837bc5a5166432609f351c200a17ef6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 10:58:05 2022 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da378df9565f7a8e1e086d1676c6742a5ca9d5f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 10:51:18 2022 -0700
+
+    Fix warning: missing initializer for field ‘extension’ of ‘SimpleClassPart'
+    
+    grid.c:153:3: warning: missing initializer for field ‘extension’ of ‘SimpleClassPart {aka struct <anonymous>}’ [-Wmissing-field-initializers]
+       }
+       ^
+    In file included from grid.c:34:0:
+    /net/also.us.oracle.com/export/alanc/X.Org/amd64-gcc/install/usr/X11R7/include/X11/Xaw/SimpleP.h:62:15: note: ‘extension’ declared here
+         XtPointer extension;
+                   ^~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d946324dae78f15ffe63f1e129eb4cb35a7116b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 10:42:15 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 46 out of 68 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9fdbf13e82163a69acf218ae5850b33fd5a0ff91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:00:17 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 66bfd8cf6e349edb42de3474b53e9f50db3a4694
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:00:14 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9cf6578a0c35b14af13dc104ab3f4ccf64e673ae
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 9 18:56:26 2019 -0800
@@ -605,7 +720,7 @@ Date:   Fri Oct 14 00:25:45 2005 +0000
     Use sed to fill in variables in man page
 
 commit bd8980b53fe42bd02524fffd77aea85895fd8b22
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Tue Sep 27 20:23:15 2005 +0000
 
     Update configure.ac to not require xaw8.
@@ -638,7 +753,7 @@ Date:   Fri Jul 29 21:22:32 2005 +0000
     - Update modular Xorg version
 
 commit 84402c21218d680e062d1effd217472d5a0d98dd
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 22:41:14 2005 +0000
 
     Add _BSD_SOURCE to xfd
@@ -670,7 +785,7 @@ Date:   Wed Jul 20 19:31:55 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 3fc196e33de9fe3c8468d771763c4433328c764c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 19:26:26 2005 +0000
 
     - Xaw/xaw.m4: Change help string to say "enable xprint" instead of "disable
@@ -681,7 +796,7 @@ Date:   Wed Jul 6 19:26:26 2005 +0000
     - remove font/arabic-misc/README and font/mutt-misc/README
 
 commit 5309f3af0daaf8292ad4fbdd8a7c1c66dc20a178
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 15:14:08 2005 +0000
 
     Build system for xfd

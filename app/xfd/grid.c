@@ -149,7 +149,8 @@ FontGridClassRec fontgridClassRec = {
     /* extension                */      NULL
   },
   { /* simple fields */
-    /* change_sensitive		*/	XtInheritChangeSensitive
+    /* change_sensitive		*/	XtInheritChangeSensitive,
+    /* extension                */      NULL
   }
 };
 
@@ -168,10 +169,9 @@ GridFirstChar (Widget w)
 	FcChar32    map[FC_CHARSET_MAP_SIZE];
 	FcChar32    next;
 	FcChar32    first;
-	int	    i;
 
 	first = FcCharSetFirstPage (xft->charset, map, &next);
-	for (i = 0; i < FC_CHARSET_MAP_SIZE; i++)
+	for (int i = 0; i < FC_CHARSET_MAP_SIZE; i++)
 	    if (map[i])
 	    {
 		FcChar32    bits = map[i];
@@ -206,12 +206,12 @@ GridLastChar (Widget w)
     {
 	FcChar32    this, last, next;
 	FcChar32    map[FC_CHARSET_MAP_SIZE];
-	int	    i;
+
 	last = FcCharSetFirstPage (xft->charset, map, &next);
 	while ((this = FcCharSetNextPage (xft->charset, map, &next)) != FC_CHARSET_DONE)
 	    last = this;
 	last &= ~0xff;
-	for (i = FC_CHARSET_MAP_SIZE - 1; i >= 0; i--)
+	for (int i = FC_CHARSET_MAP_SIZE - 1; i >= 0; i--)
 	    if (map[i])
 	    {
 		FcChar32    bits = map[i];
@@ -247,7 +247,7 @@ GridLastChar (Widget w)
 			       (cs)->ascent|(cs)->descent) == 0))
 
 #define CI_GET_CHAR_INFO_1D(fs,col,cs) \
-{ \
+do { \
     cs = NULL; \
     if (col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
 	if (fs->per_char == NULL) { \
@@ -258,14 +258,14 @@ GridLastChar (Widget w)
 	if (CI_NONEXISTCHAR(cs)) \
 	    cs = NULL; \
     } \
-}
+} while (0)
 
 /*
  * CI_GET_CHAR_INFO_2D - return the charinfo struct for the indicated row and
  * column.  This is used for fonts that have more than row zero.
  */
 #define CI_GET_CHAR_INFO_2D(fs,row,col,cs) \
-{ \
+do { \
     cs = NULL; \
     if (row >= fs->min_byte1 && row <= fs->max_byte1 && \
 	col >= fs->min_char_or_byte2 && col <= fs->max_char_or_byte2) { \
@@ -280,7 +280,7 @@ GridLastChar (Widget w)
 	if (CI_NONEXISTCHAR(cs)) \
 	    cs = NULL; \
     } \
-}
+} while (0)
 
 static Boolean
 GridHasChar (Widget w, long ch)
@@ -389,7 +389,7 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 };
 
 #define	donestr(type, value, tstr) \
-	{							\
+	do {							\
 	    if (toVal->addr != NULL) {				\
 		if (toVal->size < sizeof(type)) {		\
 		    toVal->size = sizeof(type);			\
@@ -406,10 +406,11 @@ static XtConvertArgRec xftColorConvertArgs[] = {
 	    }							\
 	    toVal->size = sizeof(type);				\
 	    return True;					\
-	}
+	} while (0)
 
 static void
-XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
+XmuFreeXftColor (XtAppContext app, XrmValuePtr toVal,
+		 XtPointer closure _X_UNUSED,
 		 XrmValuePtr args, Cardinal *num_args)
 {
     Screen	*screen;
@@ -439,7 +440,7 @@ static Boolean
 XmuCvtStringToXftColor(Display *dpy,
 		       XrmValue *args, Cardinal *num_args,
 		       XrmValue *fromVal, XrmValue *toVal,
-		       XtPointer *converter_data)
+		       XtPointer *converter_data _X_UNUSED)
 {
     char	    *spec;
     XRenderColor    renderColor;
@@ -489,7 +490,7 @@ XmuCvtStringToXftColor(Display *dpy,
 }
 
 static void
-XmuFreeXftFont (XtAppContext app, XrmValuePtr toVal, XtPointer closure,
+XmuFreeXftFont (XtAppContext app, XrmValuePtr toVal, XtPointer closure _X_UNUSED,
 		XrmValuePtr args, Cardinal *num_args)
 {
     Screen  *screen;
@@ -515,7 +516,7 @@ static Boolean
 XmuCvtStringToXftFont(Display *dpy,
 		      XrmValue *args, Cardinal *num_args,
 		      XrmValue *fromVal, XrmValue *toVal,
-		      XtPointer *converter_data)
+		      XtPointer *converter_data _X_UNUSED)
 {
     char    *name;
     XftFont *font;
@@ -571,7 +572,8 @@ ClassInitialize(void)
 
 
 static void
-Initialize(Widget request, Widget new, ArgList args, Cardinal *num_args)
+Initialize(Widget request, Widget new,
+           ArgList args _X_UNUSED, Cardinal *num_args _X_UNUSED)
 {
     FontGridWidget reqfg = (FontGridWidget) request;
     FontGridWidget newfg = (FontGridWidget) new;
@@ -684,7 +686,7 @@ Resize(Widget gw)
 
 /* ARGSUSED */
 static void
-Redisplay(Widget gw, XEvent *event, Region region)
+Redisplay(Widget gw, XEvent *event _X_UNUSED, Region region)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
     XRectangle rect;			/* bounding rect for region */
@@ -880,8 +882,8 @@ PageBlank (Widget w, long first, long last)
 
 /*ARGSUSED*/
 static Boolean
-SetValues(Widget current, Widget request, Widget new,
-	  ArgList args, Cardinal *num_args)
+SetValues(Widget current, Widget request _X_UNUSED, Widget new,
+	  ArgList args _X_UNUSED, Cardinal *num_args _X_UNUSED)
 {
     FontGridWidget curfg = (FontGridWidget) current;
     FontGridWidget newfg = (FontGridWidget) new;
@@ -943,7 +945,8 @@ SetValues(Widget current, Widget request, Widget new,
 
 /* ARGSUSED */
 static void
-Notify(Widget gw, XEvent *event, String *params, Cardinal *nparams)
+Notify(Widget gw, XEvent *event,
+       String *params _X_UNUSED, Cardinal *nparams _X_UNUSED)
 {
     FontGridWidget fgw = (FontGridWidget) gw;
     int x, y;				/* where the event happened */
