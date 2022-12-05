@@ -380,6 +380,7 @@ static Bool AMDGPUCreateScreenResources_KMS(ScreenPtr pScreen)
 	ExtensionEntry *damage_ext;
 	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
 	AMDGPUInfoPtr info = AMDGPUPTR(pScrn);
+	AMDGPUEntPtr pAMDGPUEnt = AMDGPUEntPriv(pScrn);
 	PixmapPtr pixmap;
 
 	pScreen->CreateScreenResources = info->CreateScreenResources;
@@ -399,6 +400,7 @@ static Bool AMDGPUCreateScreenResources_KMS(ScreenPtr pScreen)
 			rrScrPriv->layoutChanged = TRUE;
 		}
 
+		info->drmmode.fd = pAMDGPUEnt->fd;
 		drmmode_uevent_init(pScrn, &info->drmmode);
 	}
 

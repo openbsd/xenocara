@@ -53,10 +53,14 @@ enum drmmode_cm_prop {
 };
 
 typedef struct {
+	int fd;
 	ScrnInfoPtr scrn;
 #ifdef HAVE_LIBUDEV
 	struct udev_monitor *uevent_monitor;
 	InputHandlerProc uevent_handler;
+#endif
+#ifdef __OpenBSD__
+	InputHandlerProc kevent_handler;
 #endif
 	drmEventContext event_context;
 	int count_crtcs;

@@ -31,6 +31,10 @@
 
 #include <errno.h>
 #include <sys/ioctl.h>
+#ifdef __OpenBSD__
+#include <sys/types.h>
+#include <sys/event.h>
+#endif
 #include <time.h>
 #include "cursorstr.h"
 #include "damagestr.h"
@@ -1990,6 +1994,9 @@ drmmode_output_update_properties(xf86OutputPtr output)
 			if (koutput->prop_values[j] == p->value)
 				break;
 
+			ErrorF("%s: changed %lld->%lld\n", __func__, p->value,
+			       koutput->prop_values[j]);
+
 			p->value = koutput->prop_values[j];
 
 			if (p->mode_prop->flags & DRM_MODE_PROP_RANGE) {
@@ -3917,6 +3924,18 @@ static void drmmode_handle_uevents(int fd, void *closure)
 }
 #endif
 
+#ifdef __OpenBSD__
+static void drmmode_handle_kevents(int fd, void *closure)
+{
+	drmmode_ptr drmmode = closure;
+	ScrnInfoPtr scrn = drmmode->scrn;
+	struct kevent ev;
+
+	if ((kevent(fd, NULL, 0, &ev, 1, NULL)) && ev.fflags & NOTE_CHANGE)
+		amdgpu_mode_hotplug(scrn, drmmode);
+}
+#endif
+
 void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode)
 {
 #ifdef HAVE_LIBUDEV
@@ -3946,6 +3965,23 @@ void drmmode_uevent_init(ScrnInfoPtr scrn, drmmode_ptr drmmode)
 				  drmmode_handle_uevents, drmmode);
 
 	drmmode->uevent_monitor = mon;
+#elif defined(__OpenBSD__)
+	int kq;
+	struct kevent ev;
+
+	if (drmmode->kevent_handler)
+		return;
+
+	if ((kq = kqueue()) <= 0)
+		return;
+
+	EV_SET(&ev, drmmode->fd, EVFILT_DEVICE, EV_ADD | EV_ENABLE | EV_CLEAR,
+	       NOTE_CHANGE, 0, NULL);
+	if (kevent(kq, &ev, 1, NULL, 0, NULL) < 0)
+		return;
+
+	drmmode->kevent_handler =
+	    xf86AddGeneralHandler(kq, drmmode_handle_kevents, drmmode);
 #endif
 }
 
@@ -3958,6 +3994,14 @@ void drmmode_uevent_fini(ScrnInfoPtr scrn, drmmode_ptr drmmode)
 
 		udev_monitor_unref(drmmode->uevent_monitor);
 		udev_unref(u);
+	}
+#elif defined(__OpenBSD__)
+	int kq;
+
+	if (drmmode->kevent_handler) {
+		kq = xf86RemoveGeneralHandler(drmmode->kevent_handler);
+		close(kq);
+		drmmode->kevent_handler = NULL;
 	}
 #endif
 }
