@@ -890,7 +890,7 @@ ProcXChangeDeviceProperty(ClientPtr client)
     REQUEST(xChangeDevicePropertyReq);
     DeviceIntPtr dev;
     unsigned long len;
-    int totalSize;
+    uint64_t totalSize;
     int rc;
 
     REQUEST_AT_LEAST_SIZE(xChangeDevicePropertyReq);
@@ -902,6 +902,8 @@ ProcXChangeDeviceProperty(ClientPtr client)
 
     rc = check_change_property(client, stuff->property, stuff->type,
                                stuff->format, stuff->mode, stuff->nUnits);
+    if (rc != Success)
+        return rc;
 
     len = stuff->nUnits;
     if (len > (bytes_to_int32(0xffffffff - sizeof(xChangeDevicePropertyReq))))
@@ -1128,7 +1130,7 @@ ProcXIChangeProperty(ClientPtr client)
 {
     int rc;
     DeviceIntPtr dev;
-    int totalSize;
+    uint64_t totalSize;
     unsigned long len;
 
     REQUEST(xXIChangePropertyReq);
@@ -1141,6 +1143,9 @@ ProcXIChangeProperty(ClientPtr client)
 
     rc = check_change_property(client, stuff->property, stuff->type,
                                stuff->format, stuff->mode, stuff->num_items);
+    if (rc != Success)
+        return rc;
+
     len = stuff->num_items;
     if (len > bytes_to_int32(0xffffffff - sizeof(xXIChangePropertyReq)))
         return BadLength;
