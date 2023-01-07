@@ -29,7 +29,7 @@
 *  XPM library                                                                *
 *                                                                             *
 *  Developed by Arnaud Le Hors                                                *
-*  this originaly comes from Colas Nahaboo as a part of Wool                  *
+*  this originally comes from Colas Nahaboo as a part of Wool                  *
 *                                                                             *
 \*****************************************************************************/
 

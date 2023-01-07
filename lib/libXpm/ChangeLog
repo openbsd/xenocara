@@ -1,3 +1,129 @@
+commit 08bc174f28af028b6ebaa9edeccd3ff56c396e92
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 19 12:23:53 2022 -0800
+
+    libXpm 3.5.14
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f0857c0de206e90777a5321cce9602083b283080
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 27 10:06:23 2022 -0700
+
+    man pages: Correct Copyright/License notices
+    
+    Since the text was copied from doc/xpm.PS.gz, the copyright and license
+    notices need to be copied from there as well.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit deb81a9a210527b0a00f002b1796e5e21e492879
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 18:39:17 2022 -0700
+
+    man pages: Fix typos
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d5fa4c2079494f502f9a576d749fa1e205f2144
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 18:29:05 2022 -0700
+
+    man pages: Add missing word 'function' where needed
+    
+    A number of instances of 'The Xpm... function' were missing the word
+    "function", so read awkwardly.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2b7357e83e38e2a860687ee4150ef60bd6c0a47f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 18:16:42 2022 -0700
+
+    man pages: Make function synopses more consistent with other pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb8590c9c57d661ec4a29da243e05b9d87b999d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 18:06:51 2022 -0700
+
+    man pages: Fix shadow man pages
+    
+    Shadow man pages have a .so line that needs to list the file to be
+    shown, not the name of the shadow page.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bfaebfdcc92433a8b78c004de4bb3c5a8a545e75
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Aug 26 17:49:25 2022 -0700
+
+    man pages: Make file names consistent with their displayed names
+    
+    Lets users view the pages using the name displayed on the pages
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7a138a5278890e122731eb94b8e5a7d6ef543243
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 16:29:35 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3433f4334db7c30864c112639a929c5ae8bd3c3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 16:27:01 2022 -0700
+
+    man: strip trailing whitespace
+    
+    git diff -w shows no changes from this commit
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 961245427855ab6d30a5fa2dbb98aaffa571d728
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 16:25:38 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa16fbda9c90f932a74cd80c90eee88432d987d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 16:23:04 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 83e5427f9cd5d32602bcf647547e0030ea361f00
+Author: Walter Harms <wharms@bfs.de>
+Date:   Wed Dec 25 20:40:04 2019 +0100
+
+    update man pages
+    
+    move from k&r to ansi prototypes
+    improve nroff coding
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit e48e649eb04f95ffbdbd0c8bb77d7131142f5e9a
+Author: Walter Harms <wharms@bfs.de>
+Date:   Tue Dec 24 17:20:09 2019 +0100
+
+    add man pages based on doc/xpm.PS
+    
+    More or less hand crafted man pages based on xpm.PS.
+    Prototypes are still in K&R, see also is a dud
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
 commit b0fc485495a694816d76a43978e2cfd5575c554d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Dec 13 14:25:06 2019 +1000
@@ -205,7 +331,7 @@ Date:   Tue Dec 6 22:31:53 2016 +0100
     Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
 
 commit 42ca8d956276bc00bec09e410d76daf053ae35f9
-Author: Jörg Sonnenberger <joerg@NetBSD.org>
+Author: Jörg Sonnenberger  <joerg@NetBSD.org>
 Date:   Wed Mar 19 09:26:37 2014 +0100
 
     Fix abs() usage.
@@ -1109,13 +1235,13 @@ Date:   Thu Jun 9 13:42:36 2005 +0000
     Use $(top_srcdir)/src instead of $(top_builddir)/src in INCLUDES
 
 commit 769751fba3e32f49272d19799929e1ad5a3d2cd0
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu May 19 17:09:13 2005 +0000
 
     Add $(top_builddir)/include to INCLUDES
 
 commit 2cc1896c61eef5739bb6a8ffa89e58ba5c175a05
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu May 19 15:02:48 2005 +0000
 
     - Add build system for lib/Xpm
@@ -1123,7 +1249,7 @@ Date:   Thu May 19 15:02:48 2005 +0000
     - Conditionally include config.h in xc/extras/Xpm
 
 commit cf0d69c7ace679f27f105c582760b9be14923aba
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu May 19 14:37:53 2005 +0000
 
     Thu May 19 10:36:54 2005 Søren Sandmann <sandmann@redhat.com>
@@ -1186,6 +1312,9 @@ Date:   Tue Sep 21 17:57:35 2004 +0000
     Added new libs to the bindist control files.
     Removed inclusion of unnecessary kernel header on Linux. This may fail in
         an -ansi environment.
+
+Notes:
+    Fixes CVE-2004-0687 (integer overflows) and CVE-2004-0688 (stack overflows)
 
 commit 2773a7214e282f6f673483f5233b880505947c3f
 Author: Egbert Eich <eich@suse.de>

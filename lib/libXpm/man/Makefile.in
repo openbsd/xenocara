@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 #
-# Copyright (c) 2010, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2010, 2022, Oracle and/or its affiliates.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -132,8 +132,8 @@ am__uninstall_files_from_dir = { \
     || { echo " ( cd '$$dir' && rm -f" $$files ")"; \
          $(am__cd) "$$dir" && rm -f $$files; }; \
   }
-am__installdirs = "$(DESTDIR)$(appmandir)"
-DATA = $(appman_DATA)
+am__installdirs = "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(libmandir)"
+DATA = $(appman_DATA) $(libman_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ADMIN_MAN_DIR = @ADMIN_MAN_DIR@
@@ -269,6 +269,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -278,15 +279,86 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 appmandir = $(APP_MAN_DIR)
+libmandir = $(LIB_MAN_DIR)
+libman_PRE = $(all_shadows:=.man) \
+	XpmCreateBuffer.man	\
+	XpmCreateData.man	\
+	XpmCreateImage.man	\
+	XpmCreatePixmap.man	\
+	XpmCreateXpmImage.man	\
+	XpmMisc.man		\
+	XpmRead.man		\
+	XpmWrite.man
+
+libman_DATA = $(libman_PRE:man=$(LIB_MAN_SUFFIX))
 appman_PRE = sxpm.man cxpm.man
 appman_DATA = $(appman_PRE:man=$(APP_MAN_SUFFIX))
-EXTRA_DIST = $(appman_PRE)
-CLEANFILES = $(appman_DATA)
-SUFFIXES = .$(APP_MAN_SUFFIX) .man
+EXTRA_DIST = $(appman_PRE) $(libman_PRE)
+CLEANFILES = $(appman_DATA) $(libman_DATA)
+SUFFIXES = .$(APP_MAN_SUFFIX) .$(LIB_MAN_SUFFIX) .man
+all_shadows = \
+         $(xpmcreatebuffer_shadows)  \
+         $(xpmcreatedata_shadows)  \
+         $(xpmcreateimage_shadows)  \
+         $(xpmcreatepixmap_shadows)  \
+         $(xpmcreatexpmimage_shadows)  \
+         $(xpmmisc_shadows)  \
+         $(xpmread_shadows)  \
+         $(xpmwrite_shadows)
+
+xpmcreatebuffer_shadows = \
+	XpmCreateBufferFromImage  \
+	XpmCreateBufferFromPixmap  \
+	XpmCreateBufferFromXpmImage
+
+xpmcreatedata_shadows = \
+	XpmCreateDataFromImage  \
+	XpmCreateDataFromPixmap  \
+	XpmCreateDataFromXpmImage
+
+xpmcreateimage_shadows = \
+	XpmCreateImageFromBuffer  \
+	XpmCreateImageFromData  \
+	XpmCreateImageFromXpmImage
+
+xpmcreatepixmap_shadows = \
+	XpmCreatePixmapFromBuffer  \
+	XpmCreatePixmapFromData  \
+	XpmCreatePixmapFromXpmImage
+
+xpmcreatexpmimage_shadows = \
+	XpmCreateXpmImageFromBuffer  \
+	XpmCreateXpmImageFromData  \
+	XpmCreateXpmImageFromImage  \
+	XpmCreateXpmImageFromPixmap
+
+xpmmisc_shadows = \
+	XpmLibraryVersion  \
+	XpmGetErrorString  \
+	XpmFree  \
+	XpmFreeExtensions  \
+	XpmAttributesSize  \
+	XpmFreeAttributes  \
+	XpmFreeXpmImage  \
+	XpmFreeXpmInfo
+
+xpmread_shadows = \
+	XpmReadFileToImage  \
+	XpmReadFileToPixmap  \
+	XpmReadFileToBuffer  \
+	XpmReadFileToData  \
+	XpmReadFileToXpmImage
+
+xpmwrite_shadows = \
+	XpmWriteFileFromPixmap  \
+	XpmWriteFileFromImage  \
+	XpmWriteFileFromXpmImage  \
+	XpmWriteFileFromBuffer
+
 all: all-am
 
 .SUFFIXES:
-.SUFFIXES: .$(APP_MAN_SUFFIX) .man
+.SUFFIXES: .$(APP_MAN_SUFFIX) .$(LIB_MAN_SUFFIX) .man
 $(srcdir)/Makefile.in: @MAINTAINER_MODE_TRUE@ $(srcdir)/Makefile.am  $(am__configure_deps)
 	@for dep in $?; do \
 	  case '$(am__configure_deps)' in \
@@ -344,6 +416,27 @@ uninstall-appmanDATA:
 	@list='$(appman_DATA)'; test -n "$(appmandir)" || list=; \
 	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
 	dir='$(DESTDIR)$(appmandir)'; $(am__uninstall_files_from_dir)
+install-libmanDATA: $(libman_DATA)
+	@$(NORMAL_INSTALL)
+	@list='$(libman_DATA)'; test -n "$(libmandir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(libmandir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(libmandir)" || exit 1; \
+	fi; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(libmandir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(libmandir)" || exit $$?; \
+	done
+
+uninstall-libmanDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(libman_DATA)'; test -n "$(libmandir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	dir='$(DESTDIR)$(libmandir)'; $(am__uninstall_files_from_dir)
 tags: TAGS
 TAGS:
 
@@ -387,7 +480,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(appmandir)"; do \
+	for dir in "$(DESTDIR)$(appmandir)" "$(DESTDIR)$(libmandir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -441,7 +534,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-appmanDATA
+install-data-am: install-appmanDATA install-libmanDATA
 
 install-dvi: install-dvi-am
 
@@ -485,7 +578,7 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-appmanDATA
+uninstall-am: uninstall-appmanDATA uninstall-libmanDATA
 
 .MAKE: install-am install-strip
 
@@ -494,16 +587,20 @@ uninstall-am: uninstall-appmanDATA
 	dvi-am html html-am info info-am install install-am \
 	install-appmanDATA install-data install-data-am install-dvi \
 	install-dvi-am install-exec install-exec-am install-html \
-	install-html-am install-info install-info-am install-man \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
-	uninstall uninstall-am uninstall-appmanDATA
+	install-html-am install-info install-info-am \
+	install-libmanDATA install-man install-pdf install-pdf-am \
+	install-ps install-ps-am install-strip installcheck \
+	installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-generic \
+	mostlyclean-libtool pdf pdf-am ps ps-am uninstall uninstall-am \
+	uninstall-appmanDATA uninstall-libmanDATA
 
 
 # String replacements in MAN_SUBSTS now come from xorg-macros.m4 via configure
 .man.$(APP_MAN_SUFFIX):
+	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
+
+.man.$(LIB_MAN_SUFFIX):
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

@@ -27,7 +27,7 @@
 * parse.c:                                                                    *
 *                                                                             *
 *  XPM library                                                                *
-*  Parse an XPM file or array and store the found informations                *
+*  Parse an XPM file or array and store the found information                *
 *  in the given XpmImage structure.                                           *
 *                                                                             *
 *  Developed by Arnaud Le Hors                                                *
@@ -717,7 +717,7 @@ do { \
 } while(0)
 
 /*
- * This function parses an Xpm file or data and store the found informations
+ * This function parses an Xpm file or data and store the found information
  * in an an XpmImage structure which is returned.
  */
 int
@@ -825,7 +825,7 @@ xpmParseData(
     }
 
     /*
-     * store found informations in the XpmImage structure
+     * store found information in the XpmImage structure
      */
     image->width = width;
     image->height = height;

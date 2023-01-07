@@ -2231,7 +2231,7 @@ xpmParseDataAndCreate(
 	}
     }
     /*
-     * store found informations in the XpmImage structure
+     * store found information in the XpmImage structure
      */
     image->width = width;
     image->height = height;

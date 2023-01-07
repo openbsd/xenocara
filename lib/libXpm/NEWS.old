@@ -443,7 +443,7 @@
 		 -cp <color> <pixel> to override a color value with a given
 		 pixel, i.e. sxpm plaid.xpm -cp red 4
 
-	  also the '-s' adn '-p' options have been renamed to '-sc' and '-sp'.
+	  also the '-s' and '-p' options have been renamed to '-sc' and '-sp'.
 
 	- xpm.h defines XpmFormat, XpmVersion, and XpmRevision numbers.
 
