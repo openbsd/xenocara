@@ -994,6 +994,7 @@ CreateXImage(
 #if !defined(FOR_MSW) && !defined(AMIGA)
     if (height != 0 && (*image_return)->bytes_per_line >= INT_MAX / height) {
 	XDestroyImage(*image_return);
+	*image_return = NULL;
 	return XpmNoMemory;
     }
     /* now that bytes_per_line must have been set properly alloc data */

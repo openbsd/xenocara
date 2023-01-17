@@ -427,6 +427,13 @@ ParsePixels(
 {
     unsigned int *iptr, *iptr2 = NULL; /* found by Egbert Eich */
     unsigned int a, x, y;
+    int ErrorStatus;
+
+    if ((width == 0) && (height != 0))
+	return (XpmFileInvalid);
+
+    if ((height == 0) && (width != 0))
+	return (XpmFileInvalid);
 
     if ((height > 0 && width >= UINT_MAX / height) ||
 	width * height >= UINT_MAX / sizeof(unsigned int))
@@ -464,7 +471,11 @@ ParsePixels(
 		colidx[(unsigned char)colorTable[a].string[0]] = a + 1;
 
 	    for (y = 0; y < height; y++) {
-		xpmNextString(data);
+		ErrorStatus = xpmNextString(data);
+		if (ErrorStatus != XpmSuccess) {
+		    XpmFree(iptr2);
+		    return (ErrorStatus);
+		}
 		for (x = 0; x < width; x++, iptr++) {
 		    int c = xpmGetC(data);
 
@@ -511,7 +522,11 @@ do \
 	    }
 
 	    for (y = 0; y < height; y++) {
-		xpmNextString(data);
+		ErrorStatus = xpmNextString(data);
+		if (ErrorStatus != XpmSuccess) {
+		    XpmFree(iptr2);
+		    return (ErrorStatus);
+		}
 		for (x = 0; x < width; x++, iptr++) {
 		    int cc1 = xpmGetC(data);
 		    if (cc1 > 0 && cc1 < 256) {
@@ -551,7 +566,11 @@ do \
 		xpmHashAtom *slot;
 
 		for (y = 0; y < height; y++) {
-		    xpmNextString(data);
+		    ErrorStatus = xpmNextString(data);
+		    if (ErrorStatus != XpmSuccess) {
+			XpmFree(iptr2);
+			return (ErrorStatus);
+		    }
 		    for (x = 0; x < width; x++, iptr++) {
 			for (a = 0, s = buf; a < cpp; a++, s++) {
 			    int c = xpmGetC(data);
@@ -571,7 +590,11 @@ do \
 		}
 	    } else {
 		for (y = 0; y < height; y++) {
-		    xpmNextString(data);
+		    ErrorStatus = xpmNextString(data);
+		    if (ErrorStatus != XpmSuccess) {
+			XpmFree(iptr2);
+			return (ErrorStatus);
+		    }
 		    for (x = 0; x < width; x++, iptr++) {
 			for (a = 0, s = buf; a < cpp; a++, s++) {
 			    int c = xpmGetC(data);

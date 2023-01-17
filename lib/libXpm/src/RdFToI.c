@@ -43,6 +43,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #else
 #ifdef FOR_MSW
 #include <fcntl.h>
@@ -161,7 +162,17 @@ xpmPipeThrough(
 	    goto err;
 	if ( 0 == pid )
 	{
-	    execlp(cmd, cmd, arg1, (char *)NULL);
+#ifdef HAVE_CLOSEFROM
+	    closefrom(3);
+#elif defined(HAVE_CLOSE_RANGE)
+# ifdef CLOSE_RANGE_UNSHARE
+#  define close_range_flags CLOSE_RANGE_UNSHARE
+# else
+#  define close_range_flags 0
+#endif
+	    close_range(3, ~0U, close_range_flags);
+#endif
+	    execl(cmd, cmd, arg1, (char *)NULL);
 	    perror(cmd);
 	    goto err;
 	}
@@ -235,12 +246,12 @@ OpenReadFile(
 	if ( ext && !strcmp(ext, ".Z") )
 	{
 	    mdata->type = XPMPIPE;
-	    mdata->stream.file = xpmPipeThrough(fd, "uncompress", "-c", "r");
+	    mdata->stream.file = xpmPipeThrough(fd, XPM_PATH_UNCOMPRESS, "-c", "r");
 	}
 	else if ( ext && !strcmp(ext, ".gz") )
 	{
 	    mdata->type = XPMPIPE;
-	    mdata->stream.file = xpmPipeThrough(fd, "gunzip", "-qc", "r");
+	    mdata->stream.file = xpmPipeThrough(fd, XPM_PATH_GUNZIP, "-qc", "r");
 	}
 	else
 #endif /* z-files */

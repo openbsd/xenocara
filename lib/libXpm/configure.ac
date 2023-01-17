@@ -49,23 +49,25 @@ if test "x$USE_GETTEXT" = "xyes" ; then
 fi
 AM_CONDITIONAL(USE_GETTEXT, test "x$USE_GETTEXT" = "xyes")
 
-# Optional feature: When ___.xpm is requested, also look for ___.xpm.Z & .gz
-# Replaces ZFILEDEF = -DSTAT_ZFILE in old Imakefile
-AC_ARG_ENABLE(stat-zfile,
-	AS_HELP_STRING([--enable-stat-zfile],
-			[Search for files with .Z & .gz extensions automatically @<:@default=yes@:>@]),
-              [STAT_ZFILE=$enableval], [STAT_ZFILE=yes])
-if test x$STAT_ZFILE = xyes ; then
-	AC_DEFINE(STAT_ZFILE, 1, [Define to 1 to automatically look for files with .Z & .gz extensions])
-fi
-
+dnl Helper macro to find absolute path to program and add a #define for it
+AC_DEFUN([XPM_PATH_PROG],[
+AC_PATH_PROG([$1], [$2], [])
+AS_IF([test "x$$1" = "x"],
+      [AC_MSG_ERROR([$2 not found, set $1 or use --disable-stat-zfile])])
+AC_DEFINE_UNQUOTED([$1], ["$$1"], [Path to $2])
+]) dnl End of AC_DEFUN([XPM_PATH_PROG]...
 
 case $host_os in
-	*mingw*)
+        *mingw*)
                 AC_DEFINE(NO_ZPIPE, 1, [Define to 1 to disable decompression via pipes])
-	;;
-	*)
-	;;
+        ;;
+        *)
+                XPM_PATH_PROG([XPM_PATH_COMPRESS], [compress])
+                XPM_PATH_PROG([XPM_PATH_UNCOMPRESS], [uncompress])
+                XPM_PATH_PROG([XPM_PATH_GZIP], [gzip])
+                XPM_PATH_PROG([XPM_PATH_GUNZIP], [gunzip])
+                AC_CHECK_FUNCS([closefrom close_range], [break])
+        ;;
 esac
 
 AC_CONFIG_FILES([Makefile
