@@ -38,6 +38,7 @@ xset - user preference utility for X
 [+dpms] [-dpms]
 .br
 	[dpms \fIstandby\fP [\fI suspend\fP [\fI off\fP]]]
+.br
 	[dpms force {standby|suspend|off|on}]
 .br
 [fp=\fIpathlist\fP]
@@ -61,6 +62,7 @@ xset - user preference utility for X
 [r {on|off}] [r rate \fIdelay\fP [\fIrate\fP]]
 .br
 [s [\fIlength\fP [\fIperiod\fP]]] [s {blank|noblank}]
+.br
 [s {expose|noexpose}] [s {on|off}] [s default] [s activate] [s reset]
 .br
 [q]
@@ -120,14 +122,15 @@ the volume to the nearest value that the hardware can support.
 .PP
 .TP 8
 .B \-dpms
-The \fB\-dpms\fP option disables DPMS (Energy Star) features.
+The \fB\-dpms\fP option disables Display Power Management Signaling (DPMS) features.
 .TP 8
 .B +dpms
-The \fB+dpms\fP option enables DPMS (Energy Star) features.
+The \fB+dpms\fP option enables Display Power Management Signaling (DPMS) features.
 .TP 8
 .B dpms \fIflags...\fP
-The \fBdpms\fP option allows the DPMS (Energy Star) parameters to be
-set.  The option can take up to three numerical values, or the `force'
+The \fBdpms\fP option allows the Display Power Management Signaling (DPMS)
+parameters to be set.
+The option can take up to three numerical values, or the `force'
 flag followed by a DPMS state.  The `force' flags forces the server
 to immediately switch to the DPMS state specified.  The DPMS state can
 be one of `standby', `suspend', `off', or `on'.  When numerical values are

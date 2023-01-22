@@ -22,15 +22,14 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xset], [1.2.4],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [xset])
+AC_INIT([xset], [1.2.5],
+        [https://gitlab.freedesktop.org/xorg/app/xset/-/issues], [xset])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_USE_SYSTEM_EXTENSIONS
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require xorg-macros: XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -59,8 +58,8 @@ PKG_CHECK_MODULES(SET_XKB, x11,
 	AC_CHECK_HEADERS([X11/XKBlib.h],,,[#include <X11/Xlib.h>])
 	CPPFLAGS="$SAVE_CPPFLAGS"],[echo "not found"])
 
-AC_ARG_WITH(xf86misc, AS_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]),
-                [USE_XF86MISC="$withval"], [USE_XF86MISC="yes"])
+AC_ARG_WITH(xf86misc, AS_HELP_STRING([--with-xf86misc],[Enable xf86misc support.]),
+                [USE_XF86MISC="$withval"], [USE_XF86MISC="no"])
 if test "x$USE_XF86MISC" != "xno" ; then
 	PKG_CHECK_MODULES(SET_XF86MISC, xxf86misc,
 		[SAVE_CPPFLAGS="$CPPFLAGS"

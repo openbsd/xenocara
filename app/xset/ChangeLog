@@ -1,3 +1,136 @@
+commit fca58c426ef4eef0c000bfa2758e82e1d1b170e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 16:06:57 2022 -0800
+
+    xset 1.2.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4ee612646b79497113c5df076a99ba4dafb5432a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 22 14:22:28 2022 -0800
+
+    configure: Make xf86misc support disabled by default
+    
+    Require --with-xf86misc to enable it.
+    
+    The server side of the XF86-Misc extension was removed in the xserver-1.6.0
+    release in 2008, so this code is unusable on most systems now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b19609386121ab113c4c71e930e71dc17508c25b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 12:26:16 2022 -0800
+
+    Use C99 designated struct initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c59a8dad290489d79f82ab183dbc31b279866161
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 11:57:50 2022 -0800
+
+    set_pixels: Mark pixels parameter as const
+    
+    As suggested by cppcheck:
+    xset.c:1145:41: style: Parameter 'pixels' can be declared with const [constParameter]
+    set_pixels(Display *dpy, unsigned long *pixels, caddr_t * colors,
+                                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7545e0ed63cb03e5a6065a9823710d02f560692c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 11:56:17 2022 -0800
+
+    Remove unnecessary check for NULL pointer before calling free()
+    
+    Resolves cppcheck warning:
+    xset.c:996:9: style: Condition 'directoryList' is always true [knownConditionTrueFalse]
+        if (directoryList)
+            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a6059bdf3d3baea176c9a69ffd5b39a22b4af902
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 11:54:30 2022 -0800
+
+    Remove unnecessary casts
+    
+    These were needed for pre-C89 systems that took char * arguments
+    instead of void * arguments, but aren't needed for C89 & later.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6baf8e4fa706b8fffc121d535bac398723118415
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 11:50:26 2022 -0800
+
+    Variable scope reduction as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 777af080a6c48261d4fe8fc443cb57c52b9a0814
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e31547a20a1dbcaaf1eff5680731f412091f11f2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 12:45:49 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41db99ec80f43648b2e8fe61277c2200662b0f19
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:08:53 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7ed4a7b3da1d22be9b2f37ec9dfab72577815683
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:08:32 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5c4cd92bf97705c0afc63b37455d992e2859402d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:03:47 2021 -0800
+
+    Use the real name of the DPMS extension in messages & man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4427d95f41c8f641cc58a0f31611d039ae5a009a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:18:41 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 128e7d83c54c48552afbc4eddf7d7526039a4597
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 23:22:06 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 12dbac38f29c3db7b74a1c04e73bfd436ab66626
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 20:16:22 2018 -0800
@@ -884,13 +1017,13 @@ Date:   Wed Jul 20 19:32:04 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 6467b9f9b57d56d502e97260261745742a7645c7
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 14 22:40:16 2005 +0000
 
     Add _BSD_SOURCE to lots of applications - patch from Stefan Dirsch
 
 commit aba3f11253842b810676ae26efb20f9658182097
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:21:15 2005 +0000
 
     Build system for xset
@@ -921,7 +1054,7 @@ Date:   Thu Sep 2 05:50:38 2004 +0000
         libXaw.
 
 commit 735853aa5531434c951de4c2cd2b75b8ce7148ba
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Aug 16 16:36:27 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,
