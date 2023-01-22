@@ -35,6 +35,10 @@
 #include <ctype.h>
 #include <stdlib.h>
 
+#ifndef HAVE_STRTOF
+#define strtof(a, n)  (float)atof(a)
+#endif
+
 static char *ProgramName;
 static int MajorVersion, MinorVersion;
 static int EventBase, ErrorBase;
@@ -44,8 +48,8 @@ static int EventBase, ErrorBase;
 #define MINMINOR 0
 
 /* Maximum and Minimum gamma values */
-#define GAMMA_MIN 0.1
-#define GAMMA_MAX 10.0
+#define GAMMA_MIN 0.1f
+#define GAMMA_MAX 10.0f
 
 static void _X_NORETURN
 Syntax(const char *errmsg)
@@ -98,16 +102,16 @@ isabbreviation(const char *arg, const char *s, size_t minslen)
 int
 main(int argc, char *argv[])
 {
-    int i, ret;
+    int ret = 2;
     char *displayname = NULL;
     Display *dpy;
-    float gam = -1., rgam = -1., ggam = -1., bgam = -1.;
+    float gam = -1.0f, rgam = -1.0f, ggam = -1.0f, bgam = -1.0f;
     XF86VidModeGamma gamma;
     Bool quiet = False;
     int screen = -1;
 
     ProgramName = argv[0];
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	char *arg = argv[i];
 
 	if (arg[0] == '-') {
@@ -127,46 +131,46 @@ main(int argc, char *argv[])
 		continue;
 	    } else if (isabbreviation ("-gamma", arg, 2)) {
 		if (++i >= argc) Syntax ("-gamma requires an argument");
-		if ((rgam >= 0.) || (ggam >= 0.) || (bgam >= 0.))
+		if ((rgam >= 0.0f) || (ggam >= 0.0f) || (bgam >= 0.0f))
 		    Syntax ("-gamma cannot be used with -rgamma, -ggamma, or -bgamma");
-		gam = (float)atof(argv[i]);
+		gam = strtof(argv[i], NULL);
 		if ((gam < GAMMA_MIN) || (gam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
-			    GAMMA_MIN, GAMMA_MAX);
+			    (double)GAMMA_MIN, (double)GAMMA_MAX);
 		    exit(1);
 		}
 		continue;
 	    } else if (isabbreviation ("-rgamma", arg, 2)) {
 		if (++i >= argc) Syntax ("-rgamma requires an argument");
-		if (gam >= 0.) Syntax ("cannot set both -gamma and -rgamma");
-		rgam = (float)atof(argv[i]);
+		if (gam >= 0.0f) Syntax ("cannot set both -gamma and -rgamma");
+		rgam = strtof(argv[i], NULL);
 		if ((rgam < GAMMA_MIN) || (rgam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
-			    GAMMA_MIN, GAMMA_MAX);
+			    (double)GAMMA_MIN, (double)GAMMA_MAX);
 		    exit(1);
 		}
 		continue;
 	    } else if (isabbreviation ("-ggamma", arg, 2)) {
 		if (++i >= argc) Syntax ("-ggamma requires an argument");
-		if (gam >= 0.) Syntax ("cannot set both -gamma and -ggamma");
-		ggam = (float)atof(argv[i]);
+		if (gam >= 0.0f) Syntax ("cannot set both -gamma and -ggamma");
+		ggam = strtof(argv[i], NULL);
 		if ((ggam < GAMMA_MIN) || (ggam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
-			    GAMMA_MIN, GAMMA_MAX);
+			    (double)GAMMA_MIN, (double)GAMMA_MAX);
 		    exit(1);
 		}
 		continue;
 	    } else if (isabbreviation ("-bgamma", arg, 2)) {
 		if (++i >= argc) Syntax ("-bgamma requires an argument");
-		if (gam >= 0.) Syntax ("cannot set both -gamma and -bgamma");
-		bgam = (float)atof(argv[i]);
+		if (gam >= 0.0f) Syntax ("cannot set both -gamma and -bgamma");
+		bgam = strtof(argv[i], NULL);
 		if ((bgam < GAMMA_MIN) || (bgam > GAMMA_MAX)) {
 		    fprintf(stderr,
 			    "Gamma values must be between %6.3f and %6.3f\n",
-			    GAMMA_MIN, GAMMA_MAX);
+			    (double)GAMMA_MIN, (double)GAMMA_MAX);
 		    exit(1);
 		}
 		continue;
@@ -192,12 +196,12 @@ main(int argc, char *argv[])
 
     if (!XF86VidModeQueryVersion(dpy, &MajorVersion, &MinorVersion)) {
 	fprintf(stderr, "Unable to query video extension version\n");
-	exit(2);
+	goto finish;
     }
 
     if (!XF86VidModeQueryExtension(dpy, &EventBase, &ErrorBase)) {
 	fprintf(stderr, "Unable to query video extension information\n");
-	exit(2);
+	goto finish;
     }
 
     /* Fail if the extension version in the server is too old */
@@ -208,50 +212,47 @@ main(int argc, char *argv[])
 		" (%d.%d)\n", MajorVersion, MinorVersion);
 	fprintf(stderr, "Minimum required version is %d.%d\n",
 		MINMAJOR, MINMINOR);
-	exit(2);
+	goto finish;
     }
 
     if (!XF86VidModeGetGamma(dpy, screen, &gamma)) {
 	fprintf(stderr, "Unable to query gamma correction\n");
-	XCloseDisplay (dpy);
-	exit (2);
+	goto finish;
     } else if (!quiet)
-	fprintf(stderr, "-> Red %6.3f, Green %6.3f, Blue %6.3f\n", gamma.red,
-		gamma.green, gamma.blue);
+	fprintf(stderr, "-> Red %6.3f, Green %6.3f, Blue %6.3f\n",
+		(double)gamma.red, (double)gamma.green, (double)gamma.blue);
 
-    ret = 0;
-    if (gam >= 0.) {
+    if (gam >= 0.0f) {
 	gamma.red = gam;
 	gamma.green = gam;
 	gamma.blue = gam;
-	if (!XF86VidModeSetGamma(dpy, screen, &gamma)) {
-	    fprintf(stderr, "Unable to set gamma correction\n");
-	    ret = 2;
+    } else if ((rgam >= 0.0f) || (ggam >= 0.0f) || (bgam >= 0.0f)) {
+	if (rgam >= 0.0f) gamma.red = rgam;
+	if (ggam >= 0.0f) gamma.green = ggam;
+	if (bgam >= 0.0f) gamma.blue = bgam;
+    } else {
+	/* Not changing gamma, all done */
+	ret = 0;
+	goto finish;
+    }
+
+    /* Change gamma now */
+    if (!XF86VidModeSetGamma(dpy, screen, &gamma)) {
+	fprintf(stderr, "Unable to set gamma correction\n");
+    } else {
+	if (!XF86VidModeGetGamma(dpy, screen, &gamma)) {
+	    fprintf(stderr, "Unable to query gamma correction\n");
 	} else {
-	    if (!XF86VidModeGetGamma(dpy, screen, &gamma)) {
-		fprintf(stderr, "Unable to query gamma correction\n");
-		ret = 2;
-	    } else if (!quiet)
+	    ret = 0; /* Success! */
+	    if (!quiet) {
 		fprintf(stderr, "<- Red %6.3f, Green %6.3f, Blue %6.3f\n",
-		        gamma.red, gamma.green, gamma.blue);
-	}
-    } else if ((rgam >= 0.) || (ggam >= 0.) || (bgam >= 0.)) {
-	if (rgam >= 0.) gamma.red = rgam;
-	if (ggam >= 0.) gamma.green = ggam;
-	if (bgam >= 0.) gamma.blue = bgam;
-	if (!XF86VidModeSetGamma(dpy, screen, &gamma)) {
-	    fprintf(stderr, "Unable to set gamma correction\n");
-	    ret = 2;
-	} else {
-	    if (!XF86VidModeGetGamma(dpy, screen, &gamma)) {
-		fprintf(stderr, "Unable to query gamma correction\n");
-		ret = 2;
-	    } else if (!quiet)
-		fprintf(stderr, "<- Red %6.3f, Green %6.3f, Blue %6.3f\n",
-		        gamma.red, gamma.green, gamma.blue);
+			(double)gamma.red, (double)gamma.green,
+			(double)gamma.blue);
+	    }
 	}
     }
 
+  finish:
     XCloseDisplay (dpy);
     exit (ret);
 }

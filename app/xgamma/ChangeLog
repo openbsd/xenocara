@@ -1,3 +1,104 @@
+commit 3ceaba0a042c51b3b85ac619a9e34297bcdc322d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 13:56:43 2022 -0800
+
+    xgamma 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 066b59df4a07fb426f7a4173a0e57818ab26d875
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 3 17:55:47 2022 -0700
+
+    Use strtof() if available, instead of casting atof() to float
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 120c202bc39abfdfd7a60e407abd742e6cb218e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 3 17:43:16 2022 -0700
+
+    Refactor to reduce code duplication
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5ff5c19cb13d986315632c9c21e59a4b65fcac9c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 3 17:24:22 2022 -0700
+
+    Resolve -Wdouble-promotion warnings from clang
+    
+    Use 'f' suffix on const to match float type for gamma values.
+    
+    Add casts to double to make conversion explicit when passing to
+    printf() that requires double instead of float.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcb9c7f7a484de99cf5388ba299d559b07e3ed3a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 12:41:42 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d4098aea4429cc0ba7cc162d0f873feabe321042
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 2 14:52:23 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9414940782e5c0ac7834ee9b609d6fb0bddb1a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:05:50 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ac31b3d51c71250f8b2c27fad55110bf5a28172
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:11:59 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c4d928274d242698cedb4dd26b78efa18695bd20
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 557b722ec6ca8359b65e7130417f0fad972b1610
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 6beaf029919f802119111a2343006a785ba97b8b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 067a731285be33097edc6cd48af5ef3c6457b457
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:19:38 2015 -0700
@@ -432,7 +533,7 @@ Date:   Wed Jul 20 19:31:56 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 0e0ad15de21add08bffc4379bde7cb0cf7e77b74
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 18:19:11 2005 +0000
 
     Build system for xgamma

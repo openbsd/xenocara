@@ -40,5 +40,4 @@ ChangeLog:
 
 dist-hook: ChangeLog INSTALL
 
-
-
+EXTRA_DIST = README.md
