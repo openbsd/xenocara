@@ -63,7 +63,8 @@ opacity, as with transset(1).
 .BI \-S
 Enables synchronous operation.  Useful for debugging.
 .SH BUGS
-Probably.  Please report any you find to http://bugs.freedesktop.org/.
+Probably.  Please report any you find to
+https://gitlab.freedesktop.org/xorg/app/xcompmgr/.
 .SH AUTHORS
 Keith Packard, with contributions from Matthew Allum, Eric Anholt, Dan Doel,
 Thomas Luebking, Matthew Hawn, Ely Levy, Phil Blundell, and Carl Worth.

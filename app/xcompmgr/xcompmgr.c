@@ -156,15 +156,10 @@ static conv		*gaussianMap;
 #define WINDOW_TRANS	1
 #define WINDOW_ARGB	2
 
-#define TRANS_OPACITY	0.75
-
 #define DEBUG_REPAINT 0
 #define DEBUG_EVENTS  0
 #define DEBUG_SHAPE   0
 #define MONITOR_REPAINT 0
-
-#define SHADOWS		1
-#define SHARP_SHADOW	0
 
 typedef enum _compMode {
     CompSimple,		/* looks like a regular X server */
@@ -441,7 +436,6 @@ static unsigned char
 sum_gaussian (conv *map, double opacity, int x, int y, int width, int height)
 {
     int	    fx, fy;
-    double  *g_data;
     double  *g_line = map->data;
     int	    g_size = map->size;
     int	    center = g_size / 2;
@@ -478,7 +472,7 @@ sum_gaussian (conv *map, double opacity, int x, int y, int width, int height)
     v = 0;
     for (fy = fy_start; fy < fy_end; fy++)
     {
-	g_data = g_line;
+	double  *g_data = g_line;
 	g_line += g_size;
 
 	for (fx = fx_start; fx < fx_end; fx++)
@@ -500,12 +494,12 @@ presum_gaussian (conv *map)
     Gsize = map->size;
 
     if (shadowCorner)
-	free ((void *)shadowCorner);
+	free (shadowCorner);
     if (shadowTop)
-	free ((void *)shadowTop);
+	free (shadowTop);
 
-    shadowCorner = (unsigned char *)(malloc ((Gsize + 1) * (Gsize + 1) * 26));
-    shadowTop = (unsigned char *)(malloc ((Gsize + 1) * 26));
+    shadowCorner = malloc ((Gsize + 1) * (Gsize + 1) * 26);
+    shadowTop = malloc ((Gsize + 1) * 26);
 
     for (x = 0; x <= Gsize; x++)
     {
@@ -1155,7 +1149,6 @@ repair_win (Display *dpy, win *w)
     }
     else
     {
-	XserverRegion	o;
 	parts = XFixesCreateRegion (dpy, NULL, 0);
 	set_ignore (dpy, NextRequest (dpy));
 	XDamageSubtract (dpy, w->damage, None, parts);
@@ -1164,7 +1157,7 @@ repair_win (Display *dpy, win *w)
 			       w->a.y + w->a.border_width);
 	if (compMode == CompServerShadows)
 	{
-	    o = XFixesCreateRegion (dpy, NULL, 0);
+	    XserverRegion o = XFixesCreateRegion (dpy, NULL, 0);
 	    XFixesCopyRegion (dpy, o, parts);
 	    XFixesTranslateRegion (dpy, o, w->shadow_dx, w->shadow_dy);
 	    XFixesUnionRegion (dpy, parts, parts, o);
@@ -1179,7 +1172,7 @@ static unsigned int
 get_opacity_prop (Display *dpy, win *w, unsigned int def);
 
 static void
-map_win (Display *dpy, Window id, unsigned long sequence, Bool fade)
+map_win (Display *dpy, Window id, unsigned long sequence, Bool doFade)
 {
     win		*w = find_win (dpy, id);
 
@@ -1201,7 +1194,7 @@ map_win (Display *dpy, Window id, unsigned long sequence, Bool fade)
 #endif
     w->damaged = 0;
 
-    if (fade && fadeWindows)
+    if (doFade && fadeWindows)
 	set_fade (dpy, w, 0, get_opacity_percent (dpy, w, 1.0), fade_in_step, NULL, False, True, True);
 }
 
@@ -1266,14 +1259,14 @@ unmap_callback (Display *dpy, win *w, Bool gone)
 #endif
 
 static void
-unmap_win (Display *dpy, Window id, Bool fade)
+unmap_win (Display *dpy, Window id, Bool doFade)
 {
     win *w = find_win (dpy, id);
     if (!w)
 	return;
     w->a.map_state = IsUnmapped;
 #if HAS_NAME_WINDOW_PIXMAP
-    if (w->pixmap && fade && fadeWindows)
+    if (w->pixmap && doFade && fadeWindows)
 	set_fade (dpy, w, w->opacity*1.0/OPAQUE, 0.0, fade_out_step, unmap_callback, False, False, True);
     else
 #endif
@@ -1398,7 +1391,7 @@ determine_wintype (Display *dpy, Window w)
 {
     Window       root_return, parent_return;
     Window      *children = NULL;
-    unsigned int nchildren, i;
+    unsigned int nchildren;
     Atom         type;
 
     type = get_wintype_prop (dpy, w);
@@ -1414,7 +1407,7 @@ determine_wintype (Display *dpy, Window w)
 	return winNormalAtom;
     }
 
-    for (i = 0;i < nchildren;i++)
+    for (unsigned int i = 0; i < nchildren; i++)
     {
 	type = determine_wintype (dpy, children[i]);
 	if (type != winNormalAtom)
@@ -1671,11 +1664,11 @@ destroy_callback (Display *dpy, win *w, Bool gone)
 #endif
 
 static void
-destroy_win (Display *dpy, Window id, Bool gone, Bool fade)
+destroy_win (Display *dpy, Window id, Bool gone, Bool doFade)
 {
     win *w = find_win (dpy, id);
 #if HAS_NAME_WINDOW_PIXMAP
-    if (w && w->pixmap && fade && fadeWindows)
+    if (w && w->pixmap && doFade && fadeWindows)
 	set_fade (dpy, w, w->opacity*1.0/OPAQUE, 0.0, fade_out_step, destroy_callback, gone, False, True);
     else
 #endif
@@ -1887,7 +1880,7 @@ error (Display *dpy, XErrorEvent *ev)
 }
 
 static void
-expose_root (Display *dpy, Window root, XRectangle *rects, int nrects)
+expose_root (Display *dpy, Window rootwin, XRectangle *rects, int nrects)
 {
     XserverRegion  region = XFixesCreateRegion (dpy, rects, nrects);
 
@@ -1960,7 +1953,7 @@ ev_window (XEvent *ev)
 }
 #endif
 
-static void
+static void _X_COLD _X_NORETURN
 usage (const char *program)
 {
     fprintf (stderr, "%s v%s\n", program, PACKAGE_VERSION);
@@ -2061,7 +2054,6 @@ main (int argc, char **argv)
     Window	    root_return, parent_return;
     Window	    *children;
     unsigned int    nchildren;
-    int		    i;
     XRenderPictureAttributes	pa;
     XRectangle	    *expose_rects = NULL;
     int		    size_expose = 0;
@@ -2231,7 +2223,7 @@ main (int argc, char **argv)
 		      PropertyChangeMask);
 	XShapeSelectInput (dpy, root, ShapeNotifyMask);
 	XQueryTree (dpy, root, &root_return, &parent_return, &children, &nchildren);
-	for (i = 0; i < nchildren; i++)
+	for (unsigned int i = 0; i < nchildren; i++)
 	    add_win (dpy, children[i], i ? children[i-1] : None);
 	XFree (children);
     }

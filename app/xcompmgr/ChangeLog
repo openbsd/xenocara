@@ -1,3 +1,102 @@
+commit 052a0d39908a33e62f4d77b4d9e395f2f3583925
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 12 11:55:23 2022 -0800
+
+    xcompmgr 1.1.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94ac89d540b09841479a30158158a08ecb032a95
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 29 11:39:28 2022 -0700
+
+    Remove unused macros
+    
+    Reported by clang:
+    xcompmgr.c:159:9: warning: macro is not used [-Wunused-macros]
+     #define TRANS_OPACITY   0.75
+             ^
+    xcompmgr.c:166:9: warning: macro is not used [-Wunused-macros]
+     #define SHADOWS         1
+             ^
+    xcompmgr.c:167:9: warning: macro is not used [-Wunused-macros]
+     #define SHARP_SHADOW    0
+             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6f0f20dc0cefe96209f57099a92f7c6ace7cc5fd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 29 11:37:24 2022 -0700
+
+    Mark usage() as _X_COLD _X_NORETURN
+    
+    Suggested by clang:
+    xcompmgr.c:1963:1: warning: function 'usage' could be declared with
+      attribute 'noreturn' [-Wmissing-noreturn]
+    {
+    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 815c95d612b6f71dc4651c976b894d9a8f1fa15d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 29 11:30:47 2022 -0700
+
+    Resolve -Wshadow warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e816aa66a6f0ec0354595d9ec67182b481aee167
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 27656aaf7f23523375bdd64f92018bb6cbe220a5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 16 18:37:42 2022 -0700
+
+    Remove obsolete casts on malloc & free calls
+    
+    Not needed in C89 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 21155dd1386b98fb98a6e27e0d488c87e20b87c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 16 18:14:06 2022 -0700
+
+    Reduce variable scope as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e69037704430806ab44986bcbad8a480bec01a77
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 11:01:05 2022 -0800
+
+    xcompmgr.man: Update bug reporting URL from bugzilla to gitlab
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9faa66acd3ccdcc42d214e5c76ba9b01d24657f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:19:59 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3de80f321d81fc125bf7f7153f7154e991b7874e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 11:19:49 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ccf46116f8fba6a3e32bff6b3c0be420f821828c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 24 15:55:48 2019 -0700
