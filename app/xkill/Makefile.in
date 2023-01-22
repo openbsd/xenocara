@@ -73,7 +73,7 @@ build_triplet = @build@
 host_triplet = @host@
 bin_PROGRAMS = xkill$(EXEEXT)
 subdir = .
-DIST_COMMON = README $(am__configure_deps) $(srcdir)/Makefile.am \
+DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(srcdir)/config.h.in \
 	$(top_srcdir)/configure COPYING ChangeLog INSTALL compile \
 	config.guess config.sub depcomp install-sh missing
@@ -299,6 +299,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -314,6 +315,7 @@ xkill_SOURCES = \
         xkill.c
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
+EXTRA_DIST = README.md
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 

@@ -96,7 +96,6 @@ usage(const char *errmsg)
 int
 main(int argc, char *argv[])
 {
-    int i;				/* iterator, temp variable */
     Display *dpy = NULL;
     char *displayname = NULL;		/* name of server to contact */
     int screenno;			/* screen number of dpy */
@@ -109,7 +108,7 @@ main(int argc, char *argv[])
     ProgramName = argv[0];
     button = SelectButtonFirst;
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	char *arg = argv[i];
 
 	if (arg[0] == '-') {
@@ -182,7 +181,7 @@ main(int argc, char *argv[])
 
 	if (button >= 0 || button == SelectButtonFirst) {
 	    unsigned char pointer_map[256];	 /* 8 bits of pointer num */
-	    int count, j;
+	    int count;
 	    unsigned int ub = (unsigned int) button;
 
 
@@ -195,6 +194,8 @@ main(int argc, char *argv[])
 	    }
 
 	    if (button >= 0) {			/* check button */
+		int j;
+
 		for (j = 0; j < count; j++) {
 		    if (ub == (unsigned int) pointer_map[j]) break;
 		}
@@ -242,15 +243,13 @@ main(int argc, char *argv[])
 static int 
 parse_button(const char *s, int *buttonp)
 {
-    const char *cp;
-
     if (strcasecmp (s, "any") == 0) {
 	*buttonp = SelectButtonAny;
 	return (1);
     }
 
     /* check for non-numeric input */
-    for (cp = s; *cp; cp++) {
+    for (const char *cp = s; *cp; cp++) {
 	if (!(isascii (*cp) && isdigit (*cp))) return (0);  /* bogus name */
     }
 
@@ -370,14 +369,12 @@ verify_okay_to_kill(Display *dpy, int screenno)
 {
     unsigned char pointer_map[256];
     int count = XGetPointerMapping (dpy, pointer_map, 256);
-    int i;
-    int button;
     const char *msg = "the root window";
     Window root = RootWindow (dpy, screenno);
     int okay = 0;
 
-    for (i = 0; i < count; i++) {
-	button = (int) pointer_map[i];
+    for (int i = 0; i < count; i++) {
+	int button = (int) pointer_map[i];
 	if (button == 0) continue;	/* disabled */
 	if (get_window_id (dpy, screenno, button, msg) != root) {
 	    okay = 0;

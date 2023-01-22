@@ -1,3 +1,76 @@
+commit a5f704e4cd30f03859f66bafd609a75aae27cc8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 12 16:01:03 2022 -0800
+
+    xkill 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3b70d764a8719059a03929445eb1ebb980c6c31a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 12:31:28 2022 -0700
+
+    gitlab CI: explictly list GNU make to be installed in build environment
+    
+    Attempt to fix configure failure:
+    
+    config.status: error: Something went wrong bootstrapping makefile fragments
+        for automatic dependency tracking.  If GNU make was not used, consider
+        re-running the configure script with MAKE="gmake" (or whatever is
+        necessary).  You can also try re-running configure with the
+        '--disable-dependency-tracking' option to at least be able to build
+        the package (albeit without support for automatic dependency tracking).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b82b504cc267f465e4ab418d47b1c14a3ed1b42
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 10:36:08 2022 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 501da787ce45ce0057576f78893bcca643d0dad7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0335dfc4c9ee3c480f1691b3191afc9cc473a664
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:06:14 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2945f17574a4e023ba0ecee8e4b11e7a341c664a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:06:09 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5bcb08cfbb2cca9e78b9c569248820e681b48151
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:12:46 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 273860f2e9c9e05520848fbb5ad205e7e6eb4ba2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:30:43 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a2fdd07e3688e658d3af31dc3780983432de31e4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Mar 9 17:48:32 2018 -0800
@@ -512,7 +585,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8d94211de5403640c6fc532952d0c4c923bd90b1
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 21:13:49 2005 +0000
 
     build system for xkill
