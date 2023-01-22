@@ -749,7 +749,7 @@ void
 init_colored_cursor(Display *dpy)
 {
     static const char theme[] = "index.theme";
-    static const char pattern[] = "xtermXXXXXXXX";
+    static const char pattern[] = "xtermXXXXXXXXXX";
     char *env = getenv("XCURSOR_THEME");
 
     xterm_cursor_theme = 0;
