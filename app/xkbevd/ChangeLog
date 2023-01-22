@@ -1,3 +1,194 @@
+commit ca8e535970c7bec44e02141113e31a42bb0a1c5e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 12 15:47:00 2022 -0800
+
+    xkbevd 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2ab380b66b2bca181b01d375779bfdff167744a6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 12:09:28 2022 -0700
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7f9e4590a75d629b3ca65887b6e477a72ba39b7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 12:01:47 2022 -0700
+
+    eventTypeToString: remove unnecessary strcpy to static buffer
+    
+    Since the results are just passed to fprintf(), we can just return
+    a pointer to the string constants directly.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be8848c2203b489854982eb74727928cb5b622da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 11:58:40 2022 -0700
+
+    xkbevd.c: Update default DFLT_XKB_CONFIG_ROOT path
+    
+    Normally overriden by -DDFLT_XKB_CONFIG_ROOT in Makefile
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0bb93230c5263ebfc4cc25125f1c76f1d6a7382a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 11:42:10 2022 -0700
+
+    cfgscan: check if character is EOF before calling isalpha or isdigit
+    
+    Resolves cppcheck warnings:
+    
+    cfgscan.c:475:22: warning: Either the condition 'ch==-1' is redundant or
+     isalpha() argument nr 1 can have invalid value. The value is -1 but the
+     valid values are '0:255'. [invalidFunctionArg]
+        else if (isalpha(ch) || (ch == '_'))
+                         ^
+    cfgscan.c:479:17: note: Assuming that condition 'ch==-1' is not redundant
+        else if (ch == EOF)
+                    ^
+    cfgscan.c:475:22: note: Invalid argument
+        else if (isalpha(ch) || (ch == '_'))
+                         ^
+    cfgscan.c:477:22: warning: Either the condition 'ch==-1' is redundant or
+     isdigit() argument nr 1 can have invalid value. The value is -1 but the
+     valid values are '0:255'. [invalidFunctionArg]
+        else if (isdigit(ch))
+                         ^
+    cfgscan.c:479:17: note: Assuming that condition 'ch==-1' is not redundant
+        else if (ch == EOF)
+                    ^
+    cfgscan.c:477:22: note: Invalid argument
+        else if (isdigit(ch))
+                         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 00becc220c242cf7f37cc139db1e7f7b9c475d15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 11:16:46 2022 -0700
+
+    Rename shadowed variables
+    
+    Fixes gcc warnings of:
+    
+    xkbevd.c: In function ‘GetDisplay’:
+    xkbevd.c:219:33: warning: declaration of ‘dpyName’ shadows a global declaration [-Wshadow]
+     GetDisplay(char *program, char *dpyName, int *opcodeRtrn, int *evBaseRtrn)
+                                     ^~~~~~~
+    xkbevd.c:55:17: note: shadowed declaration is here
+     static char *   dpyName = NULL;
+                     ^~~~~~~
+    xkbevd.c:222:14: warning: declaration of ‘dpy’ shadows a global declaration [-Wshadow]
+         Display *dpy;
+                  ^~~
+    xkbevd.c:56:17: note: shadowed declaration is here
+     Display *       dpy = NULL;
+                     ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 199b00b2bbaf2dd90d95e9e3a77c738269ed3804
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 11:11:00 2022 -0700
+
+    Variable scope reduction as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa4be31580f5ea62556ac02dc2e07737a758de87
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 361125d11e8131f19c27cb2d367572e58ffed9f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 12:46:57 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 23684af1a2a33aaacb3acfa44d10f2131e6c2aed
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:57:50 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 414140cba366a5917a340c7c24525c301f8fb58c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:57:47 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dcf3ff77e28552fb0a2978e5d5c4a725c052466c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:11:31 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b896f7c9a964513ebdbb935e414a764ecb1cb6d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 22:24:48 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c5bf4d32484bcf223d39f7b13546475262ba382
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 4a2e0685ad9c8e25fd24a26c79e84d5ac50e2016
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dafbdaddea814acbf2240838a4b7c9f34b0de30b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit 4a494c0d8beb710d8f3df941f05e4b8af42deac0
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 16 23:37:10 2015 -0700
@@ -680,7 +871,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 6b1df45952ed9088b8f9db18afbd62f1ee84f59d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 20:38:28 2005 +0000
 
     build system for xkbevd

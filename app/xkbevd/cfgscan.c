@@ -341,8 +341,7 @@ static int numKeywords = sizeof(keywords) / sizeof(struct _Keyword);
 static int
 yyGetIdent(int first)
 {
-    int ch, i, found;
-
+    int ch, found;
     int rtrn = -1;
 
     buf[0] = first;
@@ -354,7 +353,7 @@ yyGetIdent(int first)
     buf[nInBuf++] = '\0';
     found = 0;
 
-    for (i = 0; (!found) && (i < numKeywords); i++) {
+    for (int i = 0; (!found) && (i < numKeywords); i++) {
         if (uStrCaseCmp(buf, keywords[i].keyword) == 0) {
             rtrn = keywords[i].token;
             found = 1;
@@ -473,12 +472,12 @@ yylex(void)
         rtrn = yyGetString();
     else if (ch == '<')
         rtrn = yyGetKeyName();
+    else if (ch == EOF)
+        rtrn = END_OF_FILE;
     else if (isalpha(ch) || (ch == '_'))
         rtrn = yyGetIdent(ch);
     else if (isdigit(ch))
         rtrn = yyGetNumber(ch);
-    else if (ch == EOF)
-        rtrn = END_OF_FILE;
     else {
         fprintf(stderr, "Unexpected character %c (%d) in input stream\n",
                 ch, ch);

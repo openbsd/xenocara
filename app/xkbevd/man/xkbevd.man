@@ -92,11 +92,5 @@ Prints the program version and exits.
 .BR xev (__appmansuffix__),
 .BR xkbwatch (__appmansuffix__),
 .BR X (__miscmansuffix__).
-.SH COPYRIGHT
-Copyright 1995, Silicon Graphics Computer Systems
-.br
-Copyright 1995, 1998  The Open Group
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHOR
 Erik Fortune, Silicon Graphics

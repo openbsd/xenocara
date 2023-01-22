@@ -32,23 +32,20 @@
 #define	Unknown	"unknown"
 #define	ynText(v)	((v)?Yes:No)
 
-static char *
+static const char *
 eventTypeToString(int evType)
 {
-    static char name[20];
-
     switch (evType) {
     case KeyPress:
-        strcpy(name, "KeyPress");
+        return "KeyPress";
         break;
     case KeyRelease:
-        strcpy(name, "KeyRelease");
+        return "KeyRelease";
         break;
     default:
-        strcpy(name, "unknown");
+        return "unknown";
         break;
     }
-    return name;
 }
 
 static void

@@ -35,7 +35,7 @@
 #endif /* DFLT_XKBEVD_CONFIG */
 
 #ifndef DFLT_XKB_CONFIG_ROOT
-#define	DFLT_XKB_CONFIG_ROOT "/usr/X11R6/lib/xkb"
+#define	DFLT_XKB_CONFIG_ROOT "/usr/share/X11/xkb"
 #endif
 
 #ifndef DFLT_SYS_XKBEVD_CONFIG
@@ -216,15 +216,16 @@ parseArgs(int argc, char *argv[])
 }
 
 static Display *
-GetDisplay(char *program, char *dpyName, int *opcodeRtrn, int *evBaseRtrn)
+GetDisplay(const char *program, const char *displayName,
+           int *opcodeRtrn, int *evBaseRtrn)
 {
     int mjr, mnr, error;
-    Display *dpy;
+    Display *display;
 
     mjr = XkbMajorVersion;
     mnr = XkbMinorVersion;
-    dpy = XkbOpenDisplay(dpyName, evBaseRtrn, NULL, &mjr, &mnr, &error);
-    if (dpy == NULL) {
+    display = XkbOpenDisplay(displayName, evBaseRtrn, NULL, &mjr, &mnr, &error);
+    if (display == NULL) {
         switch (error) {
         case XkbOD_BadLibraryVersion:
             uInformation("%s was compiled with XKB version %d.%02d\n",
@@ -233,26 +234,26 @@ GetDisplay(char *program, char *dpyName, int *opcodeRtrn, int *evBaseRtrn)
                    mjr, mnr);
             break;
         case XkbOD_ConnectionRefused:
-            uError("Cannot open display \"%s\"\n", dpyName);
+            uError("Cannot open display \"%s\"\n", displayName);
             break;
         case XkbOD_NonXkbServer:
-            uError("XKB extension not present on %s\n", dpyName);
+            uError("XKB extension not present on %s\n", displayName);
             break;
         case XkbOD_BadServerVersion:
             uInformation("%s was compiled with XKB version %d.%02d\n",
                          program, XkbMajorVersion, XkbMinorVersion);
             uError("Server %s uses incompatible version %d.%02d\n",
-                   dpyName, mjr, mnr);
+                   displayName, mjr, mnr);
             break;
         default:
             uInternalError("Unknown error %d from XkbOpenDisplay\n", error);
         }
     }
     else if (synch)
-        XSynchronize(dpy, True);
+        XSynchronize(display, True);
     if (opcodeRtrn)
-        XkbQueryExtension(dpy, opcodeRtrn, evBaseRtrn, NULL, &mjr, &mnr);
-    return dpy;
+        XkbQueryExtension(display, opcodeRtrn, evBaseRtrn, NULL, &mjr, &mnr);
+    return display;
 }
 
 /***====================================================================***/
@@ -260,12 +261,9 @@ GetDisplay(char *program, char *dpyName, int *opcodeRtrn, int *evBaseRtrn)
 void
 InterpretConfigs(CfgEntryPtr cfg)
 {
-    char *name;
-    unsigned priv = 0;
-
     config = cfg;
     while (cfg != NULL) {
-        name = cfg->name.str;
+        char *name = cfg->name.str;
         if (cfg->entry_type == VariableDef) {
             if (uStrCaseEqual(name, "sounddirectory") ||
                 uStrCaseEqual(name, "sounddir")) {
@@ -288,7 +286,9 @@ InterpretConfigs(CfgEntryPtr cfg)
                 uAction("Ignored\n");
             }
         }
-        else if (cfg->entry_type == EventDef)
+        else if (cfg->entry_type == EventDef) {
+            unsigned int priv;
+
             switch (cfg->event_type) {
             case XkbBellNotify:
                 if (name != NULL)
@@ -324,6 +324,7 @@ InterpretConfigs(CfgEntryPtr cfg)
                 /* nothing to do */
                 break;
             }
+        }
         eventMask |= (1L << cfg->event_type);
         cfg = cfg->next;
     }
