@@ -96,7 +96,7 @@ Print out the RandR version reported by the X server and exit.
 .IP \-\-verbose
 Causes xrandr to be more verbose. When used with \-q (or without other
 options), xrandr will display more information about the server state. Please
-note that the gamma and brightness informations are only approximations of the
+note that the gamma and brightness information are only approximations of the
 complete color profile stored in the server. When
 used along with options that reconfigure the system, progress will be
 reported while executing the configuration changes.

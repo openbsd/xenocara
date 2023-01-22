@@ -204,7 +204,7 @@ argerr (const char *format, ...)
     /*NOTREACHED*/
 }
 
-/* Because fmin requires C99 suppport */
+/* Because fmin requires C99 support */
 static inline double dmin (double x, double y)
 {
     return x < y ? x : y;
@@ -213,11 +213,9 @@ static inline double dmin (double x, double y)
 static const char *
 rotation_name (Rotation rotation)
 {
-    int	i;
-
     if ((rotation & 0xf) == 0)
 	return "normal";
-    for (i = 0; i < 4; i++)
+    for (int i = 0; i < 4; i++)
 	if (rotation & (1 << i))
 	    return direction[i];
     return "invalid rotation";
@@ -263,10 +261,6 @@ typedef enum _relation {
     relation_below,
     relation_same_as,
 } relation_t;
-
-typedef struct {
-    int	    x, y, width, height;
-} rectangle_t;
 
 typedef struct {
     int	    x1, y1, x2, y2;
@@ -431,19 +425,6 @@ static const char *connection[3] = {
     "disconnected",
     "unknown connection"};
 
-#define OUTPUT_NAME 1
-
-#define CRTC_OFF    2
-#define CRTC_UNSET  3
-#define CRTC_INDEX  0x40000000
-
-#define MODE_NAME   1
-#define MODE_OFF    2
-#define MODE_UNSET  3
-#define MODE_PREF   4
-
-#define POS_UNSET   -1
-
 static output_t	*all_outputs = NULL;
 static output_t	**all_outputs_tail = &all_outputs;
 static crtc_t	*crtcs;
@@ -500,22 +481,21 @@ transform_point (XTransform *transform, double *xp, double *yp)
 {
     double  vector[3];
     double  result[3];
-    int	    i, j;
-    double  v;
+
 
     vector[0] = *xp;
     vector[1] = *yp;
     vector[2] = 1;
-    for (j = 0; j < 3; j++)
+    for (int j = 0; j < 3; j++)
     {
-	v = 0;
-	for (i = 0; i < 3; i++)
+	double  v = 0;
+	for (int i = 0; i < 3; i++)
 	    v += (XFixedToDouble (transform->matrix[j][i]) * vector[i]);
 	result[j] = v;
     }
     if (!result[2])
 	return False;
-    for (j = 0; j < 2; j++) {
+    for (int j = 0; j < 2; j++) {
 	vector[j] = result[j] / result[2];
 	if (vector[j] > 32767 || vector[j] < -32767)
 	    return False;
@@ -528,11 +508,10 @@ transform_point (XTransform *transform, double *xp, double *yp)
 static void
 path_bounds (XTransform *transform, point_t *points, int npoints, box_t *box)
 {
-    int	    i;
-    box_t   point;
-
-    for (i = 0; i < npoints; i++) {
+    for (int i = 0; i < npoints; i++) {
 	double	x, y;
+	box_t	point;
+
 	x = points[i].x;
 	y = points[i].y;
 	transform_point (transform, &x, &y);
@@ -613,12 +592,10 @@ mode_hsync (const XRRModeInfo *mode_info)
 static void
 print_verbose_mode (const XRRModeInfo *mode, Bool current, Bool preferred)
 {
-    int f;
-
     printf ("  %s (0x%x) %6.3fMHz",
 	    mode->name, (int)mode->id,
 	    (double)mode->dotClock / 1000000.0);
-    for (f = 0; mode_flags[f].flag; f++)
+    for (int f = 0; mode_flags[f].flag; f++)
 	if (mode->modeFlags & mode_flags[f].flag)
 	    printf (" %s", mode_flags[f].string);
     if (current)
@@ -711,9 +688,8 @@ print_name (const name_t *name)
 static void
 init_transform (transform_t *transform)
 {
-    int x;
     memset (&transform->transform, '\0', sizeof (transform->transform));
-    for (x = 0; x < 3; x++)
+    for (int x = 0; x < 3; x++)
 	transform->transform.matrix[x][x] = XDoubleToFixed (1.0);
     transform->filter = "";
     transform->nparams = 0;
@@ -813,10 +789,9 @@ find_output_by_name (char *name)
 static crtc_t *
 find_crtc (name_t *name)
 {
-    int	    c;
     crtc_t  *crtc = NULL;
 
-    for (c = 0; c < num_crtcs; c++)
+    for (int c = 0; c < num_crtcs; c++)
     {
 	name_kind_t common;
 	
@@ -847,11 +822,10 @@ find_crtc_by_xid (RRCrtc crtc)
 static XRRModeInfo *
 find_mode (name_t *name, double refresh)
 {
-    int		m;
     XRRModeInfo	*best = NULL;
     double	bestDist = 0;
 
-    for (m = 0; m < res->nmode; m++)
+    for (int m = 0; m < res->nmode; m++)
     {
 	XRRModeInfo *mode = &res->modes[m];
 	if ((name->kind & name_xid) && name->xid == mode->id)
@@ -903,11 +877,10 @@ XRRModeInfo *
 find_mode_for_output (output_t *output, name_t *name)
 {
     XRROutputInfo   *output_info = output->output_info;
-    int		    m;
     XRRModeInfo	    *best = NULL;
     double	    bestDist = 0;
 
-    for (m = 0; m < output_info->nmode; m++)
+    for (int m = 0; m < output_info->nmode; m++)
     {
 	XRRModeInfo	    *mode;
 
@@ -944,13 +917,10 @@ static XRRModeInfo *
 preferred_mode (output_t *output)
 {
     XRROutputInfo   *output_info = output->output_info;
-    int		    m;
-    XRRModeInfo	    *best;
-    int		    bestDist;
+    XRRModeInfo	    *best = NULL;
+    int		    bestDist = 0;
     
-    best = NULL;
-    bestDist = 0;
-    for (m = 0; m < output_info->nmode; m++)
+    for (int m = 0; m < output_info->nmode; m++)
     {
 	XRRModeInfo *mode_info = find_mode_by_xid (output_info->modes[m]);
 	int	    dist;
@@ -977,9 +947,8 @@ static Bool
 output_can_use_crtc (output_t *output, crtc_t *crtc)
 {
     XRROutputInfo   *output_info = output->output_info;
-    int		    c;
 
-    for (c = 0; c < output_info->ncrtc; c++)
+    for (int c = 0; c < output_info->ncrtc; c++)
 	if (output_info->crtcs[c] == crtc->crtc.xid)
 	    return True;
     return False;
@@ -989,9 +958,8 @@ static Bool
 output_can_use_mode (output_t *output, XRRModeInfo *mode)
 {
     XRROutputInfo   *output_info = output->output_info;
-    int		    m;
 
-    for (m = 0; m < output_info->nmode; m++)
+    for (int m = 0; m < output_info->nmode; m++)
 	if (output_info->modes[m] == mode->id)
 	    return True;
     return False;
@@ -1030,9 +998,8 @@ output_rotations (output_t *output)
     Bool	    found = False;
     Rotation	    rotation = RR_Rotate_0;
     XRROutputInfo   *output_info = output->output_info;
-    int		    c;
     
-    for (c = 0; c < output_info->ncrtc; c++)
+    for (int c = 0; c < output_info->ncrtc; c++)
     {
 	crtc_t	*crtc = find_crtc_by_xid (output_info->crtcs[c]);
 	if (crtc)
@@ -1051,14 +1018,13 @@ static Bool
 output_can_use_rotation (output_t *output, Rotation rotation)
 {
     XRROutputInfo   *output_info = output->output_info;
-    int		    c;
 
     /* make sure all of the crtcs can use this rotation.
      * yes, this is not strictly necessary, but it is 
      * simpler,and we expect most drivers to either
      * support rotation everywhere or nowhere
      */
-    for (c = 0; c < output_info->ncrtc; c++)
+    for (int c = 0; c < output_info->ncrtc; c++)
     {
 	crtc_t	*crtc = find_crtc_by_xid (output_info->crtcs[c]);
 	if (crtc && !crtc_can_use_rotation (crtc, rotation))
@@ -1077,9 +1043,9 @@ output_is_primary(output_t *output)
 
 /* Returns the index of the last value in an array < 0xffff */
 static int
-find_last_non_clamped(CARD16 array[], int size) {
-    int i;
-    for (i = size - 1; i > 0; i--) {
+find_last_non_clamped(const CARD16 array[], int size)
+{
+    for (int i = size - 1; i > 0; i--) {
         if (array[i] < 0xffff)
 	    return i;
     }
@@ -1351,13 +1317,11 @@ get_screen (Bool current)
 static void
 get_crtcs (void)
 {
-    int		c;
-
     num_crtcs = res->ncrtc;
     crtcs = calloc (num_crtcs, sizeof (crtc_t));
     if (!crtcs) fatal ("out of memory\n");
     
-    for (c = 0; c < res->ncrtc; c++)
+    for (int c = 0; c < res->ncrtc; c++)
     {
 	XRRCrtcInfo *crtc_info = XRRGetCrtcInfo (dpy, res, res->crtcs[c]);
 	XRRCrtcTransformAttributes  *attr;
@@ -1453,9 +1417,7 @@ set_panning (void)
 static void
 set_gamma(void)
 {
-    output_t	*output;
-
-    for (output = all_outputs; output; output = output->next) {
+    for (output_t *output = all_outputs; output; output = output->next) {
 	int i, size;
 	crtc_t *crtc;
 	XRRCrtcGamma *crtc_gamma;
@@ -1540,12 +1502,10 @@ set_gamma(void)
 static void
 set_primary(void)
 {
-    output_t *output;
-
     if (no_primary) {
 	XRRSetOutputPrimary(dpy, root, None);
     } else {
-	for (output = all_outputs; output; output = output->next) {
+	for (output_t *output = all_outputs; output; output = output->next) {
 	    if (!(output->changes & changes_primary))
 		continue;
 	    if (output->primary)
@@ -1603,7 +1563,6 @@ static Status
 crtc_apply (crtc_t *crtc)
 {
     RROutput	*rr_outputs;
-    int		o;
     Status	s;
     RRMode	mode = None;
 
@@ -1613,14 +1572,14 @@ crtc_apply (crtc_t *crtc)
     rr_outputs = calloc (crtc->noutput, sizeof (RROutput));
     if (!rr_outputs)
 	return BadAlloc;
-    for (o = 0; o < crtc->noutput; o++)
+    for (int o = 0; o < crtc->noutput; o++)
 	rr_outputs[o] = crtc->outputs[o]->output.xid;
     mode = crtc->mode_info->id;
     if (verbose) {
 	printf ("crtc %d: %12s %6.2f +%d+%d", crtc->crtc.index,
 		crtc->mode_info->name, mode_refresh (crtc->mode_info),
 		crtc->x, crtc->y);
-	for (o = 0; o < crtc->noutput; o++)
+	for (int o = 0; o < crtc->noutput; o++)
 	    printf (" \"%s\"", crtc->outputs[o]->output.string);
 	printf ("\n");
     }
@@ -1682,15 +1641,13 @@ screen_apply (void)
 static void
 revert (void)
 {
-    int	c;
-
     /* first disable all crtcs */
-    for (c = 0; c < res->ncrtc; c++)
+    for (int c = 0; c < res->ncrtc; c++)
 	crtc_disable (&crtcs[c]);
     /* next reset screen size */
     screen_revert ();
     /* now restore all crtcs */
-    for (c = 0; c < res->ncrtc; c++)
+    for (int c = 0; c < res->ncrtc; c++)
 	crtc_revert (&crtcs[c]);
 }
 
@@ -1723,7 +1680,6 @@ static void
 apply (void)
 {
     Status  s;
-    int	    c;
     
     /*
      * Hold the server grabbed while messing with
@@ -1738,7 +1694,7 @@ apply (void)
      * Turn off any crtcs which are to be disabled or which are
      * larger than the target size
      */
-    for (c = 0; c < res->ncrtc; c++)
+    for (int c = 0; c < res->ncrtc; c++)
     {
 	crtc_t	    *crtc = &crtcs[c];
 	XRRCrtcInfo *crtc_info = crtc->crtc_info;
@@ -1789,7 +1745,7 @@ apply (void)
      * Set crtcs
      */
 
-    for (c = 0; c < res->ncrtc; c++)
+    for (int c = 0; c < res->ncrtc; c++)
     {
 	crtc_t	*crtc = &crtcs[c];
 	
@@ -1814,10 +1770,7 @@ apply (void)
 static void
 get_outputs (void)
 {
-    int		o;
-    output_t    *q;
-    
-    for (o = 0; o < res->noutput; o++)
+    for (int o = 0; o < res->noutput; o++)
     {
 	XRROutputInfo	*output_info = XRRGetOutputInfo (dpy, res, res->outputs[o]);
 	output_t	*output;
@@ -1886,7 +1839,7 @@ get_outputs (void)
 
 	set_output_info (output, res->outputs[o], output_info);
     }
-    for (q = all_outputs; q; q = q->next)
+    for (output_t *q = all_outputs; q; q = q->next)
     {
 	if (!q->found)
 	{
@@ -1899,16 +1852,13 @@ get_outputs (void)
 static void
 mark_changing_crtcs (void)
 {
-    int	c;
-
-    for (c = 0; c < num_crtcs; c++)
+    for (int c = 0; c < num_crtcs; c++)
     {
 	crtc_t	    *crtc = &crtcs[c];
-	int	    o;
 	output_t    *output;
 
 	/* walk old output list (to catch disables) */
-	for (o = 0; o < crtc->crtc_info->noutput; o++)
+	for (int o = 0; o < crtc->crtc_info->noutput; o++)
 	{
 	    output = find_output_by_xid (crtc->crtc_info->outputs[o]);
 	    if (!output) fatal ("cannot find output 0x%lx\n",
@@ -1917,7 +1867,7 @@ mark_changing_crtcs (void)
 		crtc->changing = True;
 	}
 	/* walk new output list */
-	for (o = 0; o < crtc->noutput; o++)
+	for (int o = 0; o < crtc->noutput; o++)
 	{
 	    output = crtc->outputs[o];
 	    if (output->changes)
@@ -1995,9 +1945,7 @@ check_crtc_for_output (crtc_t *crtc, output_t *output)
 static crtc_t *
 find_crtc_for_output (output_t *output)
 {
-    int	    c;
-
-    for (c = 0; c < output->output_info->ncrtc; c++)
+    for (int c = 0; c < output->output_info->ncrtc; c++)
     {
 	crtc_t	    *crtc;
 
@@ -2014,14 +1962,13 @@ static void
 set_positions (void)
 {
     output_t	*output;
-    Bool	keep_going;
-    Bool	any_set;
     int		min_x, min_y;
 
     for (;;)
     {
-	any_set = False;
-	keep_going = False;
+	Bool	any_set = False;
+	Bool	keep_going = False;
+
 	for (output = all_outputs; output; output = output->next)
 	{
 	    output_t    *relation;
@@ -2113,10 +2060,9 @@ set_positions (void)
 static void
 set_screen_size (void)
 {
-    output_t	*output;
     Bool	fb_specified = fb_width != 0 && fb_height != 0;
     
-    for (output = all_outputs; output; output = output->next)
+    for (output_t *output = all_outputs; output; output = output->next)
     {
 	XRRModeInfo *mode_info = output->mode_info;
 	int	    x, y, w, h;
@@ -2194,7 +2140,6 @@ pick_crtcs_score (output_t *outputs)
     int		my_score;
     int		score;
     crtc_t	*best_crtc;
-    int		c;
     
     if (!outputs)
 	return 0;
@@ -2213,7 +2158,7 @@ pick_crtcs_score (output_t *outputs)
     /* 
      * Now score with this output any valid crtc
      */
-    for (c = 0; c < output->output_info->ncrtc; c++)
+    for (int c = 0; c < output->output_info->ncrtc; c++)
     {
 	crtc_t	    *crtc;
 
@@ -2257,7 +2202,6 @@ pick_crtcs (void)
 {
     output_t	*output;
     int saved_crtc_noutput[num_crtcs];
-    int n;
 
     /*
      * First try to match up newly enabled outputs with spare crtcs
@@ -2291,14 +2235,14 @@ pick_crtcs (void)
 	output->current_crtc_info = output->crtc_info;
 
     /* Mark all CRTC as currently unused */
-    for (n = 0; n < num_crtcs; n++) {
+    for (int n = 0; n < num_crtcs; n++) {
 	    saved_crtc_noutput[n] = crtcs[n].crtc_info->noutput;
 	    crtcs[n].crtc_info->noutput = 0;
     }
 
     pick_crtcs_score (all_outputs);
 
-    for (n = 0; n < num_crtcs; n++)
+    for (int n = 0; n < num_crtcs; n++)
 	    crtcs[n].crtc_info->noutput = saved_crtc_noutput[n];
 
     for (output = all_outputs; output; output = output->next)
@@ -2335,7 +2279,7 @@ static void *
 property_values_from_string(const char *str, const Atom type, const int format,
                             int *returned_nitems)
 {
-    char *token, *tmp;
+    char *tmp;
     void *returned_bytes = NULL;
     int nitems = 0, bytes_per_item;
 
@@ -2359,7 +2303,7 @@ property_values_from_string(const char *str, const Atom type, const int format,
 
     tmp = strdup (str);
 
-    for (token = strtok (tmp, ","); token; token = strtok (NULL, ","))
+    for (char *token = strtok (tmp, ","); token; token = strtok (NULL, ","))
     {
 	char *endptr;
 	long int val = strtol (token, &endptr, 0);
@@ -2485,11 +2429,9 @@ print_output_property_value(int value_format, /* 8, 16, 32 */
 static void
 print_edid(int nitems, const unsigned char *prop)
 {
-    int k;
-
     printf ("\n\t\t");
 
-    for (k = 0; k < nitems; k++)
+    for (int k = 0; k < nitems; k++)
     {
 	if (k != 0 && (k % 16) == 0)
 	{
@@ -2505,11 +2447,9 @@ print_edid(int nitems, const unsigned char *prop)
 static void
 print_guid(const unsigned char *prop)
 {
-    int k;
-
     printf("{");
 
-    for (k = 0; k < 16; k++)
+    for (int k = 0; k < 16; k++)
     {
 	printf("%02" PRIX8, prop[k]);
 	if (k == 3 || k == 5 || k == 7 || k == 9)
@@ -2529,7 +2469,6 @@ print_output_property(const char *atom_name,
                       const unsigned char *prop)
 {
     int bytes_per_item;
-    int k;
 
     switch (value_format) {
     case 8:
@@ -2560,7 +2499,7 @@ print_output_property(const char *atom_name,
 	return;
     }
 
-    for (k = 0; k < nitems; k++)
+    for (int k = 0; k < nitems; k++)
     {
 	if (k != 0)
 	{
@@ -2581,7 +2520,6 @@ static void
 get_providers (void)
 {
     XRRProviderResources *pr;
-    int i;
 
     if (!has_1_4 || providers)
 	return;
@@ -2592,7 +2530,7 @@ get_providers (void)
     if (!providers)
 	fatal ("out of memory\n");
 
-    for (i = 0; i < num_providers; i++) {
+    for (int i = 0; i < num_providers; i++) {
 	provider_t *provider = &providers[i];
 	name_t *name = &provider->provider;
 	XRRProviderInfo *info = XRRGetProviderInfo(dpy, res, pr->providers[i]);
@@ -2609,11 +2547,9 @@ get_providers (void)
 static provider_t *
 find_provider (name_t *name)
 {
-    int i;
-
     if ((name->kind & name_xid) && name->xid == 0)
 	return NULL;
-    for (i = 0; i < num_providers; i++) {
+    for (int i = 0; i < num_providers; i++) {
 	provider_t *p = &providers[i];
 	name_kind_t common = name->kind & p->provider.kind;
 
@@ -2655,7 +2591,6 @@ main (int argc, char **argv)
     XRRScreenConfiguration *sc;
     int		nsize;
     int		nrate;
-    short		*rates;
     Status	status = RRSetConfigFailed;
     int		rot = -1;
     int		query = False;
@@ -2663,8 +2598,7 @@ main (int argc, char **argv)
     Rotation	current_rotation;
     XEvent	event;
     XRRScreenChangeNotifyEvent *sce;    
-    char          *display_name = NULL;
-    int 		i;
+    char       *display_name = NULL;
     SizeID	current_size;
     short	current_rate;
     double    	rate = -1;
@@ -2695,7 +2629,7 @@ main (int argc, char **argv)
     Bool	toggle_y = False;
 
     program_name = argv[0];
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	if (!strcmp ("-display", argv[i]) || !strcmp ("--display", argv[i]) ||
 	    !strcmp ("-d", argv[i])) {
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
@@ -2822,13 +2756,11 @@ main (int argc, char **argv)
 	    continue;
 	}
 	if (!strcmp("--filter", argv[i])) {
-	    int t;
-
 	    if (!config_output) argerr ("%s must be used after --output\n", argv[i]);
 	    if (++i >= argc) argerr("%s requires an argument\n", argv[i-1]);
 
 	    filter_type = -1;
-	    for (t = 0; t < sizeof(filter_names) / sizeof(filter_names[0]); t++)
+	    for (size_t t = 0; t < sizeof(filter_names) / sizeof(filter_names[0]); t++)
 	    {
 		if (!strcmp(filter_names[t], argv[i]))
 		{
@@ -3066,7 +2998,7 @@ main (int argc, char **argv)
 	}
 	if (!strcmp ("--transform", argv[i])) {
 	    double  transform[3][3];
-	    int	    k, l;
+
 	    if (!config_output) argerr ("%s must be used after --output\n", argv[i]);
 	    if (++i >= argc) argerr ("%s requires an argument\n", argv[i-1]);
 	    init_transform (&config_output->transform);
@@ -3079,8 +3011,8 @@ main (int argc, char **argv)
 		    != 9)
 		    argerr ("failed to parse '%s' as a transformation\n", argv[i]);
 		init_transform (&config_output->transform);
-		for (k = 0; k < 3; k++)
-		    for (l = 0; l < 3; l++) {
+		for (int k = 0; k < 3; k++)
+		    for (int l = 0; l < 3; l++) {
 			config_output->transform.transform.matrix[k][l] = XDoubleToFixed (transform[k][l]);
 		    }
 		config_output->transform.filter = "bilinear";
@@ -3278,7 +3210,6 @@ main (int argc, char **argv)
 	if (!strcmp("--setmonitor", argv[i]))
 	{
 	    umonitor_t	*m = calloc(1, sizeof (umonitor_t)), **l;
-	    char	*t;
 	    char	*o;
 	    char	*n;
 	    char	*geom;
@@ -3301,6 +3232,8 @@ main (int argc, char **argv)
 
 	    o = argv[++i];
 	    if (strcmp(o, "none") != 0) {
+		char	*t;
+
 		printf ("output list %s\n", o);
 		for (; (t = strtok(o, ",")) != NULL; o = NULL) {
 		    m->outputs = realloc(m->outputs, (m->noutput + 1) * sizeof (name_t));
@@ -3375,13 +3308,11 @@ main (int argc, char **argv)
 	has_1_5 = True;
     if (has_1_2 && modeit)
     {
-	umode_t	*m;
-
         get_screen (True);
 	get_crtcs();
 	get_outputs();
 	
-	for (m = umodes; m; m = m->next)
+	for (umode_t *m = umodes; m; m = m->next)
 	{
 	    XRRModeInfo *e;
 	    output_t	*o;
@@ -3424,17 +3355,13 @@ main (int argc, char **argv)
     }
     if (has_1_2 && propit)
     {
-	output_t *output;
-
         get_screen (True);
 	get_crtcs();
 	get_outputs();
 	
-	for (output = all_outputs; output; output = output->next)
+	for (output_t *output = all_outputs; output; output = output->next)
 	{
-	    output_prop_t   *prop;
-
-	    for (prop = output->props; prop; prop = prop->next)
+	    for (output_prop_t *prop = output->props; prop; prop = prop->next)
 	    {
 		Atom		name = XInternAtom (dpy, prop->name, False);
 		Atom		type;
@@ -3633,9 +3560,6 @@ main (int argc, char **argv)
 	}
     }
     if (monitorit) {
-	umonitor_t	*u;
-	Atom		name;
-
 	if (!has_1_5) {
 	    printf("RandR 1.5 not supported\n");
 	    exit(0);
@@ -3646,13 +3570,10 @@ main (int argc, char **argv)
 	get_crtcs();
 	get_outputs();
 
-	for (u = umonitors; u; u = u->next) {
+	for (umonitor_t *u = umonitors; u; u = u->next) {
 	    if (u->set) {
-		XRRMonitorInfo	*m;
-		int		o;
-
-		name = XInternAtom(dpy, u->name, False);
-		m = XRRAllocateMonitor(dpy, u->noutput);
+		Atom		name = XInternAtom(dpy, u->name, False);
+		XRRMonitorInfo	*m = XRRAllocateMonitor(dpy, u->noutput);
 
 		m->name = name;
 		m->primary = u->primary;
@@ -3662,7 +3583,7 @@ main (int argc, char **argv)
 		m->height = u->height;
 		m->mwidth = u->mmwidth;
 		m->mheight = u->mmheight;
-		for (o = 0; o < u->noutput; o++) {
+		for (int o = 0; o < u->noutput; o++) {
 		    output_t	*output = find_output(&u->outputs[o]);
 		    if (!output)
 			fatal("cannot find output\n");
@@ -3673,15 +3594,16 @@ main (int argc, char **argv)
 
 		XRRFreeMonitors(m);
 	    } else {
-		int	m;
+		Atom		name = XInternAtom(dpy, u->name, True);
 
-		name = XInternAtom(dpy, u->name, True);
 		if (!name) {
 		    printf("No monitor named '%s'\n", u->name);
 		} else {
 		    if (!monitors)
 			printf ("No monitors\n");
 		    else {
+			int	m;
+
 			for (m = 0; m < monitors->n; m++) {
 			    if (monitors->monitors[m].name == name)
 				break;
@@ -3699,9 +3621,7 @@ main (int argc, char **argv)
     }
     if (query_1_2 || (query && has_1_2 && !query_1))
     {
-	output_t    *output;
-	int	    m;
-	
+
 #define ModeShown   0x80000000
 	
 	get_screen (current);
@@ -3713,15 +3633,13 @@ main (int argc, char **argv)
 		DisplayWidth (dpy, screen), DisplayHeight(dpy, screen),
 		maxWidth, maxHeight);
 
-	for (output = all_outputs; output; output = output->next)
+	for (output_t *output = all_outputs; output; output = output->next)
 	{
 	    XRROutputInfo   *output_info = output->output_info;
 	    crtc_t	    *cur_crtc = output->crtc_info;
 	    XRRCrtcInfo	    *crtc_info = cur_crtc ? cur_crtc->crtc_info : NULL;
 	    XRRModeInfo	    *cur_mode = output->mode_info;
-	    Atom	    *props;
-	    int		    j, nprop;
-	    Bool	    *mode_shown;
+	    int		    nprop;
 	    Rotation	    rotations = output_rotations (output);
 
 	    printf ("%s %s", output_info->name, connection[output_info->connection]);
@@ -3753,7 +3671,7 @@ main (int argc, char **argv)
 	    {
 		Bool    first = True;
 		printf (" (");
-		for (i = 0; i < 4; i ++) {
+		for (int i = 0; i < 4; i ++) {
 		    if ((rotations >> i) & 1) {
 			if (!first) printf (" ");
 			printf("%s", direction[i]);
@@ -3815,7 +3733,7 @@ main (int argc, char **argv)
 		    printf ("\tBrightness: %#.2g\n", output->brightness);
 		}
 		printf ("\tClones:    ");
-		for (j = 0; j < output_info->nclone; j++)
+		for (int j = 0; j < output_info->nclone; j++)
 		{
 		    output_t	*clone = find_output_by_xid (output_info->clones[j]);
 
@@ -3825,7 +3743,7 @@ main (int argc, char **argv)
 		if (output->crtc_info)
 		    printf ("\tCRTC:       %d\n", output->crtc_info->crtc.index);
 		printf ("\tCRTCs:     ");
-		for (j = 0; j < output_info->ncrtc; j++)
+		for (int j = 0; j < output_info->ncrtc; j++)
 		{
 		    crtc_t	*crtc = find_crtc_by_xid (output_info->crtcs[j]);
 		    if (crtc)
@@ -3846,12 +3764,10 @@ main (int argc, char **argv)
 	    }
 	    if (verbose)
 	    {
-		int x, y;
-
 		printf ("\tTransform: ");
-		for (y = 0; y < 3; y++)
+		for (int y = 0; y < 3; y++)
 		{
-		    for (x = 0; x < 3; x++)
+		    for (int x = 0; x < 3; x++)
 			printf (" %f", XFixedToDouble (output->transform.transform.matrix[y][x]));
 		    if (y < 2)
 			printf ("\n\t           ");
@@ -3862,16 +3778,16 @@ main (int argc, char **argv)
 	    }
 	    if (verbose || properties)
 	    {
-		props = XRRListOutputProperties (dpy, output->output.xid,
-						 &nprop);
-		for (j = 0; j < nprop; j++) {
+		Atom *props = XRRListOutputProperties (dpy, output->output.xid,
+						       &nprop);
+
+		for (int j = 0; j < nprop; j++) {
 		    unsigned char *prop;
 		    int actual_format;
 		    unsigned long nitems, bytes_after;
 		    Atom actual_type;
 		    XRRPropertyInfo *propinfo;
 		    char *atom_name = XGetAtomName (dpy, props[j]);
-		    int k;
 
 		    XRRGetOutputProperty (dpy, output->output.xid, props[j],
 					  0, 100, False, False,
@@ -3891,7 +3807,7 @@ main (int argc, char **argv)
 		    {
 			printf ("\t\trange%s: ",
 			        (propinfo->num_values == 2) ? "" : "s");
-			for (k = 0; k < propinfo->num_values / 2; k++)
+			for (int k = 0; k < propinfo->num_values / 2; k++)
 			{
 			    printf ("(");
 			    print_output_property_value (32, actual_type,
@@ -3908,7 +3824,7 @@ main (int argc, char **argv)
 		    if (!propinfo->range && propinfo->num_values > 0)
 		    {
 			printf ("\t\tsupported: ");
-			for (k = 0; k < propinfo->num_values; k++)
+			for (int k = 0; k < propinfo->num_values; k++)
 			{
 			    print_output_property_value (32, actual_type,
 							 (unsigned char *) &(propinfo->values[k]));
@@ -3924,7 +3840,7 @@ main (int argc, char **argv)
 
 	    if (verbose)
 	    {
-		for (j = 0; j < output_info->nmode; j++)
+		for (int j = 0; j < output_info->nmode; j++)
 		{
 		    XRRModeInfo	*mode = find_mode_by_xid (output_info->modes[j]);
 		    if (!mode)
@@ -3941,12 +3857,11 @@ main (int argc, char **argv)
 	    }
 	    else
 	    {
-		mode_shown = calloc (output_info->nmode, sizeof (Bool));
+		Bool *mode_shown = calloc (output_info->nmode, sizeof (Bool));
 		if (!mode_shown) fatal ("out of memory\n");
-		for (j = 0; j < output_info->nmode; j++)
+		for (int j = 0; j < output_info->nmode; j++)
 		{
 		    XRRModeInfo *jmode, *kmode;
-		    int k;
 
 		    if (mode_shown[j]) continue;
 
@@ -3959,7 +3874,7 @@ main (int argc, char **argv)
 		    }
 		    printf (" ");
 		    printf ("  %-12s", jmode->name);
-		    for (k = j; k < output_info->nmode; k++)
+		    for (int k = j; k < output_info->nmode; k++)
 		    {
 			if (mode_shown[k]) continue;
 			kmode = find_mode_by_xid (output_info->modes[k]);
@@ -3982,7 +3897,7 @@ main (int argc, char **argv)
 		free (mode_shown);
 	    }
 	}
-	for (m = 0; m < res->nmode; m++)
+	for (int m = 0; m < res->nmode; m++)
 	{
 	    XRRModeInfo	*mode = &res->modes[m];
 
@@ -3992,8 +3907,6 @@ main (int argc, char **argv)
 	exit (0);
     }
     if (list_providers) {
-	int k;
-
 	if (!has_1_4) {
 	    printf ("RandR 1.4 not supported\n");
 	    exit (0);
@@ -4003,16 +3916,14 @@ main (int argc, char **argv)
 	get_providers ();
 
 	if (providers) {
-	    int j;
-
 	    printf("Providers: number : %d\n", num_providers);
 
-	    for (j = 0; j < num_providers; j++) {
+	    for (int j = 0; j < num_providers; j++) {
 		provider_t *provider = &providers[j];
 		XRRProviderInfo *info = provider->info;
 
 		printf("Provider %d: id: 0x%x cap: 0x%x", j, (int)provider->provider.xid, info->capabilities);
-		for (k = 0; k < 4; k++)
+		for (int k = 0; k < 4; k++)
 			if (info->capabilities & (1 << k))
 				printf(", %s", capability_name(1<<k));
 
@@ -4033,11 +3944,9 @@ main (int argc, char **argv)
 	get_outputs();
 
 	if (monitors) {
-	    int m, o;
-
 	    printf("Monitors: %d\n", monitors->n);
 
-	    for (m = 0; m < monitors->n; m++) {
+	    for (int m = 0; m < monitors->n; m++) {
 		printf (" %d: %s%s%s %d/%dx%d/%d+%d+%d ",
 			m,
 			monitors->monitors[m].automatic ? "+" : "",
@@ -4049,7 +3958,7 @@ main (int argc, char **argv)
 			monitors->monitors[m].mheight,
 			monitors->monitors[m].x,
 			monitors->monitors[m].y);
-		for (o = 0; o < monitors->monitors[m].noutput; o++) {
+		for (int o = 0; o < monitors->monitors[m].noutput; o++) {
 		    output_t	*output = find_output_by_xid(monitors->monitors[m].outputs[o]);
 		    if (output)
 			printf (" %s", output->output.string);
@@ -4109,7 +4018,9 @@ main (int argc, char **argv)
     }
     else
     {
-	rates = XRRConfigRates (sc, size, &nrate);
+	int	i;
+	short	*rates = XRRConfigRates (sc, size, &nrate);
+
 	for (i = 0; i < nrate; i++)
 	    if (rate == rates[i])
 		break;
@@ -4128,8 +4039,8 @@ main (int argc, char **argv)
 
     if (query || query_1) {
 	printf(" SZ:    Pixels          Physical       Refresh\n");
-	for (i = 0; i < nsize; i++) {
-	    int j;
+	for (int i = 0; i < nsize; i++) {
+	    short	*rates;
 
 	    printf ("%c%-2d %5d x %-5d  (%4dmm x%4dmm )",
 		    i == current_size ? '*' : ' ',
@@ -4137,7 +4048,7 @@ main (int argc, char **argv)
 		    sizes[i].mwidth, sizes[i].mheight);
 	    rates = XRRConfigRates (sc, i, &nrate);
 	    if (nrate) printf ("  ");
-	    for (j = 0; j < nrate; j++)
+	    for (int j = 0; j < nrate; j++)
 		printf ("%c%-4d",
 			i == current_size && rates[j] == current_rate ? '*' : ' ',
 			rates[j]);
@@ -4159,7 +4070,7 @@ main (int argc, char **argv)
 		   reflection_name (current_rotation));
 
 	    printf ("Rotations possible - ");
-	    for (i = 0; i < 4; i ++) {
+	    for (int i = 0; i < 4; i ++) {
 		if ((rotations >> i) & 1)  printf("%s ", direction[i]);
 	    }
 	    printf ("\n");

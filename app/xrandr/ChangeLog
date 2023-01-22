@@ -1,3 +1,96 @@
+commit 6f714830da6c8d74f024be6b0bb32c1ea39c1217
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 15:47:06 2022 -0800
+
+    xrandr 1.5.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 213e10f1996b08305df55c237c90152227e0c5f7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 18:29:04 2022 -0700
+
+    Constify array argument to find_last_non_clamped()
+    
+    Suggested by cppcheck:
+    
+    xrandr.c:1046:30: style: Parameter 'array' can be declared with const [constParameter]
+    find_last_non_clamped(CARD16 array[], int size)
+                                 ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fc331d39447412320e856f56bab88613264cd8f5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 18:25:19 2022 -0700
+
+    Remove unused definition of rectangle_t
+    
+    Was added in commit 854a7c2916455fec5e but never used.
+    Reported by cppcheck unusedStructMember warning.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e8c4a2727196c8f9bf76df30c5c0a8671e0e5dfe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 18:22:11 2022 -0700
+
+    Remove unused macros left over from original RandR 1.2 code
+    
+    Use of these was removed in commit cb017692883daf64 in 2006.
+    Reported by clang -Wunused-macros
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3613fea4472741d8423c38a82e5569739d53bbb7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 18:09:58 2022 -0700
+
+    Fix a -Wsign-compare warning
+    
+    xrandr.c: In function ‘main’:
+    xrandr.c:2780:24: warning: comparison between signed and unsigned integer
+      expressions [-Wsign-compare]
+          for (int t = 0; t < sizeof(filter_names) / sizeof(filter_names[0]); t++)
+                            ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 289722fc8f2c9916a9631c7e4c796269b99b98f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Oct 28 18:07:20 2022 -0700
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8231beec67ee274d10b5d4c5b910d673dc6d1cc8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2fb90d4d626dcc0432f96da3fa438724d637bdd3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 9 12:38:26 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 296effc3ac7b2f095e889488d82e9d1a4fffd824
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:34:30 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 824484e5ba50f1e6858ea990393c181a249c3a5e
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Aug 12 10:42:41 2019 -0700
@@ -86,7 +179,7 @@ Date:   Thu Sep 13 09:44:16 2018 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit 9882680c9f7f433a47514a9cb799c79e3e10a024
-Author: Pali Rohár <pali.rohar@gmail.com>
+Author: Pali Rohár  <pali.rohar@gmail.com>
 Date:   Sat Mar 10 16:23:29 2018 +0100
 
     Document that --dpi and --fbmm options set DPI of whole X screen
@@ -197,7 +290,7 @@ Date:   Thu Mar 23 16:05:02 2017 -0700
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 5d5db88d106a49d7560a8042fa054df8b609f00a
-Author: Pali Rohár <pali.rohar@gmail.com>
+Author: Pali Rohár  <pali.rohar@gmail.com>
 Date:   Sun May 28 23:33:26 2017 +0200
 
     Document format of --dpi option in non-ambiguous way
@@ -411,7 +504,7 @@ Date:   Fri Aug 1 23:10:46 2014 -0700
             xrandr.c
 
 commit 193a358563a59c1a3fc55f55029c605e2419c80b
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sat Jun 29 16:50:25 2013 -0700
 
     Mention of --brightness with -h option
@@ -516,7 +609,7 @@ Date:   Fri May 3 10:05:04 2013 +1000
     Signed-off-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 00c795e99fe29ecd56e05e915e508c7af0ac39ad
-Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Author: Ville Syrjälä < <ville.syrjala@linux.intel.com>
 Date:   Fri May 31 17:01:54 2013 +0300
 
     xrandr: Use floating point for VTotal when calculating refresh rate
@@ -529,7 +622,7 @@ Date:   Fri May 31 17:01:54 2013 +0300
     Reviewed-by: Aaron Plattner <aplattner@nvidia.com>
 
 commit 8f9b993342fddfceaa1afbec2996ce10038f10d7
-Author: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Author: Ville Syrjälä < <ville.syrjala@linux.intel.com>
 Date:   Fri May 31 17:01:53 2013 +0300
 
     xrandr: Use more decimal places when printing various rates
@@ -1437,7 +1530,7 @@ Date:   Thu Feb 11 10:08:07 2010 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit ac6606d8da914610446c5327813798bfbba4d6c2
-Author: Éric Piel <eric.piel@tremplin-utc.net>
+Author: Éric Piel  <eric.piel@tremplin-utc.net>
 Date:   Wed Jan 6 14:42:15 2010 +0100
 
     xrandr: fix brightness to prevent gamma to overflow and to allow 0
@@ -1593,7 +1686,7 @@ Date:   Tue Nov 17 10:34:41 2009 +0100
     Reviewed-by: Rémi Cardona <remi@gentoo.org>
 
 commit b84560759141ed52b8779c184184f888e9be8b2f
-Author: Éric Piel <eric.piel@tremplin-utc.net>
+Author: Éric Piel  <eric.piel@tremplin-utc.net>
 Date:   Mon Oct 26 14:11:02 2009 +0100
 
     xrandr: do not segfault when "--scale" or "--transform" have no output
@@ -1607,7 +1700,7 @@ Date:   Mon Oct 26 14:11:02 2009 +0100
     Signed-off-by: Matthias Hopf <mhopf@suse.de>
 
 commit 34829957441a10f6b6e31141aa1018f7a72aeaf9
-Author: Éric Piel <eric.piel@tremplin-utc.net>
+Author: Éric Piel  <eric.piel@tremplin-utc.net>
 Date:   Mon Oct 26 13:57:10 2009 +0100
 
     xrandr: make --query really the default option
@@ -1697,7 +1790,7 @@ Date:   Mon Jul 20 16:44:52 2009 -0500
     Signed-off-by: Federico Mena Quintero <federico@novell.com>
 
 commit 68d5134142e3c616f3996c7ea8d08c887ce56118
-Author: Éric Piel <E.A.B.Piel@tudelft.nl>
+Author: Éric Piel  <E.A.B.Piel@tudelft.nl>
 Date:   Tue Jul 14 21:36:32 2009 +0200
 
     xrandr: Document --nograb option
@@ -1830,7 +1923,7 @@ Date:   Fri Jan 30 17:46:05 2009 +0100
     Several fatal() were missing \n.
 
 commit 9ea6e4210d49c13991a7d07e54f6f59e3dc8ce72
-Author: Éric Piel <E.A.B.Piel@tudelft.nl>
+Author: Éric Piel  <E.A.B.Piel@tudelft.nl>
 Date:   Mon Jan 19 16:18:46 2009 +0100
 
     Add docs for --transform and --scale.
@@ -2947,7 +3040,7 @@ Date:   Wed Jul 20 19:32:03 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 5666f22654447eb381186a85a8e1630d419b0a88
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:27:45 2005 +0000
 
     Build systems for xrdb, xrandr, xrefresh
