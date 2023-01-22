@@ -1,3 +1,166 @@
+commit 55e8dbb999ccad9378adf9410fc9c299f259a998
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 16:29:33 2022 -0800
+
+    xvinfo 1.1.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit abb8797e12c3c3e5fc86ae6b36391a3334026aa0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 14:11:58 2022 -0800
+
+    Handle -Wdouble-promotion warning from clang
+    
+    xvinfo.c:217:73: warning: implicit conversion increases floating-point
+          precision: 'float' to 'double' [-Wdouble-promotion]
+                                        (float) encodings[n].rate.numerator /
+                                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6d9bdc10f349090e092887222e0e03202b1b0d55
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 14:08:40 2022 -0800
+
+    Variable scope reduction
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d1022529af4baba0a123cafd97c83644c6067f53
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad7c1c33da9ca2604d762ca49ae74561d3cc3612
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:32:22 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 31f90fcc66d9b07b920dea3da8f10bcfb31b07b4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:32:19 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb4630116ae96299b10fae177c6d048cf7173a28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 19 16:18:41 2019 -0800
+
+    xvinfo 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f973457fb7dffef4c414975f55fccf50b14b3eba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:21:15 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0dd41d38e6dfd4513ed31a19dae704068d366d49
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 23:30:34 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 95b2d71016bc10f1419e3b49852e8bccb3194c1d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 22 13:57:30 2018 -0700
+
+    Fix sign mismatch warnings for loop index comparisons
+    
+    xvinfo.c: In function ‘main’:
+    xvinfo.c:99:23: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+             for (j = 0; j < nadaptors; j++) {
+                           ^
+    xvinfo.c:129:31: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+                     for (k = 0; k < ainfo[j].num_formats; k++, format++) {
+                                   ^
+    xvinfo.c:198:31: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+                     for (n = 0; n < nencode; n++) {
+                                   ^
+    xvinfo.c:207:35: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+                         for (n = 0; n < nencode; n++) {
+                                       ^
+    xvinfo.c:222:35: warning: comparison between signed and unsigned integer
+     expressions [-Wsign-compare]
+                         for (n = 0; n < nencode; n++) {
+                                       ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit efd68bc7bf95959652619763bb5d37428546000d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 22 13:35:54 2018 -0700
+
+    Make xvinfo not exit with error in normal operation
+    
+    Fixes https://bugs.freedesktop.org/show_bug.cgi?id=74227
+    aka https://gitlab.freedesktop.org/xorg/app/xvinfo/issues/1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b086401357cfdf02cbd52d29dcd604f6cabaa1d8
+Author: Tobias Stoeckmann <tobias@stoeckmann.org>
+Date:   Mon Jul 18 23:10:33 2016 +0200
+
+    Properly handle failures of Xv query functions.
+    
+    If one of the query functions fail, xvinfo does not properly handle
+    these cases and will most likely run into a segmentation fault due
+    to accessing uninitialized variables (which includes pointers).
+    
+    Signed-off-by: Tobias Stoeckmann <tobias@stoeckmann.org>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b792adfce0127237739b906ddb28a246d23c81ae
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit c67a7cef0e1ebeebe86dbb49e231194c5d3cf1b3
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit a22f41101698c87affe7f153968294ddde5fd637
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit ec76226d2986b1a77c9c021bb9b41e59bd839ed4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 30 23:03:01 2015 -0700
@@ -74,7 +237,7 @@ Date:   Sun Jul 7 10:47:47 2013 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit af9ea390e95320e683c761cbd61eaf1c0dbaefed
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Sun Jul 7 03:15:39 2013 +0200
 
     Use real program name for help message
@@ -368,7 +531,7 @@ Date:   Thu May 24 18:05:52 2007 -0700
     Debian bug #350313 <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=350313>
 
 commit 29190804b219bf3e6289426a832b32ad2f4c53a4
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jan 15 17:14:56 2007 +0100
 
     Fix FourCC name output on big endian platforms.
@@ -376,13 +539,13 @@ Date:   Mon Jan 15 17:14:56 2007 +0100
     Fixes https://bugs.freedesktop.org/show_bug.cgi?id=9665 .
 
 commit 69758559c5ddb85bbf6501ea8e58c0896c7c1f11
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jan 15 17:13:51 2007 +0100
 
     Make git ignore object files and Emacs style backup files.
 
 commit f4363bef8760521d07a2b90d81dd85d19192bcf2
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jan 15 17:12:57 2007 +0100
 
     Rename .cvsignore to .gitignore.
@@ -484,7 +647,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit d5c7c5891a774190d3a1fbf1727bfb8238be0f23
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:10 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove
