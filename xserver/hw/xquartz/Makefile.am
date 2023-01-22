@@ -2,14 +2,14 @@ noinst_LTLIBRARIES = libXquartz.la
 AM_CFLAGS = $(DIX_CFLAGS)
 AM_OBJCFLAGS = $(DIX_CFLAGS)
 AM_CPPFLAGS = \
+	-DXQUARTZ_DATA_DIR=\"$(datadir)/X11/XQuartz\" \
 	-DXSERVER_VERSION=\"$(VERSION)\" \
 	-DBUNDLE_ID_PREFIX=\"$(BUNDLE_ID_PREFIX)\" \
 	-DUSE_NEW_CLUT \
 	-DXFree86Server \
 	-I$(top_srcdir)/miext/rootless \
 	-I$(top_builddir)/pseudoramiX \
-	-I$(top_builddir) \
-	-DX11LIBDIR=\"$(libdir)\"
+	-I$(top_builddir)"
 
 if GLX
 GL_DIR = GL
@@ -45,6 +45,7 @@ EXTRA_DIST = \
 	darwin.h \
 	darwinfb.h \
 	darwinEvents.h \
+	defaults.plist \
 	keysym2ucs.h \
 	quartz.h \
 	quartzKeyboard.h \
