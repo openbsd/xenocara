@@ -1,3 +1,75 @@
+commit 28439223c8bafa32dc64504134e0a5fd8d2d16a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 09:29:10 2022 -0800
+
+    xlsatoms 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ab1dce3cee49f0c497b158a2a2dd3412d531e154
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 13:09:18 2022 -0700
+
+    usage: add cold & noreturn attributes to function
+    
+    As suggested by clang:
+    xlsatoms.c:56:1: warning: function 'usage' could be declared with
+     attribute 'noreturn' [-Wmissing-noreturn]
+    {
+    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41975db12f73a6f23d111c3e31b4f3a14ea88b68
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 13:03:14 2022 -0700
+
+    Resolve clang -Wshorten-64-to-32 warnings
+    
+    xlsatoms.c:175:13: warning: implicit conversion loses integer precision:
+      'long long' to 'xcb_atom_t' (aka 'unsigned int') [-Wshorten-64-to-32]
+        *atom = value;
+              ~ ^~~~~
+    
+    xlsatoms.c:244:37: warning: implicit conversion loses integer precision:
+      'long' to 'xcb_atom_t' (aka 'unsigned int') [-Wshorten-64-to-32]
+            cookie[i] = xcb_get_atom_name(c, i + low);
+                        ~~~~~~~~~~~~~~~~~    ~~^~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4265e8b5e6d363b5bef1fb217012eb4aee65a0cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 22 12:38:30 2022 -0700
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd33460f430cf043e9610847974b9b3892d57595
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c528ce16f323974bb2ab60543e37f2ca5f76128c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:26:29 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b097e523402f9a7742e609ff57fef6fec58439f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:26:24 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 90e2f5a00d304c8b344f42a72b4543f6e4fd4cd6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 19 15:27:23 2019 -0800
@@ -572,7 +644,7 @@ Date:   Wed Jul 20 19:32:01 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 0dd5d7bf6f87df04b4d83ba5cc9356c6eed71088
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:10 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,

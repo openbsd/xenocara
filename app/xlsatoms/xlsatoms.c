@@ -51,7 +51,17 @@ static void do_range ( xcb_connection_t *c, const char *format, char *range );
 static void list_atoms ( xcb_connection_t *c, const char *format, int mask,
 			 xcb_atom_t low, xcb_atom_t high );
 
-static void 
+#ifndef __has_attribute
+# define __has_attribute(x) 0  /* Compatibility with older compilers. */
+#endif
+
+static void
+#if __has_attribute(__cold__)
+__attribute__((__cold__))
+#endif
+#if __has_attribute(noreturn)
+__attribute__((noreturn))
+#endif
 usage(const char *errmsg)
 {
     if (errmsg != NULL)
@@ -73,14 +83,13 @@ main(int argc, char *argv[])
 {
     char *displayname = NULL;
     const char *format = "%lu\t%s";
-    int i, doit;
     int didit = 0;
     xcb_connection_t *c = NULL;
 
     ProgramName = argv[0];
 
-    for (doit = 0; doit < 2; doit++) {	/* pre-parse to get display */
-	for (i = 1; i < argc; i++) {
+    for (int doit = 0; doit < 2; doit++) {	/* pre-parse to get display */
+	for (int i = 1; i < argc; i++) {
 	    char *arg = argv[i];
 
 	    if (arg[0] == '-') {
@@ -173,7 +182,7 @@ strtoatom(char *s, xcb_atom_t *atom)
 	return 1;
     }
 
-    *atom = value;
+    *atom = (xcb_atom_t) value;
     return 0;
 }
 
@@ -242,7 +251,7 @@ say_batch(xcb_connection_t *c, const char *format, xcb_get_atom_name_cookie_t *c
     int done = 0;
 
     for (i = 0; i < count; i++)
-	cookie[i] = xcb_get_atom_name(c, i + low);
+	cookie[i] = xcb_get_atom_name(c, (xcb_atom_t)i + low);
 
     for (i = 0; i < count; i++) {
 	xcb_get_atom_name_reply_t *r;
@@ -273,7 +282,6 @@ list_atoms(xcb_connection_t *c, const char *format, int mask, xcb_atom_t low, xc
 {
     xcb_get_atom_name_cookie_t cookie_jar[ATOMS_PER_BATCH];
     int done = 0;
-    long count;
 
     if ((mask & RangeLow) == 0)
 	low = 1;
@@ -281,7 +289,8 @@ list_atoms(xcb_connection_t *c, const char *format, int mask, xcb_atom_t low, xc
 	high = UINT32_MAX;
 
     while (!done) {
-	count = high - low < ATOMS_PER_BATCH - 1 ? high - low + 1 : ATOMS_PER_BATCH;
+	long count = (high - low < ATOMS_PER_BATCH - 1) ?
+	    (high - low + 1) : ATOMS_PER_BATCH;
 	done = say_batch(c, format, cookie_jar, low, count, (mask & RangeHigh) == 0);
 	if (high - low < UINT32_MAX && low == high - count + 1) {
 	    done = 1;
