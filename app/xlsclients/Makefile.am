@@ -28,7 +28,7 @@ xlsclients_LDADD = $(XLSCLIENTS_LIBS) $(LIBOBJS)
 xlsclients_SOURCES =	\
         xlsclients.c
 
-EXTRA_DIST = strnlen.h
+EXTRA_DIST = strnlen.h README.md
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 .PHONY: ChangeLog INSTALL

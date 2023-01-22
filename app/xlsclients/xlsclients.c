@@ -48,6 +48,10 @@ in this Software without prior written authorization from The Open Group.
 #define PRIu32 "u"
 #endif
 
+#ifndef __has_attribute
+# define __has_attribute(x) 0  /* Compatibility with older compilers. */
+#endif
+
 static char *ProgramName;
 
 static xcb_atom_t WM_STATE;
@@ -64,7 +68,13 @@ typedef int Bool;
 #define False (0)
 #define True (!False)
 
-static void 
+static void
+#if __has_attribute(__cold__)
+__attribute__((__cold__))
+#endif
+#if __has_attribute(noreturn)
+__attribute__((noreturn))
+#endif
 usage(const char *errmsg)
 {
     if (errmsg != NULL)
@@ -243,7 +253,7 @@ typedef struct {
     xcb_query_tree_cookie_t *tree_cookie;
     xcb_window_t *win;
     xcb_window_t orig_win;
-    int list_length;
+    unsigned int list_length;
     int verbose;
     int maxcmdlen;
 } child_wm_state;
@@ -255,9 +265,9 @@ static void child_info(void *closure)
     xcb_connection_t *c = cs->c;
     int verbose = cs->verbose;
     int maxcmdlen = cs->maxcmdlen;
-    int i, j;
+    unsigned int i, j;
 
-    int child_count, num_rep;
+    unsigned int child_count, num_rep;
     xcb_query_tree_reply_t **qt_reply;
 
     for (i = 0; i < cs->list_length; i++) {
@@ -435,12 +445,12 @@ show_client_properties(void *closure)
     client_state *cs = closure;
     xcb_get_property_reply_t *client_machine;
     xcb_get_property_reply_t *command;
-    xcb_get_property_reply_t *name;
-    xcb_get_property_reply_t *icon_name;
-    xcb_get_property_reply_t *wm_class;
+    xcb_get_property_reply_t *name = NULL;
+    xcb_get_property_reply_t *icon_name = NULL;
+    xcb_get_property_reply_t *wm_class = NULL;
     char *argv;
     int charsleft = cs->maxcmdlen;
-    int i;
+    unsigned int i;
 
     /*
      * get the WM_MACHINE and WM_COMMAND list of strings
@@ -499,15 +509,15 @@ show_client_properties(void *closure)
     if (cs->verbose) {
 	if (wm_class && wm_class->type) {
 	    const char *res_name, *res_class;
-	    int name_len, class_len;
+	    int name_len, class_len; /* Must be int for use with %.*s */
 	    res_name = xcb_get_property_value(wm_class);
-	    name_len = strnlen(res_name, wm_class->value_len) + 1;
-	    class_len = wm_class->value_len - name_len;
+	    name_len = (int) strnlen(res_name, wm_class->value_len) + 1;
+	    class_len = (int) wm_class->value_len - name_len;
 	    if (class_len > 0) {
 		res_class = res_name + name_len;
 	    } else {
 		res_class = Nil;
-		class_len = strlen(res_class);
+		class_len = (int) strlen(res_class);
 	    }
 
 	    printf ("  Instance/Class:  %.*s/%.*s",
