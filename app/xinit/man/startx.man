@@ -71,25 +71,27 @@ startx \-\^\- \-layout Multihead
 .PP
 To determine the client to run,
 .B startx
-looks for the following files, in order:
-.RS
-.PP
-.I $(HOME)/.startxrc
-.PP
-.I __libdir__/sys.startxrc
-.PP
-.I $(HOME)/.xinitrc
-.PP
-.I __xinitdir__/xinitrc
-.RE
-.PP
+first checks the environment variable
+.I XINITRC
+for a filename. If that variable is unset, or does not contain a filename,
+it looks for a file called
+.I .xinitrc
+in the user's home directory.  If that is not found, it uses
+the file
+.I xinitrc
+in the
+.I xinit
+library directory.
 If command line client options are given, they override this
 behavior and revert to the
 .BR xinit (__appmansuffix__)
 behavior.
 To determine the server to run,
 .B startx
-first looks for a file called
+checks the environment variable
+.I XSERVERRC
+for a filename. If that variable is unset, or does not contain a filename,
+it looks for a file called
 .I .xserverrc
 in the user's home directory.  If that is not found, it uses
 the file
@@ -165,6 +167,20 @@ for the local host.  See the
 and
 .IR Xsecurity (__miscmansuffix__)
 manual pages for more information on X client/server authentication.
+.TP 25
+XINITRC
+This variable should contain the location of an xinitrc file. If unset,
+.I $(HOME)/.xinitrc
+or
+.I __xinitdir__/xinitrc
+will be used.
+.TP 25
+XSERVERRC
+This variable should contain the location of an xserver file. If unset,
+.I $(HOME)/.xinitrc
+or
+.I __xinitdir__/xserverrc
+will be used.
 .SH FILES
 .TP 25
 .I $(HOME)/.xinitrc

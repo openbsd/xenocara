@@ -22,14 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xinit], [1.4.1],
-        [https://gitlab.freedesktop.org/xorg/app/xinit/issues], [xinit])
+AC_INIT([xinit], [1.4.2],
+        [https://gitlab.freedesktop.org/xorg/app/xinit/-/issues], [xinit])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.19 or later for TRADITIONALCPPFLAGS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -130,26 +129,12 @@ if test "x$LAUNCHD" = "xauto"; then
 	AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no], [$PATH$PATH_SEPARATOR/sbin])
 fi
 
-TIGER_LAUNCHD=no
-if test "x$LAUNCHD" = "xyes" ; then
-	AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
-	case $host_os in
-		darwin8*)
-			TIGER_LAUNCHD=yes
-		;;
-	esac
-        AC_CHECK_FUNC(dispatch_async,
-                              AC_DEFINE([HAVE_LIBDISPATCH], 1, [Define to 1 if you have the libdispatch (GCD) available]),
-                              [])
-fi
-
 AC_DEFINE_UNQUOTED(BUNDLE_ID_PREFIX, "$bundleidprefix", [Prefix to use for launchd identifiers])
 AC_SUBST([launchagentsdir])
 AC_SUBST([launchdaemonsdir])
 AC_SUBST([bundleidprefix])
 AC_SUBST([launchagentxserver])
 AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
-AM_CONDITIONAL(TIGER_LAUNCHD, [test "x$TIGER_LAUNCHD" = "xyes"])
 AM_CONDITIONAL(LAUNCHAGENT_XSERVER, [test "x$launchagentxserver" != "xno"])
 
 # Checks for pkg-config packages

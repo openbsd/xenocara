@@ -10,14 +10,6 @@
 			<string>-d</string>
 			<string>SCRIPTDIR</string>
 		</array>
-#ifdef TIGER_LAUNCHD
-	<key>RunAtLoad</key>
-		<true/>
-	<key>KeepAlive</key>
-		<true/>
-	<key>ServiceIPC</key>
-		<true/>
-#else
 	<key>MachServices</key>
 		<dict>
 			<key>BUNDLE_ID_PREFIX.privileged_startx</key>
@@ -27,6 +19,5 @@
 		<integer>120</integer>
 	<key>EnableTransactions</key>
 		<true/>
-#endif
 </dict>
 </plist>

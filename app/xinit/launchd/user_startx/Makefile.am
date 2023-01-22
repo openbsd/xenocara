@@ -26,7 +26,6 @@ libexec_PROGRAMS = launchd_startx
 AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DBINDIR=\"$(bindir)\"
 
 dist_launchd_startx_SOURCES = \
-	$(srcdir)/../console_redirect.c \
 	launchd_startx.c
 
 CPP_FILES_FLAGS = \

@@ -6,12 +6,6 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* launchd support available */
-#undef HAVE_LAUNCHD
-
-/* Define to 1 if you have the libdispatch (GCD) available */
-#undef HAVE_LIBDISPATCH
-
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 

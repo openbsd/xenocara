@@ -49,7 +49,6 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-@TIGER_LAUNCHD_FALSE@am__append_1 = user_startx
 subdir = launchd
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -268,8 +267,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 DIST_SUBDIRS = privileged_startx user_startx
-SUBDIRS = privileged_startx $(am__append_1)
-EXTRA_DIST = console_redirect.h
+SUBDIRS = privileged_startx user_startx
 all: all-recursive
 
 .SUFFIXES:

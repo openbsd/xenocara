@@ -39,8 +39,6 @@
 #include <stdlib.h>
 #include <spawn.h>
 
-#include "console_redirect.h"
-
 int main(int argc, char **argv, char **envp) {
     aslclient aslc;
     pid_t child;
@@ -53,8 +51,13 @@ int main(int argc, char **argv, char **envp) {
 
     aslc = asl_open(BUNDLE_ID_PREFIX".startx", BUNDLE_ID_PREFIX, ASL_OPT_NO_DELAY);
 
-    xi_asl_capture_fd(aslc, NULL, ASL_LEVEL_INFO, STDOUT_FILENO);
-    xi_asl_capture_fd(aslc, NULL, ASL_LEVEL_NOTICE, STDERR_FILENO);
+    asl_log_descriptor(aslc, NULL, ASL_LEVEL_INFO, STDOUT_FILENO, ASL_LOG_DESCRIPTOR_WRITE);
+    asl_log_descriptor(aslc, NULL, ASL_LEVEL_NOTICE, STDERR_FILENO, ASL_LOG_DESCRIPTOR_WRITE);
+
+    /* https://github.com/XQuartz/XQuartz/issues/114 */
+    char const * const home = getenv("HOME");
+    assert(home);
+    chdir(home);
 
     assert(posix_spawnp(&child, argv[1], NULL, NULL, &argv[1], envp) == 0);
     wait4(child, &pstat, 0, (struct rusage *)0);

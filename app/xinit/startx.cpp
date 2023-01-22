@@ -2,16 +2,16 @@ XCOMM!SHELL_CMD
 
 XCOMM
 XCOMM This is just a sample implementation of a slightly less primitive
-XCOMM interface than xinit.  It looks for user .xinitrc and .xserverrc
-XCOMM files, then system xinitrc and xserverrc files, else lets xinit choose
-XCOMM its default.  The system xinitrc should probably do things like check
-XCOMM for .Xresources files and merge them in, start up a window manager,
-XCOMM and pop a clock and several xterms.
+XCOMM interface than xinit.  It looks for XINITRC and XSERVERRC environment
+XCOMM variables, then user .xinitrc and .xserverrc files, and then system
+XCOMM xinitrc and xserverrc files, else lets xinit choose its default.
+XCOMM The system xinitrc should probably do things like check for
+XCOMM .Xresources files and merge them in, start up a window manager, and
+XCOMM pop a clock and several xterms.
 XCOMM
 XCOMM Site administrators are STRONGLY urged to write nicer versions.
 XCOMM
 
-unset DBUS_SESSION_BUS_ADDRESS
 unset SESSION_MANAGER
 
 #ifdef __APPLE__
@@ -48,9 +48,11 @@ export PATH
 #endif
 
 userclientrc=$HOME/.xinitrc
+[ -f "${XINITRC}" ] && userclientrc="${XINITRC}"
 sysclientrc=XINITDIR/xinitrc
 
 userserverrc=$HOME/.xserverrc
+[ -f "${XSERVERRC}" ] && userclientrc="${XSERVERRC}"
 sysserverrc=XINITDIR/xserverrc
 defaultclient=XTERM
 defaultserver=XSERVER
@@ -87,17 +89,17 @@ fi
 XCOMM First, start caching fonts
 if [ x`defaults read $X11_PREFS_DOMAIN cache_fonts` = x1 ] ; then
     if [ -x $bindir/font_cache ] ; then
-        $bindir/font_cache &
+        $bindir/font_cache
     elif [ -x $bindir/font_cache.sh ] ; then
-        $bindir/font_cache.sh &
+        $bindir/font_cache.sh
     elif [ -x $bindir/fc-cache ] ; then
-        $bindir/fc-cache &
+        $bindir/fc-cache
     fi
 fi
 
 if [ -x __libexecdir__/privileged_startx ] ; then
-	# Don't push this into the background becasue it can cause
-	# a race to create /tmp/.X11-unix
+	XCOMM Don't push this into the background because it can cause
+	XCOMM a race to create /tmp/.X11-unix
 	__libexecdir__/privileged_startx
 fi
 
@@ -114,7 +116,7 @@ else
 fi
 
 if [ x`defaults read $X11_PREFS_DOMAIN enable_iglx` = x1 ] ; then
-    defaultserverargs="$defaultserverargs +iglx"
+    defaultserverargs="$defaultserverargs +iglx +extension GLX"
 else
     defaultserverargs="$defaultserverargs -iglx"
 fi
@@ -206,7 +208,7 @@ if [ x"$server" = x ]; then
     XCOMM "https://bugzilla.redhat.com/show_bug.cgi?id=806491"
     tty=$(tty)
     if expr "$tty" : '/dev/tty[0-9][0-9]*$' > /dev/null; then
-        tty_num=$(echo "$tty" | grep -oE '[0-9]+$')
+        tty_num=${tty#/dev/tty}
         vtarg="vt$tty_num -keeptty"
     fi
 #endif
@@ -251,18 +253,7 @@ if [ x"$enable_xauth" = x1 ] ; then
     removelist=
 
     XCOMM set up default Xauth info for this machine
-    case `uname` in
-    Linux*)
-        if [ -z "`hostname --version 2>&1 | grep GNU`" ]; then
-            hostname=`hostname -f`
-        else
-            hostname=`hostname`
-        fi
-        ;;
-    *)
-        hostname=`hostname`
-        ;;
-    esac
+    hostname=`uname -n`
 
     authdisplay=${display:-:0}
 #if defined(HAS_COOKIE_MAKER) && defined(MK_COOKIE)
@@ -282,7 +273,7 @@ if [ x"$enable_xauth" = x1 ] ; then
 
     XCOMM create a file with auth information for the server. ':0' is a dummy.
     xserverauthfile=`mktemp ${HOME}/.serverauth.XXXXXXXXXX`
-    trap "rm -f '$xserverauthfile'" HUP INT QUIT ILL TRAP KILL BUS TERM
+    trap "rm -f '$xserverauthfile'" HUP INT QUIT ILL TRAP BUS TERM
     xauth -q -f "$xserverauthfile" << EOF
 add :$dummy . $mcookie
 EOF

@@ -263,7 +263,6 @@ main(int argc, char *argv[])
     /*
      * Start the server and client.
      */
-    signal(SIGCHLD, SIG_DFL);    /* Insurance */
 
     /* Let those signal interrupt the wait() call in the main loop */
     memset(&sa, 0, sizeof sa);
@@ -284,6 +283,7 @@ main(int argc, char *argv[])
 
     sigaction(SIGALRM, &si, NULL);
     sigaction(SIGUSR1, &si, NULL);
+    sigaction(SIGCHLD, &si, NULL);
 
 #ifdef __APPLE__
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060

@@ -95,8 +95,7 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(libexecdir)" \
 	"$(DESTDIR)$(launchagentsdir)"
 PROGRAMS = $(libexec_PROGRAMS)
-dist_launchd_startx_OBJECTS = console_redirect.$(OBJEXT) \
-	launchd_startx.$(OBJEXT)
+dist_launchd_startx_OBJECTS = launchd_startx.$(OBJEXT)
 launchd_startx_OBJECTS = $(dist_launchd_startx_OBJECTS)
 launchd_startx_LDADD = $(LDADD)
 AM_V_P = $(am__v_P_@AM_V@)
@@ -115,10 +114,6 @@ DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
-AM_V_lt = $(am__v_lt_@AM_V@)
-am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
-am__v_lt_0 = --silent
-am__v_lt_1 = 
 COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
 	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
 AM_V_CC = $(am__v_CC_@AM_V@)
@@ -327,7 +322,6 @@ CPP_SED_MAGIC = $(SED) -e '/^\#  *[0-9][0-9]*  *.*$$/d' \
 SUFFIXES = .cpp
 AM_CPPFLAGS = -I$(srcdir)/.. -DXINITDIR=\"$(xinitrcdir)\" -DBINDIR=\"$(bindir)\"
 dist_launchd_startx_SOURCES = \
-	$(srcdir)/../console_redirect.c \
 	launchd_startx.c
 
 CPP_FILES_FLAGS = -D__libexecdir__="$(libexecdir)" \
@@ -425,7 +419,6 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/console_redirect.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/launchd_startx.Po@am__quote@
 
 .c.o:
@@ -441,20 +434,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c `$(CYGPATH_W) '$<'`
-
-console_redirect.o: $(srcdir)/../console_redirect.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT console_redirect.o -MD -MP -MF $(DEPDIR)/console_redirect.Tpo -c -o console_redirect.o `test -f '$(srcdir)/../console_redirect.c' || echo '$(srcdir)/'`$(srcdir)/../console_redirect.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/console_redirect.Tpo $(DEPDIR)/console_redirect.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../console_redirect.c' object='console_redirect.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o console_redirect.o `test -f '$(srcdir)/../console_redirect.c' || echo '$(srcdir)/'`$(srcdir)/../console_redirect.c
-
-console_redirect.obj: $(srcdir)/../console_redirect.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT console_redirect.obj -MD -MP -MF $(DEPDIR)/console_redirect.Tpo -c -o console_redirect.obj `if test -f '$(srcdir)/../console_redirect.c'; then $(CYGPATH_W) '$(srcdir)/../console_redirect.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../console_redirect.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/console_redirect.Tpo $(DEPDIR)/console_redirect.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='$(srcdir)/../console_redirect.c' object='console_redirect.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o console_redirect.obj `if test -f '$(srcdir)/../console_redirect.c'; then $(CYGPATH_W) '$(srcdir)/../console_redirect.c'; else $(CYGPATH_W) '$(srcdir)/$(srcdir)/../console_redirect.c'; fi`
 install-launchagentsDATA: $(launchagents_DATA)
 	@$(NORMAL_INSTALL)
 	@list='$(launchagents_DATA)'; test -n "$(launchagentsdir)" || list=; \
