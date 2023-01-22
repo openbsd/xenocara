@@ -43,7 +43,7 @@ from The Open Group.
 #include "dsimple.h"
 
 /*
- * Just_display: A group of routines designed to make the writting of simple
+ * Just_display: A group of routines designed to make the writing of simple
  *               X11 applications which open a display but do not open
  *               any windows much faster and easier.  Unless a routine says
  *               otherwise, it may be assumed to require program_name, dpy,
@@ -59,7 +59,7 @@ Display *dpy = NULL;
 int      screen = 0;
 
 /*
- * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obselete)
+ * Get_Display_Name (argc, argv) Look for -display, -d, or host:dpy (obsolete)
  * If found, remove it from command line.  Don't go past a lone -.
  */
 char *Get_Display_Name(
@@ -162,7 +162,7 @@ XFontStruct *Open_Font(const char *name)
 
 
 /*
- * Select_Window_Args: a rountine to provide a common interface for
+ * Select_Window_Args: a routine to provide a common interface for
  *                     applications that need to allow the user to select one
  *                     window on the screen for special consideration.
  *                     This routine implements the following command line
@@ -247,19 +247,19 @@ Window Select_Window_Args(
  * Routine to let user select a window using the mouse
  */
 
-Window Select_Window(Display *dpy, int descend)
+Window Select_Window(Display *display, int descend)
 {
   int status;
   Cursor cursor;
   XEvent event;
-  Window target_win = None, root = RootWindow(dpy,screen);
+  Window target_win = None, root = RootWindow(display,screen);
   int buttons = 0;
 
   /* Make the target cursor */
-  cursor = XCreateFontCursor(dpy, XC_crosshair);
+  cursor = XCreateFontCursor(display, XC_crosshair);
 
   /* Grab the pointer using target cursor, letting it room all over */
-  status = XGrabPointer(dpy, root, False,
+  status = XGrabPointer(display, root, False,
 			ButtonPressMask|ButtonReleaseMask, GrabModeSync,
 			GrabModeAsync, root, cursor, CurrentTime);
   if (status != GrabSuccess) Fatal_Error("Can't grab the mouse.");
@@ -267,8 +267,8 @@ Window Select_Window(Display *dpy, int descend)
   /* Let the user select a window... */
   while ((target_win == None) || (buttons != 0)) {
     /* allow one more event */
-    XAllowEvents(dpy, SyncPointer, CurrentTime);
-    XWindowEvent(dpy, root, ButtonPressMask|ButtonReleaseMask, &event);
+    XAllowEvents(display, SyncPointer, CurrentTime);
+    XWindowEvent(display, root, ButtonPressMask|ButtonReleaseMask, &event);
     switch (event.type) {
     case ButtonPress:
       if (target_win == None) {
@@ -284,12 +284,12 @@ Window Select_Window(Display *dpy, int descend)
     }
   } 
 
-  XUngrabPointer(dpy, CurrentTime);      /* Done with pointer */
+  XUngrabPointer(display, CurrentTime);      /* Done with pointer */
 
   if (!descend || (target_win == root))
     return(target_win);
 
-  target_win = Find_Client(dpy, root, target_win);
+  target_win = Find_Client(display, root, target_win);
 
   return(target_win);
 }
@@ -303,7 +303,7 @@ Window Select_Window(Display *dpy, int descend)
  *                   are looked at.  Normally, top should be the RootWindow.
  */
 Window Window_With_Name(
-    Display *dpy,
+    Display *display,
     Window top,
     const char *name)
 {
@@ -313,14 +313,14 @@ Window Window_With_Name(
 	Window w=0;
 	char *window_name;
 
-	if (XFetchName(dpy, top, &window_name) && !strcmp(window_name, name))
+	if (XFetchName(display, top, &window_name) && !strcmp(window_name, name))
 	  return(top);
 
-	if (!XQueryTree(dpy, top, &dummy, &dummy, &children, &nchildren))
+	if (!XQueryTree(display, top, &dummy, &dummy, &children, &nchildren))
 	  return(0);
 
 	for (i=0; i<nchildren; i++) {
-		w = Window_With_Name(dpy, children[i], name);
+		w = Window_With_Name(display, children[i], name);
 		if (w)
 		  break;
 	}

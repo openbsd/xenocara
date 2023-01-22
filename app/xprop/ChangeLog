@@ -1,3 +1,92 @@
+commit 6d5cb0110b8b21ce94a52993e6e175266a4153fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 14:29:46 2022 -0800
+
+    xprop 1.2.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e2ab69bc4e339c555b03037db3c073d1a5fa965
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 8 19:04:05 2022 -0800
+
+    Variable scope reductions as suggested by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b14f4fa558db643d1462e9346f138122cb63ce28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 8 18:48:44 2022 -0800
+
+    Resolve many gcc -Wsign-compare warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7b1a3f4fec15a0f0a0cd95308f29310adb023a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 8 18:34:35 2022 -0800
+
+    Rename "dpy" function arguments to "display" to avoid shadowing global
+    
+    Clears many gcc -Wshadow warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 07f869b9024847a98d0593a3d05cff122ae7c8eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 8 18:24:23 2022 -0800
+
+    Declare help() and print_help() as static
+    
+    Resolves gcc -Wmissing-prototypes warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7ae07138436c9700c65192c4fbc3015819999666
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 8 18:23:21 2022 -0800
+
+    Mark help(), usage(), and grammar() with _X_NORETURN _X_COLD
+    
+    Resolves gcc -Wsuggest-attribute=noreturn warning
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 55c9f8d4b5caf48c1d79252340e1750e160ded1e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c36de8de9b2a5832f848259583631310c04b3715
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:30:04 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d7ec12530b4e45adb6f1c88e92fb25b3ff172c79
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:30:01 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ca85da483ab1817ed449fccf3e54e8280112bdbf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 09:50:10 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit ec5aeaddddec4b4bdb532451f5a2bc8e3b7148a9
 Author: Keith Packard <keithp@keithp.com>
 Date:   Thu Nov 19 16:24:50 2020 -0800
@@ -672,13 +761,13 @@ Date:   Thu Oct 1 14:54:29 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 11fb62d5aa6304d1813b56a372b8b662f0016f92
-Author: Søren Sandmann Pedersen <sandmann@redhat.com>
+Author: Søren Sandmann Pedersen  <sandmann@redhat.com>
 Date:   Tue Apr 21 21:13:16 2009 -0400
 
     Display _NET_WM_ICONs as ASCII art instead of as a big list of integers
 
 commit 1b89edb419ee103d0ef834433b16a3822398a519
-Author: Søren Sandmann Pedersen <sandmann@redhat.com>
+Author: Søren Sandmann Pedersen  <sandmann@redhat.com>
 Date:   Tue Apr 21 15:10:07 2009 -0400
 
     The "visible bit" is called "urgency bit" in the ICCCM 2.0
@@ -986,7 +1075,7 @@ Date:   Wed Jul 20 19:32:03 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 721114f44cbd225a8fcd3655d4ded2dc8cc8837f
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 8 20:58:05 2005 +0000
 
     Add build system for xprop
