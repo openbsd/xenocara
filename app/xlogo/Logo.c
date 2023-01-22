@@ -111,7 +111,8 @@ LogoClassRec logoClassRec = {
     /* extension		*/	NULL
     },
     { /* simple fields */
-    /* change_sensitive         */      XtInheritChangeSensitive
+    /* change_sensitive         */      XtInheritChangeSensitive,
+    /* extension                */      NULL
     },
     { /* logo fields */
     /* ignore                   */      0

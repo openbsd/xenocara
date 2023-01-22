@@ -1,3 +1,81 @@
+commit a03055d5b3385f41a50ba40fcc00e8cdb8758947
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 12 16:08:41 2022 -0800
+
+    xlogo 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f70d09457ae6ea2248e074f57fdb16de925c43e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 10:52:48 2022 -0700
+
+    Add configure check and --with-xkb option for use of XkbStdBell
+    
+    Optionally enable existing code to call XkbStdBell from libxkbfile
+    Enabled by default if libxkbfile is available, disable with --without-xkb
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 691a763dafc81db145a951d3151e7f050c2fb342
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 10:45:15 2022 -0700
+
+    Fix -Wmissing-field-initializers warning
+    
+    Logo.c:115:5: warning: missing initializer for field ‘extension’ of ‘SimpleClassPart {aka struct <anonymous>}’ [-Wmissing-field-initializers]
+         },
+         ^
+    In file included from LogoP.h:33:0,
+                     from Logo.c:35:
+    /usr/include/X11/Xaw/SimpleP.h:62:15: note: ‘extension’ declared here
+         XtPointer extension;
+                   ^~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e379927b2d1e24d4c637fe4161dbf3f2fd98e02b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Oct 15 10:42:54 2022 -0700
+
+    Use _CONST_X_STRING to make libXt declare String as const char *
+    
+    Clears 22 out of 36 -Wdiscarded-qualifiers warnings from gcc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e364be848c65d5e286cbc96ccb283b9052fc3c4a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b503a04bc4de9fbbec52b29eab0ca36afb3de77f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 16:16:46 2021 -0800
+
+    configure: make ---with-render help string match the accepted option name
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad9a08c1364c4165d6bdd821312e49b53e1e113f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:23:18 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b105a307a1c36f935fb461b54496c7bcf2a3834c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 15:23:15 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 793ce3bb509853c4fab8e04a38ba7ec752176a27
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 3 12:20:21 2019 -0800
@@ -637,7 +715,7 @@ Date:   Wed Jul 20 19:31:58 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 6fc943cfccd96e6ad0fec6a2e1b836fa0d0d7d3a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:09 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
@@ -734,7 +812,7 @@ Date:   Thu Sep 2 01:10:30 2004 +0000
     Bump major version number of libXaw (Bug #1273).
 
 commit 18ae14262f9859a2e1f2dd769a0c4dcf4e1bb344
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Aug 16 16:36:16 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

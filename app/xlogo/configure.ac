@@ -1,5 +1,5 @@
 dnl  Copyright 2005 Red Hat, Inc.
-dnl 
+dnl
 dnl  Permission to use, copy, modify, distribute, and sell this software and its
 dnl  documentation for any purpose is hereby granted without fee, provided that
 dnl  the above copyright notice appear in all copies and that both that
@@ -9,7 +9,7 @@ dnl  advertising or publicity pertaining to distribution of the software without
 dnl  specific, written prior permission.  Red Hat makes no
 dnl  representations about the suitability of this software for any purpose.  It
 dnl  is provided "as is" without express or implied warranty.
-dnl 
+dnl
 dnl  RED HAT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
 dnl  INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
 dnl  EVENT SHALL RED HAT BE LIABLE FOR ANY SPECIAL, INDIRECT OR
@@ -22,13 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xlogo], [1.0.5],
-        [https://gitlab.freedesktop.org/xorg/app/xlogo/issues], [xlogo])
+AC_INIT([xlogo], [1.0.6],
+        [https://gitlab.freedesktop.org/xorg/app/xlogo/-/issues], [xlogo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -39,15 +39,19 @@ XORG_DEFAULT_OPTIONS
 # Base set of required pkg-config packages
 XLOGO_DEPS="sm xaw7 xmu xt >= 1.0 xext x11"
 
-# Use render & xft2 to draw logo?
+# Ensure pkg-config is initialized, since first call to macros is conditional
+PKG_PROG_PKG_CONFIG
 
-AC_ARG_WITH(render, 
-	AS_HELP_STRING([--with-xrender], [Use Xrender & Xft2 to draw logo]), 
+# Use render & xft2 to draw logo?
+AC_MSG_CHECKING([whether to use render & xft2 to draw logo])
+AC_ARG_WITH(render,
+	AS_HELP_STRING([--with-render], [Use Xrender & Xft2 to draw logo]),
 	USE_RENDER="$withval", USE_RENDER="try")
 
 if test "x$USE_RENDER" = "xtry" ; then
 	PKG_CHECK_EXISTS([xrender xft], USE_RENDER="yes", USE_RENDER="no")
 fi
+AC_MSG_RESULT([$USE_RENDER])
 
 if test "x$USE_RENDER" = "xyes" ; then
 	XLOGO_DEPS="xft xrender $XLOGO_DEPS"
@@ -55,6 +59,23 @@ if test "x$USE_RENDER" = "xyes" ; then
 	AC_DEFINE(XRENDER, 1, [Define to 1 to use Xrender & Xft2 to draw logo])
 fi
 AM_CONDITIONAL([USE_RENDER], [test "x$USE_RENDER" = "xyes"])
+
+# Use XKB to ring the bell?
+AC_MSG_CHECKING([whether to use XkbStdBell])
+AC_ARG_WITH(xkb,
+	AS_HELP_STRING([--with-xkb], [Use XKB to sound bells]),
+	USE_XKB="$withval", USE_XKB="try")
+
+if test "x$USE_XKB" = "xtry" ; then
+	PKG_CHECK_EXISTS([xkbfile], USE_XKB="yes", USE_XKB="no")
+fi
+AC_MSG_RESULT([$USE_XKB])
+
+if test "x$USE_XKB" = "xyes" ; then
+	XLOGO_DEPS="xkbfile $XLOGO_DEPS"
+
+	AC_DEFINE(XKB, 1, [Define to 1 to use XkbStdBell])
+fi
 
 PKG_CHECK_MODULES(XLOGO, $XLOGO_DEPS)
 

@@ -63,5 +63,8 @@
 /* Version number of package */
 #undef VERSION
 
+/* Define to 1 to use XkbStdBell */
+#undef XKB
+
 /* Define to 1 to use Xrender & Xft2 to draw logo */
 #undef XRENDER

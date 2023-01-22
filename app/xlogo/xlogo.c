@@ -117,7 +117,7 @@ Syntax(Widget toplevel)
     XtSetArg(arg, XtNconnection, &connection);
     XtGetValues(toplevel, &arg, (Cardinal)1);
     if (connection)
-	SmcCloseConnection(connection, n, reasons);
+	SmcCloseConnection(connection, n, (char **) reasons);
     else {
 	for (i=0; i < n; i++)
 	    printf("%s", reasons[i]);
