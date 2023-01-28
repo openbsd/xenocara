@@ -6066,40 +6066,40 @@ KEYWORD1 void KEYWORD2 NAME(GetObjectParameterivARB)(GLhandleARB obj, GLenum pna
    DISPATCH(GetObjectParameterivARB, (obj, pname, params), (F, "glGetObjectParameterivARB(%d, 0x%x, %p);\n", obj, pname, (const void *) params));
 }
 
-KEYWORD1 void KEYWORD2 NAME(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+KEYWORD1 void KEYWORD2 NAME(DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
     (void) mode; (void) first; (void) count; (void) primcount;
-   DISPATCH(DrawArraysInstancedARB, (mode, first, count, primcount), (F, "glDrawArraysInstancedARB(0x%x, %d, %d, %d);\n", mode, first, count, primcount));
+   DISPATCH(DrawArraysInstanced, (mode, first, count, primcount), (F, "glDrawArraysInstanced(0x%x, %d, %d, %d);\n", mode, first, count, primcount));
 }
 
 KEYWORD1 void KEYWORD2 NAME(DrawArraysInstancedEXT)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
     (void) mode; (void) first; (void) count; (void) primcount;
-   DISPATCH(DrawArraysInstancedARB, (mode, first, count, primcount), (F, "glDrawArraysInstancedEXT(0x%x, %d, %d, %d);\n", mode, first, count, primcount));
+   DISPATCH(DrawArraysInstanced, (mode, first, count, primcount), (F, "glDrawArraysInstancedEXT(0x%x, %d, %d, %d);\n", mode, first, count, primcount));
 }
 
-KEYWORD1 void KEYWORD2 NAME(DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+KEYWORD1 void KEYWORD2 NAME(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
     (void) mode; (void) first; (void) count; (void) primcount;
-   DISPATCH(DrawArraysInstancedARB, (mode, first, count, primcount), (F, "glDrawArraysInstanced(0x%x, %d, %d, %d);\n", mode, first, count, primcount));
-}
-
-KEYWORD1 void KEYWORD2 NAME(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount)
-{
-    (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
-   DISPATCH(DrawElementsInstancedARB, (mode, count, type, indices, primcount), (F, "glDrawElementsInstancedARB(0x%x, %d, 0x%x, %p, %d);\n", mode, count, type, (const void *) indices, primcount));
-}
-
-KEYWORD1 void KEYWORD2 NAME(DrawElementsInstancedEXT)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount)
-{
-    (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
-   DISPATCH(DrawElementsInstancedARB, (mode, count, type, indices, primcount), (F, "glDrawElementsInstancedEXT(0x%x, %d, 0x%x, %p, %d);\n", mode, count, type, (const void *) indices, primcount));
+   DISPATCH(DrawArraysInstanced, (mode, first, count, primcount), (F, "glDrawArraysInstancedARB(0x%x, %d, %d, %d);\n", mode, first, count, primcount));
 }
 
 KEYWORD1 void KEYWORD2 NAME(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount)
 {
     (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
-   DISPATCH(DrawElementsInstancedARB, (mode, count, type, indices, primcount), (F, "glDrawElementsInstanced(0x%x, %d, 0x%x, %p, %d);\n", mode, count, type, (const void *) indices, primcount));
+   DISPATCH(DrawElementsInstanced, (mode, count, type, indices, primcount), (F, "glDrawElementsInstanced(0x%x, %d, 0x%x, %p, %d);\n", mode, count, type, (const void *) indices, primcount));
+}
+
+KEYWORD1 void KEYWORD2 NAME(DrawElementsInstancedEXT)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount)
+{
+    (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
+   DISPATCH(DrawElementsInstanced, (mode, count, type, indices, primcount), (F, "glDrawElementsInstancedEXT(0x%x, %d, 0x%x, %p, %d);\n", mode, count, type, (const void *) indices, primcount));
+}
+
+KEYWORD1 void KEYWORD2 NAME(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount)
+{
+    (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
+   DISPATCH(DrawElementsInstanced, (mode, count, type, indices, primcount), (F, "glDrawElementsInstancedARB(0x%x, %d, 0x%x, %p, %d);\n", mode, count, type, (const void *) indices, primcount));
 }
 
 KEYWORD1 void KEYWORD2 NAME(BindFramebuffer)(GLenum target, GLuint framebuffer)
@@ -6681,7 +6681,7 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_704)(GLenum mode, GLuint start, G
 KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_704)(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices, GLint basevertex)
 {
     (void) mode; (void) start; (void) end; (void) count; (void) type; (void) indices; (void) basevertex;
-   DISPATCH(DrawRangeElementsBaseVertex, (mode, start, end, count, type, indices, basevertex), (F, "glDrawRangeElementsBaseVertexEXT(0x%x, %d, %d, %d, 0x%x, %p, %d);\n", mode, start, end, count, type, (const void *) indices, basevertex));
+   DISPATCH(DrawRangeElementsBaseVertex, (mode, start, end, count, type, indices, basevertex), (F, "glInternalDrawRangeElementsBaseVertex(0x%x, %d, %d, %d, 0x%x, %p, %d);\n", mode, start, end, count, type, (const void *) indices, basevertex));
 }
 
 KEYWORD1 void KEYWORD2 NAME(MultiDrawElementsBaseVertex)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount, const GLint * basevertex)
@@ -6695,7 +6695,7 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_705)(GLenum mode, const GLsizei *
 KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_705)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount, const GLint * basevertex)
 {
     (void) mode; (void) count; (void) type; (void) indices; (void) primcount; (void) basevertex;
-   DISPATCH(MultiDrawElementsBaseVertex, (mode, count, type, indices, primcount, basevertex), (F, "glMultiDrawElementsBaseVertexEXT(0x%x, %p, 0x%x, %p, %d, %p);\n", mode, (const void *) count, type, (const void *) indices, primcount, (const void *) basevertex));
+   DISPATCH(MultiDrawElementsBaseVertex, (mode, count, type, indices, primcount, basevertex), (F, "glInternalMultiDrawElementsBaseVertex(0x%x, %p, 0x%x, %p, %d, %p);\n", mode, (const void *) count, type, (const void *) indices, primcount, (const void *) basevertex));
 }
 
 KEYWORD1 void KEYWORD2 NAME(ProvokingVertexEXT)(GLenum mode)
@@ -8005,7 +8005,7 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_861)(GLenum mode, GLint first, GL
 KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_861)(GLenum mode, GLint first, GLsizei count, GLsizei instancecount, GLuint baseinstance)
 {
     (void) mode; (void) first; (void) count; (void) instancecount; (void) baseinstance;
-   DISPATCH(DrawArraysInstancedBaseInstance, (mode, first, count, instancecount, baseinstance), (F, "glDrawArraysInstancedBaseInstanceEXT(0x%x, %d, %d, %d, %d);\n", mode, first, count, instancecount, baseinstance));
+   DISPATCH(DrawArraysInstancedBaseInstance, (mode, first, count, instancecount, baseinstance), (F, "glInternalDrawArraysInstancedBaseInstance(0x%x, %d, %d, %d, %d);\n", mode, first, count, instancecount, baseinstance));
 }
 
 KEYWORD1 void KEYWORD2 NAME(DrawElementsInstancedBaseInstance)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount, GLuint baseinstance)
@@ -8033,7 +8033,7 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_863)(GLenum mode, GLsizei count, 
 KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_863)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei instancecount, GLint basevertex, GLuint baseinstance)
 {
     (void) mode; (void) count; (void) type; (void) indices; (void) instancecount; (void) basevertex; (void) baseinstance;
-   DISPATCH(DrawElementsInstancedBaseVertexBaseInstance, (mode, count, type, indices, instancecount, basevertex, baseinstance), (F, "glDrawElementsInstancedBaseVertexBaseInstanceEXT(0x%x, %d, 0x%x, %p, %d, %d, %d);\n", mode, count, type, (const void *) indices, instancecount, basevertex, baseinstance));
+   DISPATCH(DrawElementsInstancedBaseVertexBaseInstance, (mode, count, type, indices, instancecount, basevertex, baseinstance), (F, "glInternalDrawElementsInstancedBaseVertexBaseInstance(0x%x, %d, 0x%x, %p, %d, %d, %d);\n", mode, count, type, (const void *) indices, instancecount, basevertex, baseinstance));
 }
 
 KEYWORD1 void KEYWORD2 NAME(DrawTransformFeedbackInstanced)(GLenum mode, GLuint id, GLsizei primcount)
@@ -10816,16 +10816,16 @@ KEYWORD1 void KEYWORD2 NAME(SecondaryColor3fvEXT)(const GLfloat * v)
    DISPATCH(SecondaryColor3fvEXT, (v), (F, "glSecondaryColor3fvEXT(%p);\n", (const void *) v));
 }
 
-KEYWORD1 void KEYWORD2 NAME(MultiDrawElements)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount)
-{
-    (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
-   DISPATCH(MultiDrawElementsEXT, (mode, count, type, indices, primcount), (F, "glMultiDrawElements(0x%x, %p, 0x%x, %p, %d);\n", mode, (const void *) count, type, (const void *) indices, primcount));
-}
-
 KEYWORD1 void KEYWORD2 NAME(MultiDrawElementsEXT)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount)
 {
     (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
-   DISPATCH(MultiDrawElementsEXT, (mode, count, type, indices, primcount), (F, "glMultiDrawElementsEXT(0x%x, %p, 0x%x, %p, %d);\n", mode, (const void *) count, type, (const void *) indices, primcount));
+   DISPATCH(MultiDrawElements, (mode, count, type, indices, primcount), (F, "glMultiDrawElementsEXT(0x%x, %p, 0x%x, %p, %d);\n", mode, (const void *) count, type, (const void *) indices, primcount));
+}
+
+KEYWORD1 void KEYWORD2 NAME(MultiDrawElements)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount)
+{
+    (void) mode; (void) count; (void) type; (void) indices; (void) primcount;
+   DISPATCH(MultiDrawElements, (mode, count, type, indices, primcount), (F, "glMultiDrawElements(0x%x, %p, 0x%x, %p, %d);\n", mode, (const void *) count, type, (const void *) indices, primcount));
 }
 
 KEYWORD1 void KEYWORD2 NAME(FogCoordf)(GLfloat coord)
@@ -15020,6 +15020,78 @@ KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1657)(GLuint texture, GLint level
    DISPATCH(TexturePageCommitmentEXT, (texture, level, xoffset, yoffset, zoffset, width, height, depth, commit), (F, "glTexturePageCommitmentEXT(%d, %d, %d, %d, %d, %d, %d, %d, %d);\n", texture, level, xoffset, yoffset, zoffset, width, height, depth, commit));
 }
 
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1658)(GLuint memory, GLuint64 size, GLenum handleType, GLvoid * handle);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1658)(GLuint memory, GLuint64 size, GLenum handleType, GLvoid * handle)
+{
+    (void) memory; (void) size; (void) handleType; (void) handle;
+   DISPATCH(ImportMemoryWin32HandleEXT, (memory, size, handleType, handle), (F, "glImportMemoryWin32HandleEXT(%d, %d, 0x%x, %p);\n", memory, size, handleType, (const void *) handle));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1659)(GLuint semaphore, GLenum handleType, GLvoid * handle);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1659)(GLuint semaphore, GLenum handleType, GLvoid * handle)
+{
+    (void) semaphore; (void) handleType; (void) handle;
+   DISPATCH(ImportSemaphoreWin32HandleEXT, (semaphore, handleType, handle), (F, "glImportSemaphoreWin32HandleEXT(%d, 0x%x, %p);\n", semaphore, handleType, (const void *) handle));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1660)(GLuint memory, GLuint64 size, GLenum handleType, const GLvoid * name);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1660)(GLuint memory, GLuint64 size, GLenum handleType, const GLvoid * name)
+{
+    (void) memory; (void) size; (void) handleType; (void) name;
+   DISPATCH(ImportMemoryWin32NameEXT, (memory, size, handleType, name), (F, "glImportMemoryWin32NameEXT(%d, %d, 0x%x, %p);\n", memory, size, handleType, (const void *) name));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1661)(GLuint semaphore, GLenum handleType, const GLvoid * handle);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1661)(GLuint semaphore, GLenum handleType, const GLvoid * handle)
+{
+    (void) semaphore; (void) handleType; (void) handle;
+   DISPATCH(ImportSemaphoreWin32NameEXT, (semaphore, handleType, handle), (F, "glImportSemaphoreWin32NameEXT(%d, 0x%x, %p);\n", semaphore, handleType, (const void *) handle));
+}
+
+KEYWORD1 void KEYWORD2 NAME(GetObjectLabelEXT)(GLenum type, GLuint object, GLsizei bufSize, GLsizei * length, GLchar * label)
+{
+    (void) type; (void) object; (void) bufSize; (void) length; (void) label;
+   DISPATCH(GetObjectLabelEXT, (type, object, bufSize, length, label), (F, "glGetObjectLabelEXT(0x%x, %d, %d, %p, %p);\n", type, object, bufSize, (const void *) length, (const void *) label));
+}
+
+KEYWORD1 void KEYWORD2 NAME(LabelObjectEXT)(GLenum type, GLuint object, GLsizei length, const GLchar * label)
+{
+    (void) type; (void) object; (void) length; (void) label;
+   DISPATCH(LabelObjectEXT, (type, object, length, label), (F, "glLabelObjectEXT(0x%x, %d, %d, %p);\n", type, object, length, (const void *) label));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1664)(void);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1664)(void)
+{
+   DISPATCH(DrawArraysUserBuf, (), (F, "glDrawArraysUserBuf();\n"));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1665)(void);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1665)(void)
+{
+   DISPATCH(DrawElementsUserBuf, (), (F, "glDrawElementsUserBuf();\n"));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1666)(void);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1666)(void)
+{
+   DISPATCH(MultiDrawArraysUserBuf, (), (F, "glMultiDrawArraysUserBuf();\n"));
+}
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1667)(void);
+
+KEYWORD1_ALT void KEYWORD2 NAME(_dispatch_stub_1667)(void)
+{
+   DISPATCH(MultiDrawElementsUserBuf, (), (F, "glMultiDrawElementsUserBuf();\n"));
+}
+
 
 #endif /* _GLAPI_SKIP_NORMAL_ENTRY_POINTS */
 
@@ -15730,8 +15802,8 @@ _glapi_proc DISPATCH_TABLE_NAME[] = {
    TABLE_ENTRY(GetInfoLogARB),
    TABLE_ENTRY(GetObjectParameterfvARB),
    TABLE_ENTRY(GetObjectParameterivARB),
-   TABLE_ENTRY(DrawArraysInstancedARB),
-   TABLE_ENTRY(DrawElementsInstancedARB),
+   TABLE_ENTRY(DrawArraysInstanced),
+   TABLE_ENTRY(DrawElementsInstanced),
    TABLE_ENTRY(BindFramebuffer),
    TABLE_ENTRY(BindRenderbuffer),
    TABLE_ENTRY(BlitFramebuffer),
@@ -16244,7 +16316,7 @@ _glapi_proc DISPATCH_TABLE_NAME[] = {
    TABLE_ENTRY(PushDebugGroup),
    TABLE_ENTRY(SecondaryColor3fEXT),
    TABLE_ENTRY(SecondaryColor3fvEXT),
-   TABLE_ENTRY(MultiDrawElementsEXT),
+   TABLE_ENTRY(MultiDrawElements),
    TABLE_ENTRY(FogCoordfEXT),
    TABLE_ENTRY(FogCoordfvEXT),
    TABLE_ENTRY(_dispatch_stub_1176),
@@ -16729,6 +16801,16 @@ _glapi_proc DISPATCH_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_1655),
    TABLE_ENTRY(_dispatch_stub_1656),
    TABLE_ENTRY(_dispatch_stub_1657),
+   TABLE_ENTRY(_dispatch_stub_1658),
+   TABLE_ENTRY(_dispatch_stub_1659),
+   TABLE_ENTRY(_dispatch_stub_1660),
+   TABLE_ENTRY(_dispatch_stub_1661),
+   TABLE_ENTRY(GetObjectLabelEXT),
+   TABLE_ENTRY(LabelObjectEXT),
+   TABLE_ENTRY(_dispatch_stub_1664),
+   TABLE_ENTRY(_dispatch_stub_1665),
+   TABLE_ENTRY(_dispatch_stub_1666),
+   TABLE_ENTRY(_dispatch_stub_1667),
    /* A whole bunch of no-op functions.  These might be called
     * when someone tries to call a dynamically-registered
     * extension function without a current rendering context.
@@ -17157,9 +17239,9 @@ _glapi_proc UNUSED_TABLE_NAME[] = {
    TABLE_ENTRY(VertexAttrib4f),
    TABLE_ENTRY(VertexAttrib4fv),
    TABLE_ENTRY(DrawArraysInstancedEXT),
-   TABLE_ENTRY(DrawArraysInstanced),
+   TABLE_ENTRY(DrawArraysInstancedARB),
    TABLE_ENTRY(DrawElementsInstancedEXT),
-   TABLE_ENTRY(DrawElementsInstanced),
+   TABLE_ENTRY(DrawElementsInstancedARB),
    TABLE_ENTRY(_dispatch_stub_661),
    TABLE_ENTRY(_dispatch_stub_662),
    TABLE_ENTRY(_dispatch_stub_663),
@@ -17334,7 +17416,7 @@ _glapi_proc UNUSED_TABLE_NAME[] = {
    TABLE_ENTRY(_dispatch_stub_1170),
    TABLE_ENTRY(SecondaryColor3f),
    TABLE_ENTRY(SecondaryColor3fv),
-   TABLE_ENTRY(MultiDrawElements),
+   TABLE_ENTRY(MultiDrawElementsEXT),
    TABLE_ENTRY(FogCoordf),
    TABLE_ENTRY(FogCoordfv),
    TABLE_ENTRY(VertexAttribI1i),

@@ -28,15 +28,17 @@
 
 #include "pipe/p_config.h"
 #include "pipe/p_compiler.h"
+#include "util/macros.h"
 #include "util/u_cpu_detect.h"
 #include "util/u_debug.h"
 #include "util/u_memory.h"
-#include "util/simple_list.h"
 #include "util/os_time.h"
 #include "lp_bld.h"
 #include "lp_bld_debug.h"
 #include "lp_bld_misc.h"
 #include "lp_bld_init.h"
+#include "lp_bld_coro.h"
+#include "lp_bld_printf.h"
 
 #include <llvm/Config/llvm-config.h>
 #include <llvm-c/Analysis.h>
@@ -45,7 +47,9 @@
 #include <llvm-c/Transforms/Utils.h>
 #endif
 #include <llvm-c/BitWriter.h>
-#if GALLIVM_HAVE_CORO
+#if GALLIVM_USE_NEW_PASS == 1
+#include <llvm-c/Transforms/PassBuilder.h>
+#elif GALLIVM_HAVE_CORO == 1
 #if LLVM_VERSION_MAJOR <= 8 && (defined(PIPE_ARCH_AARCH64) || defined (PIPE_ARCH_ARM) || defined(PIPE_ARCH_S390) || defined(PIPE_ARCH_MIPS64))
 #include <llvm-c/Transforms/IPO.h>
 #endif
@@ -110,6 +114,7 @@ enum LLVM_CodeGenOpt_Level {
 static boolean
 create_pass_manager(struct gallivm_state *gallivm)
 {
+#if GALLIVM_USE_NEW_PASS == 0
    assert(!gallivm->passmgr);
    assert(gallivm->target);
 
@@ -117,7 +122,7 @@ create_pass_manager(struct gallivm_state *gallivm)
    if (!gallivm->passmgr)
       return FALSE;
 
-#if GALLIVM_HAVE_CORO
+#if GALLIVM_HAVE_CORO == 1
    gallivm->cgpassmgr = LLVMCreatePassManager();
 #endif
    /*
@@ -134,7 +139,7 @@ create_pass_manager(struct gallivm_state *gallivm)
       free(td_str);
    }
 
-#if GALLIVM_HAVE_CORO
+#if GALLIVM_HAVE_CORO == 1
 #if LLVM_VERSION_MAJOR <= 8 && (defined(PIPE_ARCH_AARCH64) || defined (PIPE_ARCH_ARM) || defined(PIPE_ARCH_S390) || defined(PIPE_ARCH_MIPS64))
    LLVMAddArgumentPromotionPass(gallivm->cgpassmgr);
    LLVMAddFunctionAttrsPass(gallivm->cgpassmgr);
@@ -181,13 +186,12 @@ create_pass_manager(struct gallivm_state *gallivm)
        */
       LLVMAddPromoteMemoryToRegisterPass(gallivm->passmgr);
    }
-#if GALLIVM_HAVE_CORO
+#if GALLIVM_HAVE_CORO == 1
    LLVMAddCoroCleanupPass(gallivm->passmgr);
 #endif
-
+#endif
    return TRUE;
 }
-
 
 /**
  * Free gallivm object's LLVM allocations, but not any generated code
@@ -196,14 +200,16 @@ create_pass_manager(struct gallivm_state *gallivm)
 void
 gallivm_free_ir(struct gallivm_state *gallivm)
 {
+#if GALLIVM_USE_NEW_PASS == 0
    if (gallivm->passmgr) {
       LLVMDisposePassManager(gallivm->passmgr);
    }
 
-#if GALLIVM_HAVE_CORO
+#if GALLIVM_HAVE_CORO == 1
    if (gallivm->cgpassmgr) {
       LLVMDisposePassManager(gallivm->cgpassmgr);
    }
+#endif
 #endif
 
    if (gallivm->engine) {
@@ -232,8 +238,12 @@ gallivm_free_ir(struct gallivm_state *gallivm)
    gallivm->target = NULL;
    gallivm->module = NULL;
    gallivm->module_name = NULL;
+#if GALLIVM_USE_NEW_PASS == 0
+#if GALLIVM_HAVE_CORO == 1
    gallivm->cgpassmgr = NULL;
+#endif
    gallivm->passmgr = NULL;
+#endif
    gallivm->context = NULL;
    gallivm->builder = NULL;
    gallivm->cache = NULL;
@@ -400,6 +410,7 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
    if (!create_pass_manager(gallivm))
       goto fail;
 
+   lp_build_coro_declare_malloc_hooks(gallivm);
    return TRUE;
 
 fail:
@@ -430,51 +441,11 @@ lp_build_init(void)
 
    lp_set_target_options();
 
-   util_cpu_detect();
-
-   /* For simulating less capable machines */
-#ifdef DEBUG
-   if (debug_get_bool_option("LP_FORCE_SSE2", FALSE)) {
-      extern struct util_cpu_caps_t util_cpu_caps;
-      assert(util_cpu_caps.has_sse2);
-      util_cpu_caps.has_sse3 = 0;
-      util_cpu_caps.has_ssse3 = 0;
-      util_cpu_caps.has_sse4_1 = 0;
-      util_cpu_caps.has_sse4_2 = 0;
-      util_cpu_caps.has_avx = 0;
-      util_cpu_caps.has_avx2 = 0;
-      util_cpu_caps.has_f16c = 0;
-      util_cpu_caps.has_fma = 0;
-   }
-#endif
-
-   if (util_get_cpu_caps()->has_avx2 || util_get_cpu_caps()->has_avx) {
-      lp_native_vector_width = 256;
-   } else {
-      /* Leave it at 128, even when no SIMD extensions are available.
-       * Really needs to be a multiple of 128 so can fit 4 floats.
-       */
-      lp_native_vector_width = 128;
-   }
+   // Default to 256 until we're confident llvmpipe with 512 is as correct and not slower than 256
+   lp_native_vector_width = MIN2(util_get_cpu_caps()->max_vector_bits, 256);
 
    lp_native_vector_width = debug_get_num_option("LP_NATIVE_VECTOR_WIDTH",
                                                  lp_native_vector_width);
-
-#if LLVM_VERSION_MAJOR < 4
-   if (lp_native_vector_width <= 128) {
-      /* Hide AVX support, as often LLVM AVX intrinsics are only guarded by
-       * "util_get_cpu_caps()->has_avx" predicate, and lack the
-       * "lp_native_vector_width > 128" predicate. And also to ensure a more
-       * consistent behavior, allowing one to test SSE2 on AVX machines.
-       * XXX: should not play games with util_cpu_caps directly as it might
-       * get used for other things outside llvm too.
-       */
-      util_get_cpu_caps()->has_avx = 0;
-      util_get_cpu_caps()->has_avx2 = 0;
-      util_get_cpu_caps()->has_f16c = 0;
-      util_get_cpu_caps()->has_fma = 0;
-   }
-#endif
 
 #ifdef PIPE_ARCH_PPC_64
    /* Set the NJ bit in VSCR to 0 so denormalized values are handled as
@@ -563,6 +534,14 @@ gallivm_verify_function(struct gallivm_state *gallivm,
    }
 }
 
+void lp_init_clock_hook(struct gallivm_state *gallivm)
+{
+   if (gallivm->get_time_hook)
+      return;
+
+   LLVMTypeRef get_time_type = LLVMFunctionType(LLVMInt64TypeInContext(gallivm->context), NULL, 0, 1);
+   gallivm->get_time_hook = LLVMAddFunction(gallivm->module, "get_time_hook", get_time_type);
+}
 
 /**
  * Compile a module.
@@ -571,7 +550,6 @@ gallivm_verify_function(struct gallivm_state *gallivm,
 void
 gallivm_compile_module(struct gallivm_state *gallivm)
 {
-   LLVMValueRef func;
    int64_t time_begin = 0;
 
    assert(!gallivm->compiled);
@@ -580,6 +558,13 @@ gallivm_compile_module(struct gallivm_state *gallivm)
       LLVMDisposeBuilder(gallivm->builder);
       gallivm->builder = NULL;
    }
+
+   LLVMSetDataLayout(gallivm->module, "");
+   assert(!gallivm->engine);
+   if (!init_gallivm_engine(gallivm)) {
+      assert(0);
+   }
+   assert(gallivm->engine);
 
    if (gallivm->cache && gallivm->cache->data_size) {
       goto skip_cached;
@@ -604,11 +589,33 @@ gallivm_compile_module(struct gallivm_state *gallivm)
    if (gallivm_debug & GALLIVM_DEBUG_PERF)
       time_begin = os_time_get();
 
-#if GALLIVM_HAVE_CORO
+#if GALLIVM_USE_NEW_PASS == 1
+   char passes[1024];
+   passes[0] = 0;
+
+   /*
+    * there should be some way to combine these two pass runs but I'm not seeing it,
+    * at the time of writing.
+    */
+   strcpy(passes, "default<O0>");
+
+   LLVMPassBuilderOptionsRef opts = LLVMCreatePassBuilderOptions();
+   LLVMRunPasses(gallivm->module, passes, LLVMGetExecutionEngineTargetMachine(gallivm->engine), opts);
+
+   if (!(gallivm_perf & GALLIVM_PERF_NO_OPT))
+      strcpy(passes, "sroa,early-cse,simplifycfg,reassociate,mem2reg,instsimplify,instcombine");
+   else
+      strcpy(passes, "mem2reg");
+
+   LLVMRunPasses(gallivm->module, passes, LLVMGetExecutionEngineTargetMachine(gallivm->engine), opts);
+   LLVMDisposePassBuilderOptions(opts);
+#else
+#if GALLIVM_HAVE_CORO == 1
    LLVMRunPassManager(gallivm->cgpassmgr, gallivm->module);
 #endif
    /* Run optimization passes */
    LLVMInitializeFunctionPassManager(gallivm->passmgr);
+   LLVMValueRef func;
    func = LLVMGetFirstFunction(gallivm->module);
    while (func) {
       if (0) {
@@ -626,7 +633,7 @@ gallivm_compile_module(struct gallivm_state *gallivm)
       func = LLVMGetNextFunction(func);
    }
    LLVMFinalizeFunctionPassManager(gallivm->passmgr);
-
+#endif
    if (gallivm_debug & GALLIVM_DEBUG_PERF) {
       int64_t time_end = os_time_get();
       int time_msec = (int)((time_end - time_begin) / 1000);
@@ -653,17 +660,16 @@ gallivm_compile_module(struct gallivm_state *gallivm)
     * lp_build_create_jit_compiler_for_module()
     */
  skip_cached:
-   LLVMSetDataLayout(gallivm->module, "");
-   assert(!gallivm->engine);
-   if (!init_gallivm_engine(gallivm)) {
-      assert(0);
-   }
-   assert(gallivm->engine);
 
    ++gallivm->compiled;
 
-   if (gallivm->debug_printf_hook)
-      LLVMAddGlobalMapping(gallivm->engine, gallivm->debug_printf_hook, debug_printf);
+   lp_init_printf_hook(gallivm);
+   LLVMAddGlobalMapping(gallivm->engine, gallivm->debug_printf_hook, debug_printf);
+
+   lp_init_clock_hook(gallivm);
+   LLVMAddGlobalMapping(gallivm->engine, gallivm->get_time_hook, os_time_get_nano);
+
+   lp_build_coro_add_malloc_hooks(gallivm);
 
    if (gallivm_debug & GALLIVM_DEBUG_ASM) {
       LLVMValueRef llvm_func = LLVMGetFirstFunction(gallivm->module);

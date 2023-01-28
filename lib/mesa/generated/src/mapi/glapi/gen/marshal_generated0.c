@@ -41,4503 +41,6087 @@ UNUSED static inline int safe_mul(int a, int b)
     return a * b;
 }
 
-const _mesa_unmarshal_func _mesa_unmarshal_dispatch[NUM_DISPATCH_CMD] = {
-   [DISPATCH_CMD_NewList] = (_mesa_unmarshal_func)_mesa_unmarshal_NewList,
-   [DISPATCH_CMD_EndList] = (_mesa_unmarshal_func)_mesa_unmarshal_EndList,
-   [DISPATCH_CMD_CallList] = (_mesa_unmarshal_func)_mesa_unmarshal_CallList,
-   [DISPATCH_CMD_CallLists] = (_mesa_unmarshal_func)_mesa_unmarshal_CallLists,
-   [DISPATCH_CMD_DeleteLists] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteLists,
-   [DISPATCH_CMD_ListBase] = (_mesa_unmarshal_func)_mesa_unmarshal_ListBase,
-   [DISPATCH_CMD_Begin] = (_mesa_unmarshal_func)_mesa_unmarshal_Begin,
-   [DISPATCH_CMD_Bitmap] = (_mesa_unmarshal_func)_mesa_unmarshal_Bitmap,
-   [DISPATCH_CMD_Color3b] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3b,
-   [DISPATCH_CMD_Color3bv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3bv,
-   [DISPATCH_CMD_Color3d] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3d,
-   [DISPATCH_CMD_Color3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3dv,
-   [DISPATCH_CMD_Color3f] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3f,
-   [DISPATCH_CMD_Color3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3fv,
-   [DISPATCH_CMD_Color3i] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3i,
-   [DISPATCH_CMD_Color3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3iv,
-   [DISPATCH_CMD_Color3s] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3s,
-   [DISPATCH_CMD_Color3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3sv,
-   [DISPATCH_CMD_Color3ub] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3ub,
-   [DISPATCH_CMD_Color3ubv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3ubv,
-   [DISPATCH_CMD_Color3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3ui,
-   [DISPATCH_CMD_Color3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3uiv,
-   [DISPATCH_CMD_Color3us] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3us,
-   [DISPATCH_CMD_Color3usv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3usv,
-   [DISPATCH_CMD_Color4b] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4b,
-   [DISPATCH_CMD_Color4bv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4bv,
-   [DISPATCH_CMD_Color4d] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4d,
-   [DISPATCH_CMD_Color4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4dv,
-   [DISPATCH_CMD_Color4f] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4f,
-   [DISPATCH_CMD_Color4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4fv,
-   [DISPATCH_CMD_Color4i] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4i,
-   [DISPATCH_CMD_Color4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4iv,
-   [DISPATCH_CMD_Color4s] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4s,
-   [DISPATCH_CMD_Color4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4sv,
-   [DISPATCH_CMD_Color4ub] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4ub,
-   [DISPATCH_CMD_Color4ubv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4ubv,
-   [DISPATCH_CMD_Color4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4ui,
-   [DISPATCH_CMD_Color4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4uiv,
-   [DISPATCH_CMD_Color4us] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4us,
-   [DISPATCH_CMD_Color4usv] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4usv,
-   [DISPATCH_CMD_EdgeFlag] = (_mesa_unmarshal_func)_mesa_unmarshal_EdgeFlag,
-   [DISPATCH_CMD_EdgeFlagv] = (_mesa_unmarshal_func)_mesa_unmarshal_EdgeFlagv,
-   [DISPATCH_CMD_End] = (_mesa_unmarshal_func)_mesa_unmarshal_End,
-   [DISPATCH_CMD_Indexd] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexd,
-   [DISPATCH_CMD_Indexdv] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexdv,
-   [DISPATCH_CMD_Indexf] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexf,
-   [DISPATCH_CMD_Indexfv] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexfv,
-   [DISPATCH_CMD_Indexi] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexi,
-   [DISPATCH_CMD_Indexiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexiv,
-   [DISPATCH_CMD_Indexs] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexs,
-   [DISPATCH_CMD_Indexsv] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexsv,
-   [DISPATCH_CMD_Normal3b] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3b,
-   [DISPATCH_CMD_Normal3bv] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3bv,
-   [DISPATCH_CMD_Normal3d] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3d,
-   [DISPATCH_CMD_Normal3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3dv,
-   [DISPATCH_CMD_Normal3f] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3f,
-   [DISPATCH_CMD_Normal3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3fv,
-   [DISPATCH_CMD_Normal3i] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3i,
-   [DISPATCH_CMD_Normal3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3iv,
-   [DISPATCH_CMD_Normal3s] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3s,
-   [DISPATCH_CMD_Normal3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3sv,
-   [DISPATCH_CMD_RasterPos2d] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2d,
-   [DISPATCH_CMD_RasterPos2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2dv,
-   [DISPATCH_CMD_RasterPos2f] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2f,
-   [DISPATCH_CMD_RasterPos2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2fv,
-   [DISPATCH_CMD_RasterPos2i] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2i,
-   [DISPATCH_CMD_RasterPos2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2iv,
-   [DISPATCH_CMD_RasterPos2s] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2s,
-   [DISPATCH_CMD_RasterPos2sv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos2sv,
-   [DISPATCH_CMD_RasterPos3d] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3d,
-   [DISPATCH_CMD_RasterPos3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3dv,
-   [DISPATCH_CMD_RasterPos3f] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3f,
-   [DISPATCH_CMD_RasterPos3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3fv,
-   [DISPATCH_CMD_RasterPos3i] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3i,
-   [DISPATCH_CMD_RasterPos3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3iv,
-   [DISPATCH_CMD_RasterPos3s] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3s,
-   [DISPATCH_CMD_RasterPos3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos3sv,
-   [DISPATCH_CMD_RasterPos4d] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4d,
-   [DISPATCH_CMD_RasterPos4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4dv,
-   [DISPATCH_CMD_RasterPos4f] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4f,
-   [DISPATCH_CMD_RasterPos4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4fv,
-   [DISPATCH_CMD_RasterPos4i] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4i,
-   [DISPATCH_CMD_RasterPos4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4iv,
-   [DISPATCH_CMD_RasterPos4s] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4s,
-   [DISPATCH_CMD_RasterPos4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_RasterPos4sv,
-   [DISPATCH_CMD_Rectd] = (_mesa_unmarshal_func)_mesa_unmarshal_Rectd,
-   [DISPATCH_CMD_Rectdv] = (_mesa_unmarshal_func)_mesa_unmarshal_Rectdv,
-   [DISPATCH_CMD_Rectf] = (_mesa_unmarshal_func)_mesa_unmarshal_Rectf,
-   [DISPATCH_CMD_Rectfv] = (_mesa_unmarshal_func)_mesa_unmarshal_Rectfv,
-   [DISPATCH_CMD_Recti] = (_mesa_unmarshal_func)_mesa_unmarshal_Recti,
-   [DISPATCH_CMD_Rectiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Rectiv,
-   [DISPATCH_CMD_Rects] = (_mesa_unmarshal_func)_mesa_unmarshal_Rects,
-   [DISPATCH_CMD_Rectsv] = (_mesa_unmarshal_func)_mesa_unmarshal_Rectsv,
-   [DISPATCH_CMD_TexCoord1d] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1d,
-   [DISPATCH_CMD_TexCoord1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1dv,
-   [DISPATCH_CMD_TexCoord1f] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1f,
-   [DISPATCH_CMD_TexCoord1fv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1fv,
-   [DISPATCH_CMD_TexCoord1i] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1i,
-   [DISPATCH_CMD_TexCoord1iv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1iv,
-   [DISPATCH_CMD_TexCoord1s] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1s,
-   [DISPATCH_CMD_TexCoord1sv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1sv,
-   [DISPATCH_CMD_TexCoord2d] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2d,
-   [DISPATCH_CMD_TexCoord2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2dv,
-   [DISPATCH_CMD_TexCoord2f] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2f,
-   [DISPATCH_CMD_TexCoord2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2fv,
-   [DISPATCH_CMD_TexCoord2i] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2i,
-   [DISPATCH_CMD_TexCoord2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2iv,
-   [DISPATCH_CMD_TexCoord2s] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2s,
-   [DISPATCH_CMD_TexCoord2sv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2sv,
-   [DISPATCH_CMD_TexCoord3d] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3d,
-   [DISPATCH_CMD_TexCoord3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3dv,
-   [DISPATCH_CMD_TexCoord3f] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3f,
-   [DISPATCH_CMD_TexCoord3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3fv,
-   [DISPATCH_CMD_TexCoord3i] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3i,
-   [DISPATCH_CMD_TexCoord3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3iv,
-   [DISPATCH_CMD_TexCoord3s] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3s,
-   [DISPATCH_CMD_TexCoord3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3sv,
-   [DISPATCH_CMD_TexCoord4d] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4d,
-   [DISPATCH_CMD_TexCoord4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4dv,
-   [DISPATCH_CMD_TexCoord4f] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4f,
-   [DISPATCH_CMD_TexCoord4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4fv,
-   [DISPATCH_CMD_TexCoord4i] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4i,
-   [DISPATCH_CMD_TexCoord4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4iv,
-   [DISPATCH_CMD_TexCoord4s] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4s,
-   [DISPATCH_CMD_TexCoord4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4sv,
-   [DISPATCH_CMD_Vertex2d] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2d,
-   [DISPATCH_CMD_Vertex2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2dv,
-   [DISPATCH_CMD_Vertex2f] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2f,
-   [DISPATCH_CMD_Vertex2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2fv,
-   [DISPATCH_CMD_Vertex2i] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2i,
-   [DISPATCH_CMD_Vertex2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2iv,
-   [DISPATCH_CMD_Vertex2s] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2s,
-   [DISPATCH_CMD_Vertex2sv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2sv,
-   [DISPATCH_CMD_Vertex3d] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3d,
-   [DISPATCH_CMD_Vertex3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3dv,
-   [DISPATCH_CMD_Vertex3f] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3f,
-   [DISPATCH_CMD_Vertex3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3fv,
-   [DISPATCH_CMD_Vertex3i] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3i,
-   [DISPATCH_CMD_Vertex3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3iv,
-   [DISPATCH_CMD_Vertex3s] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3s,
-   [DISPATCH_CMD_Vertex3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3sv,
-   [DISPATCH_CMD_Vertex4d] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4d,
-   [DISPATCH_CMD_Vertex4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4dv,
-   [DISPATCH_CMD_Vertex4f] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4f,
-   [DISPATCH_CMD_Vertex4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4fv,
-   [DISPATCH_CMD_Vertex4i] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4i,
-   [DISPATCH_CMD_Vertex4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4iv,
-   [DISPATCH_CMD_Vertex4s] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4s,
-   [DISPATCH_CMD_Vertex4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4sv,
-   [DISPATCH_CMD_ClipPlane] = (_mesa_unmarshal_func)_mesa_unmarshal_ClipPlane,
-   [DISPATCH_CMD_ColorMaterial] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorMaterial,
-   [DISPATCH_CMD_CullFace] = (_mesa_unmarshal_func)_mesa_unmarshal_CullFace,
-   [DISPATCH_CMD_Fogf] = (_mesa_unmarshal_func)_mesa_unmarshal_Fogf,
-   [DISPATCH_CMD_Fogfv] = (_mesa_unmarshal_func)_mesa_unmarshal_Fogfv,
-   [DISPATCH_CMD_Fogi] = (_mesa_unmarshal_func)_mesa_unmarshal_Fogi,
-   [DISPATCH_CMD_Fogiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Fogiv,
-   [DISPATCH_CMD_FrontFace] = (_mesa_unmarshal_func)_mesa_unmarshal_FrontFace,
-   [DISPATCH_CMD_Hint] = (_mesa_unmarshal_func)_mesa_unmarshal_Hint,
-   [DISPATCH_CMD_Lightf] = (_mesa_unmarshal_func)_mesa_unmarshal_Lightf,
-   [DISPATCH_CMD_Lightfv] = (_mesa_unmarshal_func)_mesa_unmarshal_Lightfv,
-   [DISPATCH_CMD_Lighti] = (_mesa_unmarshal_func)_mesa_unmarshal_Lighti,
-   [DISPATCH_CMD_Lightiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Lightiv,
-   [DISPATCH_CMD_LightModelf] = (_mesa_unmarshal_func)_mesa_unmarshal_LightModelf,
-   [DISPATCH_CMD_LightModelfv] = (_mesa_unmarshal_func)_mesa_unmarshal_LightModelfv,
-   [DISPATCH_CMD_LightModeli] = (_mesa_unmarshal_func)_mesa_unmarshal_LightModeli,
-   [DISPATCH_CMD_LightModeliv] = (_mesa_unmarshal_func)_mesa_unmarshal_LightModeliv,
-   [DISPATCH_CMD_LineStipple] = (_mesa_unmarshal_func)_mesa_unmarshal_LineStipple,
-   [DISPATCH_CMD_LineWidth] = (_mesa_unmarshal_func)_mesa_unmarshal_LineWidth,
-   [DISPATCH_CMD_Materialf] = (_mesa_unmarshal_func)_mesa_unmarshal_Materialf,
-   [DISPATCH_CMD_Materialfv] = (_mesa_unmarshal_func)_mesa_unmarshal_Materialfv,
-   [DISPATCH_CMD_Materiali] = (_mesa_unmarshal_func)_mesa_unmarshal_Materiali,
-   [DISPATCH_CMD_Materialiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Materialiv,
-   [DISPATCH_CMD_PointSize] = (_mesa_unmarshal_func)_mesa_unmarshal_PointSize,
-   [DISPATCH_CMD_PolygonMode] = (_mesa_unmarshal_func)_mesa_unmarshal_PolygonMode,
-   [DISPATCH_CMD_PolygonStipple] = (_mesa_unmarshal_func)_mesa_unmarshal_PolygonStipple,
-   [DISPATCH_CMD_Scissor] = (_mesa_unmarshal_func)_mesa_unmarshal_Scissor,
-   [DISPATCH_CMD_ShadeModel] = (_mesa_unmarshal_func)_mesa_unmarshal_ShadeModel,
-   [DISPATCH_CMD_TexParameterf] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameterf,
-   [DISPATCH_CMD_TexParameterfv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameterfv,
-   [DISPATCH_CMD_TexParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameteri,
-   [DISPATCH_CMD_TexParameteriv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameteriv,
-   [DISPATCH_CMD_TexImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexImage1D,
-   [DISPATCH_CMD_TexImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexImage2D,
-   [DISPATCH_CMD_TexEnvf] = (_mesa_unmarshal_func)_mesa_unmarshal_TexEnvf,
-   [DISPATCH_CMD_TexEnvfv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexEnvfv,
-   [DISPATCH_CMD_TexEnvi] = (_mesa_unmarshal_func)_mesa_unmarshal_TexEnvi,
-   [DISPATCH_CMD_TexEnviv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexEnviv,
-   [DISPATCH_CMD_TexGend] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGend,
-   [DISPATCH_CMD_TexGendv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGendv,
-   [DISPATCH_CMD_TexGenf] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGenf,
-   [DISPATCH_CMD_TexGenfv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGenfv,
-   [DISPATCH_CMD_TexGeni] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGeni,
-   [DISPATCH_CMD_TexGeniv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGeniv,
-   [DISPATCH_CMD_InitNames] = (_mesa_unmarshal_func)_mesa_unmarshal_InitNames,
-   [DISPATCH_CMD_LoadName] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadName,
-   [DISPATCH_CMD_PassThrough] = (_mesa_unmarshal_func)_mesa_unmarshal_PassThrough,
-   [DISPATCH_CMD_PopName] = (_mesa_unmarshal_func)_mesa_unmarshal_PopName,
-   [DISPATCH_CMD_PushName] = (_mesa_unmarshal_func)_mesa_unmarshal_PushName,
-   [DISPATCH_CMD_DrawBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawBuffer,
-   [DISPATCH_CMD_Clear] = (_mesa_unmarshal_func)_mesa_unmarshal_Clear,
-   [DISPATCH_CMD_ClearAccum] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearAccum,
-   [DISPATCH_CMD_ClearIndex] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearIndex,
-   [DISPATCH_CMD_ClearColor] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearColor,
-   [DISPATCH_CMD_ClearStencil] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearStencil,
-   [DISPATCH_CMD_ClearDepth] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearDepth,
-   [DISPATCH_CMD_StencilMask] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilMask,
-   [DISPATCH_CMD_ColorMask] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorMask,
-   [DISPATCH_CMD_DepthMask] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthMask,
-   [DISPATCH_CMD_IndexMask] = (_mesa_unmarshal_func)_mesa_unmarshal_IndexMask,
-   [DISPATCH_CMD_Accum] = (_mesa_unmarshal_func)_mesa_unmarshal_Accum,
-   [DISPATCH_CMD_Disable] = (_mesa_unmarshal_func)_mesa_unmarshal_Disable,
-   [DISPATCH_CMD_Enable] = (_mesa_unmarshal_func)_mesa_unmarshal_Enable,
-   [DISPATCH_CMD_Flush] = (_mesa_unmarshal_func)_mesa_unmarshal_Flush,
-   [DISPATCH_CMD_PopAttrib] = (_mesa_unmarshal_func)_mesa_unmarshal_PopAttrib,
-   [DISPATCH_CMD_PushAttrib] = (_mesa_unmarshal_func)_mesa_unmarshal_PushAttrib,
-   [DISPATCH_CMD_MapGrid1d] = (_mesa_unmarshal_func)_mesa_unmarshal_MapGrid1d,
-   [DISPATCH_CMD_MapGrid1f] = (_mesa_unmarshal_func)_mesa_unmarshal_MapGrid1f,
-   [DISPATCH_CMD_MapGrid2d] = (_mesa_unmarshal_func)_mesa_unmarshal_MapGrid2d,
-   [DISPATCH_CMD_MapGrid2f] = (_mesa_unmarshal_func)_mesa_unmarshal_MapGrid2f,
-   [DISPATCH_CMD_EvalCoord1d] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord1d,
-   [DISPATCH_CMD_EvalCoord1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord1dv,
-   [DISPATCH_CMD_EvalCoord1f] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord1f,
-   [DISPATCH_CMD_EvalCoord1fv] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord1fv,
-   [DISPATCH_CMD_EvalCoord2d] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord2d,
-   [DISPATCH_CMD_EvalCoord2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord2dv,
-   [DISPATCH_CMD_EvalCoord2f] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord2f,
-   [DISPATCH_CMD_EvalCoord2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalCoord2fv,
-   [DISPATCH_CMD_EvalMesh1] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalMesh1,
-   [DISPATCH_CMD_EvalPoint1] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalPoint1,
-   [DISPATCH_CMD_EvalMesh2] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalMesh2,
-   [DISPATCH_CMD_EvalPoint2] = (_mesa_unmarshal_func)_mesa_unmarshal_EvalPoint2,
-   [DISPATCH_CMD_AlphaFunc] = (_mesa_unmarshal_func)_mesa_unmarshal_AlphaFunc,
-   [DISPATCH_CMD_BlendFunc] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendFunc,
-   [DISPATCH_CMD_LogicOp] = (_mesa_unmarshal_func)_mesa_unmarshal_LogicOp,
-   [DISPATCH_CMD_StencilFunc] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilFunc,
-   [DISPATCH_CMD_StencilOp] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilOp,
-   [DISPATCH_CMD_DepthFunc] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthFunc,
-   [DISPATCH_CMD_PixelZoom] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelZoom,
-   [DISPATCH_CMD_PixelTransferf] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelTransferf,
-   [DISPATCH_CMD_PixelTransferi] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelTransferi,
-   [DISPATCH_CMD_PixelStoref] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelStoref,
-   [DISPATCH_CMD_PixelStorei] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelStorei,
-   [DISPATCH_CMD_PixelMapfv] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelMapfv,
-   [DISPATCH_CMD_PixelMapuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelMapuiv,
-   [DISPATCH_CMD_PixelMapusv] = (_mesa_unmarshal_func)_mesa_unmarshal_PixelMapusv,
-   [DISPATCH_CMD_ReadBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_ReadBuffer,
-   [DISPATCH_CMD_CopyPixels] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyPixels,
-   [DISPATCH_CMD_ReadPixels] = (_mesa_unmarshal_func)_mesa_unmarshal_ReadPixels,
-   [DISPATCH_CMD_DrawPixels] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawPixels,
-   [DISPATCH_CMD_GetIntegerv] = (_mesa_unmarshal_func)_mesa_unmarshal_GetIntegerv,
-   [DISPATCH_CMD_GetPixelMapfv] = (_mesa_unmarshal_func)_mesa_unmarshal_GetPixelMapfv,
-   [DISPATCH_CMD_GetPixelMapuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_GetPixelMapuiv,
-   [DISPATCH_CMD_GetPixelMapusv] = (_mesa_unmarshal_func)_mesa_unmarshal_GetPixelMapusv,
-   [DISPATCH_CMD_GetPolygonStipple] = (_mesa_unmarshal_func)_mesa_unmarshal_GetPolygonStipple,
-   [DISPATCH_CMD_GetTexImage] = (_mesa_unmarshal_func)_mesa_unmarshal_GetTexImage,
-   [DISPATCH_CMD_DepthRange] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRange,
-   [DISPATCH_CMD_Frustum] = (_mesa_unmarshal_func)_mesa_unmarshal_Frustum,
-   [DISPATCH_CMD_LoadIdentity] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadIdentity,
-   [DISPATCH_CMD_LoadMatrixf] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadMatrixf,
-   [DISPATCH_CMD_LoadMatrixd] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadMatrixd,
-   [DISPATCH_CMD_MatrixMode] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixMode,
-   [DISPATCH_CMD_MultMatrixf] = (_mesa_unmarshal_func)_mesa_unmarshal_MultMatrixf,
-   [DISPATCH_CMD_MultMatrixd] = (_mesa_unmarshal_func)_mesa_unmarshal_MultMatrixd,
-   [DISPATCH_CMD_Ortho] = (_mesa_unmarshal_func)_mesa_unmarshal_Ortho,
-   [DISPATCH_CMD_PopMatrix] = (_mesa_unmarshal_func)_mesa_unmarshal_PopMatrix,
-   [DISPATCH_CMD_PushMatrix] = (_mesa_unmarshal_func)_mesa_unmarshal_PushMatrix,
-   [DISPATCH_CMD_Rotated] = (_mesa_unmarshal_func)_mesa_unmarshal_Rotated,
-   [DISPATCH_CMD_Rotatef] = (_mesa_unmarshal_func)_mesa_unmarshal_Rotatef,
-   [DISPATCH_CMD_Scaled] = (_mesa_unmarshal_func)_mesa_unmarshal_Scaled,
-   [DISPATCH_CMD_Scalef] = (_mesa_unmarshal_func)_mesa_unmarshal_Scalef,
-   [DISPATCH_CMD_Translated] = (_mesa_unmarshal_func)_mesa_unmarshal_Translated,
-   [DISPATCH_CMD_Translatef] = (_mesa_unmarshal_func)_mesa_unmarshal_Translatef,
-   [DISPATCH_CMD_Viewport] = (_mesa_unmarshal_func)_mesa_unmarshal_Viewport,
-   [DISPATCH_CMD_ArrayElement] = (_mesa_unmarshal_func)_mesa_unmarshal_ArrayElement,
-   [DISPATCH_CMD_ColorPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorPointer,
-   [DISPATCH_CMD_DisableClientState] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableClientState,
-   [DISPATCH_CMD_DrawArrays] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawArrays,
-   [DISPATCH_CMD_DrawElements] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElements,
-   [DISPATCH_CMD_EdgeFlagPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_EdgeFlagPointer,
-   [DISPATCH_CMD_EnableClientState] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableClientState,
-   [DISPATCH_CMD_IndexPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_IndexPointer,
-   [DISPATCH_CMD_InterleavedArrays] = (_mesa_unmarshal_func)_mesa_unmarshal_InterleavedArrays,
-   [DISPATCH_CMD_NormalPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_NormalPointer,
-   [DISPATCH_CMD_TexCoordPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordPointer,
-   [DISPATCH_CMD_VertexPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexPointer,
-   [DISPATCH_CMD_PolygonOffset] = (_mesa_unmarshal_func)_mesa_unmarshal_PolygonOffset,
-   [DISPATCH_CMD_CopyTexImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTexImage1D,
-   [DISPATCH_CMD_CopyTexImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTexImage2D,
-   [DISPATCH_CMD_CopyTexSubImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTexSubImage1D,
-   [DISPATCH_CMD_CopyTexSubImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTexSubImage2D,
-   [DISPATCH_CMD_TexSubImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexSubImage1D,
-   [DISPATCH_CMD_TexSubImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexSubImage2D,
-   [DISPATCH_CMD_BindTexture] = (_mesa_unmarshal_func)_mesa_unmarshal_BindTexture,
-   [DISPATCH_CMD_DeleteTextures] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteTextures,
-   [DISPATCH_CMD_PrioritizeTextures] = (_mesa_unmarshal_func)_mesa_unmarshal_PrioritizeTextures,
-   [DISPATCH_CMD_Indexub] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexub,
-   [DISPATCH_CMD_Indexubv] = (_mesa_unmarshal_func)_mesa_unmarshal_Indexubv,
-   [DISPATCH_CMD_PopClientAttrib] = (_mesa_unmarshal_func)_mesa_unmarshal_PopClientAttrib,
-   [DISPATCH_CMD_PushClientAttrib] = (_mesa_unmarshal_func)_mesa_unmarshal_PushClientAttrib,
-   [DISPATCH_CMD_BlendColor] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendColor,
-   [DISPATCH_CMD_BlendEquation] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendEquation,
-   [DISPATCH_CMD_DrawRangeElements] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawRangeElements,
-   [DISPATCH_CMD_TexImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexImage3D,
-   [DISPATCH_CMD_TexSubImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexSubImage3D,
-   [DISPATCH_CMD_CopyTexSubImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTexSubImage3D,
-   [DISPATCH_CMD_ActiveTexture] = (_mesa_unmarshal_func)_mesa_unmarshal_ActiveTexture,
-   [DISPATCH_CMD_ClientActiveTexture] = (_mesa_unmarshal_func)_mesa_unmarshal_ClientActiveTexture,
-   [DISPATCH_CMD_MultiTexCoord1d] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1d,
-   [DISPATCH_CMD_MultiTexCoord1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1dv,
-   [DISPATCH_CMD_MultiTexCoord1fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1fARB,
-   [DISPATCH_CMD_MultiTexCoord1fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1fvARB,
-   [DISPATCH_CMD_MultiTexCoord1i] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1i,
-   [DISPATCH_CMD_MultiTexCoord1iv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1iv,
-   [DISPATCH_CMD_MultiTexCoord1s] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1s,
-   [DISPATCH_CMD_MultiTexCoord1sv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1sv,
-   [DISPATCH_CMD_MultiTexCoord2d] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2d,
-   [DISPATCH_CMD_MultiTexCoord2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2dv,
-   [DISPATCH_CMD_MultiTexCoord2fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2fARB,
-   [DISPATCH_CMD_MultiTexCoord2fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2fvARB,
-   [DISPATCH_CMD_MultiTexCoord2i] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2i,
-   [DISPATCH_CMD_MultiTexCoord2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2iv,
-   [DISPATCH_CMD_MultiTexCoord2s] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2s,
-   [DISPATCH_CMD_MultiTexCoord2sv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2sv,
-   [DISPATCH_CMD_MultiTexCoord3d] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3d,
-   [DISPATCH_CMD_MultiTexCoord3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3dv,
-   [DISPATCH_CMD_MultiTexCoord3fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3fARB,
-   [DISPATCH_CMD_MultiTexCoord3fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3fvARB,
-   [DISPATCH_CMD_MultiTexCoord3i] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3i,
-   [DISPATCH_CMD_MultiTexCoord3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3iv,
-   [DISPATCH_CMD_MultiTexCoord3s] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3s,
-   [DISPATCH_CMD_MultiTexCoord3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3sv,
-   [DISPATCH_CMD_MultiTexCoord4d] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4d,
-   [DISPATCH_CMD_MultiTexCoord4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4dv,
-   [DISPATCH_CMD_MultiTexCoord4fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4fARB,
-   [DISPATCH_CMD_MultiTexCoord4fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4fvARB,
-   [DISPATCH_CMD_MultiTexCoord4i] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4i,
-   [DISPATCH_CMD_MultiTexCoord4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4iv,
-   [DISPATCH_CMD_MultiTexCoord4s] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4s,
-   [DISPATCH_CMD_MultiTexCoord4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4sv,
-   [DISPATCH_CMD_LoadTransposeMatrixf] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadTransposeMatrixf,
-   [DISPATCH_CMD_LoadTransposeMatrixd] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadTransposeMatrixd,
-   [DISPATCH_CMD_MultTransposeMatrixf] = (_mesa_unmarshal_func)_mesa_unmarshal_MultTransposeMatrixf,
-   [DISPATCH_CMD_MultTransposeMatrixd] = (_mesa_unmarshal_func)_mesa_unmarshal_MultTransposeMatrixd,
-   [DISPATCH_CMD_SampleCoverage] = (_mesa_unmarshal_func)_mesa_unmarshal_SampleCoverage,
-   [DISPATCH_CMD_CompressedTexImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTexImage3D,
-   [DISPATCH_CMD_CompressedTexImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTexImage2D,
-   [DISPATCH_CMD_CompressedTexImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTexImage1D,
-   [DISPATCH_CMD_CompressedTexSubImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTexSubImage3D,
-   [DISPATCH_CMD_CompressedTexSubImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTexSubImage2D,
-   [DISPATCH_CMD_CompressedTexSubImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTexSubImage1D,
-   [DISPATCH_CMD_GetCompressedTexImage] = (_mesa_unmarshal_func)_mesa_unmarshal_GetCompressedTexImage,
-   [DISPATCH_CMD_BlendFuncSeparate] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendFuncSeparate,
-   [DISPATCH_CMD_FogCoordfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoordfEXT,
-   [DISPATCH_CMD_FogCoordfvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoordfvEXT,
-   [DISPATCH_CMD_FogCoordd] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoordd,
-   [DISPATCH_CMD_FogCoorddv] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoorddv,
-   [DISPATCH_CMD_FogCoordPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoordPointer,
-   [DISPATCH_CMD_MultiDrawArrays] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawArrays,
-   [DISPATCH_CMD_MultiDrawElementsEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawElementsEXT,
-   [DISPATCH_CMD_PointParameterf] = (_mesa_unmarshal_func)_mesa_unmarshal_PointParameterf,
-   [DISPATCH_CMD_PointParameterfv] = (_mesa_unmarshal_func)_mesa_unmarshal_PointParameterfv,
-   [DISPATCH_CMD_PointParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_PointParameteri,
-   [DISPATCH_CMD_PointParameteriv] = (_mesa_unmarshal_func)_mesa_unmarshal_PointParameteriv,
-   [DISPATCH_CMD_SecondaryColor3b] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3b,
-   [DISPATCH_CMD_SecondaryColor3bv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3bv,
-   [DISPATCH_CMD_SecondaryColor3d] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3d,
-   [DISPATCH_CMD_SecondaryColor3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3dv,
-   [DISPATCH_CMD_SecondaryColor3fEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3fEXT,
-   [DISPATCH_CMD_SecondaryColor3fvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3fvEXT,
-   [DISPATCH_CMD_SecondaryColor3i] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3i,
-   [DISPATCH_CMD_SecondaryColor3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3iv,
-   [DISPATCH_CMD_SecondaryColor3s] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3s,
-   [DISPATCH_CMD_SecondaryColor3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3sv,
-   [DISPATCH_CMD_SecondaryColor3ub] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3ub,
-   [DISPATCH_CMD_SecondaryColor3ubv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3ubv,
-   [DISPATCH_CMD_SecondaryColor3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3ui,
-   [DISPATCH_CMD_SecondaryColor3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3uiv,
-   [DISPATCH_CMD_SecondaryColor3us] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3us,
-   [DISPATCH_CMD_SecondaryColor3usv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3usv,
-   [DISPATCH_CMD_SecondaryColorPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColorPointer,
-   [DISPATCH_CMD_WindowPos2d] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2d,
-   [DISPATCH_CMD_WindowPos2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2dv,
-   [DISPATCH_CMD_WindowPos2f] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2f,
-   [DISPATCH_CMD_WindowPos2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2fv,
-   [DISPATCH_CMD_WindowPos2i] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2i,
-   [DISPATCH_CMD_WindowPos2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2iv,
-   [DISPATCH_CMD_WindowPos2s] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2s,
-   [DISPATCH_CMD_WindowPos2sv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos2sv,
-   [DISPATCH_CMD_WindowPos3d] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3d,
-   [DISPATCH_CMD_WindowPos3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3dv,
-   [DISPATCH_CMD_WindowPos3f] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3f,
-   [DISPATCH_CMD_WindowPos3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3fv,
-   [DISPATCH_CMD_WindowPos3i] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3i,
-   [DISPATCH_CMD_WindowPos3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3iv,
-   [DISPATCH_CMD_WindowPos3s] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3s,
-   [DISPATCH_CMD_WindowPos3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos3sv,
-   [DISPATCH_CMD_BindBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_BindBuffer,
-   [DISPATCH_CMD_BufferData] = (_mesa_unmarshal_func)_mesa_unmarshal_BufferData,
-   [DISPATCH_CMD_BufferSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_BufferSubData,
-   [DISPATCH_CMD_DeleteBuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteBuffers,
-   [DISPATCH_CMD_UnmapBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_UnmapBuffer,
-   [DISPATCH_CMD_DeleteQueries] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteQueries,
-   [DISPATCH_CMD_BeginQuery] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginQuery,
-   [DISPATCH_CMD_EndQuery] = (_mesa_unmarshal_func)_mesa_unmarshal_EndQuery,
-   [DISPATCH_CMD_BlendEquationSeparate] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendEquationSeparate,
-   [DISPATCH_CMD_DrawBuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawBuffers,
-   [DISPATCH_CMD_StencilFuncSeparate] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilFuncSeparate,
-   [DISPATCH_CMD_StencilOpSeparate] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilOpSeparate,
-   [DISPATCH_CMD_StencilMaskSeparate] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilMaskSeparate,
-   [DISPATCH_CMD_AttachShader] = (_mesa_unmarshal_func)_mesa_unmarshal_AttachShader,
-   [DISPATCH_CMD_BindAttribLocation] = (_mesa_unmarshal_func)_mesa_unmarshal_BindAttribLocation,
-   [DISPATCH_CMD_CompileShader] = (_mesa_unmarshal_func)_mesa_unmarshal_CompileShader,
-   [DISPATCH_CMD_DeleteProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteProgram,
-   [DISPATCH_CMD_DeleteShader] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteShader,
-   [DISPATCH_CMD_DetachShader] = (_mesa_unmarshal_func)_mesa_unmarshal_DetachShader,
-   [DISPATCH_CMD_DisableVertexAttribArray] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableVertexAttribArray,
-   [DISPATCH_CMD_EnableVertexAttribArray] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableVertexAttribArray,
-   [DISPATCH_CMD_GetActiveUniform] = (_mesa_unmarshal_func)_mesa_unmarshal_GetActiveUniform,
-   [DISPATCH_CMD_GetUniformLocation] = (_mesa_unmarshal_func)_mesa_unmarshal_GetUniformLocation,
-   [DISPATCH_CMD_LinkProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_LinkProgram,
-   [DISPATCH_CMD_ShaderSource] = (_mesa_unmarshal_func)_mesa_unmarshal_ShaderSource,
-   [DISPATCH_CMD_UseProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_UseProgram,
-   [DISPATCH_CMD_Uniform1f] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1f,
-   [DISPATCH_CMD_Uniform2f] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2f,
-   [DISPATCH_CMD_Uniform3f] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3f,
-   [DISPATCH_CMD_Uniform4f] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4f,
-   [DISPATCH_CMD_Uniform1i] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1i,
-   [DISPATCH_CMD_Uniform2i] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2i,
-   [DISPATCH_CMD_Uniform3i] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3i,
-   [DISPATCH_CMD_Uniform4i] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4i,
-   [DISPATCH_CMD_Uniform1fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1fv,
-   [DISPATCH_CMD_Uniform2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2fv,
-   [DISPATCH_CMD_Uniform3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3fv,
-   [DISPATCH_CMD_Uniform4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4fv,
-   [DISPATCH_CMD_Uniform1iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1iv,
-   [DISPATCH_CMD_Uniform2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2iv,
-   [DISPATCH_CMD_Uniform3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3iv,
-   [DISPATCH_CMD_Uniform4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4iv,
-   [DISPATCH_CMD_UniformMatrix2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix2fv,
-   [DISPATCH_CMD_UniformMatrix3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix3fv,
-   [DISPATCH_CMD_UniformMatrix4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix4fv,
-   [DISPATCH_CMD_ValidateProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_ValidateProgram,
-   [DISPATCH_CMD_VertexAttrib1d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1d,
-   [DISPATCH_CMD_VertexAttrib1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1dv,
-   [DISPATCH_CMD_VertexAttrib1fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1fARB,
-   [DISPATCH_CMD_VertexAttrib1fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1fvARB,
-   [DISPATCH_CMD_VertexAttrib1s] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1s,
-   [DISPATCH_CMD_VertexAttrib1sv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1sv,
-   [DISPATCH_CMD_VertexAttrib2d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2d,
-   [DISPATCH_CMD_VertexAttrib2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2dv,
-   [DISPATCH_CMD_VertexAttrib2fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2fARB,
-   [DISPATCH_CMD_VertexAttrib2fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2fvARB,
-   [DISPATCH_CMD_VertexAttrib2s] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2s,
-   [DISPATCH_CMD_VertexAttrib2sv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2sv,
-   [DISPATCH_CMD_VertexAttrib3d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3d,
-   [DISPATCH_CMD_VertexAttrib3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3dv,
-   [DISPATCH_CMD_VertexAttrib3fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3fARB,
-   [DISPATCH_CMD_VertexAttrib3fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3fvARB,
-   [DISPATCH_CMD_VertexAttrib3s] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3s,
-   [DISPATCH_CMD_VertexAttrib3sv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3sv,
-   [DISPATCH_CMD_VertexAttrib4Nbv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Nbv,
-   [DISPATCH_CMD_VertexAttrib4Niv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Niv,
-   [DISPATCH_CMD_VertexAttrib4Nsv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Nsv,
-   [DISPATCH_CMD_VertexAttrib4Nub] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Nub,
-   [DISPATCH_CMD_VertexAttrib4Nubv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Nubv,
-   [DISPATCH_CMD_VertexAttrib4Nuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Nuiv,
-   [DISPATCH_CMD_VertexAttrib4Nusv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4Nusv,
-   [DISPATCH_CMD_VertexAttrib4bv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4bv,
-   [DISPATCH_CMD_VertexAttrib4d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4d,
-   [DISPATCH_CMD_VertexAttrib4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4dv,
-   [DISPATCH_CMD_VertexAttrib4fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4fARB,
-   [DISPATCH_CMD_VertexAttrib4fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4fvARB,
-   [DISPATCH_CMD_VertexAttrib4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4iv,
-   [DISPATCH_CMD_VertexAttrib4s] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4s,
-   [DISPATCH_CMD_VertexAttrib4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4sv,
-   [DISPATCH_CMD_VertexAttrib4ubv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4ubv,
-   [DISPATCH_CMD_VertexAttrib4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4uiv,
-   [DISPATCH_CMD_VertexAttrib4usv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4usv,
-   [DISPATCH_CMD_VertexAttribPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribPointer,
-   [DISPATCH_CMD_UniformMatrix2x3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix2x3fv,
-   [DISPATCH_CMD_UniformMatrix3x2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix3x2fv,
-   [DISPATCH_CMD_UniformMatrix2x4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix2x4fv,
-   [DISPATCH_CMD_UniformMatrix4x2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix4x2fv,
-   [DISPATCH_CMD_UniformMatrix3x4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix3x4fv,
-   [DISPATCH_CMD_UniformMatrix4x3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix4x3fv,
-   [DISPATCH_CMD_ProgramStringARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramStringARB,
-   [DISPATCH_CMD_BindProgramARB] = (_mesa_unmarshal_func)_mesa_unmarshal_BindProgramARB,
-   [DISPATCH_CMD_DeleteProgramsARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteProgramsARB,
-   [DISPATCH_CMD_ProgramEnvParameter4dARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramEnvParameter4dARB,
-   [DISPATCH_CMD_ProgramEnvParameter4dvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramEnvParameter4dvARB,
-   [DISPATCH_CMD_ProgramEnvParameter4fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramEnvParameter4fARB,
-   [DISPATCH_CMD_ProgramEnvParameter4fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramEnvParameter4fvARB,
-   [DISPATCH_CMD_ProgramLocalParameter4dARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramLocalParameter4dARB,
-   [DISPATCH_CMD_ProgramLocalParameter4dvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramLocalParameter4dvARB,
-   [DISPATCH_CMD_ProgramLocalParameter4fARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramLocalParameter4fARB,
-   [DISPATCH_CMD_ProgramLocalParameter4fvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramLocalParameter4fvARB,
-   [DISPATCH_CMD_DeleteObjectARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteObjectARB,
-   [DISPATCH_CMD_DetachObjectARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DetachObjectARB,
-   [DISPATCH_CMD_AttachObjectARB] = (_mesa_unmarshal_func)_mesa_unmarshal_AttachObjectARB,
-   [DISPATCH_CMD_ClampColor] = (_mesa_unmarshal_func)_mesa_unmarshal_ClampColor,
-   [DISPATCH_CMD_DrawArraysInstancedARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawArraysInstancedARB,
-   [DISPATCH_CMD_DrawElementsInstancedARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElementsInstancedARB,
-   [DISPATCH_CMD_BindRenderbuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_BindRenderbuffer,
-   [DISPATCH_CMD_DeleteRenderbuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteRenderbuffers,
-   [DISPATCH_CMD_RenderbufferStorage] = (_mesa_unmarshal_func)_mesa_unmarshal_RenderbufferStorage,
-   [DISPATCH_CMD_RenderbufferStorageMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_RenderbufferStorageMultisample,
-   [DISPATCH_CMD_BindFramebuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_BindFramebuffer,
-   [DISPATCH_CMD_DeleteFramebuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteFramebuffers,
-   [DISPATCH_CMD_FramebufferTexture1D] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferTexture1D,
-   [DISPATCH_CMD_FramebufferTexture2D] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferTexture2D,
-   [DISPATCH_CMD_FramebufferTexture3D] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferTexture3D,
-   [DISPATCH_CMD_FramebufferTextureLayer] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferTextureLayer,
-   [DISPATCH_CMD_FramebufferRenderbuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferRenderbuffer,
-   [DISPATCH_CMD_BlitFramebuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_BlitFramebuffer,
-   [DISPATCH_CMD_GenerateMipmap] = (_mesa_unmarshal_func)_mesa_unmarshal_GenerateMipmap,
-   [DISPATCH_CMD_VertexAttribDivisor] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribDivisor,
-   [DISPATCH_CMD_VertexArrayVertexAttribDivisorEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribDivisorEXT,
-   [DISPATCH_CMD_FlushMappedBufferRange] = (_mesa_unmarshal_func)_mesa_unmarshal_FlushMappedBufferRange,
-   [DISPATCH_CMD_TexBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_TexBuffer,
-   [DISPATCH_CMD_BindVertexArray] = (_mesa_unmarshal_func)_mesa_unmarshal_BindVertexArray,
-   [DISPATCH_CMD_DeleteVertexArrays] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteVertexArrays,
-   [DISPATCH_CMD_UniformBlockBinding] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformBlockBinding,
-   [DISPATCH_CMD_CopyBufferSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyBufferSubData,
-   [DISPATCH_CMD_DrawElementsBaseVertex] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElementsBaseVertex,
-   [DISPATCH_CMD_DrawRangeElementsBaseVertex] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawRangeElementsBaseVertex,
-   [DISPATCH_CMD_MultiDrawElementsBaseVertex] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawElementsBaseVertex,
-   [DISPATCH_CMD_DrawElementsInstancedBaseVertex] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElementsInstancedBaseVertex,
-   [DISPATCH_CMD_DeleteSync] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteSync,
-   [DISPATCH_CMD_WaitSync] = (_mesa_unmarshal_func)_mesa_unmarshal_WaitSync,
-   [DISPATCH_CMD_TexImage2DMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_TexImage2DMultisample,
-   [DISPATCH_CMD_TexImage3DMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_TexImage3DMultisample,
-   [DISPATCH_CMD_SampleMaski] = (_mesa_unmarshal_func)_mesa_unmarshal_SampleMaski,
-   [DISPATCH_CMD_BlendEquationiARB] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendEquationiARB,
-   [DISPATCH_CMD_BlendEquationSeparateiARB] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendEquationSeparateiARB,
-   [DISPATCH_CMD_BlendFunciARB] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendFunciARB,
-   [DISPATCH_CMD_BlendFuncSeparateiARB] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendFuncSeparateiARB,
-   [DISPATCH_CMD_MinSampleShading] = (_mesa_unmarshal_func)_mesa_unmarshal_MinSampleShading,
-   [DISPATCH_CMD_NamedStringARB] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedStringARB,
-   [DISPATCH_CMD_DeleteNamedStringARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteNamedStringARB,
-   [DISPATCH_CMD_BindFragDataLocationIndexed] = (_mesa_unmarshal_func)_mesa_unmarshal_BindFragDataLocationIndexed,
-   [DISPATCH_CMD_DeleteSamplers] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteSamplers,
-   [DISPATCH_CMD_BindSampler] = (_mesa_unmarshal_func)_mesa_unmarshal_BindSampler,
-   [DISPATCH_CMD_SamplerParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_SamplerParameteri,
-   [DISPATCH_CMD_SamplerParameterf] = (_mesa_unmarshal_func)_mesa_unmarshal_SamplerParameterf,
-   [DISPATCH_CMD_SamplerParameteriv] = (_mesa_unmarshal_func)_mesa_unmarshal_SamplerParameteriv,
-   [DISPATCH_CMD_SamplerParameterfv] = (_mesa_unmarshal_func)_mesa_unmarshal_SamplerParameterfv,
-   [DISPATCH_CMD_SamplerParameterIiv] = (_mesa_unmarshal_func)_mesa_unmarshal_SamplerParameterIiv,
-   [DISPATCH_CMD_SamplerParameterIuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_SamplerParameterIuiv,
-   [DISPATCH_CMD_QueryCounter] = (_mesa_unmarshal_func)_mesa_unmarshal_QueryCounter,
-   [DISPATCH_CMD_VertexP2ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexP2ui,
-   [DISPATCH_CMD_VertexP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexP3ui,
-   [DISPATCH_CMD_VertexP4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexP4ui,
-   [DISPATCH_CMD_VertexP2uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexP2uiv,
-   [DISPATCH_CMD_VertexP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexP3uiv,
-   [DISPATCH_CMD_VertexP4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexP4uiv,
-   [DISPATCH_CMD_TexCoordP1ui] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP1ui,
-   [DISPATCH_CMD_TexCoordP2ui] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP2ui,
-   [DISPATCH_CMD_TexCoordP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP3ui,
-   [DISPATCH_CMD_TexCoordP4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP4ui,
-   [DISPATCH_CMD_TexCoordP1uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP1uiv,
-   [DISPATCH_CMD_TexCoordP2uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP2uiv,
-   [DISPATCH_CMD_TexCoordP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP3uiv,
-   [DISPATCH_CMD_TexCoordP4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordP4uiv,
-   [DISPATCH_CMD_MultiTexCoordP1ui] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP1ui,
-   [DISPATCH_CMD_MultiTexCoordP2ui] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP2ui,
-   [DISPATCH_CMD_MultiTexCoordP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP3ui,
-   [DISPATCH_CMD_MultiTexCoordP4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP4ui,
-   [DISPATCH_CMD_MultiTexCoordP1uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP1uiv,
-   [DISPATCH_CMD_MultiTexCoordP2uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP2uiv,
-   [DISPATCH_CMD_MultiTexCoordP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP3uiv,
-   [DISPATCH_CMD_MultiTexCoordP4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordP4uiv,
-   [DISPATCH_CMD_NormalP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_NormalP3ui,
-   [DISPATCH_CMD_NormalP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_NormalP3uiv,
-   [DISPATCH_CMD_ColorP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorP3ui,
-   [DISPATCH_CMD_ColorP4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorP4ui,
-   [DISPATCH_CMD_ColorP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorP3uiv,
-   [DISPATCH_CMD_ColorP4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorP4uiv,
-   [DISPATCH_CMD_SecondaryColorP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColorP3ui,
-   [DISPATCH_CMD_SecondaryColorP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColorP3uiv,
-   [DISPATCH_CMD_VertexAttribP1ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP1ui,
-   [DISPATCH_CMD_VertexAttribP2ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP2ui,
-   [DISPATCH_CMD_VertexAttribP3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP3ui,
-   [DISPATCH_CMD_VertexAttribP4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP4ui,
-   [DISPATCH_CMD_VertexAttribP1uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP1uiv,
-   [DISPATCH_CMD_VertexAttribP2uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP2uiv,
-   [DISPATCH_CMD_VertexAttribP3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP3uiv,
-   [DISPATCH_CMD_VertexAttribP4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribP4uiv,
-   [DISPATCH_CMD_UniformSubroutinesuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformSubroutinesuiv,
-   [DISPATCH_CMD_PatchParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_PatchParameteri,
-   [DISPATCH_CMD_PatchParameterfv] = (_mesa_unmarshal_func)_mesa_unmarshal_PatchParameterfv,
-   [DISPATCH_CMD_DrawArraysIndirect] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawArraysIndirect,
-   [DISPATCH_CMD_DrawElementsIndirect] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElementsIndirect,
-   [DISPATCH_CMD_MultiDrawArraysIndirect] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawArraysIndirect,
-   [DISPATCH_CMD_MultiDrawElementsIndirect] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawElementsIndirect,
-   [DISPATCH_CMD_Uniform1d] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1d,
-   [DISPATCH_CMD_Uniform2d] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2d,
-   [DISPATCH_CMD_Uniform3d] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3d,
-   [DISPATCH_CMD_Uniform4d] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4d,
-   [DISPATCH_CMD_Uniform1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1dv,
-   [DISPATCH_CMD_Uniform2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2dv,
-   [DISPATCH_CMD_Uniform3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3dv,
-   [DISPATCH_CMD_Uniform4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4dv,
-   [DISPATCH_CMD_UniformMatrix2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix2dv,
-   [DISPATCH_CMD_UniformMatrix3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix3dv,
-   [DISPATCH_CMD_UniformMatrix4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix4dv,
-   [DISPATCH_CMD_UniformMatrix2x3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix2x3dv,
-   [DISPATCH_CMD_UniformMatrix2x4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix2x4dv,
-   [DISPATCH_CMD_UniformMatrix3x2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix3x2dv,
-   [DISPATCH_CMD_UniformMatrix3x4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix3x4dv,
-   [DISPATCH_CMD_UniformMatrix4x2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix4x2dv,
-   [DISPATCH_CMD_UniformMatrix4x3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformMatrix4x3dv,
-   [DISPATCH_CMD_ProgramUniform1d] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1d,
-   [DISPATCH_CMD_ProgramUniform2d] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2d,
-   [DISPATCH_CMD_ProgramUniform3d] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3d,
-   [DISPATCH_CMD_ProgramUniform4d] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4d,
-   [DISPATCH_CMD_ProgramUniform1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1dv,
-   [DISPATCH_CMD_ProgramUniform2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2dv,
-   [DISPATCH_CMD_ProgramUniform3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3dv,
-   [DISPATCH_CMD_ProgramUniform4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4dv,
-   [DISPATCH_CMD_ProgramUniformMatrix2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix2dv,
-   [DISPATCH_CMD_ProgramUniformMatrix3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix3dv,
-   [DISPATCH_CMD_ProgramUniformMatrix4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix4dv,
-   [DISPATCH_CMD_ProgramUniformMatrix2x3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix2x3dv,
-   [DISPATCH_CMD_ProgramUniformMatrix2x4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix2x4dv,
-   [DISPATCH_CMD_ProgramUniformMatrix3x2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix3x2dv,
-   [DISPATCH_CMD_ProgramUniformMatrix3x4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix3x4dv,
-   [DISPATCH_CMD_ProgramUniformMatrix4x2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix4x2dv,
-   [DISPATCH_CMD_ProgramUniformMatrix4x3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix4x3dv,
-   [DISPATCH_CMD_DrawTransformFeedbackStream] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTransformFeedbackStream,
-   [DISPATCH_CMD_BeginQueryIndexed] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginQueryIndexed,
-   [DISPATCH_CMD_EndQueryIndexed] = (_mesa_unmarshal_func)_mesa_unmarshal_EndQueryIndexed,
-   [DISPATCH_CMD_UseProgramStages] = (_mesa_unmarshal_func)_mesa_unmarshal_UseProgramStages,
-   [DISPATCH_CMD_ActiveShaderProgram] = (_mesa_unmarshal_func)_mesa_unmarshal_ActiveShaderProgram,
-   [DISPATCH_CMD_BindProgramPipeline] = (_mesa_unmarshal_func)_mesa_unmarshal_BindProgramPipeline,
-   [DISPATCH_CMD_DeleteProgramPipelines] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteProgramPipelines,
-   [DISPATCH_CMD_ProgramUniform1i] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1i,
-   [DISPATCH_CMD_ProgramUniform2i] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2i,
-   [DISPATCH_CMD_ProgramUniform3i] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3i,
-   [DISPATCH_CMD_ProgramUniform4i] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4i,
-   [DISPATCH_CMD_ProgramUniform1ui] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1ui,
-   [DISPATCH_CMD_ProgramUniform2ui] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2ui,
-   [DISPATCH_CMD_ProgramUniform3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3ui,
-   [DISPATCH_CMD_ProgramUniform4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4ui,
-   [DISPATCH_CMD_ProgramUniform1f] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1f,
-   [DISPATCH_CMD_ProgramUniform2f] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2f,
-   [DISPATCH_CMD_ProgramUniform3f] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3f,
-   [DISPATCH_CMD_ProgramUniform4f] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4f,
-   [DISPATCH_CMD_ProgramUniform1iv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1iv,
-   [DISPATCH_CMD_ProgramUniform2iv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2iv,
-   [DISPATCH_CMD_ProgramUniform3iv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3iv,
-   [DISPATCH_CMD_ProgramUniform4iv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4iv,
-   [DISPATCH_CMD_ProgramUniform1uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1uiv,
-   [DISPATCH_CMD_ProgramUniform2uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2uiv,
-   [DISPATCH_CMD_ProgramUniform3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3uiv,
-   [DISPATCH_CMD_ProgramUniform4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4uiv,
-   [DISPATCH_CMD_ProgramUniform1fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1fv,
-   [DISPATCH_CMD_ProgramUniform2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2fv,
-   [DISPATCH_CMD_ProgramUniform3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3fv,
-   [DISPATCH_CMD_ProgramUniform4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4fv,
-   [DISPATCH_CMD_ProgramUniformMatrix2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix2fv,
-   [DISPATCH_CMD_ProgramUniformMatrix3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix3fv,
-   [DISPATCH_CMD_ProgramUniformMatrix4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix4fv,
-   [DISPATCH_CMD_ProgramUniformMatrix2x3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix2x3fv,
-   [DISPATCH_CMD_ProgramUniformMatrix3x2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix3x2fv,
-   [DISPATCH_CMD_ProgramUniformMatrix2x4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix2x4fv,
-   [DISPATCH_CMD_ProgramUniformMatrix4x2fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix4x2fv,
-   [DISPATCH_CMD_ProgramUniformMatrix3x4fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix3x4fv,
-   [DISPATCH_CMD_ProgramUniformMatrix4x3fv] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformMatrix4x3fv,
-   [DISPATCH_CMD_ValidateProgramPipeline] = (_mesa_unmarshal_func)_mesa_unmarshal_ValidateProgramPipeline,
-   [DISPATCH_CMD_VertexAttribL1d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL1d,
-   [DISPATCH_CMD_VertexAttribL2d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL2d,
-   [DISPATCH_CMD_VertexAttribL3d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL3d,
-   [DISPATCH_CMD_VertexAttribL4d] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL4d,
-   [DISPATCH_CMD_VertexAttribL1dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL1dv,
-   [DISPATCH_CMD_VertexAttribL2dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL2dv,
-   [DISPATCH_CMD_VertexAttribL3dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL3dv,
-   [DISPATCH_CMD_VertexAttribL4dv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL4dv,
-   [DISPATCH_CMD_VertexAttribLPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribLPointer,
-   [DISPATCH_CMD_VertexArrayVertexAttribLOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribLOffsetEXT,
-   [DISPATCH_CMD_ReleaseShaderCompiler] = (_mesa_unmarshal_func)_mesa_unmarshal_ReleaseShaderCompiler,
-   [DISPATCH_CMD_ShaderBinary] = (_mesa_unmarshal_func)_mesa_unmarshal_ShaderBinary,
-   [DISPATCH_CMD_ClearDepthf] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearDepthf,
-   [DISPATCH_CMD_DepthRangef] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRangef,
-   [DISPATCH_CMD_ProgramBinary] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramBinary,
-   [DISPATCH_CMD_ProgramParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramParameteri,
-   [DISPATCH_CMD_DebugMessageControl] = (_mesa_unmarshal_func)_mesa_unmarshal_DebugMessageControl,
-   [DISPATCH_CMD_DebugMessageInsert] = (_mesa_unmarshal_func)_mesa_unmarshal_DebugMessageInsert,
-   [DISPATCH_CMD_GetnPolygonStippleARB] = (_mesa_unmarshal_func)_mesa_unmarshal_GetnPolygonStippleARB,
-   [DISPATCH_CMD_GetnTexImageARB] = (_mesa_unmarshal_func)_mesa_unmarshal_GetnTexImageARB,
-   [DISPATCH_CMD_ReadnPixelsARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ReadnPixelsARB,
-   [DISPATCH_CMD_GetnCompressedTexImageARB] = (_mesa_unmarshal_func)_mesa_unmarshal_GetnCompressedTexImageARB,
-   [DISPATCH_CMD_DrawArraysInstancedBaseInstance] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawArraysInstancedBaseInstance,
-   [DISPATCH_CMD_DrawElementsInstancedBaseInstance] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElementsInstancedBaseInstance,
-   [DISPATCH_CMD_DrawElementsInstancedBaseVertexBaseInstance] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawElementsInstancedBaseVertexBaseInstance,
-   [DISPATCH_CMD_DrawTransformFeedbackInstanced] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTransformFeedbackInstanced,
-   [DISPATCH_CMD_DrawTransformFeedbackStreamInstanced] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTransformFeedbackStreamInstanced,
-   [DISPATCH_CMD_BindImageTexture] = (_mesa_unmarshal_func)_mesa_unmarshal_BindImageTexture,
-   [DISPATCH_CMD_MemoryBarrier] = (_mesa_unmarshal_func)_mesa_unmarshal_MemoryBarrier,
-   [DISPATCH_CMD_TexStorage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorage1D,
-   [DISPATCH_CMD_TexStorage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorage2D,
-   [DISPATCH_CMD_TexStorage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorage3D,
-   [DISPATCH_CMD_TextureStorage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage1DEXT,
-   [DISPATCH_CMD_TextureStorage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage2DEXT,
-   [DISPATCH_CMD_TextureStorage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage3DEXT,
-   [DISPATCH_CMD_PushDebugGroup] = (_mesa_unmarshal_func)_mesa_unmarshal_PushDebugGroup,
-   [DISPATCH_CMD_PopDebugGroup] = (_mesa_unmarshal_func)_mesa_unmarshal_PopDebugGroup,
-   [DISPATCH_CMD_ObjectLabel] = (_mesa_unmarshal_func)_mesa_unmarshal_ObjectLabel,
-   [DISPATCH_CMD_DispatchCompute] = (_mesa_unmarshal_func)_mesa_unmarshal_DispatchCompute,
-   [DISPATCH_CMD_DispatchComputeIndirect] = (_mesa_unmarshal_func)_mesa_unmarshal_DispatchComputeIndirect,
-   [DISPATCH_CMD_CopyImageSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyImageSubData,
-   [DISPATCH_CMD_TextureView] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureView,
-   [DISPATCH_CMD_BindVertexBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_BindVertexBuffer,
-   [DISPATCH_CMD_VertexAttribFormat] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribFormat,
-   [DISPATCH_CMD_VertexAttribIFormat] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribIFormat,
-   [DISPATCH_CMD_VertexAttribLFormat] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribLFormat,
-   [DISPATCH_CMD_VertexAttribBinding] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribBinding,
-   [DISPATCH_CMD_VertexBindingDivisor] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexBindingDivisor,
-   [DISPATCH_CMD_VertexArrayBindVertexBufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayBindVertexBufferEXT,
-   [DISPATCH_CMD_VertexArrayVertexAttribFormatEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribFormatEXT,
-   [DISPATCH_CMD_VertexArrayVertexAttribIFormatEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribIFormatEXT,
-   [DISPATCH_CMD_VertexArrayVertexAttribLFormatEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribLFormatEXT,
-   [DISPATCH_CMD_VertexArrayVertexAttribBindingEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribBindingEXT,
-   [DISPATCH_CMD_VertexArrayVertexBindingDivisorEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexBindingDivisorEXT,
-   [DISPATCH_CMD_FramebufferParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferParameteri,
-   [DISPATCH_CMD_NamedFramebufferParameteriEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferParameteriEXT,
-   [DISPATCH_CMD_InvalidateTexSubImage] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateTexSubImage,
-   [DISPATCH_CMD_InvalidateTexImage] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateTexImage,
-   [DISPATCH_CMD_InvalidateBufferSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateBufferSubData,
-   [DISPATCH_CMD_InvalidateBufferData] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateBufferData,
-   [DISPATCH_CMD_InvalidateSubFramebuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateSubFramebuffer,
-   [DISPATCH_CMD_InvalidateFramebuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateFramebuffer,
-   [DISPATCH_CMD_ShaderStorageBlockBinding] = (_mesa_unmarshal_func)_mesa_unmarshal_ShaderStorageBlockBinding,
-   [DISPATCH_CMD_TexBufferRange] = (_mesa_unmarshal_func)_mesa_unmarshal_TexBufferRange,
-   [DISPATCH_CMD_TextureBufferRangeEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureBufferRangeEXT,
-   [DISPATCH_CMD_TexStorage2DMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorage2DMultisample,
-   [DISPATCH_CMD_TexStorage3DMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorage3DMultisample,
-   [DISPATCH_CMD_TextureStorage2DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage2DMultisampleEXT,
-   [DISPATCH_CMD_TextureStorage3DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage3DMultisampleEXT,
-   [DISPATCH_CMD_BindBuffersBase] = (_mesa_unmarshal_func)_mesa_unmarshal_BindBuffersBase,
-   [DISPATCH_CMD_BindBuffersRange] = (_mesa_unmarshal_func)_mesa_unmarshal_BindBuffersRange,
-   [DISPATCH_CMD_BindTextures] = (_mesa_unmarshal_func)_mesa_unmarshal_BindTextures,
-   [DISPATCH_CMD_BindSamplers] = (_mesa_unmarshal_func)_mesa_unmarshal_BindSamplers,
-   [DISPATCH_CMD_BindImageTextures] = (_mesa_unmarshal_func)_mesa_unmarshal_BindImageTextures,
-   [DISPATCH_CMD_BindVertexBuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_BindVertexBuffers,
-   [DISPATCH_CMD_MakeTextureHandleResidentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MakeTextureHandleResidentARB,
-   [DISPATCH_CMD_MakeTextureHandleNonResidentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MakeTextureHandleNonResidentARB,
-   [DISPATCH_CMD_MakeImageHandleResidentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MakeImageHandleResidentARB,
-   [DISPATCH_CMD_MakeImageHandleNonResidentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MakeImageHandleNonResidentARB,
-   [DISPATCH_CMD_UniformHandleui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformHandleui64ARB,
-   [DISPATCH_CMD_UniformHandleui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_UniformHandleui64vARB,
-   [DISPATCH_CMD_ProgramUniformHandleui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformHandleui64ARB,
-   [DISPATCH_CMD_ProgramUniformHandleui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniformHandleui64vARB,
-   [DISPATCH_CMD_VertexAttribL1ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL1ui64ARB,
-   [DISPATCH_CMD_VertexAttribL1ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribL1ui64vARB,
-   [DISPATCH_CMD_DispatchComputeGroupSizeARB] = (_mesa_unmarshal_func)_mesa_unmarshal_DispatchComputeGroupSizeARB,
-   [DISPATCH_CMD_MultiDrawArraysIndirectCountARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawArraysIndirectCountARB,
-   [DISPATCH_CMD_MultiDrawElementsIndirectCountARB] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiDrawElementsIndirectCountARB,
-   [DISPATCH_CMD_TexPageCommitmentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_TexPageCommitmentARB,
-   [DISPATCH_CMD_TexturePageCommitmentEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexturePageCommitmentEXT,
-   [DISPATCH_CMD_ClipControl] = (_mesa_unmarshal_func)_mesa_unmarshal_ClipControl,
-   [DISPATCH_CMD_TransformFeedbackBufferBase] = (_mesa_unmarshal_func)_mesa_unmarshal_TransformFeedbackBufferBase,
-   [DISPATCH_CMD_TransformFeedbackBufferRange] = (_mesa_unmarshal_func)_mesa_unmarshal_TransformFeedbackBufferRange,
-   [DISPATCH_CMD_NamedBufferData] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferData,
-   [DISPATCH_CMD_NamedBufferSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferSubData,
-   [DISPATCH_CMD_CopyNamedBufferSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyNamedBufferSubData,
-   [DISPATCH_CMD_UnmapNamedBufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_UnmapNamedBufferEXT,
-   [DISPATCH_CMD_FlushMappedNamedBufferRange] = (_mesa_unmarshal_func)_mesa_unmarshal_FlushMappedNamedBufferRange,
-   [DISPATCH_CMD_NamedFramebufferRenderbuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferRenderbuffer,
-   [DISPATCH_CMD_NamedFramebufferParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferParameteri,
-   [DISPATCH_CMD_NamedFramebufferTexture] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferTexture,
-   [DISPATCH_CMD_NamedFramebufferTextureLayer] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferTextureLayer,
-   [DISPATCH_CMD_NamedFramebufferDrawBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferDrawBuffer,
-   [DISPATCH_CMD_NamedFramebufferDrawBuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferDrawBuffers,
-   [DISPATCH_CMD_NamedFramebufferReadBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferReadBuffer,
-   [DISPATCH_CMD_InvalidateNamedFramebufferData] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateNamedFramebufferData,
-   [DISPATCH_CMD_InvalidateNamedFramebufferSubData] = (_mesa_unmarshal_func)_mesa_unmarshal_InvalidateNamedFramebufferSubData,
-   [DISPATCH_CMD_ClearNamedFramebufferiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearNamedFramebufferiv,
-   [DISPATCH_CMD_ClearNamedFramebufferuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearNamedFramebufferuiv,
-   [DISPATCH_CMD_ClearNamedFramebufferfv] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearNamedFramebufferfv,
-   [DISPATCH_CMD_ClearNamedFramebufferfi] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearNamedFramebufferfi,
-   [DISPATCH_CMD_BlitNamedFramebuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_BlitNamedFramebuffer,
-   [DISPATCH_CMD_NamedRenderbufferStorage] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedRenderbufferStorage,
-   [DISPATCH_CMD_NamedRenderbufferStorageMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedRenderbufferStorageMultisample,
-   [DISPATCH_CMD_TextureBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureBuffer,
-   [DISPATCH_CMD_TextureBufferRange] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureBufferRange,
-   [DISPATCH_CMD_TextureStorage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage1D,
-   [DISPATCH_CMD_TextureStorage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage2D,
-   [DISPATCH_CMD_TextureStorage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage3D,
-   [DISPATCH_CMD_TextureStorage2DMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage2DMultisample,
-   [DISPATCH_CMD_TextureStorage3DMultisample] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorage3DMultisample,
-   [DISPATCH_CMD_TextureSubImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureSubImage1D,
-   [DISPATCH_CMD_TextureSubImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureSubImage2D,
-   [DISPATCH_CMD_TextureSubImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureSubImage3D,
-   [DISPATCH_CMD_CompressedTextureSubImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureSubImage1D,
-   [DISPATCH_CMD_CompressedTextureSubImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureSubImage2D,
-   [DISPATCH_CMD_CompressedTextureSubImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureSubImage3D,
-   [DISPATCH_CMD_CopyTextureSubImage1D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureSubImage1D,
-   [DISPATCH_CMD_CopyTextureSubImage2D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureSubImage2D,
-   [DISPATCH_CMD_CopyTextureSubImage3D] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureSubImage3D,
-   [DISPATCH_CMD_TextureParameterf] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterf,
-   [DISPATCH_CMD_TextureParameterfv] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterfv,
-   [DISPATCH_CMD_TextureParameteri] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameteri,
-   [DISPATCH_CMD_TextureParameterIiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterIiv,
-   [DISPATCH_CMD_TextureParameterIuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterIuiv,
-   [DISPATCH_CMD_TextureParameteriv] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameteriv,
-   [DISPATCH_CMD_GenerateTextureMipmap] = (_mesa_unmarshal_func)_mesa_unmarshal_GenerateTextureMipmap,
-   [DISPATCH_CMD_BindTextureUnit] = (_mesa_unmarshal_func)_mesa_unmarshal_BindTextureUnit,
-   [DISPATCH_CMD_GetTextureImage] = (_mesa_unmarshal_func)_mesa_unmarshal_GetTextureImage,
-   [DISPATCH_CMD_GetCompressedTextureImage] = (_mesa_unmarshal_func)_mesa_unmarshal_GetCompressedTextureImage,
-   [DISPATCH_CMD_DisableVertexArrayAttrib] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableVertexArrayAttrib,
-   [DISPATCH_CMD_EnableVertexArrayAttrib] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableVertexArrayAttrib,
-   [DISPATCH_CMD_VertexArrayElementBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayElementBuffer,
-   [DISPATCH_CMD_VertexArrayVertexBuffer] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexBuffer,
-   [DISPATCH_CMD_VertexArrayVertexBuffers] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexBuffers,
-   [DISPATCH_CMD_VertexArrayAttribFormat] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayAttribFormat,
-   [DISPATCH_CMD_VertexArrayAttribIFormat] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayAttribIFormat,
-   [DISPATCH_CMD_VertexArrayAttribLFormat] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayAttribLFormat,
-   [DISPATCH_CMD_VertexArrayAttribBinding] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayAttribBinding,
-   [DISPATCH_CMD_VertexArrayBindingDivisor] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayBindingDivisor,
-   [DISPATCH_CMD_GetQueryBufferObjectiv] = (_mesa_unmarshal_func)_mesa_unmarshal_GetQueryBufferObjectiv,
-   [DISPATCH_CMD_GetQueryBufferObjectuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_GetQueryBufferObjectuiv,
-   [DISPATCH_CMD_GetQueryBufferObjecti64v] = (_mesa_unmarshal_func)_mesa_unmarshal_GetQueryBufferObjecti64v,
-   [DISPATCH_CMD_GetQueryBufferObjectui64v] = (_mesa_unmarshal_func)_mesa_unmarshal_GetQueryBufferObjectui64v,
-   [DISPATCH_CMD_GetTextureSubImage] = (_mesa_unmarshal_func)_mesa_unmarshal_GetTextureSubImage,
-   [DISPATCH_CMD_GetCompressedTextureSubImage] = (_mesa_unmarshal_func)_mesa_unmarshal_GetCompressedTextureSubImage,
-   [DISPATCH_CMD_TextureBarrierNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureBarrierNV,
-   [DISPATCH_CMD_BufferPageCommitmentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_BufferPageCommitmentARB,
-   [DISPATCH_CMD_NamedBufferPageCommitmentEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferPageCommitmentEXT,
-   [DISPATCH_CMD_NamedBufferPageCommitmentARB] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferPageCommitmentARB,
-   [DISPATCH_CMD_PrimitiveBoundingBox] = (_mesa_unmarshal_func)_mesa_unmarshal_PrimitiveBoundingBox,
-   [DISPATCH_CMD_BlendBarrier] = (_mesa_unmarshal_func)_mesa_unmarshal_BlendBarrier,
-   [DISPATCH_CMD_Uniform1i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1i64ARB,
-   [DISPATCH_CMD_Uniform2i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2i64ARB,
-   [DISPATCH_CMD_Uniform3i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3i64ARB,
-   [DISPATCH_CMD_Uniform4i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4i64ARB,
-   [DISPATCH_CMD_Uniform1i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1i64vARB,
-   [DISPATCH_CMD_Uniform2i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2i64vARB,
-   [DISPATCH_CMD_Uniform3i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3i64vARB,
-   [DISPATCH_CMD_Uniform4i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4i64vARB,
-   [DISPATCH_CMD_Uniform1ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1ui64ARB,
-   [DISPATCH_CMD_Uniform2ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2ui64ARB,
-   [DISPATCH_CMD_Uniform3ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3ui64ARB,
-   [DISPATCH_CMD_Uniform4ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4ui64ARB,
-   [DISPATCH_CMD_Uniform1ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1ui64vARB,
-   [DISPATCH_CMD_Uniform2ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2ui64vARB,
-   [DISPATCH_CMD_Uniform3ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3ui64vARB,
-   [DISPATCH_CMD_Uniform4ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4ui64vARB,
-   [DISPATCH_CMD_ProgramUniform1i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1i64ARB,
-   [DISPATCH_CMD_ProgramUniform2i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2i64ARB,
-   [DISPATCH_CMD_ProgramUniform3i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3i64ARB,
-   [DISPATCH_CMD_ProgramUniform4i64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4i64ARB,
-   [DISPATCH_CMD_ProgramUniform1i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1i64vARB,
-   [DISPATCH_CMD_ProgramUniform2i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2i64vARB,
-   [DISPATCH_CMD_ProgramUniform3i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3i64vARB,
-   [DISPATCH_CMD_ProgramUniform4i64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4i64vARB,
-   [DISPATCH_CMD_ProgramUniform1ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1ui64ARB,
-   [DISPATCH_CMD_ProgramUniform2ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2ui64ARB,
-   [DISPATCH_CMD_ProgramUniform3ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3ui64ARB,
-   [DISPATCH_CMD_ProgramUniform4ui64ARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4ui64ARB,
-   [DISPATCH_CMD_ProgramUniform1ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform1ui64vARB,
-   [DISPATCH_CMD_ProgramUniform2ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform2ui64vARB,
-   [DISPATCH_CMD_ProgramUniform3ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform3ui64vARB,
-   [DISPATCH_CMD_ProgramUniform4ui64vARB] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramUniform4ui64vARB,
-   [DISPATCH_CMD_MaxShaderCompilerThreadsKHR] = (_mesa_unmarshal_func)_mesa_unmarshal_MaxShaderCompilerThreadsKHR,
-   [DISPATCH_CMD_SpecializeShaderARB] = (_mesa_unmarshal_func)_mesa_unmarshal_SpecializeShaderARB,
-   [DISPATCH_CMD_ColorPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorPointerEXT,
-   [DISPATCH_CMD_EdgeFlagPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_EdgeFlagPointerEXT,
-   [DISPATCH_CMD_IndexPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_IndexPointerEXT,
-   [DISPATCH_CMD_NormalPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NormalPointerEXT,
-   [DISPATCH_CMD_TexCoordPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoordPointerEXT,
-   [DISPATCH_CMD_VertexPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexPointerEXT,
-   [DISPATCH_CMD_LockArraysEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_LockArraysEXT,
-   [DISPATCH_CMD_UnlockArraysEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_UnlockArraysEXT,
-   [DISPATCH_CMD_ViewportArrayv] = (_mesa_unmarshal_func)_mesa_unmarshal_ViewportArrayv,
-   [DISPATCH_CMD_ViewportIndexedf] = (_mesa_unmarshal_func)_mesa_unmarshal_ViewportIndexedf,
-   [DISPATCH_CMD_ViewportIndexedfv] = (_mesa_unmarshal_func)_mesa_unmarshal_ViewportIndexedfv,
-   [DISPATCH_CMD_ScissorArrayv] = (_mesa_unmarshal_func)_mesa_unmarshal_ScissorArrayv,
-   [DISPATCH_CMD_ScissorIndexed] = (_mesa_unmarshal_func)_mesa_unmarshal_ScissorIndexed,
-   [DISPATCH_CMD_ScissorIndexedv] = (_mesa_unmarshal_func)_mesa_unmarshal_ScissorIndexedv,
-   [DISPATCH_CMD_DepthRangeArrayv] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRangeArrayv,
-   [DISPATCH_CMD_DepthRangeIndexed] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRangeIndexed,
-   [DISPATCH_CMD_FramebufferSampleLocationsfvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferSampleLocationsfvARB,
-   [DISPATCH_CMD_NamedFramebufferSampleLocationsfvARB] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferSampleLocationsfvARB,
-   [DISPATCH_CMD_EvaluateDepthValuesARB] = (_mesa_unmarshal_func)_mesa_unmarshal_EvaluateDepthValuesARB,
-   [DISPATCH_CMD_WindowPos4dMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4dMESA,
-   [DISPATCH_CMD_WindowPos4dvMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4dvMESA,
-   [DISPATCH_CMD_WindowPos4fMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4fMESA,
-   [DISPATCH_CMD_WindowPos4fvMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4fvMESA,
-   [DISPATCH_CMD_WindowPos4iMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4iMESA,
-   [DISPATCH_CMD_WindowPos4ivMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4ivMESA,
-   [DISPATCH_CMD_WindowPos4sMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4sMESA,
-   [DISPATCH_CMD_WindowPos4svMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowPos4svMESA,
-   [DISPATCH_CMD_MultiModeDrawArraysIBM] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiModeDrawArraysIBM,
-   [DISPATCH_CMD_MultiModeDrawElementsIBM] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiModeDrawElementsIBM,
-   [DISPATCH_CMD_VertexAttrib1sNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1sNV,
-   [DISPATCH_CMD_VertexAttrib1svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1svNV,
-   [DISPATCH_CMD_VertexAttrib2sNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2sNV,
-   [DISPATCH_CMD_VertexAttrib2svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2svNV,
-   [DISPATCH_CMD_VertexAttrib3sNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3sNV,
-   [DISPATCH_CMD_VertexAttrib3svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3svNV,
-   [DISPATCH_CMD_VertexAttrib4sNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4sNV,
-   [DISPATCH_CMD_VertexAttrib4svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4svNV,
-   [DISPATCH_CMD_VertexAttrib1fNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1fNV,
-   [DISPATCH_CMD_VertexAttrib1fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1fvNV,
-   [DISPATCH_CMD_VertexAttrib2fNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2fNV,
-   [DISPATCH_CMD_VertexAttrib2fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2fvNV,
-   [DISPATCH_CMD_VertexAttrib3fNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3fNV,
-   [DISPATCH_CMD_VertexAttrib3fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3fvNV,
-   [DISPATCH_CMD_VertexAttrib4fNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4fNV,
-   [DISPATCH_CMD_VertexAttrib4fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4fvNV,
-   [DISPATCH_CMD_VertexAttrib1dNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1dNV,
-   [DISPATCH_CMD_VertexAttrib1dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1dvNV,
-   [DISPATCH_CMD_VertexAttrib2dNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2dNV,
-   [DISPATCH_CMD_VertexAttrib2dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2dvNV,
-   [DISPATCH_CMD_VertexAttrib3dNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3dNV,
-   [DISPATCH_CMD_VertexAttrib3dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3dvNV,
-   [DISPATCH_CMD_VertexAttrib4dNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4dNV,
-   [DISPATCH_CMD_VertexAttrib4dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4dvNV,
-   [DISPATCH_CMD_VertexAttrib4ubNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4ubNV,
-   [DISPATCH_CMD_VertexAttrib4ubvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4ubvNV,
-   [DISPATCH_CMD_VertexAttribs1svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs1svNV,
-   [DISPATCH_CMD_VertexAttribs2svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs2svNV,
-   [DISPATCH_CMD_VertexAttribs3svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs3svNV,
-   [DISPATCH_CMD_VertexAttribs4svNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs4svNV,
-   [DISPATCH_CMD_VertexAttribs1fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs1fvNV,
-   [DISPATCH_CMD_VertexAttribs2fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs2fvNV,
-   [DISPATCH_CMD_VertexAttribs3fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs3fvNV,
-   [DISPATCH_CMD_VertexAttribs4fvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs4fvNV,
-   [DISPATCH_CMD_VertexAttribs1dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs1dvNV,
-   [DISPATCH_CMD_VertexAttribs2dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs2dvNV,
-   [DISPATCH_CMD_VertexAttribs3dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs3dvNV,
-   [DISPATCH_CMD_VertexAttribs4dvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs4dvNV,
-   [DISPATCH_CMD_VertexAttribs4ubvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs4ubvNV,
-   [DISPATCH_CMD_BindFragmentShaderATI] = (_mesa_unmarshal_func)_mesa_unmarshal_BindFragmentShaderATI,
-   [DISPATCH_CMD_DeleteFragmentShaderATI] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteFragmentShaderATI,
-   [DISPATCH_CMD_BeginFragmentShaderATI] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginFragmentShaderATI,
-   [DISPATCH_CMD_EndFragmentShaderATI] = (_mesa_unmarshal_func)_mesa_unmarshal_EndFragmentShaderATI,
-   [DISPATCH_CMD_PassTexCoordATI] = (_mesa_unmarshal_func)_mesa_unmarshal_PassTexCoordATI,
-   [DISPATCH_CMD_SampleMapATI] = (_mesa_unmarshal_func)_mesa_unmarshal_SampleMapATI,
-   [DISPATCH_CMD_ColorFragmentOp1ATI] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorFragmentOp1ATI,
-   [DISPATCH_CMD_ColorFragmentOp2ATI] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorFragmentOp2ATI,
-   [DISPATCH_CMD_ColorFragmentOp3ATI] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorFragmentOp3ATI,
-   [DISPATCH_CMD_AlphaFragmentOp1ATI] = (_mesa_unmarshal_func)_mesa_unmarshal_AlphaFragmentOp1ATI,
-   [DISPATCH_CMD_AlphaFragmentOp2ATI] = (_mesa_unmarshal_func)_mesa_unmarshal_AlphaFragmentOp2ATI,
-   [DISPATCH_CMD_AlphaFragmentOp3ATI] = (_mesa_unmarshal_func)_mesa_unmarshal_AlphaFragmentOp3ATI,
-   [DISPATCH_CMD_SetFragmentShaderConstantATI] = (_mesa_unmarshal_func)_mesa_unmarshal_SetFragmentShaderConstantATI,
-   [DISPATCH_CMD_ActiveStencilFaceEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ActiveStencilFaceEXT,
-   [DISPATCH_CMD_DepthBoundsEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthBoundsEXT,
-   [DISPATCH_CMD_BindRenderbufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_BindRenderbufferEXT,
-   [DISPATCH_CMD_BindFramebufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_BindFramebufferEXT,
-   [DISPATCH_CMD_ProvokingVertex] = (_mesa_unmarshal_func)_mesa_unmarshal_ProvokingVertex,
-   [DISPATCH_CMD_ColorMaski] = (_mesa_unmarshal_func)_mesa_unmarshal_ColorMaski,
-   [DISPATCH_CMD_Enablei] = (_mesa_unmarshal_func)_mesa_unmarshal_Enablei,
-   [DISPATCH_CMD_Disablei] = (_mesa_unmarshal_func)_mesa_unmarshal_Disablei,
-   [DISPATCH_CMD_DeletePerfMonitorsAMD] = (_mesa_unmarshal_func)_mesa_unmarshal_DeletePerfMonitorsAMD,
-   [DISPATCH_CMD_SelectPerfMonitorCountersAMD] = (_mesa_unmarshal_func)_mesa_unmarshal_SelectPerfMonitorCountersAMD,
-   [DISPATCH_CMD_BeginPerfMonitorAMD] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginPerfMonitorAMD,
-   [DISPATCH_CMD_EndPerfMonitorAMD] = (_mesa_unmarshal_func)_mesa_unmarshal_EndPerfMonitorAMD,
-   [DISPATCH_CMD_CopyImageSubDataNV] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyImageSubDataNV,
-   [DISPATCH_CMD_MatrixLoadfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixLoadfEXT,
-   [DISPATCH_CMD_MatrixLoaddEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixLoaddEXT,
-   [DISPATCH_CMD_MatrixMultfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixMultfEXT,
-   [DISPATCH_CMD_MatrixMultdEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixMultdEXT,
-   [DISPATCH_CMD_MatrixLoadIdentityEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixLoadIdentityEXT,
-   [DISPATCH_CMD_MatrixRotatefEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixRotatefEXT,
-   [DISPATCH_CMD_MatrixRotatedEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixRotatedEXT,
-   [DISPATCH_CMD_MatrixScalefEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixScalefEXT,
-   [DISPATCH_CMD_MatrixScaledEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixScaledEXT,
-   [DISPATCH_CMD_MatrixTranslatefEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixTranslatefEXT,
-   [DISPATCH_CMD_MatrixTranslatedEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixTranslatedEXT,
-   [DISPATCH_CMD_MatrixOrthoEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixOrthoEXT,
-   [DISPATCH_CMD_MatrixFrustumEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixFrustumEXT,
-   [DISPATCH_CMD_MatrixPushEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixPushEXT,
-   [DISPATCH_CMD_MatrixPopEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixPopEXT,
-   [DISPATCH_CMD_ClientAttribDefaultEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ClientAttribDefaultEXT,
-   [DISPATCH_CMD_PushClientAttribDefaultEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_PushClientAttribDefaultEXT,
-   [DISPATCH_CMD_TextureParameteriEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameteriEXT,
-   [DISPATCH_CMD_TextureParameterivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterivEXT,
-   [DISPATCH_CMD_TextureParameterfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterfEXT,
-   [DISPATCH_CMD_TextureParameterfvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterfvEXT,
-   [DISPATCH_CMD_TextureImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureImage1DEXT,
-   [DISPATCH_CMD_TextureImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureImage2DEXT,
-   [DISPATCH_CMD_TextureImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureImage3DEXT,
-   [DISPATCH_CMD_TextureSubImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureSubImage1DEXT,
-   [DISPATCH_CMD_TextureSubImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureSubImage2DEXT,
-   [DISPATCH_CMD_TextureSubImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureSubImage3DEXT,
-   [DISPATCH_CMD_CopyTextureImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureImage1DEXT,
-   [DISPATCH_CMD_CopyTextureImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureImage2DEXT,
-   [DISPATCH_CMD_CopyTextureSubImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureSubImage1DEXT,
-   [DISPATCH_CMD_CopyTextureSubImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureSubImage2DEXT,
-   [DISPATCH_CMD_CopyTextureSubImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyTextureSubImage3DEXT,
-   [DISPATCH_CMD_GetTextureImageEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_GetTextureImageEXT,
-   [DISPATCH_CMD_BindMultiTextureEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_BindMultiTextureEXT,
-   [DISPATCH_CMD_EnableClientStateiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableClientStateiEXT,
-   [DISPATCH_CMD_DisableClientStateiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableClientStateiEXT,
-   [DISPATCH_CMD_MultiTexEnviEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexEnviEXT,
-   [DISPATCH_CMD_MultiTexEnvivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexEnvivEXT,
-   [DISPATCH_CMD_MultiTexEnvfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexEnvfEXT,
-   [DISPATCH_CMD_MultiTexEnvfvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexEnvfvEXT,
-   [DISPATCH_CMD_MultiTexParameteriEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexParameteriEXT,
-   [DISPATCH_CMD_MultiTexParameterivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexParameterivEXT,
-   [DISPATCH_CMD_MultiTexParameterfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexParameterfEXT,
-   [DISPATCH_CMD_MultiTexParameterfvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexParameterfvEXT,
-   [DISPATCH_CMD_GetMultiTexImageEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_GetMultiTexImageEXT,
-   [DISPATCH_CMD_MultiTexImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexImage1DEXT,
-   [DISPATCH_CMD_MultiTexImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexImage2DEXT,
-   [DISPATCH_CMD_MultiTexImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexImage3DEXT,
-   [DISPATCH_CMD_MultiTexSubImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexSubImage1DEXT,
-   [DISPATCH_CMD_MultiTexSubImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexSubImage2DEXT,
-   [DISPATCH_CMD_MultiTexSubImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexSubImage3DEXT,
-   [DISPATCH_CMD_CopyMultiTexImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyMultiTexImage1DEXT,
-   [DISPATCH_CMD_CopyMultiTexImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyMultiTexImage2DEXT,
-   [DISPATCH_CMD_CopyMultiTexSubImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyMultiTexSubImage1DEXT,
-   [DISPATCH_CMD_CopyMultiTexSubImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyMultiTexSubImage2DEXT,
-   [DISPATCH_CMD_CopyMultiTexSubImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CopyMultiTexSubImage3DEXT,
-   [DISPATCH_CMD_MultiTexGendEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexGendEXT,
-   [DISPATCH_CMD_MultiTexGendvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexGendvEXT,
-   [DISPATCH_CMD_MultiTexGenfEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexGenfEXT,
-   [DISPATCH_CMD_MultiTexGenfvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexGenfvEXT,
-   [DISPATCH_CMD_MultiTexGeniEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexGeniEXT,
-   [DISPATCH_CMD_MultiTexGenivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexGenivEXT,
-   [DISPATCH_CMD_MultiTexCoordPointerEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoordPointerEXT,
-   [DISPATCH_CMD_MatrixLoadTransposefEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixLoadTransposefEXT,
-   [DISPATCH_CMD_MatrixLoadTransposedEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixLoadTransposedEXT,
-   [DISPATCH_CMD_MatrixMultTransposefEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixMultTransposefEXT,
-   [DISPATCH_CMD_MatrixMultTransposedEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MatrixMultTransposedEXT,
-   [DISPATCH_CMD_CompressedTextureImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureImage1DEXT,
-   [DISPATCH_CMD_CompressedTextureImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureImage2DEXT,
-   [DISPATCH_CMD_CompressedTextureImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureImage3DEXT,
-   [DISPATCH_CMD_CompressedTextureSubImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureSubImage1DEXT,
-   [DISPATCH_CMD_CompressedTextureSubImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureSubImage2DEXT,
-   [DISPATCH_CMD_CompressedTextureSubImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedTextureSubImage3DEXT,
-   [DISPATCH_CMD_GetCompressedTextureImageEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_GetCompressedTextureImageEXT,
-   [DISPATCH_CMD_CompressedMultiTexImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedMultiTexImage1DEXT,
-   [DISPATCH_CMD_CompressedMultiTexImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedMultiTexImage2DEXT,
-   [DISPATCH_CMD_CompressedMultiTexImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedMultiTexImage3DEXT,
-   [DISPATCH_CMD_CompressedMultiTexSubImage1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedMultiTexSubImage1DEXT,
-   [DISPATCH_CMD_CompressedMultiTexSubImage2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedMultiTexSubImage2DEXT,
-   [DISPATCH_CMD_CompressedMultiTexSubImage3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_CompressedMultiTexSubImage3DEXT,
-   [DISPATCH_CMD_GetCompressedMultiTexImageEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_GetCompressedMultiTexImageEXT,
-   [DISPATCH_CMD_NamedBufferDataEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferDataEXT,
-   [DISPATCH_CMD_NamedBufferSubDataEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferSubDataEXT,
-   [DISPATCH_CMD_FlushMappedNamedBufferRangeEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FlushMappedNamedBufferRangeEXT,
-   [DISPATCH_CMD_FramebufferDrawBufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferDrawBufferEXT,
-   [DISPATCH_CMD_FramebufferDrawBuffersEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferDrawBuffersEXT,
-   [DISPATCH_CMD_FramebufferReadBufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferReadBufferEXT,
-   [DISPATCH_CMD_NamedFramebufferTexture1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferTexture1DEXT,
-   [DISPATCH_CMD_NamedFramebufferTexture2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferTexture2DEXT,
-   [DISPATCH_CMD_NamedFramebufferTexture3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferTexture3DEXT,
-   [DISPATCH_CMD_NamedFramebufferRenderbufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedFramebufferRenderbufferEXT,
-   [DISPATCH_CMD_NamedRenderbufferStorageEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedRenderbufferStorageEXT,
-   [DISPATCH_CMD_GenerateTextureMipmapEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_GenerateTextureMipmapEXT,
-   [DISPATCH_CMD_GenerateMultiTexMipmapEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_GenerateMultiTexMipmapEXT,
-   [DISPATCH_CMD_NamedRenderbufferStorageMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedRenderbufferStorageMultisampleEXT,
-   [DISPATCH_CMD_NamedCopyBufferSubDataEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedCopyBufferSubDataEXT,
-   [DISPATCH_CMD_VertexArrayVertexOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexOffsetEXT,
-   [DISPATCH_CMD_VertexArrayColorOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayColorOffsetEXT,
-   [DISPATCH_CMD_VertexArrayEdgeFlagOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayEdgeFlagOffsetEXT,
-   [DISPATCH_CMD_VertexArrayIndexOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayIndexOffsetEXT,
-   [DISPATCH_CMD_VertexArrayNormalOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayNormalOffsetEXT,
-   [DISPATCH_CMD_VertexArrayTexCoordOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayTexCoordOffsetEXT,
-   [DISPATCH_CMD_VertexArrayMultiTexCoordOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayMultiTexCoordOffsetEXT,
-   [DISPATCH_CMD_VertexArrayFogCoordOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayFogCoordOffsetEXT,
-   [DISPATCH_CMD_VertexArraySecondaryColorOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArraySecondaryColorOffsetEXT,
-   [DISPATCH_CMD_VertexArrayVertexAttribOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribOffsetEXT,
-   [DISPATCH_CMD_VertexArrayVertexAttribIOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexArrayVertexAttribIOffsetEXT,
-   [DISPATCH_CMD_EnableVertexArrayEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableVertexArrayEXT,
-   [DISPATCH_CMD_DisableVertexArrayEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableVertexArrayEXT,
-   [DISPATCH_CMD_EnableVertexArrayAttribEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_EnableVertexArrayAttribEXT,
-   [DISPATCH_CMD_DisableVertexArrayAttribEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DisableVertexArrayAttribEXT,
-   [DISPATCH_CMD_NamedProgramStringEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedProgramStringEXT,
-   [DISPATCH_CMD_NamedProgramLocalParameter4fEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedProgramLocalParameter4fEXT,
-   [DISPATCH_CMD_NamedProgramLocalParameter4fvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedProgramLocalParameter4fvEXT,
-   [DISPATCH_CMD_NamedProgramLocalParameter4dEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedProgramLocalParameter4dEXT,
-   [DISPATCH_CMD_NamedProgramLocalParameter4dvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedProgramLocalParameter4dvEXT,
-   [DISPATCH_CMD_TextureBufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureBufferEXT,
-   [DISPATCH_CMD_MultiTexBufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexBufferEXT,
-   [DISPATCH_CMD_TextureParameterIivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterIivEXT,
-   [DISPATCH_CMD_TextureParameterIuivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureParameterIuivEXT,
-   [DISPATCH_CMD_MultiTexParameterIivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexParameterIivEXT,
-   [DISPATCH_CMD_MultiTexParameterIuivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexParameterIuivEXT,
-   [DISPATCH_CMD_NamedProgramLocalParameters4fvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedProgramLocalParameters4fvEXT,
-   [DISPATCH_CMD_BindImageTextureEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_BindImageTextureEXT,
-   [DISPATCH_CMD_SubpixelPrecisionBiasNV] = (_mesa_unmarshal_func)_mesa_unmarshal_SubpixelPrecisionBiasNV,
-   [DISPATCH_CMD_ConservativeRasterParameterfNV] = (_mesa_unmarshal_func)_mesa_unmarshal_ConservativeRasterParameterfNV,
-   [DISPATCH_CMD_ConservativeRasterParameteriNV] = (_mesa_unmarshal_func)_mesa_unmarshal_ConservativeRasterParameteriNV,
-   [DISPATCH_CMD_DeletePerfQueryINTEL] = (_mesa_unmarshal_func)_mesa_unmarshal_DeletePerfQueryINTEL,
-   [DISPATCH_CMD_BeginPerfQueryINTEL] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginPerfQueryINTEL,
-   [DISPATCH_CMD_EndPerfQueryINTEL] = (_mesa_unmarshal_func)_mesa_unmarshal_EndPerfQueryINTEL,
-   [DISPATCH_CMD_AlphaToCoverageDitherControlNV] = (_mesa_unmarshal_func)_mesa_unmarshal_AlphaToCoverageDitherControlNV,
-   [DISPATCH_CMD_PolygonOffsetClampEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_PolygonOffsetClampEXT,
-   [DISPATCH_CMD_WindowRectanglesEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_WindowRectanglesEXT,
-   [DISPATCH_CMD_FramebufferFetchBarrierEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferFetchBarrierEXT,
-   [DISPATCH_CMD_RenderbufferStorageMultisampleAdvancedAMD] = (_mesa_unmarshal_func)_mesa_unmarshal_RenderbufferStorageMultisampleAdvancedAMD,
-   [DISPATCH_CMD_NamedRenderbufferStorageMultisampleAdvancedAMD] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedRenderbufferStorageMultisampleAdvancedAMD,
-   [DISPATCH_CMD_StencilFuncSeparateATI] = (_mesa_unmarshal_func)_mesa_unmarshal_StencilFuncSeparateATI,
-   [DISPATCH_CMD_ProgramEnvParameters4fvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramEnvParameters4fvEXT,
-   [DISPATCH_CMD_ProgramLocalParameters4fvEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ProgramLocalParameters4fvEXT,
-   [DISPATCH_CMD_InternalBufferSubDataCopyMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_InternalBufferSubDataCopyMESA,
-   [DISPATCH_CMD_InternalSetError] = (_mesa_unmarshal_func)_mesa_unmarshal_InternalSetError,
-   [DISPATCH_CMD_ClearColorIiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearColorIiEXT,
-   [DISPATCH_CMD_ClearColorIuiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearColorIuiEXT,
-   [DISPATCH_CMD_TexParameterIiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameterIiv,
-   [DISPATCH_CMD_TexParameterIuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameterIuiv,
-   [DISPATCH_CMD_VertexAttribI1iEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI1iEXT,
-   [DISPATCH_CMD_VertexAttribI2iEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI2iEXT,
-   [DISPATCH_CMD_VertexAttribI3iEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI3iEXT,
-   [DISPATCH_CMD_VertexAttribI4iEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4iEXT,
-   [DISPATCH_CMD_VertexAttribI1uiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI1uiEXT,
-   [DISPATCH_CMD_VertexAttribI2uiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI2uiEXT,
-   [DISPATCH_CMD_VertexAttribI3uiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI3uiEXT,
-   [DISPATCH_CMD_VertexAttribI4uiEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4uiEXT,
-   [DISPATCH_CMD_VertexAttribI1iv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI1iv,
-   [DISPATCH_CMD_VertexAttribI2ivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI2ivEXT,
-   [DISPATCH_CMD_VertexAttribI3ivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI3ivEXT,
-   [DISPATCH_CMD_VertexAttribI4ivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4ivEXT,
-   [DISPATCH_CMD_VertexAttribI1uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI1uiv,
-   [DISPATCH_CMD_VertexAttribI2uivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI2uivEXT,
-   [DISPATCH_CMD_VertexAttribI3uivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI3uivEXT,
-   [DISPATCH_CMD_VertexAttribI4uivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4uivEXT,
-   [DISPATCH_CMD_VertexAttribI4bv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4bv,
-   [DISPATCH_CMD_VertexAttribI4sv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4sv,
-   [DISPATCH_CMD_VertexAttribI4ubv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4ubv,
-   [DISPATCH_CMD_VertexAttribI4usv] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribI4usv,
-   [DISPATCH_CMD_VertexAttribIPointer] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribIPointer,
-   [DISPATCH_CMD_Uniform1ui] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1ui,
-   [DISPATCH_CMD_Uniform2ui] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2ui,
-   [DISPATCH_CMD_Uniform3ui] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3ui,
-   [DISPATCH_CMD_Uniform4ui] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4ui,
-   [DISPATCH_CMD_Uniform1uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform1uiv,
-   [DISPATCH_CMD_Uniform2uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform2uiv,
-   [DISPATCH_CMD_Uniform3uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform3uiv,
-   [DISPATCH_CMD_Uniform4uiv] = (_mesa_unmarshal_func)_mesa_unmarshal_Uniform4uiv,
-   [DISPATCH_CMD_BindFragDataLocation] = (_mesa_unmarshal_func)_mesa_unmarshal_BindFragDataLocation,
-   [DISPATCH_CMD_ClearBufferiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearBufferiv,
-   [DISPATCH_CMD_ClearBufferuiv] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearBufferuiv,
-   [DISPATCH_CMD_ClearBufferfv] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearBufferfv,
-   [DISPATCH_CMD_ClearBufferfi] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearBufferfi,
-   [DISPATCH_CMD_BeginTransformFeedback] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginTransformFeedback,
-   [DISPATCH_CMD_EndTransformFeedback] = (_mesa_unmarshal_func)_mesa_unmarshal_EndTransformFeedback,
-   [DISPATCH_CMD_BindBufferRange] = (_mesa_unmarshal_func)_mesa_unmarshal_BindBufferRange,
-   [DISPATCH_CMD_BindBufferBase] = (_mesa_unmarshal_func)_mesa_unmarshal_BindBufferBase,
-   [DISPATCH_CMD_BeginConditionalRender] = (_mesa_unmarshal_func)_mesa_unmarshal_BeginConditionalRender,
-   [DISPATCH_CMD_EndConditionalRender] = (_mesa_unmarshal_func)_mesa_unmarshal_EndConditionalRender,
-   [DISPATCH_CMD_PrimitiveRestartIndex] = (_mesa_unmarshal_func)_mesa_unmarshal_PrimitiveRestartIndex,
-   [DISPATCH_CMD_FramebufferTexture] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferTexture,
-   [DISPATCH_CMD_PrimitiveRestartNV] = (_mesa_unmarshal_func)_mesa_unmarshal_PrimitiveRestartNV,
-   [DISPATCH_CMD_BindBufferOffsetEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_BindBufferOffsetEXT,
-   [DISPATCH_CMD_BindTransformFeedback] = (_mesa_unmarshal_func)_mesa_unmarshal_BindTransformFeedback,
-   [DISPATCH_CMD_DeleteTransformFeedbacks] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteTransformFeedbacks,
-   [DISPATCH_CMD_PauseTransformFeedback] = (_mesa_unmarshal_func)_mesa_unmarshal_PauseTransformFeedback,
-   [DISPATCH_CMD_ResumeTransformFeedback] = (_mesa_unmarshal_func)_mesa_unmarshal_ResumeTransformFeedback,
-   [DISPATCH_CMD_DrawTransformFeedback] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTransformFeedback,
-   [DISPATCH_CMD_VDPAUFiniNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VDPAUFiniNV,
-   [DISPATCH_CMD_VDPAUUnregisterSurfaceNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VDPAUUnregisterSurfaceNV,
-   [DISPATCH_CMD_VDPAUSurfaceAccessNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VDPAUSurfaceAccessNV,
-   [DISPATCH_CMD_VDPAUMapSurfacesNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VDPAUMapSurfacesNV,
-   [DISPATCH_CMD_VDPAUUnmapSurfacesNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VDPAUUnmapSurfacesNV,
-   [DISPATCH_CMD_DeleteMemoryObjectsEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteMemoryObjectsEXT,
-   [DISPATCH_CMD_MemoryObjectParameterivEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_MemoryObjectParameterivEXT,
-   [DISPATCH_CMD_TexStorageMem2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorageMem2DEXT,
-   [DISPATCH_CMD_TexStorageMem2DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorageMem2DMultisampleEXT,
-   [DISPATCH_CMD_TexStorageMem3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorageMem3DEXT,
-   [DISPATCH_CMD_TexStorageMem3DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorageMem3DMultisampleEXT,
-   [DISPATCH_CMD_BufferStorageMemEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_BufferStorageMemEXT,
-   [DISPATCH_CMD_TextureStorageMem2DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorageMem2DEXT,
-   [DISPATCH_CMD_TextureStorageMem2DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorageMem2DMultisampleEXT,
-   [DISPATCH_CMD_TextureStorageMem3DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorageMem3DEXT,
-   [DISPATCH_CMD_TextureStorageMem3DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorageMem3DMultisampleEXT,
-   [DISPATCH_CMD_NamedBufferStorageMemEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_NamedBufferStorageMemEXT,
-   [DISPATCH_CMD_TexStorageMem1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TexStorageMem1DEXT,
-   [DISPATCH_CMD_TextureStorageMem1DEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_TextureStorageMem1DEXT,
-   [DISPATCH_CMD_DeleteSemaphoresEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DeleteSemaphoresEXT,
-   [DISPATCH_CMD_SemaphoreParameterui64vEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_SemaphoreParameterui64vEXT,
-   [DISPATCH_CMD_WaitSemaphoreEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_WaitSemaphoreEXT,
-   [DISPATCH_CMD_SignalSemaphoreEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_SignalSemaphoreEXT,
-   [DISPATCH_CMD_ImportMemoryFdEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ImportMemoryFdEXT,
-   [DISPATCH_CMD_ImportSemaphoreFdEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_ImportSemaphoreFdEXT,
-   [DISPATCH_CMD_ViewportSwizzleNV] = (_mesa_unmarshal_func)_mesa_unmarshal_ViewportSwizzleNV,
-   [DISPATCH_CMD_Vertex2hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2hNV,
-   [DISPATCH_CMD_Vertex2hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex2hvNV,
-   [DISPATCH_CMD_Vertex3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3hNV,
-   [DISPATCH_CMD_Vertex3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex3hvNV,
-   [DISPATCH_CMD_Vertex4hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4hNV,
-   [DISPATCH_CMD_Vertex4hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Vertex4hvNV,
-   [DISPATCH_CMD_Normal3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3hNV,
-   [DISPATCH_CMD_Normal3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3hvNV,
-   [DISPATCH_CMD_Color3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3hNV,
-   [DISPATCH_CMD_Color3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Color3hvNV,
-   [DISPATCH_CMD_Color4hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4hNV,
-   [DISPATCH_CMD_Color4hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4hvNV,
-   [DISPATCH_CMD_TexCoord1hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1hNV,
-   [DISPATCH_CMD_TexCoord1hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord1hvNV,
-   [DISPATCH_CMD_TexCoord2hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2hNV,
-   [DISPATCH_CMD_TexCoord2hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord2hvNV,
-   [DISPATCH_CMD_TexCoord3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3hNV,
-   [DISPATCH_CMD_TexCoord3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord3hvNV,
-   [DISPATCH_CMD_TexCoord4hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4hNV,
-   [DISPATCH_CMD_TexCoord4hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_TexCoord4hvNV,
-   [DISPATCH_CMD_MultiTexCoord1hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1hNV,
-   [DISPATCH_CMD_MultiTexCoord1hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord1hvNV,
-   [DISPATCH_CMD_MultiTexCoord2hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2hNV,
-   [DISPATCH_CMD_MultiTexCoord2hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord2hvNV,
-   [DISPATCH_CMD_MultiTexCoord3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3hNV,
-   [DISPATCH_CMD_MultiTexCoord3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord3hvNV,
-   [DISPATCH_CMD_MultiTexCoord4hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4hNV,
-   [DISPATCH_CMD_MultiTexCoord4hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4hvNV,
-   [DISPATCH_CMD_VertexAttrib1hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1hNV,
-   [DISPATCH_CMD_VertexAttrib1hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib1hvNV,
-   [DISPATCH_CMD_VertexAttrib2hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2hNV,
-   [DISPATCH_CMD_VertexAttrib2hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib2hvNV,
-   [DISPATCH_CMD_VertexAttrib3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3hNV,
-   [DISPATCH_CMD_VertexAttrib3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib3hvNV,
-   [DISPATCH_CMD_VertexAttrib4hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4hNV,
-   [DISPATCH_CMD_VertexAttrib4hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttrib4hvNV,
-   [DISPATCH_CMD_VertexAttribs1hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs1hvNV,
-   [DISPATCH_CMD_VertexAttribs2hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs2hvNV,
-   [DISPATCH_CMD_VertexAttribs3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs3hvNV,
-   [DISPATCH_CMD_VertexAttribs4hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_VertexAttribs4hvNV,
-   [DISPATCH_CMD_FogCoordhNV] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoordhNV,
-   [DISPATCH_CMD_FogCoordhvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_FogCoordhvNV,
-   [DISPATCH_CMD_SecondaryColor3hNV] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3hNV,
-   [DISPATCH_CMD_SecondaryColor3hvNV] = (_mesa_unmarshal_func)_mesa_unmarshal_SecondaryColor3hvNV,
-   [DISPATCH_CMD_MemoryBarrierByRegion] = (_mesa_unmarshal_func)_mesa_unmarshal_MemoryBarrierByRegion,
-   [DISPATCH_CMD_AlphaFuncx] = (_mesa_unmarshal_func)_mesa_unmarshal_AlphaFuncx,
-   [DISPATCH_CMD_ClearColorx] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearColorx,
-   [DISPATCH_CMD_ClearDepthx] = (_mesa_unmarshal_func)_mesa_unmarshal_ClearDepthx,
-   [DISPATCH_CMD_Color4x] = (_mesa_unmarshal_func)_mesa_unmarshal_Color4x,
-   [DISPATCH_CMD_DepthRangex] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRangex,
-   [DISPATCH_CMD_Fogx] = (_mesa_unmarshal_func)_mesa_unmarshal_Fogx,
-   [DISPATCH_CMD_Fogxv] = (_mesa_unmarshal_func)_mesa_unmarshal_Fogxv,
-   [DISPATCH_CMD_Frustumx] = (_mesa_unmarshal_func)_mesa_unmarshal_Frustumx,
-   [DISPATCH_CMD_LightModelx] = (_mesa_unmarshal_func)_mesa_unmarshal_LightModelx,
-   [DISPATCH_CMD_LightModelxv] = (_mesa_unmarshal_func)_mesa_unmarshal_LightModelxv,
-   [DISPATCH_CMD_Lightx] = (_mesa_unmarshal_func)_mesa_unmarshal_Lightx,
-   [DISPATCH_CMD_Lightxv] = (_mesa_unmarshal_func)_mesa_unmarshal_Lightxv,
-   [DISPATCH_CMD_LineWidthx] = (_mesa_unmarshal_func)_mesa_unmarshal_LineWidthx,
-   [DISPATCH_CMD_LoadMatrixx] = (_mesa_unmarshal_func)_mesa_unmarshal_LoadMatrixx,
-   [DISPATCH_CMD_Materialx] = (_mesa_unmarshal_func)_mesa_unmarshal_Materialx,
-   [DISPATCH_CMD_Materialxv] = (_mesa_unmarshal_func)_mesa_unmarshal_Materialxv,
-   [DISPATCH_CMD_MultMatrixx] = (_mesa_unmarshal_func)_mesa_unmarshal_MultMatrixx,
-   [DISPATCH_CMD_MultiTexCoord4x] = (_mesa_unmarshal_func)_mesa_unmarshal_MultiTexCoord4x,
-   [DISPATCH_CMD_Normal3x] = (_mesa_unmarshal_func)_mesa_unmarshal_Normal3x,
-   [DISPATCH_CMD_Orthox] = (_mesa_unmarshal_func)_mesa_unmarshal_Orthox,
-   [DISPATCH_CMD_PointSizex] = (_mesa_unmarshal_func)_mesa_unmarshal_PointSizex,
-   [DISPATCH_CMD_PolygonOffsetx] = (_mesa_unmarshal_func)_mesa_unmarshal_PolygonOffsetx,
-   [DISPATCH_CMD_Rotatex] = (_mesa_unmarshal_func)_mesa_unmarshal_Rotatex,
-   [DISPATCH_CMD_SampleCoveragex] = (_mesa_unmarshal_func)_mesa_unmarshal_SampleCoveragex,
-   [DISPATCH_CMD_Scalex] = (_mesa_unmarshal_func)_mesa_unmarshal_Scalex,
-   [DISPATCH_CMD_TexEnvx] = (_mesa_unmarshal_func)_mesa_unmarshal_TexEnvx,
-   [DISPATCH_CMD_TexEnvxv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexEnvxv,
-   [DISPATCH_CMD_TexParameterx] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameterx,
-   [DISPATCH_CMD_Translatex] = (_mesa_unmarshal_func)_mesa_unmarshal_Translatex,
-   [DISPATCH_CMD_ClipPlanex] = (_mesa_unmarshal_func)_mesa_unmarshal_ClipPlanex,
-   [DISPATCH_CMD_PointParameterx] = (_mesa_unmarshal_func)_mesa_unmarshal_PointParameterx,
-   [DISPATCH_CMD_PointParameterxv] = (_mesa_unmarshal_func)_mesa_unmarshal_PointParameterxv,
-   [DISPATCH_CMD_TexParameterxv] = (_mesa_unmarshal_func)_mesa_unmarshal_TexParameterxv,
-   [DISPATCH_CMD_TexGenxOES] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGenxOES,
-   [DISPATCH_CMD_TexGenxvOES] = (_mesa_unmarshal_func)_mesa_unmarshal_TexGenxvOES,
-   [DISPATCH_CMD_ClipPlanef] = (_mesa_unmarshal_func)_mesa_unmarshal_ClipPlanef,
-   [DISPATCH_CMD_Frustumf] = (_mesa_unmarshal_func)_mesa_unmarshal_Frustumf,
-   [DISPATCH_CMD_Orthof] = (_mesa_unmarshal_func)_mesa_unmarshal_Orthof,
-   [DISPATCH_CMD_DrawTexiOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexiOES,
-   [DISPATCH_CMD_DrawTexivOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexivOES,
-   [DISPATCH_CMD_DrawTexfOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexfOES,
-   [DISPATCH_CMD_DrawTexfvOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexfvOES,
-   [DISPATCH_CMD_DrawTexsOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexsOES,
-   [DISPATCH_CMD_DrawTexsvOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexsvOES,
-   [DISPATCH_CMD_DrawTexxOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexxOES,
-   [DISPATCH_CMD_DrawTexxvOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DrawTexxvOES,
-   [DISPATCH_CMD_PointSizePointerOES] = (_mesa_unmarshal_func)_mesa_unmarshal_PointSizePointerOES,
-   [DISPATCH_CMD_DiscardFramebufferEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_DiscardFramebufferEXT,
-   [DISPATCH_CMD_FramebufferTexture2DMultisampleEXT] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferTexture2DMultisampleEXT,
-   [DISPATCH_CMD_DepthRangeArrayfvOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRangeArrayfvOES,
-   [DISPATCH_CMD_DepthRangeIndexedfOES] = (_mesa_unmarshal_func)_mesa_unmarshal_DepthRangeIndexedfOES,
-   [DISPATCH_CMD_FramebufferParameteriMESA] = (_mesa_unmarshal_func)_mesa_unmarshal_FramebufferParameteriMESA,
-};
-
-
-/* _mesa_create_marshal_table takes a long time to compile with -O2 */
-#if defined(__GNUC__) && !defined(__clang__)
-__attribute__((optimize("O1")))
-#endif
-bool
-_mesa_create_marshal_tables(struct gl_context *ctx)
+/* NewList: marshalled asynchronously */
+struct marshal_cmd_NewList
 {
-   ctx->MarshalExec = _mesa_alloc_dispatch_table(true);
-   if (!ctx->MarshalExec)
-      return false;
+   struct marshal_cmd_base cmd_base;
+   GLenum16 mode;
+   GLuint list;
+};
+uint32_t
+_mesa_unmarshal_NewList(struct gl_context *ctx, const struct marshal_cmd_NewList *cmd)
+{
+   GLuint list = cmd->list;
+   GLenum mode = cmd->mode;
+   CALL_NewList(ctx->CurrentServerDispatch, (list, mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_NewList), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_NewList(GLuint list, GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_NewList);
+   struct marshal_cmd_NewList *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_NewList, cmd_size);
+   cmd->list = list;
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+   _mesa_glthread_NewList(ctx, list, mode);
+}
 
-   if ((ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
-      if (_gloffset_DepthRangeArrayfvOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRangeArrayfvOES] = (_glapi_proc)_mesa_marshal_DepthRangeArrayfvOES;
-      if (_gloffset_DepthRangeIndexedfOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRangeIndexedfOES] = (_glapi_proc)_mesa_marshal_DepthRangeIndexedfOES;
+
+/* EndList: marshalled asynchronously */
+struct marshal_cmd_EndList
+{
+   struct marshal_cmd_base cmd_base;
+};
+uint32_t
+_mesa_unmarshal_EndList(struct gl_context *ctx, const struct marshal_cmd_EndList *cmd)
+{
+   CALL_EndList(ctx->CurrentServerDispatch, ());
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EndList), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_EndList(void)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_EndList);
+   struct marshal_cmd_EndList *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_EndList, cmd_size);
+   (void) cmd;
+   _mesa_glthread_EndList(ctx);
+}
+
+
+/* CallLists: marshalled asynchronously */
+struct marshal_cmd_CallLists
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 type;
+   GLsizei n;
+   /* Next (n * _mesa_calllists_enum_to_count(type)) bytes are GLvoid lists[n] */
+};
+uint32_t
+_mesa_unmarshal_CallLists(struct gl_context *ctx, const struct marshal_cmd_CallLists *cmd)
+{
+   GLsizei n = cmd->n;
+   GLenum type = cmd->type;
+   GLvoid *lists;
+   const char *variable_data = (const char *) (cmd + 1);
+   lists = (GLvoid *) variable_data;
+   CALL_CallLists(ctx->CurrentServerDispatch, (n, type, lists));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_CallLists(GLsizei n, GLenum type, const GLvoid * lists)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int lists_size = (n * _mesa_calllists_enum_to_count(type));
+   int cmd_size = sizeof(struct marshal_cmd_CallLists) + lists_size;
+   struct marshal_cmd_CallLists *cmd;
+   if (unlikely(lists_size < 0 || (lists_size > 0 && !lists) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "CallLists");
+      CALL_CallLists(ctx->CurrentServerDispatch, (n, type, lists));
+      _mesa_glthread_CallLists(ctx, n, type, lists);
+      return;
    }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_CallLists, cmd_size);
+   cmd->n = n;
+   cmd->type = MIN2(type, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, lists, lists_size);
+   _mesa_glthread_CallLists(ctx, n, type, lists);
+}
+
+
+/* DeleteLists: marshalled asynchronously */
+struct marshal_cmd_DeleteLists
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint list;
+   GLsizei range;
+};
+uint32_t
+_mesa_unmarshal_DeleteLists(struct gl_context *ctx, const struct marshal_cmd_DeleteLists *cmd)
+{
+   GLuint list = cmd->list;
+   GLsizei range = cmd->range;
+   CALL_DeleteLists(ctx->CurrentServerDispatch, (list, range));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_DeleteLists), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_DeleteLists(GLuint list, GLsizei range)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_DeleteLists);
+   struct marshal_cmd_DeleteLists *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_DeleteLists, cmd_size);
+   cmd->list = list;
+   cmd->range = range;
+   _mesa_glthread_DeleteLists(ctx, range);
+}
+
+
+/* GenLists: marshalled synchronously */
+static GLuint GLAPIENTRY
+_mesa_marshal_GenLists(GLsizei range)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   _mesa_glthread_finish_before(ctx, "GenLists");
+   return CALL_GenLists(ctx->CurrentServerDispatch, (range));
+}
+
+
+/* ListBase: marshalled asynchronously */
+struct marshal_cmd_ListBase
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint base;
+};
+uint32_t
+_mesa_unmarshal_ListBase(struct gl_context *ctx, const struct marshal_cmd_ListBase *cmd)
+{
+   GLuint base = cmd->base;
+   CALL_ListBase(ctx->CurrentServerDispatch, (base));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ListBase), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_ListBase(GLuint base)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_ListBase);
+   struct marshal_cmd_ListBase *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_ListBase, cmd_size);
+   cmd->base = base;
+   _mesa_glthread_ListBase(ctx, base);
+}
+
+
+/* Begin: marshalled asynchronously */
+struct marshal_cmd_Begin
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_Begin(struct gl_context *ctx, const struct marshal_cmd_Begin *cmd)
+{
+   GLenum mode = cmd->mode;
+   CALL_Begin(ctx->CurrentServerDispatch, (mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Begin), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Begin(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Begin);
+   struct marshal_cmd_Begin *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Begin, cmd_size);
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+   ctx->GLThread.inside_begin_end = true;
+}
+
+
+/* Bitmap: marshalled asynchronously */
+struct marshal_cmd_Bitmap
+{
+   struct marshal_cmd_base cmd_base;
+   GLsizei width;
+   GLsizei height;
+   GLfloat xorig;
+   GLfloat yorig;
+   GLfloat xmove;
+   GLfloat ymove;
+   const GLubyte * bitmap;
+};
+uint32_t
+_mesa_unmarshal_Bitmap(struct gl_context *ctx, const struct marshal_cmd_Bitmap *cmd)
+{
+   GLsizei width = cmd->width;
+   GLsizei height = cmd->height;
+   GLfloat xorig = cmd->xorig;
+   GLfloat yorig = cmd->yorig;
+   GLfloat xmove = cmd->xmove;
+   GLfloat ymove = cmd->ymove;
+   const GLubyte * bitmap = cmd->bitmap;
+   CALL_Bitmap(ctx->CurrentServerDispatch, (width, height, xorig, yorig, xmove, ymove, bitmap));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Bitmap), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Bitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte * bitmap)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Bitmap);
+   struct marshal_cmd_Bitmap *cmd;
+   if (_mesa_glthread_has_no_unpack_buffer(ctx)) {
+      _mesa_glthread_finish_before(ctx, "Bitmap");
+      CALL_Bitmap(ctx->CurrentServerDispatch, (width, height, xorig, yorig, xmove, ymove, bitmap));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Bitmap, cmd_size);
+   cmd->width = width;
+   cmd->height = height;
+   cmd->xorig = xorig;
+   cmd->yorig = yorig;
+   cmd->xmove = xmove;
+   cmd->ymove = ymove;
+   cmd->bitmap = bitmap;
+}
+
+
+/* Color3b: marshalled asynchronously */
+struct marshal_cmd_Color3b
+{
+   struct marshal_cmd_base cmd_base;
+   GLbyte red;
+   GLbyte green;
+   GLbyte blue;
+};
+uint32_t
+_mesa_unmarshal_Color3b(struct gl_context *ctx, const struct marshal_cmd_Color3b *cmd)
+{
+   GLbyte red = cmd->red;
+   GLbyte green = cmd->green;
+   GLbyte blue = cmd->blue;
+   CALL_Color3b(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3b), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3b(GLbyte red, GLbyte green, GLbyte blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3b);
+   struct marshal_cmd_Color3b *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3b, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3bv: marshalled asynchronously */
+struct marshal_cmd_Color3bv
+{
+   struct marshal_cmd_base cmd_base;
+   GLbyte v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3bv(struct gl_context *ctx, const struct marshal_cmd_Color3bv *cmd)
+{
+   const GLbyte *v = cmd->v;
+   CALL_Color3bv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3bv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3bv(const GLbyte * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3bv);
+   struct marshal_cmd_Color3bv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3bv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLbyte));
+}
+
+
+/* Color3d: marshalled asynchronously */
+struct marshal_cmd_Color3d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble red;
+   GLdouble green;
+   GLdouble blue;
+};
+uint32_t
+_mesa_unmarshal_Color3d(struct gl_context *ctx, const struct marshal_cmd_Color3d *cmd)
+{
+   GLdouble red = cmd->red;
+   GLdouble green = cmd->green;
+   GLdouble blue = cmd->blue;
+   CALL_Color3d(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3d(GLdouble red, GLdouble green, GLdouble blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3d);
+   struct marshal_cmd_Color3d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3d, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3dv: marshalled asynchronously */
+struct marshal_cmd_Color3dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3dv(struct gl_context *ctx, const struct marshal_cmd_Color3dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_Color3dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3dv);
+   struct marshal_cmd_Color3dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3dv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLdouble));
+}
+
+
+/* Color3f: marshalled asynchronously */
+struct marshal_cmd_Color3f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat red;
+   GLfloat green;
+   GLfloat blue;
+};
+uint32_t
+_mesa_unmarshal_Color3f(struct gl_context *ctx, const struct marshal_cmd_Color3f *cmd)
+{
+   GLfloat red = cmd->red;
+   GLfloat green = cmd->green;
+   GLfloat blue = cmd->blue;
+   CALL_Color3f(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3f(GLfloat red, GLfloat green, GLfloat blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3f);
+   struct marshal_cmd_Color3f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3f, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3fv: marshalled asynchronously */
+struct marshal_cmd_Color3fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3fv(struct gl_context *ctx, const struct marshal_cmd_Color3fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_Color3fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3fv);
+   struct marshal_cmd_Color3fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3fv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLfloat));
+}
+
+
+/* Color3i: marshalled asynchronously */
+struct marshal_cmd_Color3i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint red;
+   GLint green;
+   GLint blue;
+};
+uint32_t
+_mesa_unmarshal_Color3i(struct gl_context *ctx, const struct marshal_cmd_Color3i *cmd)
+{
+   GLint red = cmd->red;
+   GLint green = cmd->green;
+   GLint blue = cmd->blue;
+   CALL_Color3i(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3i(GLint red, GLint green, GLint blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3i);
+   struct marshal_cmd_Color3i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3i, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3iv: marshalled asynchronously */
+struct marshal_cmd_Color3iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3iv(struct gl_context *ctx, const struct marshal_cmd_Color3iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_Color3iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3iv);
+   struct marshal_cmd_Color3iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3iv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLint));
+}
+
+
+/* Color3s: marshalled asynchronously */
+struct marshal_cmd_Color3s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort red;
+   GLshort green;
+   GLshort blue;
+};
+uint32_t
+_mesa_unmarshal_Color3s(struct gl_context *ctx, const struct marshal_cmd_Color3s *cmd)
+{
+   GLshort red = cmd->red;
+   GLshort green = cmd->green;
+   GLshort blue = cmd->blue;
+   CALL_Color3s(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3s(GLshort red, GLshort green, GLshort blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3s);
+   struct marshal_cmd_Color3s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3s, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3sv: marshalled asynchronously */
+struct marshal_cmd_Color3sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3sv(struct gl_context *ctx, const struct marshal_cmd_Color3sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_Color3sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3sv);
+   struct marshal_cmd_Color3sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3sv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLshort));
+}
+
+
+/* Color3ub: marshalled asynchronously */
+struct marshal_cmd_Color3ub
+{
+   struct marshal_cmd_base cmd_base;
+   GLubyte red;
+   GLubyte green;
+   GLubyte blue;
+};
+uint32_t
+_mesa_unmarshal_Color3ub(struct gl_context *ctx, const struct marshal_cmd_Color3ub *cmd)
+{
+   GLubyte red = cmd->red;
+   GLubyte green = cmd->green;
+   GLubyte blue = cmd->blue;
+   CALL_Color3ub(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3ub), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3ub(GLubyte red, GLubyte green, GLubyte blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3ub);
+   struct marshal_cmd_Color3ub *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3ub, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3ubv: marshalled asynchronously */
+struct marshal_cmd_Color3ubv
+{
+   struct marshal_cmd_base cmd_base;
+   GLubyte v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3ubv(struct gl_context *ctx, const struct marshal_cmd_Color3ubv *cmd)
+{
+   const GLubyte *v = cmd->v;
+   CALL_Color3ubv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3ubv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3ubv(const GLubyte * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3ubv);
+   struct marshal_cmd_Color3ubv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3ubv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLubyte));
+}
+
+
+/* Color3ui: marshalled asynchronously */
+struct marshal_cmd_Color3ui
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint red;
+   GLuint green;
+   GLuint blue;
+};
+uint32_t
+_mesa_unmarshal_Color3ui(struct gl_context *ctx, const struct marshal_cmd_Color3ui *cmd)
+{
+   GLuint red = cmd->red;
+   GLuint green = cmd->green;
+   GLuint blue = cmd->blue;
+   CALL_Color3ui(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3ui), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3ui(GLuint red, GLuint green, GLuint blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3ui);
+   struct marshal_cmd_Color3ui *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3ui, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3uiv: marshalled asynchronously */
+struct marshal_cmd_Color3uiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3uiv(struct gl_context *ctx, const struct marshal_cmd_Color3uiv *cmd)
+{
+   const GLuint *v = cmd->v;
+   CALL_Color3uiv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3uiv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3uiv(const GLuint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3uiv);
+   struct marshal_cmd_Color3uiv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3uiv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLuint));
+}
+
+
+/* Color3us: marshalled asynchronously */
+struct marshal_cmd_Color3us
+{
+   struct marshal_cmd_base cmd_base;
+   GLushort red;
+   GLushort green;
+   GLushort blue;
+};
+uint32_t
+_mesa_unmarshal_Color3us(struct gl_context *ctx, const struct marshal_cmd_Color3us *cmd)
+{
+   GLushort red = cmd->red;
+   GLushort green = cmd->green;
+   GLushort blue = cmd->blue;
+   CALL_Color3us(ctx->CurrentServerDispatch, (red, green, blue));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3us), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3us(GLushort red, GLushort green, GLushort blue)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3us);
+   struct marshal_cmd_Color3us *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3us, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+}
+
+
+/* Color3usv: marshalled asynchronously */
+struct marshal_cmd_Color3usv
+{
+   struct marshal_cmd_base cmd_base;
+   GLushort v[3];
+};
+uint32_t
+_mesa_unmarshal_Color3usv(struct gl_context *ctx, const struct marshal_cmd_Color3usv *cmd)
+{
+   const GLushort *v = cmd->v;
+   CALL_Color3usv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color3usv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color3usv(const GLushort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color3usv);
+   struct marshal_cmd_Color3usv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color3usv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLushort));
+}
+
+
+/* Color4b: marshalled asynchronously */
+struct marshal_cmd_Color4b
+{
+   struct marshal_cmd_base cmd_base;
+   GLbyte red;
+   GLbyte green;
+   GLbyte blue;
+   GLbyte alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4b(struct gl_context *ctx, const struct marshal_cmd_Color4b *cmd)
+{
+   GLbyte red = cmd->red;
+   GLbyte green = cmd->green;
+   GLbyte blue = cmd->blue;
+   GLbyte alpha = cmd->alpha;
+   CALL_Color4b(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4b), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4b(GLbyte red, GLbyte green, GLbyte blue, GLbyte alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4b);
+   struct marshal_cmd_Color4b *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4b, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4bv: marshalled asynchronously */
+struct marshal_cmd_Color4bv
+{
+   struct marshal_cmd_base cmd_base;
+   GLbyte v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4bv(struct gl_context *ctx, const struct marshal_cmd_Color4bv *cmd)
+{
+   const GLbyte *v = cmd->v;
+   CALL_Color4bv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4bv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4bv(const GLbyte * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4bv);
+   struct marshal_cmd_Color4bv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4bv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLbyte));
+}
+
+
+/* Color4d: marshalled asynchronously */
+struct marshal_cmd_Color4d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble red;
+   GLdouble green;
+   GLdouble blue;
+   GLdouble alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4d(struct gl_context *ctx, const struct marshal_cmd_Color4d *cmd)
+{
+   GLdouble red = cmd->red;
+   GLdouble green = cmd->green;
+   GLdouble blue = cmd->blue;
+   GLdouble alpha = cmd->alpha;
+   CALL_Color4d(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4d(GLdouble red, GLdouble green, GLdouble blue, GLdouble alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4d);
+   struct marshal_cmd_Color4d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4d, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4dv: marshalled asynchronously */
+struct marshal_cmd_Color4dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4dv(struct gl_context *ctx, const struct marshal_cmd_Color4dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_Color4dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4dv);
+   struct marshal_cmd_Color4dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4dv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLdouble));
+}
+
+
+/* Color4f: marshalled asynchronously */
+struct marshal_cmd_Color4f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat red;
+   GLfloat green;
+   GLfloat blue;
+   GLfloat alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4f(struct gl_context *ctx, const struct marshal_cmd_Color4f *cmd)
+{
+   GLfloat red = cmd->red;
+   GLfloat green = cmd->green;
+   GLfloat blue = cmd->blue;
+   GLfloat alpha = cmd->alpha;
+   CALL_Color4f(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4f(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4f);
+   struct marshal_cmd_Color4f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4f, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4fv: marshalled asynchronously */
+struct marshal_cmd_Color4fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4fv(struct gl_context *ctx, const struct marshal_cmd_Color4fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_Color4fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4fv);
+   struct marshal_cmd_Color4fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4fv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLfloat));
+}
+
+
+/* Color4i: marshalled asynchronously */
+struct marshal_cmd_Color4i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint red;
+   GLint green;
+   GLint blue;
+   GLint alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4i(struct gl_context *ctx, const struct marshal_cmd_Color4i *cmd)
+{
+   GLint red = cmd->red;
+   GLint green = cmd->green;
+   GLint blue = cmd->blue;
+   GLint alpha = cmd->alpha;
+   CALL_Color4i(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4i(GLint red, GLint green, GLint blue, GLint alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4i);
+   struct marshal_cmd_Color4i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4i, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4iv: marshalled asynchronously */
+struct marshal_cmd_Color4iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4iv(struct gl_context *ctx, const struct marshal_cmd_Color4iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_Color4iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4iv);
+   struct marshal_cmd_Color4iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4iv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLint));
+}
+
+
+/* Color4s: marshalled asynchronously */
+struct marshal_cmd_Color4s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort red;
+   GLshort green;
+   GLshort blue;
+   GLshort alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4s(struct gl_context *ctx, const struct marshal_cmd_Color4s *cmd)
+{
+   GLshort red = cmd->red;
+   GLshort green = cmd->green;
+   GLshort blue = cmd->blue;
+   GLshort alpha = cmd->alpha;
+   CALL_Color4s(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4s(GLshort red, GLshort green, GLshort blue, GLshort alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4s);
+   struct marshal_cmd_Color4s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4s, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4sv: marshalled asynchronously */
+struct marshal_cmd_Color4sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4sv(struct gl_context *ctx, const struct marshal_cmd_Color4sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_Color4sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4sv);
+   struct marshal_cmd_Color4sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4sv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLshort));
+}
+
+
+/* Color4ub: marshalled asynchronously */
+struct marshal_cmd_Color4ub
+{
+   struct marshal_cmd_base cmd_base;
+   GLubyte red;
+   GLubyte green;
+   GLubyte blue;
+   GLubyte alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4ub(struct gl_context *ctx, const struct marshal_cmd_Color4ub *cmd)
+{
+   GLubyte red = cmd->red;
+   GLubyte green = cmd->green;
+   GLubyte blue = cmd->blue;
+   GLubyte alpha = cmd->alpha;
+   CALL_Color4ub(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4ub), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4ub(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4ub);
+   struct marshal_cmd_Color4ub *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4ub, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4ubv: marshalled asynchronously */
+struct marshal_cmd_Color4ubv
+{
+   struct marshal_cmd_base cmd_base;
+   GLubyte v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4ubv(struct gl_context *ctx, const struct marshal_cmd_Color4ubv *cmd)
+{
+   const GLubyte *v = cmd->v;
+   CALL_Color4ubv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4ubv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4ubv(const GLubyte * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4ubv);
+   struct marshal_cmd_Color4ubv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4ubv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLubyte));
+}
+
+
+/* Color4ui: marshalled asynchronously */
+struct marshal_cmd_Color4ui
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint red;
+   GLuint green;
+   GLuint blue;
+   GLuint alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4ui(struct gl_context *ctx, const struct marshal_cmd_Color4ui *cmd)
+{
+   GLuint red = cmd->red;
+   GLuint green = cmd->green;
+   GLuint blue = cmd->blue;
+   GLuint alpha = cmd->alpha;
+   CALL_Color4ui(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4ui), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4ui(GLuint red, GLuint green, GLuint blue, GLuint alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4ui);
+   struct marshal_cmd_Color4ui *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4ui, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4uiv: marshalled asynchronously */
+struct marshal_cmd_Color4uiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLuint v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4uiv(struct gl_context *ctx, const struct marshal_cmd_Color4uiv *cmd)
+{
+   const GLuint *v = cmd->v;
+   CALL_Color4uiv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4uiv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4uiv(const GLuint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4uiv);
+   struct marshal_cmd_Color4uiv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4uiv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLuint));
+}
+
+
+/* Color4us: marshalled asynchronously */
+struct marshal_cmd_Color4us
+{
+   struct marshal_cmd_base cmd_base;
+   GLushort red;
+   GLushort green;
+   GLushort blue;
+   GLushort alpha;
+};
+uint32_t
+_mesa_unmarshal_Color4us(struct gl_context *ctx, const struct marshal_cmd_Color4us *cmd)
+{
+   GLushort red = cmd->red;
+   GLushort green = cmd->green;
+   GLushort blue = cmd->blue;
+   GLushort alpha = cmd->alpha;
+   CALL_Color4us(ctx->CurrentServerDispatch, (red, green, blue, alpha));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4us), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4us(GLushort red, GLushort green, GLushort blue, GLushort alpha)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4us);
+   struct marshal_cmd_Color4us *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4us, cmd_size);
+   cmd->red = red;
+   cmd->green = green;
+   cmd->blue = blue;
+   cmd->alpha = alpha;
+}
+
+
+/* Color4usv: marshalled asynchronously */
+struct marshal_cmd_Color4usv
+{
+   struct marshal_cmd_base cmd_base;
+   GLushort v[4];
+};
+uint32_t
+_mesa_unmarshal_Color4usv(struct gl_context *ctx, const struct marshal_cmd_Color4usv *cmd)
+{
+   const GLushort *v = cmd->v;
+   CALL_Color4usv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Color4usv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Color4usv(const GLushort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Color4usv);
+   struct marshal_cmd_Color4usv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Color4usv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLushort));
+}
+
+
+/* EdgeFlag: marshalled asynchronously */
+struct marshal_cmd_EdgeFlag
+{
+   struct marshal_cmd_base cmd_base;
+   GLboolean flag;
+};
+uint32_t
+_mesa_unmarshal_EdgeFlag(struct gl_context *ctx, const struct marshal_cmd_EdgeFlag *cmd)
+{
+   GLboolean flag = cmd->flag;
+   CALL_EdgeFlag(ctx->CurrentServerDispatch, (flag));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EdgeFlag), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_EdgeFlag(GLboolean flag)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_EdgeFlag);
+   struct marshal_cmd_EdgeFlag *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_EdgeFlag, cmd_size);
+   cmd->flag = flag;
+}
+
+
+/* EdgeFlagv: marshalled asynchronously */
+struct marshal_cmd_EdgeFlagv
+{
+   struct marshal_cmd_base cmd_base;
+   GLboolean flag[1];
+};
+uint32_t
+_mesa_unmarshal_EdgeFlagv(struct gl_context *ctx, const struct marshal_cmd_EdgeFlagv *cmd)
+{
+   const GLboolean *flag = cmd->flag;
+   CALL_EdgeFlagv(ctx->CurrentServerDispatch, (flag));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_EdgeFlagv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_EdgeFlagv(const GLboolean * flag)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_EdgeFlagv);
+   struct marshal_cmd_EdgeFlagv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_EdgeFlagv, cmd_size);
+   memcpy(cmd->flag, flag, 1 * sizeof(GLboolean));
+}
+
+
+/* End: marshalled asynchronously */
+struct marshal_cmd_End
+{
+   struct marshal_cmd_base cmd_base;
+};
+uint32_t
+_mesa_unmarshal_End(struct gl_context *ctx, const struct marshal_cmd_End *cmd)
+{
+   CALL_End(ctx->CurrentServerDispatch, ());
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_End), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_End(void)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_End);
+   struct marshal_cmd_End *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_End, cmd_size);
+   (void) cmd;
+   ctx->GLThread.inside_begin_end = false;
+}
+
+
+/* Indexd: marshalled asynchronously */
+struct marshal_cmd_Indexd
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble c;
+};
+uint32_t
+_mesa_unmarshal_Indexd(struct gl_context *ctx, const struct marshal_cmd_Indexd *cmd)
+{
+   GLdouble c = cmd->c;
+   CALL_Indexd(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexd), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexd(GLdouble c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexd);
+   struct marshal_cmd_Indexd *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexd, cmd_size);
+   cmd->c = c;
+}
+
+
+/* Indexdv: marshalled asynchronously */
+struct marshal_cmd_Indexdv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble c[1];
+};
+uint32_t
+_mesa_unmarshal_Indexdv(struct gl_context *ctx, const struct marshal_cmd_Indexdv *cmd)
+{
+   const GLdouble *c = cmd->c;
+   CALL_Indexdv(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexdv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexdv(const GLdouble * c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexdv);
+   struct marshal_cmd_Indexdv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexdv, cmd_size);
+   memcpy(cmd->c, c, 1 * sizeof(GLdouble));
+}
+
+
+/* Indexf: marshalled asynchronously */
+struct marshal_cmd_Indexf
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat c;
+};
+uint32_t
+_mesa_unmarshal_Indexf(struct gl_context *ctx, const struct marshal_cmd_Indexf *cmd)
+{
+   GLfloat c = cmd->c;
+   CALL_Indexf(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexf(GLfloat c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexf);
+   struct marshal_cmd_Indexf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexf, cmd_size);
+   cmd->c = c;
+}
+
+
+/* Indexfv: marshalled asynchronously */
+struct marshal_cmd_Indexfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat c[1];
+};
+uint32_t
+_mesa_unmarshal_Indexfv(struct gl_context *ctx, const struct marshal_cmd_Indexfv *cmd)
+{
+   const GLfloat *c = cmd->c;
+   CALL_Indexfv(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexfv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexfv(const GLfloat * c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexfv);
+   struct marshal_cmd_Indexfv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexfv, cmd_size);
+   memcpy(cmd->c, c, 1 * sizeof(GLfloat));
+}
+
+
+/* Indexi: marshalled asynchronously */
+struct marshal_cmd_Indexi
+{
+   struct marshal_cmd_base cmd_base;
+   GLint c;
+};
+uint32_t
+_mesa_unmarshal_Indexi(struct gl_context *ctx, const struct marshal_cmd_Indexi *cmd)
+{
+   GLint c = cmd->c;
+   CALL_Indexi(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexi), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexi(GLint c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexi);
+   struct marshal_cmd_Indexi *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexi, cmd_size);
+   cmd->c = c;
+}
+
+
+/* Indexiv: marshalled asynchronously */
+struct marshal_cmd_Indexiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint c[1];
+};
+uint32_t
+_mesa_unmarshal_Indexiv(struct gl_context *ctx, const struct marshal_cmd_Indexiv *cmd)
+{
+   const GLint *c = cmd->c;
+   CALL_Indexiv(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexiv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexiv(const GLint * c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexiv);
+   struct marshal_cmd_Indexiv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexiv, cmd_size);
+   memcpy(cmd->c, c, 1 * sizeof(GLint));
+}
+
+
+/* Indexs: marshalled asynchronously */
+struct marshal_cmd_Indexs
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort c;
+};
+uint32_t
+_mesa_unmarshal_Indexs(struct gl_context *ctx, const struct marshal_cmd_Indexs *cmd)
+{
+   GLshort c = cmd->c;
+   CALL_Indexs(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexs), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexs(GLshort c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexs);
+   struct marshal_cmd_Indexs *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexs, cmd_size);
+   cmd->c = c;
+}
+
+
+/* Indexsv: marshalled asynchronously */
+struct marshal_cmd_Indexsv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort c[1];
+};
+uint32_t
+_mesa_unmarshal_Indexsv(struct gl_context *ctx, const struct marshal_cmd_Indexsv *cmd)
+{
+   const GLshort *c = cmd->c;
+   CALL_Indexsv(ctx->CurrentServerDispatch, (c));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Indexsv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Indexsv(const GLshort * c)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Indexsv);
+   struct marshal_cmd_Indexsv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Indexsv, cmd_size);
+   memcpy(cmd->c, c, 1 * sizeof(GLshort));
+}
+
+
+/* Normal3b: marshalled asynchronously */
+struct marshal_cmd_Normal3b
+{
+   struct marshal_cmd_base cmd_base;
+   GLbyte nx;
+   GLbyte ny;
+   GLbyte nz;
+};
+uint32_t
+_mesa_unmarshal_Normal3b(struct gl_context *ctx, const struct marshal_cmd_Normal3b *cmd)
+{
+   GLbyte nx = cmd->nx;
+   GLbyte ny = cmd->ny;
+   GLbyte nz = cmd->nz;
+   CALL_Normal3b(ctx->CurrentServerDispatch, (nx, ny, nz));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3b), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3b(GLbyte nx, GLbyte ny, GLbyte nz)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3b);
+   struct marshal_cmd_Normal3b *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3b, cmd_size);
+   cmd->nx = nx;
+   cmd->ny = ny;
+   cmd->nz = nz;
+}
+
+
+/* Normal3bv: marshalled asynchronously */
+struct marshal_cmd_Normal3bv
+{
+   struct marshal_cmd_base cmd_base;
+   GLbyte v[3];
+};
+uint32_t
+_mesa_unmarshal_Normal3bv(struct gl_context *ctx, const struct marshal_cmd_Normal3bv *cmd)
+{
+   const GLbyte *v = cmd->v;
+   CALL_Normal3bv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3bv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3bv(const GLbyte * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3bv);
+   struct marshal_cmd_Normal3bv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3bv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLbyte));
+}
+
+
+/* Normal3d: marshalled asynchronously */
+struct marshal_cmd_Normal3d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble nx;
+   GLdouble ny;
+   GLdouble nz;
+};
+uint32_t
+_mesa_unmarshal_Normal3d(struct gl_context *ctx, const struct marshal_cmd_Normal3d *cmd)
+{
+   GLdouble nx = cmd->nx;
+   GLdouble ny = cmd->ny;
+   GLdouble nz = cmd->nz;
+   CALL_Normal3d(ctx->CurrentServerDispatch, (nx, ny, nz));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3d(GLdouble nx, GLdouble ny, GLdouble nz)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3d);
+   struct marshal_cmd_Normal3d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3d, cmd_size);
+   cmd->nx = nx;
+   cmd->ny = ny;
+   cmd->nz = nz;
+}
+
+
+/* Normal3dv: marshalled asynchronously */
+struct marshal_cmd_Normal3dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[3];
+};
+uint32_t
+_mesa_unmarshal_Normal3dv(struct gl_context *ctx, const struct marshal_cmd_Normal3dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_Normal3dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3dv);
+   struct marshal_cmd_Normal3dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3dv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLdouble));
+}
+
+
+/* Normal3f: marshalled asynchronously */
+struct marshal_cmd_Normal3f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat nx;
+   GLfloat ny;
+   GLfloat nz;
+};
+uint32_t
+_mesa_unmarshal_Normal3f(struct gl_context *ctx, const struct marshal_cmd_Normal3f *cmd)
+{
+   GLfloat nx = cmd->nx;
+   GLfloat ny = cmd->ny;
+   GLfloat nz = cmd->nz;
+   CALL_Normal3f(ctx->CurrentServerDispatch, (nx, ny, nz));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3f(GLfloat nx, GLfloat ny, GLfloat nz)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3f);
+   struct marshal_cmd_Normal3f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3f, cmd_size);
+   cmd->nx = nx;
+   cmd->ny = ny;
+   cmd->nz = nz;
+}
+
+
+/* Normal3fv: marshalled asynchronously */
+struct marshal_cmd_Normal3fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[3];
+};
+uint32_t
+_mesa_unmarshal_Normal3fv(struct gl_context *ctx, const struct marshal_cmd_Normal3fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_Normal3fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3fv);
+   struct marshal_cmd_Normal3fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3fv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLfloat));
+}
+
+
+/* Normal3i: marshalled asynchronously */
+struct marshal_cmd_Normal3i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint nx;
+   GLint ny;
+   GLint nz;
+};
+uint32_t
+_mesa_unmarshal_Normal3i(struct gl_context *ctx, const struct marshal_cmd_Normal3i *cmd)
+{
+   GLint nx = cmd->nx;
+   GLint ny = cmd->ny;
+   GLint nz = cmd->nz;
+   CALL_Normal3i(ctx->CurrentServerDispatch, (nx, ny, nz));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3i(GLint nx, GLint ny, GLint nz)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3i);
+   struct marshal_cmd_Normal3i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3i, cmd_size);
+   cmd->nx = nx;
+   cmd->ny = ny;
+   cmd->nz = nz;
+}
+
+
+/* Normal3iv: marshalled asynchronously */
+struct marshal_cmd_Normal3iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[3];
+};
+uint32_t
+_mesa_unmarshal_Normal3iv(struct gl_context *ctx, const struct marshal_cmd_Normal3iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_Normal3iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3iv);
+   struct marshal_cmd_Normal3iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3iv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLint));
+}
+
+
+/* Normal3s: marshalled asynchronously */
+struct marshal_cmd_Normal3s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort nx;
+   GLshort ny;
+   GLshort nz;
+};
+uint32_t
+_mesa_unmarshal_Normal3s(struct gl_context *ctx, const struct marshal_cmd_Normal3s *cmd)
+{
+   GLshort nx = cmd->nx;
+   GLshort ny = cmd->ny;
+   GLshort nz = cmd->nz;
+   CALL_Normal3s(ctx->CurrentServerDispatch, (nx, ny, nz));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3s(GLshort nx, GLshort ny, GLshort nz)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3s);
+   struct marshal_cmd_Normal3s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3s, cmd_size);
+   cmd->nx = nx;
+   cmd->ny = ny;
+   cmd->nz = nz;
+}
+
+
+/* Normal3sv: marshalled asynchronously */
+struct marshal_cmd_Normal3sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[3];
+};
+uint32_t
+_mesa_unmarshal_Normal3sv(struct gl_context *ctx, const struct marshal_cmd_Normal3sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_Normal3sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Normal3sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Normal3sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Normal3sv);
+   struct marshal_cmd_Normal3sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Normal3sv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLshort));
+}
+
+
+/* RasterPos2d: marshalled asynchronously */
+struct marshal_cmd_RasterPos2d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x;
+   GLdouble y;
+};
+uint32_t
+_mesa_unmarshal_RasterPos2d(struct gl_context *ctx, const struct marshal_cmd_RasterPos2d *cmd)
+{
+   GLdouble x = cmd->x;
+   GLdouble y = cmd->y;
+   CALL_RasterPos2d(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2d(GLdouble x, GLdouble y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2d);
+   struct marshal_cmd_RasterPos2d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2d, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* RasterPos2dv: marshalled asynchronously */
+struct marshal_cmd_RasterPos2dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[2];
+};
+uint32_t
+_mesa_unmarshal_RasterPos2dv(struct gl_context *ctx, const struct marshal_cmd_RasterPos2dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_RasterPos2dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2dv);
+   struct marshal_cmd_RasterPos2dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2dv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLdouble));
+}
+
+
+/* RasterPos2f: marshalled asynchronously */
+struct marshal_cmd_RasterPos2f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x;
+   GLfloat y;
+};
+uint32_t
+_mesa_unmarshal_RasterPos2f(struct gl_context *ctx, const struct marshal_cmd_RasterPos2f *cmd)
+{
+   GLfloat x = cmd->x;
+   GLfloat y = cmd->y;
+   CALL_RasterPos2f(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2f(GLfloat x, GLfloat y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2f);
+   struct marshal_cmd_RasterPos2f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2f, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* RasterPos2fv: marshalled asynchronously */
+struct marshal_cmd_RasterPos2fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[2];
+};
+uint32_t
+_mesa_unmarshal_RasterPos2fv(struct gl_context *ctx, const struct marshal_cmd_RasterPos2fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_RasterPos2fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2fv);
+   struct marshal_cmd_RasterPos2fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2fv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLfloat));
+}
+
+
+/* RasterPos2i: marshalled asynchronously */
+struct marshal_cmd_RasterPos2i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+};
+uint32_t
+_mesa_unmarshal_RasterPos2i(struct gl_context *ctx, const struct marshal_cmd_RasterPos2i *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   CALL_RasterPos2i(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2i(GLint x, GLint y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2i);
+   struct marshal_cmd_RasterPos2i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2i, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* RasterPos2iv: marshalled asynchronously */
+struct marshal_cmd_RasterPos2iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[2];
+};
+uint32_t
+_mesa_unmarshal_RasterPos2iv(struct gl_context *ctx, const struct marshal_cmd_RasterPos2iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_RasterPos2iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2iv);
+   struct marshal_cmd_RasterPos2iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2iv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLint));
+}
+
+
+/* RasterPos2s: marshalled asynchronously */
+struct marshal_cmd_RasterPos2s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x;
+   GLshort y;
+};
+uint32_t
+_mesa_unmarshal_RasterPos2s(struct gl_context *ctx, const struct marshal_cmd_RasterPos2s *cmd)
+{
+   GLshort x = cmd->x;
+   GLshort y = cmd->y;
+   CALL_RasterPos2s(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2s(GLshort x, GLshort y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2s);
+   struct marshal_cmd_RasterPos2s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2s, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* RasterPos2sv: marshalled asynchronously */
+struct marshal_cmd_RasterPos2sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[2];
+};
+uint32_t
+_mesa_unmarshal_RasterPos2sv(struct gl_context *ctx, const struct marshal_cmd_RasterPos2sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_RasterPos2sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos2sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos2sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos2sv);
+   struct marshal_cmd_RasterPos2sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos2sv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLshort));
+}
+
+
+/* RasterPos3d: marshalled asynchronously */
+struct marshal_cmd_RasterPos3d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x;
+   GLdouble y;
+   GLdouble z;
+};
+uint32_t
+_mesa_unmarshal_RasterPos3d(struct gl_context *ctx, const struct marshal_cmd_RasterPos3d *cmd)
+{
+   GLdouble x = cmd->x;
+   GLdouble y = cmd->y;
+   GLdouble z = cmd->z;
+   CALL_RasterPos3d(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3d(GLdouble x, GLdouble y, GLdouble z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3d);
+   struct marshal_cmd_RasterPos3d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3d, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* RasterPos3dv: marshalled asynchronously */
+struct marshal_cmd_RasterPos3dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[3];
+};
+uint32_t
+_mesa_unmarshal_RasterPos3dv(struct gl_context *ctx, const struct marshal_cmd_RasterPos3dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_RasterPos3dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3dv);
+   struct marshal_cmd_RasterPos3dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3dv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLdouble));
+}
+
+
+/* RasterPos3f: marshalled asynchronously */
+struct marshal_cmd_RasterPos3f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x;
+   GLfloat y;
+   GLfloat z;
+};
+uint32_t
+_mesa_unmarshal_RasterPos3f(struct gl_context *ctx, const struct marshal_cmd_RasterPos3f *cmd)
+{
+   GLfloat x = cmd->x;
+   GLfloat y = cmd->y;
+   GLfloat z = cmd->z;
+   CALL_RasterPos3f(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3f(GLfloat x, GLfloat y, GLfloat z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3f);
+   struct marshal_cmd_RasterPos3f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3f, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* RasterPos3fv: marshalled asynchronously */
+struct marshal_cmd_RasterPos3fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[3];
+};
+uint32_t
+_mesa_unmarshal_RasterPos3fv(struct gl_context *ctx, const struct marshal_cmd_RasterPos3fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_RasterPos3fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3fv);
+   struct marshal_cmd_RasterPos3fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3fv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLfloat));
+}
+
+
+/* RasterPos3i: marshalled asynchronously */
+struct marshal_cmd_RasterPos3i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+   GLint z;
+};
+uint32_t
+_mesa_unmarshal_RasterPos3i(struct gl_context *ctx, const struct marshal_cmd_RasterPos3i *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   GLint z = cmd->z;
+   CALL_RasterPos3i(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3i(GLint x, GLint y, GLint z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3i);
+   struct marshal_cmd_RasterPos3i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3i, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* RasterPos3iv: marshalled asynchronously */
+struct marshal_cmd_RasterPos3iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[3];
+};
+uint32_t
+_mesa_unmarshal_RasterPos3iv(struct gl_context *ctx, const struct marshal_cmd_RasterPos3iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_RasterPos3iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3iv);
+   struct marshal_cmd_RasterPos3iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3iv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLint));
+}
+
+
+/* RasterPos3s: marshalled asynchronously */
+struct marshal_cmd_RasterPos3s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x;
+   GLshort y;
+   GLshort z;
+};
+uint32_t
+_mesa_unmarshal_RasterPos3s(struct gl_context *ctx, const struct marshal_cmd_RasterPos3s *cmd)
+{
+   GLshort x = cmd->x;
+   GLshort y = cmd->y;
+   GLshort z = cmd->z;
+   CALL_RasterPos3s(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3s(GLshort x, GLshort y, GLshort z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3s);
+   struct marshal_cmd_RasterPos3s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3s, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* RasterPos3sv: marshalled asynchronously */
+struct marshal_cmd_RasterPos3sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[3];
+};
+uint32_t
+_mesa_unmarshal_RasterPos3sv(struct gl_context *ctx, const struct marshal_cmd_RasterPos3sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_RasterPos3sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos3sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos3sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos3sv);
+   struct marshal_cmd_RasterPos3sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos3sv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLshort));
+}
+
+
+/* RasterPos4d: marshalled asynchronously */
+struct marshal_cmd_RasterPos4d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x;
+   GLdouble y;
+   GLdouble z;
+   GLdouble w;
+};
+uint32_t
+_mesa_unmarshal_RasterPos4d(struct gl_context *ctx, const struct marshal_cmd_RasterPos4d *cmd)
+{
+   GLdouble x = cmd->x;
+   GLdouble y = cmd->y;
+   GLdouble z = cmd->z;
+   GLdouble w = cmd->w;
+   CALL_RasterPos4d(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4d);
+   struct marshal_cmd_RasterPos4d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4d, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* RasterPos4dv: marshalled asynchronously */
+struct marshal_cmd_RasterPos4dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[4];
+};
+uint32_t
+_mesa_unmarshal_RasterPos4dv(struct gl_context *ctx, const struct marshal_cmd_RasterPos4dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_RasterPos4dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4dv);
+   struct marshal_cmd_RasterPos4dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4dv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLdouble));
+}
+
+
+/* RasterPos4f: marshalled asynchronously */
+struct marshal_cmd_RasterPos4f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x;
+   GLfloat y;
+   GLfloat z;
+   GLfloat w;
+};
+uint32_t
+_mesa_unmarshal_RasterPos4f(struct gl_context *ctx, const struct marshal_cmd_RasterPos4f *cmd)
+{
+   GLfloat x = cmd->x;
+   GLfloat y = cmd->y;
+   GLfloat z = cmd->z;
+   GLfloat w = cmd->w;
+   CALL_RasterPos4f(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4f);
+   struct marshal_cmd_RasterPos4f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4f, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* RasterPos4fv: marshalled asynchronously */
+struct marshal_cmd_RasterPos4fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[4];
+};
+uint32_t
+_mesa_unmarshal_RasterPos4fv(struct gl_context *ctx, const struct marshal_cmd_RasterPos4fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_RasterPos4fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4fv);
+   struct marshal_cmd_RasterPos4fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4fv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLfloat));
+}
+
+
+/* RasterPos4i: marshalled asynchronously */
+struct marshal_cmd_RasterPos4i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+   GLint z;
+   GLint w;
+};
+uint32_t
+_mesa_unmarshal_RasterPos4i(struct gl_context *ctx, const struct marshal_cmd_RasterPos4i *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   GLint z = cmd->z;
+   GLint w = cmd->w;
+   CALL_RasterPos4i(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4i(GLint x, GLint y, GLint z, GLint w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4i);
+   struct marshal_cmd_RasterPos4i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4i, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* RasterPos4iv: marshalled asynchronously */
+struct marshal_cmd_RasterPos4iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[4];
+};
+uint32_t
+_mesa_unmarshal_RasterPos4iv(struct gl_context *ctx, const struct marshal_cmd_RasterPos4iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_RasterPos4iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4iv);
+   struct marshal_cmd_RasterPos4iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4iv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLint));
+}
+
+
+/* RasterPos4s: marshalled asynchronously */
+struct marshal_cmd_RasterPos4s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x;
+   GLshort y;
+   GLshort z;
+   GLshort w;
+};
+uint32_t
+_mesa_unmarshal_RasterPos4s(struct gl_context *ctx, const struct marshal_cmd_RasterPos4s *cmd)
+{
+   GLshort x = cmd->x;
+   GLshort y = cmd->y;
+   GLshort z = cmd->z;
+   GLshort w = cmd->w;
+   CALL_RasterPos4s(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4s(GLshort x, GLshort y, GLshort z, GLshort w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4s);
+   struct marshal_cmd_RasterPos4s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4s, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* RasterPos4sv: marshalled asynchronously */
+struct marshal_cmd_RasterPos4sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[4];
+};
+uint32_t
+_mesa_unmarshal_RasterPos4sv(struct gl_context *ctx, const struct marshal_cmd_RasterPos4sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_RasterPos4sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_RasterPos4sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_RasterPos4sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_RasterPos4sv);
+   struct marshal_cmd_RasterPos4sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_RasterPos4sv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLshort));
+}
+
+
+/* Rectd: marshalled asynchronously */
+struct marshal_cmd_Rectd
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x1;
+   GLdouble y1;
+   GLdouble x2;
+   GLdouble y2;
+};
+uint32_t
+_mesa_unmarshal_Rectd(struct gl_context *ctx, const struct marshal_cmd_Rectd *cmd)
+{
+   GLdouble x1 = cmd->x1;
+   GLdouble y1 = cmd->y1;
+   GLdouble x2 = cmd->x2;
+   GLdouble y2 = cmd->y2;
+   CALL_Rectd(ctx->CurrentServerDispatch, (x1, y1, x2, y2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rectd), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rectd(GLdouble x1, GLdouble y1, GLdouble x2, GLdouble y2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rectd);
+   struct marshal_cmd_Rectd *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rectd, cmd_size);
+   cmd->x1 = x1;
+   cmd->y1 = y1;
+   cmd->x2 = x2;
+   cmd->y2 = y2;
+}
+
+
+/* Rectdv: marshalled asynchronously */
+struct marshal_cmd_Rectdv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v1[2];
+   GLdouble v2[2];
+};
+uint32_t
+_mesa_unmarshal_Rectdv(struct gl_context *ctx, const struct marshal_cmd_Rectdv *cmd)
+{
+   const GLdouble *v1 = cmd->v1;
+   const GLdouble *v2 = cmd->v2;
+   CALL_Rectdv(ctx->CurrentServerDispatch, (v1, v2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rectdv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rectdv(const GLdouble * v1, const GLdouble * v2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rectdv);
+   struct marshal_cmd_Rectdv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rectdv, cmd_size);
+   memcpy(cmd->v1, v1, 2 * sizeof(GLdouble));
+   memcpy(cmd->v2, v2, 2 * sizeof(GLdouble));
+}
+
+
+/* Rectf: marshalled asynchronously */
+struct marshal_cmd_Rectf
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x1;
+   GLfloat y1;
+   GLfloat x2;
+   GLfloat y2;
+};
+uint32_t
+_mesa_unmarshal_Rectf(struct gl_context *ctx, const struct marshal_cmd_Rectf *cmd)
+{
+   GLfloat x1 = cmd->x1;
+   GLfloat y1 = cmd->y1;
+   GLfloat x2 = cmd->x2;
+   GLfloat y2 = cmd->y2;
+   CALL_Rectf(ctx->CurrentServerDispatch, (x1, y1, x2, y2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rectf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rectf);
+   struct marshal_cmd_Rectf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rectf, cmd_size);
+   cmd->x1 = x1;
+   cmd->y1 = y1;
+   cmd->x2 = x2;
+   cmd->y2 = y2;
+}
+
+
+/* Rectfv: marshalled asynchronously */
+struct marshal_cmd_Rectfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v1[2];
+   GLfloat v2[2];
+};
+uint32_t
+_mesa_unmarshal_Rectfv(struct gl_context *ctx, const struct marshal_cmd_Rectfv *cmd)
+{
+   const GLfloat *v1 = cmd->v1;
+   const GLfloat *v2 = cmd->v2;
+   CALL_Rectfv(ctx->CurrentServerDispatch, (v1, v2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rectfv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rectfv(const GLfloat * v1, const GLfloat * v2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rectfv);
+   struct marshal_cmd_Rectfv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rectfv, cmd_size);
+   memcpy(cmd->v1, v1, 2 * sizeof(GLfloat));
+   memcpy(cmd->v2, v2, 2 * sizeof(GLfloat));
+}
+
+
+/* Recti: marshalled asynchronously */
+struct marshal_cmd_Recti
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x1;
+   GLint y1;
+   GLint x2;
+   GLint y2;
+};
+uint32_t
+_mesa_unmarshal_Recti(struct gl_context *ctx, const struct marshal_cmd_Recti *cmd)
+{
+   GLint x1 = cmd->x1;
+   GLint y1 = cmd->y1;
+   GLint x2 = cmd->x2;
+   GLint y2 = cmd->y2;
+   CALL_Recti(ctx->CurrentServerDispatch, (x1, y1, x2, y2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Recti), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Recti(GLint x1, GLint y1, GLint x2, GLint y2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Recti);
+   struct marshal_cmd_Recti *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Recti, cmd_size);
+   cmd->x1 = x1;
+   cmd->y1 = y1;
+   cmd->x2 = x2;
+   cmd->y2 = y2;
+}
+
+
+/* Rectiv: marshalled asynchronously */
+struct marshal_cmd_Rectiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v1[2];
+   GLint v2[2];
+};
+uint32_t
+_mesa_unmarshal_Rectiv(struct gl_context *ctx, const struct marshal_cmd_Rectiv *cmd)
+{
+   const GLint *v1 = cmd->v1;
+   const GLint *v2 = cmd->v2;
+   CALL_Rectiv(ctx->CurrentServerDispatch, (v1, v2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rectiv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rectiv(const GLint * v1, const GLint * v2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rectiv);
+   struct marshal_cmd_Rectiv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rectiv, cmd_size);
+   memcpy(cmd->v1, v1, 2 * sizeof(GLint));
+   memcpy(cmd->v2, v2, 2 * sizeof(GLint));
+}
+
+
+/* Rects: marshalled asynchronously */
+struct marshal_cmd_Rects
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x1;
+   GLshort y1;
+   GLshort x2;
+   GLshort y2;
+};
+uint32_t
+_mesa_unmarshal_Rects(struct gl_context *ctx, const struct marshal_cmd_Rects *cmd)
+{
+   GLshort x1 = cmd->x1;
+   GLshort y1 = cmd->y1;
+   GLshort x2 = cmd->x2;
+   GLshort y2 = cmd->y2;
+   CALL_Rects(ctx->CurrentServerDispatch, (x1, y1, x2, y2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rects), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rects(GLshort x1, GLshort y1, GLshort x2, GLshort y2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rects);
+   struct marshal_cmd_Rects *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rects, cmd_size);
+   cmd->x1 = x1;
+   cmd->y1 = y1;
+   cmd->x2 = x2;
+   cmd->y2 = y2;
+}
+
+
+/* Rectsv: marshalled asynchronously */
+struct marshal_cmd_Rectsv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v1[2];
+   GLshort v2[2];
+};
+uint32_t
+_mesa_unmarshal_Rectsv(struct gl_context *ctx, const struct marshal_cmd_Rectsv *cmd)
+{
+   const GLshort *v1 = cmd->v1;
+   const GLshort *v2 = cmd->v2;
+   CALL_Rectsv(ctx->CurrentServerDispatch, (v1, v2));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Rectsv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Rectsv(const GLshort * v1, const GLshort * v2)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Rectsv);
+   struct marshal_cmd_Rectsv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Rectsv, cmd_size);
+   memcpy(cmd->v1, v1, 2 * sizeof(GLshort));
+   memcpy(cmd->v2, v2, 2 * sizeof(GLshort));
+}
+
+
+/* TexCoord1d: marshalled asynchronously */
+struct marshal_cmd_TexCoord1d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble s;
+};
+uint32_t
+_mesa_unmarshal_TexCoord1d(struct gl_context *ctx, const struct marshal_cmd_TexCoord1d *cmd)
+{
+   GLdouble s = cmd->s;
+   CALL_TexCoord1d(ctx->CurrentServerDispatch, (s));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1d(GLdouble s)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1d);
+   struct marshal_cmd_TexCoord1d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1d, cmd_size);
+   cmd->s = s;
+}
+
+
+/* TexCoord1dv: marshalled asynchronously */
+struct marshal_cmd_TexCoord1dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[1];
+};
+uint32_t
+_mesa_unmarshal_TexCoord1dv(struct gl_context *ctx, const struct marshal_cmd_TexCoord1dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_TexCoord1dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1dv);
+   struct marshal_cmd_TexCoord1dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1dv, cmd_size);
+   memcpy(cmd->v, v, 1 * sizeof(GLdouble));
+}
+
+
+/* TexCoord1f: marshalled asynchronously */
+struct marshal_cmd_TexCoord1f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat s;
+};
+uint32_t
+_mesa_unmarshal_TexCoord1f(struct gl_context *ctx, const struct marshal_cmd_TexCoord1f *cmd)
+{
+   GLfloat s = cmd->s;
+   CALL_TexCoord1f(ctx->CurrentServerDispatch, (s));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1f(GLfloat s)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1f);
+   struct marshal_cmd_TexCoord1f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1f, cmd_size);
+   cmd->s = s;
+}
+
+
+/* TexCoord1fv: marshalled asynchronously */
+struct marshal_cmd_TexCoord1fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[1];
+};
+uint32_t
+_mesa_unmarshal_TexCoord1fv(struct gl_context *ctx, const struct marshal_cmd_TexCoord1fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_TexCoord1fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1fv);
+   struct marshal_cmd_TexCoord1fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1fv, cmd_size);
+   memcpy(cmd->v, v, 1 * sizeof(GLfloat));
+}
+
+
+/* TexCoord1i: marshalled asynchronously */
+struct marshal_cmd_TexCoord1i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint s;
+};
+uint32_t
+_mesa_unmarshal_TexCoord1i(struct gl_context *ctx, const struct marshal_cmd_TexCoord1i *cmd)
+{
+   GLint s = cmd->s;
+   CALL_TexCoord1i(ctx->CurrentServerDispatch, (s));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1i(GLint s)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1i);
+   struct marshal_cmd_TexCoord1i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1i, cmd_size);
+   cmd->s = s;
+}
+
+
+/* TexCoord1iv: marshalled asynchronously */
+struct marshal_cmd_TexCoord1iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[1];
+};
+uint32_t
+_mesa_unmarshal_TexCoord1iv(struct gl_context *ctx, const struct marshal_cmd_TexCoord1iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_TexCoord1iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1iv);
+   struct marshal_cmd_TexCoord1iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1iv, cmd_size);
+   memcpy(cmd->v, v, 1 * sizeof(GLint));
+}
+
+
+/* TexCoord1s: marshalled asynchronously */
+struct marshal_cmd_TexCoord1s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort s;
+};
+uint32_t
+_mesa_unmarshal_TexCoord1s(struct gl_context *ctx, const struct marshal_cmd_TexCoord1s *cmd)
+{
+   GLshort s = cmd->s;
+   CALL_TexCoord1s(ctx->CurrentServerDispatch, (s));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1s(GLshort s)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1s);
+   struct marshal_cmd_TexCoord1s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1s, cmd_size);
+   cmd->s = s;
+}
+
+
+/* TexCoord1sv: marshalled asynchronously */
+struct marshal_cmd_TexCoord1sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[1];
+};
+uint32_t
+_mesa_unmarshal_TexCoord1sv(struct gl_context *ctx, const struct marshal_cmd_TexCoord1sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_TexCoord1sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord1sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord1sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord1sv);
+   struct marshal_cmd_TexCoord1sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord1sv, cmd_size);
+   memcpy(cmd->v, v, 1 * sizeof(GLshort));
+}
+
+
+/* TexCoord2d: marshalled asynchronously */
+struct marshal_cmd_TexCoord2d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble s;
+   GLdouble t;
+};
+uint32_t
+_mesa_unmarshal_TexCoord2d(struct gl_context *ctx, const struct marshal_cmd_TexCoord2d *cmd)
+{
+   GLdouble s = cmd->s;
+   GLdouble t = cmd->t;
+   CALL_TexCoord2d(ctx->CurrentServerDispatch, (s, t));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2d(GLdouble s, GLdouble t)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2d);
+   struct marshal_cmd_TexCoord2d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2d, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+}
+
+
+/* TexCoord2dv: marshalled asynchronously */
+struct marshal_cmd_TexCoord2dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[2];
+};
+uint32_t
+_mesa_unmarshal_TexCoord2dv(struct gl_context *ctx, const struct marshal_cmd_TexCoord2dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_TexCoord2dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2dv);
+   struct marshal_cmd_TexCoord2dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2dv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLdouble));
+}
+
+
+/* TexCoord2f: marshalled asynchronously */
+struct marshal_cmd_TexCoord2f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat s;
+   GLfloat t;
+};
+uint32_t
+_mesa_unmarshal_TexCoord2f(struct gl_context *ctx, const struct marshal_cmd_TexCoord2f *cmd)
+{
+   GLfloat s = cmd->s;
+   GLfloat t = cmd->t;
+   CALL_TexCoord2f(ctx->CurrentServerDispatch, (s, t));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2f(GLfloat s, GLfloat t)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2f);
+   struct marshal_cmd_TexCoord2f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2f, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+}
+
+
+/* TexCoord2fv: marshalled asynchronously */
+struct marshal_cmd_TexCoord2fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[2];
+};
+uint32_t
+_mesa_unmarshal_TexCoord2fv(struct gl_context *ctx, const struct marshal_cmd_TexCoord2fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_TexCoord2fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2fv);
+   struct marshal_cmd_TexCoord2fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2fv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLfloat));
+}
+
+
+/* TexCoord2i: marshalled asynchronously */
+struct marshal_cmd_TexCoord2i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint s;
+   GLint t;
+};
+uint32_t
+_mesa_unmarshal_TexCoord2i(struct gl_context *ctx, const struct marshal_cmd_TexCoord2i *cmd)
+{
+   GLint s = cmd->s;
+   GLint t = cmd->t;
+   CALL_TexCoord2i(ctx->CurrentServerDispatch, (s, t));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2i(GLint s, GLint t)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2i);
+   struct marshal_cmd_TexCoord2i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2i, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+}
+
+
+/* TexCoord2iv: marshalled asynchronously */
+struct marshal_cmd_TexCoord2iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[2];
+};
+uint32_t
+_mesa_unmarshal_TexCoord2iv(struct gl_context *ctx, const struct marshal_cmd_TexCoord2iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_TexCoord2iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2iv);
+   struct marshal_cmd_TexCoord2iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2iv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLint));
+}
+
+
+/* TexCoord2s: marshalled asynchronously */
+struct marshal_cmd_TexCoord2s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort s;
+   GLshort t;
+};
+uint32_t
+_mesa_unmarshal_TexCoord2s(struct gl_context *ctx, const struct marshal_cmd_TexCoord2s *cmd)
+{
+   GLshort s = cmd->s;
+   GLshort t = cmd->t;
+   CALL_TexCoord2s(ctx->CurrentServerDispatch, (s, t));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2s(GLshort s, GLshort t)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2s);
+   struct marshal_cmd_TexCoord2s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2s, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+}
+
+
+/* TexCoord2sv: marshalled asynchronously */
+struct marshal_cmd_TexCoord2sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[2];
+};
+uint32_t
+_mesa_unmarshal_TexCoord2sv(struct gl_context *ctx, const struct marshal_cmd_TexCoord2sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_TexCoord2sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord2sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord2sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord2sv);
+   struct marshal_cmd_TexCoord2sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord2sv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLshort));
+}
+
+
+/* TexCoord3d: marshalled asynchronously */
+struct marshal_cmd_TexCoord3d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble s;
+   GLdouble t;
+   GLdouble r;
+};
+uint32_t
+_mesa_unmarshal_TexCoord3d(struct gl_context *ctx, const struct marshal_cmd_TexCoord3d *cmd)
+{
+   GLdouble s = cmd->s;
+   GLdouble t = cmd->t;
+   GLdouble r = cmd->r;
+   CALL_TexCoord3d(ctx->CurrentServerDispatch, (s, t, r));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3d(GLdouble s, GLdouble t, GLdouble r)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3d);
+   struct marshal_cmd_TexCoord3d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3d, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+}
+
+
+/* TexCoord3dv: marshalled asynchronously */
+struct marshal_cmd_TexCoord3dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[3];
+};
+uint32_t
+_mesa_unmarshal_TexCoord3dv(struct gl_context *ctx, const struct marshal_cmd_TexCoord3dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_TexCoord3dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3dv);
+   struct marshal_cmd_TexCoord3dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3dv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLdouble));
+}
+
+
+/* TexCoord3f: marshalled asynchronously */
+struct marshal_cmd_TexCoord3f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat s;
+   GLfloat t;
+   GLfloat r;
+};
+uint32_t
+_mesa_unmarshal_TexCoord3f(struct gl_context *ctx, const struct marshal_cmd_TexCoord3f *cmd)
+{
+   GLfloat s = cmd->s;
+   GLfloat t = cmd->t;
+   GLfloat r = cmd->r;
+   CALL_TexCoord3f(ctx->CurrentServerDispatch, (s, t, r));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3f(GLfloat s, GLfloat t, GLfloat r)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3f);
+   struct marshal_cmd_TexCoord3f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3f, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+}
+
+
+/* TexCoord3fv: marshalled asynchronously */
+struct marshal_cmd_TexCoord3fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[3];
+};
+uint32_t
+_mesa_unmarshal_TexCoord3fv(struct gl_context *ctx, const struct marshal_cmd_TexCoord3fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_TexCoord3fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3fv);
+   struct marshal_cmd_TexCoord3fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3fv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLfloat));
+}
+
+
+/* TexCoord3i: marshalled asynchronously */
+struct marshal_cmd_TexCoord3i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint s;
+   GLint t;
+   GLint r;
+};
+uint32_t
+_mesa_unmarshal_TexCoord3i(struct gl_context *ctx, const struct marshal_cmd_TexCoord3i *cmd)
+{
+   GLint s = cmd->s;
+   GLint t = cmd->t;
+   GLint r = cmd->r;
+   CALL_TexCoord3i(ctx->CurrentServerDispatch, (s, t, r));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3i(GLint s, GLint t, GLint r)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3i);
+   struct marshal_cmd_TexCoord3i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3i, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+}
+
+
+/* TexCoord3iv: marshalled asynchronously */
+struct marshal_cmd_TexCoord3iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[3];
+};
+uint32_t
+_mesa_unmarshal_TexCoord3iv(struct gl_context *ctx, const struct marshal_cmd_TexCoord3iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_TexCoord3iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3iv);
+   struct marshal_cmd_TexCoord3iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3iv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLint));
+}
+
+
+/* TexCoord3s: marshalled asynchronously */
+struct marshal_cmd_TexCoord3s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort s;
+   GLshort t;
+   GLshort r;
+};
+uint32_t
+_mesa_unmarshal_TexCoord3s(struct gl_context *ctx, const struct marshal_cmd_TexCoord3s *cmd)
+{
+   GLshort s = cmd->s;
+   GLshort t = cmd->t;
+   GLshort r = cmd->r;
+   CALL_TexCoord3s(ctx->CurrentServerDispatch, (s, t, r));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3s(GLshort s, GLshort t, GLshort r)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3s);
+   struct marshal_cmd_TexCoord3s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3s, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+}
+
+
+/* TexCoord3sv: marshalled asynchronously */
+struct marshal_cmd_TexCoord3sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[3];
+};
+uint32_t
+_mesa_unmarshal_TexCoord3sv(struct gl_context *ctx, const struct marshal_cmd_TexCoord3sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_TexCoord3sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord3sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord3sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord3sv);
+   struct marshal_cmd_TexCoord3sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord3sv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLshort));
+}
+
+
+/* TexCoord4d: marshalled asynchronously */
+struct marshal_cmd_TexCoord4d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble s;
+   GLdouble t;
+   GLdouble r;
+   GLdouble q;
+};
+uint32_t
+_mesa_unmarshal_TexCoord4d(struct gl_context *ctx, const struct marshal_cmd_TexCoord4d *cmd)
+{
+   GLdouble s = cmd->s;
+   GLdouble t = cmd->t;
+   GLdouble r = cmd->r;
+   GLdouble q = cmd->q;
+   CALL_TexCoord4d(ctx->CurrentServerDispatch, (s, t, r, q));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4d(GLdouble s, GLdouble t, GLdouble r, GLdouble q)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4d);
+   struct marshal_cmd_TexCoord4d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4d, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+   cmd->q = q;
+}
+
+
+/* TexCoord4dv: marshalled asynchronously */
+struct marshal_cmd_TexCoord4dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[4];
+};
+uint32_t
+_mesa_unmarshal_TexCoord4dv(struct gl_context *ctx, const struct marshal_cmd_TexCoord4dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_TexCoord4dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4dv);
+   struct marshal_cmd_TexCoord4dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4dv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLdouble));
+}
+
+
+/* TexCoord4f: marshalled asynchronously */
+struct marshal_cmd_TexCoord4f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat s;
+   GLfloat t;
+   GLfloat r;
+   GLfloat q;
+};
+uint32_t
+_mesa_unmarshal_TexCoord4f(struct gl_context *ctx, const struct marshal_cmd_TexCoord4f *cmd)
+{
+   GLfloat s = cmd->s;
+   GLfloat t = cmd->t;
+   GLfloat r = cmd->r;
+   GLfloat q = cmd->q;
+   CALL_TexCoord4f(ctx->CurrentServerDispatch, (s, t, r, q));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4f(GLfloat s, GLfloat t, GLfloat r, GLfloat q)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4f);
+   struct marshal_cmd_TexCoord4f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4f, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+   cmd->q = q;
+}
+
+
+/* TexCoord4fv: marshalled asynchronously */
+struct marshal_cmd_TexCoord4fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[4];
+};
+uint32_t
+_mesa_unmarshal_TexCoord4fv(struct gl_context *ctx, const struct marshal_cmd_TexCoord4fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_TexCoord4fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4fv);
+   struct marshal_cmd_TexCoord4fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4fv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLfloat));
+}
+
+
+/* TexCoord4i: marshalled asynchronously */
+struct marshal_cmd_TexCoord4i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint s;
+   GLint t;
+   GLint r;
+   GLint q;
+};
+uint32_t
+_mesa_unmarshal_TexCoord4i(struct gl_context *ctx, const struct marshal_cmd_TexCoord4i *cmd)
+{
+   GLint s = cmd->s;
+   GLint t = cmd->t;
+   GLint r = cmd->r;
+   GLint q = cmd->q;
+   CALL_TexCoord4i(ctx->CurrentServerDispatch, (s, t, r, q));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4i(GLint s, GLint t, GLint r, GLint q)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4i);
+   struct marshal_cmd_TexCoord4i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4i, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+   cmd->q = q;
+}
+
+
+/* TexCoord4iv: marshalled asynchronously */
+struct marshal_cmd_TexCoord4iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[4];
+};
+uint32_t
+_mesa_unmarshal_TexCoord4iv(struct gl_context *ctx, const struct marshal_cmd_TexCoord4iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_TexCoord4iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4iv);
+   struct marshal_cmd_TexCoord4iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4iv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLint));
+}
+
+
+/* TexCoord4s: marshalled asynchronously */
+struct marshal_cmd_TexCoord4s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort s;
+   GLshort t;
+   GLshort r;
+   GLshort q;
+};
+uint32_t
+_mesa_unmarshal_TexCoord4s(struct gl_context *ctx, const struct marshal_cmd_TexCoord4s *cmd)
+{
+   GLshort s = cmd->s;
+   GLshort t = cmd->t;
+   GLshort r = cmd->r;
+   GLshort q = cmd->q;
+   CALL_TexCoord4s(ctx->CurrentServerDispatch, (s, t, r, q));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4s(GLshort s, GLshort t, GLshort r, GLshort q)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4s);
+   struct marshal_cmd_TexCoord4s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4s, cmd_size);
+   cmd->s = s;
+   cmd->t = t;
+   cmd->r = r;
+   cmd->q = q;
+}
+
+
+/* TexCoord4sv: marshalled asynchronously */
+struct marshal_cmd_TexCoord4sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[4];
+};
+uint32_t
+_mesa_unmarshal_TexCoord4sv(struct gl_context *ctx, const struct marshal_cmd_TexCoord4sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_TexCoord4sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexCoord4sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexCoord4sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexCoord4sv);
+   struct marshal_cmd_TexCoord4sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexCoord4sv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLshort));
+}
+
+
+/* Vertex2d: marshalled asynchronously */
+struct marshal_cmd_Vertex2d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x;
+   GLdouble y;
+};
+uint32_t
+_mesa_unmarshal_Vertex2d(struct gl_context *ctx, const struct marshal_cmd_Vertex2d *cmd)
+{
+   GLdouble x = cmd->x;
+   GLdouble y = cmd->y;
+   CALL_Vertex2d(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2d(GLdouble x, GLdouble y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2d);
+   struct marshal_cmd_Vertex2d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2d, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* Vertex2dv: marshalled asynchronously */
+struct marshal_cmd_Vertex2dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[2];
+};
+uint32_t
+_mesa_unmarshal_Vertex2dv(struct gl_context *ctx, const struct marshal_cmd_Vertex2dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_Vertex2dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2dv);
+   struct marshal_cmd_Vertex2dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2dv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLdouble));
+}
+
+
+/* Vertex2f: marshalled asynchronously */
+struct marshal_cmd_Vertex2f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x;
+   GLfloat y;
+};
+uint32_t
+_mesa_unmarshal_Vertex2f(struct gl_context *ctx, const struct marshal_cmd_Vertex2f *cmd)
+{
+   GLfloat x = cmd->x;
+   GLfloat y = cmd->y;
+   CALL_Vertex2f(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2f(GLfloat x, GLfloat y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2f);
+   struct marshal_cmd_Vertex2f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2f, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* Vertex2fv: marshalled asynchronously */
+struct marshal_cmd_Vertex2fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[2];
+};
+uint32_t
+_mesa_unmarshal_Vertex2fv(struct gl_context *ctx, const struct marshal_cmd_Vertex2fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_Vertex2fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2fv);
+   struct marshal_cmd_Vertex2fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2fv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLfloat));
+}
+
+
+/* Vertex2i: marshalled asynchronously */
+struct marshal_cmd_Vertex2i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+};
+uint32_t
+_mesa_unmarshal_Vertex2i(struct gl_context *ctx, const struct marshal_cmd_Vertex2i *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   CALL_Vertex2i(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2i(GLint x, GLint y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2i);
+   struct marshal_cmd_Vertex2i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2i, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* Vertex2iv: marshalled asynchronously */
+struct marshal_cmd_Vertex2iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[2];
+};
+uint32_t
+_mesa_unmarshal_Vertex2iv(struct gl_context *ctx, const struct marshal_cmd_Vertex2iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_Vertex2iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2iv);
+   struct marshal_cmd_Vertex2iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2iv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLint));
+}
+
+
+/* Vertex2s: marshalled asynchronously */
+struct marshal_cmd_Vertex2s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x;
+   GLshort y;
+};
+uint32_t
+_mesa_unmarshal_Vertex2s(struct gl_context *ctx, const struct marshal_cmd_Vertex2s *cmd)
+{
+   GLshort x = cmd->x;
+   GLshort y = cmd->y;
+   CALL_Vertex2s(ctx->CurrentServerDispatch, (x, y));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2s(GLshort x, GLshort y)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2s);
+   struct marshal_cmd_Vertex2s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2s, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+}
+
+
+/* Vertex2sv: marshalled asynchronously */
+struct marshal_cmd_Vertex2sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[2];
+};
+uint32_t
+_mesa_unmarshal_Vertex2sv(struct gl_context *ctx, const struct marshal_cmd_Vertex2sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_Vertex2sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex2sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex2sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex2sv);
+   struct marshal_cmd_Vertex2sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex2sv, cmd_size);
+   memcpy(cmd->v, v, 2 * sizeof(GLshort));
+}
+
+
+/* Vertex3d: marshalled asynchronously */
+struct marshal_cmd_Vertex3d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x;
+   GLdouble y;
+   GLdouble z;
+};
+uint32_t
+_mesa_unmarshal_Vertex3d(struct gl_context *ctx, const struct marshal_cmd_Vertex3d *cmd)
+{
+   GLdouble x = cmd->x;
+   GLdouble y = cmd->y;
+   GLdouble z = cmd->z;
+   CALL_Vertex3d(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3d(GLdouble x, GLdouble y, GLdouble z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3d);
+   struct marshal_cmd_Vertex3d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3d, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* Vertex3dv: marshalled asynchronously */
+struct marshal_cmd_Vertex3dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[3];
+};
+uint32_t
+_mesa_unmarshal_Vertex3dv(struct gl_context *ctx, const struct marshal_cmd_Vertex3dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_Vertex3dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3dv);
+   struct marshal_cmd_Vertex3dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3dv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLdouble));
+}
+
+
+/* Vertex3f: marshalled asynchronously */
+struct marshal_cmd_Vertex3f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x;
+   GLfloat y;
+   GLfloat z;
+};
+uint32_t
+_mesa_unmarshal_Vertex3f(struct gl_context *ctx, const struct marshal_cmd_Vertex3f *cmd)
+{
+   GLfloat x = cmd->x;
+   GLfloat y = cmd->y;
+   GLfloat z = cmd->z;
+   CALL_Vertex3f(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3f(GLfloat x, GLfloat y, GLfloat z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3f);
+   struct marshal_cmd_Vertex3f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3f, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* Vertex3fv: marshalled asynchronously */
+struct marshal_cmd_Vertex3fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[3];
+};
+uint32_t
+_mesa_unmarshal_Vertex3fv(struct gl_context *ctx, const struct marshal_cmd_Vertex3fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_Vertex3fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3fv);
+   struct marshal_cmd_Vertex3fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3fv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLfloat));
+}
+
+
+/* Vertex3i: marshalled asynchronously */
+struct marshal_cmd_Vertex3i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+   GLint z;
+};
+uint32_t
+_mesa_unmarshal_Vertex3i(struct gl_context *ctx, const struct marshal_cmd_Vertex3i *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   GLint z = cmd->z;
+   CALL_Vertex3i(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3i(GLint x, GLint y, GLint z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3i);
+   struct marshal_cmd_Vertex3i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3i, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* Vertex3iv: marshalled asynchronously */
+struct marshal_cmd_Vertex3iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[3];
+};
+uint32_t
+_mesa_unmarshal_Vertex3iv(struct gl_context *ctx, const struct marshal_cmd_Vertex3iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_Vertex3iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3iv);
+   struct marshal_cmd_Vertex3iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3iv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLint));
+}
+
+
+/* Vertex3s: marshalled asynchronously */
+struct marshal_cmd_Vertex3s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x;
+   GLshort y;
+   GLshort z;
+};
+uint32_t
+_mesa_unmarshal_Vertex3s(struct gl_context *ctx, const struct marshal_cmd_Vertex3s *cmd)
+{
+   GLshort x = cmd->x;
+   GLshort y = cmd->y;
+   GLshort z = cmd->z;
+   CALL_Vertex3s(ctx->CurrentServerDispatch, (x, y, z));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3s(GLshort x, GLshort y, GLshort z)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3s);
+   struct marshal_cmd_Vertex3s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3s, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+}
+
+
+/* Vertex3sv: marshalled asynchronously */
+struct marshal_cmd_Vertex3sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[3];
+};
+uint32_t
+_mesa_unmarshal_Vertex3sv(struct gl_context *ctx, const struct marshal_cmd_Vertex3sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_Vertex3sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex3sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex3sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex3sv);
+   struct marshal_cmd_Vertex3sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex3sv, cmd_size);
+   memcpy(cmd->v, v, 3 * sizeof(GLshort));
+}
+
+
+/* Vertex4d: marshalled asynchronously */
+struct marshal_cmd_Vertex4d
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble x;
+   GLdouble y;
+   GLdouble z;
+   GLdouble w;
+};
+uint32_t
+_mesa_unmarshal_Vertex4d(struct gl_context *ctx, const struct marshal_cmd_Vertex4d *cmd)
+{
+   GLdouble x = cmd->x;
+   GLdouble y = cmd->y;
+   GLdouble z = cmd->z;
+   GLdouble w = cmd->w;
+   CALL_Vertex4d(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4d), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4d(GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4d);
+   struct marshal_cmd_Vertex4d *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4d, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* Vertex4dv: marshalled asynchronously */
+struct marshal_cmd_Vertex4dv
+{
+   struct marshal_cmd_base cmd_base;
+   GLdouble v[4];
+};
+uint32_t
+_mesa_unmarshal_Vertex4dv(struct gl_context *ctx, const struct marshal_cmd_Vertex4dv *cmd)
+{
+   const GLdouble *v = cmd->v;
+   CALL_Vertex4dv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4dv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4dv(const GLdouble * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4dv);
+   struct marshal_cmd_Vertex4dv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4dv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLdouble));
+}
+
+
+/* Vertex4f: marshalled asynchronously */
+struct marshal_cmd_Vertex4f
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat x;
+   GLfloat y;
+   GLfloat z;
+   GLfloat w;
+};
+uint32_t
+_mesa_unmarshal_Vertex4f(struct gl_context *ctx, const struct marshal_cmd_Vertex4f *cmd)
+{
+   GLfloat x = cmd->x;
+   GLfloat y = cmd->y;
+   GLfloat z = cmd->z;
+   GLfloat w = cmd->w;
+   CALL_Vertex4f(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4f), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4f(GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4f);
+   struct marshal_cmd_Vertex4f *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4f, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* Vertex4fv: marshalled asynchronously */
+struct marshal_cmd_Vertex4fv
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat v[4];
+};
+uint32_t
+_mesa_unmarshal_Vertex4fv(struct gl_context *ctx, const struct marshal_cmd_Vertex4fv *cmd)
+{
+   const GLfloat *v = cmd->v;
+   CALL_Vertex4fv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4fv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4fv(const GLfloat * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4fv);
+   struct marshal_cmd_Vertex4fv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4fv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLfloat));
+}
+
+
+/* Vertex4i: marshalled asynchronously */
+struct marshal_cmd_Vertex4i
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+   GLint z;
+   GLint w;
+};
+uint32_t
+_mesa_unmarshal_Vertex4i(struct gl_context *ctx, const struct marshal_cmd_Vertex4i *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   GLint z = cmd->z;
+   GLint w = cmd->w;
+   CALL_Vertex4i(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4i), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4i(GLint x, GLint y, GLint z, GLint w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4i);
+   struct marshal_cmd_Vertex4i *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4i, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* Vertex4iv: marshalled asynchronously */
+struct marshal_cmd_Vertex4iv
+{
+   struct marshal_cmd_base cmd_base;
+   GLint v[4];
+};
+uint32_t
+_mesa_unmarshal_Vertex4iv(struct gl_context *ctx, const struct marshal_cmd_Vertex4iv *cmd)
+{
+   const GLint *v = cmd->v;
+   CALL_Vertex4iv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4iv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4iv(const GLint * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4iv);
+   struct marshal_cmd_Vertex4iv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4iv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLint));
+}
+
+
+/* Vertex4s: marshalled asynchronously */
+struct marshal_cmd_Vertex4s
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort x;
+   GLshort y;
+   GLshort z;
+   GLshort w;
+};
+uint32_t
+_mesa_unmarshal_Vertex4s(struct gl_context *ctx, const struct marshal_cmd_Vertex4s *cmd)
+{
+   GLshort x = cmd->x;
+   GLshort y = cmd->y;
+   GLshort z = cmd->z;
+   GLshort w = cmd->w;
+   CALL_Vertex4s(ctx->CurrentServerDispatch, (x, y, z, w));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4s), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4s(GLshort x, GLshort y, GLshort z, GLshort w)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4s);
+   struct marshal_cmd_Vertex4s *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4s, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->z = z;
+   cmd->w = w;
+}
+
+
+/* Vertex4sv: marshalled asynchronously */
+struct marshal_cmd_Vertex4sv
+{
+   struct marshal_cmd_base cmd_base;
+   GLshort v[4];
+};
+uint32_t
+_mesa_unmarshal_Vertex4sv(struct gl_context *ctx, const struct marshal_cmd_Vertex4sv *cmd)
+{
+   const GLshort *v = cmd->v;
+   CALL_Vertex4sv(ctx->CurrentServerDispatch, (v));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Vertex4sv), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Vertex4sv(const GLshort * v)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Vertex4sv);
+   struct marshal_cmd_Vertex4sv *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Vertex4sv, cmd_size);
+   memcpy(cmd->v, v, 4 * sizeof(GLshort));
+}
+
+
+/* ClipPlane: marshalled asynchronously */
+struct marshal_cmd_ClipPlane
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 plane;
+   GLdouble equation[4];
+};
+uint32_t
+_mesa_unmarshal_ClipPlane(struct gl_context *ctx, const struct marshal_cmd_ClipPlane *cmd)
+{
+   GLenum plane = cmd->plane;
+   const GLdouble *equation = cmd->equation;
+   CALL_ClipPlane(ctx->CurrentServerDispatch, (plane, equation));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ClipPlane), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_ClipPlane(GLenum plane, const GLdouble * equation)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_ClipPlane);
+   struct marshal_cmd_ClipPlane *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_ClipPlane, cmd_size);
+   cmd->plane = MIN2(plane, 0xffff); /* clamped to 0xffff (invalid enum) */
+   memcpy(cmd->equation, equation, 4 * sizeof(GLdouble));
+}
+
+
+/* ColorMaterial: marshalled asynchronously */
+struct marshal_cmd_ColorMaterial
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 face;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_ColorMaterial(struct gl_context *ctx, const struct marshal_cmd_ColorMaterial *cmd)
+{
+   GLenum face = cmd->face;
+   GLenum mode = cmd->mode;
+   CALL_ColorMaterial(ctx->CurrentServerDispatch, (face, mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ColorMaterial), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_ColorMaterial(GLenum face, GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_ColorMaterial);
+   struct marshal_cmd_ColorMaterial *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_ColorMaterial, cmd_size);
+   cmd->face = MIN2(face, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+}
+
+
+/* CullFace: marshalled asynchronously */
+struct marshal_cmd_CullFace
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_CullFace(struct gl_context *ctx, const struct marshal_cmd_CullFace *cmd)
+{
+   GLenum mode = cmd->mode;
+   CALL_CullFace(ctx->CurrentServerDispatch, (mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_CullFace), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_CullFace(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_CullFace);
+   struct marshal_cmd_CullFace *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_CullFace, cmd_size);
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+}
+
+
+/* Fogf: marshalled asynchronously */
+struct marshal_cmd_Fogf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_Fogf(struct gl_context *ctx, const struct marshal_cmd_Fogf *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_Fogf(ctx->CurrentServerDispatch, (pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Fogf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Fogf(GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Fogf);
+   struct marshal_cmd_Fogf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Fogf, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* Fogfv: marshalled asynchronously */
+struct marshal_cmd_Fogfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_fog_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_Fogfv(struct gl_context *ctx, const struct marshal_cmd_Fogfv *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_Fogfv(ctx->CurrentServerDispatch, (pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Fogfv(GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_fog_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_Fogfv) + params_size;
+   struct marshal_cmd_Fogfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "Fogfv");
+      CALL_Fogfv(ctx->CurrentServerDispatch, (pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Fogfv, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* Fogi: marshalled asynchronously */
+struct marshal_cmd_Fogi
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_Fogi(struct gl_context *ctx, const struct marshal_cmd_Fogi *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_Fogi(ctx->CurrentServerDispatch, (pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Fogi), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Fogi(GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Fogi);
+   struct marshal_cmd_Fogi *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Fogi, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* Fogiv: marshalled asynchronously */
+struct marshal_cmd_Fogiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_fog_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_Fogiv(struct gl_context *ctx, const struct marshal_cmd_Fogiv *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_Fogiv(ctx->CurrentServerDispatch, (pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Fogiv(GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_fog_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_Fogiv) + params_size;
+   struct marshal_cmd_Fogiv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "Fogiv");
+      CALL_Fogiv(ctx->CurrentServerDispatch, (pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Fogiv, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* FrontFace: marshalled asynchronously */
+struct marshal_cmd_FrontFace
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_FrontFace(struct gl_context *ctx, const struct marshal_cmd_FrontFace *cmd)
+{
+   GLenum mode = cmd->mode;
+   CALL_FrontFace(ctx->CurrentServerDispatch, (mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_FrontFace), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_FrontFace(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_FrontFace);
+   struct marshal_cmd_FrontFace *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_FrontFace, cmd_size);
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+}
+
+
+/* Hint: marshalled asynchronously */
+struct marshal_cmd_Hint
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_Hint(struct gl_context *ctx, const struct marshal_cmd_Hint *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum mode = cmd->mode;
+   CALL_Hint(ctx->CurrentServerDispatch, (target, mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Hint), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Hint(GLenum target, GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Hint);
+   struct marshal_cmd_Hint *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Hint, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+}
+
+
+/* Lightf: marshalled asynchronously */
+struct marshal_cmd_Lightf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 light;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_Lightf(struct gl_context *ctx, const struct marshal_cmd_Lightf *cmd)
+{
+   GLenum light = cmd->light;
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_Lightf(ctx->CurrentServerDispatch, (light, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Lightf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Lightf(GLenum light, GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Lightf);
+   struct marshal_cmd_Lightf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Lightf, cmd_size);
+   cmd->light = MIN2(light, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* Lightfv: marshalled asynchronously */
+struct marshal_cmd_Lightfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 light;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_light_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_Lightfv(struct gl_context *ctx, const struct marshal_cmd_Lightfv *cmd)
+{
+   GLenum light = cmd->light;
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_Lightfv(ctx->CurrentServerDispatch, (light, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Lightfv(GLenum light, GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_light_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_Lightfv) + params_size;
+   struct marshal_cmd_Lightfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "Lightfv");
+      CALL_Lightfv(ctx->CurrentServerDispatch, (light, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Lightfv, cmd_size);
+   cmd->light = MIN2(light, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* Lighti: marshalled asynchronously */
+struct marshal_cmd_Lighti
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 light;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_Lighti(struct gl_context *ctx, const struct marshal_cmd_Lighti *cmd)
+{
+   GLenum light = cmd->light;
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_Lighti(ctx->CurrentServerDispatch, (light, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Lighti), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Lighti(GLenum light, GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Lighti);
+   struct marshal_cmd_Lighti *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Lighti, cmd_size);
+   cmd->light = MIN2(light, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* Lightiv: marshalled asynchronously */
+struct marshal_cmd_Lightiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 light;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_light_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_Lightiv(struct gl_context *ctx, const struct marshal_cmd_Lightiv *cmd)
+{
+   GLenum light = cmd->light;
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_Lightiv(ctx->CurrentServerDispatch, (light, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Lightiv(GLenum light, GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_light_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_Lightiv) + params_size;
+   struct marshal_cmd_Lightiv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "Lightiv");
+      CALL_Lightiv(ctx->CurrentServerDispatch, (light, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Lightiv, cmd_size);
+   cmd->light = MIN2(light, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* LightModelf: marshalled asynchronously */
+struct marshal_cmd_LightModelf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_LightModelf(struct gl_context *ctx, const struct marshal_cmd_LightModelf *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_LightModelf(ctx->CurrentServerDispatch, (pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_LightModelf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_LightModelf(GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_LightModelf);
+   struct marshal_cmd_LightModelf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_LightModelf, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* LightModelfv: marshalled asynchronously */
+struct marshal_cmd_LightModelfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_light_model_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_LightModelfv(struct gl_context *ctx, const struct marshal_cmd_LightModelfv *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_LightModelfv(ctx->CurrentServerDispatch, (pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_LightModelfv(GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_light_model_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_LightModelfv) + params_size;
+   struct marshal_cmd_LightModelfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "LightModelfv");
+      CALL_LightModelfv(ctx->CurrentServerDispatch, (pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_LightModelfv, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* LightModeli: marshalled asynchronously */
+struct marshal_cmd_LightModeli
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_LightModeli(struct gl_context *ctx, const struct marshal_cmd_LightModeli *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_LightModeli(ctx->CurrentServerDispatch, (pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_LightModeli), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_LightModeli(GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_LightModeli);
+   struct marshal_cmd_LightModeli *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_LightModeli, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* LightModeliv: marshalled asynchronously */
+struct marshal_cmd_LightModeliv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_light_model_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_LightModeliv(struct gl_context *ctx, const struct marshal_cmd_LightModeliv *cmd)
+{
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_LightModeliv(ctx->CurrentServerDispatch, (pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_LightModeliv(GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_light_model_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_LightModeliv) + params_size;
+   struct marshal_cmd_LightModeliv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "LightModeliv");
+      CALL_LightModeliv(ctx->CurrentServerDispatch, (pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_LightModeliv, cmd_size);
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* LineStipple: marshalled asynchronously */
+struct marshal_cmd_LineStipple
+{
+   struct marshal_cmd_base cmd_base;
+   GLushort pattern;
+   GLint factor;
+};
+uint32_t
+_mesa_unmarshal_LineStipple(struct gl_context *ctx, const struct marshal_cmd_LineStipple *cmd)
+{
+   GLint factor = cmd->factor;
+   GLushort pattern = cmd->pattern;
+   CALL_LineStipple(ctx->CurrentServerDispatch, (factor, pattern));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_LineStipple), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_LineStipple(GLint factor, GLushort pattern)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_LineStipple);
+   struct marshal_cmd_LineStipple *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_LineStipple, cmd_size);
+   cmd->factor = factor;
+   cmd->pattern = pattern;
+}
+
+
+/* LineWidth: marshalled asynchronously */
+struct marshal_cmd_LineWidth
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat width;
+};
+uint32_t
+_mesa_unmarshal_LineWidth(struct gl_context *ctx, const struct marshal_cmd_LineWidth *cmd)
+{
+   GLfloat width = cmd->width;
+   CALL_LineWidth(ctx->CurrentServerDispatch, (width));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_LineWidth), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_LineWidth(GLfloat width)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_LineWidth);
+   struct marshal_cmd_LineWidth *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_LineWidth, cmd_size);
+   cmd->width = width;
+}
+
+
+/* Materialf: marshalled asynchronously */
+struct marshal_cmd_Materialf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 face;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_Materialf(struct gl_context *ctx, const struct marshal_cmd_Materialf *cmd)
+{
+   GLenum face = cmd->face;
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_Materialf(ctx->CurrentServerDispatch, (face, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Materialf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Materialf(GLenum face, GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Materialf);
+   struct marshal_cmd_Materialf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Materialf, cmd_size);
+   cmd->face = MIN2(face, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* Materialfv: marshalled asynchronously */
+struct marshal_cmd_Materialfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 face;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_material_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_Materialfv(struct gl_context *ctx, const struct marshal_cmd_Materialfv *cmd)
+{
+   GLenum face = cmd->face;
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_Materialfv(ctx->CurrentServerDispatch, (face, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Materialfv(GLenum face, GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_material_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_Materialfv) + params_size;
+   struct marshal_cmd_Materialfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "Materialfv");
+      CALL_Materialfv(ctx->CurrentServerDispatch, (face, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Materialfv, cmd_size);
+   cmd->face = MIN2(face, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* Materiali: marshalled asynchronously */
+struct marshal_cmd_Materiali
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 face;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_Materiali(struct gl_context *ctx, const struct marshal_cmd_Materiali *cmd)
+{
+   GLenum face = cmd->face;
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_Materiali(ctx->CurrentServerDispatch, (face, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Materiali), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Materiali(GLenum face, GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Materiali);
+   struct marshal_cmd_Materiali *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Materiali, cmd_size);
+   cmd->face = MIN2(face, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* Materialiv: marshalled asynchronously */
+struct marshal_cmd_Materialiv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 face;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_material_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_Materialiv(struct gl_context *ctx, const struct marshal_cmd_Materialiv *cmd)
+{
+   GLenum face = cmd->face;
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_Materialiv(ctx->CurrentServerDispatch, (face, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Materialiv(GLenum face, GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_material_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_Materialiv) + params_size;
+   struct marshal_cmd_Materialiv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "Materialiv");
+      CALL_Materialiv(ctx->CurrentServerDispatch, (face, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Materialiv, cmd_size);
+   cmd->face = MIN2(face, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* PointSize: marshalled asynchronously */
+struct marshal_cmd_PointSize
+{
+   struct marshal_cmd_base cmd_base;
+   GLfloat size;
+};
+uint32_t
+_mesa_unmarshal_PointSize(struct gl_context *ctx, const struct marshal_cmd_PointSize *cmd)
+{
+   GLfloat size = cmd->size;
+   CALL_PointSize(ctx->CurrentServerDispatch, (size));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_PointSize), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_PointSize(GLfloat size)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_PointSize);
+   struct marshal_cmd_PointSize *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_PointSize, cmd_size);
+   cmd->size = size;
+}
+
+
+/* PolygonMode: marshalled asynchronously */
+struct marshal_cmd_PolygonMode
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 face;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_PolygonMode(struct gl_context *ctx, const struct marshal_cmd_PolygonMode *cmd)
+{
+   GLenum face = cmd->face;
+   GLenum mode = cmd->mode;
+   CALL_PolygonMode(ctx->CurrentServerDispatch, (face, mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_PolygonMode), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_PolygonMode(GLenum face, GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_PolygonMode);
+   struct marshal_cmd_PolygonMode *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_PolygonMode, cmd_size);
+   cmd->face = MIN2(face, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+}
+
+
+/* PolygonStipple: marshalled asynchronously */
+struct marshal_cmd_PolygonStipple
+{
+   struct marshal_cmd_base cmd_base;
+   const GLubyte * mask;
+};
+uint32_t
+_mesa_unmarshal_PolygonStipple(struct gl_context *ctx, const struct marshal_cmd_PolygonStipple *cmd)
+{
+   const GLubyte * mask = cmd->mask;
+   CALL_PolygonStipple(ctx->CurrentServerDispatch, (mask));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_PolygonStipple), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_PolygonStipple(const GLubyte * mask)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_PolygonStipple);
+   struct marshal_cmd_PolygonStipple *cmd;
+   if (_mesa_glthread_has_no_unpack_buffer(ctx)) {
+      _mesa_glthread_finish_before(ctx, "PolygonStipple");
+      CALL_PolygonStipple(ctx->CurrentServerDispatch, (mask));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_PolygonStipple, cmd_size);
+   cmd->mask = mask;
+}
+
+
+/* Scissor: marshalled asynchronously */
+struct marshal_cmd_Scissor
+{
+   struct marshal_cmd_base cmd_base;
+   GLint x;
+   GLint y;
+   GLsizei width;
+   GLsizei height;
+};
+uint32_t
+_mesa_unmarshal_Scissor(struct gl_context *ctx, const struct marshal_cmd_Scissor *cmd)
+{
+   GLint x = cmd->x;
+   GLint y = cmd->y;
+   GLsizei width = cmd->width;
+   GLsizei height = cmd->height;
+   CALL_Scissor(ctx->CurrentServerDispatch, (x, y, width, height));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_Scissor), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_Scissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_Scissor);
+   struct marshal_cmd_Scissor *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_Scissor, cmd_size);
+   cmd->x = x;
+   cmd->y = y;
+   cmd->width = width;
+   cmd->height = height;
+}
+
+
+/* ShadeModel: marshalled asynchronously */
+struct marshal_cmd_ShadeModel
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 mode;
+};
+uint32_t
+_mesa_unmarshal_ShadeModel(struct gl_context *ctx, const struct marshal_cmd_ShadeModel *cmd)
+{
+   GLenum mode = cmd->mode;
+   CALL_ShadeModel(ctx->CurrentServerDispatch, (mode));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_ShadeModel), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_ShadeModel(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_ShadeModel);
+   struct marshal_cmd_ShadeModel *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_ShadeModel, cmd_size);
+   cmd->mode = MIN2(mode, 0xffff); /* clamped to 0xffff (invalid enum) */
+}
+
+
+/* TexParameterf: marshalled asynchronously */
+struct marshal_cmd_TexParameterf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_TexParameterf(struct gl_context *ctx, const struct marshal_cmd_TexParameterf *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_TexParameterf(ctx->CurrentServerDispatch, (target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexParameterf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexParameterf(GLenum target, GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexParameterf);
+   struct marshal_cmd_TexParameterf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexParameterf, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexParameterfv: marshalled asynchronously */
+struct marshal_cmd_TexParameterfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexParameterfv(struct gl_context *ctx, const struct marshal_cmd_TexParameterfv *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_TexParameterfv(ctx->CurrentServerDispatch, (target, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexParameterfv(GLenum target, GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_TexParameterfv) + params_size;
+   struct marshal_cmd_TexParameterfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexParameterfv");
+      CALL_TexParameterfv(ctx->CurrentServerDispatch, (target, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexParameterfv, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* TexParameteri: marshalled asynchronously */
+struct marshal_cmd_TexParameteri
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_TexParameteri(struct gl_context *ctx, const struct marshal_cmd_TexParameteri *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_TexParameteri(ctx->CurrentServerDispatch, (target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexParameteri), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexParameteri(GLenum target, GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexParameteri);
+   struct marshal_cmd_TexParameteri *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexParameteri, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexParameteriv: marshalled asynchronously */
+struct marshal_cmd_TexParameteriv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexParameteriv(struct gl_context *ctx, const struct marshal_cmd_TexParameteriv *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_TexParameteriv(ctx->CurrentServerDispatch, (target, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexParameteriv(GLenum target, GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_tex_param_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_TexParameteriv) + params_size;
+   struct marshal_cmd_TexParameteriv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexParameteriv");
+      CALL_TexParameteriv(ctx->CurrentServerDispatch, (target, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexParameteriv, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* TexImage1D: marshalled asynchronously */
+struct marshal_cmd_TexImage1D
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 format;
+   GLenum16 type;
+   GLint level;
+   GLint internalformat;
+   GLsizei width;
+   GLint border;
+   const GLvoid * pixels;
+};
+uint32_t
+_mesa_unmarshal_TexImage1D(struct gl_context *ctx, const struct marshal_cmd_TexImage1D *cmd)
+{
+   GLenum target = cmd->target;
+   GLint level = cmd->level;
+   GLint internalformat = cmd->internalformat;
+   GLsizei width = cmd->width;
+   GLint border = cmd->border;
+   GLenum format = cmd->format;
+   GLenum type = cmd->type;
+   const GLvoid * pixels = cmd->pixels;
+   CALL_TexImage1D(ctx->CurrentServerDispatch, (target, level, internalformat, width, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexImage1D), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexImage1D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexImage1D);
+   struct marshal_cmd_TexImage1D *cmd;
+   if (_mesa_glthread_has_no_unpack_buffer(ctx)) {
+      _mesa_glthread_finish_before(ctx, "TexImage1D");
+      CALL_TexImage1D(ctx->CurrentServerDispatch, (target, level, internalformat, width, border, format, type, pixels));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexImage1D, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->level = level;
+   cmd->internalformat = internalformat;
+   cmd->width = width;
+   cmd->border = border;
+   cmd->format = MIN2(format, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->type = MIN2(type, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pixels = pixels;
+}
+
+
+/* TexImage2D: marshalled asynchronously */
+struct marshal_cmd_TexImage2D
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 format;
+   GLenum16 type;
+   GLint level;
+   GLint internalformat;
+   GLsizei width;
+   GLsizei height;
+   GLint border;
+   const GLvoid * pixels;
+};
+uint32_t
+_mesa_unmarshal_TexImage2D(struct gl_context *ctx, const struct marshal_cmd_TexImage2D *cmd)
+{
+   GLenum target = cmd->target;
+   GLint level = cmd->level;
+   GLint internalformat = cmd->internalformat;
+   GLsizei width = cmd->width;
+   GLsizei height = cmd->height;
+   GLint border = cmd->border;
+   GLenum format = cmd->format;
+   GLenum type = cmd->type;
+   const GLvoid * pixels = cmd->pixels;
+   CALL_TexImage2D(ctx->CurrentServerDispatch, (target, level, internalformat, width, height, border, format, type, pixels));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexImage2D), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexImage2D);
+   struct marshal_cmd_TexImage2D *cmd;
+   if (_mesa_glthread_has_no_unpack_buffer(ctx)) {
+      _mesa_glthread_finish_before(ctx, "TexImage2D");
+      CALL_TexImage2D(ctx->CurrentServerDispatch, (target, level, internalformat, width, height, border, format, type, pixels));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexImage2D, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->level = level;
+   cmd->internalformat = internalformat;
+   cmd->width = width;
+   cmd->height = height;
+   cmd->border = border;
+   cmd->format = MIN2(format, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->type = MIN2(type, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pixels = pixels;
+}
+
+
+/* TexEnvf: marshalled asynchronously */
+struct marshal_cmd_TexEnvf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_TexEnvf(struct gl_context *ctx, const struct marshal_cmd_TexEnvf *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_TexEnvf(ctx->CurrentServerDispatch, (target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexEnvf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexEnvf(GLenum target, GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexEnvf);
+   struct marshal_cmd_TexEnvf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexEnvf, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexEnvfv: marshalled asynchronously */
+struct marshal_cmd_TexEnvfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_texenv_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexEnvfv(struct gl_context *ctx, const struct marshal_cmd_TexEnvfv *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_TexEnvfv(ctx->CurrentServerDispatch, (target, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexEnvfv(GLenum target, GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_texenv_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_TexEnvfv) + params_size;
+   struct marshal_cmd_TexEnvfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexEnvfv");
+      CALL_TexEnvfv(ctx->CurrentServerDispatch, (target, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexEnvfv, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* TexEnvi: marshalled asynchronously */
+struct marshal_cmd_TexEnvi
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_TexEnvi(struct gl_context *ctx, const struct marshal_cmd_TexEnvi *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_TexEnvi(ctx->CurrentServerDispatch, (target, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexEnvi), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexEnvi(GLenum target, GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexEnvi);
+   struct marshal_cmd_TexEnvi *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexEnvi, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexEnviv: marshalled asynchronously */
+struct marshal_cmd_TexEnviv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 target;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_texenv_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexEnviv(struct gl_context *ctx, const struct marshal_cmd_TexEnviv *cmd)
+{
+   GLenum target = cmd->target;
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_TexEnviv(ctx->CurrentServerDispatch, (target, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexEnviv(GLenum target, GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_texenv_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_TexEnviv) + params_size;
+   struct marshal_cmd_TexEnviv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexEnviv");
+      CALL_TexEnviv(ctx->CurrentServerDispatch, (target, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexEnviv, cmd_size);
+   cmd->target = MIN2(target, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* TexGend: marshalled asynchronously */
+struct marshal_cmd_TexGend
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 coord;
+   GLenum16 pname;
+   GLdouble param;
+};
+uint32_t
+_mesa_unmarshal_TexGend(struct gl_context *ctx, const struct marshal_cmd_TexGend *cmd)
+{
+   GLenum coord = cmd->coord;
+   GLenum pname = cmd->pname;
+   GLdouble param = cmd->param;
+   CALL_TexGend(ctx->CurrentServerDispatch, (coord, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexGend), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexGend(GLenum coord, GLenum pname, GLdouble param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexGend);
+   struct marshal_cmd_TexGend *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexGend, cmd_size);
+   cmd->coord = MIN2(coord, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexGendv: marshalled asynchronously */
+struct marshal_cmd_TexGendv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 coord;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLdouble)) bytes are GLdouble params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexGendv(struct gl_context *ctx, const struct marshal_cmd_TexGendv *cmd)
+{
+   GLenum coord = cmd->coord;
+   GLenum pname = cmd->pname;
+   GLdouble *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLdouble *) variable_data;
+   CALL_TexGendv(ctx->CurrentServerDispatch, (coord, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexGendv(GLenum coord, GLenum pname, const GLdouble * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLdouble));
+   int cmd_size = sizeof(struct marshal_cmd_TexGendv) + params_size;
+   struct marshal_cmd_TexGendv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexGendv");
+      CALL_TexGendv(ctx->CurrentServerDispatch, (coord, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexGendv, cmd_size);
+   cmd->coord = MIN2(coord, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* TexGenf: marshalled asynchronously */
+struct marshal_cmd_TexGenf
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 coord;
+   GLenum16 pname;
+   GLfloat param;
+};
+uint32_t
+_mesa_unmarshal_TexGenf(struct gl_context *ctx, const struct marshal_cmd_TexGenf *cmd)
+{
+   GLenum coord = cmd->coord;
+   GLenum pname = cmd->pname;
+   GLfloat param = cmd->param;
+   CALL_TexGenf(ctx->CurrentServerDispatch, (coord, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexGenf), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexGenf(GLenum coord, GLenum pname, GLfloat param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexGenf);
+   struct marshal_cmd_TexGenf *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexGenf, cmd_size);
+   cmd->coord = MIN2(coord, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexGenfv: marshalled asynchronously */
+struct marshal_cmd_TexGenfv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 coord;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLfloat)) bytes are GLfloat params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexGenfv(struct gl_context *ctx, const struct marshal_cmd_TexGenfv *cmd)
+{
+   GLenum coord = cmd->coord;
+   GLenum pname = cmd->pname;
+   GLfloat *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLfloat *) variable_data;
+   CALL_TexGenfv(ctx->CurrentServerDispatch, (coord, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexGenfv(GLenum coord, GLenum pname, const GLfloat * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLfloat));
+   int cmd_size = sizeof(struct marshal_cmd_TexGenfv) + params_size;
+   struct marshal_cmd_TexGenfv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexGenfv");
+      CALL_TexGenfv(ctx->CurrentServerDispatch, (coord, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexGenfv, cmd_size);
+   cmd->coord = MIN2(coord, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* TexGeni: marshalled asynchronously */
+struct marshal_cmd_TexGeni
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 coord;
+   GLenum16 pname;
+   GLint param;
+};
+uint32_t
+_mesa_unmarshal_TexGeni(struct gl_context *ctx, const struct marshal_cmd_TexGeni *cmd)
+{
+   GLenum coord = cmd->coord;
+   GLenum pname = cmd->pname;
+   GLint param = cmd->param;
+   CALL_TexGeni(ctx->CurrentServerDispatch, (coord, pname, param));
+   const unsigned cmd_size = (align(sizeof(struct marshal_cmd_TexGeni), 8) / 8);
+   assert(cmd_size == cmd->cmd_base.cmd_size);
+   return cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexGeni(GLenum coord, GLenum pname, GLint param)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int cmd_size = sizeof(struct marshal_cmd_TexGeni);
+   struct marshal_cmd_TexGeni *cmd;
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexGeni, cmd_size);
+   cmd->coord = MIN2(coord, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->param = param;
+}
+
+
+/* TexGeniv: marshalled asynchronously */
+struct marshal_cmd_TexGeniv
+{
+   struct marshal_cmd_base cmd_base;
+   GLenum16 coord;
+   GLenum16 pname;
+   /* Next safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLint)) bytes are GLint params[None] */
+};
+uint32_t
+_mesa_unmarshal_TexGeniv(struct gl_context *ctx, const struct marshal_cmd_TexGeniv *cmd)
+{
+   GLenum coord = cmd->coord;
+   GLenum pname = cmd->pname;
+   GLint *params;
+   const char *variable_data = (const char *) (cmd + 1);
+   params = (GLint *) variable_data;
+   CALL_TexGeniv(ctx->CurrentServerDispatch, (coord, pname, params));
+   return cmd->cmd_base.cmd_size;
+}
+static void GLAPIENTRY
+_mesa_marshal_TexGeniv(GLenum coord, GLenum pname, const GLint * params)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   int params_size = safe_mul(_mesa_texgen_enum_to_count(pname), 1 * sizeof(GLint));
+   int cmd_size = sizeof(struct marshal_cmd_TexGeniv) + params_size;
+   struct marshal_cmd_TexGeniv *cmd;
+   if (unlikely(params_size < 0 || (params_size > 0 && !params) || (unsigned)cmd_size > MARSHAL_MAX_CMD_SIZE)) {
+      _mesa_glthread_finish_before(ctx, "TexGeniv");
+      CALL_TexGeniv(ctx->CurrentServerDispatch, (coord, pname, params));
+      return;
+   }
+   cmd = _mesa_glthread_allocate_command(ctx, DISPATCH_CMD_TexGeniv, cmd_size);
+   cmd->coord = MIN2(coord, 0xffff); /* clamped to 0xffff (invalid enum) */
+   cmd->pname = MIN2(pname, 0xffff); /* clamped to 0xffff (invalid enum) */
+   char *variable_data = (char *) (cmd + 1);
+   memcpy(variable_data, params, params_size);
+}
+
+
+/* FeedbackBuffer: marshalled synchronously */
+static void GLAPIENTRY
+_mesa_marshal_FeedbackBuffer(GLsizei size, GLenum type, GLfloat * buffer)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   _mesa_glthread_finish_before(ctx, "FeedbackBuffer");
+   CALL_FeedbackBuffer(ctx->CurrentServerDispatch, (size, type, buffer));
+}
+
+
+/* SelectBuffer: marshalled synchronously */
+static void GLAPIENTRY
+_mesa_marshal_SelectBuffer(GLsizei size, GLuint * buffer)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   _mesa_glthread_finish_before(ctx, "SelectBuffer");
+   CALL_SelectBuffer(ctx->CurrentServerDispatch, (size, buffer));
+}
+
+
+/* RenderMode: marshalled synchronously */
+static GLint GLAPIENTRY
+_mesa_marshal_RenderMode(GLenum mode)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   _mesa_glthread_finish_before(ctx, "RenderMode");
+   return CALL_RenderMode(ctx->CurrentServerDispatch, (mode));
+}
+
+
+void
+_mesa_glthread_init_dispatch0(struct gl_context *ctx, struct _glapi_table *table)
+{
    if (_mesa_is_desktop_gl(ctx)) {
-      if (_gloffset_AlphaToCoverageDitherControlNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AlphaToCoverageDitherControlNV] = (_glapi_proc)_mesa_marshal_AlphaToCoverageDitherControlNV;
-      if (_gloffset_AttachObjectARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AttachObjectARB] = (_glapi_proc)_mesa_marshal_AttachObjectARB;
-      if (_gloffset_BeginQueryIndexed >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginQueryIndexed] = (_glapi_proc)_mesa_marshal_BeginQueryIndexed;
-      if (_gloffset_BindBufferOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindBufferOffsetEXT] = (_glapi_proc)_mesa_marshal_BindBufferOffsetEXT;
-      if (_gloffset_BindBuffersBase >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindBuffersBase] = (_glapi_proc)_mesa_marshal_BindBuffersBase;
-      if (_gloffset_BindBuffersRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindBuffersRange] = (_glapi_proc)_mesa_marshal_BindBuffersRange;
-      if (_gloffset_BindFramebufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindFramebufferEXT] = (_glapi_proc)_mesa_marshal_BindFramebufferEXT;
-      if (_gloffset_BindImageTextureEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindImageTextureEXT] = (_glapi_proc)_mesa_marshal_BindImageTextureEXT;
-      if (_gloffset_BindImageTextures >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindImageTextures] = (_glapi_proc)_mesa_marshal_BindImageTextures;
-      if (_gloffset_BindMultiTextureEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindMultiTextureEXT] = (_glapi_proc)_mesa_marshal_BindMultiTextureEXT;
-      if (_gloffset_BindRenderbufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindRenderbufferEXT] = (_glapi_proc)_mesa_marshal_BindRenderbufferEXT;
-      if (_gloffset_BindSamplers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindSamplers] = (_glapi_proc)_mesa_marshal_BindSamplers;
-      if (_gloffset_BindTextures >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindTextures] = (_glapi_proc)_mesa_marshal_BindTextures;
-      if (_gloffset_BindVertexBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindVertexBuffers] = (_glapi_proc)_mesa_marshal_BindVertexBuffers;
-      if (_gloffset_BufferPageCommitmentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BufferPageCommitmentARB] = (_glapi_proc)_mesa_marshal_BufferPageCommitmentARB;
-      if (_gloffset_CheckNamedFramebufferStatusEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CheckNamedFramebufferStatusEXT] = (_glapi_proc)_mesa_marshal_CheckNamedFramebufferStatusEXT;
-      if (_gloffset_ClampColor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClampColor] = (_glapi_proc)_mesa_marshal_ClampColor;
-      if (_gloffset_ClearBufferData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearBufferData] = (_glapi_proc)_mesa_marshal_ClearBufferData;
-      if (_gloffset_ClearBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearBufferSubData] = (_glapi_proc)_mesa_marshal_ClearBufferSubData;
-      if (_gloffset_ClearColorIiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearColorIiEXT] = (_glapi_proc)_mesa_marshal_ClearColorIiEXT;
-      if (_gloffset_ClearColorIuiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearColorIuiEXT] = (_glapi_proc)_mesa_marshal_ClearColorIuiEXT;
-      if (_gloffset_ClearDepth >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearDepth] = (_glapi_proc)_mesa_marshal_ClearDepth;
-      if (_gloffset_ClearNamedBufferDataEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedBufferDataEXT] = (_glapi_proc)_mesa_marshal_ClearNamedBufferDataEXT;
-      if (_gloffset_ClearNamedBufferSubDataEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedBufferSubDataEXT] = (_glapi_proc)_mesa_marshal_ClearNamedBufferSubDataEXT;
-      if (_gloffset_ClientAttribDefaultEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClientAttribDefaultEXT] = (_glapi_proc)_mesa_marshal_ClientAttribDefaultEXT;
-      if (_gloffset_CompileShaderIncludeARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompileShaderIncludeARB] = (_glapi_proc)_mesa_marshal_CompileShaderIncludeARB;
-      if (_gloffset_CompressedMultiTexImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedMultiTexImage1DEXT] = (_glapi_proc)_mesa_marshal_CompressedMultiTexImage1DEXT;
-      if (_gloffset_CompressedMultiTexImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedMultiTexImage2DEXT] = (_glapi_proc)_mesa_marshal_CompressedMultiTexImage2DEXT;
-      if (_gloffset_CompressedMultiTexImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedMultiTexImage3DEXT] = (_glapi_proc)_mesa_marshal_CompressedMultiTexImage3DEXT;
-      if (_gloffset_CompressedMultiTexSubImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedMultiTexSubImage1DEXT] = (_glapi_proc)_mesa_marshal_CompressedMultiTexSubImage1DEXT;
-      if (_gloffset_CompressedMultiTexSubImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedMultiTexSubImage2DEXT] = (_glapi_proc)_mesa_marshal_CompressedMultiTexSubImage2DEXT;
-      if (_gloffset_CompressedMultiTexSubImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedMultiTexSubImage3DEXT] = (_glapi_proc)_mesa_marshal_CompressedMultiTexSubImage3DEXT;
-      if (_gloffset_CompressedTexImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTexImage1D] = (_glapi_proc)_mesa_marshal_CompressedTexImage1D;
-      if (_gloffset_CompressedTexSubImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTexSubImage1D] = (_glapi_proc)_mesa_marshal_CompressedTexSubImage1D;
-      if (_gloffset_CompressedTextureImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureImage1DEXT] = (_glapi_proc)_mesa_marshal_CompressedTextureImage1DEXT;
-      if (_gloffset_CompressedTextureImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureImage2DEXT] = (_glapi_proc)_mesa_marshal_CompressedTextureImage2DEXT;
-      if (_gloffset_CompressedTextureImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureImage3DEXT] = (_glapi_proc)_mesa_marshal_CompressedTextureImage3DEXT;
-      if (_gloffset_CompressedTextureSubImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureSubImage1DEXT] = (_glapi_proc)_mesa_marshal_CompressedTextureSubImage1DEXT;
-      if (_gloffset_CompressedTextureSubImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureSubImage2DEXT] = (_glapi_proc)_mesa_marshal_CompressedTextureSubImage2DEXT;
-      if (_gloffset_CompressedTextureSubImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureSubImage3DEXT] = (_glapi_proc)_mesa_marshal_CompressedTextureSubImage3DEXT;
-      if (_gloffset_CopyImageSubDataNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyImageSubDataNV] = (_glapi_proc)_mesa_marshal_CopyImageSubDataNV;
-      if (_gloffset_CopyMultiTexImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyMultiTexImage1DEXT] = (_glapi_proc)_mesa_marshal_CopyMultiTexImage1DEXT;
-      if (_gloffset_CopyMultiTexImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyMultiTexImage2DEXT] = (_glapi_proc)_mesa_marshal_CopyMultiTexImage2DEXT;
-      if (_gloffset_CopyMultiTexSubImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyMultiTexSubImage1DEXT] = (_glapi_proc)_mesa_marshal_CopyMultiTexSubImage1DEXT;
-      if (_gloffset_CopyMultiTexSubImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyMultiTexSubImage2DEXT] = (_glapi_proc)_mesa_marshal_CopyMultiTexSubImage2DEXT;
-      if (_gloffset_CopyMultiTexSubImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyMultiTexSubImage3DEXT] = (_glapi_proc)_mesa_marshal_CopyMultiTexSubImage3DEXT;
-      if (_gloffset_CopyTexImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTexImage1D] = (_glapi_proc)_mesa_marshal_CopyTexImage1D;
-      if (_gloffset_CopyTexSubImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTexSubImage1D] = (_glapi_proc)_mesa_marshal_CopyTexSubImage1D;
-      if (_gloffset_CopyTextureImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureImage1DEXT] = (_glapi_proc)_mesa_marshal_CopyTextureImage1DEXT;
-      if (_gloffset_CopyTextureImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureImage2DEXT] = (_glapi_proc)_mesa_marshal_CopyTextureImage2DEXT;
-      if (_gloffset_CopyTextureSubImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureSubImage1DEXT] = (_glapi_proc)_mesa_marshal_CopyTextureSubImage1DEXT;
-      if (_gloffset_CopyTextureSubImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureSubImage2DEXT] = (_glapi_proc)_mesa_marshal_CopyTextureSubImage2DEXT;
-      if (_gloffset_CopyTextureSubImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureSubImage3DEXT] = (_glapi_proc)_mesa_marshal_CopyTextureSubImage3DEXT;
-      if (_gloffset_CreateProgramObjectARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateProgramObjectARB] = (_glapi_proc)_mesa_marshal_CreateProgramObjectARB;
-      if (_gloffset_CreateShaderObjectARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateShaderObjectARB] = (_glapi_proc)_mesa_marshal_CreateShaderObjectARB;
-      if (_gloffset_DeleteNamedStringARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteNamedStringARB] = (_glapi_proc)_mesa_marshal_DeleteNamedStringARB;
-      if (_gloffset_DeleteObjectARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteObjectARB] = (_glapi_proc)_mesa_marshal_DeleteObjectARB;
-      if (_gloffset_DepthBoundsEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthBoundsEXT] = (_glapi_proc)_mesa_marshal_DepthBoundsEXT;
-      if (_gloffset_DepthRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRange] = (_glapi_proc)_mesa_marshal_DepthRange;
-      if (_gloffset_DetachObjectARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DetachObjectARB] = (_glapi_proc)_mesa_marshal_DetachObjectARB;
-      if (_gloffset_DisableClientStateiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DisableClientStateiEXT] = (_glapi_proc)_mesa_marshal_DisableClientStateiEXT;
-      if (_gloffset_DisableVertexArrayAttribEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DisableVertexArrayAttribEXT] = (_glapi_proc)_mesa_marshal_DisableVertexArrayAttribEXT;
-      if (_gloffset_DisableVertexArrayEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DisableVertexArrayEXT] = (_glapi_proc)_mesa_marshal_DisableVertexArrayEXT;
-      if (_gloffset_DispatchComputeGroupSizeARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DispatchComputeGroupSizeARB] = (_glapi_proc)_mesa_marshal_DispatchComputeGroupSizeARB;
-      if (_gloffset_DrawBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawBuffer] = (_glapi_proc)_mesa_marshal_DrawBuffer;
-      if (_gloffset_DrawTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTransformFeedback] = (_glapi_proc)_mesa_marshal_DrawTransformFeedback;
-      if (_gloffset_DrawTransformFeedbackInstanced >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTransformFeedbackInstanced] = (_glapi_proc)_mesa_marshal_DrawTransformFeedbackInstanced;
-      if (_gloffset_DrawTransformFeedbackStream >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTransformFeedbackStream] = (_glapi_proc)_mesa_marshal_DrawTransformFeedbackStream;
-      if (_gloffset_DrawTransformFeedbackStreamInstanced >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTransformFeedbackStreamInstanced] = (_glapi_proc)_mesa_marshal_DrawTransformFeedbackStreamInstanced;
-      if (_gloffset_EGLImageTargetTextureStorageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EGLImageTargetTextureStorageEXT] = (_glapi_proc)_mesa_marshal_EGLImageTargetTextureStorageEXT;
-      if (_gloffset_EnableClientStateiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EnableClientStateiEXT] = (_glapi_proc)_mesa_marshal_EnableClientStateiEXT;
-      if (_gloffset_EnableVertexArrayAttribEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EnableVertexArrayAttribEXT] = (_glapi_proc)_mesa_marshal_EnableVertexArrayAttribEXT;
-      if (_gloffset_EnableVertexArrayEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EnableVertexArrayEXT] = (_glapi_proc)_mesa_marshal_EnableVertexArrayEXT;
-      if (_gloffset_EndQueryIndexed >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndQueryIndexed] = (_glapi_proc)_mesa_marshal_EndQueryIndexed;
-      if (_gloffset_FlushMappedNamedBufferRangeEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FlushMappedNamedBufferRangeEXT] = (_glapi_proc)_mesa_marshal_FlushMappedNamedBufferRangeEXT;
-      if (_gloffset_FramebufferDrawBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferDrawBufferEXT] = (_glapi_proc)_mesa_marshal_FramebufferDrawBufferEXT;
-      if (_gloffset_FramebufferDrawBuffersEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferDrawBuffersEXT] = (_glapi_proc)_mesa_marshal_FramebufferDrawBuffersEXT;
-      if (_gloffset_FramebufferReadBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferReadBufferEXT] = (_glapi_proc)_mesa_marshal_FramebufferReadBufferEXT;
-      if (_gloffset_FramebufferTexture1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferTexture1D] = (_glapi_proc)_mesa_marshal_FramebufferTexture1D;
-      if (_gloffset_GenerateMultiTexMipmapEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenerateMultiTexMipmapEXT] = (_glapi_proc)_mesa_marshal_GenerateMultiTexMipmapEXT;
-      if (_gloffset_GenerateTextureMipmapEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenerateTextureMipmapEXT] = (_glapi_proc)_mesa_marshal_GenerateTextureMipmapEXT;
-      if (_gloffset_GetActiveAtomicCounterBufferiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveAtomicCounterBufferiv] = (_glapi_proc)_mesa_marshal_GetActiveAtomicCounterBufferiv;
-      if (_gloffset_GetActiveUniformName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveUniformName] = (_glapi_proc)_mesa_marshal_GetActiveUniformName;
-      if (_gloffset_GetAttachedObjectsARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetAttachedObjectsARB] = (_glapi_proc)_mesa_marshal_GetAttachedObjectsARB;
-      if (_gloffset_GetBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetBufferSubData] = (_glapi_proc)_mesa_marshal_GetBufferSubData;
-      if (_gloffset_GetCompressedMultiTexImageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetCompressedMultiTexImageEXT] = (_glapi_proc)_mesa_marshal_GetCompressedMultiTexImageEXT;
-      if (_gloffset_GetCompressedTexImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetCompressedTexImage] = (_glapi_proc)_mesa_marshal_GetCompressedTexImage;
-      if (_gloffset_GetCompressedTextureImageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetCompressedTextureImageEXT] = (_glapi_proc)_mesa_marshal_GetCompressedTextureImageEXT;
-      if (_gloffset_GetCompressedTextureSubImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetCompressedTextureSubImage] = (_glapi_proc)_mesa_marshal_GetCompressedTextureSubImage;
-      if (_gloffset_GetDoublei_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetDoublei_v] = (_glapi_proc)_mesa_marshal_GetDoublei_v;
-      if (_gloffset_GetDoublev >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetDoublev] = (_glapi_proc)_mesa_marshal_GetDoublev;
-      if (_gloffset_GetFramebufferParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFramebufferParameterivEXT] = (_glapi_proc)_mesa_marshal_GetFramebufferParameterivEXT;
-      if (_gloffset_GetHandleARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetHandleARB] = (_glapi_proc)_mesa_marshal_GetHandleARB;
-      if (_gloffset_GetImageHandleARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetImageHandleARB] = (_glapi_proc)_mesa_marshal_GetImageHandleARB;
-      if (_gloffset_GetInfoLogARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetInfoLogARB] = (_glapi_proc)_mesa_marshal_GetInfoLogARB;
-      if (_gloffset_GetMultiTexEnvfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexEnvfvEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexEnvfvEXT;
-      if (_gloffset_GetMultiTexEnvivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexEnvivEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexEnvivEXT;
-      if (_gloffset_GetMultiTexGendvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexGendvEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexGendvEXT;
-      if (_gloffset_GetMultiTexGenfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexGenfvEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexGenfvEXT;
-      if (_gloffset_GetMultiTexGenivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexGenivEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexGenivEXT;
-      if (_gloffset_GetMultiTexImageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexImageEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexImageEXT;
-      if (_gloffset_GetMultiTexLevelParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexLevelParameterfvEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexLevelParameterfvEXT;
-      if (_gloffset_GetMultiTexLevelParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexLevelParameterivEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexLevelParameterivEXT;
-      if (_gloffset_GetMultiTexParameterIivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexParameterIivEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexParameterIivEXT;
-      if (_gloffset_GetMultiTexParameterIuivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexParameterIuivEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexParameterIuivEXT;
-      if (_gloffset_GetMultiTexParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexParameterfvEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexParameterfvEXT;
-      if (_gloffset_GetMultiTexParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultiTexParameterivEXT] = (_glapi_proc)_mesa_marshal_GetMultiTexParameterivEXT;
-      if (_gloffset_GetNamedBufferParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferParameterivEXT] = (_glapi_proc)_mesa_marshal_GetNamedBufferParameterivEXT;
-      if (_gloffset_GetNamedBufferPointervEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferPointervEXT] = (_glapi_proc)_mesa_marshal_GetNamedBufferPointervEXT;
-      if (_gloffset_GetNamedBufferSubDataEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferSubDataEXT] = (_glapi_proc)_mesa_marshal_GetNamedBufferSubDataEXT;
-      if (_gloffset_GetNamedFramebufferAttachmentParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedFramebufferAttachmentParameterivEXT] = (_glapi_proc)_mesa_marshal_GetNamedFramebufferAttachmentParameterivEXT;
-      if (_gloffset_GetNamedFramebufferParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedFramebufferParameterivEXT] = (_glapi_proc)_mesa_marshal_GetNamedFramebufferParameterivEXT;
-      if (_gloffset_GetNamedProgramLocalParameterdvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedProgramLocalParameterdvEXT] = (_glapi_proc)_mesa_marshal_GetNamedProgramLocalParameterdvEXT;
-      if (_gloffset_GetNamedProgramLocalParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedProgramLocalParameterfvEXT] = (_glapi_proc)_mesa_marshal_GetNamedProgramLocalParameterfvEXT;
-      if (_gloffset_GetNamedProgramStringEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedProgramStringEXT] = (_glapi_proc)_mesa_marshal_GetNamedProgramStringEXT;
-      if (_gloffset_GetNamedProgramivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedProgramivEXT] = (_glapi_proc)_mesa_marshal_GetNamedProgramivEXT;
-      if (_gloffset_GetNamedRenderbufferParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedRenderbufferParameterivEXT] = (_glapi_proc)_mesa_marshal_GetNamedRenderbufferParameterivEXT;
-      if (_gloffset_GetNamedStringARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedStringARB] = (_glapi_proc)_mesa_marshal_GetNamedStringARB;
-      if (_gloffset_GetNamedStringivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedStringivARB] = (_glapi_proc)_mesa_marshal_GetNamedStringivARB;
-      if (_gloffset_GetObjectParameterfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetObjectParameterfvARB] = (_glapi_proc)_mesa_marshal_GetObjectParameterfvARB;
-      if (_gloffset_GetObjectParameterivAPPLE >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetObjectParameterivAPPLE] = (_glapi_proc)_mesa_marshal_GetObjectParameterivAPPLE;
-      if (_gloffset_GetObjectParameterivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetObjectParameterivARB] = (_glapi_proc)_mesa_marshal_GetObjectParameterivARB;
-      if (_gloffset_GetPointerIndexedvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPointerIndexedvEXT] = (_glapi_proc)_mesa_marshal_GetPointerIndexedvEXT;
-      if (_gloffset_GetQueryIndexediv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryIndexediv] = (_glapi_proc)_mesa_marshal_GetQueryIndexediv;
-      if (_gloffset_GetTexImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexImage] = (_glapi_proc)_mesa_marshal_GetTexImage;
-      if (_gloffset_GetTextureHandleARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureHandleARB] = (_glapi_proc)_mesa_marshal_GetTextureHandleARB;
-      if (_gloffset_GetTextureImageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureImageEXT] = (_glapi_proc)_mesa_marshal_GetTextureImageEXT;
-      if (_gloffset_GetTextureLevelParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureLevelParameterfvEXT] = (_glapi_proc)_mesa_marshal_GetTextureLevelParameterfvEXT;
-      if (_gloffset_GetTextureLevelParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureLevelParameterivEXT] = (_glapi_proc)_mesa_marshal_GetTextureLevelParameterivEXT;
-      if (_gloffset_GetTextureParameterIivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterIivEXT] = (_glapi_proc)_mesa_marshal_GetTextureParameterIivEXT;
-      if (_gloffset_GetTextureParameterIuivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterIuivEXT] = (_glapi_proc)_mesa_marshal_GetTextureParameterIuivEXT;
-      if (_gloffset_GetTextureParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterfvEXT] = (_glapi_proc)_mesa_marshal_GetTextureParameterfvEXT;
-      if (_gloffset_GetTextureParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterivEXT] = (_glapi_proc)_mesa_marshal_GetTextureParameterivEXT;
-      if (_gloffset_GetTextureSamplerHandleARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureSamplerHandleARB] = (_glapi_proc)_mesa_marshal_GetTextureSamplerHandleARB;
-      if (_gloffset_GetTextureSubImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureSubImage] = (_glapi_proc)_mesa_marshal_GetTextureSubImage;
-      if (_gloffset_GetVertexArrayIntegeri_vEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayIntegeri_vEXT] = (_glapi_proc)_mesa_marshal_GetVertexArrayIntegeri_vEXT;
-      if (_gloffset_GetVertexArrayIntegervEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayIntegervEXT] = (_glapi_proc)_mesa_marshal_GetVertexArrayIntegervEXT;
-      if (_gloffset_GetVertexArrayPointeri_vEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayPointeri_vEXT] = (_glapi_proc)_mesa_marshal_GetVertexArrayPointeri_vEXT;
-      if (_gloffset_GetVertexArrayPointervEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayPointervEXT] = (_glapi_proc)_mesa_marshal_GetVertexArrayPointervEXT;
-      if (_gloffset_GetVertexAttribdv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribdv] = (_glapi_proc)_mesa_marshal_GetVertexAttribdv;
-      if (_gloffset_GetnCompressedTexImageARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnCompressedTexImageARB] = (_glapi_proc)_mesa_marshal_GetnCompressedTexImageARB;
-      if (_gloffset_GetnPolygonStippleARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnPolygonStippleARB] = (_glapi_proc)_mesa_marshal_GetnPolygonStippleARB;
-      if (_gloffset_GetnTexImageARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnTexImageARB] = (_glapi_proc)_mesa_marshal_GetnTexImageARB;
-      if (_gloffset_GetnUniformdvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnUniformdvARB] = (_glapi_proc)_mesa_marshal_GetnUniformdvARB;
-      if (_gloffset_InvalidateBufferData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateBufferData] = (_glapi_proc)_mesa_marshal_InvalidateBufferData;
-      if (_gloffset_InvalidateBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateBufferSubData] = (_glapi_proc)_mesa_marshal_InvalidateBufferSubData;
-      if (_gloffset_InvalidateTexImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateTexImage] = (_glapi_proc)_mesa_marshal_InvalidateTexImage;
-      if (_gloffset_InvalidateTexSubImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateTexSubImage] = (_glapi_proc)_mesa_marshal_InvalidateTexSubImage;
-      if (_gloffset_IsImageHandleResidentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsImageHandleResidentARB] = (_glapi_proc)_mesa_marshal_IsImageHandleResidentARB;
-      if (_gloffset_IsNamedStringARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsNamedStringARB] = (_glapi_proc)_mesa_marshal_IsNamedStringARB;
-      if (_gloffset_IsTextureHandleResidentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsTextureHandleResidentARB] = (_glapi_proc)_mesa_marshal_IsTextureHandleResidentARB;
-      if (_gloffset_MakeImageHandleNonResidentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MakeImageHandleNonResidentARB] = (_glapi_proc)_mesa_marshal_MakeImageHandleNonResidentARB;
-      if (_gloffset_MakeImageHandleResidentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MakeImageHandleResidentARB] = (_glapi_proc)_mesa_marshal_MakeImageHandleResidentARB;
-      if (_gloffset_MakeTextureHandleNonResidentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MakeTextureHandleNonResidentARB] = (_glapi_proc)_mesa_marshal_MakeTextureHandleNonResidentARB;
-      if (_gloffset_MakeTextureHandleResidentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MakeTextureHandleResidentARB] = (_glapi_proc)_mesa_marshal_MakeTextureHandleResidentARB;
-      if (_gloffset_MapNamedBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapNamedBufferEXT] = (_glapi_proc)_mesa_marshal_MapNamedBufferEXT;
-      if (_gloffset_MapNamedBufferRangeEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapNamedBufferRangeEXT] = (_glapi_proc)_mesa_marshal_MapNamedBufferRangeEXT;
-      if (_gloffset_MatrixFrustumEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixFrustumEXT] = (_glapi_proc)_mesa_marshal_MatrixFrustumEXT;
-      if (_gloffset_MatrixLoadIdentityEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixLoadIdentityEXT] = (_glapi_proc)_mesa_marshal_MatrixLoadIdentityEXT;
-      if (_gloffset_MatrixLoadTransposedEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixLoadTransposedEXT] = (_glapi_proc)_mesa_marshal_MatrixLoadTransposedEXT;
-      if (_gloffset_MatrixLoadTransposefEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixLoadTransposefEXT] = (_glapi_proc)_mesa_marshal_MatrixLoadTransposefEXT;
-      if (_gloffset_MatrixLoaddEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixLoaddEXT] = (_glapi_proc)_mesa_marshal_MatrixLoaddEXT;
-      if (_gloffset_MatrixLoadfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixLoadfEXT] = (_glapi_proc)_mesa_marshal_MatrixLoadfEXT;
-      if (_gloffset_MatrixMultTransposedEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixMultTransposedEXT] = (_glapi_proc)_mesa_marshal_MatrixMultTransposedEXT;
-      if (_gloffset_MatrixMultTransposefEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixMultTransposefEXT] = (_glapi_proc)_mesa_marshal_MatrixMultTransposefEXT;
-      if (_gloffset_MatrixMultdEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixMultdEXT] = (_glapi_proc)_mesa_marshal_MatrixMultdEXT;
-      if (_gloffset_MatrixMultfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixMultfEXT] = (_glapi_proc)_mesa_marshal_MatrixMultfEXT;
-      if (_gloffset_MatrixOrthoEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixOrthoEXT] = (_glapi_proc)_mesa_marshal_MatrixOrthoEXT;
-      if (_gloffset_MatrixPopEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixPopEXT] = (_glapi_proc)_mesa_marshal_MatrixPopEXT;
-      if (_gloffset_MatrixPushEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixPushEXT] = (_glapi_proc)_mesa_marshal_MatrixPushEXT;
-      if (_gloffset_MatrixRotatedEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixRotatedEXT] = (_glapi_proc)_mesa_marshal_MatrixRotatedEXT;
-      if (_gloffset_MatrixRotatefEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixRotatefEXT] = (_glapi_proc)_mesa_marshal_MatrixRotatefEXT;
-      if (_gloffset_MatrixScaledEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixScaledEXT] = (_glapi_proc)_mesa_marshal_MatrixScaledEXT;
-      if (_gloffset_MatrixScalefEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixScalefEXT] = (_glapi_proc)_mesa_marshal_MatrixScalefEXT;
-      if (_gloffset_MatrixTranslatedEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixTranslatedEXT] = (_glapi_proc)_mesa_marshal_MatrixTranslatedEXT;
-      if (_gloffset_MatrixTranslatefEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixTranslatefEXT] = (_glapi_proc)_mesa_marshal_MatrixTranslatefEXT;
-      if (_gloffset_MultiDrawArraysIndirect >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawArraysIndirect] = (_glapi_proc)_mesa_marshal_MultiDrawArraysIndirect;
-      if (_gloffset_MultiDrawArraysIndirectCountARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawArraysIndirectCountARB] = (_glapi_proc)_mesa_marshal_MultiDrawArraysIndirectCountARB;
-      if (_gloffset_MultiDrawElementsIndirect >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawElementsIndirect] = (_glapi_proc)_mesa_marshal_MultiDrawElementsIndirect;
-      if (_gloffset_MultiDrawElementsIndirectCountARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawElementsIndirectCountARB] = (_glapi_proc)_mesa_marshal_MultiDrawElementsIndirectCountARB;
-      if (_gloffset_MultiModeDrawArraysIBM >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiModeDrawArraysIBM] = (_glapi_proc)_mesa_marshal_MultiModeDrawArraysIBM;
-      if (_gloffset_MultiModeDrawElementsIBM >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiModeDrawElementsIBM] = (_glapi_proc)_mesa_marshal_MultiModeDrawElementsIBM;
-      if (_gloffset_MultiTexBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexBufferEXT] = (_glapi_proc)_mesa_marshal_MultiTexBufferEXT;
-      if (_gloffset_MultiTexCoordPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordPointerEXT] = (_glapi_proc)_mesa_marshal_MultiTexCoordPointerEXT;
-      if (_gloffset_MultiTexEnvfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexEnvfEXT] = (_glapi_proc)_mesa_marshal_MultiTexEnvfEXT;
-      if (_gloffset_MultiTexEnvfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexEnvfvEXT] = (_glapi_proc)_mesa_marshal_MultiTexEnvfvEXT;
-      if (_gloffset_MultiTexEnviEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexEnviEXT] = (_glapi_proc)_mesa_marshal_MultiTexEnviEXT;
-      if (_gloffset_MultiTexEnvivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexEnvivEXT] = (_glapi_proc)_mesa_marshal_MultiTexEnvivEXT;
-      if (_gloffset_MultiTexGendEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexGendEXT] = (_glapi_proc)_mesa_marshal_MultiTexGendEXT;
-      if (_gloffset_MultiTexGendvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexGendvEXT] = (_glapi_proc)_mesa_marshal_MultiTexGendvEXT;
-      if (_gloffset_MultiTexGenfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexGenfEXT] = (_glapi_proc)_mesa_marshal_MultiTexGenfEXT;
-      if (_gloffset_MultiTexGenfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexGenfvEXT] = (_glapi_proc)_mesa_marshal_MultiTexGenfvEXT;
-      if (_gloffset_MultiTexGeniEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexGeniEXT] = (_glapi_proc)_mesa_marshal_MultiTexGeniEXT;
-      if (_gloffset_MultiTexGenivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexGenivEXT] = (_glapi_proc)_mesa_marshal_MultiTexGenivEXT;
-      if (_gloffset_MultiTexImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexImage1DEXT] = (_glapi_proc)_mesa_marshal_MultiTexImage1DEXT;
-      if (_gloffset_MultiTexImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexImage2DEXT] = (_glapi_proc)_mesa_marshal_MultiTexImage2DEXT;
-      if (_gloffset_MultiTexImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexImage3DEXT] = (_glapi_proc)_mesa_marshal_MultiTexImage3DEXT;
-      if (_gloffset_MultiTexParameterIivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexParameterIivEXT] = (_glapi_proc)_mesa_marshal_MultiTexParameterIivEXT;
-      if (_gloffset_MultiTexParameterIuivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexParameterIuivEXT] = (_glapi_proc)_mesa_marshal_MultiTexParameterIuivEXT;
-      if (_gloffset_MultiTexParameterfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexParameterfEXT] = (_glapi_proc)_mesa_marshal_MultiTexParameterfEXT;
-      if (_gloffset_MultiTexParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexParameterfvEXT] = (_glapi_proc)_mesa_marshal_MultiTexParameterfvEXT;
-      if (_gloffset_MultiTexParameteriEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexParameteriEXT] = (_glapi_proc)_mesa_marshal_MultiTexParameteriEXT;
-      if (_gloffset_MultiTexParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexParameterivEXT] = (_glapi_proc)_mesa_marshal_MultiTexParameterivEXT;
-      if (_gloffset_MultiTexSubImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexSubImage1DEXT] = (_glapi_proc)_mesa_marshal_MultiTexSubImage1DEXT;
-      if (_gloffset_MultiTexSubImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexSubImage2DEXT] = (_glapi_proc)_mesa_marshal_MultiTexSubImage2DEXT;
-      if (_gloffset_MultiTexSubImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexSubImage3DEXT] = (_glapi_proc)_mesa_marshal_MultiTexSubImage3DEXT;
-      if (_gloffset_NamedBufferDataEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferDataEXT] = (_glapi_proc)_mesa_marshal_NamedBufferDataEXT;
-      if (_gloffset_NamedBufferPageCommitmentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferPageCommitmentARB] = (_glapi_proc)_mesa_marshal_NamedBufferPageCommitmentARB;
-      if (_gloffset_NamedBufferPageCommitmentEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferPageCommitmentEXT] = (_glapi_proc)_mesa_marshal_NamedBufferPageCommitmentEXT;
-      if (_gloffset_NamedBufferStorageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferStorageEXT] = (_glapi_proc)_mesa_marshal_NamedBufferStorageEXT;
-      if (_gloffset_NamedBufferSubDataEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferSubDataEXT] = (_glapi_proc)_mesa_marshal_NamedBufferSubDataEXT;
-      if (_gloffset_NamedCopyBufferSubDataEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedCopyBufferSubDataEXT] = (_glapi_proc)_mesa_marshal_NamedCopyBufferSubDataEXT;
-      if (_gloffset_NamedFramebufferParameteriEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferParameteriEXT] = (_glapi_proc)_mesa_marshal_NamedFramebufferParameteriEXT;
-      if (_gloffset_NamedFramebufferRenderbufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferRenderbufferEXT] = (_glapi_proc)_mesa_marshal_NamedFramebufferRenderbufferEXT;
-      if (_gloffset_NamedFramebufferTexture1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferTexture1DEXT] = (_glapi_proc)_mesa_marshal_NamedFramebufferTexture1DEXT;
-      if (_gloffset_NamedFramebufferTexture2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferTexture2DEXT] = (_glapi_proc)_mesa_marshal_NamedFramebufferTexture2DEXT;
-      if (_gloffset_NamedFramebufferTexture3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferTexture3DEXT] = (_glapi_proc)_mesa_marshal_NamedFramebufferTexture3DEXT;
-      if (_gloffset_NamedProgramLocalParameter4dEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedProgramLocalParameter4dEXT] = (_glapi_proc)_mesa_marshal_NamedProgramLocalParameter4dEXT;
-      if (_gloffset_NamedProgramLocalParameter4dvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedProgramLocalParameter4dvEXT] = (_glapi_proc)_mesa_marshal_NamedProgramLocalParameter4dvEXT;
-      if (_gloffset_NamedProgramLocalParameter4fEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedProgramLocalParameter4fEXT] = (_glapi_proc)_mesa_marshal_NamedProgramLocalParameter4fEXT;
-      if (_gloffset_NamedProgramLocalParameter4fvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedProgramLocalParameter4fvEXT] = (_glapi_proc)_mesa_marshal_NamedProgramLocalParameter4fvEXT;
-      if (_gloffset_NamedProgramLocalParameters4fvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedProgramLocalParameters4fvEXT] = (_glapi_proc)_mesa_marshal_NamedProgramLocalParameters4fvEXT;
-      if (_gloffset_NamedProgramStringEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedProgramStringEXT] = (_glapi_proc)_mesa_marshal_NamedProgramStringEXT;
-      if (_gloffset_NamedRenderbufferStorageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedRenderbufferStorageEXT] = (_glapi_proc)_mesa_marshal_NamedRenderbufferStorageEXT;
-      if (_gloffset_NamedRenderbufferStorageMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedRenderbufferStorageMultisampleEXT] = (_glapi_proc)_mesa_marshal_NamedRenderbufferStorageMultisampleEXT;
-      if (_gloffset_NamedStringARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedStringARB] = (_glapi_proc)_mesa_marshal_NamedStringARB;
-      if (_gloffset_ObjectPurgeableAPPLE >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ObjectPurgeableAPPLE] = (_glapi_proc)_mesa_marshal_ObjectPurgeableAPPLE;
-      if (_gloffset_ObjectUnpurgeableAPPLE >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ObjectUnpurgeableAPPLE] = (_glapi_proc)_mesa_marshal_ObjectUnpurgeableAPPLE;
-      if (_gloffset_PatchParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PatchParameterfv] = (_glapi_proc)_mesa_marshal_PatchParameterfv;
-      if (_gloffset_PixelStoref >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelStoref] = (_glapi_proc)_mesa_marshal_PixelStoref;
-      if (_gloffset_PointParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointParameteri] = (_glapi_proc)_mesa_marshal_PointParameteri;
-      if (_gloffset_PointParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointParameteriv] = (_glapi_proc)_mesa_marshal_PointParameteriv;
-      if (_gloffset_PolygonMode >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PolygonMode] = (_glapi_proc)_mesa_marshal_PolygonMode;
-      if (_gloffset_PrimitiveRestartIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PrimitiveRestartIndex] = (_glapi_proc)_mesa_marshal_PrimitiveRestartIndex;
-      if (_gloffset_ProgramUniform1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1d] = (_glapi_proc)_mesa_marshal_ProgramUniform1d;
-      if (_gloffset_ProgramUniform1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1dv] = (_glapi_proc)_mesa_marshal_ProgramUniform1dv;
-      if (_gloffset_ProgramUniform2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2d] = (_glapi_proc)_mesa_marshal_ProgramUniform2d;
-      if (_gloffset_ProgramUniform2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2dv] = (_glapi_proc)_mesa_marshal_ProgramUniform2dv;
-      if (_gloffset_ProgramUniform3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3d] = (_glapi_proc)_mesa_marshal_ProgramUniform3d;
-      if (_gloffset_ProgramUniform3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3dv] = (_glapi_proc)_mesa_marshal_ProgramUniform3dv;
-      if (_gloffset_ProgramUniform4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4d] = (_glapi_proc)_mesa_marshal_ProgramUniform4d;
-      if (_gloffset_ProgramUniform4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4dv] = (_glapi_proc)_mesa_marshal_ProgramUniform4dv;
-      if (_gloffset_ProgramUniformHandleui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformHandleui64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniformHandleui64ARB;
-      if (_gloffset_ProgramUniformHandleui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformHandleui64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniformHandleui64vARB;
-      if (_gloffset_ProgramUniformMatrix2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix2dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix2dv;
-      if (_gloffset_ProgramUniformMatrix2x3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix2x3dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix2x3dv;
-      if (_gloffset_ProgramUniformMatrix2x4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix2x4dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix2x4dv;
-      if (_gloffset_ProgramUniformMatrix3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix3dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix3dv;
-      if (_gloffset_ProgramUniformMatrix3x2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix3x2dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix3x2dv;
-      if (_gloffset_ProgramUniformMatrix3x4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix3x4dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix3x4dv;
-      if (_gloffset_ProgramUniformMatrix4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix4dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix4dv;
-      if (_gloffset_ProgramUniformMatrix4x2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix4x2dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix4x2dv;
-      if (_gloffset_ProgramUniformMatrix4x3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix4x3dv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix4x3dv;
-      if (_gloffset_ProvokingVertex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProvokingVertex] = (_glapi_proc)_mesa_marshal_ProvokingVertex;
-      if (_gloffset_PushClientAttribDefaultEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PushClientAttribDefaultEXT] = (_glapi_proc)_mesa_marshal_PushClientAttribDefaultEXT;
-      if (_gloffset_ShaderStorageBlockBinding >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ShaderStorageBlockBinding] = (_glapi_proc)_mesa_marshal_ShaderStorageBlockBinding;
-      if (_gloffset_SpecializeShaderARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SpecializeShaderARB] = (_glapi_proc)_mesa_marshal_SpecializeShaderARB;
-      if (_gloffset_StringMarkerGREMEDY >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StringMarkerGREMEDY] = (_glapi_proc)_mesa_marshal_StringMarkerGREMEDY;
-      if (_gloffset_TexImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexImage1D] = (_glapi_proc)_mesa_marshal_TexImage1D;
-      if (_gloffset_TexImage2DMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexImage2DMultisample] = (_glapi_proc)_mesa_marshal_TexImage2DMultisample;
-      if (_gloffset_TexImage3DMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexImage3DMultisample] = (_glapi_proc)_mesa_marshal_TexImage3DMultisample;
-      if (_gloffset_TexPageCommitmentARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexPageCommitmentARB] = (_glapi_proc)_mesa_marshal_TexPageCommitmentARB;
-      if (_gloffset_TexStorage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorage1D] = (_glapi_proc)_mesa_marshal_TexStorage1D;
-      if (_gloffset_TexStorageMem1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorageMem1DEXT] = (_glapi_proc)_mesa_marshal_TexStorageMem1DEXT;
-      if (_gloffset_TexSubImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexSubImage1D] = (_glapi_proc)_mesa_marshal_TexSubImage1D;
-      if (_gloffset_TextureBarrierNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureBarrierNV] = (_glapi_proc)_mesa_marshal_TextureBarrierNV;
-      if (_gloffset_TextureBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureBufferEXT] = (_glapi_proc)_mesa_marshal_TextureBufferEXT;
-      if (_gloffset_TextureBufferRangeEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureBufferRangeEXT] = (_glapi_proc)_mesa_marshal_TextureBufferRangeEXT;
-      if (_gloffset_TextureImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureImage1DEXT] = (_glapi_proc)_mesa_marshal_TextureImage1DEXT;
-      if (_gloffset_TextureImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureImage2DEXT] = (_glapi_proc)_mesa_marshal_TextureImage2DEXT;
-      if (_gloffset_TextureImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureImage3DEXT] = (_glapi_proc)_mesa_marshal_TextureImage3DEXT;
-      if (_gloffset_TexturePageCommitmentEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexturePageCommitmentEXT] = (_glapi_proc)_mesa_marshal_TexturePageCommitmentEXT;
-      if (_gloffset_TextureParameterIivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterIivEXT] = (_glapi_proc)_mesa_marshal_TextureParameterIivEXT;
-      if (_gloffset_TextureParameterIuivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterIuivEXT] = (_glapi_proc)_mesa_marshal_TextureParameterIuivEXT;
-      if (_gloffset_TextureParameterfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterfEXT] = (_glapi_proc)_mesa_marshal_TextureParameterfEXT;
-      if (_gloffset_TextureParameterfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterfvEXT] = (_glapi_proc)_mesa_marshal_TextureParameterfvEXT;
-      if (_gloffset_TextureParameteriEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameteriEXT] = (_glapi_proc)_mesa_marshal_TextureParameteriEXT;
-      if (_gloffset_TextureParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterivEXT] = (_glapi_proc)_mesa_marshal_TextureParameterivEXT;
-      if (_gloffset_TextureStorage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage1DEXT] = (_glapi_proc)_mesa_marshal_TextureStorage1DEXT;
-      if (_gloffset_TextureStorage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage2DEXT] = (_glapi_proc)_mesa_marshal_TextureStorage2DEXT;
-      if (_gloffset_TextureStorage2DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage2DMultisampleEXT] = (_glapi_proc)_mesa_marshal_TextureStorage2DMultisampleEXT;
-      if (_gloffset_TextureStorage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage3DEXT] = (_glapi_proc)_mesa_marshal_TextureStorage3DEXT;
-      if (_gloffset_TextureStorage3DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage3DMultisampleEXT] = (_glapi_proc)_mesa_marshal_TextureStorage3DMultisampleEXT;
-      if (_gloffset_TextureStorageMem1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorageMem1DEXT] = (_glapi_proc)_mesa_marshal_TextureStorageMem1DEXT;
-      if (_gloffset_TextureSubImage1DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureSubImage1DEXT] = (_glapi_proc)_mesa_marshal_TextureSubImage1DEXT;
-      if (_gloffset_TextureSubImage2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureSubImage2DEXT] = (_glapi_proc)_mesa_marshal_TextureSubImage2DEXT;
-      if (_gloffset_TextureSubImage3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureSubImage3DEXT] = (_glapi_proc)_mesa_marshal_TextureSubImage3DEXT;
-      if (_gloffset_UniformHandleui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformHandleui64ARB] = (_glapi_proc)_mesa_marshal_UniformHandleui64ARB;
-      if (_gloffset_UniformHandleui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformHandleui64vARB] = (_glapi_proc)_mesa_marshal_UniformHandleui64vARB;
-      if (_gloffset_UnmapNamedBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UnmapNamedBufferEXT] = (_glapi_proc)_mesa_marshal_UnmapNamedBufferEXT;
-      if (_gloffset_VDPAUFiniNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUFiniNV] = (_glapi_proc)_mesa_marshal_VDPAUFiniNV;
-      if (_gloffset_VDPAUGetSurfaceivNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUGetSurfaceivNV] = (_glapi_proc)_mesa_marshal_VDPAUGetSurfaceivNV;
-      if (_gloffset_VDPAUInitNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUInitNV] = (_glapi_proc)_mesa_marshal_VDPAUInitNV;
-      if (_gloffset_VDPAUIsSurfaceNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUIsSurfaceNV] = (_glapi_proc)_mesa_marshal_VDPAUIsSurfaceNV;
-      if (_gloffset_VDPAUMapSurfacesNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUMapSurfacesNV] = (_glapi_proc)_mesa_marshal_VDPAUMapSurfacesNV;
-      if (_gloffset_VDPAURegisterOutputSurfaceNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAURegisterOutputSurfaceNV] = (_glapi_proc)_mesa_marshal_VDPAURegisterOutputSurfaceNV;
-      if (_gloffset_VDPAURegisterVideoSurfaceNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAURegisterVideoSurfaceNV] = (_glapi_proc)_mesa_marshal_VDPAURegisterVideoSurfaceNV;
-      if (_gloffset_VDPAUSurfaceAccessNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUSurfaceAccessNV] = (_glapi_proc)_mesa_marshal_VDPAUSurfaceAccessNV;
-      if (_gloffset_VDPAUUnmapSurfacesNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUUnmapSurfacesNV] = (_glapi_proc)_mesa_marshal_VDPAUUnmapSurfacesNV;
-      if (_gloffset_VDPAUUnregisterSurfaceNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VDPAUUnregisterSurfaceNV] = (_glapi_proc)_mesa_marshal_VDPAUUnregisterSurfaceNV;
-      if (_gloffset_VertexArrayBindVertexBufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayBindVertexBufferEXT] = (_glapi_proc)_mesa_marshal_VertexArrayBindVertexBufferEXT;
-      if (_gloffset_VertexArrayColorOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayColorOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayColorOffsetEXT;
-      if (_gloffset_VertexArrayEdgeFlagOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayEdgeFlagOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayEdgeFlagOffsetEXT;
-      if (_gloffset_VertexArrayFogCoordOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayFogCoordOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayFogCoordOffsetEXT;
-      if (_gloffset_VertexArrayIndexOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayIndexOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayIndexOffsetEXT;
-      if (_gloffset_VertexArrayMultiTexCoordOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayMultiTexCoordOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayMultiTexCoordOffsetEXT;
-      if (_gloffset_VertexArrayNormalOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayNormalOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayNormalOffsetEXT;
-      if (_gloffset_VertexArraySecondaryColorOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArraySecondaryColorOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArraySecondaryColorOffsetEXT;
-      if (_gloffset_VertexArrayTexCoordOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayTexCoordOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayTexCoordOffsetEXT;
-      if (_gloffset_VertexArrayVertexAttribBindingEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribBindingEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribBindingEXT;
-      if (_gloffset_VertexArrayVertexAttribDivisorEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribDivisorEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribDivisorEXT;
-      if (_gloffset_VertexArrayVertexAttribFormatEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribFormatEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribFormatEXT;
-      if (_gloffset_VertexArrayVertexAttribIFormatEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribIFormatEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribIFormatEXT;
-      if (_gloffset_VertexArrayVertexAttribIOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribIOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribIOffsetEXT;
-      if (_gloffset_VertexArrayVertexAttribLFormatEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribLFormatEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribLFormatEXT;
-      if (_gloffset_VertexArrayVertexAttribLOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribLOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribLOffsetEXT;
-      if (_gloffset_VertexArrayVertexAttribOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexAttribOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexAttribOffsetEXT;
-      if (_gloffset_VertexArrayVertexBindingDivisorEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexBindingDivisorEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexBindingDivisorEXT;
-      if (_gloffset_VertexArrayVertexOffsetEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexOffsetEXT] = (_glapi_proc)_mesa_marshal_VertexArrayVertexOffsetEXT;
-      if (_gloffset_VertexAttrib1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1d] = (_glapi_proc)_mesa_marshal_VertexAttrib1d;
-      if (_gloffset_VertexAttrib1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1dv] = (_glapi_proc)_mesa_marshal_VertexAttrib1dv;
-      if (_gloffset_VertexAttrib1s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1s] = (_glapi_proc)_mesa_marshal_VertexAttrib1s;
-      if (_gloffset_VertexAttrib1sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1sv] = (_glapi_proc)_mesa_marshal_VertexAttrib1sv;
-      if (_gloffset_VertexAttrib2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2d] = (_glapi_proc)_mesa_marshal_VertexAttrib2d;
-      if (_gloffset_VertexAttrib2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2dv] = (_glapi_proc)_mesa_marshal_VertexAttrib2dv;
-      if (_gloffset_VertexAttrib2s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2s] = (_glapi_proc)_mesa_marshal_VertexAttrib2s;
-      if (_gloffset_VertexAttrib2sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2sv] = (_glapi_proc)_mesa_marshal_VertexAttrib2sv;
-      if (_gloffset_VertexAttrib3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3d] = (_glapi_proc)_mesa_marshal_VertexAttrib3d;
-      if (_gloffset_VertexAttrib3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3dv] = (_glapi_proc)_mesa_marshal_VertexAttrib3dv;
-      if (_gloffset_VertexAttrib3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3s] = (_glapi_proc)_mesa_marshal_VertexAttrib3s;
-      if (_gloffset_VertexAttrib3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3sv] = (_glapi_proc)_mesa_marshal_VertexAttrib3sv;
-      if (_gloffset_VertexAttrib4Nbv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Nbv] = (_glapi_proc)_mesa_marshal_VertexAttrib4Nbv;
-      if (_gloffset_VertexAttrib4Niv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Niv] = (_glapi_proc)_mesa_marshal_VertexAttrib4Niv;
-      if (_gloffset_VertexAttrib4Nsv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Nsv] = (_glapi_proc)_mesa_marshal_VertexAttrib4Nsv;
-      if (_gloffset_VertexAttrib4Nub >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Nub] = (_glapi_proc)_mesa_marshal_VertexAttrib4Nub;
-      if (_gloffset_VertexAttrib4Nubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Nubv] = (_glapi_proc)_mesa_marshal_VertexAttrib4Nubv;
-      if (_gloffset_VertexAttrib4Nuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Nuiv] = (_glapi_proc)_mesa_marshal_VertexAttrib4Nuiv;
-      if (_gloffset_VertexAttrib4Nusv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4Nusv] = (_glapi_proc)_mesa_marshal_VertexAttrib4Nusv;
-      if (_gloffset_VertexAttrib4bv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4bv] = (_glapi_proc)_mesa_marshal_VertexAttrib4bv;
-      if (_gloffset_VertexAttrib4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4d] = (_glapi_proc)_mesa_marshal_VertexAttrib4d;
-      if (_gloffset_VertexAttrib4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4dv] = (_glapi_proc)_mesa_marshal_VertexAttrib4dv;
-      if (_gloffset_VertexAttrib4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4iv] = (_glapi_proc)_mesa_marshal_VertexAttrib4iv;
-      if (_gloffset_VertexAttrib4s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4s] = (_glapi_proc)_mesa_marshal_VertexAttrib4s;
-      if (_gloffset_VertexAttrib4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4sv] = (_glapi_proc)_mesa_marshal_VertexAttrib4sv;
-      if (_gloffset_VertexAttrib4ubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4ubv] = (_glapi_proc)_mesa_marshal_VertexAttrib4ubv;
-      if (_gloffset_VertexAttrib4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4uiv] = (_glapi_proc)_mesa_marshal_VertexAttrib4uiv;
-      if (_gloffset_VertexAttrib4usv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4usv] = (_glapi_proc)_mesa_marshal_VertexAttrib4usv;
-      if (_gloffset_VertexAttribI1iEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI1iEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI1iEXT;
-      if (_gloffset_VertexAttribI1iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI1iv] = (_glapi_proc)_mesa_marshal_VertexAttribI1iv;
-      if (_gloffset_VertexAttribI1uiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI1uiEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI1uiEXT;
-      if (_gloffset_VertexAttribI1uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI1uiv] = (_glapi_proc)_mesa_marshal_VertexAttribI1uiv;
-      if (_gloffset_VertexAttribI2iEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI2iEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI2iEXT;
-      if (_gloffset_VertexAttribI2ivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI2ivEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI2ivEXT;
-      if (_gloffset_VertexAttribI2uiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI2uiEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI2uiEXT;
-      if (_gloffset_VertexAttribI2uivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI2uivEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI2uivEXT;
-      if (_gloffset_VertexAttribI3iEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI3iEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI3iEXT;
-      if (_gloffset_VertexAttribI3ivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI3ivEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI3ivEXT;
-      if (_gloffset_VertexAttribI3uiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI3uiEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI3uiEXT;
-      if (_gloffset_VertexAttribI3uivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI3uivEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI3uivEXT;
-      if (_gloffset_VertexAttribI4bv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4bv] = (_glapi_proc)_mesa_marshal_VertexAttribI4bv;
-      if (_gloffset_VertexAttribI4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4sv] = (_glapi_proc)_mesa_marshal_VertexAttribI4sv;
-      if (_gloffset_VertexAttribI4ubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4ubv] = (_glapi_proc)_mesa_marshal_VertexAttribI4ubv;
-      if (_gloffset_VertexAttribI4usv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4usv] = (_glapi_proc)_mesa_marshal_VertexAttribI4usv;
-      if (_gloffset_VertexAttribL1ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL1ui64ARB] = (_glapi_proc)_mesa_marshal_VertexAttribL1ui64ARB;
-      if (_gloffset_VertexAttribL1ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL1ui64vARB] = (_glapi_proc)_mesa_marshal_VertexAttribL1ui64vARB;
-      if (_gloffset_VertexAttribLFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribLFormat] = (_glapi_proc)_mesa_marshal_VertexAttribLFormat;
-      if (_gloffset_VertexAttribP1ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP1ui] = (_glapi_proc)_mesa_marshal_VertexAttribP1ui;
-      if (_gloffset_VertexAttribP1uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP1uiv] = (_glapi_proc)_mesa_marshal_VertexAttribP1uiv;
-      if (_gloffset_VertexAttribP2ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP2ui] = (_glapi_proc)_mesa_marshal_VertexAttribP2ui;
-      if (_gloffset_VertexAttribP2uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP2uiv] = (_glapi_proc)_mesa_marshal_VertexAttribP2uiv;
-      if (_gloffset_VertexAttribP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP3ui] = (_glapi_proc)_mesa_marshal_VertexAttribP3ui;
-      if (_gloffset_VertexAttribP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP3uiv] = (_glapi_proc)_mesa_marshal_VertexAttribP3uiv;
-      if (_gloffset_VertexAttribP4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP4ui] = (_glapi_proc)_mesa_marshal_VertexAttribP4ui;
-      if (_gloffset_VertexAttribP4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribP4uiv] = (_glapi_proc)_mesa_marshal_VertexAttribP4uiv;
+      SET_NamedBufferDataEXT(table, _mesa_marshal_NamedBufferDataEXT);
+      SET_NamedBufferSubDataEXT(table, _mesa_marshal_NamedBufferSubDataEXT);
+      SET_PolygonMode(table, _mesa_marshal_PolygonMode);
+      SET_TexImage1D(table, _mesa_marshal_TexImage1D);
    }
    if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
-      if (_gloffset_BeginTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginTransformFeedback] = (_glapi_proc)_mesa_marshal_BeginTransformFeedback;
-      if (_gloffset_BindBufferBase >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindBufferBase] = (_glapi_proc)_mesa_marshal_BindBufferBase;
-      if (_gloffset_BindBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindBufferRange] = (_glapi_proc)_mesa_marshal_BindBufferRange;
-      if (_gloffset_BindFragDataLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindFragDataLocation] = (_glapi_proc)_mesa_marshal_BindFragDataLocation;
-      if (_gloffset_BindFragDataLocationIndexed >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindFragDataLocationIndexed] = (_glapi_proc)_mesa_marshal_BindFragDataLocationIndexed;
-      if (_gloffset_BindSampler >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindSampler] = (_glapi_proc)_mesa_marshal_BindSampler;
-      if (_gloffset_BindTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindTransformFeedback] = (_glapi_proc)_mesa_marshal_BindTransformFeedback;
-      if (_gloffset_BlendEquationSeparateiARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendEquationSeparateiARB] = (_glapi_proc)_mesa_marshal_BlendEquationSeparateiARB;
-      if (_gloffset_BlendEquationiARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendEquationiARB] = (_glapi_proc)_mesa_marshal_BlendEquationiARB;
-      if (_gloffset_BlendFuncSeparateiARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendFuncSeparateiARB] = (_glapi_proc)_mesa_marshal_BlendFuncSeparateiARB;
-      if (_gloffset_BlendFunciARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendFunciARB] = (_glapi_proc)_mesa_marshal_BlendFunciARB;
-      if (_gloffset_BlitFramebuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlitFramebuffer] = (_glapi_proc)_mesa_marshal_BlitFramebuffer;
-      if (_gloffset_ClearBufferfi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearBufferfi] = (_glapi_proc)_mesa_marshal_ClearBufferfi;
-      if (_gloffset_ClearBufferfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearBufferfv] = (_glapi_proc)_mesa_marshal_ClearBufferfv;
-      if (_gloffset_ClearBufferiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearBufferiv] = (_glapi_proc)_mesa_marshal_ClearBufferiv;
-      if (_gloffset_ClearBufferuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearBufferuiv] = (_glapi_proc)_mesa_marshal_ClearBufferuiv;
-      if (_gloffset_ClientWaitSync >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClientWaitSync] = (_glapi_proc)_mesa_marshal_ClientWaitSync;
-      if (_gloffset_ColorMaski >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorMaski] = (_glapi_proc)_mesa_marshal_ColorMaski;
-      if (_gloffset_CopyBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyBufferSubData] = (_glapi_proc)_mesa_marshal_CopyBufferSubData;
-      if (_gloffset_CopyImageSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyImageSubData] = (_glapi_proc)_mesa_marshal_CopyImageSubData;
-      if (_gloffset_DeleteSamplers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteSamplers] = (_glapi_proc)_mesa_marshal_DeleteSamplers;
-      if (_gloffset_DeleteSync >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteSync] = (_glapi_proc)_mesa_marshal_DeleteSync;
-      if (_gloffset_DeleteTransformFeedbacks >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteTransformFeedbacks] = (_glapi_proc)_mesa_marshal_DeleteTransformFeedbacks;
-      if (_gloffset_Disablei >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Disablei] = (_glapi_proc)_mesa_marshal_Disablei;
-      if (_gloffset_DrawArraysInstancedBaseInstance >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawArraysInstancedBaseInstance] = (_glapi_proc)_mesa_marshal_DrawArraysInstancedBaseInstance;
-      if (_gloffset_DrawElementsInstancedBaseInstance >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElementsInstancedBaseInstance] = (_glapi_proc)_mesa_marshal_DrawElementsInstancedBaseInstance;
-      if (_gloffset_DrawElementsInstancedBaseVertex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElementsInstancedBaseVertex] = (_glapi_proc)_mesa_marshal_DrawElementsInstancedBaseVertex;
-      if (_gloffset_DrawElementsInstancedBaseVertexBaseInstance >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElementsInstancedBaseVertexBaseInstance] = (_glapi_proc)_mesa_marshal_DrawElementsInstancedBaseVertexBaseInstance;
-      if (_gloffset_DrawRangeElements >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawRangeElements] = (_glapi_proc)_mesa_marshal_DrawRangeElements;
-      if (_gloffset_DrawRangeElementsBaseVertex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawRangeElementsBaseVertex] = (_glapi_proc)_mesa_marshal_DrawRangeElementsBaseVertex;
-      if (_gloffset_EGLImageTargetTexStorageEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EGLImageTargetTexStorageEXT] = (_glapi_proc)_mesa_marshal_EGLImageTargetTexStorageEXT;
-      if (_gloffset_Enablei >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Enablei] = (_glapi_proc)_mesa_marshal_Enablei;
-      if (_gloffset_EndTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndTransformFeedback] = (_glapi_proc)_mesa_marshal_EndTransformFeedback;
-      if (_gloffset_FenceSync >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FenceSync] = (_glapi_proc)_mesa_marshal_FenceSync;
-      if (_gloffset_FramebufferTextureLayer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferTextureLayer] = (_glapi_proc)_mesa_marshal_FramebufferTextureLayer;
-      if (_gloffset_GenSamplers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenSamplers] = (_glapi_proc)_mesa_marshal_GenSamplers;
-      if (_gloffset_GenTransformFeedbacks >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenTransformFeedbacks] = (_glapi_proc)_mesa_marshal_GenTransformFeedbacks;
-      if (_gloffset_GetActiveUniformBlockName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveUniformBlockName] = (_glapi_proc)_mesa_marshal_GetActiveUniformBlockName;
-      if (_gloffset_GetActiveUniformBlockiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveUniformBlockiv] = (_glapi_proc)_mesa_marshal_GetActiveUniformBlockiv;
-      if (_gloffset_GetActiveUniformsiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveUniformsiv] = (_glapi_proc)_mesa_marshal_GetActiveUniformsiv;
-      if (_gloffset_GetBufferParameteri64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetBufferParameteri64v] = (_glapi_proc)_mesa_marshal_GetBufferParameteri64v;
-      if (_gloffset_GetFragDataIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFragDataIndex] = (_glapi_proc)_mesa_marshal_GetFragDataIndex;
-      if (_gloffset_GetFragDataLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFragDataLocation] = (_glapi_proc)_mesa_marshal_GetFragDataLocation;
-      if (_gloffset_GetInteger64i_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetInteger64i_v] = (_glapi_proc)_mesa_marshal_GetInteger64i_v;
-      if (_gloffset_GetIntegeri_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetIntegeri_v] = (_glapi_proc)_mesa_marshal_GetIntegeri_v;
-      if (_gloffset_GetInternalformati64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetInternalformati64v] = (_glapi_proc)_mesa_marshal_GetInternalformati64v;
-      if (_gloffset_GetInternalformativ >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetInternalformativ] = (_glapi_proc)_mesa_marshal_GetInternalformativ;
-      if (_gloffset_GetSamplerParameterIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSamplerParameterIiv] = (_glapi_proc)_mesa_marshal_GetSamplerParameterIiv;
-      if (_gloffset_GetSamplerParameterIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSamplerParameterIuiv] = (_glapi_proc)_mesa_marshal_GetSamplerParameterIuiv;
-      if (_gloffset_GetSamplerParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSamplerParameterfv] = (_glapi_proc)_mesa_marshal_GetSamplerParameterfv;
-      if (_gloffset_GetSamplerParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSamplerParameteriv] = (_glapi_proc)_mesa_marshal_GetSamplerParameteriv;
-      if (_gloffset_GetStringi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetStringi] = (_glapi_proc)_mesa_marshal_GetStringi;
-      if (_gloffset_GetSynciv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSynciv] = (_glapi_proc)_mesa_marshal_GetSynciv;
-      if (_gloffset_GetTexParameterIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexParameterIiv] = (_glapi_proc)_mesa_marshal_GetTexParameterIiv;
-      if (_gloffset_GetTexParameterIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexParameterIuiv] = (_glapi_proc)_mesa_marshal_GetTexParameterIuiv;
-      if (_gloffset_GetTransformFeedbackVarying >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTransformFeedbackVarying] = (_glapi_proc)_mesa_marshal_GetTransformFeedbackVarying;
-      if (_gloffset_GetUniformBlockIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformBlockIndex] = (_glapi_proc)_mesa_marshal_GetUniformBlockIndex;
-      if (_gloffset_GetUniformIndices >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformIndices] = (_glapi_proc)_mesa_marshal_GetUniformIndices;
-      if (_gloffset_GetUniformuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformuiv] = (_glapi_proc)_mesa_marshal_GetUniformuiv;
-      if (_gloffset_GetVertexAttribIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribIiv] = (_glapi_proc)_mesa_marshal_GetVertexAttribIiv;
-      if (_gloffset_GetVertexAttribIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribIuiv] = (_glapi_proc)_mesa_marshal_GetVertexAttribIuiv;
-      if (_gloffset_InvalidateFramebuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateFramebuffer] = (_glapi_proc)_mesa_marshal_InvalidateFramebuffer;
-      if (_gloffset_InvalidateSubFramebuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateSubFramebuffer] = (_glapi_proc)_mesa_marshal_InvalidateSubFramebuffer;
-      if (_gloffset_IsEnabledi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsEnabledi] = (_glapi_proc)_mesa_marshal_IsEnabledi;
-      if (_gloffset_IsSampler >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsSampler] = (_glapi_proc)_mesa_marshal_IsSampler;
-      if (_gloffset_IsSync >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsSync] = (_glapi_proc)_mesa_marshal_IsSync;
-      if (_gloffset_IsTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsTransformFeedback] = (_glapi_proc)_mesa_marshal_IsTransformFeedback;
-      if (_gloffset_MinSampleShading >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MinSampleShading] = (_glapi_proc)_mesa_marshal_MinSampleShading;
-      if (_gloffset_NamedRenderbufferStorageMultisampleAdvancedAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedRenderbufferStorageMultisampleAdvancedAMD] = (_glapi_proc)_mesa_marshal_NamedRenderbufferStorageMultisampleAdvancedAMD;
-      if (_gloffset_PauseTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PauseTransformFeedback] = (_glapi_proc)_mesa_marshal_PauseTransformFeedback;
-      if (_gloffset_ProgramUniform1ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1ui] = (_glapi_proc)_mesa_marshal_ProgramUniform1ui;
-      if (_gloffset_ProgramUniform1uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1uiv] = (_glapi_proc)_mesa_marshal_ProgramUniform1uiv;
-      if (_gloffset_ProgramUniform2ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2ui] = (_glapi_proc)_mesa_marshal_ProgramUniform2ui;
-      if (_gloffset_ProgramUniform2uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2uiv] = (_glapi_proc)_mesa_marshal_ProgramUniform2uiv;
-      if (_gloffset_ProgramUniform3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3ui] = (_glapi_proc)_mesa_marshal_ProgramUniform3ui;
-      if (_gloffset_ProgramUniform3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3uiv] = (_glapi_proc)_mesa_marshal_ProgramUniform3uiv;
-      if (_gloffset_ProgramUniform4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4ui] = (_glapi_proc)_mesa_marshal_ProgramUniform4ui;
-      if (_gloffset_ProgramUniform4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4uiv] = (_glapi_proc)_mesa_marshal_ProgramUniform4uiv;
-      if (_gloffset_RenderbufferStorageMultisampleAdvancedAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RenderbufferStorageMultisampleAdvancedAMD] = (_glapi_proc)_mesa_marshal_RenderbufferStorageMultisampleAdvancedAMD;
-      if (_gloffset_ResumeTransformFeedback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ResumeTransformFeedback] = (_glapi_proc)_mesa_marshal_ResumeTransformFeedback;
-      if (_gloffset_SamplerParameterIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SamplerParameterIiv] = (_glapi_proc)_mesa_marshal_SamplerParameterIiv;
-      if (_gloffset_SamplerParameterIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SamplerParameterIuiv] = (_glapi_proc)_mesa_marshal_SamplerParameterIuiv;
-      if (_gloffset_SamplerParameterf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SamplerParameterf] = (_glapi_proc)_mesa_marshal_SamplerParameterf;
-      if (_gloffset_SamplerParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SamplerParameterfv] = (_glapi_proc)_mesa_marshal_SamplerParameterfv;
-      if (_gloffset_SamplerParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SamplerParameteri] = (_glapi_proc)_mesa_marshal_SamplerParameteri;
-      if (_gloffset_SamplerParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SamplerParameteriv] = (_glapi_proc)_mesa_marshal_SamplerParameteriv;
-      if (_gloffset_TexParameterIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameterIiv] = (_glapi_proc)_mesa_marshal_TexParameterIiv;
-      if (_gloffset_TexParameterIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameterIuiv] = (_glapi_proc)_mesa_marshal_TexParameterIuiv;
-      if (_gloffset_TexStorage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorage2D] = (_glapi_proc)_mesa_marshal_TexStorage2D;
-      if (_gloffset_TexStorage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorage3D] = (_glapi_proc)_mesa_marshal_TexStorage3D;
-      if (_gloffset_TransformFeedbackVaryings >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TransformFeedbackVaryings] = (_glapi_proc)_mesa_marshal_TransformFeedbackVaryings;
-      if (_gloffset_Uniform1ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1ui] = (_glapi_proc)_mesa_marshal_Uniform1ui;
-      if (_gloffset_Uniform1uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1uiv] = (_glapi_proc)_mesa_marshal_Uniform1uiv;
-      if (_gloffset_Uniform2ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2ui] = (_glapi_proc)_mesa_marshal_Uniform2ui;
-      if (_gloffset_Uniform2uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2uiv] = (_glapi_proc)_mesa_marshal_Uniform2uiv;
-      if (_gloffset_Uniform3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3ui] = (_glapi_proc)_mesa_marshal_Uniform3ui;
-      if (_gloffset_Uniform3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3uiv] = (_glapi_proc)_mesa_marshal_Uniform3uiv;
-      if (_gloffset_Uniform4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4ui] = (_glapi_proc)_mesa_marshal_Uniform4ui;
-      if (_gloffset_Uniform4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4uiv] = (_glapi_proc)_mesa_marshal_Uniform4uiv;
-      if (_gloffset_UniformBlockBinding >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformBlockBinding] = (_glapi_proc)_mesa_marshal_UniformBlockBinding;
-      if (_gloffset_UniformMatrix2x3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix2x3fv] = (_glapi_proc)_mesa_marshal_UniformMatrix2x3fv;
-      if (_gloffset_UniformMatrix2x4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix2x4fv] = (_glapi_proc)_mesa_marshal_UniformMatrix2x4fv;
-      if (_gloffset_UniformMatrix3x2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix3x2fv] = (_glapi_proc)_mesa_marshal_UniformMatrix3x2fv;
-      if (_gloffset_UniformMatrix3x4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix3x4fv] = (_glapi_proc)_mesa_marshal_UniformMatrix3x4fv;
-      if (_gloffset_UniformMatrix4x2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix4x2fv] = (_glapi_proc)_mesa_marshal_UniformMatrix4x2fv;
-      if (_gloffset_UniformMatrix4x3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix4x3fv] = (_glapi_proc)_mesa_marshal_UniformMatrix4x3fv;
-      if (_gloffset_VertexAttribDivisor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribDivisor] = (_glapi_proc)_mesa_marshal_VertexAttribDivisor;
-      if (_gloffset_VertexAttribI4iEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4iEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI4iEXT;
-      if (_gloffset_VertexAttribI4ivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4ivEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI4ivEXT;
-      if (_gloffset_VertexAttribI4uiEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4uiEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI4uiEXT;
-      if (_gloffset_VertexAttribI4uivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribI4uivEXT] = (_glapi_proc)_mesa_marshal_VertexAttribI4uivEXT;
-      if (_gloffset_VertexAttribIPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribIPointer] = (_glapi_proc)_mesa_marshal_VertexAttribIPointer;
-      if (_gloffset_WaitSync >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WaitSync] = (_glapi_proc)_mesa_marshal_WaitSync;
-      if (_gloffset_WindowRectanglesEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowRectanglesEXT] = (_glapi_proc)_mesa_marshal_WindowRectanglesEXT;
-   }
-   if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
-      if (_gloffset_BindImageTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindImageTexture] = (_glapi_proc)_mesa_marshal_BindImageTexture;
-      if (_gloffset_BindVertexBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindVertexBuffer] = (_glapi_proc)_mesa_marshal_BindVertexBuffer;
-      if (_gloffset_BufferStorage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BufferStorage] = (_glapi_proc)_mesa_marshal_BufferStorage;
-      if (_gloffset_ClearTexImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearTexImage] = (_glapi_proc)_mesa_marshal_ClearTexImage;
-      if (_gloffset_ClearTexSubImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearTexSubImage] = (_glapi_proc)_mesa_marshal_ClearTexSubImage;
-      if (_gloffset_DispatchCompute >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DispatchCompute] = (_glapi_proc)_mesa_marshal_DispatchCompute;
-      if (_gloffset_DispatchComputeIndirect >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DispatchComputeIndirect] = (_glapi_proc)_mesa_marshal_DispatchComputeIndirect;
-      if (_gloffset_DrawArraysIndirect >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawArraysIndirect] = (_glapi_proc)_mesa_marshal_DrawArraysIndirect;
-      if (_gloffset_DrawElementsIndirect >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElementsIndirect] = (_glapi_proc)_mesa_marshal_DrawElementsIndirect;
-      if (_gloffset_EvaluateDepthValuesARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvaluateDepthValuesARB] = (_glapi_proc)_mesa_marshal_EvaluateDepthValuesARB;
-      if (_gloffset_FramebufferSampleLocationsfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferSampleLocationsfvARB] = (_glapi_proc)_mesa_marshal_FramebufferSampleLocationsfvARB;
-      if (_gloffset_GetBooleani_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetBooleani_v] = (_glapi_proc)_mesa_marshal_GetBooleani_v;
-      if (_gloffset_GetFloati_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFloati_v] = (_glapi_proc)_mesa_marshal_GetFloati_v;
-      if (_gloffset_GetMultisamplefv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMultisamplefv] = (_glapi_proc)_mesa_marshal_GetMultisamplefv;
-      if (_gloffset_GetProgramInterfaceiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramInterfaceiv] = (_glapi_proc)_mesa_marshal_GetProgramInterfaceiv;
-      if (_gloffset_GetProgramResourceIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramResourceIndex] = (_glapi_proc)_mesa_marshal_GetProgramResourceIndex;
-      if (_gloffset_GetProgramResourceLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramResourceLocation] = (_glapi_proc)_mesa_marshal_GetProgramResourceLocation;
-      if (_gloffset_GetProgramResourceLocationIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramResourceLocationIndex] = (_glapi_proc)_mesa_marshal_GetProgramResourceLocationIndex;
-      if (_gloffset_GetProgramResourceName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramResourceName] = (_glapi_proc)_mesa_marshal_GetProgramResourceName;
-      if (_gloffset_GetProgramResourceiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramResourceiv] = (_glapi_proc)_mesa_marshal_GetProgramResourceiv;
-      if (_gloffset_GetTexLevelParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexLevelParameterfv] = (_glapi_proc)_mesa_marshal_GetTexLevelParameterfv;
-      if (_gloffset_GetTexLevelParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexLevelParameteriv] = (_glapi_proc)_mesa_marshal_GetTexLevelParameteriv;
-      if (_gloffset_MemoryBarrier >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MemoryBarrier] = (_glapi_proc)_mesa_marshal_MemoryBarrier;
-      if (_gloffset_MemoryBarrierByRegion >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MemoryBarrierByRegion] = (_glapi_proc)_mesa_marshal_MemoryBarrierByRegion;
-      if (_gloffset_NamedFramebufferSampleLocationsfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferSampleLocationsfvARB] = (_glapi_proc)_mesa_marshal_NamedFramebufferSampleLocationsfvARB;
-      if (_gloffset_PatchParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PatchParameteri] = (_glapi_proc)_mesa_marshal_PatchParameteri;
-      if (_gloffset_PrimitiveBoundingBox >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PrimitiveBoundingBox] = (_glapi_proc)_mesa_marshal_PrimitiveBoundingBox;
-      if (_gloffset_SampleMaski >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SampleMaski] = (_glapi_proc)_mesa_marshal_SampleMaski;
-      if (_gloffset_TexStorage2DMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorage2DMultisample] = (_glapi_proc)_mesa_marshal_TexStorage2DMultisample;
-      if (_gloffset_TexStorage3DMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorage3DMultisample] = (_glapi_proc)_mesa_marshal_TexStorage3DMultisample;
-      if (_gloffset_TextureView >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureView] = (_glapi_proc)_mesa_marshal_TextureView;
-      if (_gloffset_VertexAttribBinding >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribBinding] = (_glapi_proc)_mesa_marshal_VertexAttribBinding;
-      if (_gloffset_VertexAttribFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribFormat] = (_glapi_proc)_mesa_marshal_VertexAttribFormat;
-      if (_gloffset_VertexAttribIFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribIFormat] = (_glapi_proc)_mesa_marshal_VertexAttribIFormat;
-      if (_gloffset_VertexBindingDivisor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexBindingDivisor] = (_glapi_proc)_mesa_marshal_VertexBindingDivisor;
-      if (_gloffset_ViewportSwizzleNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ViewportSwizzleNV] = (_glapi_proc)_mesa_marshal_ViewportSwizzleNV;
-   }
-   if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32)) {
-      if (_gloffset_BufferStorageMemEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BufferStorageMemEXT] = (_glapi_proc)_mesa_marshal_BufferStorageMemEXT;
-      if (_gloffset_CreateMemoryObjectsEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateMemoryObjectsEXT] = (_glapi_proc)_mesa_marshal_CreateMemoryObjectsEXT;
-      if (_gloffset_DeleteMemoryObjectsEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteMemoryObjectsEXT] = (_glapi_proc)_mesa_marshal_DeleteMemoryObjectsEXT;
-      if (_gloffset_DeleteSemaphoresEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteSemaphoresEXT] = (_glapi_proc)_mesa_marshal_DeleteSemaphoresEXT;
-      if (_gloffset_GenSemaphoresEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenSemaphoresEXT] = (_glapi_proc)_mesa_marshal_GenSemaphoresEXT;
-      if (_gloffset_GetMemoryObjectParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMemoryObjectParameterivEXT] = (_glapi_proc)_mesa_marshal_GetMemoryObjectParameterivEXT;
-      if (_gloffset_GetSemaphoreParameterui64vEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSemaphoreParameterui64vEXT] = (_glapi_proc)_mesa_marshal_GetSemaphoreParameterui64vEXT;
-      if (_gloffset_GetUnsignedBytei_vEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUnsignedBytei_vEXT] = (_glapi_proc)_mesa_marshal_GetUnsignedBytei_vEXT;
-      if (_gloffset_GetUnsignedBytevEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUnsignedBytevEXT] = (_glapi_proc)_mesa_marshal_GetUnsignedBytevEXT;
-      if (_gloffset_ImportMemoryFdEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ImportMemoryFdEXT] = (_glapi_proc)_mesa_marshal_ImportMemoryFdEXT;
-      if (_gloffset_ImportSemaphoreFdEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ImportSemaphoreFdEXT] = (_glapi_proc)_mesa_marshal_ImportSemaphoreFdEXT;
-      if (_gloffset_IsMemoryObjectEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsMemoryObjectEXT] = (_glapi_proc)_mesa_marshal_IsMemoryObjectEXT;
-      if (_gloffset_IsSemaphoreEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsSemaphoreEXT] = (_glapi_proc)_mesa_marshal_IsSemaphoreEXT;
-      if (_gloffset_MemoryObjectParameterivEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MemoryObjectParameterivEXT] = (_glapi_proc)_mesa_marshal_MemoryObjectParameterivEXT;
-      if (_gloffset_NamedBufferStorageMemEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferStorageMemEXT] = (_glapi_proc)_mesa_marshal_NamedBufferStorageMemEXT;
-      if (_gloffset_SemaphoreParameterui64vEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SemaphoreParameterui64vEXT] = (_glapi_proc)_mesa_marshal_SemaphoreParameterui64vEXT;
-      if (_gloffset_SignalSemaphoreEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SignalSemaphoreEXT] = (_glapi_proc)_mesa_marshal_SignalSemaphoreEXT;
-      if (_gloffset_TexStorageMem2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorageMem2DEXT] = (_glapi_proc)_mesa_marshal_TexStorageMem2DEXT;
-      if (_gloffset_TexStorageMem2DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorageMem2DMultisampleEXT] = (_glapi_proc)_mesa_marshal_TexStorageMem2DMultisampleEXT;
-      if (_gloffset_TexStorageMem3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorageMem3DEXT] = (_glapi_proc)_mesa_marshal_TexStorageMem3DEXT;
-      if (_gloffset_TexStorageMem3DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexStorageMem3DMultisampleEXT] = (_glapi_proc)_mesa_marshal_TexStorageMem3DMultisampleEXT;
-      if (_gloffset_TextureStorageMem2DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorageMem2DEXT] = (_glapi_proc)_mesa_marshal_TextureStorageMem2DEXT;
-      if (_gloffset_TextureStorageMem2DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorageMem2DMultisampleEXT] = (_glapi_proc)_mesa_marshal_TextureStorageMem2DMultisampleEXT;
-      if (_gloffset_TextureStorageMem3DEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorageMem3DEXT] = (_glapi_proc)_mesa_marshal_TextureStorageMem3DEXT;
-      if (_gloffset_TextureStorageMem3DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorageMem3DMultisampleEXT] = (_glapi_proc)_mesa_marshal_TextureStorageMem3DMultisampleEXT;
-      if (_gloffset_WaitSemaphoreEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WaitSemaphoreEXT] = (_glapi_proc)_mesa_marshal_WaitSemaphoreEXT;
+      SET_DrawElementsInstancedBaseInstance(table, _mesa_marshal_DrawElementsInstancedBaseInstance);
+      SET_DrawElementsInstancedBaseVertex(table, _mesa_marshal_DrawElementsInstancedBaseVertex);
+      SET_DrawRangeElements(table, _mesa_marshal_DrawRangeElements);
    }
    if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES) {
-      if (_gloffset_LogicOp >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LogicOp] = (_glapi_proc)_mesa_marshal_LogicOp;
-      if (_gloffset_PointParameterf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointParameterf] = (_glapi_proc)_mesa_marshal_PointParameterf;
-      if (_gloffset_PointParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointParameterfv] = (_glapi_proc)_mesa_marshal_PointParameterfv;
-      if (_gloffset_PointSize >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointSize] = (_glapi_proc)_mesa_marshal_PointSize;
+      SET_PointSize(table, _mesa_marshal_PointSize);
+   }
+   if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
+      SET_DrawArraysInstancedBaseInstance(table, _mesa_marshal_DrawArraysInstancedBaseInstance);
+      SET_DrawElementsInstancedBaseVertexBaseInstance(table, _mesa_marshal_DrawElementsInstancedBaseVertexBaseInstance);
+      SET_DrawRangeElementsBaseVertex(table, _mesa_marshal_DrawRangeElementsBaseVertex);
    }
    if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2) {
-      if (_gloffset_ActiveTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ActiveTexture] = (_glapi_proc)_mesa_marshal_ActiveTexture;
-      if (_gloffset_BindBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindBuffer] = (_glapi_proc)_mesa_marshal_BindBuffer;
-      if (_gloffset_BindFramebuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindFramebuffer] = (_glapi_proc)_mesa_marshal_BindFramebuffer;
-      if (_gloffset_BindRenderbuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindRenderbuffer] = (_glapi_proc)_mesa_marshal_BindRenderbuffer;
-      if (_gloffset_BindTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindTexture] = (_glapi_proc)_mesa_marshal_BindTexture;
-      if (_gloffset_BlendEquation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendEquation] = (_glapi_proc)_mesa_marshal_BlendEquation;
-      if (_gloffset_BlendEquationSeparate >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendEquationSeparate] = (_glapi_proc)_mesa_marshal_BlendEquationSeparate;
-      if (_gloffset_BlendFunc >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendFunc] = (_glapi_proc)_mesa_marshal_BlendFunc;
-      if (_gloffset_BlendFuncSeparate >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendFuncSeparate] = (_glapi_proc)_mesa_marshal_BlendFuncSeparate;
-      if (_gloffset_BufferData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BufferData] = (_glapi_proc)_mesa_marshal_BufferData;
-      if (_gloffset_BufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BufferSubData] = (_glapi_proc)_mesa_marshal_BufferSubData;
-      if (_gloffset_CheckFramebufferStatus >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CheckFramebufferStatus] = (_glapi_proc)_mesa_marshal_CheckFramebufferStatus;
-      if (_gloffset_Clear >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Clear] = (_glapi_proc)_mesa_marshal_Clear;
-      if (_gloffset_ClearColor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearColor] = (_glapi_proc)_mesa_marshal_ClearColor;
-      if (_gloffset_ClearDepthf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearDepthf] = (_glapi_proc)_mesa_marshal_ClearDepthf;
-      if (_gloffset_ClearStencil >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearStencil] = (_glapi_proc)_mesa_marshal_ClearStencil;
-      if (_gloffset_ColorMask >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorMask] = (_glapi_proc)_mesa_marshal_ColorMask;
-      if (_gloffset_CompressedTexImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTexImage2D] = (_glapi_proc)_mesa_marshal_CompressedTexImage2D;
-      if (_gloffset_CompressedTexSubImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTexSubImage2D] = (_glapi_proc)_mesa_marshal_CompressedTexSubImage2D;
-      if (_gloffset_ConservativeRasterParameterfNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ConservativeRasterParameterfNV] = (_glapi_proc)_mesa_marshal_ConservativeRasterParameterfNV;
-      if (_gloffset_ConservativeRasterParameteriNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ConservativeRasterParameteriNV] = (_glapi_proc)_mesa_marshal_ConservativeRasterParameteriNV;
-      if (_gloffset_CopyTexImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTexImage2D] = (_glapi_proc)_mesa_marshal_CopyTexImage2D;
-      if (_gloffset_CopyTexSubImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTexSubImage2D] = (_glapi_proc)_mesa_marshal_CopyTexSubImage2D;
-      if (_gloffset_CullFace >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CullFace] = (_glapi_proc)_mesa_marshal_CullFace;
-      if (_gloffset_DebugMessageCallback >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DebugMessageCallback] = (_glapi_proc)_mesa_marshal_DebugMessageCallback;
-      if (_gloffset_DebugMessageControl >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DebugMessageControl] = (_glapi_proc)_mesa_marshal_DebugMessageControl;
-      if (_gloffset_DebugMessageInsert >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DebugMessageInsert] = (_glapi_proc)_mesa_marshal_DebugMessageInsert;
-      if (_gloffset_DeleteBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteBuffers] = (_glapi_proc)_mesa_marshal_DeleteBuffers;
-      if (_gloffset_DeleteFramebuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteFramebuffers] = (_glapi_proc)_mesa_marshal_DeleteFramebuffers;
-      if (_gloffset_DeleteRenderbuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteRenderbuffers] = (_glapi_proc)_mesa_marshal_DeleteRenderbuffers;
-      if (_gloffset_DeleteTextures >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteTextures] = (_glapi_proc)_mesa_marshal_DeleteTextures;
-      if (_gloffset_DepthFunc >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthFunc] = (_glapi_proc)_mesa_marshal_DepthFunc;
-      if (_gloffset_DepthMask >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthMask] = (_glapi_proc)_mesa_marshal_DepthMask;
-      if (_gloffset_DepthRangef >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRangef] = (_glapi_proc)_mesa_marshal_DepthRangef;
-      if (_gloffset_Disable >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Disable] = (_glapi_proc)_mesa_marshal_Disable;
-      if (_gloffset_DrawArrays >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawArrays] = (_glapi_proc)_mesa_marshal_DrawArrays;
-      if (_gloffset_DrawElements >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElements] = (_glapi_proc)_mesa_marshal_DrawElements;
-      if (_gloffset_EGLImageTargetRenderbufferStorageOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EGLImageTargetRenderbufferStorageOES] = (_glapi_proc)_mesa_marshal_EGLImageTargetRenderbufferStorageOES;
-      if (_gloffset_EGLImageTargetTexture2DOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EGLImageTargetTexture2DOES] = (_glapi_proc)_mesa_marshal_EGLImageTargetTexture2DOES;
-      if (_gloffset_Enable >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Enable] = (_glapi_proc)_mesa_marshal_Enable;
-      if (_gloffset_Finish >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Finish] = (_glapi_proc)_mesa_marshal_Finish;
-      if (_gloffset_Flush >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Flush] = (_glapi_proc)_mesa_marshal_Flush;
-      if (_gloffset_FlushMappedBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FlushMappedBufferRange] = (_glapi_proc)_mesa_marshal_FlushMappedBufferRange;
-      if (_gloffset_FramebufferRenderbuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferRenderbuffer] = (_glapi_proc)_mesa_marshal_FramebufferRenderbuffer;
-      if (_gloffset_FramebufferTexture2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferTexture2D] = (_glapi_proc)_mesa_marshal_FramebufferTexture2D;
-      if (_gloffset_FrontFace >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FrontFace] = (_glapi_proc)_mesa_marshal_FrontFace;
-      if (_gloffset_GenBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenBuffers] = (_glapi_proc)_mesa_marshal_GenBuffers;
-      if (_gloffset_GenFramebuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenFramebuffers] = (_glapi_proc)_mesa_marshal_GenFramebuffers;
-      if (_gloffset_GenRenderbuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenRenderbuffers] = (_glapi_proc)_mesa_marshal_GenRenderbuffers;
-      if (_gloffset_GenTextures >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenTextures] = (_glapi_proc)_mesa_marshal_GenTextures;
-      if (_gloffset_GenerateMipmap >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenerateMipmap] = (_glapi_proc)_mesa_marshal_GenerateMipmap;
-      if (_gloffset_GetBooleanv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetBooleanv] = (_glapi_proc)_mesa_marshal_GetBooleanv;
-      if (_gloffset_GetBufferParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetBufferParameteriv] = (_glapi_proc)_mesa_marshal_GetBufferParameteriv;
-      if (_gloffset_GetBufferPointerv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetBufferPointerv] = (_glapi_proc)_mesa_marshal_GetBufferPointerv;
-      if (_gloffset_GetDebugMessageLog >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetDebugMessageLog] = (_glapi_proc)_mesa_marshal_GetDebugMessageLog;
-      if (_gloffset_GetError >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetError] = (_glapi_proc)_mesa_marshal_GetError;
-      if (_gloffset_GetFloatv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFloatv] = (_glapi_proc)_mesa_marshal_GetFloatv;
-      if (_gloffset_GetFramebufferAttachmentParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFramebufferAttachmentParameteriv] = (_glapi_proc)_mesa_marshal_GetFramebufferAttachmentParameteriv;
-      if (_gloffset_GetIntegerv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetIntegerv] = (_glapi_proc)_mesa_marshal_GetIntegerv;
-      if (_gloffset_GetObjectLabel >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetObjectLabel] = (_glapi_proc)_mesa_marshal_GetObjectLabel;
-      if (_gloffset_GetObjectPtrLabel >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetObjectPtrLabel] = (_glapi_proc)_mesa_marshal_GetObjectPtrLabel;
-      if (_gloffset_GetPointerv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPointerv] = (_glapi_proc)_mesa_marshal_GetPointerv;
-      if (_gloffset_GetRenderbufferParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetRenderbufferParameteriv] = (_glapi_proc)_mesa_marshal_GetRenderbufferParameteriv;
-      if (_gloffset_GetString >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetString] = (_glapi_proc)_mesa_marshal_GetString;
-      if (_gloffset_GetTexParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexParameterfv] = (_glapi_proc)_mesa_marshal_GetTexParameterfv;
-      if (_gloffset_GetTexParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexParameteriv] = (_glapi_proc)_mesa_marshal_GetTexParameteriv;
-      if (_gloffset_Hint >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Hint] = (_glapi_proc)_mesa_marshal_Hint;
-      if (_gloffset_InternalSetError >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InternalSetError] = (_glapi_proc)_mesa_marshal_InternalSetError;
-      if (_gloffset_IsBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsBuffer] = (_glapi_proc)_mesa_marshal_IsBuffer;
-      if (_gloffset_IsEnabled >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsEnabled] = (_glapi_proc)_mesa_marshal_IsEnabled;
-      if (_gloffset_IsFramebuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsFramebuffer] = (_glapi_proc)_mesa_marshal_IsFramebuffer;
-      if (_gloffset_IsRenderbuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsRenderbuffer] = (_glapi_proc)_mesa_marshal_IsRenderbuffer;
-      if (_gloffset_IsTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsTexture] = (_glapi_proc)_mesa_marshal_IsTexture;
-      if (_gloffset_LineWidth >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LineWidth] = (_glapi_proc)_mesa_marshal_LineWidth;
-      if (_gloffset_MapBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapBuffer] = (_glapi_proc)_mesa_marshal_MapBuffer;
-      if (_gloffset_MapBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapBufferRange] = (_glapi_proc)_mesa_marshal_MapBufferRange;
-      if (_gloffset_MultiDrawArrays >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawArrays] = (_glapi_proc)_mesa_marshal_MultiDrawArrays;
-      if (_gloffset_MultiDrawElementsEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawElementsEXT] = (_glapi_proc)_mesa_marshal_MultiDrawElementsEXT;
-      if (_gloffset_ObjectLabel >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ObjectLabel] = (_glapi_proc)_mesa_marshal_ObjectLabel;
-      if (_gloffset_ObjectPtrLabel >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ObjectPtrLabel] = (_glapi_proc)_mesa_marshal_ObjectPtrLabel;
-      if (_gloffset_PixelStorei >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelStorei] = (_glapi_proc)_mesa_marshal_PixelStorei;
-      if (_gloffset_PolygonOffset >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PolygonOffset] = (_glapi_proc)_mesa_marshal_PolygonOffset;
-      if (_gloffset_PolygonOffsetClampEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PolygonOffsetClampEXT] = (_glapi_proc)_mesa_marshal_PolygonOffsetClampEXT;
-      if (_gloffset_PopDebugGroup >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PopDebugGroup] = (_glapi_proc)_mesa_marshal_PopDebugGroup;
-      if (_gloffset_PushDebugGroup >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PushDebugGroup] = (_glapi_proc)_mesa_marshal_PushDebugGroup;
-      if (_gloffset_ReadPixels >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ReadPixels] = (_glapi_proc)_mesa_marshal_ReadPixels;
-      if (_gloffset_RenderbufferStorage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RenderbufferStorage] = (_glapi_proc)_mesa_marshal_RenderbufferStorage;
-      if (_gloffset_SampleCoverage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SampleCoverage] = (_glapi_proc)_mesa_marshal_SampleCoverage;
-      if (_gloffset_Scissor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Scissor] = (_glapi_proc)_mesa_marshal_Scissor;
-      if (_gloffset_StencilFunc >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilFunc] = (_glapi_proc)_mesa_marshal_StencilFunc;
-      if (_gloffset_StencilMask >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilMask] = (_glapi_proc)_mesa_marshal_StencilMask;
-      if (_gloffset_StencilOp >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilOp] = (_glapi_proc)_mesa_marshal_StencilOp;
-      if (_gloffset_SubpixelPrecisionBiasNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SubpixelPrecisionBiasNV] = (_glapi_proc)_mesa_marshal_SubpixelPrecisionBiasNV;
-      if (_gloffset_TexImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexImage2D] = (_glapi_proc)_mesa_marshal_TexImage2D;
-      if (_gloffset_TexParameterf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameterf] = (_glapi_proc)_mesa_marshal_TexParameterf;
-      if (_gloffset_TexParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameterfv] = (_glapi_proc)_mesa_marshal_TexParameterfv;
-      if (_gloffset_TexParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameteri] = (_glapi_proc)_mesa_marshal_TexParameteri;
-      if (_gloffset_TexParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameteriv] = (_glapi_proc)_mesa_marshal_TexParameteriv;
-      if (_gloffset_TexSubImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexSubImage2D] = (_glapi_proc)_mesa_marshal_TexSubImage2D;
-      if (_gloffset_UnmapBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UnmapBuffer] = (_glapi_proc)_mesa_marshal_UnmapBuffer;
-      if (_gloffset_Viewport >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Viewport] = (_glapi_proc)_mesa_marshal_Viewport;
+      SET_BindBuffer(table, _mesa_marshal_BindBuffer);
+      SET_BufferData(table, _mesa_marshal_BufferData);
+      SET_BufferSubData(table, _mesa_marshal_BufferSubData);
+      SET_CullFace(table, _mesa_marshal_CullFace);
+      SET_DrawArrays(table, _mesa_marshal_DrawArrays);
+      SET_DrawArraysUserBuf(table, _mesa_marshal_DrawArraysUserBuf);
+      SET_DrawElements(table, _mesa_marshal_DrawElements);
+      SET_DrawElementsUserBuf(table, _mesa_marshal_DrawElementsUserBuf);
+      SET_FrontFace(table, _mesa_marshal_FrontFace);
+      SET_GetIntegerv(table, _mesa_marshal_GetIntegerv);
+      SET_Hint(table, _mesa_marshal_Hint);
+      SET_LineWidth(table, _mesa_marshal_LineWidth);
+      SET_MultiDrawArrays(table, _mesa_marshal_MultiDrawArrays);
+      SET_MultiDrawArraysUserBuf(table, _mesa_marshal_MultiDrawArraysUserBuf);
+      SET_MultiDrawElements(table, _mesa_marshal_MultiDrawElements);
+      SET_MultiDrawElementsBaseVertex(table, _mesa_marshal_MultiDrawElementsBaseVertex);
+      SET_MultiDrawElementsUserBuf(table, _mesa_marshal_MultiDrawElementsUserBuf);
+      SET_Scissor(table, _mesa_marshal_Scissor);
+      SET_TexImage2D(table, _mesa_marshal_TexImage2D);
+      SET_TexParameterf(table, _mesa_marshal_TexParameterf);
+      SET_TexParameterfv(table, _mesa_marshal_TexParameterfv);
+      SET_TexParameteri(table, _mesa_marshal_TexParameteri);
+      SET_TexParameteriv(table, _mesa_marshal_TexParameteriv);
    }
    if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES2) {
-      if (_gloffset_ActiveShaderProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ActiveShaderProgram] = (_glapi_proc)_mesa_marshal_ActiveShaderProgram;
-      if (_gloffset_AttachShader >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AttachShader] = (_glapi_proc)_mesa_marshal_AttachShader;
-      if (_gloffset_BeginConditionalRender >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginConditionalRender] = (_glapi_proc)_mesa_marshal_BeginConditionalRender;
-      if (_gloffset_BeginPerfMonitorAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginPerfMonitorAMD] = (_glapi_proc)_mesa_marshal_BeginPerfMonitorAMD;
-      if (_gloffset_BeginPerfQueryINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginPerfQueryINTEL] = (_glapi_proc)_mesa_marshal_BeginPerfQueryINTEL;
-      if (_gloffset_BeginQuery >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginQuery] = (_glapi_proc)_mesa_marshal_BeginQuery;
-      if (_gloffset_BindAttribLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindAttribLocation] = (_glapi_proc)_mesa_marshal_BindAttribLocation;
-      if (_gloffset_BindProgramPipeline >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindProgramPipeline] = (_glapi_proc)_mesa_marshal_BindProgramPipeline;
-      if (_gloffset_BindVertexArray >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindVertexArray] = (_glapi_proc)_mesa_marshal_BindVertexArray;
-      if (_gloffset_BlendBarrier >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendBarrier] = (_glapi_proc)_mesa_marshal_BlendBarrier;
-      if (_gloffset_BlendColor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlendColor] = (_glapi_proc)_mesa_marshal_BlendColor;
-      if (_gloffset_ClipControl >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClipControl] = (_glapi_proc)_mesa_marshal_ClipControl;
-      if (_gloffset_CompileShader >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompileShader] = (_glapi_proc)_mesa_marshal_CompileShader;
-      if (_gloffset_CompressedTexImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTexImage3D] = (_glapi_proc)_mesa_marshal_CompressedTexImage3D;
-      if (_gloffset_CompressedTexSubImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTexSubImage3D] = (_glapi_proc)_mesa_marshal_CompressedTexSubImage3D;
-      if (_gloffset_CopyTexSubImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTexSubImage3D] = (_glapi_proc)_mesa_marshal_CopyTexSubImage3D;
-      if (_gloffset_CreatePerfQueryINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreatePerfQueryINTEL] = (_glapi_proc)_mesa_marshal_CreatePerfQueryINTEL;
-      if (_gloffset_CreateProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateProgram] = (_glapi_proc)_mesa_marshal_CreateProgram;
-      if (_gloffset_CreateShader >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateShader] = (_glapi_proc)_mesa_marshal_CreateShader;
-      if (_gloffset_CreateShaderProgramv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateShaderProgramv] = (_glapi_proc)_mesa_marshal_CreateShaderProgramv;
-      if (_gloffset_DeletePerfMonitorsAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeletePerfMonitorsAMD] = (_glapi_proc)_mesa_marshal_DeletePerfMonitorsAMD;
-      if (_gloffset_DeletePerfQueryINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeletePerfQueryINTEL] = (_glapi_proc)_mesa_marshal_DeletePerfQueryINTEL;
-      if (_gloffset_DeleteProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteProgram] = (_glapi_proc)_mesa_marshal_DeleteProgram;
-      if (_gloffset_DeleteProgramPipelines >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteProgramPipelines] = (_glapi_proc)_mesa_marshal_DeleteProgramPipelines;
-      if (_gloffset_DeleteQueries >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteQueries] = (_glapi_proc)_mesa_marshal_DeleteQueries;
-      if (_gloffset_DeleteShader >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteShader] = (_glapi_proc)_mesa_marshal_DeleteShader;
-      if (_gloffset_DeleteVertexArrays >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteVertexArrays] = (_glapi_proc)_mesa_marshal_DeleteVertexArrays;
-      if (_gloffset_DetachShader >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DetachShader] = (_glapi_proc)_mesa_marshal_DetachShader;
-      if (_gloffset_DisableVertexAttribArray >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DisableVertexAttribArray] = (_glapi_proc)_mesa_marshal_DisableVertexAttribArray;
-      if (_gloffset_DrawArraysInstancedARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawArraysInstancedARB] = (_glapi_proc)_mesa_marshal_DrawArraysInstancedARB;
-      if (_gloffset_DrawBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawBuffers] = (_glapi_proc)_mesa_marshal_DrawBuffers;
-      if (_gloffset_DrawElementsBaseVertex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElementsBaseVertex] = (_glapi_proc)_mesa_marshal_DrawElementsBaseVertex;
-      if (_gloffset_DrawElementsInstancedARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawElementsInstancedARB] = (_glapi_proc)_mesa_marshal_DrawElementsInstancedARB;
-      if (_gloffset_EnableVertexAttribArray >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EnableVertexAttribArray] = (_glapi_proc)_mesa_marshal_EnableVertexAttribArray;
-      if (_gloffset_EndConditionalRender >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndConditionalRender] = (_glapi_proc)_mesa_marshal_EndConditionalRender;
-      if (_gloffset_EndPerfMonitorAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndPerfMonitorAMD] = (_glapi_proc)_mesa_marshal_EndPerfMonitorAMD;
-      if (_gloffset_EndPerfQueryINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndPerfQueryINTEL] = (_glapi_proc)_mesa_marshal_EndPerfQueryINTEL;
-      if (_gloffset_EndQuery >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndQuery] = (_glapi_proc)_mesa_marshal_EndQuery;
-      if (_gloffset_FramebufferFetchBarrierEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferFetchBarrierEXT] = (_glapi_proc)_mesa_marshal_FramebufferFetchBarrierEXT;
-      if (_gloffset_FramebufferTexture3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferTexture3D] = (_glapi_proc)_mesa_marshal_FramebufferTexture3D;
-      if (_gloffset_GenPerfMonitorsAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenPerfMonitorsAMD] = (_glapi_proc)_mesa_marshal_GenPerfMonitorsAMD;
-      if (_gloffset_GenProgramPipelines >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenProgramPipelines] = (_glapi_proc)_mesa_marshal_GenProgramPipelines;
-      if (_gloffset_GenQueries >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenQueries] = (_glapi_proc)_mesa_marshal_GenQueries;
-      if (_gloffset_GenVertexArrays >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenVertexArrays] = (_glapi_proc)_mesa_marshal_GenVertexArrays;
-      if (_gloffset_GetActiveAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveAttrib] = (_glapi_proc)_mesa_marshal_GetActiveAttrib;
-      if (_gloffset_GetActiveUniform >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveUniform] = (_glapi_proc)_mesa_marshal_GetActiveUniform;
-      if (_gloffset_GetAttachedShaders >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetAttachedShaders] = (_glapi_proc)_mesa_marshal_GetAttachedShaders;
-      if (_gloffset_GetAttribLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetAttribLocation] = (_glapi_proc)_mesa_marshal_GetAttribLocation;
-      if (_gloffset_GetFirstPerfQueryIdINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFirstPerfQueryIdINTEL] = (_glapi_proc)_mesa_marshal_GetFirstPerfQueryIdINTEL;
-      if (_gloffset_GetGraphicsResetStatusARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetGraphicsResetStatusARB] = (_glapi_proc)_mesa_marshal_GetGraphicsResetStatusARB;
-      if (_gloffset_GetInteger64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetInteger64v] = (_glapi_proc)_mesa_marshal_GetInteger64v;
-      if (_gloffset_GetNextPerfQueryIdINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNextPerfQueryIdINTEL] = (_glapi_proc)_mesa_marshal_GetNextPerfQueryIdINTEL;
-      if (_gloffset_GetPerfCounterInfoINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfCounterInfoINTEL] = (_glapi_proc)_mesa_marshal_GetPerfCounterInfoINTEL;
-      if (_gloffset_GetPerfMonitorCounterDataAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfMonitorCounterDataAMD] = (_glapi_proc)_mesa_marshal_GetPerfMonitorCounterDataAMD;
-      if (_gloffset_GetPerfMonitorCounterInfoAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfMonitorCounterInfoAMD] = (_glapi_proc)_mesa_marshal_GetPerfMonitorCounterInfoAMD;
-      if (_gloffset_GetPerfMonitorCounterStringAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfMonitorCounterStringAMD] = (_glapi_proc)_mesa_marshal_GetPerfMonitorCounterStringAMD;
-      if (_gloffset_GetPerfMonitorCountersAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfMonitorCountersAMD] = (_glapi_proc)_mesa_marshal_GetPerfMonitorCountersAMD;
-      if (_gloffset_GetPerfMonitorGroupStringAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfMonitorGroupStringAMD] = (_glapi_proc)_mesa_marshal_GetPerfMonitorGroupStringAMD;
-      if (_gloffset_GetPerfMonitorGroupsAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfMonitorGroupsAMD] = (_glapi_proc)_mesa_marshal_GetPerfMonitorGroupsAMD;
-      if (_gloffset_GetPerfQueryDataINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfQueryDataINTEL] = (_glapi_proc)_mesa_marshal_GetPerfQueryDataINTEL;
-      if (_gloffset_GetPerfQueryIdByNameINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfQueryIdByNameINTEL] = (_glapi_proc)_mesa_marshal_GetPerfQueryIdByNameINTEL;
-      if (_gloffset_GetPerfQueryInfoINTEL >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPerfQueryInfoINTEL] = (_glapi_proc)_mesa_marshal_GetPerfQueryInfoINTEL;
-      if (_gloffset_GetProgramBinary >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramBinary] = (_glapi_proc)_mesa_marshal_GetProgramBinary;
-      if (_gloffset_GetProgramInfoLog >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramInfoLog] = (_glapi_proc)_mesa_marshal_GetProgramInfoLog;
-      if (_gloffset_GetProgramPipelineInfoLog >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramPipelineInfoLog] = (_glapi_proc)_mesa_marshal_GetProgramPipelineInfoLog;
-      if (_gloffset_GetProgramPipelineiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramPipelineiv] = (_glapi_proc)_mesa_marshal_GetProgramPipelineiv;
-      if (_gloffset_GetProgramiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramiv] = (_glapi_proc)_mesa_marshal_GetProgramiv;
-      if (_gloffset_GetQueryObjecti64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryObjecti64v] = (_glapi_proc)_mesa_marshal_GetQueryObjecti64v;
-      if (_gloffset_GetQueryObjectiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryObjectiv] = (_glapi_proc)_mesa_marshal_GetQueryObjectiv;
-      if (_gloffset_GetQueryObjectui64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryObjectui64v] = (_glapi_proc)_mesa_marshal_GetQueryObjectui64v;
-      if (_gloffset_GetQueryObjectuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryObjectuiv] = (_glapi_proc)_mesa_marshal_GetQueryObjectuiv;
-      if (_gloffset_GetQueryiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryiv] = (_glapi_proc)_mesa_marshal_GetQueryiv;
-      if (_gloffset_GetShaderInfoLog >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetShaderInfoLog] = (_glapi_proc)_mesa_marshal_GetShaderInfoLog;
-      if (_gloffset_GetShaderPrecisionFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetShaderPrecisionFormat] = (_glapi_proc)_mesa_marshal_GetShaderPrecisionFormat;
-      if (_gloffset_GetShaderSource >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetShaderSource] = (_glapi_proc)_mesa_marshal_GetShaderSource;
-      if (_gloffset_GetShaderiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetShaderiv] = (_glapi_proc)_mesa_marshal_GetShaderiv;
-      if (_gloffset_GetUniformLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformLocation] = (_glapi_proc)_mesa_marshal_GetUniformLocation;
-      if (_gloffset_GetUniformfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformfv] = (_glapi_proc)_mesa_marshal_GetUniformfv;
-      if (_gloffset_GetUniformiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformiv] = (_glapi_proc)_mesa_marshal_GetUniformiv;
-      if (_gloffset_GetVertexAttribPointerv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribPointerv] = (_glapi_proc)_mesa_marshal_GetVertexAttribPointerv;
-      if (_gloffset_GetVertexAttribfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribfv] = (_glapi_proc)_mesa_marshal_GetVertexAttribfv;
-      if (_gloffset_GetVertexAttribiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribiv] = (_glapi_proc)_mesa_marshal_GetVertexAttribiv;
-      if (_gloffset_GetnUniformfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnUniformfvARB] = (_glapi_proc)_mesa_marshal_GetnUniformfvARB;
-      if (_gloffset_GetnUniformivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnUniformivARB] = (_glapi_proc)_mesa_marshal_GetnUniformivARB;
-      if (_gloffset_GetnUniformuivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnUniformuivARB] = (_glapi_proc)_mesa_marshal_GetnUniformuivARB;
-      if (_gloffset_InternalBufferSubDataCopyMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InternalBufferSubDataCopyMESA] = (_glapi_proc)_mesa_marshal_InternalBufferSubDataCopyMESA;
-      if (_gloffset_IsProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsProgram] = (_glapi_proc)_mesa_marshal_IsProgram;
-      if (_gloffset_IsProgramPipeline >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsProgramPipeline] = (_glapi_proc)_mesa_marshal_IsProgramPipeline;
-      if (_gloffset_IsQuery >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsQuery] = (_glapi_proc)_mesa_marshal_IsQuery;
-      if (_gloffset_IsShader >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsShader] = (_glapi_proc)_mesa_marshal_IsShader;
-      if (_gloffset_IsVertexArray >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsVertexArray] = (_glapi_proc)_mesa_marshal_IsVertexArray;
-      if (_gloffset_LinkProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LinkProgram] = (_glapi_proc)_mesa_marshal_LinkProgram;
-      if (_gloffset_MaxShaderCompilerThreadsKHR >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MaxShaderCompilerThreadsKHR] = (_glapi_proc)_mesa_marshal_MaxShaderCompilerThreadsKHR;
-      if (_gloffset_MultiDrawElementsBaseVertex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiDrawElementsBaseVertex] = (_glapi_proc)_mesa_marshal_MultiDrawElementsBaseVertex;
-      if (_gloffset_ProgramBinary >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramBinary] = (_glapi_proc)_mesa_marshal_ProgramBinary;
-      if (_gloffset_ProgramParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramParameteri] = (_glapi_proc)_mesa_marshal_ProgramParameteri;
-      if (_gloffset_ProgramUniform1f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1f] = (_glapi_proc)_mesa_marshal_ProgramUniform1f;
-      if (_gloffset_ProgramUniform1fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1fv] = (_glapi_proc)_mesa_marshal_ProgramUniform1fv;
-      if (_gloffset_ProgramUniform1i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1i] = (_glapi_proc)_mesa_marshal_ProgramUniform1i;
-      if (_gloffset_ProgramUniform1iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1iv] = (_glapi_proc)_mesa_marshal_ProgramUniform1iv;
-      if (_gloffset_ProgramUniform2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2f] = (_glapi_proc)_mesa_marshal_ProgramUniform2f;
-      if (_gloffset_ProgramUniform2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2fv] = (_glapi_proc)_mesa_marshal_ProgramUniform2fv;
-      if (_gloffset_ProgramUniform2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2i] = (_glapi_proc)_mesa_marshal_ProgramUniform2i;
-      if (_gloffset_ProgramUniform2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2iv] = (_glapi_proc)_mesa_marshal_ProgramUniform2iv;
-      if (_gloffset_ProgramUniform3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3f] = (_glapi_proc)_mesa_marshal_ProgramUniform3f;
-      if (_gloffset_ProgramUniform3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3fv] = (_glapi_proc)_mesa_marshal_ProgramUniform3fv;
-      if (_gloffset_ProgramUniform3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3i] = (_glapi_proc)_mesa_marshal_ProgramUniform3i;
-      if (_gloffset_ProgramUniform3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3iv] = (_glapi_proc)_mesa_marshal_ProgramUniform3iv;
-      if (_gloffset_ProgramUniform4f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4f] = (_glapi_proc)_mesa_marshal_ProgramUniform4f;
-      if (_gloffset_ProgramUniform4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4fv] = (_glapi_proc)_mesa_marshal_ProgramUniform4fv;
-      if (_gloffset_ProgramUniform4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4i] = (_glapi_proc)_mesa_marshal_ProgramUniform4i;
-      if (_gloffset_ProgramUniform4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4iv] = (_glapi_proc)_mesa_marshal_ProgramUniform4iv;
-      if (_gloffset_ProgramUniformMatrix2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix2fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix2fv;
-      if (_gloffset_ProgramUniformMatrix2x3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix2x3fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix2x3fv;
-      if (_gloffset_ProgramUniformMatrix2x4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix2x4fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix2x4fv;
-      if (_gloffset_ProgramUniformMatrix3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix3fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix3fv;
-      if (_gloffset_ProgramUniformMatrix3x2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix3x2fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix3x2fv;
-      if (_gloffset_ProgramUniformMatrix3x4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix3x4fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix3x4fv;
-      if (_gloffset_ProgramUniformMatrix4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix4fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix4fv;
-      if (_gloffset_ProgramUniformMatrix4x2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix4x2fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix4x2fv;
-      if (_gloffset_ProgramUniformMatrix4x3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniformMatrix4x3fv] = (_glapi_proc)_mesa_marshal_ProgramUniformMatrix4x3fv;
-      if (_gloffset_QueryCounter >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_QueryCounter] = (_glapi_proc)_mesa_marshal_QueryCounter;
-      if (_gloffset_ReadBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ReadBuffer] = (_glapi_proc)_mesa_marshal_ReadBuffer;
-      if (_gloffset_ReadnPixelsARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ReadnPixelsARB] = (_glapi_proc)_mesa_marshal_ReadnPixelsARB;
-      if (_gloffset_ReleaseShaderCompiler >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ReleaseShaderCompiler] = (_glapi_proc)_mesa_marshal_ReleaseShaderCompiler;
-      if (_gloffset_RenderbufferStorageMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RenderbufferStorageMultisample] = (_glapi_proc)_mesa_marshal_RenderbufferStorageMultisample;
-      if (_gloffset_SelectPerfMonitorCountersAMD >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SelectPerfMonitorCountersAMD] = (_glapi_proc)_mesa_marshal_SelectPerfMonitorCountersAMD;
-      if (_gloffset_ShaderBinary >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ShaderBinary] = (_glapi_proc)_mesa_marshal_ShaderBinary;
-      if (_gloffset_ShaderSource >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ShaderSource] = (_glapi_proc)_mesa_marshal_ShaderSource;
-      if (_gloffset_StencilFuncSeparate >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilFuncSeparate] = (_glapi_proc)_mesa_marshal_StencilFuncSeparate;
-      if (_gloffset_StencilMaskSeparate >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilMaskSeparate] = (_glapi_proc)_mesa_marshal_StencilMaskSeparate;
-      if (_gloffset_StencilOpSeparate >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilOpSeparate] = (_glapi_proc)_mesa_marshal_StencilOpSeparate;
-      if (_gloffset_TexImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexImage3D] = (_glapi_proc)_mesa_marshal_TexImage3D;
-      if (_gloffset_TexSubImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexSubImage3D] = (_glapi_proc)_mesa_marshal_TexSubImage3D;
-      if (_gloffset_Uniform1f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1f] = (_glapi_proc)_mesa_marshal_Uniform1f;
-      if (_gloffset_Uniform1fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1fv] = (_glapi_proc)_mesa_marshal_Uniform1fv;
-      if (_gloffset_Uniform1i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1i] = (_glapi_proc)_mesa_marshal_Uniform1i;
-      if (_gloffset_Uniform1iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1iv] = (_glapi_proc)_mesa_marshal_Uniform1iv;
-      if (_gloffset_Uniform2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2f] = (_glapi_proc)_mesa_marshal_Uniform2f;
-      if (_gloffset_Uniform2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2fv] = (_glapi_proc)_mesa_marshal_Uniform2fv;
-      if (_gloffset_Uniform2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2i] = (_glapi_proc)_mesa_marshal_Uniform2i;
-      if (_gloffset_Uniform2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2iv] = (_glapi_proc)_mesa_marshal_Uniform2iv;
-      if (_gloffset_Uniform3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3f] = (_glapi_proc)_mesa_marshal_Uniform3f;
-      if (_gloffset_Uniform3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3fv] = (_glapi_proc)_mesa_marshal_Uniform3fv;
-      if (_gloffset_Uniform3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3i] = (_glapi_proc)_mesa_marshal_Uniform3i;
-      if (_gloffset_Uniform3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3iv] = (_glapi_proc)_mesa_marshal_Uniform3iv;
-      if (_gloffset_Uniform4f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4f] = (_glapi_proc)_mesa_marshal_Uniform4f;
-      if (_gloffset_Uniform4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4fv] = (_glapi_proc)_mesa_marshal_Uniform4fv;
-      if (_gloffset_Uniform4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4i] = (_glapi_proc)_mesa_marshal_Uniform4i;
-      if (_gloffset_Uniform4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4iv] = (_glapi_proc)_mesa_marshal_Uniform4iv;
-      if (_gloffset_UniformMatrix2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix2fv] = (_glapi_proc)_mesa_marshal_UniformMatrix2fv;
-      if (_gloffset_UniformMatrix3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix3fv] = (_glapi_proc)_mesa_marshal_UniformMatrix3fv;
-      if (_gloffset_UniformMatrix4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix4fv] = (_glapi_proc)_mesa_marshal_UniformMatrix4fv;
-      if (_gloffset_UseProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UseProgram] = (_glapi_proc)_mesa_marshal_UseProgram;
-      if (_gloffset_UseProgramStages >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UseProgramStages] = (_glapi_proc)_mesa_marshal_UseProgramStages;
-      if (_gloffset_ValidateProgram >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ValidateProgram] = (_glapi_proc)_mesa_marshal_ValidateProgram;
-      if (_gloffset_ValidateProgramPipeline >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ValidateProgramPipeline] = (_glapi_proc)_mesa_marshal_ValidateProgramPipeline;
-      if (_gloffset_VertexAttrib1fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1fARB] = (_glapi_proc)_mesa_marshal_VertexAttrib1fARB;
-      if (_gloffset_VertexAttrib1fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1fvARB] = (_glapi_proc)_mesa_marshal_VertexAttrib1fvARB;
-      if (_gloffset_VertexAttrib2fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2fARB] = (_glapi_proc)_mesa_marshal_VertexAttrib2fARB;
-      if (_gloffset_VertexAttrib2fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2fvARB] = (_glapi_proc)_mesa_marshal_VertexAttrib2fvARB;
-      if (_gloffset_VertexAttrib3fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3fARB] = (_glapi_proc)_mesa_marshal_VertexAttrib3fARB;
-      if (_gloffset_VertexAttrib3fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3fvARB] = (_glapi_proc)_mesa_marshal_VertexAttrib3fvARB;
-      if (_gloffset_VertexAttrib4fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4fARB] = (_glapi_proc)_mesa_marshal_VertexAttrib4fARB;
-      if (_gloffset_VertexAttrib4fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4fvARB] = (_glapi_proc)_mesa_marshal_VertexAttrib4fvARB;
-      if (_gloffset_VertexAttribPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribPointer] = (_glapi_proc)_mesa_marshal_VertexAttribPointer;
-   }
-   if (ctx->API == API_OPENGLES) {
-      if (_gloffset_AlphaFuncx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AlphaFuncx] = (_glapi_proc)_mesa_marshal_AlphaFuncx;
-      if (_gloffset_ClearColorx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearColorx] = (_glapi_proc)_mesa_marshal_ClearColorx;
-      if (_gloffset_ClearDepthx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearDepthx] = (_glapi_proc)_mesa_marshal_ClearDepthx;
-      if (_gloffset_ClipPlanef >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClipPlanef] = (_glapi_proc)_mesa_marshal_ClipPlanef;
-      if (_gloffset_ClipPlanex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClipPlanex] = (_glapi_proc)_mesa_marshal_ClipPlanex;
-      if (_gloffset_Color4x >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4x] = (_glapi_proc)_mesa_marshal_Color4x;
-      if (_gloffset_DepthRangex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRangex] = (_glapi_proc)_mesa_marshal_DepthRangex;
-      if (_gloffset_DrawTexfOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexfOES] = (_glapi_proc)_mesa_marshal_DrawTexfOES;
-      if (_gloffset_DrawTexfvOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexfvOES] = (_glapi_proc)_mesa_marshal_DrawTexfvOES;
-      if (_gloffset_DrawTexiOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexiOES] = (_glapi_proc)_mesa_marshal_DrawTexiOES;
-      if (_gloffset_DrawTexivOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexivOES] = (_glapi_proc)_mesa_marshal_DrawTexivOES;
-      if (_gloffset_DrawTexsOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexsOES] = (_glapi_proc)_mesa_marshal_DrawTexsOES;
-      if (_gloffset_DrawTexsvOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexsvOES] = (_glapi_proc)_mesa_marshal_DrawTexsvOES;
-      if (_gloffset_DrawTexxOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexxOES] = (_glapi_proc)_mesa_marshal_DrawTexxOES;
-      if (_gloffset_DrawTexxvOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawTexxvOES] = (_glapi_proc)_mesa_marshal_DrawTexxvOES;
-      if (_gloffset_Fogx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Fogx] = (_glapi_proc)_mesa_marshal_Fogx;
-      if (_gloffset_Fogxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Fogxv] = (_glapi_proc)_mesa_marshal_Fogxv;
-      if (_gloffset_Frustumf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Frustumf] = (_glapi_proc)_mesa_marshal_Frustumf;
-      if (_gloffset_Frustumx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Frustumx] = (_glapi_proc)_mesa_marshal_Frustumx;
-      if (_gloffset_GetClipPlanef >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetClipPlanef] = (_glapi_proc)_mesa_marshal_GetClipPlanef;
-      if (_gloffset_GetClipPlanex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetClipPlanex] = (_glapi_proc)_mesa_marshal_GetClipPlanex;
-      if (_gloffset_GetFixedv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFixedv] = (_glapi_proc)_mesa_marshal_GetFixedv;
-      if (_gloffset_GetLightxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetLightxv] = (_glapi_proc)_mesa_marshal_GetLightxv;
-      if (_gloffset_GetMaterialxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMaterialxv] = (_glapi_proc)_mesa_marshal_GetMaterialxv;
-      if (_gloffset_GetTexEnvxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexEnvxv] = (_glapi_proc)_mesa_marshal_GetTexEnvxv;
-      if (_gloffset_GetTexGenxvOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexGenxvOES] = (_glapi_proc)_mesa_marshal_GetTexGenxvOES;
-      if (_gloffset_GetTexParameterxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexParameterxv] = (_glapi_proc)_mesa_marshal_GetTexParameterxv;
-      if (_gloffset_LightModelx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LightModelx] = (_glapi_proc)_mesa_marshal_LightModelx;
-      if (_gloffset_LightModelxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LightModelxv] = (_glapi_proc)_mesa_marshal_LightModelxv;
-      if (_gloffset_Lightx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Lightx] = (_glapi_proc)_mesa_marshal_Lightx;
-      if (_gloffset_Lightxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Lightxv] = (_glapi_proc)_mesa_marshal_Lightxv;
-      if (_gloffset_LineWidthx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LineWidthx] = (_glapi_proc)_mesa_marshal_LineWidthx;
-      if (_gloffset_LoadMatrixx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadMatrixx] = (_glapi_proc)_mesa_marshal_LoadMatrixx;
-      if (_gloffset_Materialx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Materialx] = (_glapi_proc)_mesa_marshal_Materialx;
-      if (_gloffset_Materialxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Materialxv] = (_glapi_proc)_mesa_marshal_Materialxv;
-      if (_gloffset_MultMatrixx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultMatrixx] = (_glapi_proc)_mesa_marshal_MultMatrixx;
-      if (_gloffset_MultiTexCoord4x >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4x] = (_glapi_proc)_mesa_marshal_MultiTexCoord4x;
-      if (_gloffset_Normal3x >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3x] = (_glapi_proc)_mesa_marshal_Normal3x;
-      if (_gloffset_Orthof >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Orthof] = (_glapi_proc)_mesa_marshal_Orthof;
-      if (_gloffset_Orthox >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Orthox] = (_glapi_proc)_mesa_marshal_Orthox;
-      if (_gloffset_PointParameterx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointParameterx] = (_glapi_proc)_mesa_marshal_PointParameterx;
-      if (_gloffset_PointParameterxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointParameterxv] = (_glapi_proc)_mesa_marshal_PointParameterxv;
-      if (_gloffset_PointSizePointerOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointSizePointerOES] = (_glapi_proc)_mesa_marshal_PointSizePointerOES;
-      if (_gloffset_PointSizex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PointSizex] = (_glapi_proc)_mesa_marshal_PointSizex;
-      if (_gloffset_PolygonOffsetx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PolygonOffsetx] = (_glapi_proc)_mesa_marshal_PolygonOffsetx;
-      if (_gloffset_QueryMatrixxOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_QueryMatrixxOES] = (_glapi_proc)_mesa_marshal_QueryMatrixxOES;
-      if (_gloffset_Rotatex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rotatex] = (_glapi_proc)_mesa_marshal_Rotatex;
-      if (_gloffset_SampleCoveragex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SampleCoveragex] = (_glapi_proc)_mesa_marshal_SampleCoveragex;
-      if (_gloffset_Scalex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Scalex] = (_glapi_proc)_mesa_marshal_Scalex;
-      if (_gloffset_TexEnvx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexEnvx] = (_glapi_proc)_mesa_marshal_TexEnvx;
-      if (_gloffset_TexEnvxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexEnvxv] = (_glapi_proc)_mesa_marshal_TexEnvxv;
-      if (_gloffset_TexGenxOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGenxOES] = (_glapi_proc)_mesa_marshal_TexGenxOES;
-      if (_gloffset_TexGenxvOES >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGenxvOES] = (_glapi_proc)_mesa_marshal_TexGenxvOES;
-      if (_gloffset_TexParameterx >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameterx] = (_glapi_proc)_mesa_marshal_TexParameterx;
-      if (_gloffset_TexParameterxv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexParameterxv] = (_glapi_proc)_mesa_marshal_TexParameterxv;
-      if (_gloffset_Translatex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Translatex] = (_glapi_proc)_mesa_marshal_Translatex;
-   }
-   if (ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2) {
-      if (_gloffset_DiscardFramebufferEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DiscardFramebufferEXT] = (_glapi_proc)_mesa_marshal_DiscardFramebufferEXT;
-   }
-   if (ctx->API == API_OPENGLES2) {
-      if (_gloffset_FramebufferTexture2DMultisampleEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferTexture2DMultisampleEXT] = (_glapi_proc)_mesa_marshal_FramebufferTexture2DMultisampleEXT;
+      SET_DrawArraysInstanced(table, _mesa_marshal_DrawArraysInstanced);
+      SET_DrawElementsBaseVertex(table, _mesa_marshal_DrawElementsBaseVertex);
+      SET_DrawElementsInstanced(table, _mesa_marshal_DrawElementsInstanced);
+      SET_GetActiveUniform(table, _mesa_marshal_GetActiveUniform);
+      SET_GetUniformLocation(table, _mesa_marshal_GetUniformLocation);
    }
    if (ctx->API == API_OPENGL_COMPAT) {
-      if (_gloffset_Accum >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Accum] = (_glapi_proc)_mesa_marshal_Accum;
-      if (_gloffset_ActiveStencilFaceEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ActiveStencilFaceEXT] = (_glapi_proc)_mesa_marshal_ActiveStencilFaceEXT;
-      if (_gloffset_AlphaFragmentOp1ATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AlphaFragmentOp1ATI] = (_glapi_proc)_mesa_marshal_AlphaFragmentOp1ATI;
-      if (_gloffset_AlphaFragmentOp2ATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AlphaFragmentOp2ATI] = (_glapi_proc)_mesa_marshal_AlphaFragmentOp2ATI;
-      if (_gloffset_AlphaFragmentOp3ATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AlphaFragmentOp3ATI] = (_glapi_proc)_mesa_marshal_AlphaFragmentOp3ATI;
-      if (_gloffset_AreTexturesResident >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AreTexturesResident] = (_glapi_proc)_mesa_marshal_AreTexturesResident;
-      if (_gloffset_ArrayElement >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ArrayElement] = (_glapi_proc)_mesa_marshal_ArrayElement;
-      if (_gloffset_Begin >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Begin] = (_glapi_proc)_mesa_marshal_Begin;
-      if (_gloffset_BeginFragmentShaderATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BeginFragmentShaderATI] = (_glapi_proc)_mesa_marshal_BeginFragmentShaderATI;
-      if (_gloffset_BindFragmentShaderATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindFragmentShaderATI] = (_glapi_proc)_mesa_marshal_BindFragmentShaderATI;
-      if (_gloffset_BindProgramARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindProgramARB] = (_glapi_proc)_mesa_marshal_BindProgramARB;
-      if (_gloffset_Bitmap >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Bitmap] = (_glapi_proc)_mesa_marshal_Bitmap;
-      if (_gloffset_CallList >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CallList] = (_glapi_proc)_mesa_marshal_CallList;
-      if (_gloffset_CallLists >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CallLists] = (_glapi_proc)_mesa_marshal_CallLists;
-      if (_gloffset_ClearAccum >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearAccum] = (_glapi_proc)_mesa_marshal_ClearAccum;
-      if (_gloffset_ClearIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearIndex] = (_glapi_proc)_mesa_marshal_ClearIndex;
-      if (_gloffset_ClipPlane >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClipPlane] = (_glapi_proc)_mesa_marshal_ClipPlane;
-      if (_gloffset_Color3b >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3b] = (_glapi_proc)_mesa_marshal_Color3b;
-      if (_gloffset_Color3bv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3bv] = (_glapi_proc)_mesa_marshal_Color3bv;
-      if (_gloffset_Color3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3d] = (_glapi_proc)_mesa_marshal_Color3d;
-      if (_gloffset_Color3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3dv] = (_glapi_proc)_mesa_marshal_Color3dv;
-      if (_gloffset_Color3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3f] = (_glapi_proc)_mesa_marshal_Color3f;
-      if (_gloffset_Color3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3fv] = (_glapi_proc)_mesa_marshal_Color3fv;
-      if (_gloffset_Color3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3hNV] = (_glapi_proc)_mesa_marshal_Color3hNV;
-      if (_gloffset_Color3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3hvNV] = (_glapi_proc)_mesa_marshal_Color3hvNV;
-      if (_gloffset_Color3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3i] = (_glapi_proc)_mesa_marshal_Color3i;
-      if (_gloffset_Color3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3iv] = (_glapi_proc)_mesa_marshal_Color3iv;
-      if (_gloffset_Color3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3s] = (_glapi_proc)_mesa_marshal_Color3s;
-      if (_gloffset_Color3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3sv] = (_glapi_proc)_mesa_marshal_Color3sv;
-      if (_gloffset_Color3ub >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3ub] = (_glapi_proc)_mesa_marshal_Color3ub;
-      if (_gloffset_Color3ubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3ubv] = (_glapi_proc)_mesa_marshal_Color3ubv;
-      if (_gloffset_Color3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3ui] = (_glapi_proc)_mesa_marshal_Color3ui;
-      if (_gloffset_Color3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3uiv] = (_glapi_proc)_mesa_marshal_Color3uiv;
-      if (_gloffset_Color3us >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3us] = (_glapi_proc)_mesa_marshal_Color3us;
-      if (_gloffset_Color3usv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color3usv] = (_glapi_proc)_mesa_marshal_Color3usv;
-      if (_gloffset_Color4b >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4b] = (_glapi_proc)_mesa_marshal_Color4b;
-      if (_gloffset_Color4bv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4bv] = (_glapi_proc)_mesa_marshal_Color4bv;
-      if (_gloffset_Color4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4d] = (_glapi_proc)_mesa_marshal_Color4d;
-      if (_gloffset_Color4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4dv] = (_glapi_proc)_mesa_marshal_Color4dv;
-      if (_gloffset_Color4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4fv] = (_glapi_proc)_mesa_marshal_Color4fv;
-      if (_gloffset_Color4hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4hNV] = (_glapi_proc)_mesa_marshal_Color4hNV;
-      if (_gloffset_Color4hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4hvNV] = (_glapi_proc)_mesa_marshal_Color4hvNV;
-      if (_gloffset_Color4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4i] = (_glapi_proc)_mesa_marshal_Color4i;
-      if (_gloffset_Color4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4iv] = (_glapi_proc)_mesa_marshal_Color4iv;
-      if (_gloffset_Color4s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4s] = (_glapi_proc)_mesa_marshal_Color4s;
-      if (_gloffset_Color4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4sv] = (_glapi_proc)_mesa_marshal_Color4sv;
-      if (_gloffset_Color4ubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4ubv] = (_glapi_proc)_mesa_marshal_Color4ubv;
-      if (_gloffset_Color4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4ui] = (_glapi_proc)_mesa_marshal_Color4ui;
-      if (_gloffset_Color4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4uiv] = (_glapi_proc)_mesa_marshal_Color4uiv;
-      if (_gloffset_Color4us >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4us] = (_glapi_proc)_mesa_marshal_Color4us;
-      if (_gloffset_Color4usv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4usv] = (_glapi_proc)_mesa_marshal_Color4usv;
-      if (_gloffset_ColorFragmentOp1ATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorFragmentOp1ATI] = (_glapi_proc)_mesa_marshal_ColorFragmentOp1ATI;
-      if (_gloffset_ColorFragmentOp2ATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorFragmentOp2ATI] = (_glapi_proc)_mesa_marshal_ColorFragmentOp2ATI;
-      if (_gloffset_ColorFragmentOp3ATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorFragmentOp3ATI] = (_glapi_proc)_mesa_marshal_ColorFragmentOp3ATI;
-      if (_gloffset_ColorMaterial >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorMaterial] = (_glapi_proc)_mesa_marshal_ColorMaterial;
-      if (_gloffset_ColorP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorP3ui] = (_glapi_proc)_mesa_marshal_ColorP3ui;
-      if (_gloffset_ColorP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorP3uiv] = (_glapi_proc)_mesa_marshal_ColorP3uiv;
-      if (_gloffset_ColorP4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorP4ui] = (_glapi_proc)_mesa_marshal_ColorP4ui;
-      if (_gloffset_ColorP4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorP4uiv] = (_glapi_proc)_mesa_marshal_ColorP4uiv;
-      if (_gloffset_ColorPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorPointerEXT] = (_glapi_proc)_mesa_marshal_ColorPointerEXT;
-      if (_gloffset_CopyPixels >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyPixels] = (_glapi_proc)_mesa_marshal_CopyPixels;
-      if (_gloffset_DeleteFragmentShaderATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteFragmentShaderATI] = (_glapi_proc)_mesa_marshal_DeleteFragmentShaderATI;
-      if (_gloffset_DeleteLists >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteLists] = (_glapi_proc)_mesa_marshal_DeleteLists;
-      if (_gloffset_DeleteProgramsARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DeleteProgramsARB] = (_glapi_proc)_mesa_marshal_DeleteProgramsARB;
-      if (_gloffset_DrawPixels >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DrawPixels] = (_glapi_proc)_mesa_marshal_DrawPixels;
-      if (_gloffset_EdgeFlag >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EdgeFlag] = (_glapi_proc)_mesa_marshal_EdgeFlag;
-      if (_gloffset_EdgeFlagPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EdgeFlagPointer] = (_glapi_proc)_mesa_marshal_EdgeFlagPointer;
-      if (_gloffset_EdgeFlagPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EdgeFlagPointerEXT] = (_glapi_proc)_mesa_marshal_EdgeFlagPointerEXT;
-      if (_gloffset_EdgeFlagv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EdgeFlagv] = (_glapi_proc)_mesa_marshal_EdgeFlagv;
-      if (_gloffset_End >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_End] = (_glapi_proc)_mesa_marshal_End;
-      if (_gloffset_EndFragmentShaderATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndFragmentShaderATI] = (_glapi_proc)_mesa_marshal_EndFragmentShaderATI;
-      if (_gloffset_EndList >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EndList] = (_glapi_proc)_mesa_marshal_EndList;
-      if (_gloffset_EvalCoord1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord1d] = (_glapi_proc)_mesa_marshal_EvalCoord1d;
-      if (_gloffset_EvalCoord1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord1dv] = (_glapi_proc)_mesa_marshal_EvalCoord1dv;
-      if (_gloffset_EvalCoord1f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord1f] = (_glapi_proc)_mesa_marshal_EvalCoord1f;
-      if (_gloffset_EvalCoord1fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord1fv] = (_glapi_proc)_mesa_marshal_EvalCoord1fv;
-      if (_gloffset_EvalCoord2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord2d] = (_glapi_proc)_mesa_marshal_EvalCoord2d;
-      if (_gloffset_EvalCoord2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord2dv] = (_glapi_proc)_mesa_marshal_EvalCoord2dv;
-      if (_gloffset_EvalCoord2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord2f] = (_glapi_proc)_mesa_marshal_EvalCoord2f;
-      if (_gloffset_EvalCoord2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalCoord2fv] = (_glapi_proc)_mesa_marshal_EvalCoord2fv;
-      if (_gloffset_EvalMesh1 >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalMesh1] = (_glapi_proc)_mesa_marshal_EvalMesh1;
-      if (_gloffset_EvalMesh2 >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalMesh2] = (_glapi_proc)_mesa_marshal_EvalMesh2;
-      if (_gloffset_EvalPoint1 >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalPoint1] = (_glapi_proc)_mesa_marshal_EvalPoint1;
-      if (_gloffset_EvalPoint2 >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EvalPoint2] = (_glapi_proc)_mesa_marshal_EvalPoint2;
-      if (_gloffset_FeedbackBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FeedbackBuffer] = (_glapi_proc)_mesa_marshal_FeedbackBuffer;
-      if (_gloffset_FogCoordPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoordPointer] = (_glapi_proc)_mesa_marshal_FogCoordPointer;
-      if (_gloffset_FogCoordd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoordd] = (_glapi_proc)_mesa_marshal_FogCoordd;
-      if (_gloffset_FogCoorddv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoorddv] = (_glapi_proc)_mesa_marshal_FogCoorddv;
-      if (_gloffset_FogCoordfEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoordfEXT] = (_glapi_proc)_mesa_marshal_FogCoordfEXT;
-      if (_gloffset_FogCoordfvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoordfvEXT] = (_glapi_proc)_mesa_marshal_FogCoordfvEXT;
-      if (_gloffset_FogCoordhNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoordhNV] = (_glapi_proc)_mesa_marshal_FogCoordhNV;
-      if (_gloffset_FogCoordhvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FogCoordhvNV] = (_glapi_proc)_mesa_marshal_FogCoordhvNV;
-      if (_gloffset_Fogi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Fogi] = (_glapi_proc)_mesa_marshal_Fogi;
-      if (_gloffset_Fogiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Fogiv] = (_glapi_proc)_mesa_marshal_Fogiv;
-      if (_gloffset_Frustum >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Frustum] = (_glapi_proc)_mesa_marshal_Frustum;
-      if (_gloffset_GenFragmentShadersATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenFragmentShadersATI] = (_glapi_proc)_mesa_marshal_GenFragmentShadersATI;
-      if (_gloffset_GenLists >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenLists] = (_glapi_proc)_mesa_marshal_GenLists;
-      if (_gloffset_GenProgramsARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenProgramsARB] = (_glapi_proc)_mesa_marshal_GenProgramsARB;
-      if (_gloffset_GetClipPlane >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetClipPlane] = (_glapi_proc)_mesa_marshal_GetClipPlane;
-      if (_gloffset_GetLightiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetLightiv] = (_glapi_proc)_mesa_marshal_GetLightiv;
-      if (_gloffset_GetMapdv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMapdv] = (_glapi_proc)_mesa_marshal_GetMapdv;
-      if (_gloffset_GetMapfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMapfv] = (_glapi_proc)_mesa_marshal_GetMapfv;
-      if (_gloffset_GetMapiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMapiv] = (_glapi_proc)_mesa_marshal_GetMapiv;
-      if (_gloffset_GetMaterialiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMaterialiv] = (_glapi_proc)_mesa_marshal_GetMaterialiv;
-      if (_gloffset_GetPixelMapfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPixelMapfv] = (_glapi_proc)_mesa_marshal_GetPixelMapfv;
-      if (_gloffset_GetPixelMapuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPixelMapuiv] = (_glapi_proc)_mesa_marshal_GetPixelMapuiv;
-      if (_gloffset_GetPixelMapusv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPixelMapusv] = (_glapi_proc)_mesa_marshal_GetPixelMapusv;
-      if (_gloffset_GetPolygonStipple >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetPolygonStipple] = (_glapi_proc)_mesa_marshal_GetPolygonStipple;
-      if (_gloffset_GetProgramEnvParameterdvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramEnvParameterdvARB] = (_glapi_proc)_mesa_marshal_GetProgramEnvParameterdvARB;
-      if (_gloffset_GetProgramEnvParameterfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramEnvParameterfvARB] = (_glapi_proc)_mesa_marshal_GetProgramEnvParameterfvARB;
-      if (_gloffset_GetProgramLocalParameterdvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramLocalParameterdvARB] = (_glapi_proc)_mesa_marshal_GetProgramLocalParameterdvARB;
-      if (_gloffset_GetProgramLocalParameterfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramLocalParameterfvARB] = (_glapi_proc)_mesa_marshal_GetProgramLocalParameterfvARB;
-      if (_gloffset_GetProgramStringARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramStringARB] = (_glapi_proc)_mesa_marshal_GetProgramStringARB;
-      if (_gloffset_GetProgramivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramivARB] = (_glapi_proc)_mesa_marshal_GetProgramivARB;
-      if (_gloffset_GetTexGendv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexGendv] = (_glapi_proc)_mesa_marshal_GetTexGendv;
-      if (_gloffset_GetnMapdvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnMapdvARB] = (_glapi_proc)_mesa_marshal_GetnMapdvARB;
-      if (_gloffset_GetnMapfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnMapfvARB] = (_glapi_proc)_mesa_marshal_GetnMapfvARB;
-      if (_gloffset_GetnMapivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnMapivARB] = (_glapi_proc)_mesa_marshal_GetnMapivARB;
-      if (_gloffset_GetnPixelMapfvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnPixelMapfvARB] = (_glapi_proc)_mesa_marshal_GetnPixelMapfvARB;
-      if (_gloffset_GetnPixelMapuivARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnPixelMapuivARB] = (_glapi_proc)_mesa_marshal_GetnPixelMapuivARB;
-      if (_gloffset_GetnPixelMapusvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnPixelMapusvARB] = (_glapi_proc)_mesa_marshal_GetnPixelMapusvARB;
-      if (_gloffset_IndexMask >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IndexMask] = (_glapi_proc)_mesa_marshal_IndexMask;
-      if (_gloffset_IndexPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IndexPointer] = (_glapi_proc)_mesa_marshal_IndexPointer;
-      if (_gloffset_IndexPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IndexPointerEXT] = (_glapi_proc)_mesa_marshal_IndexPointerEXT;
-      if (_gloffset_Indexd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexd] = (_glapi_proc)_mesa_marshal_Indexd;
-      if (_gloffset_Indexdv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexdv] = (_glapi_proc)_mesa_marshal_Indexdv;
-      if (_gloffset_Indexf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexf] = (_glapi_proc)_mesa_marshal_Indexf;
-      if (_gloffset_Indexfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexfv] = (_glapi_proc)_mesa_marshal_Indexfv;
-      if (_gloffset_Indexi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexi] = (_glapi_proc)_mesa_marshal_Indexi;
-      if (_gloffset_Indexiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexiv] = (_glapi_proc)_mesa_marshal_Indexiv;
-      if (_gloffset_Indexs >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexs] = (_glapi_proc)_mesa_marshal_Indexs;
-      if (_gloffset_Indexsv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexsv] = (_glapi_proc)_mesa_marshal_Indexsv;
-      if (_gloffset_Indexub >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexub] = (_glapi_proc)_mesa_marshal_Indexub;
-      if (_gloffset_Indexubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Indexubv] = (_glapi_proc)_mesa_marshal_Indexubv;
-      if (_gloffset_InitNames >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InitNames] = (_glapi_proc)_mesa_marshal_InitNames;
-      if (_gloffset_InterleavedArrays >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InterleavedArrays] = (_glapi_proc)_mesa_marshal_InterleavedArrays;
-      if (_gloffset_IsList >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsList] = (_glapi_proc)_mesa_marshal_IsList;
-      if (_gloffset_IsProgramARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_IsProgramARB] = (_glapi_proc)_mesa_marshal_IsProgramARB;
-      if (_gloffset_LightModeli >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LightModeli] = (_glapi_proc)_mesa_marshal_LightModeli;
-      if (_gloffset_LightModeliv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LightModeliv] = (_glapi_proc)_mesa_marshal_LightModeliv;
-      if (_gloffset_Lighti >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Lighti] = (_glapi_proc)_mesa_marshal_Lighti;
-      if (_gloffset_Lightiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Lightiv] = (_glapi_proc)_mesa_marshal_Lightiv;
-      if (_gloffset_LineStipple >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LineStipple] = (_glapi_proc)_mesa_marshal_LineStipple;
-      if (_gloffset_ListBase >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ListBase] = (_glapi_proc)_mesa_marshal_ListBase;
-      if (_gloffset_LoadMatrixd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadMatrixd] = (_glapi_proc)_mesa_marshal_LoadMatrixd;
-      if (_gloffset_LoadName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadName] = (_glapi_proc)_mesa_marshal_LoadName;
-      if (_gloffset_LoadTransposeMatrixd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadTransposeMatrixd] = (_glapi_proc)_mesa_marshal_LoadTransposeMatrixd;
-      if (_gloffset_LoadTransposeMatrixf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadTransposeMatrixf] = (_glapi_proc)_mesa_marshal_LoadTransposeMatrixf;
-      if (_gloffset_LockArraysEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LockArraysEXT] = (_glapi_proc)_mesa_marshal_LockArraysEXT;
-      if (_gloffset_Map1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Map1d] = (_glapi_proc)_mesa_marshal_Map1d;
-      if (_gloffset_Map1f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Map1f] = (_glapi_proc)_mesa_marshal_Map1f;
-      if (_gloffset_Map2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Map2d] = (_glapi_proc)_mesa_marshal_Map2d;
-      if (_gloffset_Map2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Map2f] = (_glapi_proc)_mesa_marshal_Map2f;
-      if (_gloffset_MapGrid1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapGrid1d] = (_glapi_proc)_mesa_marshal_MapGrid1d;
-      if (_gloffset_MapGrid1f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapGrid1f] = (_glapi_proc)_mesa_marshal_MapGrid1f;
-      if (_gloffset_MapGrid2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapGrid2d] = (_glapi_proc)_mesa_marshal_MapGrid2d;
-      if (_gloffset_MapGrid2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapGrid2f] = (_glapi_proc)_mesa_marshal_MapGrid2f;
-      if (_gloffset_Materiali >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Materiali] = (_glapi_proc)_mesa_marshal_Materiali;
-      if (_gloffset_Materialiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Materialiv] = (_glapi_proc)_mesa_marshal_Materialiv;
-      if (_gloffset_MultMatrixd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultMatrixd] = (_glapi_proc)_mesa_marshal_MultMatrixd;
-      if (_gloffset_MultTransposeMatrixd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultTransposeMatrixd] = (_glapi_proc)_mesa_marshal_MultTransposeMatrixd;
-      if (_gloffset_MultTransposeMatrixf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultTransposeMatrixf] = (_glapi_proc)_mesa_marshal_MultTransposeMatrixf;
-      if (_gloffset_MultiTexCoord1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1d] = (_glapi_proc)_mesa_marshal_MultiTexCoord1d;
-      if (_gloffset_MultiTexCoord1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1dv] = (_glapi_proc)_mesa_marshal_MultiTexCoord1dv;
-      if (_gloffset_MultiTexCoord1fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1fARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord1fARB;
-      if (_gloffset_MultiTexCoord1fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1fvARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord1fvARB;
-      if (_gloffset_MultiTexCoord1hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1hNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord1hNV;
-      if (_gloffset_MultiTexCoord1hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1hvNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord1hvNV;
-      if (_gloffset_MultiTexCoord1i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1i] = (_glapi_proc)_mesa_marshal_MultiTexCoord1i;
-      if (_gloffset_MultiTexCoord1iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1iv] = (_glapi_proc)_mesa_marshal_MultiTexCoord1iv;
-      if (_gloffset_MultiTexCoord1s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1s] = (_glapi_proc)_mesa_marshal_MultiTexCoord1s;
-      if (_gloffset_MultiTexCoord1sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord1sv] = (_glapi_proc)_mesa_marshal_MultiTexCoord1sv;
-      if (_gloffset_MultiTexCoord2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2d] = (_glapi_proc)_mesa_marshal_MultiTexCoord2d;
-      if (_gloffset_MultiTexCoord2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2dv] = (_glapi_proc)_mesa_marshal_MultiTexCoord2dv;
-      if (_gloffset_MultiTexCoord2fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2fARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord2fARB;
-      if (_gloffset_MultiTexCoord2fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2fvARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord2fvARB;
-      if (_gloffset_MultiTexCoord2hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2hNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord2hNV;
-      if (_gloffset_MultiTexCoord2hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2hvNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord2hvNV;
-      if (_gloffset_MultiTexCoord2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2i] = (_glapi_proc)_mesa_marshal_MultiTexCoord2i;
-      if (_gloffset_MultiTexCoord2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2iv] = (_glapi_proc)_mesa_marshal_MultiTexCoord2iv;
-      if (_gloffset_MultiTexCoord2s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2s] = (_glapi_proc)_mesa_marshal_MultiTexCoord2s;
-      if (_gloffset_MultiTexCoord2sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord2sv] = (_glapi_proc)_mesa_marshal_MultiTexCoord2sv;
-      if (_gloffset_MultiTexCoord3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3d] = (_glapi_proc)_mesa_marshal_MultiTexCoord3d;
-      if (_gloffset_MultiTexCoord3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3dv] = (_glapi_proc)_mesa_marshal_MultiTexCoord3dv;
-      if (_gloffset_MultiTexCoord3fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3fARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord3fARB;
-      if (_gloffset_MultiTexCoord3fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3fvARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord3fvARB;
-      if (_gloffset_MultiTexCoord3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3hNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord3hNV;
-      if (_gloffset_MultiTexCoord3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3hvNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord3hvNV;
-      if (_gloffset_MultiTexCoord3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3i] = (_glapi_proc)_mesa_marshal_MultiTexCoord3i;
-      if (_gloffset_MultiTexCoord3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3iv] = (_glapi_proc)_mesa_marshal_MultiTexCoord3iv;
-      if (_gloffset_MultiTexCoord3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3s] = (_glapi_proc)_mesa_marshal_MultiTexCoord3s;
-      if (_gloffset_MultiTexCoord3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord3sv] = (_glapi_proc)_mesa_marshal_MultiTexCoord3sv;
-      if (_gloffset_MultiTexCoord4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4d] = (_glapi_proc)_mesa_marshal_MultiTexCoord4d;
-      if (_gloffset_MultiTexCoord4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4dv] = (_glapi_proc)_mesa_marshal_MultiTexCoord4dv;
-      if (_gloffset_MultiTexCoord4fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4fvARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord4fvARB;
-      if (_gloffset_MultiTexCoord4hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4hNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord4hNV;
-      if (_gloffset_MultiTexCoord4hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4hvNV] = (_glapi_proc)_mesa_marshal_MultiTexCoord4hvNV;
-      if (_gloffset_MultiTexCoord4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4i] = (_glapi_proc)_mesa_marshal_MultiTexCoord4i;
-      if (_gloffset_MultiTexCoord4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4iv] = (_glapi_proc)_mesa_marshal_MultiTexCoord4iv;
-      if (_gloffset_MultiTexCoord4s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4s] = (_glapi_proc)_mesa_marshal_MultiTexCoord4s;
-      if (_gloffset_MultiTexCoord4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4sv] = (_glapi_proc)_mesa_marshal_MultiTexCoord4sv;
-      if (_gloffset_MultiTexCoordP1ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP1ui] = (_glapi_proc)_mesa_marshal_MultiTexCoordP1ui;
-      if (_gloffset_MultiTexCoordP1uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP1uiv] = (_glapi_proc)_mesa_marshal_MultiTexCoordP1uiv;
-      if (_gloffset_MultiTexCoordP2ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP2ui] = (_glapi_proc)_mesa_marshal_MultiTexCoordP2ui;
-      if (_gloffset_MultiTexCoordP2uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP2uiv] = (_glapi_proc)_mesa_marshal_MultiTexCoordP2uiv;
-      if (_gloffset_MultiTexCoordP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP3ui] = (_glapi_proc)_mesa_marshal_MultiTexCoordP3ui;
-      if (_gloffset_MultiTexCoordP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP3uiv] = (_glapi_proc)_mesa_marshal_MultiTexCoordP3uiv;
-      if (_gloffset_MultiTexCoordP4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP4ui] = (_glapi_proc)_mesa_marshal_MultiTexCoordP4ui;
-      if (_gloffset_MultiTexCoordP4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoordP4uiv] = (_glapi_proc)_mesa_marshal_MultiTexCoordP4uiv;
-      if (_gloffset_NewList >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NewList] = (_glapi_proc)_mesa_marshal_NewList;
-      if (_gloffset_Normal3b >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3b] = (_glapi_proc)_mesa_marshal_Normal3b;
-      if (_gloffset_Normal3bv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3bv] = (_glapi_proc)_mesa_marshal_Normal3bv;
-      if (_gloffset_Normal3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3d] = (_glapi_proc)_mesa_marshal_Normal3d;
-      if (_gloffset_Normal3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3dv] = (_glapi_proc)_mesa_marshal_Normal3dv;
-      if (_gloffset_Normal3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3fv] = (_glapi_proc)_mesa_marshal_Normal3fv;
-      if (_gloffset_Normal3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3hNV] = (_glapi_proc)_mesa_marshal_Normal3hNV;
-      if (_gloffset_Normal3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3hvNV] = (_glapi_proc)_mesa_marshal_Normal3hvNV;
-      if (_gloffset_Normal3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3i] = (_glapi_proc)_mesa_marshal_Normal3i;
-      if (_gloffset_Normal3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3iv] = (_glapi_proc)_mesa_marshal_Normal3iv;
-      if (_gloffset_Normal3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3s] = (_glapi_proc)_mesa_marshal_Normal3s;
-      if (_gloffset_Normal3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3sv] = (_glapi_proc)_mesa_marshal_Normal3sv;
-      if (_gloffset_NormalP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NormalP3ui] = (_glapi_proc)_mesa_marshal_NormalP3ui;
-      if (_gloffset_NormalP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NormalP3uiv] = (_glapi_proc)_mesa_marshal_NormalP3uiv;
-      if (_gloffset_NormalPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NormalPointerEXT] = (_glapi_proc)_mesa_marshal_NormalPointerEXT;
-      if (_gloffset_Ortho >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Ortho] = (_glapi_proc)_mesa_marshal_Ortho;
-      if (_gloffset_PassTexCoordATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PassTexCoordATI] = (_glapi_proc)_mesa_marshal_PassTexCoordATI;
-      if (_gloffset_PassThrough >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PassThrough] = (_glapi_proc)_mesa_marshal_PassThrough;
-      if (_gloffset_PixelMapfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelMapfv] = (_glapi_proc)_mesa_marshal_PixelMapfv;
-      if (_gloffset_PixelMapuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelMapuiv] = (_glapi_proc)_mesa_marshal_PixelMapuiv;
-      if (_gloffset_PixelMapusv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelMapusv] = (_glapi_proc)_mesa_marshal_PixelMapusv;
-      if (_gloffset_PixelTransferf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelTransferf] = (_glapi_proc)_mesa_marshal_PixelTransferf;
-      if (_gloffset_PixelTransferi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelTransferi] = (_glapi_proc)_mesa_marshal_PixelTransferi;
-      if (_gloffset_PixelZoom >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PixelZoom] = (_glapi_proc)_mesa_marshal_PixelZoom;
-      if (_gloffset_PolygonStipple >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PolygonStipple] = (_glapi_proc)_mesa_marshal_PolygonStipple;
-      if (_gloffset_PopAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PopAttrib] = (_glapi_proc)_mesa_marshal_PopAttrib;
-      if (_gloffset_PopClientAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PopClientAttrib] = (_glapi_proc)_mesa_marshal_PopClientAttrib;
-      if (_gloffset_PopName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PopName] = (_glapi_proc)_mesa_marshal_PopName;
-      if (_gloffset_PrimitiveRestartNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PrimitiveRestartNV] = (_glapi_proc)_mesa_marshal_PrimitiveRestartNV;
-      if (_gloffset_PrioritizeTextures >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PrioritizeTextures] = (_glapi_proc)_mesa_marshal_PrioritizeTextures;
-      if (_gloffset_ProgramEnvParameter4dARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramEnvParameter4dARB] = (_glapi_proc)_mesa_marshal_ProgramEnvParameter4dARB;
-      if (_gloffset_ProgramEnvParameter4dvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramEnvParameter4dvARB] = (_glapi_proc)_mesa_marshal_ProgramEnvParameter4dvARB;
-      if (_gloffset_ProgramEnvParameter4fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramEnvParameter4fARB] = (_glapi_proc)_mesa_marshal_ProgramEnvParameter4fARB;
-      if (_gloffset_ProgramEnvParameter4fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramEnvParameter4fvARB] = (_glapi_proc)_mesa_marshal_ProgramEnvParameter4fvARB;
-      if (_gloffset_ProgramEnvParameters4fvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramEnvParameters4fvEXT] = (_glapi_proc)_mesa_marshal_ProgramEnvParameters4fvEXT;
-      if (_gloffset_ProgramLocalParameter4dARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramLocalParameter4dARB] = (_glapi_proc)_mesa_marshal_ProgramLocalParameter4dARB;
-      if (_gloffset_ProgramLocalParameter4dvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramLocalParameter4dvARB] = (_glapi_proc)_mesa_marshal_ProgramLocalParameter4dvARB;
-      if (_gloffset_ProgramLocalParameter4fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramLocalParameter4fARB] = (_glapi_proc)_mesa_marshal_ProgramLocalParameter4fARB;
-      if (_gloffset_ProgramLocalParameter4fvARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramLocalParameter4fvARB] = (_glapi_proc)_mesa_marshal_ProgramLocalParameter4fvARB;
-      if (_gloffset_ProgramLocalParameters4fvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramLocalParameters4fvEXT] = (_glapi_proc)_mesa_marshal_ProgramLocalParameters4fvEXT;
-      if (_gloffset_ProgramStringARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramStringARB] = (_glapi_proc)_mesa_marshal_ProgramStringARB;
-      if (_gloffset_PushAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PushAttrib] = (_glapi_proc)_mesa_marshal_PushAttrib;
-      if (_gloffset_PushClientAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PushClientAttrib] = (_glapi_proc)_mesa_marshal_PushClientAttrib;
-      if (_gloffset_PushName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PushName] = (_glapi_proc)_mesa_marshal_PushName;
-      if (_gloffset_RasterPos2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2d] = (_glapi_proc)_mesa_marshal_RasterPos2d;
-      if (_gloffset_RasterPos2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2dv] = (_glapi_proc)_mesa_marshal_RasterPos2dv;
-      if (_gloffset_RasterPos2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2f] = (_glapi_proc)_mesa_marshal_RasterPos2f;
-      if (_gloffset_RasterPos2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2fv] = (_glapi_proc)_mesa_marshal_RasterPos2fv;
-      if (_gloffset_RasterPos2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2i] = (_glapi_proc)_mesa_marshal_RasterPos2i;
-      if (_gloffset_RasterPos2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2iv] = (_glapi_proc)_mesa_marshal_RasterPos2iv;
-      if (_gloffset_RasterPos2s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2s] = (_glapi_proc)_mesa_marshal_RasterPos2s;
-      if (_gloffset_RasterPos2sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos2sv] = (_glapi_proc)_mesa_marshal_RasterPos2sv;
-      if (_gloffset_RasterPos3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3d] = (_glapi_proc)_mesa_marshal_RasterPos3d;
-      if (_gloffset_RasterPos3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3dv] = (_glapi_proc)_mesa_marshal_RasterPos3dv;
-      if (_gloffset_RasterPos3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3f] = (_glapi_proc)_mesa_marshal_RasterPos3f;
-      if (_gloffset_RasterPos3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3fv] = (_glapi_proc)_mesa_marshal_RasterPos3fv;
-      if (_gloffset_RasterPos3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3i] = (_glapi_proc)_mesa_marshal_RasterPos3i;
-      if (_gloffset_RasterPos3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3iv] = (_glapi_proc)_mesa_marshal_RasterPos3iv;
-      if (_gloffset_RasterPos3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3s] = (_glapi_proc)_mesa_marshal_RasterPos3s;
-      if (_gloffset_RasterPos3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos3sv] = (_glapi_proc)_mesa_marshal_RasterPos3sv;
-      if (_gloffset_RasterPos4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4d] = (_glapi_proc)_mesa_marshal_RasterPos4d;
-      if (_gloffset_RasterPos4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4dv] = (_glapi_proc)_mesa_marshal_RasterPos4dv;
-      if (_gloffset_RasterPos4f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4f] = (_glapi_proc)_mesa_marshal_RasterPos4f;
-      if (_gloffset_RasterPos4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4fv] = (_glapi_proc)_mesa_marshal_RasterPos4fv;
-      if (_gloffset_RasterPos4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4i] = (_glapi_proc)_mesa_marshal_RasterPos4i;
-      if (_gloffset_RasterPos4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4iv] = (_glapi_proc)_mesa_marshal_RasterPos4iv;
-      if (_gloffset_RasterPos4s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4s] = (_glapi_proc)_mesa_marshal_RasterPos4s;
-      if (_gloffset_RasterPos4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RasterPos4sv] = (_glapi_proc)_mesa_marshal_RasterPos4sv;
-      if (_gloffset_Rectd >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rectd] = (_glapi_proc)_mesa_marshal_Rectd;
-      if (_gloffset_Rectdv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rectdv] = (_glapi_proc)_mesa_marshal_Rectdv;
-      if (_gloffset_Rectf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rectf] = (_glapi_proc)_mesa_marshal_Rectf;
-      if (_gloffset_Rectfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rectfv] = (_glapi_proc)_mesa_marshal_Rectfv;
-      if (_gloffset_Recti >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Recti] = (_glapi_proc)_mesa_marshal_Recti;
-      if (_gloffset_Rectiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rectiv] = (_glapi_proc)_mesa_marshal_Rectiv;
-      if (_gloffset_Rects >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rects] = (_glapi_proc)_mesa_marshal_Rects;
-      if (_gloffset_Rectsv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rectsv] = (_glapi_proc)_mesa_marshal_Rectsv;
-      if (_gloffset_RenderMode >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_RenderMode] = (_glapi_proc)_mesa_marshal_RenderMode;
-      if (_gloffset_Rotated >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rotated] = (_glapi_proc)_mesa_marshal_Rotated;
-      if (_gloffset_SampleMapATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SampleMapATI] = (_glapi_proc)_mesa_marshal_SampleMapATI;
-      if (_gloffset_Scaled >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Scaled] = (_glapi_proc)_mesa_marshal_Scaled;
-      if (_gloffset_SecondaryColor3b >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3b] = (_glapi_proc)_mesa_marshal_SecondaryColor3b;
-      if (_gloffset_SecondaryColor3bv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3bv] = (_glapi_proc)_mesa_marshal_SecondaryColor3bv;
-      if (_gloffset_SecondaryColor3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3d] = (_glapi_proc)_mesa_marshal_SecondaryColor3d;
-      if (_gloffset_SecondaryColor3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3dv] = (_glapi_proc)_mesa_marshal_SecondaryColor3dv;
-      if (_gloffset_SecondaryColor3fEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3fEXT] = (_glapi_proc)_mesa_marshal_SecondaryColor3fEXT;
-      if (_gloffset_SecondaryColor3fvEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3fvEXT] = (_glapi_proc)_mesa_marshal_SecondaryColor3fvEXT;
-      if (_gloffset_SecondaryColor3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3hNV] = (_glapi_proc)_mesa_marshal_SecondaryColor3hNV;
-      if (_gloffset_SecondaryColor3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3hvNV] = (_glapi_proc)_mesa_marshal_SecondaryColor3hvNV;
-      if (_gloffset_SecondaryColor3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3i] = (_glapi_proc)_mesa_marshal_SecondaryColor3i;
-      if (_gloffset_SecondaryColor3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3iv] = (_glapi_proc)_mesa_marshal_SecondaryColor3iv;
-      if (_gloffset_SecondaryColor3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3s] = (_glapi_proc)_mesa_marshal_SecondaryColor3s;
-      if (_gloffset_SecondaryColor3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3sv] = (_glapi_proc)_mesa_marshal_SecondaryColor3sv;
-      if (_gloffset_SecondaryColor3ub >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3ub] = (_glapi_proc)_mesa_marshal_SecondaryColor3ub;
-      if (_gloffset_SecondaryColor3ubv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3ubv] = (_glapi_proc)_mesa_marshal_SecondaryColor3ubv;
-      if (_gloffset_SecondaryColor3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3ui] = (_glapi_proc)_mesa_marshal_SecondaryColor3ui;
-      if (_gloffset_SecondaryColor3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3uiv] = (_glapi_proc)_mesa_marshal_SecondaryColor3uiv;
-      if (_gloffset_SecondaryColor3us >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3us] = (_glapi_proc)_mesa_marshal_SecondaryColor3us;
-      if (_gloffset_SecondaryColor3usv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColor3usv] = (_glapi_proc)_mesa_marshal_SecondaryColor3usv;
-      if (_gloffset_SecondaryColorP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColorP3ui] = (_glapi_proc)_mesa_marshal_SecondaryColorP3ui;
-      if (_gloffset_SecondaryColorP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColorP3uiv] = (_glapi_proc)_mesa_marshal_SecondaryColorP3uiv;
-      if (_gloffset_SecondaryColorPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SecondaryColorPointer] = (_glapi_proc)_mesa_marshal_SecondaryColorPointer;
-      if (_gloffset_SelectBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SelectBuffer] = (_glapi_proc)_mesa_marshal_SelectBuffer;
-      if (_gloffset_SetFragmentShaderConstantATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_SetFragmentShaderConstantATI] = (_glapi_proc)_mesa_marshal_SetFragmentShaderConstantATI;
-      if (_gloffset_StencilFuncSeparateATI >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_StencilFuncSeparateATI] = (_glapi_proc)_mesa_marshal_StencilFuncSeparateATI;
-      if (_gloffset_TexCoord1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1d] = (_glapi_proc)_mesa_marshal_TexCoord1d;
-      if (_gloffset_TexCoord1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1dv] = (_glapi_proc)_mesa_marshal_TexCoord1dv;
-      if (_gloffset_TexCoord1f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1f] = (_glapi_proc)_mesa_marshal_TexCoord1f;
-      if (_gloffset_TexCoord1fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1fv] = (_glapi_proc)_mesa_marshal_TexCoord1fv;
-      if (_gloffset_TexCoord1hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1hNV] = (_glapi_proc)_mesa_marshal_TexCoord1hNV;
-      if (_gloffset_TexCoord1hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1hvNV] = (_glapi_proc)_mesa_marshal_TexCoord1hvNV;
-      if (_gloffset_TexCoord1i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1i] = (_glapi_proc)_mesa_marshal_TexCoord1i;
-      if (_gloffset_TexCoord1iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1iv] = (_glapi_proc)_mesa_marshal_TexCoord1iv;
-      if (_gloffset_TexCoord1s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1s] = (_glapi_proc)_mesa_marshal_TexCoord1s;
-      if (_gloffset_TexCoord1sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord1sv] = (_glapi_proc)_mesa_marshal_TexCoord1sv;
-      if (_gloffset_TexCoord2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2d] = (_glapi_proc)_mesa_marshal_TexCoord2d;
-      if (_gloffset_TexCoord2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2dv] = (_glapi_proc)_mesa_marshal_TexCoord2dv;
-      if (_gloffset_TexCoord2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2f] = (_glapi_proc)_mesa_marshal_TexCoord2f;
-      if (_gloffset_TexCoord2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2fv] = (_glapi_proc)_mesa_marshal_TexCoord2fv;
-      if (_gloffset_TexCoord2hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2hNV] = (_glapi_proc)_mesa_marshal_TexCoord2hNV;
-      if (_gloffset_TexCoord2hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2hvNV] = (_glapi_proc)_mesa_marshal_TexCoord2hvNV;
-      if (_gloffset_TexCoord2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2i] = (_glapi_proc)_mesa_marshal_TexCoord2i;
-      if (_gloffset_TexCoord2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2iv] = (_glapi_proc)_mesa_marshal_TexCoord2iv;
-      if (_gloffset_TexCoord2s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2s] = (_glapi_proc)_mesa_marshal_TexCoord2s;
-      if (_gloffset_TexCoord2sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord2sv] = (_glapi_proc)_mesa_marshal_TexCoord2sv;
-      if (_gloffset_TexCoord3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3d] = (_glapi_proc)_mesa_marshal_TexCoord3d;
-      if (_gloffset_TexCoord3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3dv] = (_glapi_proc)_mesa_marshal_TexCoord3dv;
-      if (_gloffset_TexCoord3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3f] = (_glapi_proc)_mesa_marshal_TexCoord3f;
-      if (_gloffset_TexCoord3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3fv] = (_glapi_proc)_mesa_marshal_TexCoord3fv;
-      if (_gloffset_TexCoord3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3hNV] = (_glapi_proc)_mesa_marshal_TexCoord3hNV;
-      if (_gloffset_TexCoord3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3hvNV] = (_glapi_proc)_mesa_marshal_TexCoord3hvNV;
-      if (_gloffset_TexCoord3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3i] = (_glapi_proc)_mesa_marshal_TexCoord3i;
-      if (_gloffset_TexCoord3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3iv] = (_glapi_proc)_mesa_marshal_TexCoord3iv;
-      if (_gloffset_TexCoord3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3s] = (_glapi_proc)_mesa_marshal_TexCoord3s;
-      if (_gloffset_TexCoord3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord3sv] = (_glapi_proc)_mesa_marshal_TexCoord3sv;
-      if (_gloffset_TexCoord4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4d] = (_glapi_proc)_mesa_marshal_TexCoord4d;
-      if (_gloffset_TexCoord4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4dv] = (_glapi_proc)_mesa_marshal_TexCoord4dv;
-      if (_gloffset_TexCoord4f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4f] = (_glapi_proc)_mesa_marshal_TexCoord4f;
-      if (_gloffset_TexCoord4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4fv] = (_glapi_proc)_mesa_marshal_TexCoord4fv;
-      if (_gloffset_TexCoord4hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4hNV] = (_glapi_proc)_mesa_marshal_TexCoord4hNV;
-      if (_gloffset_TexCoord4hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4hvNV] = (_glapi_proc)_mesa_marshal_TexCoord4hvNV;
-      if (_gloffset_TexCoord4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4i] = (_glapi_proc)_mesa_marshal_TexCoord4i;
-      if (_gloffset_TexCoord4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4iv] = (_glapi_proc)_mesa_marshal_TexCoord4iv;
-      if (_gloffset_TexCoord4s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4s] = (_glapi_proc)_mesa_marshal_TexCoord4s;
-      if (_gloffset_TexCoord4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoord4sv] = (_glapi_proc)_mesa_marshal_TexCoord4sv;
-      if (_gloffset_TexCoordP1ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP1ui] = (_glapi_proc)_mesa_marshal_TexCoordP1ui;
-      if (_gloffset_TexCoordP1uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP1uiv] = (_glapi_proc)_mesa_marshal_TexCoordP1uiv;
-      if (_gloffset_TexCoordP2ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP2ui] = (_glapi_proc)_mesa_marshal_TexCoordP2ui;
-      if (_gloffset_TexCoordP2uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP2uiv] = (_glapi_proc)_mesa_marshal_TexCoordP2uiv;
-      if (_gloffset_TexCoordP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP3ui] = (_glapi_proc)_mesa_marshal_TexCoordP3ui;
-      if (_gloffset_TexCoordP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP3uiv] = (_glapi_proc)_mesa_marshal_TexCoordP3uiv;
-      if (_gloffset_TexCoordP4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP4ui] = (_glapi_proc)_mesa_marshal_TexCoordP4ui;
-      if (_gloffset_TexCoordP4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordP4uiv] = (_glapi_proc)_mesa_marshal_TexCoordP4uiv;
-      if (_gloffset_TexCoordPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordPointerEXT] = (_glapi_proc)_mesa_marshal_TexCoordPointerEXT;
-      if (_gloffset_TexGend >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGend] = (_glapi_proc)_mesa_marshal_TexGend;
-      if (_gloffset_TexGendv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGendv] = (_glapi_proc)_mesa_marshal_TexGendv;
-      if (_gloffset_Translated >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Translated] = (_glapi_proc)_mesa_marshal_Translated;
-      if (_gloffset_UnlockArraysEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UnlockArraysEXT] = (_glapi_proc)_mesa_marshal_UnlockArraysEXT;
-      if (_gloffset_Vertex2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2d] = (_glapi_proc)_mesa_marshal_Vertex2d;
-      if (_gloffset_Vertex2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2dv] = (_glapi_proc)_mesa_marshal_Vertex2dv;
-      if (_gloffset_Vertex2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2f] = (_glapi_proc)_mesa_marshal_Vertex2f;
-      if (_gloffset_Vertex2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2fv] = (_glapi_proc)_mesa_marshal_Vertex2fv;
-      if (_gloffset_Vertex2hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2hNV] = (_glapi_proc)_mesa_marshal_Vertex2hNV;
-      if (_gloffset_Vertex2hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2hvNV] = (_glapi_proc)_mesa_marshal_Vertex2hvNV;
-      if (_gloffset_Vertex2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2i] = (_glapi_proc)_mesa_marshal_Vertex2i;
-      if (_gloffset_Vertex2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2iv] = (_glapi_proc)_mesa_marshal_Vertex2iv;
-      if (_gloffset_Vertex2s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2s] = (_glapi_proc)_mesa_marshal_Vertex2s;
-      if (_gloffset_Vertex2sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex2sv] = (_glapi_proc)_mesa_marshal_Vertex2sv;
-      if (_gloffset_Vertex3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3d] = (_glapi_proc)_mesa_marshal_Vertex3d;
-      if (_gloffset_Vertex3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3dv] = (_glapi_proc)_mesa_marshal_Vertex3dv;
-      if (_gloffset_Vertex3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3f] = (_glapi_proc)_mesa_marshal_Vertex3f;
-      if (_gloffset_Vertex3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3fv] = (_glapi_proc)_mesa_marshal_Vertex3fv;
-      if (_gloffset_Vertex3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3hNV] = (_glapi_proc)_mesa_marshal_Vertex3hNV;
-      if (_gloffset_Vertex3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3hvNV] = (_glapi_proc)_mesa_marshal_Vertex3hvNV;
-      if (_gloffset_Vertex3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3i] = (_glapi_proc)_mesa_marshal_Vertex3i;
-      if (_gloffset_Vertex3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3iv] = (_glapi_proc)_mesa_marshal_Vertex3iv;
-      if (_gloffset_Vertex3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3s] = (_glapi_proc)_mesa_marshal_Vertex3s;
-      if (_gloffset_Vertex3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex3sv] = (_glapi_proc)_mesa_marshal_Vertex3sv;
-      if (_gloffset_Vertex4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4d] = (_glapi_proc)_mesa_marshal_Vertex4d;
-      if (_gloffset_Vertex4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4dv] = (_glapi_proc)_mesa_marshal_Vertex4dv;
-      if (_gloffset_Vertex4f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4f] = (_glapi_proc)_mesa_marshal_Vertex4f;
-      if (_gloffset_Vertex4fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4fv] = (_glapi_proc)_mesa_marshal_Vertex4fv;
-      if (_gloffset_Vertex4hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4hNV] = (_glapi_proc)_mesa_marshal_Vertex4hNV;
-      if (_gloffset_Vertex4hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4hvNV] = (_glapi_proc)_mesa_marshal_Vertex4hvNV;
-      if (_gloffset_Vertex4i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4i] = (_glapi_proc)_mesa_marshal_Vertex4i;
-      if (_gloffset_Vertex4iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4iv] = (_glapi_proc)_mesa_marshal_Vertex4iv;
-      if (_gloffset_Vertex4s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4s] = (_glapi_proc)_mesa_marshal_Vertex4s;
-      if (_gloffset_Vertex4sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Vertex4sv] = (_glapi_proc)_mesa_marshal_Vertex4sv;
-      if (_gloffset_VertexAttrib1dNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1dNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1dNV;
-      if (_gloffset_VertexAttrib1dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1dvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1dvNV;
-      if (_gloffset_VertexAttrib1fNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1fNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1fNV;
-      if (_gloffset_VertexAttrib1fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1fvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1fvNV;
-      if (_gloffset_VertexAttrib1hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1hNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1hNV;
-      if (_gloffset_VertexAttrib1hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1hvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1hvNV;
-      if (_gloffset_VertexAttrib1sNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1sNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1sNV;
-      if (_gloffset_VertexAttrib1svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib1svNV] = (_glapi_proc)_mesa_marshal_VertexAttrib1svNV;
-      if (_gloffset_VertexAttrib2dNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2dNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2dNV;
-      if (_gloffset_VertexAttrib2dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2dvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2dvNV;
-      if (_gloffset_VertexAttrib2fNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2fNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2fNV;
-      if (_gloffset_VertexAttrib2fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2fvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2fvNV;
-      if (_gloffset_VertexAttrib2hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2hNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2hNV;
-      if (_gloffset_VertexAttrib2hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2hvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2hvNV;
-      if (_gloffset_VertexAttrib2sNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2sNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2sNV;
-      if (_gloffset_VertexAttrib2svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib2svNV] = (_glapi_proc)_mesa_marshal_VertexAttrib2svNV;
-      if (_gloffset_VertexAttrib3dNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3dNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3dNV;
-      if (_gloffset_VertexAttrib3dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3dvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3dvNV;
-      if (_gloffset_VertexAttrib3fNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3fNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3fNV;
-      if (_gloffset_VertexAttrib3fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3fvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3fvNV;
-      if (_gloffset_VertexAttrib3hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3hNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3hNV;
-      if (_gloffset_VertexAttrib3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3hvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3hvNV;
-      if (_gloffset_VertexAttrib3sNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3sNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3sNV;
-      if (_gloffset_VertexAttrib3svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib3svNV] = (_glapi_proc)_mesa_marshal_VertexAttrib3svNV;
-      if (_gloffset_VertexAttrib4dNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4dNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4dNV;
-      if (_gloffset_VertexAttrib4dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4dvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4dvNV;
-      if (_gloffset_VertexAttrib4fNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4fNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4fNV;
-      if (_gloffset_VertexAttrib4fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4fvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4fvNV;
-      if (_gloffset_VertexAttrib4hNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4hNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4hNV;
-      if (_gloffset_VertexAttrib4hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4hvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4hvNV;
-      if (_gloffset_VertexAttrib4sNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4sNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4sNV;
-      if (_gloffset_VertexAttrib4svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4svNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4svNV;
-      if (_gloffset_VertexAttrib4ubNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4ubNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4ubNV;
-      if (_gloffset_VertexAttrib4ubvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttrib4ubvNV] = (_glapi_proc)_mesa_marshal_VertexAttrib4ubvNV;
-      if (_gloffset_VertexAttribs1dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs1dvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs1dvNV;
-      if (_gloffset_VertexAttribs1fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs1fvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs1fvNV;
-      if (_gloffset_VertexAttribs1hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs1hvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs1hvNV;
-      if (_gloffset_VertexAttribs1svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs1svNV] = (_glapi_proc)_mesa_marshal_VertexAttribs1svNV;
-      if (_gloffset_VertexAttribs2dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs2dvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs2dvNV;
-      if (_gloffset_VertexAttribs2fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs2fvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs2fvNV;
-      if (_gloffset_VertexAttribs2hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs2hvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs2hvNV;
-      if (_gloffset_VertexAttribs2svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs2svNV] = (_glapi_proc)_mesa_marshal_VertexAttribs2svNV;
-      if (_gloffset_VertexAttribs3dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs3dvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs3dvNV;
-      if (_gloffset_VertexAttribs3fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs3fvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs3fvNV;
-      if (_gloffset_VertexAttribs3hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs3hvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs3hvNV;
-      if (_gloffset_VertexAttribs3svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs3svNV] = (_glapi_proc)_mesa_marshal_VertexAttribs3svNV;
-      if (_gloffset_VertexAttribs4dvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs4dvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs4dvNV;
-      if (_gloffset_VertexAttribs4fvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs4fvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs4fvNV;
-      if (_gloffset_VertexAttribs4hvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs4hvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs4hvNV;
-      if (_gloffset_VertexAttribs4svNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs4svNV] = (_glapi_proc)_mesa_marshal_VertexAttribs4svNV;
-      if (_gloffset_VertexAttribs4ubvNV >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribs4ubvNV] = (_glapi_proc)_mesa_marshal_VertexAttribs4ubvNV;
-      if (_gloffset_VertexP2ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexP2ui] = (_glapi_proc)_mesa_marshal_VertexP2ui;
-      if (_gloffset_VertexP2uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexP2uiv] = (_glapi_proc)_mesa_marshal_VertexP2uiv;
-      if (_gloffset_VertexP3ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexP3ui] = (_glapi_proc)_mesa_marshal_VertexP3ui;
-      if (_gloffset_VertexP3uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexP3uiv] = (_glapi_proc)_mesa_marshal_VertexP3uiv;
-      if (_gloffset_VertexP4ui >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexP4ui] = (_glapi_proc)_mesa_marshal_VertexP4ui;
-      if (_gloffset_VertexP4uiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexP4uiv] = (_glapi_proc)_mesa_marshal_VertexP4uiv;
-      if (_gloffset_VertexPointerEXT >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexPointerEXT] = (_glapi_proc)_mesa_marshal_VertexPointerEXT;
-      if (_gloffset_WindowPos2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2d] = (_glapi_proc)_mesa_marshal_WindowPos2d;
-      if (_gloffset_WindowPos2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2dv] = (_glapi_proc)_mesa_marshal_WindowPos2dv;
-      if (_gloffset_WindowPos2f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2f] = (_glapi_proc)_mesa_marshal_WindowPos2f;
-      if (_gloffset_WindowPos2fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2fv] = (_glapi_proc)_mesa_marshal_WindowPos2fv;
-      if (_gloffset_WindowPos2i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2i] = (_glapi_proc)_mesa_marshal_WindowPos2i;
-      if (_gloffset_WindowPos2iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2iv] = (_glapi_proc)_mesa_marshal_WindowPos2iv;
-      if (_gloffset_WindowPos2s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2s] = (_glapi_proc)_mesa_marshal_WindowPos2s;
-      if (_gloffset_WindowPos2sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos2sv] = (_glapi_proc)_mesa_marshal_WindowPos2sv;
-      if (_gloffset_WindowPos3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3d] = (_glapi_proc)_mesa_marshal_WindowPos3d;
-      if (_gloffset_WindowPos3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3dv] = (_glapi_proc)_mesa_marshal_WindowPos3dv;
-      if (_gloffset_WindowPos3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3f] = (_glapi_proc)_mesa_marshal_WindowPos3f;
-      if (_gloffset_WindowPos3fv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3fv] = (_glapi_proc)_mesa_marshal_WindowPos3fv;
-      if (_gloffset_WindowPos3i >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3i] = (_glapi_proc)_mesa_marshal_WindowPos3i;
-      if (_gloffset_WindowPos3iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3iv] = (_glapi_proc)_mesa_marshal_WindowPos3iv;
-      if (_gloffset_WindowPos3s >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3s] = (_glapi_proc)_mesa_marshal_WindowPos3s;
-      if (_gloffset_WindowPos3sv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos3sv] = (_glapi_proc)_mesa_marshal_WindowPos3sv;
-      if (_gloffset_WindowPos4dMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4dMESA] = (_glapi_proc)_mesa_marshal_WindowPos4dMESA;
-      if (_gloffset_WindowPos4dvMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4dvMESA] = (_glapi_proc)_mesa_marshal_WindowPos4dvMESA;
-      if (_gloffset_WindowPos4fMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4fMESA] = (_glapi_proc)_mesa_marshal_WindowPos4fMESA;
-      if (_gloffset_WindowPos4fvMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4fvMESA] = (_glapi_proc)_mesa_marshal_WindowPos4fvMESA;
-      if (_gloffset_WindowPos4iMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4iMESA] = (_glapi_proc)_mesa_marshal_WindowPos4iMESA;
-      if (_gloffset_WindowPos4ivMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4ivMESA] = (_glapi_proc)_mesa_marshal_WindowPos4ivMESA;
-      if (_gloffset_WindowPos4sMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4sMESA] = (_glapi_proc)_mesa_marshal_WindowPos4sMESA;
-      if (_gloffset_WindowPos4svMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_WindowPos4svMESA] = (_glapi_proc)_mesa_marshal_WindowPos4svMESA;
+      SET_Begin(table, _mesa_marshal_Begin);
+      SET_Bitmap(table, _mesa_marshal_Bitmap);
+      SET_CallList(table, _mesa_marshal_CallList);
+      SET_CallLists(table, _mesa_marshal_CallLists);
+      SET_ClipPlane(table, _mesa_marshal_ClipPlane);
+      SET_Color3b(table, _mesa_marshal_Color3b);
+      SET_Color3bv(table, _mesa_marshal_Color3bv);
+      SET_Color3d(table, _mesa_marshal_Color3d);
+      SET_Color3dv(table, _mesa_marshal_Color3dv);
+      SET_Color3f(table, _mesa_marshal_Color3f);
+      SET_Color3fv(table, _mesa_marshal_Color3fv);
+      SET_Color3i(table, _mesa_marshal_Color3i);
+      SET_Color3iv(table, _mesa_marshal_Color3iv);
+      SET_Color3s(table, _mesa_marshal_Color3s);
+      SET_Color3sv(table, _mesa_marshal_Color3sv);
+      SET_Color3ub(table, _mesa_marshal_Color3ub);
+      SET_Color3ubv(table, _mesa_marshal_Color3ubv);
+      SET_Color3ui(table, _mesa_marshal_Color3ui);
+      SET_Color3uiv(table, _mesa_marshal_Color3uiv);
+      SET_Color3us(table, _mesa_marshal_Color3us);
+      SET_Color3usv(table, _mesa_marshal_Color3usv);
+      SET_Color4b(table, _mesa_marshal_Color4b);
+      SET_Color4bv(table, _mesa_marshal_Color4bv);
+      SET_Color4d(table, _mesa_marshal_Color4d);
+      SET_Color4dv(table, _mesa_marshal_Color4dv);
+      SET_Color4fv(table, _mesa_marshal_Color4fv);
+      SET_Color4i(table, _mesa_marshal_Color4i);
+      SET_Color4iv(table, _mesa_marshal_Color4iv);
+      SET_Color4s(table, _mesa_marshal_Color4s);
+      SET_Color4sv(table, _mesa_marshal_Color4sv);
+      SET_Color4ubv(table, _mesa_marshal_Color4ubv);
+      SET_Color4ui(table, _mesa_marshal_Color4ui);
+      SET_Color4uiv(table, _mesa_marshal_Color4uiv);
+      SET_Color4us(table, _mesa_marshal_Color4us);
+      SET_Color4usv(table, _mesa_marshal_Color4usv);
+      SET_ColorMaterial(table, _mesa_marshal_ColorMaterial);
+      SET_DeleteLists(table, _mesa_marshal_DeleteLists);
+      SET_EdgeFlag(table, _mesa_marshal_EdgeFlag);
+      SET_EdgeFlagv(table, _mesa_marshal_EdgeFlagv);
+      SET_End(table, _mesa_marshal_End);
+      SET_EndList(table, _mesa_marshal_EndList);
+      SET_FeedbackBuffer(table, _mesa_marshal_FeedbackBuffer);
+      SET_Fogi(table, _mesa_marshal_Fogi);
+      SET_Fogiv(table, _mesa_marshal_Fogiv);
+      SET_GenLists(table, _mesa_marshal_GenLists);
+      SET_Indexd(table, _mesa_marshal_Indexd);
+      SET_Indexdv(table, _mesa_marshal_Indexdv);
+      SET_Indexf(table, _mesa_marshal_Indexf);
+      SET_Indexfv(table, _mesa_marshal_Indexfv);
+      SET_Indexi(table, _mesa_marshal_Indexi);
+      SET_Indexiv(table, _mesa_marshal_Indexiv);
+      SET_Indexs(table, _mesa_marshal_Indexs);
+      SET_Indexsv(table, _mesa_marshal_Indexsv);
+      SET_LightModeli(table, _mesa_marshal_LightModeli);
+      SET_LightModeliv(table, _mesa_marshal_LightModeliv);
+      SET_Lighti(table, _mesa_marshal_Lighti);
+      SET_Lightiv(table, _mesa_marshal_Lightiv);
+      SET_LineStipple(table, _mesa_marshal_LineStipple);
+      SET_ListBase(table, _mesa_marshal_ListBase);
+      SET_Materiali(table, _mesa_marshal_Materiali);
+      SET_Materialiv(table, _mesa_marshal_Materialiv);
+      SET_NewList(table, _mesa_marshal_NewList);
+      SET_Normal3b(table, _mesa_marshal_Normal3b);
+      SET_Normal3bv(table, _mesa_marshal_Normal3bv);
+      SET_Normal3d(table, _mesa_marshal_Normal3d);
+      SET_Normal3dv(table, _mesa_marshal_Normal3dv);
+      SET_Normal3fv(table, _mesa_marshal_Normal3fv);
+      SET_Normal3i(table, _mesa_marshal_Normal3i);
+      SET_Normal3iv(table, _mesa_marshal_Normal3iv);
+      SET_Normal3s(table, _mesa_marshal_Normal3s);
+      SET_Normal3sv(table, _mesa_marshal_Normal3sv);
+      SET_PolygonStipple(table, _mesa_marshal_PolygonStipple);
+      SET_RasterPos2d(table, _mesa_marshal_RasterPos2d);
+      SET_RasterPos2dv(table, _mesa_marshal_RasterPos2dv);
+      SET_RasterPos2f(table, _mesa_marshal_RasterPos2f);
+      SET_RasterPos2fv(table, _mesa_marshal_RasterPos2fv);
+      SET_RasterPos2i(table, _mesa_marshal_RasterPos2i);
+      SET_RasterPos2iv(table, _mesa_marshal_RasterPos2iv);
+      SET_RasterPos2s(table, _mesa_marshal_RasterPos2s);
+      SET_RasterPos2sv(table, _mesa_marshal_RasterPos2sv);
+      SET_RasterPos3d(table, _mesa_marshal_RasterPos3d);
+      SET_RasterPos3dv(table, _mesa_marshal_RasterPos3dv);
+      SET_RasterPos3f(table, _mesa_marshal_RasterPos3f);
+      SET_RasterPos3fv(table, _mesa_marshal_RasterPos3fv);
+      SET_RasterPos3i(table, _mesa_marshal_RasterPos3i);
+      SET_RasterPos3iv(table, _mesa_marshal_RasterPos3iv);
+      SET_RasterPos3s(table, _mesa_marshal_RasterPos3s);
+      SET_RasterPos3sv(table, _mesa_marshal_RasterPos3sv);
+      SET_RasterPos4d(table, _mesa_marshal_RasterPos4d);
+      SET_RasterPos4dv(table, _mesa_marshal_RasterPos4dv);
+      SET_RasterPos4f(table, _mesa_marshal_RasterPos4f);
+      SET_RasterPos4fv(table, _mesa_marshal_RasterPos4fv);
+      SET_RasterPos4i(table, _mesa_marshal_RasterPos4i);
+      SET_RasterPos4iv(table, _mesa_marshal_RasterPos4iv);
+      SET_RasterPos4s(table, _mesa_marshal_RasterPos4s);
+      SET_RasterPos4sv(table, _mesa_marshal_RasterPos4sv);
+      SET_Rectd(table, _mesa_marshal_Rectd);
+      SET_Rectdv(table, _mesa_marshal_Rectdv);
+      SET_Rectf(table, _mesa_marshal_Rectf);
+      SET_Rectfv(table, _mesa_marshal_Rectfv);
+      SET_Recti(table, _mesa_marshal_Recti);
+      SET_Rectiv(table, _mesa_marshal_Rectiv);
+      SET_Rects(table, _mesa_marshal_Rects);
+      SET_Rectsv(table, _mesa_marshal_Rectsv);
+      SET_RenderMode(table, _mesa_marshal_RenderMode);
+      SET_SelectBuffer(table, _mesa_marshal_SelectBuffer);
+      SET_TexCoord1d(table, _mesa_marshal_TexCoord1d);
+      SET_TexCoord1dv(table, _mesa_marshal_TexCoord1dv);
+      SET_TexCoord1f(table, _mesa_marshal_TexCoord1f);
+      SET_TexCoord1fv(table, _mesa_marshal_TexCoord1fv);
+      SET_TexCoord1i(table, _mesa_marshal_TexCoord1i);
+      SET_TexCoord1iv(table, _mesa_marshal_TexCoord1iv);
+      SET_TexCoord1s(table, _mesa_marshal_TexCoord1s);
+      SET_TexCoord1sv(table, _mesa_marshal_TexCoord1sv);
+      SET_TexCoord2d(table, _mesa_marshal_TexCoord2d);
+      SET_TexCoord2dv(table, _mesa_marshal_TexCoord2dv);
+      SET_TexCoord2f(table, _mesa_marshal_TexCoord2f);
+      SET_TexCoord2fv(table, _mesa_marshal_TexCoord2fv);
+      SET_TexCoord2i(table, _mesa_marshal_TexCoord2i);
+      SET_TexCoord2iv(table, _mesa_marshal_TexCoord2iv);
+      SET_TexCoord2s(table, _mesa_marshal_TexCoord2s);
+      SET_TexCoord2sv(table, _mesa_marshal_TexCoord2sv);
+      SET_TexCoord3d(table, _mesa_marshal_TexCoord3d);
+      SET_TexCoord3dv(table, _mesa_marshal_TexCoord3dv);
+      SET_TexCoord3f(table, _mesa_marshal_TexCoord3f);
+      SET_TexCoord3fv(table, _mesa_marshal_TexCoord3fv);
+      SET_TexCoord3i(table, _mesa_marshal_TexCoord3i);
+      SET_TexCoord3iv(table, _mesa_marshal_TexCoord3iv);
+      SET_TexCoord3s(table, _mesa_marshal_TexCoord3s);
+      SET_TexCoord3sv(table, _mesa_marshal_TexCoord3sv);
+      SET_TexCoord4d(table, _mesa_marshal_TexCoord4d);
+      SET_TexCoord4dv(table, _mesa_marshal_TexCoord4dv);
+      SET_TexCoord4f(table, _mesa_marshal_TexCoord4f);
+      SET_TexCoord4fv(table, _mesa_marshal_TexCoord4fv);
+      SET_TexCoord4i(table, _mesa_marshal_TexCoord4i);
+      SET_TexCoord4iv(table, _mesa_marshal_TexCoord4iv);
+      SET_TexCoord4s(table, _mesa_marshal_TexCoord4s);
+      SET_TexCoord4sv(table, _mesa_marshal_TexCoord4sv);
+      SET_TexGend(table, _mesa_marshal_TexGend);
+      SET_TexGendv(table, _mesa_marshal_TexGendv);
+      SET_Vertex2d(table, _mesa_marshal_Vertex2d);
+      SET_Vertex2dv(table, _mesa_marshal_Vertex2dv);
+      SET_Vertex2f(table, _mesa_marshal_Vertex2f);
+      SET_Vertex2fv(table, _mesa_marshal_Vertex2fv);
+      SET_Vertex2i(table, _mesa_marshal_Vertex2i);
+      SET_Vertex2iv(table, _mesa_marshal_Vertex2iv);
+      SET_Vertex2s(table, _mesa_marshal_Vertex2s);
+      SET_Vertex2sv(table, _mesa_marshal_Vertex2sv);
+      SET_Vertex3d(table, _mesa_marshal_Vertex3d);
+      SET_Vertex3dv(table, _mesa_marshal_Vertex3dv);
+      SET_Vertex3f(table, _mesa_marshal_Vertex3f);
+      SET_Vertex3fv(table, _mesa_marshal_Vertex3fv);
+      SET_Vertex3i(table, _mesa_marshal_Vertex3i);
+      SET_Vertex3iv(table, _mesa_marshal_Vertex3iv);
+      SET_Vertex3s(table, _mesa_marshal_Vertex3s);
+      SET_Vertex3sv(table, _mesa_marshal_Vertex3sv);
+      SET_Vertex4d(table, _mesa_marshal_Vertex4d);
+      SET_Vertex4dv(table, _mesa_marshal_Vertex4dv);
+      SET_Vertex4f(table, _mesa_marshal_Vertex4f);
+      SET_Vertex4fv(table, _mesa_marshal_Vertex4fv);
+      SET_Vertex4i(table, _mesa_marshal_Vertex4i);
+      SET_Vertex4iv(table, _mesa_marshal_Vertex4iv);
+      SET_Vertex4s(table, _mesa_marshal_Vertex4s);
+      SET_Vertex4sv(table, _mesa_marshal_Vertex4sv);
    }
    if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES) {
-      if (_gloffset_AlphaFunc >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_AlphaFunc] = (_glapi_proc)_mesa_marshal_AlphaFunc;
-      if (_gloffset_ClientActiveTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClientActiveTexture] = (_glapi_proc)_mesa_marshal_ClientActiveTexture;
-      if (_gloffset_Color4f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4f] = (_glapi_proc)_mesa_marshal_Color4f;
-      if (_gloffset_Color4ub >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Color4ub] = (_glapi_proc)_mesa_marshal_Color4ub;
-      if (_gloffset_ColorPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ColorPointer] = (_glapi_proc)_mesa_marshal_ColorPointer;
-      if (_gloffset_DisableClientState >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DisableClientState] = (_glapi_proc)_mesa_marshal_DisableClientState;
-      if (_gloffset_EnableClientState >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EnableClientState] = (_glapi_proc)_mesa_marshal_EnableClientState;
-      if (_gloffset_Fogf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Fogf] = (_glapi_proc)_mesa_marshal_Fogf;
-      if (_gloffset_Fogfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Fogfv] = (_glapi_proc)_mesa_marshal_Fogfv;
-      if (_gloffset_GetLightfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetLightfv] = (_glapi_proc)_mesa_marshal_GetLightfv;
-      if (_gloffset_GetMaterialfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetMaterialfv] = (_glapi_proc)_mesa_marshal_GetMaterialfv;
-      if (_gloffset_GetTexEnvfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexEnvfv] = (_glapi_proc)_mesa_marshal_GetTexEnvfv;
-      if (_gloffset_GetTexEnviv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexEnviv] = (_glapi_proc)_mesa_marshal_GetTexEnviv;
-      if (_gloffset_GetTexGenfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexGenfv] = (_glapi_proc)_mesa_marshal_GetTexGenfv;
-      if (_gloffset_GetTexGeniv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTexGeniv] = (_glapi_proc)_mesa_marshal_GetTexGeniv;
-      if (_gloffset_LightModelf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LightModelf] = (_glapi_proc)_mesa_marshal_LightModelf;
-      if (_gloffset_LightModelfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LightModelfv] = (_glapi_proc)_mesa_marshal_LightModelfv;
-      if (_gloffset_Lightf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Lightf] = (_glapi_proc)_mesa_marshal_Lightf;
-      if (_gloffset_Lightfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Lightfv] = (_glapi_proc)_mesa_marshal_Lightfv;
-      if (_gloffset_LoadIdentity >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadIdentity] = (_glapi_proc)_mesa_marshal_LoadIdentity;
-      if (_gloffset_LoadMatrixf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_LoadMatrixf] = (_glapi_proc)_mesa_marshal_LoadMatrixf;
-      if (_gloffset_Materialf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Materialf] = (_glapi_proc)_mesa_marshal_Materialf;
-      if (_gloffset_Materialfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Materialfv] = (_glapi_proc)_mesa_marshal_Materialfv;
-      if (_gloffset_MatrixMode >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MatrixMode] = (_glapi_proc)_mesa_marshal_MatrixMode;
-      if (_gloffset_MultMatrixf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultMatrixf] = (_glapi_proc)_mesa_marshal_MultMatrixf;
-      if (_gloffset_MultiTexCoord4fARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MultiTexCoord4fARB] = (_glapi_proc)_mesa_marshal_MultiTexCoord4fARB;
-      if (_gloffset_Normal3f >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Normal3f] = (_glapi_proc)_mesa_marshal_Normal3f;
-      if (_gloffset_NormalPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NormalPointer] = (_glapi_proc)_mesa_marshal_NormalPointer;
-      if (_gloffset_PopMatrix >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PopMatrix] = (_glapi_proc)_mesa_marshal_PopMatrix;
-      if (_gloffset_PushMatrix >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_PushMatrix] = (_glapi_proc)_mesa_marshal_PushMatrix;
-      if (_gloffset_Rotatef >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Rotatef] = (_glapi_proc)_mesa_marshal_Rotatef;
-      if (_gloffset_Scalef >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Scalef] = (_glapi_proc)_mesa_marshal_Scalef;
-      if (_gloffset_ShadeModel >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ShadeModel] = (_glapi_proc)_mesa_marshal_ShadeModel;
-      if (_gloffset_TexCoordPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexCoordPointer] = (_glapi_proc)_mesa_marshal_TexCoordPointer;
-      if (_gloffset_TexEnvf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexEnvf] = (_glapi_proc)_mesa_marshal_TexEnvf;
-      if (_gloffset_TexEnvfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexEnvfv] = (_glapi_proc)_mesa_marshal_TexEnvfv;
-      if (_gloffset_TexEnvi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexEnvi] = (_glapi_proc)_mesa_marshal_TexEnvi;
-      if (_gloffset_TexEnviv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexEnviv] = (_glapi_proc)_mesa_marshal_TexEnviv;
-      if (_gloffset_TexGenf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGenf] = (_glapi_proc)_mesa_marshal_TexGenf;
-      if (_gloffset_TexGenfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGenfv] = (_glapi_proc)_mesa_marshal_TexGenfv;
-      if (_gloffset_TexGeni >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGeni] = (_glapi_proc)_mesa_marshal_TexGeni;
-      if (_gloffset_TexGeniv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexGeniv] = (_glapi_proc)_mesa_marshal_TexGeniv;
-      if (_gloffset_Translatef >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Translatef] = (_glapi_proc)_mesa_marshal_Translatef;
-      if (_gloffset_VertexPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexPointer] = (_glapi_proc)_mesa_marshal_VertexPointer;
+      SET_Color4f(table, _mesa_marshal_Color4f);
+      SET_Color4ub(table, _mesa_marshal_Color4ub);
+      SET_Fogf(table, _mesa_marshal_Fogf);
+      SET_Fogfv(table, _mesa_marshal_Fogfv);
+      SET_LightModelf(table, _mesa_marshal_LightModelf);
+      SET_LightModelfv(table, _mesa_marshal_LightModelfv);
+      SET_Lightf(table, _mesa_marshal_Lightf);
+      SET_Lightfv(table, _mesa_marshal_Lightfv);
+      SET_Materialf(table, _mesa_marshal_Materialf);
+      SET_Materialfv(table, _mesa_marshal_Materialfv);
+      SET_Normal3f(table, _mesa_marshal_Normal3f);
+      SET_ShadeModel(table, _mesa_marshal_ShadeModel);
+      SET_TexEnvf(table, _mesa_marshal_TexEnvf);
+      SET_TexEnvfv(table, _mesa_marshal_TexEnvfv);
+      SET_TexEnvi(table, _mesa_marshal_TexEnvi);
+      SET_TexEnviv(table, _mesa_marshal_TexEnviv);
+      SET_TexGenf(table, _mesa_marshal_TexGenf);
+      SET_TexGenfv(table, _mesa_marshal_TexGenfv);
+      SET_TexGeni(table, _mesa_marshal_TexGeni);
+      SET_TexGeniv(table, _mesa_marshal_TexGeniv);
    }
    if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE) {
-      if (_gloffset_BindTextureUnit >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BindTextureUnit] = (_glapi_proc)_mesa_marshal_BindTextureUnit;
-      if (_gloffset_BlitNamedFramebuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_BlitNamedFramebuffer] = (_glapi_proc)_mesa_marshal_BlitNamedFramebuffer;
-      if (_gloffset_CheckNamedFramebufferStatus >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CheckNamedFramebufferStatus] = (_glapi_proc)_mesa_marshal_CheckNamedFramebufferStatus;
-      if (_gloffset_ClearNamedBufferData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedBufferData] = (_glapi_proc)_mesa_marshal_ClearNamedBufferData;
-      if (_gloffset_ClearNamedBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedBufferSubData] = (_glapi_proc)_mesa_marshal_ClearNamedBufferSubData;
-      if (_gloffset_ClearNamedFramebufferfi >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedFramebufferfi] = (_glapi_proc)_mesa_marshal_ClearNamedFramebufferfi;
-      if (_gloffset_ClearNamedFramebufferfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedFramebufferfv] = (_glapi_proc)_mesa_marshal_ClearNamedFramebufferfv;
-      if (_gloffset_ClearNamedFramebufferiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedFramebufferiv] = (_glapi_proc)_mesa_marshal_ClearNamedFramebufferiv;
-      if (_gloffset_ClearNamedFramebufferuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ClearNamedFramebufferuiv] = (_glapi_proc)_mesa_marshal_ClearNamedFramebufferuiv;
-      if (_gloffset_CompressedTextureSubImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureSubImage1D] = (_glapi_proc)_mesa_marshal_CompressedTextureSubImage1D;
-      if (_gloffset_CompressedTextureSubImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureSubImage2D] = (_glapi_proc)_mesa_marshal_CompressedTextureSubImage2D;
-      if (_gloffset_CompressedTextureSubImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CompressedTextureSubImage3D] = (_glapi_proc)_mesa_marshal_CompressedTextureSubImage3D;
-      if (_gloffset_CopyNamedBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyNamedBufferSubData] = (_glapi_proc)_mesa_marshal_CopyNamedBufferSubData;
-      if (_gloffset_CopyTextureSubImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureSubImage1D] = (_glapi_proc)_mesa_marshal_CopyTextureSubImage1D;
-      if (_gloffset_CopyTextureSubImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureSubImage2D] = (_glapi_proc)_mesa_marshal_CopyTextureSubImage2D;
-      if (_gloffset_CopyTextureSubImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CopyTextureSubImage3D] = (_glapi_proc)_mesa_marshal_CopyTextureSubImage3D;
-      if (_gloffset_CreateBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateBuffers] = (_glapi_proc)_mesa_marshal_CreateBuffers;
-      if (_gloffset_CreateFramebuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateFramebuffers] = (_glapi_proc)_mesa_marshal_CreateFramebuffers;
-      if (_gloffset_CreateProgramPipelines >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateProgramPipelines] = (_glapi_proc)_mesa_marshal_CreateProgramPipelines;
-      if (_gloffset_CreateQueries >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateQueries] = (_glapi_proc)_mesa_marshal_CreateQueries;
-      if (_gloffset_CreateRenderbuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateRenderbuffers] = (_glapi_proc)_mesa_marshal_CreateRenderbuffers;
-      if (_gloffset_CreateSamplers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateSamplers] = (_glapi_proc)_mesa_marshal_CreateSamplers;
-      if (_gloffset_CreateTextures >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateTextures] = (_glapi_proc)_mesa_marshal_CreateTextures;
-      if (_gloffset_CreateTransformFeedbacks >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateTransformFeedbacks] = (_glapi_proc)_mesa_marshal_CreateTransformFeedbacks;
-      if (_gloffset_CreateVertexArrays >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_CreateVertexArrays] = (_glapi_proc)_mesa_marshal_CreateVertexArrays;
-      if (_gloffset_DepthRangeArrayv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRangeArrayv] = (_glapi_proc)_mesa_marshal_DepthRangeArrayv;
-      if (_gloffset_DepthRangeIndexed >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DepthRangeIndexed] = (_glapi_proc)_mesa_marshal_DepthRangeIndexed;
-      if (_gloffset_DisableVertexArrayAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_DisableVertexArrayAttrib] = (_glapi_proc)_mesa_marshal_DisableVertexArrayAttrib;
-      if (_gloffset_EnableVertexArrayAttrib >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_EnableVertexArrayAttrib] = (_glapi_proc)_mesa_marshal_EnableVertexArrayAttrib;
-      if (_gloffset_FlushMappedNamedBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FlushMappedNamedBufferRange] = (_glapi_proc)_mesa_marshal_FlushMappedNamedBufferRange;
-      if (_gloffset_GenerateTextureMipmap >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GenerateTextureMipmap] = (_glapi_proc)_mesa_marshal_GenerateTextureMipmap;
-      if (_gloffset_GetActiveSubroutineName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveSubroutineName] = (_glapi_proc)_mesa_marshal_GetActiveSubroutineName;
-      if (_gloffset_GetActiveSubroutineUniformName >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveSubroutineUniformName] = (_glapi_proc)_mesa_marshal_GetActiveSubroutineUniformName;
-      if (_gloffset_GetActiveSubroutineUniformiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetActiveSubroutineUniformiv] = (_glapi_proc)_mesa_marshal_GetActiveSubroutineUniformiv;
-      if (_gloffset_GetCompressedTextureImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetCompressedTextureImage] = (_glapi_proc)_mesa_marshal_GetCompressedTextureImage;
-      if (_gloffset_GetNamedBufferParameteri64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferParameteri64v] = (_glapi_proc)_mesa_marshal_GetNamedBufferParameteri64v;
-      if (_gloffset_GetNamedBufferParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferParameteriv] = (_glapi_proc)_mesa_marshal_GetNamedBufferParameteriv;
-      if (_gloffset_GetNamedBufferPointerv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferPointerv] = (_glapi_proc)_mesa_marshal_GetNamedBufferPointerv;
-      if (_gloffset_GetNamedBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedBufferSubData] = (_glapi_proc)_mesa_marshal_GetNamedBufferSubData;
-      if (_gloffset_GetNamedFramebufferAttachmentParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedFramebufferAttachmentParameteriv] = (_glapi_proc)_mesa_marshal_GetNamedFramebufferAttachmentParameteriv;
-      if (_gloffset_GetNamedFramebufferParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedFramebufferParameteriv] = (_glapi_proc)_mesa_marshal_GetNamedFramebufferParameteriv;
-      if (_gloffset_GetNamedRenderbufferParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetNamedRenderbufferParameteriv] = (_glapi_proc)_mesa_marshal_GetNamedRenderbufferParameteriv;
-      if (_gloffset_GetProgramStageiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetProgramStageiv] = (_glapi_proc)_mesa_marshal_GetProgramStageiv;
-      if (_gloffset_GetQueryBufferObjecti64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryBufferObjecti64v] = (_glapi_proc)_mesa_marshal_GetQueryBufferObjecti64v;
-      if (_gloffset_GetQueryBufferObjectiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryBufferObjectiv] = (_glapi_proc)_mesa_marshal_GetQueryBufferObjectiv;
-      if (_gloffset_GetQueryBufferObjectui64v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryBufferObjectui64v] = (_glapi_proc)_mesa_marshal_GetQueryBufferObjectui64v;
-      if (_gloffset_GetQueryBufferObjectuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetQueryBufferObjectuiv] = (_glapi_proc)_mesa_marshal_GetQueryBufferObjectuiv;
-      if (_gloffset_GetSubroutineIndex >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSubroutineIndex] = (_glapi_proc)_mesa_marshal_GetSubroutineIndex;
-      if (_gloffset_GetSubroutineUniformLocation >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetSubroutineUniformLocation] = (_glapi_proc)_mesa_marshal_GetSubroutineUniformLocation;
-      if (_gloffset_GetTextureImage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureImage] = (_glapi_proc)_mesa_marshal_GetTextureImage;
-      if (_gloffset_GetTextureLevelParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureLevelParameterfv] = (_glapi_proc)_mesa_marshal_GetTextureLevelParameterfv;
-      if (_gloffset_GetTextureLevelParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureLevelParameteriv] = (_glapi_proc)_mesa_marshal_GetTextureLevelParameteriv;
-      if (_gloffset_GetTextureParameterIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterIiv] = (_glapi_proc)_mesa_marshal_GetTextureParameterIiv;
-      if (_gloffset_GetTextureParameterIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterIuiv] = (_glapi_proc)_mesa_marshal_GetTextureParameterIuiv;
-      if (_gloffset_GetTextureParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameterfv] = (_glapi_proc)_mesa_marshal_GetTextureParameterfv;
-      if (_gloffset_GetTextureParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTextureParameteriv] = (_glapi_proc)_mesa_marshal_GetTextureParameteriv;
-      if (_gloffset_GetTransformFeedbacki64_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTransformFeedbacki64_v] = (_glapi_proc)_mesa_marshal_GetTransformFeedbacki64_v;
-      if (_gloffset_GetTransformFeedbacki_v >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTransformFeedbacki_v] = (_glapi_proc)_mesa_marshal_GetTransformFeedbacki_v;
-      if (_gloffset_GetTransformFeedbackiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetTransformFeedbackiv] = (_glapi_proc)_mesa_marshal_GetTransformFeedbackiv;
-      if (_gloffset_GetUniformSubroutineuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformSubroutineuiv] = (_glapi_proc)_mesa_marshal_GetUniformSubroutineuiv;
-      if (_gloffset_GetUniformdv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformdv] = (_glapi_proc)_mesa_marshal_GetUniformdv;
-      if (_gloffset_GetUniformi64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformi64vARB] = (_glapi_proc)_mesa_marshal_GetUniformi64vARB;
-      if (_gloffset_GetUniformui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetUniformui64vARB] = (_glapi_proc)_mesa_marshal_GetUniformui64vARB;
-      if (_gloffset_GetVertexArrayIndexed64iv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayIndexed64iv] = (_glapi_proc)_mesa_marshal_GetVertexArrayIndexed64iv;
-      if (_gloffset_GetVertexArrayIndexediv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayIndexediv] = (_glapi_proc)_mesa_marshal_GetVertexArrayIndexediv;
-      if (_gloffset_GetVertexArrayiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexArrayiv] = (_glapi_proc)_mesa_marshal_GetVertexArrayiv;
-      if (_gloffset_GetVertexAttribLdv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribLdv] = (_glapi_proc)_mesa_marshal_GetVertexAttribLdv;
-      if (_gloffset_GetVertexAttribLui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetVertexAttribLui64vARB] = (_glapi_proc)_mesa_marshal_GetVertexAttribLui64vARB;
-      if (_gloffset_GetnUniformi64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnUniformi64vARB] = (_glapi_proc)_mesa_marshal_GetnUniformi64vARB;
-      if (_gloffset_GetnUniformui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetnUniformui64vARB] = (_glapi_proc)_mesa_marshal_GetnUniformui64vARB;
-      if (_gloffset_InvalidateNamedFramebufferData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateNamedFramebufferData] = (_glapi_proc)_mesa_marshal_InvalidateNamedFramebufferData;
-      if (_gloffset_InvalidateNamedFramebufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_InvalidateNamedFramebufferSubData] = (_glapi_proc)_mesa_marshal_InvalidateNamedFramebufferSubData;
-      if (_gloffset_MapNamedBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapNamedBuffer] = (_glapi_proc)_mesa_marshal_MapNamedBuffer;
-      if (_gloffset_MapNamedBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_MapNamedBufferRange] = (_glapi_proc)_mesa_marshal_MapNamedBufferRange;
-      if (_gloffset_NamedBufferData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferData] = (_glapi_proc)_mesa_marshal_NamedBufferData;
-      if (_gloffset_NamedBufferStorage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferStorage] = (_glapi_proc)_mesa_marshal_NamedBufferStorage;
-      if (_gloffset_NamedBufferSubData >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedBufferSubData] = (_glapi_proc)_mesa_marshal_NamedBufferSubData;
-      if (_gloffset_NamedFramebufferDrawBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferDrawBuffer] = (_glapi_proc)_mesa_marshal_NamedFramebufferDrawBuffer;
-      if (_gloffset_NamedFramebufferDrawBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferDrawBuffers] = (_glapi_proc)_mesa_marshal_NamedFramebufferDrawBuffers;
-      if (_gloffset_NamedFramebufferParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferParameteri] = (_glapi_proc)_mesa_marshal_NamedFramebufferParameteri;
-      if (_gloffset_NamedFramebufferReadBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferReadBuffer] = (_glapi_proc)_mesa_marshal_NamedFramebufferReadBuffer;
-      if (_gloffset_NamedFramebufferRenderbuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferRenderbuffer] = (_glapi_proc)_mesa_marshal_NamedFramebufferRenderbuffer;
-      if (_gloffset_NamedFramebufferTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferTexture] = (_glapi_proc)_mesa_marshal_NamedFramebufferTexture;
-      if (_gloffset_NamedFramebufferTextureLayer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedFramebufferTextureLayer] = (_glapi_proc)_mesa_marshal_NamedFramebufferTextureLayer;
-      if (_gloffset_NamedRenderbufferStorage >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedRenderbufferStorage] = (_glapi_proc)_mesa_marshal_NamedRenderbufferStorage;
-      if (_gloffset_NamedRenderbufferStorageMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_NamedRenderbufferStorageMultisample] = (_glapi_proc)_mesa_marshal_NamedRenderbufferStorageMultisample;
-      if (_gloffset_ProgramUniform1i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1i64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform1i64ARB;
-      if (_gloffset_ProgramUniform1i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1i64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform1i64vARB;
-      if (_gloffset_ProgramUniform1ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1ui64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform1ui64ARB;
-      if (_gloffset_ProgramUniform1ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform1ui64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform1ui64vARB;
-      if (_gloffset_ProgramUniform2i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2i64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform2i64ARB;
-      if (_gloffset_ProgramUniform2i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2i64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform2i64vARB;
-      if (_gloffset_ProgramUniform2ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2ui64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform2ui64ARB;
-      if (_gloffset_ProgramUniform2ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform2ui64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform2ui64vARB;
-      if (_gloffset_ProgramUniform3i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3i64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform3i64ARB;
-      if (_gloffset_ProgramUniform3i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3i64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform3i64vARB;
-      if (_gloffset_ProgramUniform3ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3ui64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform3ui64ARB;
-      if (_gloffset_ProgramUniform3ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform3ui64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform3ui64vARB;
-      if (_gloffset_ProgramUniform4i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4i64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform4i64ARB;
-      if (_gloffset_ProgramUniform4i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4i64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform4i64vARB;
-      if (_gloffset_ProgramUniform4ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4ui64ARB] = (_glapi_proc)_mesa_marshal_ProgramUniform4ui64ARB;
-      if (_gloffset_ProgramUniform4ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ProgramUniform4ui64vARB] = (_glapi_proc)_mesa_marshal_ProgramUniform4ui64vARB;
-      if (_gloffset_TextureBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureBuffer] = (_glapi_proc)_mesa_marshal_TextureBuffer;
-      if (_gloffset_TextureBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureBufferRange] = (_glapi_proc)_mesa_marshal_TextureBufferRange;
-      if (_gloffset_TextureParameterIiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterIiv] = (_glapi_proc)_mesa_marshal_TextureParameterIiv;
-      if (_gloffset_TextureParameterIuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterIuiv] = (_glapi_proc)_mesa_marshal_TextureParameterIuiv;
-      if (_gloffset_TextureParameterf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterf] = (_glapi_proc)_mesa_marshal_TextureParameterf;
-      if (_gloffset_TextureParameterfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameterfv] = (_glapi_proc)_mesa_marshal_TextureParameterfv;
-      if (_gloffset_TextureParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameteri] = (_glapi_proc)_mesa_marshal_TextureParameteri;
-      if (_gloffset_TextureParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureParameteriv] = (_glapi_proc)_mesa_marshal_TextureParameteriv;
-      if (_gloffset_TextureStorage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage1D] = (_glapi_proc)_mesa_marshal_TextureStorage1D;
-      if (_gloffset_TextureStorage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage2D] = (_glapi_proc)_mesa_marshal_TextureStorage2D;
-      if (_gloffset_TextureStorage2DMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage2DMultisample] = (_glapi_proc)_mesa_marshal_TextureStorage2DMultisample;
-      if (_gloffset_TextureStorage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage3D] = (_glapi_proc)_mesa_marshal_TextureStorage3D;
-      if (_gloffset_TextureStorage3DMultisample >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureStorage3DMultisample] = (_glapi_proc)_mesa_marshal_TextureStorage3DMultisample;
-      if (_gloffset_TextureSubImage1D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureSubImage1D] = (_glapi_proc)_mesa_marshal_TextureSubImage1D;
-      if (_gloffset_TextureSubImage2D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureSubImage2D] = (_glapi_proc)_mesa_marshal_TextureSubImage2D;
-      if (_gloffset_TextureSubImage3D >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TextureSubImage3D] = (_glapi_proc)_mesa_marshal_TextureSubImage3D;
-      if (_gloffset_TransformFeedbackBufferBase >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TransformFeedbackBufferBase] = (_glapi_proc)_mesa_marshal_TransformFeedbackBufferBase;
-      if (_gloffset_TransformFeedbackBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TransformFeedbackBufferRange] = (_glapi_proc)_mesa_marshal_TransformFeedbackBufferRange;
-      if (_gloffset_Uniform1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1d] = (_glapi_proc)_mesa_marshal_Uniform1d;
-      if (_gloffset_Uniform1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1dv] = (_glapi_proc)_mesa_marshal_Uniform1dv;
-      if (_gloffset_Uniform1i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1i64ARB] = (_glapi_proc)_mesa_marshal_Uniform1i64ARB;
-      if (_gloffset_Uniform1i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1i64vARB] = (_glapi_proc)_mesa_marshal_Uniform1i64vARB;
-      if (_gloffset_Uniform1ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1ui64ARB] = (_glapi_proc)_mesa_marshal_Uniform1ui64ARB;
-      if (_gloffset_Uniform1ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform1ui64vARB] = (_glapi_proc)_mesa_marshal_Uniform1ui64vARB;
-      if (_gloffset_Uniform2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2d] = (_glapi_proc)_mesa_marshal_Uniform2d;
-      if (_gloffset_Uniform2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2dv] = (_glapi_proc)_mesa_marshal_Uniform2dv;
-      if (_gloffset_Uniform2i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2i64ARB] = (_glapi_proc)_mesa_marshal_Uniform2i64ARB;
-      if (_gloffset_Uniform2i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2i64vARB] = (_glapi_proc)_mesa_marshal_Uniform2i64vARB;
-      if (_gloffset_Uniform2ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2ui64ARB] = (_glapi_proc)_mesa_marshal_Uniform2ui64ARB;
-      if (_gloffset_Uniform2ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform2ui64vARB] = (_glapi_proc)_mesa_marshal_Uniform2ui64vARB;
-      if (_gloffset_Uniform3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3d] = (_glapi_proc)_mesa_marshal_Uniform3d;
-      if (_gloffset_Uniform3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3dv] = (_glapi_proc)_mesa_marshal_Uniform3dv;
-      if (_gloffset_Uniform3i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3i64ARB] = (_glapi_proc)_mesa_marshal_Uniform3i64ARB;
-      if (_gloffset_Uniform3i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3i64vARB] = (_glapi_proc)_mesa_marshal_Uniform3i64vARB;
-      if (_gloffset_Uniform3ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3ui64ARB] = (_glapi_proc)_mesa_marshal_Uniform3ui64ARB;
-      if (_gloffset_Uniform3ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform3ui64vARB] = (_glapi_proc)_mesa_marshal_Uniform3ui64vARB;
-      if (_gloffset_Uniform4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4d] = (_glapi_proc)_mesa_marshal_Uniform4d;
-      if (_gloffset_Uniform4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4dv] = (_glapi_proc)_mesa_marshal_Uniform4dv;
-      if (_gloffset_Uniform4i64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4i64ARB] = (_glapi_proc)_mesa_marshal_Uniform4i64ARB;
-      if (_gloffset_Uniform4i64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4i64vARB] = (_glapi_proc)_mesa_marshal_Uniform4i64vARB;
-      if (_gloffset_Uniform4ui64ARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4ui64ARB] = (_glapi_proc)_mesa_marshal_Uniform4ui64ARB;
-      if (_gloffset_Uniform4ui64vARB >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_Uniform4ui64vARB] = (_glapi_proc)_mesa_marshal_Uniform4ui64vARB;
-      if (_gloffset_UniformMatrix2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix2dv] = (_glapi_proc)_mesa_marshal_UniformMatrix2dv;
-      if (_gloffset_UniformMatrix2x3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix2x3dv] = (_glapi_proc)_mesa_marshal_UniformMatrix2x3dv;
-      if (_gloffset_UniformMatrix2x4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix2x4dv] = (_glapi_proc)_mesa_marshal_UniformMatrix2x4dv;
-      if (_gloffset_UniformMatrix3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix3dv] = (_glapi_proc)_mesa_marshal_UniformMatrix3dv;
-      if (_gloffset_UniformMatrix3x2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix3x2dv] = (_glapi_proc)_mesa_marshal_UniformMatrix3x2dv;
-      if (_gloffset_UniformMatrix3x4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix3x4dv] = (_glapi_proc)_mesa_marshal_UniformMatrix3x4dv;
-      if (_gloffset_UniformMatrix4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix4dv] = (_glapi_proc)_mesa_marshal_UniformMatrix4dv;
-      if (_gloffset_UniformMatrix4x2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix4x2dv] = (_glapi_proc)_mesa_marshal_UniformMatrix4x2dv;
-      if (_gloffset_UniformMatrix4x3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformMatrix4x3dv] = (_glapi_proc)_mesa_marshal_UniformMatrix4x3dv;
-      if (_gloffset_UniformSubroutinesuiv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_UniformSubroutinesuiv] = (_glapi_proc)_mesa_marshal_UniformSubroutinesuiv;
-      if (_gloffset_VertexArrayAttribBinding >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayAttribBinding] = (_glapi_proc)_mesa_marshal_VertexArrayAttribBinding;
-      if (_gloffset_VertexArrayAttribFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayAttribFormat] = (_glapi_proc)_mesa_marshal_VertexArrayAttribFormat;
-      if (_gloffset_VertexArrayAttribIFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayAttribIFormat] = (_glapi_proc)_mesa_marshal_VertexArrayAttribIFormat;
-      if (_gloffset_VertexArrayAttribLFormat >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayAttribLFormat] = (_glapi_proc)_mesa_marshal_VertexArrayAttribLFormat;
-      if (_gloffset_VertexArrayBindingDivisor >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayBindingDivisor] = (_glapi_proc)_mesa_marshal_VertexArrayBindingDivisor;
-      if (_gloffset_VertexArrayElementBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayElementBuffer] = (_glapi_proc)_mesa_marshal_VertexArrayElementBuffer;
-      if (_gloffset_VertexArrayVertexBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexBuffer] = (_glapi_proc)_mesa_marshal_VertexArrayVertexBuffer;
-      if (_gloffset_VertexArrayVertexBuffers >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexArrayVertexBuffers] = (_glapi_proc)_mesa_marshal_VertexArrayVertexBuffers;
-      if (_gloffset_VertexAttribL1d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL1d] = (_glapi_proc)_mesa_marshal_VertexAttribL1d;
-      if (_gloffset_VertexAttribL1dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL1dv] = (_glapi_proc)_mesa_marshal_VertexAttribL1dv;
-      if (_gloffset_VertexAttribL2d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL2d] = (_glapi_proc)_mesa_marshal_VertexAttribL2d;
-      if (_gloffset_VertexAttribL2dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL2dv] = (_glapi_proc)_mesa_marshal_VertexAttribL2dv;
-      if (_gloffset_VertexAttribL3d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL3d] = (_glapi_proc)_mesa_marshal_VertexAttribL3d;
-      if (_gloffset_VertexAttribL3dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL3dv] = (_glapi_proc)_mesa_marshal_VertexAttribL3dv;
-      if (_gloffset_VertexAttribL4d >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL4d] = (_glapi_proc)_mesa_marshal_VertexAttribL4d;
-      if (_gloffset_VertexAttribL4dv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribL4dv] = (_glapi_proc)_mesa_marshal_VertexAttribL4dv;
-      if (_gloffset_VertexAttribLPointer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_VertexAttribLPointer] = (_glapi_proc)_mesa_marshal_VertexAttribLPointer;
+      SET_NamedBufferData(table, _mesa_marshal_NamedBufferData);
+      SET_NamedBufferSubData(table, _mesa_marshal_NamedBufferSubData);
    }
-   if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
-      if (_gloffset_FramebufferParameteri >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferParameteri] = (_glapi_proc)_mesa_marshal_FramebufferParameteri;
-      if (_gloffset_FramebufferTexture >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferTexture] = (_glapi_proc)_mesa_marshal_FramebufferTexture;
-      if (_gloffset_GetFramebufferParameteriv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFramebufferParameteriv] = (_glapi_proc)_mesa_marshal_GetFramebufferParameteriv;
-      if (_gloffset_ScissorArrayv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ScissorArrayv] = (_glapi_proc)_mesa_marshal_ScissorArrayv;
-      if (_gloffset_ScissorIndexed >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ScissorIndexed] = (_glapi_proc)_mesa_marshal_ScissorIndexed;
-      if (_gloffset_ScissorIndexedv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ScissorIndexedv] = (_glapi_proc)_mesa_marshal_ScissorIndexedv;
-      if (_gloffset_TexBuffer >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexBuffer] = (_glapi_proc)_mesa_marshal_TexBuffer;
-      if (_gloffset_TexBufferRange >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_TexBufferRange] = (_glapi_proc)_mesa_marshal_TexBufferRange;
-      if (_gloffset_ViewportArrayv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ViewportArrayv] = (_glapi_proc)_mesa_marshal_ViewportArrayv;
-      if (_gloffset_ViewportIndexedf >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ViewportIndexedf] = (_glapi_proc)_mesa_marshal_ViewportIndexedf;
-      if (_gloffset_ViewportIndexedfv >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_ViewportIndexedfv] = (_glapi_proc)_mesa_marshal_ViewportIndexedfv;
-   }
-   if (ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
-      if (_gloffset_FramebufferParameteriMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_FramebufferParameteriMESA] = (_glapi_proc)_mesa_marshal_FramebufferParameteriMESA;
-      if (_gloffset_GetFramebufferParameterivMESA >= 0)
-         ((_glapi_proc *)(ctx->MarshalExec))[_gloffset_GetFramebufferParameterivMESA] = (_glapi_proc)_mesa_marshal_GetFramebufferParameterivMESA;
-   }
-
-   return true;
 }

@@ -15,8 +15,6 @@ extern "C" {
 const char *
 tr_util_pipe_texture_target_name(enum pipe_texture_target value);
 const char *
-tr_util_pipe_shader_type_name(enum pipe_shader_type value);
-const char *
 tr_util_pipe_shader_cap_name(enum pipe_shader_cap value);
 const char *
 tr_util_pipe_shader_ir_name(enum pipe_shader_ir value);

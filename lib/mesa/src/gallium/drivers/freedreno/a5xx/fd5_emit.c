@@ -101,7 +101,7 @@ fd5_emit_const_ptrs(struct fd_ringbuffer *ring, gl_shader_stage type,
    uint32_t anum = align(num, 2);
    uint32_t i;
 
-   debug_assert((regid % 4) == 0);
+   assert((regid % 4) == 0);
 
    OUT_PKT7(ring, CP_LOAD_STATE4, 3 + (2 * anum));
    OUT_RING(ring, CP_LOAD_STATE4_0_DST_OFF(regid / 4) |
@@ -268,7 +268,7 @@ setup_border_colors(struct fd_texture_stateobj *tex,
                   clamped = CLAMP(bc->ui[j], 0, 65535);
                break;
             default:
-               assert(!"Unexpected bit size");
+               unreachable("Unexpected bit size");
             case 32:
                clamped = 0;
                break;
@@ -488,7 +488,7 @@ fd5_emit_vertex_bufs(struct fd_ringbuffer *ring, struct fd5_emit *emit)
          bool isint = util_format_is_pure_integer(pfmt);
          uint32_t off = vb->buffer_offset + elem->src_offset;
          uint32_t size = vb->buffer.resource->width0 - off;
-         debug_assert(fmt != VFMT5_NONE);
+         assert(fmt != VFMT5_NONE);
 
          OUT_PKT4(ring, REG_A5XX_VFD_FETCH(j), 4);
          OUT_RELOC(ring, rsc->bo, off, 0, 0);
@@ -619,15 +619,15 @@ fd5_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
       OUT_PKT4(ring, REG_A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0, 2);
       OUT_RING(ring, A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0_X(scissor->minx) |
                         A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0_Y(scissor->miny));
-      OUT_RING(ring, A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0_X(scissor->maxx - 1) |
-                        A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0_Y(scissor->maxy - 1));
+      OUT_RING(ring, A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0_X(scissor->maxx) |
+                        A5XX_GRAS_SC_SCREEN_SCISSOR_TL_0_Y(scissor->maxy));
 
       OUT_PKT4(ring, REG_A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0, 2);
       OUT_RING(ring, A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_X(scissor->minx) |
                         A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_Y(scissor->miny));
       OUT_RING(ring,
-               A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_X(scissor->maxx - 1) |
-                  A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_Y(scissor->maxy - 1));
+               A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_X(scissor->maxx) |
+                  A5XX_GRAS_SC_VIEWPORT_SCISSOR_TL_0_Y(scissor->maxy));
 
       ctx->batch->max_scissor.minx =
          MIN2(ctx->batch->max_scissor.minx, scissor->minx);
@@ -640,14 +640,17 @@ fd5_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
    }
 
    if (dirty & FD_DIRTY_VIEWPORT) {
+      struct pipe_viewport_state *vp = & ctx->viewport[0];
+
       fd_wfi(ctx->batch, ring);
+
       OUT_PKT4(ring, REG_A5XX_GRAS_CL_VPORT_XOFFSET_0, 6);
-      OUT_RING(ring, A5XX_GRAS_CL_VPORT_XOFFSET_0(ctx->viewport.translate[0]));
-      OUT_RING(ring, A5XX_GRAS_CL_VPORT_XSCALE_0(ctx->viewport.scale[0]));
-      OUT_RING(ring, A5XX_GRAS_CL_VPORT_YOFFSET_0(ctx->viewport.translate[1]));
-      OUT_RING(ring, A5XX_GRAS_CL_VPORT_YSCALE_0(ctx->viewport.scale[1]));
-      OUT_RING(ring, A5XX_GRAS_CL_VPORT_ZOFFSET_0(ctx->viewport.translate[2]));
-      OUT_RING(ring, A5XX_GRAS_CL_VPORT_ZSCALE_0(ctx->viewport.scale[2]));
+      OUT_RING(ring, A5XX_GRAS_CL_VPORT_XOFFSET_0(vp->translate[0]));
+      OUT_RING(ring, A5XX_GRAS_CL_VPORT_XSCALE_0(vp->scale[0]));
+      OUT_RING(ring, A5XX_GRAS_CL_VPORT_YOFFSET_0(vp->translate[1]));
+      OUT_RING(ring, A5XX_GRAS_CL_VPORT_YSCALE_0(vp->scale[1]));
+      OUT_RING(ring, A5XX_GRAS_CL_VPORT_ZOFFSET_0(vp->translate[2]));
+      OUT_RING(ring, A5XX_GRAS_CL_VPORT_ZSCALE_0(vp->scale[2]));
    }
 
    if (dirty & (FD_DIRTY_PROG | FD_DIRTY_RASTERIZER_CLIP_PLANE_ENABLE))
@@ -723,7 +726,7 @@ fd5_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
    if (!emit->binning_pass)
       ir3_emit_fs_consts(fp, ring, ctx);
 
-   struct ir3_stream_output_info *info = &vp->shader->stream_output;
+   const struct ir3_stream_output_info *info = &vp->stream_output;
    if (info->num_outputs) {
       struct fd_streamout_stateobj *so = &ctx->streamout;
 

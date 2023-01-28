@@ -395,7 +395,7 @@ get_fast_clear_rect(const struct isl_device *dev,
        * Target(s)", beneath the "MSAA Compression" bullet (p326):
        *
        *     Clear pass for this case requires that scaled down primitive
-       *     is sent down with upper left co-ordinate to coincide with
+       *     is sent down with upper left coordinate to coincide with
        *     actual rectangle being cleared. For MSAA, clear rectangle’s
        *     height and width need to as show in the following table in
        *     terms of (width,height) of the RT.
@@ -406,7 +406,7 @@ get_fast_clear_rect(const struct isl_device *dev,
        *      8X     Ceil(1/2*width)      Ceil(1/2*height)
        *     16X         width            Ceil(1/2*height)
        *
-       * The text "with upper left co-ordinate to coincide with actual
+       * The text "with upper left coordinate to coincide with actual
        * rectangle being cleared" is a little confusing--it seems to imply
        * that to clear a rectangle from (x,y) to (x+w,y+h), one needs to
        * feed the pipeline using the rectangle (x,y) to
@@ -476,9 +476,9 @@ blorp_fast_clear(struct blorp_batch *batch,
 
    assert(params.num_samples != 0);
    if (params.num_samples == 1)
-      params.snapshot_type = INTEL_SNAPSHOT_CCS_COLOR_CLEAR;
+      params.op = BLORP_OP_CCS_COLOR_CLEAR;
    else
-      params.snapshot_type = INTEL_SNAPSHOT_MCS_COLOR_CLEAR;
+      params.op = BLORP_OP_MCS_COLOR_CLEAR;
 
    /* If a swizzle was provided, we need to swizzle the clear color so that
     * the hardware color format conversion will work properly.
@@ -487,6 +487,36 @@ blorp_fast_clear(struct blorp_batch *batch,
       isl_color_value_swizzle_inv(params.dst.clear_color, swizzle);
 
    batch->blorp->exec(batch, &params);
+}
+
+bool
+blorp_clear_supports_blitter(struct blorp_context *blorp,
+                             const struct blorp_surf *surf,
+                             uint8_t color_write_disable,
+                             bool blend_enabled)
+{
+   const struct intel_device_info *devinfo = blorp->isl_dev->info;
+
+   if (devinfo->ver < 12)
+      return false;
+
+   if (surf->surf->samples > 1)
+      return false;
+
+   if (color_write_disable != 0 || blend_enabled)
+      return false;
+
+   if (!blorp_blitter_supports_aux(devinfo, surf->aux_usage))
+      return false;
+
+   const struct isl_format_layout *fmtl =
+      isl_format_get_layout(surf->surf->format);
+
+   /* We can only support linear mode for 96bpp. */
+   if (fmtl->bpb == 96 && surf->surf->tiling != ISL_TILING_LINEAR)
+      return false;
+
+   return true;
 }
 
 bool
@@ -518,12 +548,16 @@ blorp_clear(struct blorp_batch *batch,
 {
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_SLOW_COLOR_CLEAR;
+   params.op = BLORP_OP_SLOW_COLOR_CLEAR;
 
    const bool compute = batch->flags & BLORP_BATCH_USE_COMPUTE;
-   if (compute)
+   if (compute) {
       assert(blorp_clear_supports_compute(batch->blorp, color_write_disable,
                                           false, surf->aux_usage));
+   } else if (batch->flags & BLORP_BATCH_USE_BLITTER) {
+      assert(blorp_clear_supports_blitter(batch->blorp, surf,
+                                          color_write_disable, false));
+   }
 
    /* Manually apply the clear destination swizzle.  This way swizzled clears
     * will work for swizzles which we can't normally use for rendering and it
@@ -576,7 +610,7 @@ blorp_clear(struct blorp_batch *batch,
    if (compute)
       use_simd16_replicated_data = false;
 
-   /* Constant color writes ignore everyting in blend and color calculator
+   /* Constant color writes ignore everything in blend and color calculator
     * state.  This is not documented.
     */
    params.color_write_disable = color_write_disable & BITFIELD_MASK(4);
@@ -735,7 +769,7 @@ blorp_clear_stencil_as_rgba(struct blorp_batch *batch,
 
    /* W-tiles and Y-tiles have the same layout as far as cache lines are
     * concerned: both are 8x8 cache lines laid out Y-major.  The difference is
-    * entirely in how the data is arranged withing the cache line.  W-tiling
+    * entirely in how the data is arranged within the cache line.  W-tiling
     * is 8x8 pixels in a swizzled pattern while Y-tiling is 16B by 4 rows
     * regardless of image format size.  As long as everything is aligned to 8,
     * we can just treat the W-tiled image as Y-tiled, ignore the layout
@@ -746,7 +780,7 @@ blorp_clear_stencil_as_rgba(struct blorp_batch *batch,
 
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_SLOW_DEPTH_CLEAR;
+   params.op = BLORP_OP_SLOW_DEPTH_CLEAR;
 
    if (!blorp_params_get_clear_kernel(batch, &params, true, false))
       return false;
@@ -827,7 +861,7 @@ blorp_clear_depth_stencil(struct blorp_batch *batch,
 
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_SLOW_DEPTH_CLEAR;
+   params.op = BLORP_OP_SLOW_DEPTH_CLEAR;
 
    params.x0 = x0;
    params.y0 = y0;
@@ -1015,7 +1049,7 @@ blorp_hiz_clear_depth_stencil(struct blorp_batch *batch,
 {
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_HIZ_CLEAR;
+   params.op = BLORP_OP_HIZ_CLEAR;
 
    /* This requires WM_HZ_OP which only exists on gfx8+ */
    assert(ISL_GFX_VER(batch->blorp->isl_dev) >= 8);
@@ -1081,7 +1115,7 @@ blorp_gfx8_hiz_clear_attachments(struct blorp_batch *batch,
 
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_HIZ_CLEAR;
+   params.op = BLORP_OP_HIZ_CLEAR;
    params.num_layers = 1;
    params.hiz_op = ISL_AUX_OP_FAST_CLEAR;
    params.x0 = x0;
@@ -1136,7 +1170,7 @@ blorp_clear_attachments(struct blorp_batch *batch,
 
    if (clear_color) {
       params.dst.enabled = true;
-      params.snapshot_type = INTEL_SNAPSHOT_SLOW_COLOR_CLEAR;
+      params.op = BLORP_OP_SLOW_COLOR_CLEAR;
 
       memcpy(&params.wm_inputs.clear_color, color_value.f32, sizeof(float) * 4);
 
@@ -1150,7 +1184,7 @@ blorp_clear_attachments(struct blorp_batch *batch,
 
    if (clear_depth) {
       params.depth.enabled = true;
-      params.snapshot_type = INTEL_SNAPSHOT_SLOW_DEPTH_CLEAR;
+      params.op = BLORP_OP_SLOW_DEPTH_CLEAR;
 
       params.z = depth_value;
       params.depth_format = isl_format_get_depth_format(depth_format, false);
@@ -1158,7 +1192,7 @@ blorp_clear_attachments(struct blorp_batch *batch,
 
    if (stencil_mask) {
       params.stencil.enabled = true;
-      params.snapshot_type = INTEL_SNAPSHOT_SLOW_DEPTH_CLEAR;
+      params.op = BLORP_OP_SLOW_DEPTH_CLEAR;
 
       params.stencil_mask = stencil_mask;
       params.stencil_ref = stencil_value;
@@ -1185,13 +1219,13 @@ blorp_ccs_resolve(struct blorp_batch *batch,
    blorp_params_init(&params);
    switch(resolve_op) {
    case ISL_AUX_OP_AMBIGUATE:
-      params.snapshot_type = INTEL_SNAPSHOT_CCS_AMBIGUATE;
+      params.op = BLORP_OP_CCS_AMBIGUATE;
       break;
    case ISL_AUX_OP_FULL_RESOLVE:
-      params.snapshot_type = INTEL_SNAPSHOT_CCS_RESOLVE;
+      params.op = BLORP_OP_CCS_RESOLVE;
       break;
    case ISL_AUX_OP_PARTIAL_RESOLVE:
-      params.snapshot_type = INTEL_SNAPSHOT_CCS_PARTIAL_RESOLVE;
+      params.op = BLORP_OP_CCS_PARTIAL_RESOLVE;
       break;
    default:
       assert(false);
@@ -1365,7 +1399,7 @@ blorp_mcs_partial_resolve(struct blorp_batch *batch,
 {
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_MCS_PARTIAL_RESOLVE;
+   params.op = BLORP_OP_MCS_PARTIAL_RESOLVE;
 
    assert(batch->blorp->isl_dev->info->ver >= 7);
 
@@ -1413,7 +1447,7 @@ blorp_ccs_ambiguate(struct blorp_batch *batch,
 
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_CCS_AMBIGUATE;
+   params.op = BLORP_OP_CCS_AMBIGUATE;
 
    assert(ISL_GFX_VER(batch->blorp->isl_dev) >= 7);
 

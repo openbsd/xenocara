@@ -27622,13 +27622,39 @@ evaluate_fcos(nir_const_value *_dst_val,
       }
 }
 static void
-evaluate_fcos_r600(nir_const_value *_dst_val,
+evaluate_fcos_amd(nir_const_value *_dst_val,
                  UNUSED unsigned num_components,
-                 UNUSED unsigned bit_size,
+                  unsigned bit_size,
                  UNUSED nir_const_value **_src,
                  UNUSED unsigned execution_mode)
 {
-      
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      for (unsigned _i = 0; _i < num_components; _i++) {
+               const float src0 =
+                  _mesa_half_to_float(_src[0][_i].u16);
+
+            float16_t dst = cosf(6.2831853 * src0);
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
+            } else {
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
+               }
+      }
+
+         break;
+      }
+      case 32: {
+         
    
 
          
@@ -27645,6 +27671,32 @@ evaluate_fcos_r600(nir_const_value *_dst_val,
                }
       }
 
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      for (unsigned _i = 0; _i < num_components; _i++) {
+               const float64_t src0 =
+                  _src[0][_i].f64;
+
+            float64_t dst = cosf(6.2831853 * src0);
+
+            _dst_val[_i].f64 = dst;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
+               }
+      }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
 }
 static void
 evaluate_fcsel(nir_const_value *_dst_val,
@@ -34473,13 +34525,39 @@ evaluate_fsin_agx(nir_const_value *_dst_val,
       }
 }
 static void
-evaluate_fsin_r600(nir_const_value *_dst_val,
+evaluate_fsin_amd(nir_const_value *_dst_val,
                  UNUSED unsigned num_components,
-                 UNUSED unsigned bit_size,
+                  unsigned bit_size,
                  UNUSED nir_const_value **_src,
                  UNUSED unsigned execution_mode)
 {
-      
+      switch (bit_size) {
+      case 16: {
+         
+   
+
+         
+      for (unsigned _i = 0; _i < num_components; _i++) {
+               const float src0 =
+                  _mesa_half_to_float(_src[0][_i].u16);
+
+            float16_t dst = sinf(6.2831853 * src0);
+
+            if (nir_is_rounding_mode_rtz(execution_mode, 16)) {
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtz(dst);
+            } else {
+               _dst_val[_i].u16 = _mesa_float_to_float16_rtne(dst);
+            }
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 16)) {
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 16);
+               }
+      }
+
+         break;
+      }
+      case 32: {
+         
    
 
          
@@ -34496,6 +34574,32 @@ evaluate_fsin_r600(nir_const_value *_dst_val,
                }
       }
 
+         break;
+      }
+      case 64: {
+         
+   
+
+         
+      for (unsigned _i = 0; _i < num_components; _i++) {
+               const float64_t src0 =
+                  _src[0][_i].f64;
+
+            float64_t dst = sinf(6.2831853 * src0);
+
+            _dst_val[_i].f64 = dst;
+
+               if (nir_is_denorm_flush_to_zero(execution_mode, 64)) {
+                  constant_denorm_flush_to_zero(&_dst_val[_i], 64);
+               }
+      }
+
+         break;
+      }
+
+      default:
+         unreachable("unknown bit width");
+      }
 }
 static void
 evaluate_fsqrt(nir_const_value *_dst_val,
@@ -37693,7 +37797,7 @@ evaluate_ifind_msb(nir_const_value *_dst_val,
 
             
 dst = -1;
-for (int bit = 31; bit >= 0; bit--) {
+for (int bit = bit_size - 1; bit >= 0; bit--) {
    /* If src0 < 0, we're looking for the first 0 bit.
     * if src0 >= 0, we're looking for the first 1 bit.
     */
@@ -37731,16 +37835,12 @@ evaluate_ifind_msb_rev(nir_const_value *_dst_val,
 
             
 dst = -1;
-if (src0 != 0 && src0 != -1) {
-   for (int bit = 0; bit < 31; bit++) {
-      /* If src0 < 0, we're looking for the first 0 bit.
-       * if src0 >= 0, we're looking for the first 1 bit.
-       */
-      if ((((src0 << bit) & 0x40000000) && (src0 >= 0)) ||
-          ((!((src0 << bit) & 0x40000000)) && (src0 < 0))) {
-         dst = bit;
-         break;
-      }
+/* We are looking for the highest bit that's not the same as the sign bit. */
+uint32_t sign = src0 & 0x80000000u;
+for (int bit = 0; bit < 32; bit++) {
+   if (((src0 << bit) & 0x80000000u) != sign) {
+      dst = bit;
+      break;
    }
 }
 
@@ -37764,16 +37864,12 @@ if (src0 != 0 && src0 != -1) {
 
             
 dst = -1;
-if (src0 != 0 && src0 != -1) {
-   for (int bit = 0; bit < 31; bit++) {
-      /* If src0 < 0, we're looking for the first 0 bit.
-       * if src0 >= 0, we're looking for the first 1 bit.
-       */
-      if ((((src0 << bit) & 0x40000000) && (src0 >= 0)) ||
-          ((!((src0 << bit) & 0x40000000)) && (src0 < 0))) {
-         dst = bit;
-         break;
-      }
+/* We are looking for the highest bit that's not the same as the sign bit. */
+uint32_t sign = src0 & 0x80000000u;
+for (int bit = 0; bit < 32; bit++) {
+   if (((src0 << bit) & 0x80000000u) != sign) {
+      dst = bit;
+      break;
    }
 }
 
@@ -37797,16 +37893,12 @@ if (src0 != 0 && src0 != -1) {
 
             
 dst = -1;
-if (src0 != 0 && src0 != -1) {
-   for (int bit = 0; bit < 31; bit++) {
-      /* If src0 < 0, we're looking for the first 0 bit.
-       * if src0 >= 0, we're looking for the first 1 bit.
-       */
-      if ((((src0 << bit) & 0x40000000) && (src0 >= 0)) ||
-          ((!((src0 << bit) & 0x40000000)) && (src0 < 0))) {
-         dst = bit;
-         break;
-      }
+/* We are looking for the highest bit that's not the same as the sign bit. */
+uint32_t sign = src0 & 0x80000000u;
+for (int bit = 0; bit < 32; bit++) {
+   if (((src0 << bit) & 0x80000000u) != sign) {
+      dst = bit;
+      break;
    }
 }
 
@@ -37830,16 +37922,12 @@ if (src0 != 0 && src0 != -1) {
 
             
 dst = -1;
-if (src0 != 0 && src0 != -1) {
-   for (int bit = 0; bit < 31; bit++) {
-      /* If src0 < 0, we're looking for the first 0 bit.
-       * if src0 >= 0, we're looking for the first 1 bit.
-       */
-      if ((((src0 << bit) & 0x40000000) && (src0 >= 0)) ||
-          ((!((src0 << bit) & 0x40000000)) && (src0 < 0))) {
-         dst = bit;
-         break;
-      }
+/* We are looking for the highest bit that's not the same as the sign bit. */
+uint32_t sign = src0 & 0x80000000u;
+for (int bit = 0; bit < 32; bit++) {
+   if (((src0 << bit) & 0x80000000u) != sign) {
+      dst = bit;
+      break;
    }
 }
 
@@ -37863,16 +37951,12 @@ if (src0 != 0 && src0 != -1) {
 
             
 dst = -1;
-if (src0 != 0 && src0 != -1) {
-   for (int bit = 0; bit < 31; bit++) {
-      /* If src0 < 0, we're looking for the first 0 bit.
-       * if src0 >= 0, we're looking for the first 1 bit.
-       */
-      if ((((src0 << bit) & 0x40000000) && (src0 >= 0)) ||
-          ((!((src0 << bit) & 0x40000000)) && (src0 < 0))) {
-         dst = bit;
-         break;
-      }
+/* We are looking for the highest bit that's not the same as the sign bit. */
+uint32_t sign = src0 & 0x80000000u;
+for (int bit = 0; bit < 32; bit++) {
+   if (((src0 << bit) & 0x80000000u) != sign) {
+      dst = bit;
+      break;
    }
 }
 
@@ -44909,7 +44993,7 @@ for (bit = bit_size - 1; bit >= 0; bit--) {
    if ((src0 & (1u << bit)) != 0)
       break;
 }
-dst = (unsigned)(31 - bit);
+dst = (unsigned)(bit_size - bit - 1);
 
 
             _dst_val[_i].u32 = dst;
@@ -53902,8 +53986,8 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_fcos:
       evaluate_fcos(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
-   case nir_op_fcos_r600:
-      evaluate_fcos_r600(dest, num_components, bit_width, src, float_controls_execution_mode);
+   case nir_op_fcos_amd:
+      evaluate_fcos_amd(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_fcsel:
       evaluate_fcsel(dest, num_components, bit_width, src, float_controls_execution_mode);
@@ -54121,8 +54205,8 @@ nir_eval_const_opcode(nir_op op, nir_const_value *dest,
    case nir_op_fsin_agx:
       evaluate_fsin_agx(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
-   case nir_op_fsin_r600:
-      evaluate_fsin_r600(dest, num_components, bit_width, src, float_controls_execution_mode);
+   case nir_op_fsin_amd:
+      evaluate_fsin_amd(dest, num_components, bit_width, src, float_controls_execution_mode);
       return;
    case nir_op_fsqrt:
       evaluate_fsqrt(dest, num_components, bit_width, src, float_controls_execution_mode);

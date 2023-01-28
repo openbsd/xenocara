@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:33 jsg Exp $
 
 LIB=	anv_common
 
 NOPROFILE=
 
-SRCS=	anv_allocator.c \
+SRCS=	anv_hitman3.c \
+	anv_allocator.c \
 	anv_batch_chain.c \
 	anv_blorp.c \
 	anv_bo_sync.c \
@@ -20,6 +21,7 @@ SRCS=	anv_allocator.c \
 	anv_nir_lower_multiview.c \
 	anv_nir_lower_ubo_loads.c \
 	anv_nir_lower_ycbcr_textures.c \
+	anv_nir_push_descriptor_analysis.c \
 	anv_perf.c \
 	anv_pipeline.c \
 	anv_pipeline_cache.c \
@@ -55,7 +57,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \
 		-DVK_USE_PLATFORM_DISPLAY_KHR \
-		-DVK_USE_PLATFORM_XLIB_XRANDR_EXT
+		-DVK_USE_PLATFORM_XLIB_XRANDR_EXT \
+		-DANV_SUPPORT_RT=0
 
 install:
 
@@ -65,4 +68,5 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/intel/vulkan
+.PATH: ${MESA_SRC}/src/intel/vulkan/layers
 .PATH: ${MESA_SRC}/generated/src/intel/vulkan

@@ -294,6 +294,7 @@ struct vk_physical_device_dispatch_table {
 #endif
     PFN_vkAcquireDrmDisplayEXT AcquireDrmDisplayEXT;
     PFN_vkGetDrmDisplayEXT GetDrmDisplayEXT;
+    PFN_vkGetPhysicalDeviceOpticalFlowImageFormatsNV GetPhysicalDeviceOpticalFlowImageFormatsNV;
 
 };
 
@@ -698,6 +699,9 @@ struct vk_device_dispatch_table {
     PFN_vkCmdDrawMeshTasksNV CmdDrawMeshTasksNV;
     PFN_vkCmdDrawMeshTasksIndirectNV CmdDrawMeshTasksIndirectNV;
     PFN_vkCmdDrawMeshTasksIndirectCountNV CmdDrawMeshTasksIndirectCountNV;
+    PFN_vkCmdDrawMeshTasksEXT CmdDrawMeshTasksEXT;
+    PFN_vkCmdDrawMeshTasksIndirectEXT CmdDrawMeshTasksIndirectEXT;
+    PFN_vkCmdDrawMeshTasksIndirectCountEXT CmdDrawMeshTasksIndirectCountEXT;
     PFN_vkCompileDeferredNV CompileDeferredNV;
     PFN_vkCreateAccelerationStructureNV CreateAccelerationStructureNV;
     PFN_vkCmdBindInvocationMaskHUAWEI CmdBindInvocationMaskHUAWEI;
@@ -727,6 +731,7 @@ struct vk_device_dispatch_table {
     PFN_vkCreateRayTracingPipelinesNV CreateRayTracingPipelinesNV;
     PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelinesKHR;
     PFN_vkCmdTraceRaysIndirectKHR CmdTraceRaysIndirectKHR;
+    PFN_vkCmdTraceRaysIndirect2KHR CmdTraceRaysIndirect2KHR;
     PFN_vkGetDeviceAccelerationStructureCompatibilityKHR GetDeviceAccelerationStructureCompatibilityKHR;
     PFN_vkGetRayTracingShaderGroupStackSizeKHR GetRayTracingShaderGroupStackSizeKHR;
     PFN_vkCmdSetRayTracingPipelineStackSizeKHR CmdSetRayTracingPipelineStackSizeKHR;
@@ -852,6 +857,37 @@ struct vk_device_dispatch_table {
         PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
         PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
     };
+    PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
+    PFN_vkCmdSetDepthClampEnableEXT CmdSetDepthClampEnableEXT;
+    PFN_vkCmdSetPolygonModeEXT CmdSetPolygonModeEXT;
+    PFN_vkCmdSetRasterizationSamplesEXT CmdSetRasterizationSamplesEXT;
+    PFN_vkCmdSetSampleMaskEXT CmdSetSampleMaskEXT;
+    PFN_vkCmdSetAlphaToCoverageEnableEXT CmdSetAlphaToCoverageEnableEXT;
+    PFN_vkCmdSetAlphaToOneEnableEXT CmdSetAlphaToOneEnableEXT;
+    PFN_vkCmdSetLogicOpEnableEXT CmdSetLogicOpEnableEXT;
+    PFN_vkCmdSetColorBlendEnableEXT CmdSetColorBlendEnableEXT;
+    PFN_vkCmdSetColorBlendEquationEXT CmdSetColorBlendEquationEXT;
+    PFN_vkCmdSetColorWriteMaskEXT CmdSetColorWriteMaskEXT;
+    PFN_vkCmdSetRasterizationStreamEXT CmdSetRasterizationStreamEXT;
+    PFN_vkCmdSetConservativeRasterizationModeEXT CmdSetConservativeRasterizationModeEXT;
+    PFN_vkCmdSetExtraPrimitiveOverestimationSizeEXT CmdSetExtraPrimitiveOverestimationSizeEXT;
+    PFN_vkCmdSetDepthClipEnableEXT CmdSetDepthClipEnableEXT;
+    PFN_vkCmdSetSampleLocationsEnableEXT CmdSetSampleLocationsEnableEXT;
+    PFN_vkCmdSetColorBlendAdvancedEXT CmdSetColorBlendAdvancedEXT;
+    PFN_vkCmdSetProvokingVertexModeEXT CmdSetProvokingVertexModeEXT;
+    PFN_vkCmdSetLineRasterizationModeEXT CmdSetLineRasterizationModeEXT;
+    PFN_vkCmdSetLineStippleEnableEXT CmdSetLineStippleEnableEXT;
+    PFN_vkCmdSetDepthClipNegativeOneToOneEXT CmdSetDepthClipNegativeOneToOneEXT;
+    PFN_vkCmdSetViewportWScalingEnableNV CmdSetViewportWScalingEnableNV;
+    PFN_vkCmdSetViewportSwizzleNV CmdSetViewportSwizzleNV;
+    PFN_vkCmdSetCoverageToColorEnableNV CmdSetCoverageToColorEnableNV;
+    PFN_vkCmdSetCoverageToColorLocationNV CmdSetCoverageToColorLocationNV;
+    PFN_vkCmdSetCoverageModulationModeNV CmdSetCoverageModulationModeNV;
+    PFN_vkCmdSetCoverageModulationTableEnableNV CmdSetCoverageModulationTableEnableNV;
+    PFN_vkCmdSetCoverageModulationTableNV CmdSetCoverageModulationTableNV;
+    PFN_vkCmdSetShadingRateImageEnableNV CmdSetShadingRateImageEnableNV;
+    PFN_vkCmdSetCoverageReductionModeNV CmdSetCoverageReductionModeNV;
+    PFN_vkCmdSetRepresentativeFragmentTestEnableNV CmdSetRepresentativeFragmentTestEnableNV;
         union {
         PFN_vkDestroyPrivateDataSlot DestroyPrivateDataSlot;
         PFN_vkDestroyPrivateDataSlotEXT DestroyPrivateDataSlotEXT;
@@ -1021,6 +1057,36 @@ struct vk_device_dispatch_table {
     };
         PFN_vkGetDescriptorSetLayoutHostMappingInfoVALVE GetDescriptorSetLayoutHostMappingInfoVALVE;
     PFN_vkGetDescriptorSetHostMappingVALVE GetDescriptorSetHostMappingVALVE;
+    PFN_vkCreateMicromapEXT CreateMicromapEXT;
+    PFN_vkCmdBuildMicromapsEXT CmdBuildMicromapsEXT;
+    PFN_vkBuildMicromapsEXT BuildMicromapsEXT;
+    PFN_vkDestroyMicromapEXT DestroyMicromapEXT;
+    PFN_vkCmdCopyMicromapEXT CmdCopyMicromapEXT;
+    PFN_vkCopyMicromapEXT CopyMicromapEXT;
+    PFN_vkCmdCopyMicromapToMemoryEXT CmdCopyMicromapToMemoryEXT;
+    PFN_vkCopyMicromapToMemoryEXT CopyMicromapToMemoryEXT;
+    PFN_vkCmdCopyMemoryToMicromapEXT CmdCopyMemoryToMicromapEXT;
+    PFN_vkCopyMemoryToMicromapEXT CopyMemoryToMicromapEXT;
+    PFN_vkCmdWriteMicromapsPropertiesEXT CmdWriteMicromapsPropertiesEXT;
+    PFN_vkWriteMicromapsPropertiesEXT WriteMicromapsPropertiesEXT;
+    PFN_vkGetDeviceMicromapCompatibilityEXT GetDeviceMicromapCompatibilityEXT;
+    PFN_vkGetMicromapBuildSizesEXT GetMicromapBuildSizesEXT;
+    PFN_vkGetShaderModuleIdentifierEXT GetShaderModuleIdentifierEXT;
+    PFN_vkGetShaderModuleCreateInfoIdentifierEXT GetShaderModuleCreateInfoIdentifierEXT;
+    PFN_vkGetImageSubresourceLayout2EXT GetImageSubresourceLayout2EXT;
+    PFN_vkGetPipelinePropertiesEXT GetPipelinePropertiesEXT;
+#ifdef VK_USE_PLATFORM_METAL_EXT
+    PFN_vkExportMetalObjectsEXT ExportMetalObjectsEXT;
+#else
+    PFN_vkVoidFunction ExportMetalObjectsEXT;
+#endif
+    PFN_vkGetFramebufferTilePropertiesQCOM GetFramebufferTilePropertiesQCOM;
+    PFN_vkGetDynamicRenderingTilePropertiesQCOM GetDynamicRenderingTilePropertiesQCOM;
+    PFN_vkCreateOpticalFlowSessionNV CreateOpticalFlowSessionNV;
+    PFN_vkDestroyOpticalFlowSessionNV DestroyOpticalFlowSessionNV;
+    PFN_vkBindOpticalFlowSessionImageNV BindOpticalFlowSessionImageNV;
+    PFN_vkCmdOpticalFlowExecuteNV CmdOpticalFlowExecuteNV;
+    PFN_vkGetDeviceFaultInfoEXT GetDeviceFaultInfoEXT;
 
 };
 
@@ -1269,6 +1335,7 @@ struct vk_dispatch_table {
 #endif
     PFN_vkAcquireDrmDisplayEXT AcquireDrmDisplayEXT;
     PFN_vkGetDrmDisplayEXT GetDrmDisplayEXT;
+    PFN_vkGetPhysicalDeviceOpticalFlowImageFormatsNV GetPhysicalDeviceOpticalFlowImageFormatsNV;
 
             
     PFN_vkGetDeviceProcAddr GetDeviceProcAddr;
@@ -1670,6 +1737,9 @@ struct vk_dispatch_table {
     PFN_vkCmdDrawMeshTasksNV CmdDrawMeshTasksNV;
     PFN_vkCmdDrawMeshTasksIndirectNV CmdDrawMeshTasksIndirectNV;
     PFN_vkCmdDrawMeshTasksIndirectCountNV CmdDrawMeshTasksIndirectCountNV;
+    PFN_vkCmdDrawMeshTasksEXT CmdDrawMeshTasksEXT;
+    PFN_vkCmdDrawMeshTasksIndirectEXT CmdDrawMeshTasksIndirectEXT;
+    PFN_vkCmdDrawMeshTasksIndirectCountEXT CmdDrawMeshTasksIndirectCountEXT;
     PFN_vkCompileDeferredNV CompileDeferredNV;
     PFN_vkCreateAccelerationStructureNV CreateAccelerationStructureNV;
     PFN_vkCmdBindInvocationMaskHUAWEI CmdBindInvocationMaskHUAWEI;
@@ -1699,6 +1769,7 @@ struct vk_dispatch_table {
     PFN_vkCreateRayTracingPipelinesNV CreateRayTracingPipelinesNV;
     PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelinesKHR;
     PFN_vkCmdTraceRaysIndirectKHR CmdTraceRaysIndirectKHR;
+    PFN_vkCmdTraceRaysIndirect2KHR CmdTraceRaysIndirect2KHR;
     PFN_vkGetDeviceAccelerationStructureCompatibilityKHR GetDeviceAccelerationStructureCompatibilityKHR;
     PFN_vkGetRayTracingShaderGroupStackSizeKHR GetRayTracingShaderGroupStackSizeKHR;
     PFN_vkCmdSetRayTracingPipelineStackSizeKHR CmdSetRayTracingPipelineStackSizeKHR;
@@ -1824,6 +1895,37 @@ struct vk_dispatch_table {
         PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
         PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
     };
+    PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
+    PFN_vkCmdSetDepthClampEnableEXT CmdSetDepthClampEnableEXT;
+    PFN_vkCmdSetPolygonModeEXT CmdSetPolygonModeEXT;
+    PFN_vkCmdSetRasterizationSamplesEXT CmdSetRasterizationSamplesEXT;
+    PFN_vkCmdSetSampleMaskEXT CmdSetSampleMaskEXT;
+    PFN_vkCmdSetAlphaToCoverageEnableEXT CmdSetAlphaToCoverageEnableEXT;
+    PFN_vkCmdSetAlphaToOneEnableEXT CmdSetAlphaToOneEnableEXT;
+    PFN_vkCmdSetLogicOpEnableEXT CmdSetLogicOpEnableEXT;
+    PFN_vkCmdSetColorBlendEnableEXT CmdSetColorBlendEnableEXT;
+    PFN_vkCmdSetColorBlendEquationEXT CmdSetColorBlendEquationEXT;
+    PFN_vkCmdSetColorWriteMaskEXT CmdSetColorWriteMaskEXT;
+    PFN_vkCmdSetRasterizationStreamEXT CmdSetRasterizationStreamEXT;
+    PFN_vkCmdSetConservativeRasterizationModeEXT CmdSetConservativeRasterizationModeEXT;
+    PFN_vkCmdSetExtraPrimitiveOverestimationSizeEXT CmdSetExtraPrimitiveOverestimationSizeEXT;
+    PFN_vkCmdSetDepthClipEnableEXT CmdSetDepthClipEnableEXT;
+    PFN_vkCmdSetSampleLocationsEnableEXT CmdSetSampleLocationsEnableEXT;
+    PFN_vkCmdSetColorBlendAdvancedEXT CmdSetColorBlendAdvancedEXT;
+    PFN_vkCmdSetProvokingVertexModeEXT CmdSetProvokingVertexModeEXT;
+    PFN_vkCmdSetLineRasterizationModeEXT CmdSetLineRasterizationModeEXT;
+    PFN_vkCmdSetLineStippleEnableEXT CmdSetLineStippleEnableEXT;
+    PFN_vkCmdSetDepthClipNegativeOneToOneEXT CmdSetDepthClipNegativeOneToOneEXT;
+    PFN_vkCmdSetViewportWScalingEnableNV CmdSetViewportWScalingEnableNV;
+    PFN_vkCmdSetViewportSwizzleNV CmdSetViewportSwizzleNV;
+    PFN_vkCmdSetCoverageToColorEnableNV CmdSetCoverageToColorEnableNV;
+    PFN_vkCmdSetCoverageToColorLocationNV CmdSetCoverageToColorLocationNV;
+    PFN_vkCmdSetCoverageModulationModeNV CmdSetCoverageModulationModeNV;
+    PFN_vkCmdSetCoverageModulationTableEnableNV CmdSetCoverageModulationTableEnableNV;
+    PFN_vkCmdSetCoverageModulationTableNV CmdSetCoverageModulationTableNV;
+    PFN_vkCmdSetShadingRateImageEnableNV CmdSetShadingRateImageEnableNV;
+    PFN_vkCmdSetCoverageReductionModeNV CmdSetCoverageReductionModeNV;
+    PFN_vkCmdSetRepresentativeFragmentTestEnableNV CmdSetRepresentativeFragmentTestEnableNV;
         union {
         PFN_vkDestroyPrivateDataSlot DestroyPrivateDataSlot;
         PFN_vkDestroyPrivateDataSlotEXT DestroyPrivateDataSlotEXT;
@@ -1993,6 +2095,36 @@ struct vk_dispatch_table {
     };
         PFN_vkGetDescriptorSetLayoutHostMappingInfoVALVE GetDescriptorSetLayoutHostMappingInfoVALVE;
     PFN_vkGetDescriptorSetHostMappingVALVE GetDescriptorSetHostMappingVALVE;
+    PFN_vkCreateMicromapEXT CreateMicromapEXT;
+    PFN_vkCmdBuildMicromapsEXT CmdBuildMicromapsEXT;
+    PFN_vkBuildMicromapsEXT BuildMicromapsEXT;
+    PFN_vkDestroyMicromapEXT DestroyMicromapEXT;
+    PFN_vkCmdCopyMicromapEXT CmdCopyMicromapEXT;
+    PFN_vkCopyMicromapEXT CopyMicromapEXT;
+    PFN_vkCmdCopyMicromapToMemoryEXT CmdCopyMicromapToMemoryEXT;
+    PFN_vkCopyMicromapToMemoryEXT CopyMicromapToMemoryEXT;
+    PFN_vkCmdCopyMemoryToMicromapEXT CmdCopyMemoryToMicromapEXT;
+    PFN_vkCopyMemoryToMicromapEXT CopyMemoryToMicromapEXT;
+    PFN_vkCmdWriteMicromapsPropertiesEXT CmdWriteMicromapsPropertiesEXT;
+    PFN_vkWriteMicromapsPropertiesEXT WriteMicromapsPropertiesEXT;
+    PFN_vkGetDeviceMicromapCompatibilityEXT GetDeviceMicromapCompatibilityEXT;
+    PFN_vkGetMicromapBuildSizesEXT GetMicromapBuildSizesEXT;
+    PFN_vkGetShaderModuleIdentifierEXT GetShaderModuleIdentifierEXT;
+    PFN_vkGetShaderModuleCreateInfoIdentifierEXT GetShaderModuleCreateInfoIdentifierEXT;
+    PFN_vkGetImageSubresourceLayout2EXT GetImageSubresourceLayout2EXT;
+    PFN_vkGetPipelinePropertiesEXT GetPipelinePropertiesEXT;
+#ifdef VK_USE_PLATFORM_METAL_EXT
+    PFN_vkExportMetalObjectsEXT ExportMetalObjectsEXT;
+#else
+    PFN_vkVoidFunction ExportMetalObjectsEXT;
+#endif
+    PFN_vkGetFramebufferTilePropertiesQCOM GetFramebufferTilePropertiesQCOM;
+    PFN_vkGetDynamicRenderingTilePropertiesQCOM GetDynamicRenderingTilePropertiesQCOM;
+    PFN_vkCreateOpticalFlowSessionNV CreateOpticalFlowSessionNV;
+    PFN_vkDestroyOpticalFlowSessionNV DestroyOpticalFlowSessionNV;
+    PFN_vkBindOpticalFlowSessionImageNV BindOpticalFlowSessionImageNV;
+    PFN_vkCmdOpticalFlowExecuteNV CmdOpticalFlowExecuteNV;
+    PFN_vkGetDeviceFaultInfoEXT GetDeviceFaultInfoEXT;
 
         };
     };
@@ -2213,6 +2345,7 @@ struct vk_physical_device_entrypoint_table {
 # endif
     PFN_vkAcquireDrmDisplayEXT AcquireDrmDisplayEXT;
     PFN_vkGetDrmDisplayEXT GetDrmDisplayEXT;
+    PFN_vkGetPhysicalDeviceOpticalFlowImageFormatsNV GetPhysicalDeviceOpticalFlowImageFormatsNV;
 };
 
 
@@ -2560,6 +2693,9 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdDrawMeshTasksNV CmdDrawMeshTasksNV;
     PFN_vkCmdDrawMeshTasksIndirectNV CmdDrawMeshTasksIndirectNV;
     PFN_vkCmdDrawMeshTasksIndirectCountNV CmdDrawMeshTasksIndirectCountNV;
+    PFN_vkCmdDrawMeshTasksEXT CmdDrawMeshTasksEXT;
+    PFN_vkCmdDrawMeshTasksIndirectEXT CmdDrawMeshTasksIndirectEXT;
+    PFN_vkCmdDrawMeshTasksIndirectCountEXT CmdDrawMeshTasksIndirectCountEXT;
     PFN_vkCompileDeferredNV CompileDeferredNV;
     PFN_vkCreateAccelerationStructureNV CreateAccelerationStructureNV;
     PFN_vkCmdBindInvocationMaskHUAWEI CmdBindInvocationMaskHUAWEI;
@@ -2587,6 +2723,7 @@ struct vk_device_entrypoint_table {
     PFN_vkCreateRayTracingPipelinesNV CreateRayTracingPipelinesNV;
     PFN_vkCreateRayTracingPipelinesKHR CreateRayTracingPipelinesKHR;
     PFN_vkCmdTraceRaysIndirectKHR CmdTraceRaysIndirectKHR;
+    PFN_vkCmdTraceRaysIndirect2KHR CmdTraceRaysIndirect2KHR;
     PFN_vkGetDeviceAccelerationStructureCompatibilityKHR GetDeviceAccelerationStructureCompatibilityKHR;
     PFN_vkGetRayTracingShaderGroupStackSizeKHR GetRayTracingShaderGroupStackSizeKHR;
     PFN_vkCmdSetRayTracingPipelineStackSizeKHR CmdSetRayTracingPipelineStackSizeKHR;
@@ -2673,6 +2810,37 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdSetPrimitiveRestartEnable CmdSetPrimitiveRestartEnable;
     PFN_vkCmdSetPrimitiveRestartEnableEXT CmdSetPrimitiveRestartEnableEXT;
     PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
+    PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
+    PFN_vkCmdSetDepthClampEnableEXT CmdSetDepthClampEnableEXT;
+    PFN_vkCmdSetPolygonModeEXT CmdSetPolygonModeEXT;
+    PFN_vkCmdSetRasterizationSamplesEXT CmdSetRasterizationSamplesEXT;
+    PFN_vkCmdSetSampleMaskEXT CmdSetSampleMaskEXT;
+    PFN_vkCmdSetAlphaToCoverageEnableEXT CmdSetAlphaToCoverageEnableEXT;
+    PFN_vkCmdSetAlphaToOneEnableEXT CmdSetAlphaToOneEnableEXT;
+    PFN_vkCmdSetLogicOpEnableEXT CmdSetLogicOpEnableEXT;
+    PFN_vkCmdSetColorBlendEnableEXT CmdSetColorBlendEnableEXT;
+    PFN_vkCmdSetColorBlendEquationEXT CmdSetColorBlendEquationEXT;
+    PFN_vkCmdSetColorWriteMaskEXT CmdSetColorWriteMaskEXT;
+    PFN_vkCmdSetRasterizationStreamEXT CmdSetRasterizationStreamEXT;
+    PFN_vkCmdSetConservativeRasterizationModeEXT CmdSetConservativeRasterizationModeEXT;
+    PFN_vkCmdSetExtraPrimitiveOverestimationSizeEXT CmdSetExtraPrimitiveOverestimationSizeEXT;
+    PFN_vkCmdSetDepthClipEnableEXT CmdSetDepthClipEnableEXT;
+    PFN_vkCmdSetSampleLocationsEnableEXT CmdSetSampleLocationsEnableEXT;
+    PFN_vkCmdSetColorBlendAdvancedEXT CmdSetColorBlendAdvancedEXT;
+    PFN_vkCmdSetProvokingVertexModeEXT CmdSetProvokingVertexModeEXT;
+    PFN_vkCmdSetLineRasterizationModeEXT CmdSetLineRasterizationModeEXT;
+    PFN_vkCmdSetLineStippleEnableEXT CmdSetLineStippleEnableEXT;
+    PFN_vkCmdSetDepthClipNegativeOneToOneEXT CmdSetDepthClipNegativeOneToOneEXT;
+    PFN_vkCmdSetViewportWScalingEnableNV CmdSetViewportWScalingEnableNV;
+    PFN_vkCmdSetViewportSwizzleNV CmdSetViewportSwizzleNV;
+    PFN_vkCmdSetCoverageToColorEnableNV CmdSetCoverageToColorEnableNV;
+    PFN_vkCmdSetCoverageToColorLocationNV CmdSetCoverageToColorLocationNV;
+    PFN_vkCmdSetCoverageModulationModeNV CmdSetCoverageModulationModeNV;
+    PFN_vkCmdSetCoverageModulationTableEnableNV CmdSetCoverageModulationTableEnableNV;
+    PFN_vkCmdSetCoverageModulationTableNV CmdSetCoverageModulationTableNV;
+    PFN_vkCmdSetShadingRateImageEnableNV CmdSetShadingRateImageEnableNV;
+    PFN_vkCmdSetCoverageReductionModeNV CmdSetCoverageReductionModeNV;
+    PFN_vkCmdSetRepresentativeFragmentTestEnableNV CmdSetRepresentativeFragmentTestEnableNV;
     PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
     PFN_vkDestroyPrivateDataSlot DestroyPrivateDataSlot;
     PFN_vkDestroyPrivateDataSlotEXT DestroyPrivateDataSlotEXT;
@@ -2809,6 +2977,36 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdEndRenderingKHR CmdEndRenderingKHR;
     PFN_vkGetDescriptorSetLayoutHostMappingInfoVALVE GetDescriptorSetLayoutHostMappingInfoVALVE;
     PFN_vkGetDescriptorSetHostMappingVALVE GetDescriptorSetHostMappingVALVE;
+    PFN_vkCreateMicromapEXT CreateMicromapEXT;
+    PFN_vkCmdBuildMicromapsEXT CmdBuildMicromapsEXT;
+    PFN_vkBuildMicromapsEXT BuildMicromapsEXT;
+    PFN_vkDestroyMicromapEXT DestroyMicromapEXT;
+    PFN_vkCmdCopyMicromapEXT CmdCopyMicromapEXT;
+    PFN_vkCopyMicromapEXT CopyMicromapEXT;
+    PFN_vkCmdCopyMicromapToMemoryEXT CmdCopyMicromapToMemoryEXT;
+    PFN_vkCopyMicromapToMemoryEXT CopyMicromapToMemoryEXT;
+    PFN_vkCmdCopyMemoryToMicromapEXT CmdCopyMemoryToMicromapEXT;
+    PFN_vkCopyMemoryToMicromapEXT CopyMemoryToMicromapEXT;
+    PFN_vkCmdWriteMicromapsPropertiesEXT CmdWriteMicromapsPropertiesEXT;
+    PFN_vkWriteMicromapsPropertiesEXT WriteMicromapsPropertiesEXT;
+    PFN_vkGetDeviceMicromapCompatibilityEXT GetDeviceMicromapCompatibilityEXT;
+    PFN_vkGetMicromapBuildSizesEXT GetMicromapBuildSizesEXT;
+    PFN_vkGetShaderModuleIdentifierEXT GetShaderModuleIdentifierEXT;
+    PFN_vkGetShaderModuleCreateInfoIdentifierEXT GetShaderModuleCreateInfoIdentifierEXT;
+    PFN_vkGetImageSubresourceLayout2EXT GetImageSubresourceLayout2EXT;
+    PFN_vkGetPipelinePropertiesEXT GetPipelinePropertiesEXT;
+#ifdef VK_USE_PLATFORM_METAL_EXT
+    PFN_vkExportMetalObjectsEXT ExportMetalObjectsEXT;
+#else
+    PFN_vkVoidFunction ExportMetalObjectsEXT;
+# endif
+    PFN_vkGetFramebufferTilePropertiesQCOM GetFramebufferTilePropertiesQCOM;
+    PFN_vkGetDynamicRenderingTilePropertiesQCOM GetDynamicRenderingTilePropertiesQCOM;
+    PFN_vkCreateOpticalFlowSessionNV CreateOpticalFlowSessionNV;
+    PFN_vkDestroyOpticalFlowSessionNV DestroyOpticalFlowSessionNV;
+    PFN_vkBindOpticalFlowSessionImageNV BindOpticalFlowSessionImageNV;
+    PFN_vkCmdOpticalFlowExecuteNV CmdOpticalFlowExecuteNV;
+    PFN_vkGetDeviceFaultInfoEXT GetDeviceFaultInfoEXT;
 };
 
 

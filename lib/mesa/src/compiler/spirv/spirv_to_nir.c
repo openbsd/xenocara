@@ -2701,7 +2701,7 @@ vtn_handle_texture(struct vtn_builder *b, SpvOp opcode,
       return;
    } else if (opcode == SpvOpImageSparseTexelsResident) {
       nir_ssa_def *code = vtn_get_nir_ssa(b, w[3]);
-      vtn_push_nir_ssa(b, w[2], nir_is_sparse_texels_resident(&b->nb, code));
+      vtn_push_nir_ssa(b, w[2], nir_is_sparse_texels_resident(&b->nb, 1, code));
       return;
    }
 
@@ -2826,8 +2826,13 @@ vtn_handle_texture(struct vtn_builder *b, SpvOp opcode,
       break;
    case nir_texop_txf_ms_mcs_intel:
       vtn_fail("unexpected nir_texop_txf_ms_mcs");
+      break;
    case nir_texop_tex_prefetch:
       vtn_fail("unexpected nir_texop_tex_prefetch");
+      break;
+   case nir_texop_descriptor_amd:
+      vtn_fail("unexpected nir_texop_descriptor_amd");
+      break;
    }
 
    unsigned idx = 4;
@@ -2873,8 +2878,7 @@ vtn_handle_texture(struct vtn_builder *b, SpvOp opcode,
        */
       vtn_fail_if(coord->num_components < coord_components,
                   "Coordinate value passed has fewer components than sampler dimensionality.");
-      p->src = nir_src_for_ssa(nir_channels(&b->nb, coord,
-                                            (1 << coord_components) - 1));
+      p->src = nir_src_for_ssa(nir_trim_vector(&b->nb, coord, coord_components));
 
       /* OpenCL allows integer sampling coordinates */
       if (glsl_type_is_integer(coord_val->type) &&
@@ -3155,8 +3159,8 @@ vtn_handle_texture(struct vtn_builder *b, SpvOp opcode,
       struct vtn_ssa_value *dest = vtn_create_ssa_value(b, struct_type->type);
       unsigned result_size = glsl_get_vector_elements(ret_type->type);
       dest->elems[0]->def = nir_channel(&b->nb, &instr->dest.ssa, result_size);
-      dest->elems[1]->def = nir_channels(&b->nb, &instr->dest.ssa,
-                                         nir_component_mask(result_size));
+      dest->elems[1]->def = nir_trim_vector(&b->nb, &instr->dest.ssa,
+                                              result_size);
       vtn_push_ssa_value(b, w[2], dest);
    } else {
       vtn_push_nir_ssa(b, w[2], &instr->dest.ssa);
@@ -3504,11 +3508,9 @@ vtn_handle_image(struct vtn_builder *b, SpvOp opcode,
        */
       intrin->src[4] = nir_src_for_ssa(image.lod);
 
-      if (opcode == SpvOpImageWrite) {
-         nir_alu_type src_type =
-            get_image_type(b, nir_get_nir_type_for_glsl_type(value->type), operands);
-         nir_intrinsic_set_src_type(intrin, src_type);
-      }
+      nir_alu_type src_type =
+         get_image_type(b, nir_get_nir_type_for_glsl_type(value->type), operands);
+      nir_intrinsic_set_src_type(intrin, src_type);
       break;
    }
 
@@ -3562,15 +3564,23 @@ vtn_handle_image(struct vtn_builder *b, SpvOp opcode,
       if (nir_intrinsic_infos[op].dest_components == 0)
          intrin->num_components = dest_components;
 
+      unsigned bit_size = glsl_get_bit_size(type->type);
+      if (opcode == SpvOpImageQuerySize ||
+          opcode == SpvOpImageQuerySizeLod)
+         bit_size = MIN2(bit_size, 32);
+
       nir_ssa_dest_init(&intrin->instr, &intrin->dest,
                         nir_intrinsic_dest_components(intrin),
-                        glsl_get_bit_size(type->type), NULL);
+                        bit_size, NULL);
 
       nir_builder_instr_insert(&b->nb, &intrin->instr);
 
-      nir_ssa_def *result = &intrin->dest.ssa;
-      if (nir_intrinsic_dest_components(intrin) != dest_components)
-         result = nir_channels(&b->nb, result, (1 << dest_components) - 1);
+      nir_ssa_def *result = nir_trim_vector(&b->nb, &intrin->dest.ssa,
+                                              dest_components);
+
+      if (opcode == SpvOpImageQuerySize ||
+          opcode == SpvOpImageQuerySizeLod)
+         result = nir_u2u(&b->nb, result, glsl_get_bit_size(type->type));
 
       if (opcode == SpvOpImageSparseRead) {
          struct vtn_ssa_value *dest = vtn_create_ssa_value(b, struct_type->type);
@@ -3578,14 +3588,14 @@ vtn_handle_image(struct vtn_builder *b, SpvOp opcode,
          dest->elems[0]->def = nir_channel(&b->nb, result, res_type_size);
          if (intrin->dest.ssa.bit_size != 32)
             dest->elems[0]->def = nir_u2u32(&b->nb, dest->elems[0]->def);
-         dest->elems[1]->def = nir_channels(&b->nb, result,
-                                            nir_component_mask(res_type_size));
+         dest->elems[1]->def = nir_trim_vector(&b->nb, result, res_type_size);
          vtn_push_ssa_value(b, w[2], dest);
       } else {
          vtn_push_nir_ssa(b, w[2], result);
       }
 
-      if (opcode == SpvOpImageRead || opcode == SpvOpImageSparseRead) {
+      if (opcode == SpvOpImageRead || opcode == SpvOpImageSparseRead ||
+          opcode == SpvOpAtomicLoad) {
          nir_alu_type dest_type =
             get_image_type(b, nir_get_nir_type_for_glsl_type(type->type), operands);
          nir_intrinsic_set_dest_type(intrin, dest_type);
@@ -3865,19 +3875,16 @@ vtn_ssa_transpose(struct vtn_builder *b, struct vtn_ssa_value *src)
       vtn_create_ssa_value(b, glsl_transposed_type(src->type));
 
    for (unsigned i = 0; i < glsl_get_matrix_columns(dest->type); i++) {
-      nir_alu_instr *vec = create_vec(b, glsl_get_matrix_columns(src->type),
-                                         glsl_get_bit_size(src->type));
       if (glsl_type_is_vector_or_scalar(src->type)) {
-          vec->src[0].src = nir_src_for_ssa(src->def);
-          vec->src[0].swizzle[0] = i;
+         dest->elems[i]->def = nir_channel(&b->nb, src->def, i);
       } else {
-         for (unsigned j = 0; j < glsl_get_matrix_columns(src->type); j++) {
-            vec->src[j].src = nir_src_for_ssa(src->elems[j]->def);
-            vec->src[j].swizzle[0] = i;
+         unsigned cols = glsl_get_matrix_columns(src->type);
+         nir_ssa_scalar srcs[NIR_MAX_MATRIX_COLUMNS];
+         for (unsigned j = 0; j < cols; j++) {
+            srcs[j] = nir_get_ssa_scalar(src->elems[j]->def, i);
          }
+         dest->elems[i]->def = nir_vec_scalars(&b->nb, srcs, cols);
       }
-      nir_builder_instr_insert(&b->nb, &vec->instr);
-      dest->elems[i]->def = &vec->dest.dest.ssa;
    }
 
    dest->transposed = src;
@@ -3894,6 +3901,11 @@ vtn_vector_shuffle(struct vtn_builder *b, unsigned num_components,
 
    for (unsigned i = 0; i < num_components; i++) {
       uint32_t index = indices[i];
+      unsigned total_components = src0->num_components + src1->num_components;
+      vtn_fail_if(index != 0xffffffff && index >= total_components,
+                  "OpVectorShuffle: All Component literals must either be "
+                  "FFFFFFFF or in [0, N - 1] (inclusive)");
+
       if (index == 0xffffffff) {
          vec->src[i].src =
             nir_src_for_ssa(nir_ssa_undef(&b->nb, 1, src0->bit_size));
@@ -4070,8 +4082,10 @@ vtn_handle_composite(struct vtn_builder *b, SpvOp opcode,
       assume(elems >= 1);
       if (glsl_type_is_vector_or_scalar(type->type)) {
          nir_ssa_def *srcs[NIR_MAX_VEC_COMPONENTS];
-         for (unsigned i = 0; i < elems; i++)
+         for (unsigned i = 0; i < elems; i++) {
             srcs[i] = vtn_get_nir_ssa(b, w[3 + i]);
+            vtn_assert(glsl_get_bit_size(type->type) == srcs[i]->bit_size);
+         }
          ssa->def =
             vtn_vector_construct(b, glsl_get_vector_elements(type->type),
                                  elems, srcs);
@@ -4374,8 +4388,10 @@ stage_for_execution_model(struct vtn_builder *b, SpvExecutionModel model)
    case SpvExecutionModelCallableKHR:
        return MESA_SHADER_CALLABLE;
    case SpvExecutionModelTaskNV:
+   case SpvExecutionModelTaskEXT:
       return MESA_SHADER_TASK;
    case SpvExecutionModelMeshNV:
+   case SpvExecutionModelMeshEXT:
       return MESA_SHADER_MESH;
    default:
       vtn_fail("Unsupported execution model: %s (%u)",
@@ -4442,9 +4458,18 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
       break;
    }
 
+   case SpvOpExtension: {
+      /* Implementing both NV_mesh_shader and EXT_mesh_shader
+       * is difficult without knowing which we're dealing with.
+       * TODO: remove this when we stop supporting NV_mesh_shader.
+       */
+      const char *ext_name = (const char *)&w[1];
+      if (strcmp(ext_name, "SPV_NV_mesh_shader") == 0)
+         b->shader->info.mesh.nv = true;
+      break;
+   }
    case SpvOpSourceExtension:
    case SpvOpSourceContinued:
-   case SpvOpExtension:
    case SpvOpModuleProcessed:
       /* Unhandled, but these are for debug so that's ok. */
       break;
@@ -4490,7 +4515,6 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
             vtn_warn("Unsupported SPIR-V capability: %s",
                      spirv_capability_to_string(cap));
          spv_check_supported(linkage, cap);
-         vtn_warn("The SPIR-V Linkage capability is not fully supported");
          break;
 
       case SpvCapabilitySparseResidency:
@@ -4778,6 +4802,10 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
          spv_check_supported(intel_subgroup_buffer_block_io, cap);
          break;
 
+      case SpvCapabilityRayCullMaskKHR:
+         spv_check_supported(ray_cull_mask, cap);
+         break;
+
       case SpvCapabilityRayTracingKHR:
          spv_check_supported(ray_tracing, cap);
          break;
@@ -4822,6 +4850,10 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
 
       case SpvCapabilityAtomicFloat64MinMaxEXT:
          spv_check_supported(float64_atomic_min_max, cap);
+         break;
+
+      case SpvCapabilityMeshShadingEXT:
+         spv_check_supported(mesh_shading, cap);
          break;
 
       case SpvCapabilityMeshShadingNV:
@@ -5248,7 +5280,8 @@ vtn_handle_execution_mode(struct vtn_builder *b, struct vtn_value *entry_point,
 
    case SpvExecutionModeSubgroupSize:
       vtn_assert(b->shader->info.stage == MESA_SHADER_KERNEL);
-      b->shader->info.cs.subgroup_size = mode->operands[0];
+      vtn_assert(b->shader->info.subgroup_size == SUBGROUP_SIZE_VARYING);
+      b->shader->info.subgroup_size = mode->operands[0];
       break;
 
    case SpvExecutionModeSubgroupUniformControlFlowKHR:
@@ -6260,11 +6293,23 @@ vtn_handle_body_instruction(struct vtn_builder *b, SpvOp opcode,
       vtn_handle_write_packed_primitive_indices(b, opcode, w, count);
       break;
 
+   case SpvOpSetMeshOutputsEXT:
+      nir_set_vertex_and_primitive_count(
+         &b->nb, vtn_get_nir_ssa(b, w[1]), vtn_get_nir_ssa(b, w[2]));
+      break;
+
    default:
       vtn_fail_with_opcode("Unhandled opcode", opcode);
    }
 
    return true;
+}
+
+static bool
+is_glslang(const struct vtn_builder *b)
+{
+   return b->generator_id == vtn_generator_glslang_reference_front_end ||
+          b->generator_id == vtn_generator_shaderc_over_glslang;
 }
 
 struct vtn_builder*
@@ -6314,9 +6359,7 @@ vtn_create_builder(const uint32_t *words, size_t word_count,
     * commands.  Prior to that, we need to fix them up ourselves.  This
     * GLSLang fix caused them to bump to generator version 3.
     */
-   b->wa_glslang_cs_barrier =
-      (b->generator_id == vtn_generator_glslang_reference_front_end &&
-       generator_version < 3);
+   b->wa_glslang_cs_barrier = is_glslang(b) && generator_version < 3;
 
    /* Identifying the LLVM-SPIRV translator:
     *
@@ -6340,6 +6383,19 @@ vtn_create_builder(const uint32_t *words, size_t word_count,
     */
    b->wa_llvm_spirv_ignore_workgroup_initializer =
       b->options->environment == NIR_SPIRV_OPENCL && is_llvm_spirv_translator;
+
+   /* Older versions of GLSLang would incorrectly emit OpReturn after
+    * OpEmitMeshTasksEXT. This is incorrect since the latter is already
+    * a terminator instruction.
+    *
+    * See https://github.com/KhronosGroup/glslang/issues/3020 for details.
+    *
+    * Clay Shader Compiler (used by GravityMark) is also affected.
+    */
+   b->wa_ignore_return_after_emit_mesh_tasks =
+      (is_glslang(b) && generator_version < 11) ||
+      (b->generator_id == vtn_generator_clay_shader_compiler &&
+       generator_version < 18);
 
    /* words[2] == generator magic */
    unsigned value_id_bound = words[3];
@@ -6468,6 +6524,7 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
    words+= 5;
 
    b->shader = nir_shader_create(b, stage, nir_options, NULL);
+   b->shader->info.subgroup_size = options->subgroup_size;
    b->shader->info.float_controls_execution_mode = options->float_controls_execution_mode;
 
    /* Handle all the preamble instructions */
@@ -6481,11 +6538,9 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
     *
     * Related glslang issue: https://github.com/KhronosGroup/glslang/issues/2416
     */
-   bool glslang = b->generator_id == vtn_generator_glslang_reference_front_end ||
-                  b->generator_id == vtn_generator_shaderc_over_glslang;
    bool dxsc = b->generator_id == vtn_generator_spiregg;
    b->convert_discard_to_demote = ((dxsc && !b->uses_demote_to_helper_invocation) ||
-                                   (glslang && b->source_lang == SpvSourceLanguageHLSL)) &&
+                                   (is_glslang(b) && b->source_lang == SpvSourceLanguageHLSL)) &&
                                   options->caps.demote_to_helper_invocation;
 
    if (!options->create_library && b->entry_point == NULL) {
@@ -6633,6 +6688,47 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
          size = MAX2(size, glsl_get_explicit_size(var->type, align_to_stride));
       }
       b->shader->info.shared_size = size;
+   }
+
+   if (stage == MESA_SHADER_FRAGMENT) {
+      /* From the Vulkan 1.2.199 spec:
+       *
+       *    "If a fragment shader entry point’s interface includes an input
+       *    variable decorated with SamplePosition, Sample Shading is
+       *    considered enabled with a minSampleShading value of 1.0."
+       *
+       * Similar text exists for SampleId.  Regarding the Sample decoration,
+       * the Vulkan 1.2.199 spec says:
+       *
+       *    "If a fragment shader input is decorated with Sample, a separate
+       *    value must be assigned to that variable for each covered sample in
+       *    the fragment, and that value must be sampled at the location of
+       *    the individual sample. When rasterizationSamples is
+       *    VK_SAMPLE_COUNT_1_BIT, the fragment center must be used for
+       *    Centroid, Sample, and undecorated attribute interpolation."
+       *
+       * Unfortunately, this isn't quite as clear about static use and the
+       * interface but the static use check should be valid.
+       *
+       * For OpenGL, similar language exists but it's all more wishy-washy.
+       * We'll assume the same behavior across APIs.
+       */
+      nir_foreach_variable_with_modes(var, b->shader,
+                                      nir_var_shader_in |
+                                      nir_var_system_value) {
+         struct nir_variable_data *members =
+            var->members ? var->members : &var->data;
+         uint16_t num_members = var->members ? var->num_members : 1;
+         for (uint16_t i = 0; i < num_members; i++) {
+            if (members[i].mode == nir_var_system_value &&
+                (members[i].location == SYSTEM_VALUE_SAMPLE_ID ||
+                 members[i].location == SYSTEM_VALUE_SAMPLE_POS))
+               b->shader->info.fs.uses_sample_shading = true;
+
+            if (members[i].mode == nir_var_shader_in && members[i].sample)
+               b->shader->info.fs.uses_sample_shading = true;
+         }
+      }
    }
 
    /* Unparent the shader from the vtn_builder before we delete the builder */

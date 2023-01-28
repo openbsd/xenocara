@@ -53,7 +53,7 @@ _vbo_attribute_alias_map[VP_MODE_MAX][VERT_ATTRIB_MAX] = {
       VBO_ATTRIB_GENERIC0,            /* VERT_ATTRIB_GENERIC0 */
       VBO_ATTRIB_GENERIC1,            /* VERT_ATTRIB_GENERIC1 */
       VBO_ATTRIB_GENERIC2,            /* VERT_ATTRIB_GENERIC2 */
-      VBO_ATTRIB_GENERIC3,            /* VERT_ATTRIB_GENERIC3 */
+      VBO_ATTRIB_SELECT_RESULT_OFFSET,/* VERT_ATTRIB_GENERIC3 */
       VBO_ATTRIB_MAT_FRONT_AMBIENT,   /* VERT_ATTRIB_GENERIC4 */
       VBO_ATTRIB_MAT_BACK_AMBIENT,    /* VERT_ATTRIB_GENERIC5 */
       VBO_ATTRIB_MAT_FRONT_DIFFUSE,   /* VERT_ATTRIB_GENERIC6 */
@@ -204,7 +204,7 @@ vbo_merge_draws(struct gl_context *ctx, bool in_dlist,
       if (begin1 == 1 && (in_dlist || ctx->Line.StippleFlag))
          return false;
 
-      /* _mesa_prim::end is irrelevant at this point and is only used
+      /* end is irrelevant at this point and is only used
        * before this function is called.
        */
    }

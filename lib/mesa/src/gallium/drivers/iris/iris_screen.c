@@ -37,7 +37,7 @@
 #include "pipe/p_state.h"
 #include "pipe/p_context.h"
 #include "pipe/p_screen.h"
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/os_file.h"
 #include "util/u_cpu_detect.h"
 #include "util/u_inlines.h"
@@ -115,7 +115,7 @@ iris_enable_clover()
 {
    static int enable = -1;
    if (enable < 0)
-      enable = env_var_as_boolean("IRIS_ENABLE_CLOVER", false);
+      enable = debug_get_bool_option("IRIS_ENABLE_CLOVER", false);
    return enable;
 }
 
@@ -148,13 +148,10 @@ iris_get_video_memory(struct iris_screen *screen)
 {
    uint64_t vram = iris_bufmgr_vram_size(screen->bufmgr);
    uint64_t sram = iris_bufmgr_sram_size(screen->bufmgr);
-   uint64_t osmem;
    if (vram) {
       return vram / (1024 * 1024);
    } else if (sram) {
       return sram / (1024 * 1024);
-   } else if (os_get_available_system_memory(&osmem)) {
-      return osmem / (1024 * 1024);
    } else {
       /* This is the old code path, it get the GGTT size from the kernel
        * (which should always be 4Gb on Gfx8+).
@@ -195,7 +192,6 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    switch (param) {
    case PIPE_CAP_NPOT_TEXTURES:
    case PIPE_CAP_ANISOTROPIC_FILTER:
-   case PIPE_CAP_POINT_SPRITE:
    case PIPE_CAP_OCCLUSION_QUERY:
    case PIPE_CAP_QUERY_TIME_ELAPSED:
    case PIPE_CAP_TEXTURE_SWIZZLE:
@@ -203,7 +199,6 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_BLEND_EQUATION_SEPARATE:
    case PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD:
    case PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES:
-   case PIPE_CAP_VERTEX_SHADER_SATURATE:
    case PIPE_CAP_PRIMITIVE_RESTART:
    case PIPE_CAP_PRIMITIVE_RESTART_FIXED_INDEX:
    case PIPE_CAP_INDEP_BLEND_ENABLE:
@@ -214,7 +209,6 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_DEPTH_CLIP_DISABLE:
    case PIPE_CAP_VS_INSTANCEID:
    case PIPE_CAP_VERTEX_ELEMENT_INSTANCE_DIVISOR:
-   case PIPE_CAP_MIXED_COLORBUFFER_FORMATS:
    case PIPE_CAP_SEAMLESS_CUBE_MAP:
    case PIPE_CAP_SEAMLESS_CUBE_MAP_PER_TEXTURE:
    case PIPE_CAP_CONDITIONAL_RENDER:
@@ -228,7 +222,6 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_CUBE_MAP_ARRAY:
    case PIPE_CAP_TEXTURE_BUFFER_OBJECTS:
    case PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE:
-   case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
    case PIPE_CAP_TEXTURE_QUERY_LOD:
    case PIPE_CAP_SAMPLE_SHADING:
    case PIPE_CAP_FORCE_PERSAMPLE_INTERP:
@@ -241,7 +234,6 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_FS_FINE_DERIVATIVE:
    case PIPE_CAP_SHADER_PACK_HALF_FLOAT:
    case PIPE_CAP_ACCELERATED:
-   case PIPE_CAP_UMA:
    case PIPE_CAP_CONDITIONAL_RENDER_INVERTED:
    case PIPE_CAP_CLIP_HALFZ:
    case PIPE_CAP_TGSI_TEXCOORD:
@@ -282,7 +274,6 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_COMPUTE_SHADER_DERIVATIVES:
    case PIPE_CAP_INVALIDATE_BUFFER:
    case PIPE_CAP_SURFACE_REINTERPRET_BLOCKS:
-   case PIPE_CAP_CS_DERIVED_SYSTEM_VALUES_SUPPORTED:
    case PIPE_CAP_TEXTURE_SHADOW_LOD:
    case PIPE_CAP_SHADER_SAMPLES_IDENTICAL:
    case PIPE_CAP_GL_SPIRV:
@@ -293,7 +284,10 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
    case PIPE_CAP_FENCE_SIGNAL:
    case PIPE_CAP_IMAGE_STORE_FORMATTED:
+   case PIPE_CAP_LEGACY_MATH_RULES:
       return true;
+   case PIPE_CAP_UMA:
+      return iris_bufmgr_vram_size(screen->bufmgr) == 0;
    case PIPE_CAP_PREFER_BACK_BUFFER_REUSE:
       return false;
    case PIPE_CAP_FBFETCH:
@@ -336,13 +330,13 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return IRIS_MAP_BUFFER_ALIGNMENT;
    case PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT:
       return 4;
-   case PIPE_CAP_MAX_SHADER_BUFFER_SIZE:
+   case PIPE_CAP_MAX_SHADER_BUFFER_SIZE_UINT:
       return 1 << 27;
    case PIPE_CAP_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
       return 16; // XXX: u_screen says 256 is the minimum value...
    case PIPE_CAP_TEXTURE_TRANSFER_MODES:
       return PIPE_TEXTURE_TRANSFER_BLIT;
-   case PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE:
+   case PIPE_CAP_MAX_TEXEL_BUFFER_ELEMENTS_UINT:
       return IRIS_MAX_TEXTURE_BUFFER_SIZE;
    case PIPE_CAP_MAX_VIEWPORTS:
       return 16;
@@ -363,12 +357,17 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_VENDOR_ID:
       return 0x8086;
    case PIPE_CAP_DEVICE_ID:
-      return screen->pci_id;
+      return screen->devinfo.pci_device_id;
    case PIPE_CAP_VIDEO_MEMORY:
       return iris_get_video_memory(screen);
    case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
    case PIPE_CAP_MAX_VARYINGS:
       return 32;
+   case PIPE_CAP_PREFER_IMM_ARRAYS_AS_CONSTBUF:
+      /* We want immediate arrays to go get uploaded as nir->constant_data by
+       * nir_opt_large_constants() instead.
+       */
+      return 0;
    case PIPE_CAP_RESOURCE_FROM_USER_MEMORY:
       /* AMD_pinned_memory assumes the flexibility of using client memory
        * for any buffer (incl. vertex buffers) which rules out the prospect
@@ -409,6 +408,12 @@ iris_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
        * separately.
        */
       return devinfo->ver >= 11;
+
+   case PIPE_CAP_QUERY_TIMESTAMP_BITS:
+      return TIMESTAMP_BITS;
+
+   case PIPE_CAP_DEVICE_PROTECTED_CONTEXT:
+      return screen->kernel_features & KERNEL_HAS_PROTECTED_CONTEXT;
 
    default:
       return u_pipe_screen_get_param_defaults(pscreen, param);
@@ -474,13 +479,13 @@ iris_get_shader_param(struct pipe_screen *pscreen,
       return stage == MESA_SHADER_VERTEX ? 16 : 32;
    case PIPE_SHADER_CAP_MAX_OUTPUTS:
       return 32;
-   case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
+   case PIPE_SHADER_CAP_MAX_CONST_BUFFER0_SIZE:
       return 16 * 1024 * sizeof(float);
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
       return 16;
    case PIPE_SHADER_CAP_MAX_TEMPS:
       return 256; /* GL_MAX_PROGRAM_TEMPORARIES_ARB */
-   case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
+   case PIPE_SHADER_CAP_CONT_SUPPORTED:
       return 0;
    case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
    case PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR:
@@ -503,9 +508,11 @@ iris_get_shader_param(struct pipe_screen *pscreen,
    case PIPE_SHADER_CAP_GLSL_16BIT_CONSTS:
       return 0;
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
+      return IRIS_MAX_SAMPLERS;
    case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
+      return IRIS_MAX_TEXTURES;
    case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
-      return IRIS_MAX_TEXTURE_SAMPLERS;
+      return IRIS_MAX_IMAGES;
    case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
       return IRIS_MAX_ABOS + IRIS_MAX_SSBOS;
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
@@ -519,16 +526,12 @@ iris_get_shader_param(struct pipe_screen *pscreen,
          irs |= 1 << PIPE_SHADER_IR_NIR_SERIALIZED;
       return irs;
    }
-   case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_LDEXP_SUPPORTED:
+   case PIPE_SHADER_CAP_DROUND_SUPPORTED:
+   case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
       return 1;
-   case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
-   case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
-   case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
+   case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
    case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
-   case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
       return 0;
    default:
       unreachable("unknown shader param");
@@ -620,10 +623,11 @@ static uint64_t
 iris_get_timestamp(struct pipe_screen *pscreen)
 {
    struct iris_screen *screen = (struct iris_screen *) pscreen;
-   const unsigned TIMESTAMP = 0x2358;
    uint64_t result;
 
-   iris_reg_read(screen->bufmgr, TIMESTAMP | 1, &result);
+   if (!intel_gem_read_render_timestamp(iris_bufmgr_get_fd(screen->bufmgr),
+                                        &result))
+      return 0;
 
    result = intel_device_info_timebase_scale(&screen->devinfo, result);
    result &= (1ull << TIMESTAMP_BITS) - 1;
@@ -750,6 +754,8 @@ iris_detect_kernel_features(struct iris_screen *screen)
    /* Kernel 5.2+ */
    if (intel_gem_supports_syncobj_wait(screen->fd))
       screen->kernel_features |= KERNEL_HAS_WAIT_FOR_SUBMIT;
+   if (intel_gem_supports_protected_context(screen->fd))
+      screen->kernel_features |= KERNEL_HAS_PROTECTED_CONTEXT;
 }
 
 static bool
@@ -785,7 +791,6 @@ iris_screen_create(int fd, const struct pipe_screen_config *config)
 
    if (!intel_get_device_info_from_fd(fd, &screen->devinfo))
       return NULL;
-   screen->pci_id = screen->devinfo.pci_device_id;
 
    p_atomic_set(&screen->refcount, 1);
 
@@ -802,7 +807,8 @@ iris_screen_create(int fd, const struct pipe_screen_config *config)
     * Checking the last feature availability will include all previous ones.
     */
    if (iris_getparam_integer(fd, I915_PARAM_HAS_CONTEXT_ISOLATION) <= 0) {
-      debug_error("Kernel is too old for Iris. Consider upgrading to kernel v4.16.\n");
+      debug_error("Kernel is too old (4.16+ required) or unusable for Iris.\n"
+                  "Check your dmesg logs for loading failures.\n");
       return NULL;
    }
 
@@ -831,7 +837,7 @@ iris_screen_create(int fd, const struct pipe_screen_config *config)
    screen->id = iris_bufmgr_create_screen_id(screen->bufmgr);
 
    screen->workaround_bo =
-      iris_bo_alloc(screen->bufmgr, "workaround", 4096, 1,
+      iris_bo_alloc(screen->bufmgr, "workaround", 4096, 4096,
                     IRIS_MEMZONE_OTHER, BO_ALLOC_NO_SUBALLOC);
    if (!screen->workaround_bo)
       return NULL;
@@ -847,8 +853,12 @@ iris_screen_create(int fd, const struct pipe_screen_config *config)
       driQueryOptionb(config->options, "always_flush_cache");
    screen->driconf.sync_compile =
       driQueryOptionb(config->options, "sync_compile");
+   screen->driconf.limit_trig_input_range =
+      driQueryOptionb(config->options, "limit_trig_input_range");
+   screen->driconf.lower_depth_range_rate =
+      driQueryOptionf(config->options, "lower_depth_range_rate");
 
-   screen->precompile = env_var_as_boolean("shader_precompile", true);
+   screen->precompile = debug_get_bool_option("shader_precompile", true);
 
    isl_device_init(&screen->isl_dev, &screen->devinfo);
 

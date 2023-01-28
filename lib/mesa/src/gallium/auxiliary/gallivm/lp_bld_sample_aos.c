@@ -1107,7 +1107,6 @@ lp_build_sample_mipmap(struct lp_build_sample_context *bld,
  */
 void
 lp_build_sample_aos(struct lp_build_sample_context *bld,
-                    unsigned sampler_unit,
                     LLVMValueRef s,
                     LLVMValueRef t,
                     LLVMValueRef r,
@@ -1191,7 +1190,7 @@ lp_build_sample_aos(struct lp_build_sample_context *bld,
       lp_build_endif(&if_ctx);
    }
 
-   packed = LLVMBuildLoad(builder, packed_var, "");
+   packed = LLVMBuildLoad2(builder, u8n_bld.vec_type, packed_var, "");
 
    /*
     * Convert to SoA and swizzle.

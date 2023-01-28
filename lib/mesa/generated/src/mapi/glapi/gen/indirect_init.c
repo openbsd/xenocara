@@ -991,9 +991,9 @@ struct _glapi_table * __glXNewIndirectAPI( void )
 
     /* 148. GL_EXT_multi_draw_arrays */
 
-    o = _glapi_get_proc_offset("glMultiDrawElementsEXT");
+    o = _glapi_get_proc_offset("glMultiDrawElements");
     assert(o > 0);
-    table[o] = (_glapi_proc) __indirect_glMultiDrawElementsEXT;
+    table[o] = (_glapi_proc) __indirect_glMultiDrawElements;
 
     /* 149. GL_EXT_fog_coord */
 

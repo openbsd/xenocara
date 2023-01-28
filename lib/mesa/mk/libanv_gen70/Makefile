@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/01/28 08:56:34 jsg Exp $
 
 GEN=	70
 LIB=	anv_gen${GEN}
@@ -18,7 +18,7 @@ SRCS+=	gfx7_cmd_buffer.c
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} ${C_SSE2_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
-		-I${MESA_SRC}/src/intel/vulkan \
+		-I${MESA_SRC}/src/intel/vulkan_hasvk \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
@@ -30,7 +30,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
 		-I${MESA_SRC}/generated/src/intel/ds \
-		-I${MESA_SRC}/generated/src/intel/vulkan \
+		-I${MESA_SRC}/generated/src/intel/vulkan_hasvk \
 		-I${MESA_SRC}/generated/src/util \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
@@ -48,5 +48,5 @@ obj: _xenocara_obj
 .include <bsd.lib.mk>
 .include <bsd.xorg.mk>
 
-.PATH: ${MESA_SRC}/src/intel/vulkan
-.PATH: ${MESA_SRC}/generated/src/intel/vulkan
+.PATH: ${MESA_SRC}/src/intel/vulkan_hasvk
+.PATH: ${MESA_SRC}/generated/src/intel/vulkan_hasvk

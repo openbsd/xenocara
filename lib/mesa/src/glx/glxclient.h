@@ -244,6 +244,9 @@ struct glx_context_vtable {
    int (*interop_export_object)(struct glx_context *ctx,
                                 struct mesa_glinterop_export_in *in,
                                 struct mesa_glinterop_export_out *out);
+   int (*interop_flush_objects)(struct glx_context *ctx,
+                                unsigned count, struct mesa_glinterop_export_in *objects,
+                                GLsync *sync);
 };
 
 /**
@@ -343,9 +346,8 @@ struct glx_context
      */
    Bool isDirect;
 
-#if defined(GLX_DIRECT_RENDERING) && defined(GLX_USE_APPLEGL)
+   /* Backend private state for the context */
    void *driContext;
-#endif
 
     /**
      * \c dpy of current display for this context.  Will be \c NULL if not
@@ -423,11 +425,6 @@ struct glx_context
    int server_major;        /**< Major version number. */
    int server_minor;        /**< Minor version number. */
    /*@} */
-
-   /**
-    * Number of threads we're currently current in.
-    */
-   unsigned long thread_refcount;
 
    /**
     * GLX_ARB_create_context_no_error setting for this context.
@@ -655,17 +652,9 @@ extern int __glXDebug;
 
 extern void __glXSetCurrentContext(struct glx_context * c);
 
-# if defined( USE_ELF_TLS )
-
 extern __THREAD_INITIAL_EXEC void *__glX_tls_Context;
 
 #  define __glXGetCurrentContext() __glX_tls_Context
-
-# else
-
-extern struct glx_context *__glXGetCurrentContext(void);
-
-# endif /* defined( USE_ELF_TLS ) */
 
 extern void __glXSetCurrentContextNull(void);
 

@@ -680,7 +680,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "b2b1",
@@ -1235,7 +1235,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "b8all_fequal16",
@@ -1610,7 +1610,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "ball_fequal16",
@@ -1985,7 +1985,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "bfi",
@@ -2768,15 +2768,15 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
       0
 },
 {
-   .name = "fcos_r600",
+   .name = "fcos_amd",
    .num_inputs = 1,
    .output_size = 0,
-   .output_type = nir_type_float32,
+   .output_type = nir_type_float,
    .input_sizes = {
       0
    },
    .input_types = {
-      nir_type_float32
+      nir_type_float
    },
    .is_conversion = false,
    .algebraic_properties =
@@ -2795,7 +2795,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "fcsel_ge",
@@ -2810,7 +2810,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "fcsel_gt",
@@ -2825,7 +2825,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "fddx",
@@ -3863,15 +3863,15 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
       0
 },
 {
-   .name = "fsin_r600",
+   .name = "fsin_amd",
    .num_inputs = 1,
    .output_size = 0,
-   .output_type = nir_type_float32,
+   .output_type = nir_type_float,
    .input_sizes = {
       0
    },
    .input_types = {
-      nir_type_float32
+      nir_type_float
    },
    .is_conversion = false,
    .algebraic_properties =
@@ -4190,7 +4190,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "i32csel_gt",
@@ -4205,7 +4205,7 @@ const nir_op_info nir_op_infos[nir_num_opcodes] = {
    },
    .is_conversion = false,
    .algebraic_properties =
-      0
+      NIR_OP_IS_SELECTION
 },
 {
    .name = "iabs",

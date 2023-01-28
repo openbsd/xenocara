@@ -22,6 +22,7 @@
  */
 
 #include "vk_common_entrypoints.h"
+#include "wsi_common_entrypoints.h"
 #include "radv_private.h"
 #include "radv_shader.h"
 
@@ -33,12 +34,11 @@ radv_write_begin_general_api_marker(struct radv_cmd_buffer *cmd_buffer,
                                     enum rgp_sqtt_marker_general_api_type api_type)
 {
    struct rgp_sqtt_marker_general_api marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    marker.identifier = RGP_SQTT_MARKER_IDENTIFIER_GENERAL_API;
    marker.api_type = api_type;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 static void
@@ -46,13 +46,12 @@ radv_write_end_general_api_marker(struct radv_cmd_buffer *cmd_buffer,
                                   enum rgp_sqtt_marker_general_api_type api_type)
 {
    struct rgp_sqtt_marker_general_api marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    marker.identifier = RGP_SQTT_MARKER_IDENTIFIER_GENERAL_API;
    marker.api_type = api_type;
    marker.is_end = 1;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 static void
@@ -61,7 +60,6 @@ radv_write_event_marker(struct radv_cmd_buffer *cmd_buffer,
                         uint32_t instance_offset_user_data, uint32_t draw_index_user_data)
 {
    struct rgp_sqtt_marker_event marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    marker.identifier = RGP_SQTT_MARKER_IDENTIFIER_EVENT;
    marker.api_type = api_type;
@@ -80,7 +78,7 @@ radv_write_event_marker(struct radv_cmd_buffer *cmd_buffer,
    marker.instance_offset_reg_idx = instance_offset_user_data;
    marker.draw_index_reg_idx = draw_index_user_data;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 static void
@@ -89,7 +87,6 @@ radv_write_event_with_dims_marker(struct radv_cmd_buffer *cmd_buffer,
                                   uint32_t z)
 {
    struct rgp_sqtt_marker_event_with_dims marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    marker.event.identifier = RGP_SQTT_MARKER_IDENTIFIER_EVENT;
    marker.event.api_type = api_type;
@@ -101,22 +98,20 @@ radv_write_event_with_dims_marker(struct radv_cmd_buffer *cmd_buffer,
    marker.thread_y = y;
    marker.thread_z = z;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 static void
 radv_write_user_event_marker(struct radv_cmd_buffer *cmd_buffer,
                              enum rgp_sqtt_marker_user_event_type type, const char *str)
 {
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
-
    if (type == UserEventPop) {
       assert(str == NULL);
       struct rgp_sqtt_marker_user_event marker = {0};
       marker.identifier = RGP_SQTT_MARKER_IDENTIFIER_USER_EVENT;
       marker.data_type = type;
 
-      radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+      radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
    } else {
       assert(str != NULL);
       unsigned len = strlen(str);
@@ -130,7 +125,7 @@ radv_write_user_event_marker(struct radv_cmd_buffer *cmd_buffer,
       memcpy(buffer, &marker, sizeof(marker));
       memcpy(buffer + sizeof(marker), str, len);
 
-      radv_emit_thread_trace_userdata(cmd_buffer->device, cs, buffer,
+      radv_emit_thread_trace_userdata(cmd_buffer, buffer,
                                       sizeof(marker) / 4 + marker.length / 4);
    }
 }
@@ -140,7 +135,6 @@ radv_describe_begin_cmd_buffer(struct radv_cmd_buffer *cmd_buffer)
 {
    uint64_t device_id = (uintptr_t)cmd_buffer->device;
    struct rgp_sqtt_marker_cb_start marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    if (likely(!cmd_buffer->device->thread_trace.bo))
       return;
@@ -155,7 +149,7 @@ radv_describe_begin_cmd_buffer(struct radv_cmd_buffer *cmd_buffer)
    if (cmd_buffer->qf == RADV_QUEUE_GENERAL)
       marker.queue_flags |= VK_QUEUE_GRAPHICS_BIT;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 void
@@ -163,7 +157,6 @@ radv_describe_end_cmd_buffer(struct radv_cmd_buffer *cmd_buffer)
 {
    uint64_t device_id = (uintptr_t)cmd_buffer->device;
    struct rgp_sqtt_marker_cb_end marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    if (likely(!cmd_buffer->device->thread_trace.bo))
       return;
@@ -173,7 +166,7 @@ radv_describe_end_cmd_buffer(struct radv_cmd_buffer *cmd_buffer)
    marker.device_id_low = device_id;
    marker.device_id_high = device_id >> 32;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 void
@@ -226,7 +219,6 @@ void
 radv_describe_barrier_end_delayed(struct radv_cmd_buffer *cmd_buffer)
 {
    struct rgp_sqtt_marker_barrier_end marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    if (likely(!cmd_buffer->device->thread_trace.bo) || !cmd_buffer->state.pending_sqtt_barrier_end)
       return;
@@ -271,7 +263,7 @@ radv_describe_barrier_end_delayed(struct radv_cmd_buffer *cmd_buffer)
    if (cmd_buffer->state.sqtt_flush_bits & RGP_FLUSH_INVAL_L1)
       marker.inval_gl1 = true;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 
    cmd_buffer->state.num_layout_transitions = 0;
 }
@@ -280,7 +272,6 @@ void
 radv_describe_barrier_start(struct radv_cmd_buffer *cmd_buffer, enum rgp_barrier_reason reason)
 {
    struct rgp_sqtt_marker_barrier_start marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    if (likely(!cmd_buffer->device->thread_trace.bo))
       return;
@@ -292,7 +283,7 @@ radv_describe_barrier_start(struct radv_cmd_buffer *cmd_buffer, enum rgp_barrier
    marker.cb_id = 0;
    marker.dword02 = reason;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 void
@@ -306,7 +297,6 @@ radv_describe_layout_transition(struct radv_cmd_buffer *cmd_buffer,
                                 const struct radv_barrier_data *barrier)
 {
    struct rgp_sqtt_marker_layout_transition marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    if (likely(!cmd_buffer->device->thread_trace.bo))
       return;
@@ -321,7 +311,7 @@ radv_describe_layout_transition(struct radv_cmd_buffer *cmd_buffer,
    marker.fmask_color_expand = barrier->layout_transitions.fmask_color_expand;
    marker.init_mask_ram = barrier->layout_transitions.init_mask_ram;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 
    cmd_buffer->state.num_layout_transitions++;
 }
@@ -331,7 +321,6 @@ radv_describe_pipeline_bind(struct radv_cmd_buffer *cmd_buffer,
                             VkPipelineBindPoint pipelineBindPoint, struct radv_pipeline *pipeline)
 {
    struct rgp_sqtt_marker_pipeline_bind marker = {0};
-   struct radeon_cmdbuf *cs = cmd_buffer->cs;
 
    if (likely(!cmd_buffer->device->thread_trace.bo))
       return;
@@ -342,7 +331,7 @@ radv_describe_pipeline_bind(struct radv_cmd_buffer *cmd_buffer,
    marker.api_pso_hash[0] = pipeline->pipeline_hash;
    marker.api_pso_hash[1] = pipeline->pipeline_hash >> 32;
 
-   radv_emit_thread_trace_userdata(cmd_buffer->device, cs, &marker, sizeof(marker) / 4);
+   radv_emit_thread_trace_userdata(cmd_buffer, &marker, sizeof(marker) / 4);
 }
 
 /* TODO: Improve the way to trigger capture (overlay, etc). */
@@ -359,6 +348,10 @@ radv_handle_thread_trace(VkQueue _queue)
 
       radv_end_thread_trace(queue);
       thread_trace_enabled = false;
+
+      if (!radv_device_set_pstate(queue->device, false)) {
+         fprintf(stderr, "radv: Failed to restore previous pstate, ignoring.\n");
+      }
 
       /* TODO: Do something better than this whole sync. */
       queue->device->vk.dispatch_table.QueueWaitIdle(_queue);
@@ -395,7 +388,8 @@ radv_handle_thread_trace(VkQueue _queue)
 #endif
 
       if (frame_trigger || file_trigger || resize_trigger) {
-         if (ac_check_profile_state(&queue->device->physical_device->rad_info)) {
+         if (!radv_device_set_pstate(queue->device, true) ||
+             ac_check_profile_state(&queue->device->physical_device->rad_info)) {
             fprintf(stderr, "radv: Canceling RGP trace request as a hang condition has been "
                             "detected. Force the GPU into a profiling mode with e.g. "
                             "\"echo profile_peak  > "
@@ -416,7 +410,7 @@ sqtt_QueuePresentKHR(VkQueue _queue, const VkPresentInfoKHR *pPresentInfo)
 {
    VkResult result;
 
-   result = radv_QueuePresentKHR(_queue, pPresentInfo);
+   result = wsi_QueuePresentKHR(_queue, pPresentInfo);
    if (result != VK_SUCCESS)
       return result;
 
@@ -425,15 +419,19 @@ sqtt_QueuePresentKHR(VkQueue _queue, const VkPresentInfoKHR *pPresentInfo)
    return VK_SUCCESS;
 }
 
-#define EVENT_MARKER_ALIAS(cmd_name, api_name, ...)                                                \
+#define EVENT_MARKER_BASE(cmd_name, api_name, event_name, ...)                                     \
    RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);                                   \
    radv_write_begin_general_api_marker(cmd_buffer, ApiCmd##api_name);                              \
-   cmd_buffer->state.current_event_type = EventCmd##api_name;                                      \
+   cmd_buffer->state.current_event_type = EventCmd##event_name;                                    \
    radv_Cmd##cmd_name(__VA_ARGS__);                                                                \
    cmd_buffer->state.current_event_type = EventInternalUnknown;                                    \
    radv_write_end_general_api_marker(cmd_buffer, ApiCmd##api_name);
 
-#define EVENT_MARKER(cmd_name, ...) EVENT_MARKER_ALIAS(cmd_name, cmd_name, __VA_ARGS__);
+#define EVENT_MARKER_ALIAS(cmd_name, api_name, ...)                                                \
+   EVENT_MARKER_BASE(cmd_name, api_name, api_name, __VA_ARGS__);
+
+#define EVENT_MARKER(cmd_name, ...)                                                                \
+   EVENT_MARKER_ALIAS(cmd_name, cmd_name, __VA_ARGS__);
 
 VKAPI_ATTR void VKAPI_CALL
 sqtt_CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount,
@@ -607,7 +605,81 @@ sqtt_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer, VkQueryPool queryPoo
                 dstOffset, stride, flags);
 }
 
+#define EVENT_RT_MARKER(cmd_name, ...) \
+   EVENT_MARKER_BASE(cmd_name, Dispatch, cmd_name, __VA_ARGS__);
+
+#define EVENT_RT_MARKER_ALIAS(cmd_name, event_name, ...) \
+   EVENT_MARKER_BASE(cmd_name, Dispatch, event_name, __VA_ARGS__);
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdTraceRaysKHR(VkCommandBuffer commandBuffer,
+                     const VkStridedDeviceAddressRegionKHR *pRaygenShaderBindingTable,
+                     const VkStridedDeviceAddressRegionKHR *pMissShaderBindingTable,
+                     const VkStridedDeviceAddressRegionKHR *pHitShaderBindingTable,
+                     const VkStridedDeviceAddressRegionKHR *pCallableShaderBindingTable,
+                     uint32_t width, uint32_t height, uint32_t depth)
+{
+   EVENT_RT_MARKER(TraceRaysKHR, commandBuffer, pRaygenShaderBindingTable, pMissShaderBindingTable,
+                   pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdTraceRaysIndirectKHR(VkCommandBuffer commandBuffer,
+                             const VkStridedDeviceAddressRegionKHR *pRaygenShaderBindingTable,
+                             const VkStridedDeviceAddressRegionKHR *pMissShaderBindingTable,
+                             const VkStridedDeviceAddressRegionKHR *pHitShaderBindingTable,
+                             const VkStridedDeviceAddressRegionKHR *pCallableShaderBindingTable,
+                             VkDeviceAddress indirectDeviceAddress)
+{
+   EVENT_RT_MARKER(TraceRaysIndirectKHR, commandBuffer, pRaygenShaderBindingTable,
+                   pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable,
+                   indirectDeviceAddress);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdTraceRaysIndirect2KHR(VkCommandBuffer commandBuffer, VkDeviceAddress indirectDeviceAddress)
+{
+   EVENT_RT_MARKER_ALIAS(TraceRaysIndirect2KHR, TraceRaysIndirectKHR, commandBuffer,
+                         indirectDeviceAddress);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdBuildAccelerationStructuresKHR(VkCommandBuffer commandBuffer, uint32_t infoCount,
+                                       const VkAccelerationStructureBuildGeometryInfoKHR *pInfos,
+                                       const VkAccelerationStructureBuildRangeInfoKHR *const *ppBuildRangeInfos)
+{
+   EVENT_RT_MARKER(BuildAccelerationStructuresKHR, commandBuffer, infoCount, pInfos,
+                   ppBuildRangeInfos);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdCopyAccelerationStructureKHR(VkCommandBuffer commandBuffer,
+                                     const VkCopyAccelerationStructureInfoKHR *pInfo)
+{
+   EVENT_RT_MARKER(CopyAccelerationStructureKHR, commandBuffer, pInfo);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdCopyAccelerationStructureToMemoryKHR(VkCommandBuffer commandBuffer,
+                                             const VkCopyAccelerationStructureToMemoryInfoKHR *pInfo)
+{
+   EVENT_RT_MARKER(CopyAccelerationStructureToMemoryKHR, commandBuffer, pInfo);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+sqtt_CmdCopyMemoryToAccelerationStructureKHR(VkCommandBuffer commandBuffer,
+                                             const VkCopyMemoryToAccelerationStructureInfoKHR *pInfo)
+{
+   EVENT_RT_MARKER(CopyMemoryToAccelerationStructureKHR, commandBuffer, pInfo);
+}
+
+#undef EVENT_RT_MARKER_ALIAS
+#undef EVENT_RT_MARKER
+
 #undef EVENT_MARKER
+#undef EVENT_MARKER_ALIAS
+#undef EVENT_MARKER_BASE
+
 #define API_MARKER_ALIAS(cmd_name, api_name, ...)                                                  \
    RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);                                   \
    radv_write_begin_general_api_marker(cmd_buffer, ApiCmd##api_name);                              \
@@ -624,7 +696,14 @@ sqtt_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipeline
 
    API_MARKER(BindPipeline, commandBuffer, pipelineBindPoint, _pipeline);
 
-   radv_describe_pipeline_bind(cmd_buffer, pipelineBindPoint, pipeline);
+   if (pipelineBindPoint == VK_PIPELINE_BIND_POINT_RAY_TRACING_KHR) {
+      /* RGP seems to expect a compute bind point to detect and report RT pipelines, which makes
+       * sense somehow given that RT shaders are compiled to an unified compute shader.
+       */
+      radv_describe_pipeline_bind(cmd_buffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline);
+   } else {
+      radv_describe_pipeline_bind(cmd_buffer, pipelineBindPoint, pipeline);
+   }
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -642,14 +721,6 @@ sqtt_CmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDevice
                         VkIndexType indexType)
 {
    API_MARKER(BindIndexBuffer, commandBuffer, buffer, offset, indexType);
-}
-
-VKAPI_ATTR void VKAPI_CALL
-sqtt_CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t firstBinding,
-                          uint32_t bindingCount, const VkBuffer *pBuffers,
-                          const VkDeviceSize *pOffsets)
-{
-   API_MARKER(BindVertexBuffers, commandBuffer, firstBinding, bindingCount, pBuffers, pOffsets);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -691,25 +762,16 @@ sqtt_CmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout,
 }
 
 VKAPI_ATTR void VKAPI_CALL
-sqtt_CmdBeginRenderPass2(VkCommandBuffer commandBuffer,
-                         const VkRenderPassBeginInfo *pRenderPassBeginInfo,
-                         const VkSubpassBeginInfo *pSubpassBeginInfo)
+sqtt_CmdBeginRendering(VkCommandBuffer commandBuffer,
+                       const VkRenderingInfo *pRenderingInfo)
 {
-   API_MARKER_ALIAS(BeginRenderPass2, BeginRenderPass, commandBuffer, pRenderPassBeginInfo,
-                    pSubpassBeginInfo);
+   API_MARKER_ALIAS(BeginRendering, BeginRenderPass, commandBuffer, pRenderingInfo);
 }
 
 VKAPI_ATTR void VKAPI_CALL
-sqtt_CmdNextSubpass2(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo *pSubpassBeginInfo,
-                     const VkSubpassEndInfo *pSubpassEndInfo)
+sqtt_CmdEndRendering(VkCommandBuffer commandBuffer)
 {
-   API_MARKER_ALIAS(NextSubpass2, NextSubpass, commandBuffer, pSubpassBeginInfo, pSubpassEndInfo);
-}
-
-VKAPI_ATTR void VKAPI_CALL
-sqtt_CmdEndRenderPass2(VkCommandBuffer commandBuffer, const VkSubpassEndInfo *pSubpassEndInfo)
-{
-   API_MARKER_ALIAS(EndRenderPass2, EndRenderPass, commandBuffer, pSubpassEndInfo);
+   API_MARKER_ALIAS(EndRendering, EndRenderPass, commandBuffer);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -1077,6 +1139,41 @@ sqtt_CreateComputePipelines(VkDevice _device, VkPipelineCache pipelineCache, uin
 
    result = radv_CreateComputePipelines(_device, pipelineCache, count, pCreateInfos, pAllocator,
                                         pPipelines);
+   if (result != VK_SUCCESS)
+      return result;
+
+   for (unsigned i = 0; i < count; i++) {
+      RADV_FROM_HANDLE(radv_pipeline, pipeline, pPipelines[i]);
+
+      if (!pipeline)
+         continue;
+
+      result = radv_register_pipeline(device, pipeline);
+      if (result != VK_SUCCESS)
+         goto fail;
+   }
+
+   return VK_SUCCESS;
+
+fail:
+   for (unsigned i = 0; i < count; i++) {
+      sqtt_DestroyPipeline(_device, pPipelines[i], pAllocator);
+      pPipelines[i] = VK_NULL_HANDLE;
+   }
+   return result;
+}
+
+VKAPI_ATTR VkResult VKAPI_CALL
+sqtt_CreateRayTracingPipelinesKHR(VkDevice _device, VkDeferredOperationKHR deferredOperation,
+                                  VkPipelineCache pipelineCache, uint32_t count,
+                                  const VkRayTracingPipelineCreateInfoKHR *pCreateInfos,
+                                  const VkAllocationCallbacks *pAllocator, VkPipeline *pPipelines)
+{
+   RADV_FROM_HANDLE(radv_device, device, _device);
+   VkResult result;
+
+   result = radv_CreateRayTracingPipelinesKHR(_device, deferredOperation, pipelineCache, count,
+                                              pCreateInfos, pAllocator, pPipelines);
    if (result != VK_SUCCESS)
       return result;
 

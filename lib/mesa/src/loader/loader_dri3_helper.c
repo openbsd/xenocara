@@ -39,12 +39,6 @@
 #include "util/macros.h"
 #include "drm-uapi/drm_fourcc.h"
 
-/* From driconf.h, user exposed so should be stable */
-#define DRI_CONF_VBLANK_NEVER 0
-#define DRI_CONF_VBLANK_DEF_INTERVAL_0 1
-#define DRI_CONF_VBLANK_DEF_INTERVAL_1 2
-#define DRI_CONF_VBLANK_ALWAYS_SYNC 3
-
 /**
  * A cached blit context.
  */
@@ -397,8 +391,6 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
    xcb_get_geometry_cookie_t cookie;
    xcb_get_geometry_reply_t *reply;
    xcb_generic_error_t *error;
-   GLint vblank_mode = DRI_CONF_VBLANK_DEF_INTERVAL_1;
-   int swap_interval;
 
    draw->conn = conn;
    draw->ext = ext;
@@ -410,12 +402,14 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
    draw->is_different_gpu = is_different_gpu;
    draw->multiplanes_available = multiplanes_available;
    draw->prefer_back_buffer_reuse = prefer_back_buffer_reuse;
+   draw->queries_buffer_age = false;
 
    draw->have_back = 0;
    draw->have_fake_front = 0;
    draw->first_init = true;
    draw->adaptive_sync = false;
    draw->adaptive_sync_active = false;
+   draw->block_on_depleted_buffers = false;
 
    draw->cur_blit_source = -1;
    draw->back_format = __DRI_IMAGE_FORMAT_NONE;
@@ -424,32 +418,26 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
 
    if (draw->ext->config) {
       unsigned char adaptive_sync = 0;
-
-      draw->ext->config->configQueryi(draw->dri_screen,
-                                      "vblank_mode", &vblank_mode);
+      unsigned char block_on_depleted_buffers = 0;
 
       draw->ext->config->configQueryb(draw->dri_screen,
                                       "adaptive_sync",
                                       &adaptive_sync);
 
       draw->adaptive_sync = adaptive_sync;
+
+      draw->ext->config->configQueryb(draw->dri_screen,
+                                      "block_on_depleted_buffers",
+                                      &block_on_depleted_buffers);
+
+      draw->block_on_depleted_buffers = block_on_depleted_buffers;
    }
 
    if (!draw->adaptive_sync)
       set_adaptive_sync_property(conn, draw->drawable, false);
 
-   switch (vblank_mode) {
-   case DRI_CONF_VBLANK_NEVER:
-   case DRI_CONF_VBLANK_DEF_INTERVAL_0:
-      swap_interval = 0;
-      break;
-   case DRI_CONF_VBLANK_DEF_INTERVAL_1:
-   case DRI_CONF_VBLANK_ALWAYS_SYNC:
-   default:
-      swap_interval = 1;
-      break;
-   }
-   draw->swap_interval = swap_interval;
+   draw->swap_interval = dri_get_initial_swap_interval(draw->dri_screen,
+                                                       draw->ext->config);
 
    dri3_update_max_num_back(draw);
 
@@ -487,7 +475,7 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
     * Make sure server has the same swap interval we do for the new
     * drawable.
     */
-   loader_dri3_set_swap_interval(draw, swap_interval);
+   loader_dri3_set_swap_interval(draw, draw->swap_interval);
 
    return 0;
 }
@@ -996,6 +984,7 @@ loader_dri3_swap_buffers_msc(struct loader_dri3_drawable *draw,
 {
    struct loader_dri3_buffer *back;
    int64_t ret = 0;
+   bool wait_for_next_buffer = false;
 
    /* GLX spec:
     *   void glXSwapBuffers(Display *dpy, GLXDrawable draw);
@@ -1219,9 +1208,33 @@ loader_dri3_swap_buffers_msc(struct loader_dri3_drawable *draw,
    if (draw->stamp)
       ++(*draw->stamp);
 
+   /* Waiting on a buffer is only sensible if all buffers are in use and the
+    * client doesn't use the buffer age extension. In this case a client is
+    * relying on it receiving back control immediately.
+    *
+    * As waiting on a buffer can at worst make us miss a frame the option has
+    * to be enabled explicitly with the block_on_depleted_buffers DRI option.
+    */
+   wait_for_next_buffer = draw->cur_num_back == draw->max_num_back &&
+      !draw->queries_buffer_age && draw->block_on_depleted_buffers;
+
    mtx_unlock(&draw->mtx);
 
    draw->ext->flush->invalidate(draw->dri_drawable);
+
+   /* Clients that use up all available buffers usually regulate their drawing
+    * through swapchain contention backpressure. In such a scenario the client
+    * draws whenever control returns to it. Its event loop is slowed down only
+    * by us waiting on buffers becoming available again.
+    *
+    * By waiting here on a new buffer and only then returning back to the client
+    * we ensure the client begins drawing only when the next buffer is available
+    * and not draw first and then wait a refresh cycle on the next available
+    * buffer to show it. This way we can reduce the latency between what is
+    * being drawn by the client and what is shown on the screen by one frame.
+    */
+   if (wait_for_next_buffer)
+      dri3_find_back(draw, draw->prefer_back_buffer_reuse);
 
    return ret;
 }
@@ -1230,11 +1243,12 @@ int
 loader_dri3_query_buffer_age(struct loader_dri3_drawable *draw)
 {
    struct loader_dri3_buffer *back = dri3_find_back_alloc(draw);
-   int ret;
+   int ret = 0;
 
    mtx_lock(&draw->mtx);
-   ret = (!back || back->last_swap == 0) ? 0 :
-      draw->send_sbc - back->last_swap + 1;
+   draw->queries_buffer_age = true;
+   if (back && back->last_swap != 0)
+      ret = draw->send_sbc - back->last_swap + 1;
    mtx_unlock(&draw->mtx);
 
    return ret;
@@ -1260,10 +1274,8 @@ loader_dri3_open(xcb_connection_t *conn,
                           provider);
 
    reply = xcb_dri3_open_reply(conn, cookie, NULL);
-   if (!reply)
-      return -1;
 
-   if (reply->nfd != 1) {
+   if (!reply || reply->nfd != 1) {
       free(reply);
       return -1;
    }
@@ -1302,6 +1314,8 @@ dri3_cpp_for_format(uint32_t format) {
    case  __DRI_IMAGE_FORMAT_SABGR8:
    case  __DRI_IMAGE_FORMAT_SXRGB8:
       return 4;
+   case __DRI_IMAGE_FORMAT_ABGR16161616:
+   case __DRI_IMAGE_FORMAT_XBGR16161616:
    case __DRI_IMAGE_FORMAT_XBGR16161616F:
    case __DRI_IMAGE_FORMAT_ABGR16161616F:
       return 8;
@@ -1364,6 +1378,8 @@ image_format_to_fourcc(int format)
    case __DRI_IMAGE_FORMAT_ARGB2101010: return DRM_FORMAT_ARGB2101010;
    case __DRI_IMAGE_FORMAT_XBGR2101010: return DRM_FORMAT_XBGR2101010;
    case __DRI_IMAGE_FORMAT_ABGR2101010: return DRM_FORMAT_ABGR2101010;
+   case __DRI_IMAGE_FORMAT_ABGR16161616: return DRM_FORMAT_ABGR16161616;
+   case __DRI_IMAGE_FORMAT_XBGR16161616: return DRM_FORMAT_XBGR16161616;
    case __DRI_IMAGE_FORMAT_XBGR16161616F: return DRM_FORMAT_XBGR16161616F;
    case __DRI_IMAGE_FORMAT_ABGR16161616F: return DRM_FORMAT_ABGR16161616F;
    }
@@ -1495,7 +1511,6 @@ dri3_alloc_render_buffer(struct loader_dri3_drawable *draw, unsigned int format,
             count = mod_reply->num_screen_modifiers;
             modifiers = malloc(count * sizeof(uint64_t));
             if (!modifiers) {
-               free(modifiers);
                free(mod_reply);
                goto no_image;
             }

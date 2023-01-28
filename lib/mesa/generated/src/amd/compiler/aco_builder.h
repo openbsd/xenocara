@@ -83,15 +83,30 @@ aco_ptr<Instruction> create_s_mov(Definition dst, Operand src);
 
 enum sendmsg {
    sendmsg_none = 0,
-   _sendmsg_gs = 2,
-   _sendmsg_gs_done = 3,
-   sendmsg_save_wave = 4,
-   sendmsg_stall_wave_gen = 5,
-   sendmsg_halt_waves = 6,
-   sendmsg_ordered_ps_done = 7,
-   sendmsg_early_prim_dealloc = 8,
-   sendmsg_gs_alloc_req = 9,
+   _sendmsg_gs = 2, /* gfx6 to gfx10.3 */
+   _sendmsg_gs_done = 3, /* gfx6 to gfx10.3 */
+   sendmsg_hs_tessfactor = 2, /* gfx11+ */
+   sendmsg_dealloc_vgprs = 3, /* gfx11+ */
+   sendmsg_save_wave = 4, /* gfx8 to gfx10.3 */
+   sendmsg_stall_wave_gen = 5, /* gfx9+ */
+   sendmsg_halt_waves = 6, /* gfx9+ */
+   sendmsg_ordered_ps_done = 7, /* gfx9+ */
+   sendmsg_early_prim_dealloc = 8, /* gfx9 to gfx10 */
+   sendmsg_gs_alloc_req = 9, /* gfx9+ */
+   sendmsg_get_doorbell = 10, /* gfx9 to gfx10.3 */
+   sendmsg_get_ddid = 11, /* gfx10 to gfx10.3 */
    sendmsg_id_mask = 0xf,
+};
+
+/* gfx11+ */
+enum sendmsg_rtn {
+   sendmsg_rtn_get_doorbell = 0,
+   sendmsg_rtn_get_ddid = 1,
+   sendmsg_rtn_get_tma = 2,
+   sendmsg_rtn_get_realtime = 3,
+   sendmsg_rtn_save_wave = 4,
+   sendmsg_rtn_get_tba = 5,
+   sendmsg_rtn_mask = 0xff,
 };
 
 inline sendmsg
@@ -107,6 +122,15 @@ sendmsg_gs_done(bool cut, bool emit, unsigned stream)
     assert(stream < 4);
     return (sendmsg)((unsigned)_sendmsg_gs_done | (cut << 4) | (emit << 5) | (stream << 8));
 }
+
+enum bperm_swiz {
+   bperm_b1_sign = 8,
+   bperm_b3_sign = 9,
+   bperm_b5_sign = 10,
+   bperm_b7_sign = 11,
+   bperm_0 = 12,
+   bperm_255 = 13,
+};
 
 class Builder {
 public:
@@ -390,10 +414,10 @@ public:
    Result v_mul_imm(Definition dst, Temp tmp, uint32_t imm, bool bits24=false)
    {
       assert(tmp.type() == RegType::vgpr);
-      bool has_lshl_add = program->chip_class >= GFX9;
+      bool has_lshl_add = program->gfx_level >= GFX9;
       /* v_mul_lo_u32 has 1.6x the latency of most VALU on GFX10 (8 vs 5 cycles),
        * compared to 4x the latency on <GFX10. */
-      unsigned mul_cost = program->chip_class >= GFX10 ? 1 : (4 + Operand::c32(imm).isLiteral());
+      unsigned mul_cost = program->gfx_level >= GFX10 ? 1 : (4 + Operand::c32(imm).isLiteral());
       if (imm == 0) {
          return copy(dst, Operand::zero());
       } else if (imm == 1) {
@@ -455,9 +479,9 @@ public:
 
       if (!carry_in.op.isUndefined())
          return vop2(aco_opcode::v_addc_co_u32, Definition(dst), def(lm), a, b, carry_in);
-      else if (program->chip_class >= GFX10 && carry_out)
+      else if (program->gfx_level >= GFX10 && carry_out)
          return vop3(aco_opcode::v_add_co_u32_e64, Definition(dst), def(lm), a, b);
-      else if (program->chip_class < GFX9 || carry_out)
+      else if (program->gfx_level < GFX9 || carry_out)
          return vop2(aco_opcode::v_add_co_u32, Definition(dst), def(lm), a, b);
       else
          return vop2(aco_opcode::v_add_u32, Definition(dst), a, b);
@@ -465,7 +489,7 @@ public:
 
    Result vsub32(Definition dst, Op a, Op b, bool carry_out=false, Op borrow=Op(Operand(s2)))
    {
-      if (!borrow.op.isUndefined() || program->chip_class < GFX9)
+      if (!borrow.op.isUndefined() || program->gfx_level < GFX9)
          carry_out = true;
 
       bool reverse = !b.op.isTemp() || b.op.regClass().type() != RegType::vgpr;
@@ -486,10 +510,10 @@ public:
          op = reverse ? aco_opcode::v_subrev_u32 : aco_opcode::v_sub_u32;
       }
       bool vop3 = false;
-      if (program->chip_class >= GFX10 && op == aco_opcode::v_subrev_co_u32) {
+      if (program->gfx_level >= GFX10 && op == aco_opcode::v_subrev_co_u32) {
         vop3 = true;
         op = aco_opcode::v_subrev_co_u32_e64;
-      } else if (program->chip_class >= GFX10 && op == aco_opcode::v_sub_co_u32) {
+      } else if (program->gfx_level >= GFX10 && op == aco_opcode::v_sub_co_u32) {
         vop3 = true;
         op = aco_opcode::v_sub_co_u32_e64;
       }
@@ -514,13 +538,13 @@ public:
 
    Result readlane(Definition dst, Op vsrc, Op lane)
    {
-      if (program->chip_class >= GFX8)
+      if (program->gfx_level >= GFX8)
          return vop3(aco_opcode::v_readlane_b32_e64, dst, vsrc, lane);
       else
          return vop2(aco_opcode::v_readlane_b32, dst, vsrc, lane);
    }
    Result writelane(Definition dst, Op val, Op lane, Op vsrc) {
-      if (program->chip_class >= GFX8)
+      if (program->gfx_level >= GFX8)
          return vop3(aco_opcode::v_writelane_b32_e64, dst, val, lane, vsrc);
       else
          return vop2(aco_opcode::v_writelane_b32, dst, val, lane, vsrc);
@@ -1105,6 +1129,51 @@ public:
    }
 
         
+   Result pseudo(aco_opcode opcode, Definition def0, Definition def1, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5)
+   {
+      Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 6, 2);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            instr->operands[3] = op3.op;
+            instr->operands[4] = op4.op;
+            instr->operands[5] = op5.op;
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result pseudo(aco_opcode opcode, Definition def0, Definition def1, Definition def2, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5)
+   {
+      Pseudo_instruction *instr = create_instruction<Pseudo_instruction>(opcode, (Format)((int)Format::PSEUDO), 6, 3);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->definitions[1] = def1;
+            instr->definitions[1].setPrecise(is_precise);
+            instr->definitions[1].setNUW(is_nuw);
+            instr->definitions[2] = def2;
+            instr->definitions[2].setPrecise(is_precise);
+            instr->definitions[2].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            instr->operands[3] = op3.op;
+            instr->operands[4] = op4.op;
+            instr->operands[5] = op5.op;
+            
+       
+      return insert(instr);
+   }
+
+        
    Result sop1(aco_opcode opcode, Op op0)
    {
       SOP1_instruction *instr = create_instruction<SOP1_instruction>(opcode, (Format)((int)Format::SOP1), 1, 0);
@@ -1579,6 +1648,24 @@ public:
    }
 
         
+   Result ds(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, uint16_t offset0=0, uint8_t offset1=0, bool gds=false)
+   {
+      DS_instruction *instr = create_instruction<DS_instruction>(opcode, (Format)((int)Format::DS), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+      instr->offset0 = offset0;
+      instr->offset1 = offset1;
+      instr->gds = gds;
+            
+       
+      return insert(instr);
+   }
+
+        
    Result ds(aco_opcode opcode, Op op0, Op op1, Op op2, uint16_t offset0=0, uint8_t offset1=0, bool gds=false)
    {
       DS_instruction *instr = create_instruction<DS_instruction>(opcode, (Format)((int)Format::DS), 3, 0);
@@ -1604,6 +1691,23 @@ public:
       instr->offset0 = offset0;
       instr->offset1 = offset1;
       instr->gds = gds;
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result ldsdir(aco_opcode opcode, Definition def0, Op op0, uint8_t attr=0, uint8_t attr_chan=0, memory_sync_info sync=memory_sync_info(), uint8_t wait_vdst=15)
+   {
+      LDSDIR_instruction *instr = create_instruction<LDSDIR_instruction>(opcode, (Format)((int)Format::LDSDIR), 1, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+      instr->attr = attr;
+      instr->attr_chan = attr_chan;
+      instr->sync = sync;
+      instr->wait_vdst = wait_vdst;
             
        
       return insert(instr);
@@ -1708,7 +1812,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 3, 0);
             instr->operands[0] = op0.op;
@@ -1723,7 +1827,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1731,7 +1836,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 4, 0);
             instr->operands[0] = op0.op;
@@ -1747,7 +1852,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1755,7 +1861,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 5, 0);
             instr->operands[0] = op0.op;
@@ -1772,7 +1878,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1780,7 +1887,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 6, 0);
             instr->operands[0] = op0.op;
@@ -1798,7 +1905,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1806,7 +1914,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, Op op6, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, Op op6, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 7, 0);
             instr->operands[0] = op0.op;
@@ -1825,7 +1933,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1833,7 +1942,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 3, 1);
             instr->definitions[0] = def0;
@@ -1851,7 +1960,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1859,7 +1969,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 4, 1);
             instr->definitions[0] = def0;
@@ -1878,7 +1988,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1886,7 +1997,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, Op op4, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, Op op4, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 5, 1);
             instr->definitions[0] = def0;
@@ -1906,7 +2017,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1914,7 +2026,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 6, 1);
             instr->definitions[0] = def0;
@@ -1935,7 +2047,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1943,7 +2056,7 @@ public:
    }
 
         
-   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, Op op6, unsigned dmask=0xF, bool da=false, bool unrm=true, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128_a16=false, bool d16=false)
+   Result mimg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, Op op3, Op op4, Op op5, Op op6, unsigned dmask=0xF, bool da=false, bool unrm=false, bool disable_wqm=false, bool glc=false, bool dlc=false, bool slc=false, bool tfe=false, bool lwe=false, bool r128=false, bool a16=false, bool d16=false)
    {
       MIMG_instruction *instr = create_instruction<MIMG_instruction>(opcode, (Format)((int)Format::MIMG), 7, 1);
             instr->definitions[0] = def0;
@@ -1965,7 +2078,8 @@ public:
       instr->slc = slc;
       instr->tfe = tfe;
       instr->lwe = lwe;
-      instr->r128 = r128_a16;
+      instr->r128 = r128;
+      instr->a16 = a16;
       instr->d16 = d16;
             
        
@@ -1980,6 +2094,25 @@ public:
             instr->operands[1] = op1.op;
             instr->operands[2] = op2.op;
             instr->operands[3] = op3.op;
+      instr->enabled_mask = enabled_mask;
+      instr->dest = dest;
+      instr->compressed = compr;
+      instr->done = done;
+      instr->valid_mask = vm;
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result exp(aco_opcode opcode, Op op0, Op op1, Op op2, Op op3, Op op4, unsigned enabled_mask, unsigned dest, bool compr=false, bool done=false, bool vm=false)
+   {
+      Export_instruction *instr = create_instruction<Export_instruction>(opcode, (Format)((int)Format::EXP), 5, 0);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+            instr->operands[3] = op3.op;
+            instr->operands[4] = op4.op;
       instr->enabled_mask = enabled_mask;
       instr->dest = dest;
       instr->compressed = compr;
@@ -2401,9 +2534,26 @@ public:
    }
 
         
+   Result vinterp_inreg(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, unsigned wait_exp=7, uint8_t opsel=0)
+   {
+      VINTERP_inreg_instruction *instr = create_instruction<VINTERP_inreg_instruction>(opcode, (Format)((int)Format::VINTERP_INREG), 3, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+      instr->wait_exp = wait_exp;
+      instr->opsel = opsel;
+            
+       
+      return insert(instr);
+   }
+
+        
    Result vintrp(aco_opcode opcode, Definition def0, Op op0, Op op1, unsigned attribute, unsigned component)
    {
-      Interp_instruction *instr = create_instruction<Interp_instruction>(opcode, (Format)((int)Format::VINTRP), 2, 1);
+      VINTRP_instruction *instr = create_instruction<VINTRP_instruction>(opcode, (Format)((int)Format::VINTRP), 2, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2419,7 +2569,7 @@ public:
         
    Result vintrp(aco_opcode opcode, Definition def0, Op op0, Op op1, Op op2, unsigned attribute, unsigned component)
    {
-      Interp_instruction *instr = create_instruction<Interp_instruction>(opcode, (Format)((int)Format::VINTRP), 3, 1);
+      VINTRP_instruction *instr = create_instruction<VINTRP_instruction>(opcode, (Format)((int)Format::VINTRP), 3, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);
@@ -2807,7 +2957,7 @@ public:
    }
 
         
-   Result flat(aco_opcode opcode, Op op0, Op op1, Op op2, uint16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
+   Result flat(aco_opcode opcode, Op op0, Op op1, Op op2, int16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
    {
       FLAT_instruction *instr = create_instruction<FLAT_instruction>(opcode, (Format)((int)Format::FLAT), 3, 0);
             instr->operands[0] = op0.op;
@@ -2825,7 +2975,7 @@ public:
    }
 
         
-   Result flat(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
+   Result flat(aco_opcode opcode, Definition def0, Op op0, Op op1, int16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
    {
       FLAT_instruction *instr = create_instruction<FLAT_instruction>(opcode, (Format)((int)Format::FLAT), 2, 1);
             instr->definitions[0] = def0;
@@ -2845,7 +2995,7 @@ public:
    }
 
         
-   Result global(aco_opcode opcode, Op op0, Op op1, Op op2, uint16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
+   Result global(aco_opcode opcode, Op op0, Op op1, Op op2, int16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
    {
       FLAT_instruction *instr = create_instruction<FLAT_instruction>(opcode, (Format)((int)Format::GLOBAL), 3, 0);
             instr->operands[0] = op0.op;
@@ -2863,9 +3013,47 @@ public:
    }
 
         
-   Result global(aco_opcode opcode, Definition def0, Op op0, Op op1, uint16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
+   Result global(aco_opcode opcode, Definition def0, Op op0, Op op1, int16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
    {
       FLAT_instruction *instr = create_instruction<FLAT_instruction>(opcode, (Format)((int)Format::GLOBAL), 2, 1);
+            instr->definitions[0] = def0;
+            instr->definitions[0].setPrecise(is_precise);
+            instr->definitions[0].setNUW(is_nuw);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+      instr->offset = offset;
+      instr->sync = sync;
+      instr->glc = glc;
+      instr->slc = slc;
+      instr->lds = lds;
+      instr->nv = nv;
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result scratch(aco_opcode opcode, Op op0, Op op1, Op op2, int16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
+   {
+      FLAT_instruction *instr = create_instruction<FLAT_instruction>(opcode, (Format)((int)Format::SCRATCH), 3, 0);
+            instr->operands[0] = op0.op;
+            instr->operands[1] = op1.op;
+            instr->operands[2] = op2.op;
+      instr->offset = offset;
+      instr->sync = sync;
+      instr->glc = glc;
+      instr->slc = slc;
+      instr->lds = lds;
+      instr->nv = nv;
+            
+       
+      return insert(instr);
+   }
+
+        
+   Result scratch(aco_opcode opcode, Definition def0, Op op0, Op op1, int16_t offset=0, memory_sync_info sync=memory_sync_info(), bool glc=false, bool slc=false, bool lds=false, bool nv=false)
+   {
+      FLAT_instruction *instr = create_instruction<FLAT_instruction>(opcode, (Format)((int)Format::SCRATCH), 2, 1);
             instr->definitions[0] = def0;
             instr->definitions[0].setPrecise(is_precise);
             instr->definitions[0].setNUW(is_nuw);

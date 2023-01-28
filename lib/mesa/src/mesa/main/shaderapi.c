@@ -135,6 +135,8 @@ _mesa_get_shader_flags(void)
          flags |= GLSL_DUMP;
       if (strstr(env, "log"))
          flags |= GLSL_LOG;
+      if (strstr(env, "source"))
+         flags |= GLSL_SOURCE;
 #endif
       if (strstr(env, "cache_fb"))
          flags |= GLSL_CACHE_FALLBACK;
@@ -203,7 +205,6 @@ _mesa_init_shader_state(struct gl_context *ctx)
    int i;
 
    memset(&options, 0, sizeof(options));
-   options.MaxUnrollIterations = 32;
    options.MaxIfDepth = UINT_MAX;
 
    for (sh = 0; sh < MESA_SHADER_STAGES; ++sh)
@@ -1217,7 +1218,7 @@ _mesa_compile_shader(struct gl_context *ctx, struct gl_shader *sh)
        */
       sh->CompileStatus = COMPILE_FAILURE;
    } else {
-      if (ctx->_Shader->Flags & GLSL_DUMP) {
+      if (ctx->_Shader->Flags & (GLSL_DUMP | GLSL_SOURCE)) {
          _mesa_log("GLSL source for %s shader %d:\n",
                  _mesa_shader_stage_to_string(sh->Stage), sh->Name);
          _mesa_log_direct(sh->Source);
@@ -2660,10 +2661,6 @@ _mesa_copy_linked_program_data(const struct gl_shader_program *src,
    }
    case MESA_SHADER_FRAGMENT: {
       dst->info.fs.depth_layout = src->FragDepthLayout;
-      break;
-   }
-   case MESA_SHADER_COMPUTE: {
-      dst->info.shared_size = src->Comp.SharedSize;
       break;
    }
    default:

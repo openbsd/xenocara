@@ -12,8 +12,10 @@ CFLAGS+= \
 	-Werror=missing-prototypes \
 	-Werror=return-type \
 	-Werror=thread-safety \
+	-Wno-microsoft-enum-value \
 	-Wno-missing-field-initializers \
 	-Wno-typedef-redefinition \
+	-Wno-unused-function \
 	-fno-math-errno \
 	-fno-trapping-math \
 	-fno-common \
@@ -22,7 +24,7 @@ CFLAGS+= \
 	-Qunused-arguments
 
 CXXFLAGS+= \
-	-std=c++14 \
+	-std=c++17 \
 	-Wall \
 	-Werror=empty-body \
 	-Werror=format \
@@ -90,8 +92,11 @@ CPPFLAGS+= \
 	-DHAVE_POSIX_MEMALIGN \
 	-DHAVE_PTHREAD \
 	-DHAVE_PTHREAD_NP_H \
+	-DHAVE_REALLOCARRAY \
 	-DHAVE_STRTOF \
 	-DHAVE_STRTOK_R \
+	-DHAVE_STRUCT_TIMESPEC \
+	-DHAVE_SURFACELESS_PLATFORM \
 	-DHAVE_SYS_SHM_H \
 	-DHAVE_SYS_SYSCTL_H \
 	-DHAVE_TIMESPEC_GET \
@@ -112,6 +117,7 @@ CPPFLAGS+= \
 	-DHAVE___BUILTIN_UNREACHABLE \
 	-DNDEBUG \
 	-DUSE_GCC_ATOMIC_BUILTINS \
+	-DUSE_LIBELF \
 	-DPACKAGE_BUGREPORT=\"bugs@openbsd.org\" \
 	-DVK_USE_PLATFORM_DISPLAY_KHR \
 	-D_FILE_OFFSET_BITS=64 \
@@ -120,12 +126,22 @@ CPPFLAGS+= \
 	-D__STDC_FORMAT_MACROS \
 	-D__STDC_LIMIT_MACROS
 
+CPPFLAGS+= \
+	-DVIDEO_CODEC_H264DEC=1 \
+	-DVIDEO_CODEC_H264ENC=1 \
+	-DVIDEO_CODEC_H265DEC=1 \
+	-DVIDEO_CODEC_H265ENC=1 \
+	-DVIDEO_CODEC_VC1DEC=1
+
 # not CPPFLAGS as breaks aco c++ files
 CFLAGS+= \
 	-DVK_USE_PLATFORM_XCB_KHR \
 	-DVK_USE_PLATFORM_XLIB_KHR \
 	-DVK_USE_PLATFORM_XLIB_XRANDR_EXT
 
+CPPFLAGS+= \
+	-DHAVE_DRI \
+	-DHAVE_DRI2
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
 CPPFLAGS+= \
 	-DHAVE_DRI3 \
@@ -180,6 +196,7 @@ WITH_SSE41=no
 WITH_DRI=yes
 WITH_GALLIUM_DRISW_KMS=yes
 WITH_GALLIUM_SOFTPIPE=yes
+CPPFLAGS+=	-DHAVE_DRISW_KMS -DHAVE_SWRAST
 
 .if ${MACHINE_ARCH} == "powerpc"
 WITH_LLVM=no
@@ -202,12 +219,14 @@ WITH_SSE41=yes
     ${MACHINE} == "sparc64"
 WITH_GALLIUM_R300=yes
 WITH_GALLIUM_R600=yes
+CPPFLAGS+=	-DHAVE_R300 -DHAVE_R600
 .endif
 
 .if ${MACHINE} == "amd64" || ${MACHINE} == "arm64" || ${MACHINE} == "i386" || \
     ${MACHINE} == "powerpc64" || ${MACHINE} == "riscv64"
 WITH_GALLIUM_RADEONSI=yes
 WITH_AMD_VK=yes
+CPPFLAGS+=	-DHAVE_RADEONSI
 .endif
 
 .if ${MACHINE} == "amd64" || ${MACHINE} == "i386"
@@ -215,4 +234,5 @@ WITH_GALLIUM_I915=yes
 WITH_GALLIUM_CROCUS=yes
 WITH_GALLIUM_IRIS=yes
 WITH_INTEL_VK=yes
+CPPFLAGS+=	-DHAVE_I915 -DHAVE_CROCUS -DHAVE_IRIS
 .endif

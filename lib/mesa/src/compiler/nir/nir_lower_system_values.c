@@ -353,6 +353,30 @@ lower_compute_system_value_instr(nir_builder *b,
       if (b->shader->options->lower_cs_local_id_to_index ||
           (options && options->lower_cs_local_id_to_index)) {
          nir_ssa_def *local_index = nir_load_local_invocation_index(b);
+
+         if (!b->shader->info.workgroup_size_variable) {
+            /* Shortcut for 1 dimensional workgroups:
+             * Use local_invocation_index directly, which is better than
+             * lower_id_to_index + constant folding, because
+             * this way we don't leave behind extra ALU instrs.
+             */
+
+            /* size_x = 1, size_y = 1, therefore Z = local index */
+            if (b->shader->info.workgroup_size[0] == 1 &&
+                b->shader->info.workgroup_size[1] == 1)
+               return nir_vec3(b, nir_imm_int(b, 0), nir_imm_int(b, 0), local_index);
+
+            /* size_x = 1, size_z = 1, therefore Y = local index */
+            if (b->shader->info.workgroup_size[0] == 1 &&
+                b->shader->info.workgroup_size[2] == 1)
+               return nir_vec3(b, nir_imm_int(b, 0), local_index, nir_imm_int(b, 0));
+
+            /* size_y = 1, size_z = 1, therefore X = local index */
+            if (b->shader->info.workgroup_size[1] == 1 &&
+                b->shader->info.workgroup_size[2] == 1)
+               return nir_vec3(b, local_index, nir_imm_int(b, 0), nir_imm_int(b, 0));
+         }
+
          nir_ssa_def *local_size = nir_load_workgroup_size(b);
          return lower_id_to_index(b, local_index, local_size, bit_size);
       }
@@ -463,11 +487,9 @@ lower_compute_system_value_instr(nir_builder *b,
           *    gl_WorkGroupSize.x + gl_LocalInvocationID.x"
           */
          nir_ssa_def *local_id = nir_load_local_invocation_id(b);
-
-         nir_ssa_def *size_x =
-            nir_imm_int(b, b->shader->info.workgroup_size[0]);
-         nir_ssa_def *size_y =
-            nir_imm_int(b, b->shader->info.workgroup_size[1]);
+         nir_ssa_def *local_size = nir_load_workgroup_size(b);
+         nir_ssa_def *size_x = nir_channel(b, local_size, 0);
+         nir_ssa_def *size_y = nir_channel(b, local_size, 1);
 
          /* Because no hardware supports a local workgroup size greater than
           * about 1K, this calculation can be done in 32-bit and can save some

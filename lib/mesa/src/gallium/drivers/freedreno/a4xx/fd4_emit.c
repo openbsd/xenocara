@@ -98,7 +98,7 @@ fd4_emit_const_ptrs(struct fd_ringbuffer *ring, gl_shader_stage type,
    uint32_t anum = align(num, 4);
    uint32_t i;
 
-   debug_assert((regid % 4) == 0);
+   assert((regid % 4) == 0);
 
    OUT_PKT3(ring, CP_LOAD_STATE4, 2 + anum);
    OUT_RING(ring, CP_LOAD_STATE4_0_DST_OFF(regid / 4) |
@@ -241,7 +241,7 @@ emit_textures(struct fd_context *ctx, struct fd_ringbuffer *ring,
          view = tex->textures[idx] ? fd4_pipe_sampler_view(tex->textures[idx])
                                    : &dummy_view;
 
-         debug_assert(view->texconst0 & A4XX_TEX_CONST_0_SRGB);
+         assert(view->texconst0 & A4XX_TEX_CONST_0_SRGB);
 
          OUT_RING(ring, view->texconst0 & ~A4XX_TEX_CONST_0_SRGB);
          OUT_RING(ring, view->texconst1);
@@ -320,7 +320,7 @@ emit_textures(struct fd_context *ctx, struct fd_ringbuffer *ring,
                break;
 
             default:
-               debug_assert(0);
+               assert(0);
             }
          }
 
@@ -339,8 +339,8 @@ emit_textures(struct fd_context *ctx, struct fd_ringbuffer *ring,
          OUT_RING(ring, 0x00000000);
       }
    } else {
-      debug_assert(v->astc_srgb.count == 0);
-      debug_assert(v->tg4.count == 0);
+      assert(v->astc_srgb.count == 0);
+      assert(v->tg4.count == 0);
    }
 
    if (needs_border) {
@@ -428,7 +428,7 @@ fd4_emit_gmem_restore_tex(struct fd_ringbuffer *ring, unsigned nr_bufs,
              (format == PIPE_FORMAT_Z32_FLOAT_S8X24_UINT))
             mrt_comp[i] = 0;
 
-         debug_assert(bufs[i]->u.tex.first_layer == bufs[i]->u.tex.last_layer);
+         assert(bufs[i]->u.tex.first_layer == bufs[i]->u.tex.last_layer);
 
          OUT_RING(ring, A4XX_TEX_CONST_0_FMT(fd4_pipe2tex(format)) |
                            A4XX_TEX_CONST_0_TYPE(A4XX_TEX_2D) |
@@ -569,7 +569,7 @@ fd4_emit_vertex_bufs(struct fd_ringbuffer *ring, struct fd4_emit *emit)
          uint32_t fs = util_format_get_blocksize(pfmt);
          uint32_t off = vb->buffer_offset + elem->src_offset;
          uint32_t size = vb->buffer.resource->width0 - off;
-         debug_assert(fmt != VFMT4_NONE);
+         assert(fmt != VFMT4_NONE);
 
          OUT_PKT0(ring, REG_A4XX_VFD_FETCH(j), 4);
          OUT_RING(ring, A4XX_VFD_FETCH_INSTR_0_FETCHSIZE(fs - 1) |
@@ -710,7 +710,7 @@ fd4_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
    if (dirty & (FD_DIRTY_ZSA | FD_DIRTY_RASTERIZER | FD_DIRTY_PROG)) {
       struct fd4_zsa_stateobj *zsa = fd4_zsa_stateobj(ctx->zsa);
       bool fragz = fp->no_earlyz || fp->has_kill || fp->writes_pos;
-      bool latez = fp->shader && !fp->shader->nir->info.fs.early_fragment_tests && fragz;
+      bool latez = !fp->fs.early_fragment_tests && fragz;
       bool clamp = !ctx->rasterizer->depth_clip_near;
 
       OUT_PKT0(ring, REG_A4XX_RB_DEPTH_CONTROL, 1);
@@ -784,8 +784,8 @@ fd4_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
       struct pipe_scissor_state *scissor = fd_context_get_scissor(ctx);
 
       OUT_PKT0(ring, REG_A4XX_GRAS_SC_WINDOW_SCISSOR_BR, 2);
-      OUT_RING(ring, A4XX_GRAS_SC_WINDOW_SCISSOR_BR_X(scissor->maxx - 1) |
-                        A4XX_GRAS_SC_WINDOW_SCISSOR_BR_Y(scissor->maxy - 1));
+      OUT_RING(ring, A4XX_GRAS_SC_WINDOW_SCISSOR_BR_X(scissor->maxx) |
+                        A4XX_GRAS_SC_WINDOW_SCISSOR_BR_Y(scissor->maxy));
       OUT_RING(ring, A4XX_GRAS_SC_WINDOW_SCISSOR_TL_X(scissor->minx) |
                         A4XX_GRAS_SC_WINDOW_SCISSOR_TL_Y(scissor->miny));
 
@@ -800,14 +800,17 @@ fd4_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
    }
 
    if (dirty & FD_DIRTY_VIEWPORT) {
+      struct pipe_viewport_state *vp = & ctx->viewport[0];
+
       fd_wfi(ctx->batch, ring);
+
       OUT_PKT0(ring, REG_A4XX_GRAS_CL_VPORT_XOFFSET_0, 6);
-      OUT_RING(ring, A4XX_GRAS_CL_VPORT_XOFFSET_0(ctx->viewport.translate[0]));
-      OUT_RING(ring, A4XX_GRAS_CL_VPORT_XSCALE_0(ctx->viewport.scale[0]));
-      OUT_RING(ring, A4XX_GRAS_CL_VPORT_YOFFSET_0(ctx->viewport.translate[1]));
-      OUT_RING(ring, A4XX_GRAS_CL_VPORT_YSCALE_0(ctx->viewport.scale[1]));
-      OUT_RING(ring, A4XX_GRAS_CL_VPORT_ZOFFSET_0(ctx->viewport.translate[2]));
-      OUT_RING(ring, A4XX_GRAS_CL_VPORT_ZSCALE_0(ctx->viewport.scale[2]));
+      OUT_RING(ring, A4XX_GRAS_CL_VPORT_XOFFSET_0(vp->translate[0]));
+      OUT_RING(ring, A4XX_GRAS_CL_VPORT_XSCALE_0(vp->scale[0]));
+      OUT_RING(ring, A4XX_GRAS_CL_VPORT_YOFFSET_0(vp->translate[1]));
+      OUT_RING(ring, A4XX_GRAS_CL_VPORT_YSCALE_0(vp->scale[1]));
+      OUT_RING(ring, A4XX_GRAS_CL_VPORT_ZOFFSET_0(vp->translate[2]));
+      OUT_RING(ring, A4XX_GRAS_CL_VPORT_ZSCALE_0(vp->scale[2]));
    }
 
    if (dirty &
@@ -819,7 +822,7 @@ fd4_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
             pipe_surface_format(ctx->batch->framebuffer.zsbuf),
             UTIL_FORMAT_COLORSPACE_ZS, 0);
       }
-      util_viewport_zmin_zmax(&ctx->viewport, ctx->rasterizer->clip_halfz,
+      util_viewport_zmin_zmax(&ctx->viewport[0], ctx->rasterizer->clip_halfz,
                               &zmin, &zmax);
 
       OUT_PKT0(ring, REG_A4XX_RB_VPORT_Z_CLAMP(0), 2);

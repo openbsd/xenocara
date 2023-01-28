@@ -31,92 +31,65 @@
 #include "nir_builder.h"
 
 #ifdef __cplusplus
-#include "sfn_shader_base.h"
+#include "sfn_shader.h"
+
 #include <vector>
 
 namespace r600 {
 
 class NirLowerInstruction {
 public:
-	NirLowerInstruction();
+   NirLowerInstruction();
 
-	bool run(nir_shader *shader);
+   bool run(nir_shader *shader);
 
 private:
-	static bool filter_instr(const nir_instr *instr, const void *data);
-        static nir_ssa_def *lower_instr(nir_builder *b, nir_instr *instr,  void *data);
+   static bool filter_instr(const nir_instr *instr, const void *data);
+   static nir_ssa_def *lower_instr(nir_builder *b, nir_instr *instr, void *data);
 
-        void set_builder(nir_builder *_b) { b = _b;}
+   void set_builder(nir_builder *_b) { b = _b; }
 
-	virtual bool filter(const nir_instr *instr) const = 0;
-	virtual nir_ssa_def *lower(nir_instr *instr) = 0;
+   virtual bool filter(const nir_instr *instr) const = 0;
+   virtual nir_ssa_def *lower(nir_instr *instr) = 0;
+
 protected:
-	nir_builder *b;
+   nir_builder *b;
 };
 
-bool r600_lower_scratch_addresses(nir_shader *shader);
+bool
+r600_lower_scratch_addresses(nir_shader *shader);
 
-bool r600_lower_ubo_to_align16(nir_shader *shader);
+bool
+r600_lower_ubo_to_align16(nir_shader *shader);
 
-bool r600_nir_split_64bit_io(nir_shader *sh);
+bool
+r600_nir_split_64bit_io(nir_shader *sh);
 
-bool r600_nir_64_to_vec2(nir_shader *sh);
+bool
+r600_nir_64_to_vec2(nir_shader *sh);
 
-bool r600_merge_vec2_stores(nir_shader *shader);
+bool
+r600_merge_vec2_stores(nir_shader *shader);
 
-class Shader {
-public:
-   std::vector<InstructionBlock>& m_ir;
-   ValueMap m_temp;
-};
-
-class ShaderFromNir {
-public:
-   ShaderFromNir();
-   ~ShaderFromNir();
-
-   unsigned ninputs() const;
-
-   bool lower(const nir_shader *shader, r600_pipe_shader *sh,
-              r600_pipe_shader_selector *sel, r600_shader_key &key,
-              r600_shader *gs_shader, enum chip_class chip_class);
-
-   bool process_declaration();
-
-   pipe_shader_type processor_type() const;
-
-   bool emit_instruction(nir_instr *instr);
-
-   const std::vector<InstructionBlock> &shader_ir() const;
-
-   Shader shader() const;
-private:
-
-   bool process_block();
-   bool process_cf_node(nir_cf_node *node);
-   bool process_if(nir_if *node);
-   bool process_loop(nir_loop *node);
-   bool process_block(nir_block *node);
-
-   std::unique_ptr<ShaderFromNirProcessor> impl;
-   const nir_shader *sh;
-
-   enum chip_class chip_class;
-   int m_current_if_id;
-   int m_current_loop_id;
-   std::stack<int> m_if_stack;
-   int scratch_size;
-};
+bool
+r600_split_64bit_uniforms_and_ubo(nir_shader *sh);
+bool
+r600_lower_64bit_to_vec2(nir_shader *sh);
+bool
+r600_split_64bit_alu_and_phi(nir_shader *sh);
+bool
+r600_lower_clipvertex_to_clipdist(nir_shader *sh);
 
 class AssemblyFromShader {
 public:
    virtual ~AssemblyFromShader();
-   bool lower(const std::vector<InstructionBlock> &ir);
+   bool lower(const Shader& s);
+
 private:
-   virtual bool do_lower(const std::vector<InstructionBlock>& ir)  = 0 ;
+   virtual bool do_lower(const Shader& s) = 0;
 };
 
-}
+} // namespace r600
 
 static inline nir_ssa_def *
 r600_imm_ivec3(nir_builder *build, int x, int y, int z)
@@ -130,13 +103,15 @@ r600_imm_ivec3(nir_builder *build, int x, int y, int z)
    return nir_build_imm(build, 3, 32, v);
 }
 
-bool r600_lower_tess_io(nir_shader *shader, enum pipe_prim_type prim_type);
-bool r600_append_tcs_TF_emission(nir_shader *shader, enum pipe_prim_type prim_type);
-bool r600_lower_tess_coord(nir_shader *sh, enum pipe_prim_type prim_type);
+bool
+r600_lower_tess_io(nir_shader *shader, enum pipe_prim_type prim_type);
+bool
+r600_append_tcs_TF_emission(nir_shader *shader, enum pipe_prim_type prim_type);
+bool
+r600_lower_tess_coord(nir_shader *sh, enum pipe_prim_type prim_type);
 
 bool
 r600_legalize_image_load_store(nir_shader *shader);
-
 
 #else
 #include "gallium/drivers/r600/r600_shader.h"
@@ -146,17 +121,19 @@ r600_legalize_image_load_store(nir_shader *shader);
 extern "C" {
 #endif
 
-bool r600_vectorize_vs_inputs(nir_shader *shader);
+bool
+r600_vectorize_vs_inputs(nir_shader *shader);
 
-bool r600_lower_to_scalar_instr_filter(const nir_instr *instr, const void *);
+bool
+r600_lower_to_scalar_instr_filter(const nir_instr *instr, const void *);
 
-int r600_shader_from_nir(struct r600_context *rctx,
-                         struct r600_pipe_shader *pipeshader,
-                         union r600_shader_key *key);
+int
+r600_shader_from_nir(struct r600_context *rctx,
+                     struct r600_pipe_shader *pipeshader,
+                     union r600_shader_key *key);
 
 #ifdef __cplusplus
 }
 #endif
-
 
 #endif // SFN_NIR_H

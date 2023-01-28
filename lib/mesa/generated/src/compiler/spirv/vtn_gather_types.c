@@ -330,6 +330,7 @@ result_type_args_for_opcode(SpvOp opcode)
    case SpvOpSubgroupAllKHR: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupAnyKHR: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupAllEqualKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupNonUniformRotateKHR: return (struct type_args){ 1, 0 };
    case SpvOpSubgroupReadInvocationKHR: return (struct type_args){ 1, 0 };
    case SpvOpConvertUToAccelerationStructureKHR: return (struct type_args){ 1, 0 };
    case SpvOpSDot: return (struct type_args){ 1, 0 };
@@ -557,6 +558,9 @@ result_type_args_for_opcode(SpvOp opcode)
    case SpvOpArbitraryFloatPowINTEL: return (struct type_args){ 1, 0 };
    case SpvOpArbitraryFloatPowRINTEL: return (struct type_args){ 1, 0 };
    case SpvOpArbitraryFloatPowNINTEL: return (struct type_args){ 1, 0 };
+   case SpvOpAliasDomainDeclINTEL: return (struct type_args){ 0, -1 };
+   case SpvOpAliasScopeDeclINTEL: return (struct type_args){ 0, -1 };
+   case SpvOpAliasScopeListDeclINTEL: return (struct type_args){ 0, -1 };
    case SpvOpFixedSqrtINTEL: return (struct type_args){ 1, 0 };
    case SpvOpFixedRecipINTEL: return (struct type_args){ 1, 0 };
    case SpvOpFixedRsqrtINTEL: return (struct type_args){ 1, 0 };
@@ -592,6 +596,14 @@ result_type_args_for_opcode(SpvOp opcode)
    case SpvOpRayQueryGetIntersectionWorldToObjectKHR: return (struct type_args){ 1, 0 };
    case SpvOpAtomicFAddEXT: return (struct type_args){ 1, 0 };
    case SpvOpTypeBufferSurfaceINTEL: return (struct type_args){ 0, -1 };
+   case SpvOpGroupIMulKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupFMulKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupBitwiseAndKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupBitwiseOrKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupBitwiseXorKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupLogicalAndKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupLogicalOrKHR: return (struct type_args){ 1, 0 };
+   case SpvOpGroupLogicalXorKHR: return (struct type_args){ 1, 0 };
    default: return (struct type_args){ -1, -1 };
    }
 }

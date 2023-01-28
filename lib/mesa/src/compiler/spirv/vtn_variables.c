@@ -459,6 +459,7 @@ vtn_pointer_dereference(struct vtn_builder *b,
          tail = nir_build_deref_array(&b->nb, tail, arr_index);
          type = type->array_element;
       }
+      tail->arr.in_bounds = deref_chain->in_bounds;
 
       access |= type->access;
    }
@@ -1121,6 +1122,10 @@ vtn_get_builtin_location(struct vtn_builder *b,
       *location = SYSTEM_VALUE_RAY_GEOMETRY_INDEX;
       set_mode_system_value(b, mode);
       break;
+   case SpvBuiltInCullMaskKHR:
+      *location = SYSTEM_VALUE_CULL_MASK;
+      set_mode_system_value(b, mode);
+      break;
    case SpvBuiltInShadingRateKHR:
       *location = SYSTEM_VALUE_FRAG_SHADING_RATE;
       set_mode_system_value(b, mode);
@@ -1138,6 +1143,9 @@ vtn_get_builtin_location(struct vtn_builder *b,
    case SpvBuiltInPrimitiveCountNV:
       *location = VARYING_SLOT_PRIMITIVE_COUNT;
       break;
+   case SpvBuiltInPrimitivePointIndicesEXT:
+   case SpvBuiltInPrimitiveLineIndicesEXT:
+   case SpvBuiltInPrimitiveTriangleIndicesEXT:
    case SpvBuiltInPrimitiveIndicesNV:
       *location = VARYING_SLOT_PRIMITIVE_INDICES;
       break;
@@ -1153,6 +1161,9 @@ vtn_get_builtin_location(struct vtn_builder *b,
    case SpvBuiltInMeshViewIndicesNV:
       *location = SYSTEM_VALUE_MESH_VIEW_INDICES;
       set_mode_system_value(b, mode);
+      break;
+   case SpvBuiltInCullPrimitiveEXT:
+      *location = VARYING_SLOT_CULL_PRIMITIVE;
       break;
    default:
       vtn_fail("Unsupported builtin: %s (%u)",
@@ -1230,6 +1241,19 @@ apply_var_decoration(struct vtn_builder *b,
       case SpvBuiltInCullDistance:
       case SpvBuiltInCullDistancePerViewNV:
          var_data->compact = true;
+         break;
+      case SpvBuiltInPrimitivePointIndicesEXT:
+      case SpvBuiltInPrimitiveLineIndicesEXT:
+      case SpvBuiltInPrimitiveTriangleIndicesEXT:
+         /* Not defined as per-primitive in the EXT, but they behave
+          * like per-primitive outputs so it's easier to treat them like that.
+          * They may still require special treatment in the backend in order to
+          * control where and how they are stored.
+          *
+          * EXT_mesh_shader: write-only array of vectors indexed by the primitive index
+          * NV_mesh_shader: read/write flat array
+          */
+         var_data->per_primitive = true;
          break;
       default:
          break;
@@ -1574,6 +1598,10 @@ vtn_storage_class_to_mode(struct vtn_builder *b,
    case SpvStorageClassWorkgroup:
       mode = vtn_variable_mode_workgroup;
       nir_mode = nir_var_mem_shared;
+      break;
+   case SpvStorageClassTaskPayloadWorkgroupEXT:
+      mode = vtn_variable_mode_task_payload;
+      nir_mode = nir_var_mem_task_payload;
       break;
    case SpvStorageClassAtomicCounter:
       mode = vtn_variable_mode_atomic_counter;
@@ -2412,7 +2440,6 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
       struct vtn_value *val = vtn_push_value(b, w[2], vtn_value_type_pointer);
 
       struct vtn_type *ptr_type = rzalloc(b, struct vtn_type);
-      ptr_type = rzalloc(b, struct vtn_type);
       ptr_type->base_type = vtn_base_type_pointer;
       ptr_type->deref = sampler_type;
       ptr_type->storage_class = SpvStorageClassUniform;
@@ -2459,6 +2486,8 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
       struct vtn_type *ptr_type = vtn_get_type(b, w[1]);
 
       struct vtn_pointer *base = vtn_pointer(b, w[3]);
+
+      chain->in_bounds = (opcode == SpvOpInBoundsAccessChain || opcode == SpvOpInBoundsPtrAccessChain);
 
       /* Workaround for https://gitlab.freedesktop.org/mesa/mesa/-/issues/3406 */
       access |= base->access & ACCESS_NON_UNIFORM;
@@ -2640,13 +2669,11 @@ vtn_handle_variables(struct vtn_builder *b, SpvOp opcode,
 
          /* array_length = max(buffer_size - offset, 0) / stride */
          nir_ssa_def *array_length =
-            nir_idiv(&b->nb,
-                     nir_imax(&b->nb,
-                              nir_isub(&b->nb,
-                                       buf_size,
-                                       nir_imm_int(&b->nb, offset)),
-                              nir_imm_int(&b->nb, 0u)),
-                     nir_imm_int(&b->nb, stride));
+            nir_udiv_imm(&b->nb,
+                         nir_usub_sat(&b->nb,
+                                      buf_size,
+                                      nir_imm_int(&b->nb, offset)),
+                         stride);
 
          vtn_push_nir_ssa(b, w[2], array_length);
       }

@@ -31,10 +31,8 @@
 #define GFX4_PACK_H
 
 #include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <math.h>
+
+#include "util/bitpack_helpers.h"
 
 #ifndef __gen_validate_value
 #define __gen_validate_value(x)
@@ -48,67 +46,6 @@
 #else
 #define NDEBUG_UNUSED
 #endif
-
-union __intel_value {
-   float f;
-   uint32_t dw;
-};
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_mbo(uint32_t start, uint32_t end)
-{
-   return (~0ull >> (64 - (end - start + 1))) << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_uint(uint64_t v, uint32_t start, NDEBUG_UNUSED uint32_t end)
-{
-   __gen_validate_value(v);
-
-#ifndef NDEBUG
-   const int width = end - start + 1;
-   if (width < 64) {
-      const uint64_t max = (1ull << width) - 1;
-      assert(v <= max);
-   }
-#endif
-
-   return v << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_uint_nonzero(uint64_t v, uint32_t start, uint32_t end)
-{
-   assert(v != 0ull);
-   return __gen_uint(v, start, end);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sint(int64_t v, uint32_t start, uint32_t end)
-{
-   const int width = end - start + 1;
-
-   __gen_validate_value(v);
-
-#ifndef NDEBUG
-   if (width < 64) {
-      const int64_t max = (1ll << (width - 1)) - 1;
-      const int64_t min = -(1ll << (width - 1));
-      assert(min <= v && v <= max);
-   }
-#endif
-
-   const uint64_t mask = ~0ull >> (64 - width);
-
-   return (v & mask) << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sint_nonzero(int64_t v, uint32_t start, uint32_t end)
-{
-   assert(v != 0ll);
-   return __gen_sint(v, start, end);
-}
 
 static inline __attribute__((always_inline)) uint64_t
 __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
@@ -144,71 +81,6 @@ __gen_address(__gen_user_data *data, void *location,
    } else {
       return addr_u64;
    }
-}
-
-static inline __attribute__((always_inline)) uint32_t
-__gen_float(float v)
-{
-   __gen_validate_value(v);
-   return ((union __intel_value) { .f = (v) }).dw;
-}
-
-static inline __attribute__((always_inline)) uint32_t
-__gen_float_nonzero(float v)
-{
-   assert(v != 0.0f);
-   return __gen_float(v);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
-{
-   __gen_validate_value(v);
-
-   const float factor = (1 << fract_bits);
-
-#ifndef NDEBUG
-   const float max = ((1 << (end - start)) - 1) / factor;
-   const float min = -(1 << (end - start)) / factor;
-   assert(min <= v && v <= max);
-#endif
-
-   const int64_t int_val = llroundf(v * factor);
-   const uint64_t mask = ~0ull >> (64 - (end - start + 1));
-
-   return (int_val & mask) << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sfixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
-{
-   assert(v != 0.0f);
-   return __gen_sfixed(v, start, end, fract_bits);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract_bits)
-{
-   __gen_validate_value(v);
-
-   const float factor = (1 << fract_bits);
-
-#ifndef NDEBUG
-   const float max = ((1 << (end - start + 1)) - 1) / factor;
-   const float min = 0.0f;
-   assert(min <= v && v <= max);
-#endif
-
-   const uint64_t uint_val = llroundf(v * factor);
-
-   return uint_val << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_ufixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
-{
-   assert(v != 0.0f);
-   return __gen_ufixed(v, start, end, fract_bits);
 }
 
 #ifndef __gen_address_type
@@ -353,10 +225,10 @@ GFX4_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_float(values->MinimumDepth);
+      util_bitpack_float(values->MinimumDepth);
 
    dw[1] =
-      __gen_float(values->MaximumDepth);
+      util_bitpack_float(values->MaximumDepth);
 }
 
 #define GFX4_CLIP_STATE_length                11
@@ -418,59 +290,59 @@ GFX4_CLIP_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->GRFRegisterCount, 1, 3);
+      util_bitpack_uint(values->GRFRegisterCount, 1, 3);
    dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->ThreadPriority, 17, 17) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->ThreadPriority, 17, 17) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->ConstantURBEntryReadOffset, 18, 23) |
-      __gen_uint(values->ConstantURBEntryReadLength, 25, 30);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->ConstantURBEntryReadOffset, 18, 23) |
+      util_bitpack_uint(values->ConstantURBEntryReadLength, 25, 30);
 
    dw[4] =
-      __gen_uint(values->ClipperStatisticsEnable, 10, 10) |
-      __gen_uint(values->GSOutputObjectStatisticsEnable, 10, 10) |
-      __gen_uint(values->NumberofURBEntries, 11, 18) |
-      __gen_uint(values->URBEntryAllocationSize, 19, 23) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 30);
+      util_bitpack_uint(values->ClipperStatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->GSOutputObjectStatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->NumberofURBEntries, 11, 18) |
+      util_bitpack_uint(values->URBEntryAllocationSize, 19, 23) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 30);
 
    dw[5] =
-      __gen_uint(values->ClipMode, 13, 15) |
-      __gen_uint(values->UserClipDistanceClipTestEnableBitmask, 16, 23) |
-      __gen_uint(values->UserClipFlagsMustClipEnable, 24, 24) |
-      __gen_uint(values->GuardbandClipTestEnable, 26, 26) |
-      __gen_uint(values->ViewportZClipTestEnable, 27, 27) |
-      __gen_uint(values->ViewportXYClipTestEnable, 28, 28) |
-      __gen_uint(values->VertexPositionSpace, 29, 29) |
-      __gen_uint(values->APIMode, 30, 30);
+      util_bitpack_uint(values->ClipMode, 13, 15) |
+      util_bitpack_uint(values->UserClipDistanceClipTestEnableBitmask, 16, 23) |
+      util_bitpack_uint(values->UserClipFlagsMustClipEnable, 24, 24) |
+      util_bitpack_uint(values->GuardbandClipTestEnable, 26, 26) |
+      util_bitpack_uint(values->ViewportZClipTestEnable, 27, 27) |
+      util_bitpack_uint(values->ViewportXYClipTestEnable, 28, 28) |
+      util_bitpack_uint(values->VertexPositionSpace, 29, 29) |
+      util_bitpack_uint(values->APIMode, 30, 30);
 
    dw[6] = __gen_address(data, &dw[6], values->ClipperViewportStatePointer, 0, 5, 31);
 
    dw[7] =
-      __gen_float(values->ScreenSpaceViewportXMin);
+      util_bitpack_float(values->ScreenSpaceViewportXMin);
 
    dw[8] =
-      __gen_float(values->ScreenSpaceViewportXMax);
+      util_bitpack_float(values->ScreenSpaceViewportXMax);
 
    dw[9] =
-      __gen_float(values->ScreenSpaceViewportYMin);
+      util_bitpack_float(values->ScreenSpaceViewportYMin);
 
    dw[10] =
-      __gen_float(values->ScreenSpaceViewportYMax);
+      util_bitpack_float(values->ScreenSpaceViewportYMax);
 }
 
 #define GFX4_CLIP_VIEWPORT_length              4
@@ -489,16 +361,16 @@ GFX4_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_float(values->XMinClipGuardband);
+      util_bitpack_float(values->XMinClipGuardband);
 
    dw[1] =
-      __gen_float(values->XMaxClipGuardband);
+      util_bitpack_float(values->XMaxClipGuardband);
 
    dw[2] =
-      __gen_float(values->YMinClipGuardband);
+      util_bitpack_float(values->YMinClipGuardband);
 
    dw[3] =
-      __gen_float(values->YMaxClipGuardband);
+      util_bitpack_float(values->YMaxClipGuardband);
 }
 
 #define GFX4_COLOR_CALC_STATE_length           8
@@ -562,63 +434,63 @@ GFX4_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->BackfaceStencilPassDepthPassOp, 3, 5) |
-      __gen_uint(values->BackfaceStencilPassDepthFailOp, 6, 8) |
-      __gen_uint(values->BackfaceStencilFailOp, 9, 11) |
-      __gen_uint(values->BackfaceStencilTestFunction, 12, 14) |
-      __gen_uint(values->DoubleSidedStencilEnable, 15, 15) |
-      __gen_uint(values->StencilBufferWriteEnable, 18, 18) |
-      __gen_uint(values->StencilPassDepthPassOp, 19, 21) |
-      __gen_uint(values->StencilPassDepthFailOp, 22, 24) |
-      __gen_uint(values->StencilFailOp, 25, 27) |
-      __gen_uint(values->StencilTestFunction, 28, 30) |
-      __gen_uint(values->StencilTestEnable, 31, 31);
+      util_bitpack_uint(values->BackfaceStencilPassDepthPassOp, 3, 5) |
+      util_bitpack_uint(values->BackfaceStencilPassDepthFailOp, 6, 8) |
+      util_bitpack_uint(values->BackfaceStencilFailOp, 9, 11) |
+      util_bitpack_uint(values->BackfaceStencilTestFunction, 12, 14) |
+      util_bitpack_uint(values->DoubleSidedStencilEnable, 15, 15) |
+      util_bitpack_uint(values->StencilBufferWriteEnable, 18, 18) |
+      util_bitpack_uint(values->StencilPassDepthPassOp, 19, 21) |
+      util_bitpack_uint(values->StencilPassDepthFailOp, 22, 24) |
+      util_bitpack_uint(values->StencilFailOp, 25, 27) |
+      util_bitpack_uint(values->StencilTestFunction, 28, 30) |
+      util_bitpack_uint(values->StencilTestEnable, 31, 31);
 
    dw[1] =
-      __gen_uint(values->BackfaceStencilReferenceValue, 0, 7) |
-      __gen_uint(values->StencilWriteMask, 8, 15) |
-      __gen_uint(values->StencilTestMask, 16, 23) |
-      __gen_uint(values->StencilReferenceValue, 24, 31);
+      util_bitpack_uint(values->BackfaceStencilReferenceValue, 0, 7) |
+      util_bitpack_uint(values->StencilWriteMask, 8, 15) |
+      util_bitpack_uint(values->StencilTestMask, 16, 23) |
+      util_bitpack_uint(values->StencilReferenceValue, 24, 31);
 
    dw[2] =
-      __gen_uint(values->LogicOpEnable, 0, 0) |
-      __gen_uint(values->DepthBufferWriteEnable, 11, 11) |
-      __gen_uint(values->DepthTestFunction, 12, 14) |
-      __gen_uint(values->DepthTestEnable, 15, 15) |
-      __gen_uint(values->BackfaceStencilWriteMask, 16, 23) |
-      __gen_uint(values->BackfaceStencilTestMask, 24, 31);
+      util_bitpack_uint(values->LogicOpEnable, 0, 0) |
+      util_bitpack_uint(values->DepthBufferWriteEnable, 11, 11) |
+      util_bitpack_uint(values->DepthTestFunction, 12, 14) |
+      util_bitpack_uint(values->DepthTestEnable, 15, 15) |
+      util_bitpack_uint(values->BackfaceStencilWriteMask, 16, 23) |
+      util_bitpack_uint(values->BackfaceStencilTestMask, 24, 31);
 
    dw[3] =
-      __gen_uint(values->AlphaTestFunction, 8, 10) |
-      __gen_uint(values->AlphaTestEnable, 11, 11) |
-      __gen_uint(values->ColorBufferBlendEnable, 12, 12) |
-      __gen_uint(values->IndependentAlphaBlendEnable, 13, 13) |
-      __gen_uint(values->AlphaTestFormat, 15, 15);
+      util_bitpack_uint(values->AlphaTestFunction, 8, 10) |
+      util_bitpack_uint(values->AlphaTestEnable, 11, 11) |
+      util_bitpack_uint(values->ColorBufferBlendEnable, 12, 12) |
+      util_bitpack_uint(values->IndependentAlphaBlendEnable, 13, 13) |
+      util_bitpack_uint(values->AlphaTestFormat, 15, 15);
 
    dw[4] = __gen_address(data, &dw[4], values->CCViewportStatePointer, 0, 5, 31);
 
    dw[5] =
-      __gen_uint(values->DestinationAlphaBlendFactor, 2, 6) |
-      __gen_uint(values->SourceAlphaBlendFactor, 7, 11) |
-      __gen_uint(values->AlphaBlendFunction, 12, 14) |
-      __gen_uint(values->StatisticsEnable, 15, 15) |
-      __gen_uint(values->LogicOpFunction, 16, 19) |
-      __gen_uint(values->RoundDisableFunctionDisable, 30, 30) |
-      __gen_uint(values->ColorDitherEnable, 31, 31);
+      util_bitpack_uint(values->DestinationAlphaBlendFactor, 2, 6) |
+      util_bitpack_uint(values->SourceAlphaBlendFactor, 7, 11) |
+      util_bitpack_uint(values->AlphaBlendFunction, 12, 14) |
+      util_bitpack_uint(values->StatisticsEnable, 15, 15) |
+      util_bitpack_uint(values->LogicOpFunction, 16, 19) |
+      util_bitpack_uint(values->RoundDisableFunctionDisable, 30, 30) |
+      util_bitpack_uint(values->ColorDitherEnable, 31, 31);
 
    dw[6] =
-      __gen_uint(values->PostBlendColorClampEnable, 0, 0) |
-      __gen_uint(values->PreBlendColorClampEnable, 1, 1) |
-      __gen_uint(values->ColorClampRange, 2, 3) |
-      __gen_uint(values->YDitherOffset, 15, 16) |
-      __gen_uint(values->XDitherOffset, 17, 18) |
-      __gen_uint(values->DestinationBlendFactor, 19, 23) |
-      __gen_uint(values->SourceBlendFactor, 24, 28) |
-      __gen_uint(values->ColorBlendFunction, 29, 31);
+      util_bitpack_uint(values->PostBlendColorClampEnable, 0, 0) |
+      util_bitpack_uint(values->PreBlendColorClampEnable, 1, 1) |
+      util_bitpack_uint(values->ColorClampRange, 2, 3) |
+      util_bitpack_uint(values->YDitherOffset, 15, 16) |
+      util_bitpack_uint(values->XDitherOffset, 17, 18) |
+      util_bitpack_uint(values->DestinationBlendFactor, 19, 23) |
+      util_bitpack_uint(values->SourceBlendFactor, 24, 28) |
+      util_bitpack_uint(values->ColorBlendFunction, 29, 31);
 
    dw[7] =
-      __gen_uint(values->AlphaReferenceValueAsUNORM8, 0, 31) |
-      __gen_float(values->AlphaReferenceValueAsFLOAT32);
+      util_bitpack_uint(values->AlphaReferenceValueAsUNORM8, 0, 31) |
+      util_bitpack_float(values->AlphaReferenceValueAsFLOAT32);
 }
 
 #define GFX4_GS_STATE_length                   7
@@ -658,41 +530,41 @@ GFX4_GS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->GRFRegisterCount, 1, 3);
+      util_bitpack_uint(values->GRFRegisterCount, 1, 3);
    dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->ConstantURBEntryReadOffset, 18, 23) |
-      __gen_uint(values->ConstantURBEntryReadLength, 25, 30);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->ConstantURBEntryReadOffset, 18, 23) |
+      util_bitpack_uint(values->ConstantURBEntryReadLength, 25, 30);
 
    dw[4] =
-      __gen_uint(values->NumberofURBEntries, 11, 18) |
-      __gen_uint(values->URBEntryAllocationSize, 19, 23) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 30);
+      util_bitpack_uint(values->NumberofURBEntries, 11, 18) |
+      util_bitpack_uint(values->URBEntryAllocationSize, 19, 23) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 30);
 
    const uint32_t v5 =
-      __gen_uint(values->SamplerCount, 0, 2);
+      util_bitpack_uint(values->SamplerCount, 0, 2);
    dw[5] = __gen_address(data, &dw[5], values->SamplerStatePointer, v5, 5, 31);
 
    dw[6] =
-      __gen_uint(values->MaximumVPIndex, 0, 3) |
-      __gen_uint(values->DiscardAdjacency, 29, 29) |
-      __gen_uint(values->ReorderEnable, 30, 30);
+      util_bitpack_uint(values->MaximumVPIndex, 0, 3) |
+      util_bitpack_uint(values->DiscardAdjacency, 29, 29) |
+      util_bitpack_uint(values->ReorderEnable, 30, 30);
 }
 
 #define GFX4_RENDER_SURFACE_STATE_length       5
@@ -753,40 +625,40 @@ GFX4_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->CubeFaceEnablePositiveZ, 0, 0) |
-      __gen_uint(values->CubeFaceEnableNegativeZ, 1, 1) |
-      __gen_uint(values->CubeFaceEnablePositiveY, 2, 2) |
-      __gen_uint(values->CubeFaceEnableNegativeY, 3, 3) |
-      __gen_uint(values->CubeFaceEnablePositiveX, 4, 4) |
-      __gen_uint(values->CubeFaceEnableNegativeX, 5, 5) |
-      __gen_uint(values->MediaBoundaryPixelMode, 6, 7) |
-      __gen_uint(values->RenderCacheReadWriteMode, 8, 8) |
-      __gen_uint(values->MIPMapLayoutMode, 10, 10) |
-      __gen_uint(values->VerticalLineStrideOffset, 11, 11) |
-      __gen_uint(values->VerticalLineStride, 12, 12) |
-      __gen_uint(values->ColorBlendEnable, 13, 13) |
-      __gen_uint(values->ColorBufferComponentWriteDisables, 14, 17) |
-      __gen_uint(values->SurfaceFormat, 18, 26) |
-      __gen_uint(values->DataReturnFormat, 27, 27) |
-      __gen_uint(values->SurfaceType, 29, 31);
+      util_bitpack_uint(values->CubeFaceEnablePositiveZ, 0, 0) |
+      util_bitpack_uint(values->CubeFaceEnableNegativeZ, 1, 1) |
+      util_bitpack_uint(values->CubeFaceEnablePositiveY, 2, 2) |
+      util_bitpack_uint(values->CubeFaceEnableNegativeY, 3, 3) |
+      util_bitpack_uint(values->CubeFaceEnablePositiveX, 4, 4) |
+      util_bitpack_uint(values->CubeFaceEnableNegativeX, 5, 5) |
+      util_bitpack_uint(values->MediaBoundaryPixelMode, 6, 7) |
+      util_bitpack_uint(values->RenderCacheReadWriteMode, 8, 8) |
+      util_bitpack_uint(values->MIPMapLayoutMode, 10, 10) |
+      util_bitpack_uint(values->VerticalLineStrideOffset, 11, 11) |
+      util_bitpack_uint(values->VerticalLineStride, 12, 12) |
+      util_bitpack_uint(values->ColorBlendEnable, 13, 13) |
+      util_bitpack_uint(values->ColorBufferComponentWriteDisables, 14, 17) |
+      util_bitpack_uint(values->SurfaceFormat, 18, 26) |
+      util_bitpack_uint(values->DataReturnFormat, 27, 27) |
+      util_bitpack_uint(values->SurfaceType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[2] =
-      __gen_uint(values->MIPCountLOD, 2, 5) |
-      __gen_uint(values->Width, 6, 18) |
-      __gen_uint(values->Height, 19, 31);
+      util_bitpack_uint(values->MIPCountLOD, 2, 5) |
+      util_bitpack_uint(values->Width, 6, 18) |
+      util_bitpack_uint(values->Height, 19, 31);
 
    dw[3] =
-      __gen_uint(values->TileWalk, 0, 0) |
-      __gen_uint(values->TiledSurface, 1, 1) |
-      __gen_uint(values->SurfacePitch, 3, 19) |
-      __gen_uint(values->Depth, 21, 31);
+      util_bitpack_uint(values->TileWalk, 0, 0) |
+      util_bitpack_uint(values->TiledSurface, 1, 1) |
+      util_bitpack_uint(values->SurfacePitch, 3, 19) |
+      util_bitpack_uint(values->Depth, 21, 31);
 
    dw[4] =
-      __gen_uint(values->RenderTargetViewExtent, 8, 16) |
-      __gen_uint(values->MinimumArrayElement, 17, 27) |
-      __gen_uint(values->SurfaceMinLOD, 28, 31);
+      util_bitpack_uint(values->RenderTargetViewExtent, 8, 16) |
+      util_bitpack_uint(values->MinimumArrayElement, 17, 27) |
+      util_bitpack_uint(values->SurfaceMinLOD, 28, 31);
 }
 
 #define GFX4_SAMPLER_BORDER_COLOR_STATE_length     12
@@ -805,16 +677,16 @@ GFX4_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_float(values->BorderColorRed);
+      util_bitpack_float(values->BorderColorRed);
 
    dw[1] =
-      __gen_float(values->BorderColorGreen);
+      util_bitpack_float(values->BorderColorGreen);
 
    dw[2] =
-      __gen_float(values->BorderColorBlue);
+      util_bitpack_float(values->BorderColorBlue);
 
    dw[3] =
-      __gen_float(values->BorderColorAlpha);
+      util_bitpack_float(values->BorderColorAlpha);
 
    dw[4] = 0;
 
@@ -897,36 +769,36 @@ GFX4_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ShadowFunction, 0, 2) |
-      __gen_sfixed(values->TextureLODBias, 3, 13, 6) |
-      __gen_uint(values->MinModeFilter, 14, 16) |
-      __gen_uint(values->MagModeFilter, 17, 19) |
-      __gen_uint(values->MipModeFilter, 20, 21) |
-      __gen_ufixed(values->BaseMipLevel, 22, 26, 1) |
-      __gen_uint(values->LODPreClampEnable, 28, 28) |
-      __gen_uint(values->SamplerDisable, 31, 31);
+      util_bitpack_uint(values->ShadowFunction, 0, 2) |
+      util_bitpack_sfixed(values->TextureLODBias, 3, 13, 6) |
+      util_bitpack_uint(values->MinModeFilter, 14, 16) |
+      util_bitpack_uint(values->MagModeFilter, 17, 19) |
+      util_bitpack_uint(values->MipModeFilter, 20, 21) |
+      util_bitpack_ufixed(values->BaseMipLevel, 22, 26, 1) |
+      util_bitpack_uint(values->LODPreClampEnable, 28, 28) |
+      util_bitpack_uint(values->SamplerDisable, 31, 31);
 
    dw[1] =
-      __gen_uint(values->TCZAddressControlMode, 0, 2) |
-      __gen_uint(values->TCYAddressControlMode, 3, 5) |
-      __gen_uint(values->TCXAddressControlMode, 6, 8) |
-      __gen_uint(values->CubeSurfaceControlMode, 9, 9) |
-      __gen_ufixed(values->MaxLOD, 12, 21, 6) |
-      __gen_ufixed(values->MinLOD, 22, 31, 6);
+      util_bitpack_uint(values->TCZAddressControlMode, 0, 2) |
+      util_bitpack_uint(values->TCYAddressControlMode, 3, 5) |
+      util_bitpack_uint(values->TCXAddressControlMode, 6, 8) |
+      util_bitpack_uint(values->CubeSurfaceControlMode, 9, 9) |
+      util_bitpack_ufixed(values->MaxLOD, 12, 21, 6) |
+      util_bitpack_ufixed(values->MinLOD, 22, 31, 6);
 
    dw[2] = __gen_address(data, &dw[2], values->BorderColorPointer, 0, 5, 31);
 
    dw[3] =
-      __gen_uint(values->RAddressMinFilterRoundingEnable, 13, 13) |
-      __gen_uint(values->RAddressMagFilterRoundingEnable, 14, 14) |
-      __gen_uint(values->VAddressMinFilterRoundingEnable, 15, 15) |
-      __gen_uint(values->VAddressMagFilterRoundingEnable, 16, 16) |
-      __gen_uint(values->UAddressMinFilterRoundingEnable, 17, 17) |
-      __gen_uint(values->UAddressMagFilterRoundingEnable, 18, 18) |
-      __gen_uint(values->MaximumAnisotropy, 19, 21) |
-      __gen_uint(values->ChromaKeyMode, 22, 22) |
-      __gen_uint(values->ChromaKeyIndex, 23, 24) |
-      __gen_uint(values->ChromaKeyEnable, 25, 25);
+      util_bitpack_uint(values->RAddressMinFilterRoundingEnable, 13, 13) |
+      util_bitpack_uint(values->RAddressMagFilterRoundingEnable, 14, 14) |
+      util_bitpack_uint(values->VAddressMinFilterRoundingEnable, 15, 15) |
+      util_bitpack_uint(values->VAddressMagFilterRoundingEnable, 16, 16) |
+      util_bitpack_uint(values->UAddressMinFilterRoundingEnable, 17, 17) |
+      util_bitpack_uint(values->UAddressMagFilterRoundingEnable, 18, 18) |
+      util_bitpack_uint(values->MaximumAnisotropy, 19, 21) |
+      util_bitpack_uint(values->ChromaKeyMode, 22, 22) |
+      util_bitpack_uint(values->ChromaKeyIndex, 23, 24) |
+      util_bitpack_uint(values->ChromaKeyEnable, 25, 25);
 }
 
 #define GFX4_SCISSOR_RECT_length               2
@@ -945,12 +817,12 @@ GFX4_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ScissorRectangleXMin, 0, 15) |
-      __gen_uint(values->ScissorRectangleYMin, 16, 31);
+      util_bitpack_uint(values->ScissorRectangleXMin, 0, 15) |
+      util_bitpack_uint(values->ScissorRectangleYMin, 16, 31);
 
    dw[1] =
-      __gen_uint(values->ScissorRectangleXMax, 0, 15) |
-      __gen_uint(values->ScissorRectangleYMax, 16, 31);
+      util_bitpack_uint(values->ScissorRectangleXMax, 0, 15) |
+      util_bitpack_uint(values->ScissorRectangleYMax, 16, 31);
 }
 
 #define GFX4_SF_STATE_length                   8
@@ -1034,61 +906,61 @@ GFX4_SF_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->GRFRegisterCount, 1, 3);
+      util_bitpack_uint(values->GRFRegisterCount, 1, 3);
    dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->ThreadPriority, 17, 17) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->ThreadPriority, 17, 17) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->ConstantURBEntryReadOffset, 18, 23) |
-      __gen_uint(values->ConstantURBEntryReadLength, 25, 30);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->ConstantURBEntryReadOffset, 18, 23) |
+      util_bitpack_uint(values->ConstantURBEntryReadLength, 25, 30);
 
    dw[4] =
-      __gen_uint(values->NumberofURBEntries, 11, 18) |
-      __gen_uint(values->URBEntryAllocationSize, 19, 23) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 30);
+      util_bitpack_uint(values->NumberofURBEntries, 11, 18) |
+      util_bitpack_uint(values->URBEntryAllocationSize, 19, 23) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 30);
 
    const uint32_t v5 =
-      __gen_uint(values->FrontWinding, 0, 0) |
-      __gen_uint(values->ViewportTransformEnable, 1, 1);
+      util_bitpack_uint(values->FrontWinding, 0, 0) |
+      util_bitpack_uint(values->ViewportTransformEnable, 1, 1);
    dw[5] = __gen_address(data, &dw[5], values->SetupViewportStateOffset, v5, 5, 31);
 
    dw[6] =
-      __gen_ufixed(values->DestinationOriginVerticalBias, 9, 12, 4) |
-      __gen_ufixed(values->DestinationOriginHorizontalBias, 13, 16, 4) |
-      __gen_uint(values->ScissorRectangleEnable, 17, 17) |
-      __gen_uint(values->_2x2PixelTriangleFilterDisable, 18, 18) |
-      __gen_uint(values->ZeroPixelTriangleFilterDisable, 19, 19) |
-      __gen_uint(values->PointRasterizationRule, 20, 21) |
-      __gen_uint(values->LineEndCapAntialiasingRegionWidth, 22, 23) |
-      __gen_ufixed(values->LineWidth, 24, 27, 1) |
-      __gen_uint(values->FastScissorClipDisable, 28, 28) |
-      __gen_uint(values->CullMode, 29, 30) |
-      __gen_uint(values->AntialiasingEnable, 31, 31);
+      util_bitpack_ufixed(values->DestinationOriginVerticalBias, 9, 12, 4) |
+      util_bitpack_ufixed(values->DestinationOriginHorizontalBias, 13, 16, 4) |
+      util_bitpack_uint(values->ScissorRectangleEnable, 17, 17) |
+      util_bitpack_uint(values->_2x2PixelTriangleFilterDisable, 18, 18) |
+      util_bitpack_uint(values->ZeroPixelTriangleFilterDisable, 19, 19) |
+      util_bitpack_uint(values->PointRasterizationRule, 20, 21) |
+      util_bitpack_uint(values->LineEndCapAntialiasingRegionWidth, 22, 23) |
+      util_bitpack_ufixed(values->LineWidth, 24, 27, 1) |
+      util_bitpack_uint(values->FastScissorClipDisable, 28, 28) |
+      util_bitpack_uint(values->CullMode, 29, 30) |
+      util_bitpack_uint(values->AntialiasingEnable, 31, 31);
 
    dw[7] =
-      __gen_ufixed(values->PointWidth, 0, 10, 3) |
-      __gen_uint(values->PointWidthSource, 11, 11) |
-      __gen_uint(values->VertexSubPixelPrecisionSelect, 12, 12) |
-      __gen_uint(values->SpritePointEnable, 13, 13) |
-      __gen_uint(values->TriangleFanProvokingVertexSelect, 25, 26) |
-      __gen_uint(values->LineStripListProvokingVertexSelect, 27, 28) |
-      __gen_uint(values->TriangleStripListProvokingVertexSelect, 29, 30) |
-      __gen_uint(values->LastPixelEnable, 31, 31);
+      util_bitpack_ufixed(values->PointWidth, 0, 10, 3) |
+      util_bitpack_uint(values->PointWidthSource, 11, 11) |
+      util_bitpack_uint(values->VertexSubPixelPrecisionSelect, 12, 12) |
+      util_bitpack_uint(values->SpritePointEnable, 13, 13) |
+      util_bitpack_uint(values->TriangleFanProvokingVertexSelect, 25, 26) |
+      util_bitpack_uint(values->LineStripListProvokingVertexSelect, 27, 28) |
+      util_bitpack_uint(values->TriangleStripListProvokingVertexSelect, 29, 30) |
+      util_bitpack_uint(values->LastPixelEnable, 31, 31);
 }
 
 #define GFX4_SF_VIEWPORT_length                8
@@ -1110,22 +982,22 @@ GFX4_SF_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_float(values->ViewportMatrixElementm00);
+      util_bitpack_float(values->ViewportMatrixElementm00);
 
    dw[1] =
-      __gen_float(values->ViewportMatrixElementm11);
+      util_bitpack_float(values->ViewportMatrixElementm11);
 
    dw[2] =
-      __gen_float(values->ViewportMatrixElementm22);
+      util_bitpack_float(values->ViewportMatrixElementm22);
 
    dw[3] =
-      __gen_float(values->ViewportMatrixElementm30);
+      util_bitpack_float(values->ViewportMatrixElementm30);
 
    dw[4] =
-      __gen_float(values->ViewportMatrixElementm31);
+      util_bitpack_float(values->ViewportMatrixElementm31);
 
    dw[5] =
-      __gen_float(values->ViewportMatrixElementm32);
+      util_bitpack_float(values->ViewportMatrixElementm32);
 
    GFX4_SCISSOR_RECT_pack(data, &dw[6], &values->ScissorRectangle);
 }
@@ -1150,17 +1022,17 @@ GFX4_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->BufferPitch, 0, 10) |
-      __gen_uint(values->BufferAccessType, 26, 26) |
-      __gen_uint(values->VertexBufferIndex, 27, 31);
+      util_bitpack_uint(values->BufferPitch, 0, 10) |
+      util_bitpack_uint(values->BufferAccessType, 26, 26) |
+      util_bitpack_uint(values->VertexBufferIndex, 27, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
    dw[2] =
-      __gen_uint(values->MaxIndex, 0, 31);
+      util_bitpack_uint(values->MaxIndex, 0, 31);
 
    dw[3] =
-      __gen_uint(values->InstanceDataStepRate, 0, 31);
+      util_bitpack_uint(values->InstanceDataStepRate, 0, 31);
 }
 
 #define GFX4_VERTEX_ELEMENT_STATE_length       2
@@ -1184,17 +1056,17 @@ GFX4_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->SourceElementOffset, 0, 10) |
-      __gen_uint(values->SourceElementFormat, 16, 24) |
-      __gen_uint(values->Valid, 26, 26) |
-      __gen_uint(values->VertexBufferIndex, 27, 31);
+      util_bitpack_uint(values->SourceElementOffset, 0, 10) |
+      util_bitpack_uint(values->SourceElementFormat, 16, 24) |
+      util_bitpack_uint(values->Valid, 26, 26) |
+      util_bitpack_uint(values->VertexBufferIndex, 27, 31);
 
    dw[1] =
-      __gen_uint(values->DestinationElementOffset, 0, 7) |
-      __gen_uint(values->Component3Control, 16, 18) |
-      __gen_uint(values->Component2Control, 20, 22) |
-      __gen_uint(values->Component1Control, 24, 26) |
-      __gen_uint(values->Component0Control, 28, 30);
+      util_bitpack_uint(values->DestinationElementOffset, 0, 7) |
+      util_bitpack_uint(values->Component3Control, 16, 18) |
+      util_bitpack_uint(values->Component2Control, 20, 22) |
+      util_bitpack_uint(values->Component1Control, 24, 26) |
+      util_bitpack_uint(values->Component0Control, 28, 30);
 }
 
 #define GFX4_VS_STATE_length                   7
@@ -1237,42 +1109,42 @@ GFX4_VS_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->GRFRegisterCount, 1, 3);
+      util_bitpack_uint(values->GRFRegisterCount, 1, 3);
    dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer, v0, 6, 31);
 
    dw[1] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->ThreadPriority, 17, 17) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->ThreadPriority, 17, 17) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->ConstantURBEntryReadOffset, 18, 23) |
-      __gen_uint(values->ConstantURBEntryReadLength, 25, 30);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->ConstantURBEntryReadOffset, 18, 23) |
+      util_bitpack_uint(values->ConstantURBEntryReadLength, 25, 30);
 
    dw[4] =
-      __gen_uint(values->StatisticsEnable, 10, 10) |
-      __gen_uint(values->NumberofURBEntries, 11, 18) |
-      __gen_uint(values->URBEntryAllocationSize, 19, 23) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 30);
+      util_bitpack_uint(values->StatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->NumberofURBEntries, 11, 18) |
+      util_bitpack_uint(values->URBEntryAllocationSize, 19, 23) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 30);
 
    const uint32_t v5 =
-      __gen_uint(values->SamplerCount, 0, 2);
+      util_bitpack_uint(values->SamplerCount, 0, 2);
    dw[5] = __gen_address(data, &dw[5], values->SamplerStatePointer, v5, 5, 31);
 
    dw[6] =
-      __gen_uint(values->Enable, 0, 0) |
-      __gen_uint(values->VertexCacheDisable, 1, 1);
+      util_bitpack_uint(values->Enable, 0, 0) |
+      util_bitpack_uint(values->VertexCacheDisable, 1, 1);
 }
 
 #define GFX4_WM_STATE_length                   8
@@ -1336,58 +1208,58 @@ GFX4_WM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->GRFRegisterCount0, 1, 3);
+      util_bitpack_uint(values->GRFRegisterCount0, 1, 3);
    dw[0] = __gen_address(data, &dw[0], values->KernelStartPointer0, v0, 6, 31);
 
    dw[1] =
-      __gen_uint(values->SoftwareExceptionEnable, 1, 1) |
-      __gen_uint(values->MaskStackExceptionEnable, 2, 2) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 4, 4) |
-      __gen_uint(values->DepthCoefficientURBReadOffset, 8, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->ThreadPriority, 17, 17) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 1, 1) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 2, 2) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 4, 4) |
+      util_bitpack_uint(values->DepthCoefficientURBReadOffset, 8, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->ThreadPriority, 17, 17) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[2] = __gen_address(data, &dw[2], values->ScratchSpaceBasePointer, v2, 10, 31);
 
    dw[3] =
-      __gen_uint(values->DispatchGRFStartRegisterForConstantSetupData0, 0, 3) |
-      __gen_uint(values->SetupURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->SetupURBEntryReadLength, 11, 16) |
-      __gen_uint(values->ConstantURBEntryReadOffset, 18, 23) |
-      __gen_uint(values->ConstantURBEntryReadLength, 25, 30);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForConstantSetupData0, 0, 3) |
+      util_bitpack_uint(values->SetupURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->SetupURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->ConstantURBEntryReadOffset, 18, 23) |
+      util_bitpack_uint(values->ConstantURBEntryReadLength, 25, 30);
 
    const uint32_t v4 =
-      __gen_uint(values->StatisticsEnable, 0, 0) |
-      __gen_uint(values->SamplerCount, 2, 4);
+      util_bitpack_uint(values->StatisticsEnable, 0, 0) |
+      util_bitpack_uint(values->SamplerCount, 2, 4);
    dw[4] = __gen_address(data, &dw[4], values->SamplerStatePointer, v4, 5, 31);
 
    dw[5] =
-      __gen_uint(values->_8PixelDispatchEnable, 0, 0) |
-      __gen_uint(values->_16PixelDispatchEnable, 1, 1) |
-      __gen_uint(values->_32PixelDispatchEnable, 2, 2) |
-      __gen_uint(values->LegacyGlobalDepthBiasEnable, 10, 10) |
-      __gen_uint(values->LineStippleEnable, 11, 11) |
-      __gen_uint(values->GlobalDepthOffsetEnable, 12, 12) |
-      __gen_uint(values->PolygonStippleEnable, 13, 13) |
-      __gen_uint(values->LineAntialiasingRegionWidth, 14, 15) |
-      __gen_uint(values->LineEndCapAntialiasingRegionWidth, 16, 17) |
-      __gen_uint(values->EarlyDepthTestEnable, 18, 18) |
-      __gen_uint(values->ThreadDispatchEnable, 19, 19) |
-      __gen_uint(values->PixelShaderUsesSourceDepth, 20, 20) |
-      __gen_uint(values->PixelShaderComputedDepth, 21, 21) |
-      __gen_uint(values->PixelShaderKillsPixel, 22, 22) |
-      __gen_uint(values->LegacyDiamondLineRasterization, 23, 23) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 31);
+      util_bitpack_uint(values->_8PixelDispatchEnable, 0, 0) |
+      util_bitpack_uint(values->_16PixelDispatchEnable, 1, 1) |
+      util_bitpack_uint(values->_32PixelDispatchEnable, 2, 2) |
+      util_bitpack_uint(values->LegacyGlobalDepthBiasEnable, 10, 10) |
+      util_bitpack_uint(values->LineStippleEnable, 11, 11) |
+      util_bitpack_uint(values->GlobalDepthOffsetEnable, 12, 12) |
+      util_bitpack_uint(values->PolygonStippleEnable, 13, 13) |
+      util_bitpack_uint(values->LineAntialiasingRegionWidth, 14, 15) |
+      util_bitpack_uint(values->LineEndCapAntialiasingRegionWidth, 16, 17) |
+      util_bitpack_uint(values->EarlyDepthTestEnable, 18, 18) |
+      util_bitpack_uint(values->ThreadDispatchEnable, 19, 19) |
+      util_bitpack_uint(values->PixelShaderUsesSourceDepth, 20, 20) |
+      util_bitpack_uint(values->PixelShaderComputedDepth, 21, 21) |
+      util_bitpack_uint(values->PixelShaderKillsPixel, 22, 22) |
+      util_bitpack_uint(values->LegacyDiamondLineRasterization, 23, 23) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 31);
 
    dw[6] =
-      __gen_float(values->GlobalDepthOffsetConstant);
+      util_bitpack_float(values->GlobalDepthOffsetConstant);
 
    dw[7] =
-      __gen_float(values->GlobalDepthOffsetScale);
+      util_bitpack_float(values->GlobalDepthOffsetScale);
 }
 
 #define GFX4_3DPRIMITIVE_length                6
@@ -1426,27 +1298,27 @@ GFX4_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->PrimitiveTopologyType, 10, 14) |
-      __gen_uint(values->VertexAccessType, 15, 15) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PrimitiveTopologyType, 10, 14) |
+      util_bitpack_uint(values->VertexAccessType, 15, 15) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->VertexCountPerInstance, 0, 31);
+      util_bitpack_uint(values->VertexCountPerInstance, 0, 31);
 
    dw[2] =
-      __gen_uint(values->StartVertexLocation, 0, 31);
+      util_bitpack_uint(values->StartVertexLocation, 0, 31);
 
    dw[3] =
-      __gen_uint(values->InstanceCount, 0, 31);
+      util_bitpack_uint(values->InstanceCount, 0, 31);
 
    dw[4] = 0;
 
    dw[5] =
-      __gen_sint(values->BaseVertexLocation, 0, 31);
+      util_bitpack_sint(values->BaseVertexLocation, 0, 31);
 }
 
 #define GFX4_3DSTATE_BINDING_TABLE_POINTERS_length      6
@@ -1479,11 +1351,11 @@ GFX4_3DSTATE_BINDING_TABLE_POINTERS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoVSBindingTable, 5, 31);
@@ -1530,23 +1402,23 @@ GFX4_3DSTATE_CONSTANT_COLOR_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_float(values->BlendConstantColorRed);
+      util_bitpack_float(values->BlendConstantColorRed);
 
    dw[2] =
-      __gen_float(values->BlendConstantColorGreen);
+      util_bitpack_float(values->BlendConstantColorGreen);
 
    dw[3] =
-      __gen_float(values->BlendConstantColorBlue);
+      util_bitpack_float(values->BlendConstantColorBlue);
 
    dw[4] =
-      __gen_float(values->BlendConstantColorAlpha);
+      util_bitpack_float(values->BlendConstantColorAlpha);
 }
 
 #define GFX4_3DSTATE_DEPTH_BUFFER_length       5
@@ -1607,33 +1479,33 @@ GFX4_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SurfacePitch, 0, 16) |
-      __gen_uint(values->SurfaceFormat, 18, 20) |
-      __gen_uint(values->SoftwareTiledRenderingMode, 23, 24) |
-      __gen_uint(values->DepthBufferCoordinateOffsetDisable, 25, 25) |
-      __gen_uint(values->TileWalk, 26, 26) |
-      __gen_uint(values->TiledSurface, 27, 27) |
-      __gen_uint(values->SurfaceType, 29, 31);
+      util_bitpack_uint(values->SurfacePitch, 0, 16) |
+      util_bitpack_uint(values->SurfaceFormat, 18, 20) |
+      util_bitpack_uint(values->SoftwareTiledRenderingMode, 23, 24) |
+      util_bitpack_uint(values->DepthBufferCoordinateOffsetDisable, 25, 25) |
+      util_bitpack_uint(values->TileWalk, 26, 26) |
+      util_bitpack_uint(values->TiledSurface, 27, 27) |
+      util_bitpack_uint(values->SurfaceType, 29, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[3] =
-      __gen_uint(values->MIPMapLayoutMode, 1, 1) |
-      __gen_uint(values->LOD, 2, 5) |
-      __gen_uint(values->Width, 6, 18) |
-      __gen_uint(values->Height, 19, 31);
+      util_bitpack_uint(values->MIPMapLayoutMode, 1, 1) |
+      util_bitpack_uint(values->LOD, 2, 5) |
+      util_bitpack_uint(values->Width, 6, 18) |
+      util_bitpack_uint(values->Height, 19, 31);
 
    dw[4] =
-      __gen_uint(values->RenderTargetViewExtent, 1, 9) |
-      __gen_uint(values->MinimumArrayElement, 10, 20) |
-      __gen_uint(values->Depth, 21, 31);
+      util_bitpack_uint(values->RenderTargetViewExtent, 1, 9) |
+      util_bitpack_uint(values->MinimumArrayElement, 10, 20) |
+      util_bitpack_uint(values->Depth, 21, 31);
 }
 
 #define GFX4_3DSTATE_DRAWING_RECTANGLE_length      4
@@ -1667,23 +1539,23 @@ GFX4_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ClippedDrawingRectangleXMin, 0, 15) |
-      __gen_uint(values->ClippedDrawingRectangleYMin, 16, 31);
+      util_bitpack_uint(values->ClippedDrawingRectangleXMin, 0, 15) |
+      util_bitpack_uint(values->ClippedDrawingRectangleYMin, 16, 31);
 
    dw[2] =
-      __gen_uint(values->ClippedDrawingRectangleXMax, 0, 15) |
-      __gen_uint(values->ClippedDrawingRectangleYMax, 16, 31);
+      util_bitpack_uint(values->ClippedDrawingRectangleXMax, 0, 15) |
+      util_bitpack_uint(values->ClippedDrawingRectangleYMax, 16, 31);
 
    dw[3] =
-      __gen_sint(values->DrawingRectangleOriginX, 0, 15) |
-      __gen_sint(values->DrawingRectangleOriginY, 16, 31);
+      util_bitpack_sint(values->DrawingRectangleOriginX, 0, 15) |
+      util_bitpack_sint(values->DrawingRectangleOriginY, 16, 31);
 }
 
 #define GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_length      2
@@ -1712,14 +1584,14 @@ GFX4_3DSTATE_GLOBAL_DEPTH_OFFSET_CLAMP_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_float(values->GlobalDepthOffsetClamp);
+      util_bitpack_float(values->GlobalDepthOffsetClamp);
 }
 
 #define GFX4_3DSTATE_INDEX_BUFFER_length       3
@@ -1754,13 +1626,13 @@ GFX4_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->IndexFormat, 8, 9) |
-      __gen_uint(values->CutIndexEnable, 10, 10) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->IndexFormat, 8, 9) |
+      util_bitpack_uint(values->CutIndexEnable, 10, 10) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
@@ -1798,21 +1670,21 @@ GFX4_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->LineStipplePattern, 0, 15) |
-      __gen_uint(values->CurrentStippleIndex, 16, 19) |
-      __gen_uint(values->CurrentRepeatCounter, 21, 29) |
-      __gen_uint(values->ModifyEnable, 31, 31);
+      util_bitpack_uint(values->LineStipplePattern, 0, 15) |
+      util_bitpack_uint(values->CurrentStippleIndex, 16, 19) |
+      util_bitpack_uint(values->CurrentRepeatCounter, 21, 29) |
+      util_bitpack_uint(values->ModifyEnable, 31, 31);
 
    dw[2] =
-      __gen_uint(values->LineStippleRepeatCount, 0, 8) |
-      __gen_ufixed(values->LineStippleInverseRepeatCount, 16, 31, 13);
+      util_bitpack_uint(values->LineStippleRepeatCount, 0, 8) |
+      util_bitpack_ufixed(values->LineStippleInverseRepeatCount, 16, 31, 13);
 }
 
 #define GFX4_3DSTATE_PIPELINED_POINTERS_length      7
@@ -1848,20 +1720,20 @@ GFX4_3DSTATE_PIPELINED_POINTERS_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->PointertoVSState, 0, 5, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->GSEnable, 0, 0);
+      util_bitpack_uint(values->GSEnable, 0, 0);
    dw[2] = __gen_address(data, &dw[2], values->PointertoGSState, v2, 5, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->ClipEnable, 0, 0);
+      util_bitpack_uint(values->ClipEnable, 0, 0);
    dw[3] = __gen_address(data, &dw[3], values->PointertoCLIPState, v3, 5, 31);
 
    dw[4] = __gen_address(data, &dw[4], values->PointertoSFState, 0, 5, 31);
@@ -1898,15 +1770,15 @@ GFX4_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PolygonStippleYOffset, 0, 4) |
-      __gen_uint(values->PolygonStippleXOffset, 8, 12);
+      util_bitpack_uint(values->PolygonStippleYOffset, 0, 4) |
+      util_bitpack_uint(values->PolygonStippleXOffset, 8, 12);
 }
 
 #define GFX4_3DSTATE_POLY_STIPPLE_PATTERN_length     33
@@ -1935,107 +1807,107 @@ GFX4_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PatternRow[0], 0, 31);
+      util_bitpack_uint(values->PatternRow[0], 0, 31);
 
    dw[2] =
-      __gen_uint(values->PatternRow[1], 0, 31);
+      util_bitpack_uint(values->PatternRow[1], 0, 31);
 
    dw[3] =
-      __gen_uint(values->PatternRow[2], 0, 31);
+      util_bitpack_uint(values->PatternRow[2], 0, 31);
 
    dw[4] =
-      __gen_uint(values->PatternRow[3], 0, 31);
+      util_bitpack_uint(values->PatternRow[3], 0, 31);
 
    dw[5] =
-      __gen_uint(values->PatternRow[4], 0, 31);
+      util_bitpack_uint(values->PatternRow[4], 0, 31);
 
    dw[6] =
-      __gen_uint(values->PatternRow[5], 0, 31);
+      util_bitpack_uint(values->PatternRow[5], 0, 31);
 
    dw[7] =
-      __gen_uint(values->PatternRow[6], 0, 31);
+      util_bitpack_uint(values->PatternRow[6], 0, 31);
 
    dw[8] =
-      __gen_uint(values->PatternRow[7], 0, 31);
+      util_bitpack_uint(values->PatternRow[7], 0, 31);
 
    dw[9] =
-      __gen_uint(values->PatternRow[8], 0, 31);
+      util_bitpack_uint(values->PatternRow[8], 0, 31);
 
    dw[10] =
-      __gen_uint(values->PatternRow[9], 0, 31);
+      util_bitpack_uint(values->PatternRow[9], 0, 31);
 
    dw[11] =
-      __gen_uint(values->PatternRow[10], 0, 31);
+      util_bitpack_uint(values->PatternRow[10], 0, 31);
 
    dw[12] =
-      __gen_uint(values->PatternRow[11], 0, 31);
+      util_bitpack_uint(values->PatternRow[11], 0, 31);
 
    dw[13] =
-      __gen_uint(values->PatternRow[12], 0, 31);
+      util_bitpack_uint(values->PatternRow[12], 0, 31);
 
    dw[14] =
-      __gen_uint(values->PatternRow[13], 0, 31);
+      util_bitpack_uint(values->PatternRow[13], 0, 31);
 
    dw[15] =
-      __gen_uint(values->PatternRow[14], 0, 31);
+      util_bitpack_uint(values->PatternRow[14], 0, 31);
 
    dw[16] =
-      __gen_uint(values->PatternRow[15], 0, 31);
+      util_bitpack_uint(values->PatternRow[15], 0, 31);
 
    dw[17] =
-      __gen_uint(values->PatternRow[16], 0, 31);
+      util_bitpack_uint(values->PatternRow[16], 0, 31);
 
    dw[18] =
-      __gen_uint(values->PatternRow[17], 0, 31);
+      util_bitpack_uint(values->PatternRow[17], 0, 31);
 
    dw[19] =
-      __gen_uint(values->PatternRow[18], 0, 31);
+      util_bitpack_uint(values->PatternRow[18], 0, 31);
 
    dw[20] =
-      __gen_uint(values->PatternRow[19], 0, 31);
+      util_bitpack_uint(values->PatternRow[19], 0, 31);
 
    dw[21] =
-      __gen_uint(values->PatternRow[20], 0, 31);
+      util_bitpack_uint(values->PatternRow[20], 0, 31);
 
    dw[22] =
-      __gen_uint(values->PatternRow[21], 0, 31);
+      util_bitpack_uint(values->PatternRow[21], 0, 31);
 
    dw[23] =
-      __gen_uint(values->PatternRow[22], 0, 31);
+      util_bitpack_uint(values->PatternRow[22], 0, 31);
 
    dw[24] =
-      __gen_uint(values->PatternRow[23], 0, 31);
+      util_bitpack_uint(values->PatternRow[23], 0, 31);
 
    dw[25] =
-      __gen_uint(values->PatternRow[24], 0, 31);
+      util_bitpack_uint(values->PatternRow[24], 0, 31);
 
    dw[26] =
-      __gen_uint(values->PatternRow[25], 0, 31);
+      util_bitpack_uint(values->PatternRow[25], 0, 31);
 
    dw[27] =
-      __gen_uint(values->PatternRow[26], 0, 31);
+      util_bitpack_uint(values->PatternRow[26], 0, 31);
 
    dw[28] =
-      __gen_uint(values->PatternRow[27], 0, 31);
+      util_bitpack_uint(values->PatternRow[27], 0, 31);
 
    dw[29] =
-      __gen_uint(values->PatternRow[28], 0, 31);
+      util_bitpack_uint(values->PatternRow[28], 0, 31);
 
    dw[30] =
-      __gen_uint(values->PatternRow[29], 0, 31);
+      util_bitpack_uint(values->PatternRow[29], 0, 31);
 
    dw[31] =
-      __gen_uint(values->PatternRow[30], 0, 31);
+      util_bitpack_uint(values->PatternRow[30], 0, 31);
 
    dw[32] =
-      __gen_uint(values->PatternRow[31], 0, 31);
+      util_bitpack_uint(values->PatternRow[31], 0, 31);
 }
 
 #define GFX4_3DSTATE_VERTEX_BUFFERS_length_bias      2
@@ -2063,11 +1935,11 @@ GFX4_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX4_3DSTATE_VERTEX_ELEMENTS_length_bias      2
@@ -2095,11 +1967,11 @@ GFX4_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX4_3DSTATE_VF_STATISTICS_length      1
@@ -2126,11 +1998,11 @@ GFX4_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->StatisticsEnable, 0, 0) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->StatisticsEnable, 0, 0) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX4_CONSTANT_BUFFER_length            2
@@ -2162,15 +2034,15 @@ GFX4_CONSTANT_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->Valid, 8, 8) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->Valid, 8, 8) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->BufferLength, 0, 5);
+      util_bitpack_uint(values->BufferLength, 0, 5);
    dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, v1, 6, 31);
 }
 
@@ -2201,15 +2073,15 @@ GFX4_CS_URB_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->NumberofURBEntries, 0, 2) |
-      __gen_uint(values->URBEntryAllocationSize, 4, 8);
+      util_bitpack_uint(values->NumberofURBEntries, 0, 2) |
+      util_bitpack_uint(values->URBEntryAllocationSize, 4, 8);
 }
 
 #define GFX4_MI_FLUSH_length                   1
@@ -2240,11 +2112,11 @@ GFX4_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->StateInstructionCacheInvalidate, 1, 1) |
-      __gen_uint(values->RenderCacheFlushInhibit, 2, 2) |
-      __gen_uint(values->GlobalSnapshotCountReset, 3, 3) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->StateInstructionCacheInvalidate, 1, 1) |
+      util_bitpack_uint(values->RenderCacheFlushInhibit, 2, 2) |
+      util_bitpack_uint(values->GlobalSnapshotCountReset, 3, 3) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX4_MI_LOAD_REGISTER_IMM_length       3
@@ -2272,16 +2144,16 @@ GFX4_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 5) |
-      __gen_uint(values->ByteWriteDisables, 8, 11) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 5) |
+      util_bitpack_uint(values->ByteWriteDisables, 8, 11) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->RegisterOffset, 2, 31);
 
    dw[2] =
-      __gen_uint(values->DataDWord, 0, 31);
+      util_bitpack_uint(values->DataDWord, 0, 31);
 }
 
 #define GFX4_MI_STORE_DATA_IMM_length          5
@@ -2310,18 +2182,18 @@ GFX4_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 5) |
-      __gen_uint(values->BitFieldName, 21, 21) |
-      __gen_uint(values->MemoryAddressType, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 5) |
+      util_bitpack_uint(values->BitFieldName, 21, 21) |
+      util_bitpack_uint(values->MemoryAddressType, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->PhysicalStartAddressExtension, 0, 0, 3);
 
    dw[2] = __gen_address(data, &dw[2], values->Address, 0, 2, 31);
 
    const uint64_t v3 =
-      __gen_uint(values->ImmediateData, 0, 63);
+      util_bitpack_uint(values->ImmediateData, 0, 63);
    dw[3] = v3;
    dw[4] = v3 >> 32;
 }
@@ -2351,10 +2223,10 @@ GFX4_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->UseGlobalGTT, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->UseGlobalGTT, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
       __gen_offset(values->RegisterAddress, 2, 22);
@@ -2389,11 +2261,11 @@ GFX4_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->PipelineSelection, 0, 0) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->PipelineSelection, 0, 0) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX4_PIPE_CONTROL_length               4
@@ -2434,23 +2306,23 @@ GFX4_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->NotifyEnable, 8, 8) |
-      __gen_uint(values->InstructionCacheInvalidateEnable, 11, 11) |
-      __gen_uint(values->WriteCacheFlush, 12, 12) |
-      __gen_uint(values->DepthStallEnable, 13, 13) |
-      __gen_uint(values->PostSyncOperation, 14, 15) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->NotifyEnable, 8, 8) |
+      util_bitpack_uint(values->InstructionCacheInvalidateEnable, 11, 11) |
+      util_bitpack_uint(values->WriteCacheFlush, 12, 12) |
+      util_bitpack_uint(values->DepthStallEnable, 13, 13) |
+      util_bitpack_uint(values->PostSyncOperation, 14, 15) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->DestinationAddressType, 2, 2);
+      util_bitpack_uint(values->DestinationAddressType, 2, 2);
    dw[1] = __gen_address(data, &dw[1], values->Address, v1, 3, 31);
 
    const uint64_t v2 =
-      __gen_uint(values->ImmediateData, 0, 63);
+      util_bitpack_uint(values->ImmediateData, 0, 63);
    dw[2] = v2;
    dw[3] = v2 >> 32;
 }
@@ -2490,30 +2362,30 @@ GFX4_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0);
+      util_bitpack_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0);
    dw[1] = __gen_address(data, &dw[1], values->GeneralStateBaseAddress, v1, 12, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0);
+      util_bitpack_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0);
    dw[2] = __gen_address(data, &dw[2], values->SurfaceStateBaseAddress, v2, 12, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0);
+      util_bitpack_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0);
    dw[3] = __gen_address(data, &dw[3], values->IndirectObjectBaseAddress, v3, 12, 31);
 
    const uint32_t v4 =
-      __gen_uint(values->GeneralStateAccessUpperBoundModifyEnable, 0, 0);
+      util_bitpack_uint(values->GeneralStateAccessUpperBoundModifyEnable, 0, 0);
    dw[4] = __gen_address(data, &dw[4], values->GeneralStateAccessUpperBound, v4, 12, 31);
 
    const uint32_t v5 =
-      __gen_uint(values->IndirectObjectAccessUpperBoundModifyEnable, 0, 0);
+      util_bitpack_uint(values->IndirectObjectAccessUpperBoundModifyEnable, 0, 0);
    dw[5] = __gen_address(data, &dw[5], values->IndirectObjectAccessUpperBound, v5, 12, 31);
 }
 
@@ -2543,11 +2415,11 @@ GFX4_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->SystemInstructionPointer, 4, 31);
@@ -2590,27 +2462,27 @@ GFX4_URB_FENCE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->VSUnitURBReallocationRequest, 8, 8) |
-      __gen_uint(values->GSUnitURBReallocationRequest, 9, 9) |
-      __gen_uint(values->CLIPUnitURBReallocationRequest, 10, 10) |
-      __gen_uint(values->SFUnitURBReallocationRequest, 11, 11) |
-      __gen_uint(values->VFEUnitURBReallocationRequest, 12, 12) |
-      __gen_uint(values->CSUnitURBReallocationRequest, 13, 13) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->VSUnitURBReallocationRequest, 8, 8) |
+      util_bitpack_uint(values->GSUnitURBReallocationRequest, 9, 9) |
+      util_bitpack_uint(values->CLIPUnitURBReallocationRequest, 10, 10) |
+      util_bitpack_uint(values->SFUnitURBReallocationRequest, 11, 11) |
+      util_bitpack_uint(values->VFEUnitURBReallocationRequest, 12, 12) |
+      util_bitpack_uint(values->CSUnitURBReallocationRequest, 13, 13) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->VSFence, 0, 9) |
-      __gen_uint(values->GSFence, 10, 19) |
-      __gen_uint(values->CLIPFence, 20, 29);
+      util_bitpack_uint(values->VSFence, 0, 9) |
+      util_bitpack_uint(values->GSFence, 10, 19) |
+      util_bitpack_uint(values->CLIPFence, 20, 29);
 
    dw[2] =
-      __gen_uint(values->SFFence, 0, 9) |
-      __gen_uint(values->VFEFence, 10, 19) |
-      __gen_uint(values->CSFence, 20, 30);
+      util_bitpack_uint(values->SFFence, 0, 9) |
+      util_bitpack_uint(values->VFEFence, 10, 19) |
+      util_bitpack_uint(values->CSFence, 20, 30);
 }
 
 #define GFX4_XY_COLOR_BLT_length               6
@@ -2650,30 +2522,30 @@ GFX4_XY_COLOR_BLT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->TilingEnable, 11, 11) |
-      __gen_uint(values->_32bppByteMask, 20, 21) |
-      __gen_uint(values->_2DCommandOpcode, 22, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->TilingEnable, 11, 11) |
+      util_bitpack_uint(values->_32bppByteMask, 20, 21) |
+      util_bitpack_uint(values->_2DCommandOpcode, 22, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_sint(values->DestinationPitch, 0, 15) |
-      __gen_uint(values->RasterOperation, 16, 23) |
-      __gen_uint(values->ColorDepth, 24, 25) |
-      __gen_uint(values->ClippingEnabled, 30, 30);
+      util_bitpack_sint(values->DestinationPitch, 0, 15) |
+      util_bitpack_uint(values->RasterOperation, 16, 23) |
+      util_bitpack_uint(values->ColorDepth, 24, 25) |
+      util_bitpack_uint(values->ClippingEnabled, 30, 30);
 
    dw[2] =
-      __gen_sint(values->DestinationX1Coordinate, 0, 15) |
-      __gen_sint(values->DestinationY1Coordinate, 16, 31);
+      util_bitpack_sint(values->DestinationX1Coordinate, 0, 15) |
+      util_bitpack_sint(values->DestinationY1Coordinate, 16, 31);
 
    dw[3] =
-      __gen_sint(values->DestinationX2Coordinate, 0, 15) |
-      __gen_sint(values->DestinationY2Coordinate, 16, 31);
+      util_bitpack_sint(values->DestinationX2Coordinate, 0, 15) |
+      util_bitpack_sint(values->DestinationY2Coordinate, 16, 31);
 
    dw[4] = __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 31);
 
    dw[5] =
-      __gen_sint(values->SolidPatternColor, 0, 31);
+      util_bitpack_sint(values->SolidPatternColor, 0, 31);
 }
 
 #define GFX4_XY_SETUP_BLT_length               8
@@ -2716,37 +2588,37 @@ GFX4_XY_SETUP_BLT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->TilingEnable, 11, 11) |
-      __gen_uint(values->_32bppByteMask, 20, 21) |
-      __gen_uint(values->_2DCommandOpcode, 22, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->TilingEnable, 11, 11) |
+      util_bitpack_uint(values->_32bppByteMask, 20, 21) |
+      util_bitpack_uint(values->_2DCommandOpcode, 22, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_sint(values->DestinationPitch, 0, 15) |
-      __gen_uint(values->RasterOperation, 16, 23) |
-      __gen_uint(values->ColorDepth, 24, 25) |
-      __gen_uint(values->MonoSourceTransparencyMode, 29, 29) |
-      __gen_uint(values->ClippingEnabled, 30, 30);
+      util_bitpack_sint(values->DestinationPitch, 0, 15) |
+      util_bitpack_uint(values->RasterOperation, 16, 23) |
+      util_bitpack_uint(values->ColorDepth, 24, 25) |
+      util_bitpack_uint(values->MonoSourceTransparencyMode, 29, 29) |
+      util_bitpack_uint(values->ClippingEnabled, 30, 30);
 
    dw[2] =
-      __gen_sint(values->ClipRectX1Coordinate, 0, 15) |
-      __gen_sint(values->ClipRectY1Coordinate, 16, 31);
+      util_bitpack_sint(values->ClipRectX1Coordinate, 0, 15) |
+      util_bitpack_sint(values->ClipRectY1Coordinate, 16, 31);
 
    dw[3] =
-      __gen_sint(values->ClipRectX2Coordinate, 0, 15) |
-      __gen_sint(values->ClipRectY2Coordinate, 16, 31);
+      util_bitpack_sint(values->ClipRectX2Coordinate, 0, 15) |
+      util_bitpack_sint(values->ClipRectY2Coordinate, 16, 31);
 
    dw[4] = __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 31);
 
    dw[5] =
-      __gen_uint(values->BackgroundColor, 0, 31);
+      util_bitpack_uint(values->BackgroundColor, 0, 31);
 
    dw[6] =
-      __gen_uint(values->ForegroundColor, 0, 31);
+      util_bitpack_uint(values->ForegroundColor, 0, 31);
 
    dw[7] =
-      __gen_uint(values->PatternBaseAddress, 0, 31);
+      util_bitpack_uint(values->PatternBaseAddress, 0, 31);
 }
 
 #define GFX4_XY_SRC_COPY_BLT_length            8
@@ -2790,35 +2662,35 @@ GFX4_XY_SRC_COPY_BLT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->DestinationTilingEnable, 11, 11) |
-      __gen_uint(values->SourceTilingEnable, 15, 15) |
-      __gen_uint(values->_32bppByteMask, 20, 21) |
-      __gen_uint(values->_2DCommandOpcode, 22, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->DestinationTilingEnable, 11, 11) |
+      util_bitpack_uint(values->SourceTilingEnable, 15, 15) |
+      util_bitpack_uint(values->_32bppByteMask, 20, 21) |
+      util_bitpack_uint(values->_2DCommandOpcode, 22, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_sint(values->DestinationPitch, 0, 15) |
-      __gen_uint(values->RasterOperation, 16, 23) |
-      __gen_uint(values->ColorDepth, 24, 25) |
-      __gen_uint(values->ClippingEnabled, 30, 30);
+      util_bitpack_sint(values->DestinationPitch, 0, 15) |
+      util_bitpack_uint(values->RasterOperation, 16, 23) |
+      util_bitpack_uint(values->ColorDepth, 24, 25) |
+      util_bitpack_uint(values->ClippingEnabled, 30, 30);
 
    dw[2] =
-      __gen_sint(values->DestinationX1Coordinate, 0, 15) |
-      __gen_sint(values->DestinationY1Coordinate, 16, 31);
+      util_bitpack_sint(values->DestinationX1Coordinate, 0, 15) |
+      util_bitpack_sint(values->DestinationY1Coordinate, 16, 31);
 
    dw[3] =
-      __gen_sint(values->DestinationX2Coordinate, 0, 15) |
-      __gen_sint(values->DestinationY2Coordinate, 16, 31);
+      util_bitpack_sint(values->DestinationX2Coordinate, 0, 15) |
+      util_bitpack_sint(values->DestinationY2Coordinate, 16, 31);
 
    dw[4] = __gen_address(data, &dw[4], values->DestinationBaseAddress, 0, 0, 31);
 
    dw[5] =
-      __gen_sint(values->SourceX1Coordinate, 0, 15) |
-      __gen_sint(values->SourceY1Coordinate, 16, 31);
+      util_bitpack_sint(values->SourceX1Coordinate, 0, 15) |
+      util_bitpack_sint(values->SourceY1Coordinate, 16, 31);
 
    dw[6] =
-      __gen_sint(values->SourcePitch, 0, 15);
+      util_bitpack_sint(values->SourcePitch, 0, 15);
 
    dw[7] = __gen_address(data, &dw[7], values->SourceBaseAddress, 0, 0, 31);
 }
@@ -2854,21 +2726,21 @@ GFX4_XY_TEXT_IMMEDIATE_BLT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->TilingEnable, 11, 11) |
-      __gen_uint(values->Packing, 16, 16) |
-      __gen_uint(values->_32bppByteMask, 20, 21) |
-      __gen_uint(values->_2DCommandOpcode, 22, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->TilingEnable, 11, 11) |
+      util_bitpack_uint(values->Packing, 16, 16) |
+      util_bitpack_uint(values->_32bppByteMask, 20, 21) |
+      util_bitpack_uint(values->_2DCommandOpcode, 22, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_sint(values->DestinationPitch, 0, 15) |
-      __gen_sint(values->DestinationX1Coordinate, 0, 15) |
-      __gen_sint(values->DestinationY1Coordinate, 16, 31);
+      util_bitpack_sint(values->DestinationPitch, 0, 15) |
+      util_bitpack_sint(values->DestinationX1Coordinate, 0, 15) |
+      util_bitpack_sint(values->DestinationY1Coordinate, 16, 31);
 
    dw[2] =
-      __gen_sint(values->DestinationX2Coordinate, 0, 15) |
-      __gen_sint(values->DestinationY2Coordinate, 16, 31);
+      util_bitpack_sint(values->DestinationX2Coordinate, 0, 15) |
+      util_bitpack_sint(values->DestinationY2Coordinate, 16, 31);
 }
 
 #endif /* GFX4_PACK_H */

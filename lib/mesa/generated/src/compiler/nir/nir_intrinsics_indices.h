@@ -770,6 +770,30 @@ nir_intrinsic_has_st64(const nir_intrinsic_instr *instr)
 }
 
 
+static inline unsigned
+nir_intrinsic_arg_upper_bound_u32_amd(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] > 0);
+   return (unsigned)instr->const_index[info->index_map[NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] - 1];
+}
+
+static inline void
+nir_intrinsic_set_arg_upper_bound_u32_amd(nir_intrinsic_instr *instr, unsigned val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_arg_upper_bound_u32_amd(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] > 0;
+}
+
+
 static inline enum gl_access_qualifier
 nir_intrinsic_dst_access(const nir_intrinsic_instr *instr)
 {
@@ -1092,6 +1116,30 @@ nir_intrinsic_has_synchronous(const nir_intrinsic_instr *instr)
 {
    const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
    return info->index_map[NIR_INTRINSIC_SYNCHRONOUS] > 0;
+}
+
+
+static inline unsigned
+nir_intrinsic_value_id(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_VALUE_ID] > 0);
+   return (unsigned)instr->const_index[info->index_map[NIR_INTRINSIC_VALUE_ID] - 1];
+}
+
+static inline void
+nir_intrinsic_set_value_id(nir_intrinsic_instr *instr, unsigned val)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   assert(info->index_map[NIR_INTRINSIC_VALUE_ID] > 0);
+   instr->const_index[info->index_map[NIR_INTRINSIC_VALUE_ID] - 1] = val;
+}
+
+static inline bool
+nir_intrinsic_has_value_id(const nir_intrinsic_instr *instr)
+{
+   const nir_intrinsic_info *info = &nir_intrinsic_infos[instr->intrinsic];
+   return info->index_map[NIR_INTRINSIC_VALUE_ID] > 0;
 }
 
 #endif /* _NIR_INTRINSICS_INDICES_ */

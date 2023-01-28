@@ -67,7 +67,8 @@
 #define UNSIGNED_INT_2_10_10_10_REV_BIT   (1 << 12)
 #define INT_2_10_10_10_REV_BIT            (1 << 13)
 #define UNSIGNED_INT_10F_11F_11F_REV_BIT  (1 << 14)
-#define ALL_TYPE_BITS                    ((1 << 15) - 1)
+#define UNSIGNED_INT64_BIT                (1 << 15)
+#define ALL_TYPE_BITS                    ((1 << 16) - 1)
 
 #define ATTRIB_FORMAT_TYPES_MASK (BYTE_BIT | UNSIGNED_BYTE_BIT | \
                                   SHORT_BIT | UNSIGNED_SHORT_BIT | \
@@ -82,7 +83,7 @@
                                    SHORT_BIT | UNSIGNED_SHORT_BIT | \
                                    INT_BIT | UNSIGNED_INT_BIT)
 
-#define ATTRIB_LFORMAT_TYPES_MASK DOUBLE_BIT
+#define ATTRIB_LFORMAT_TYPES_MASK (DOUBLE_BIT | UNSIGNED_INT64_BIT)
 
 
 /** Convert GL datatype enum into a <type>_BIT value seen above */
@@ -577,7 +578,8 @@ get_legal_types_mask(const struct gl_context *ctx)
    if (_mesa_is_gles(ctx)) {
       legalTypesMask &= ~(FIXED_GL_BIT |
                           DOUBLE_BIT |
-                          UNSIGNED_INT_10F_11F_11F_REV_BIT);
+                          UNSIGNED_INT_10F_11F_11F_REV_BIT |
+                          UNSIGNED_INT64_BIT);
 
       /* GL_INT and GL_UNSIGNED_INT data is not allowed in OpenGL ES until
        * 3.0.  The 2_10_10_10 types are added in OpenGL ES 3.0 or
@@ -608,6 +610,9 @@ get_legal_types_mask(const struct gl_context *ctx)
 
       if (!ctx->Extensions.ARB_vertex_type_10f_11f_11f_rev)
          legalTypesMask &= ~UNSIGNED_INT_10F_11F_11F_REV_BIT;
+
+      if (!ctx->Extensions.ARB_bindless_texture)
+         legalTypesMask &= ~UNSIGNED_INT64_BIT;
    }
 
    return legalTypesMask;
@@ -1751,7 +1756,7 @@ _mesa_VertexArrayVertexAttribLOffsetEXT(GLuint vaobj, GLuint buffer, GLuint inde
       return;
    }
 
-   const GLbitfield legalTypes = DOUBLE_BIT;
+   const GLbitfield legalTypes = ATTRIB_LFORMAT_TYPES_MASK;
 
    if (!validate_array_and_format(ctx, "glVertexArrayVertexAttribLOffsetEXT",
                                   vao, vbo,
@@ -1880,7 +1885,7 @@ _mesa_VertexAttribLPointer(GLuint index, GLint size, GLenum type,
       return;
    }
 
-   const GLbitfield legalTypes = DOUBLE_BIT;
+   const GLbitfield legalTypes = ATTRIB_LFORMAT_TYPES_MASK;
 
    if (!validate_array_and_format(ctx, "glVertexAttribLPointer",
                                   ctx->Array.VAO, ctx->Array.ArrayBufferObj,

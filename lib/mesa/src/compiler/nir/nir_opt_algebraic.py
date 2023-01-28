@@ -30,6 +30,7 @@ from nir_opcodes import type_sizes
 import itertools
 import struct
 from math import pi
+import math
 
 # Convenience variables
 a = 'a'
@@ -143,6 +144,10 @@ optimizations = [
    (('fadd(is_only_used_as_float)', 'a@16', 0.0), a, '!'+signed_zero_inf_nan_preserve_16),
    (('fadd(is_only_used_as_float)', 'a@32', 0.0), a, '!'+signed_zero_inf_nan_preserve_32),
    (('iadd', a, 0), a),
+   (('iadd_sat', a, 0), a),
+   (('isub_sat', a, 0), a),
+   (('uadd_sat', a, 0), a),
+   (('usub_sat', a, 0), a),
    (('usadd_4x8_vc4', a, 0), a),
    (('usadd_4x8_vc4', a, ~0), ~0),
    (('~fadd', ('fmul', a, b), ('fmul', a, c)), ('fmul', a, ('fadd', b, c))),
@@ -156,8 +161,11 @@ optimizations = [
    (('~fadd', ('fmulz(is_used_once)', a, b), ('ffmaz(is_used_once)', a, c, d)), ('ffmaz', a, ('fadd', b, c), d)),
    (('~ffmaz', a, ('fmulz(is_used_once)', b, c), ('fmulz(is_used_once)', b, d)), ('fmulz', b, ('ffmaz', a, c, d))),
    (('iadd', ('imul', a, b), ('imul', a, c)), ('imul', a, ('iadd', b, c))),
+   (('iadd', ('ishl', b, a), ('ishl', c, a)), ('ishl', ('iadd', b, c), a)),
    (('iand', ('ior', a, b), ('ior', a, c)), ('ior', a, ('iand', b, c))),
    (('ior', ('iand', a, b), ('iand', a, c)), ('iand', a, ('ior', b, c))),
+   (('ieq', ('iand', a, '#b(is_pos_power_of_two)'), b), ('ine', ('iand', a, b), 0)),
+   (('ine', ('iand', a, '#b(is_pos_power_of_two)'), b), ('ieq', ('iand', a, b), 0)),
    (('~fadd', ('fneg', a), a), 0.0),
    (('iadd', ('ineg', a), a), 0),
    (('iadd', ('ineg', a), ('iadd', a, b)), b),
@@ -269,6 +277,11 @@ optimizations = [
     ('ffmaz', a, b, c), 'options->has_fmulz && !'+signed_zero_inf_nan_preserve_32),
    (('ffma@32', a, ('bcsel', ignore_exact('feq', a, 0.0), 0.0, '#b(is_not_const_zero)'), c),
     ('ffmaz', a, b, c), 'options->has_fmulz && !'+signed_zero_inf_nan_preserve_32),
+
+   # b == 0.0 ? 1.0 : fexp2(fmul(a, b)) -> fexp2(fmulz(a, b))
+   (('bcsel', ignore_exact('feq', b, 0.0), 1.0, ('fexp2', ('fmul@32', a, b))),
+    ('fexp2', ('fmulz', a, b)),
+    'options->has_fmulz && !'+signed_zero_inf_nan_preserve_32),
 ]
 
 # Shorthand for the expansion of just the dot product part of the [iu]dp4a
@@ -355,18 +368,20 @@ optimizations.extend([
    (('~flrp', ('fmul(is_used_once)', a, b), ('fmul(is_used_once)', a, c), d), ('fmul', ('flrp', b, c, d), a)),
 
    (('~flrp', a, 0.0, c), ('fadd', ('fmul', ('fneg', a), c), a)),
-   (('ftrunc', a), ('bcsel', ('flt', a, 0.0), ('fneg', ('ffloor', ('fabs', a))), ('ffloor', ('fabs', a))), 'options->lower_ftrunc'),
 
-   # Approximate handling of fround_even for DX9 addressing from gallium nine on
-   # DX9-class hardware with no proper fround support.
-   (('fround_even', a), ('bcsel',
-                         ('feq', ('ffract', a), 0.5),
-                         ('fadd', ('ffloor', ('fadd', a, 0.5)), 1.0),
-                         ('ffloor', ('fadd', a, 0.5))), 'options->lower_fround_even'),
+   (('ftrunc@16', a), ('bcsel', ('flt', a, 0.0), ('fneg', ('ffloor', ('fabs', a))), ('ffloor', ('fabs', a))), 'options->lower_ftrunc'),
+   (('ftrunc@32', a), ('bcsel', ('flt', a, 0.0), ('fneg', ('ffloor', ('fabs', a))), ('ffloor', ('fabs', a))), 'options->lower_ftrunc'),
+   (('ftrunc@64', a), ('bcsel', ('flt', a, 0.0), ('fneg', ('ffloor', ('fabs', a))), ('ffloor', ('fabs', a))), 'options->lower_ftrunc || (options->lower_doubles_options & nir_lower_dtrunc)'),
 
-   (('ffloor', a), ('fsub', a, ('ffract', a)), 'options->lower_ffloor'),
-   (('fadd', a, ('fneg', ('ffract', a))), ('ffloor', a), '!options->lower_ffloor'),
-   (('ffract', a), ('fsub', a, ('ffloor', a)), 'options->lower_ffract'),
+   (('ffloor@16', a), ('fsub', a, ('ffract', a)), 'options->lower_ffloor'),
+   (('ffloor@32', a), ('fsub', a, ('ffract', a)), 'options->lower_ffloor'),
+   (('ffloor@64', a), ('fsub', a, ('ffract', a)), '(options->lower_ffloor || (options->lower_doubles_options & nir_lower_dfloor)) && !(options->lower_doubles_options & nir_lower_dfract)'),
+   (('fadd@16', a, ('fneg', ('ffract', a))), ('ffloor', a), '!options->lower_ffloor'),
+   (('fadd@32', a, ('fneg', ('ffract', a))), ('ffloor', a), '!options->lower_ffloor'),
+   (('fadd@64', a, ('fneg', ('ffract', a))), ('ffloor', a), '!options->lower_ffloor && !(options->lower_doubles_options & nir_lower_dfloor)'),
+   (('ffract@16', a), ('fsub', a, ('ffloor', a)), 'options->lower_ffract'),
+   (('ffract@32', a), ('fsub', a, ('ffloor', a)), 'options->lower_ffract'),
+   (('ffract@64', a), ('fsub', a, ('ffloor', a)), 'options->lower_ffract || (options->lower_doubles_options & nir_lower_dfract)'),
    (('fceil', a), ('fneg', ('ffloor', ('fneg', a))), 'options->lower_fceil'),
    (('ffma@16', a, b, c), ('fadd', ('fmul', a, b), c), 'options->lower_ffma16'),
    (('ffma@32', a, b, c), ('fadd', ('fmul', a, b), c), 'options->lower_ffma32'),
@@ -689,6 +704,14 @@ optimizations.extend([
    (('~bcsel', ('flt', a, b), b, a), ('fmax', a, b)),
    (('~bcsel', ('fge', a, b), b, a), ('fmin', a, b)),
    (('~bcsel', ('fge', b, a), b, a), ('fmax', a, b)),
+   (('bcsel', ('ult', b, a), b, a), ('umin', a, b)),
+   (('bcsel', ('ult', a, b), b, a), ('umax', a, b)),
+   (('bcsel', ('uge', a, b), b, a), ('umin', a, b)),
+   (('bcsel', ('uge', b, a), b, a), ('umax', a, b)),
+   (('bcsel', ('ilt', b, a), b, a), ('imin', a, b)),
+   (('bcsel', ('ilt', a, b), b, a), ('imax', a, b)),
+   (('bcsel', ('ige', a, b), b, a), ('imin', a, b)),
+   (('bcsel', ('ige', b, a), b, a), ('imax', a, b)),
    (('bcsel', ('i2b', a), b, c), ('bcsel', ('ine', a, 0), b, c)),
    (('bcsel', ('inot', a), b, c), ('bcsel', a, c, b)),
    (('bcsel', a, ('bcsel', a, b, c), d), ('bcsel', a, b, d)),
@@ -1019,6 +1042,8 @@ for op in ['iand', 'ior', 'ixor']:
 
 # Integer sizes
 for s in [8, 16, 32, 64]:
+    last_shift_bit = int(math.log2(s)) - 1
+
     optimizations.extend([
        (('iand', ('ieq', 'a@{}'.format(s), 0), ('ieq', 'b@{}'.format(s), 0)), ('ieq', ('ior', a, b), 0), 'options->lower_umax'),
        (('ior',  ('ine', 'a@{}'.format(s), 0), ('ine', 'b@{}'.format(s), 0)), ('ine', ('ior', a, b), 0), 'options->lower_umin'),
@@ -1034,6 +1059,7 @@ for s in [8, 16, 32, 64]:
        (('ishl', 'a@{}'.format(s), ('iand', s - 1, b)), ('ishl', a, b)),
        (('ishr', 'a@{}'.format(s), ('iand', s - 1, b)), ('ishr', a, b)),
        (('ushr', 'a@{}'.format(s), ('iand', s - 1, b)), ('ushr', a, b)),
+       (('ushr', 'a@{}'.format(s), ('ishl(is_used_once)', ('iand', b, 1), last_shift_bit)), ('ushr', a, ('ishl', b, last_shift_bit))),
     ])
 
 optimizations.extend([
@@ -1041,9 +1067,7 @@ optimizations.extend([
    (('ior', ('ieq', a, 0), ('ieq', a, 1)), ('uge', 1, a)),
    (('ior', ('uge', 1, a), ('ieq', a, 2)), ('uge', 2, a)),
    (('ior', ('uge', 2, a), ('ieq', a, 3)), ('uge', 3, a)),
-
    (('ior', a, ('ieq', a, False)), True),
-   (('ior', a, ('inot', a)), -1),
 
    (('ine', ('ineg', ('b2i', 'a@1')), ('ineg', ('b2i', 'b@1'))), ('ine', a, b)),
    (('b2i', ('ine', 'a@1', 'b@1')), ('b2i', ('ixor', a, b))),
@@ -1146,26 +1170,38 @@ optimizations.extend([
    (('fall_equal2', a, b), ('fmin', ('seq', 'a.x', 'b.x'), ('seq', 'a.y', 'b.y')), 'options->lower_vector_cmp'),
    (('fall_equal3', a, b), ('seq', ('fany_nequal3', a, b), 0.0), 'options->lower_vector_cmp'),
    (('fall_equal4', a, b), ('seq', ('fany_nequal4', a, b), 0.0), 'options->lower_vector_cmp'),
+   (('fall_equal8', a, b), ('seq', ('fany_nequal8', a, b), 0.0), 'options->lower_vector_cmp'),
+   (('fall_equal16', a, b), ('seq', ('fany_nequal16', a, b), 0.0), 'options->lower_vector_cmp'),
    (('fany_nequal2', a, b), ('fmax', ('sne', 'a.x', 'b.x'), ('sne', 'a.y', 'b.y')), 'options->lower_vector_cmp'),
    (('fany_nequal3', a, b), ('fsat', ('fdot3', ('sne', a, b), ('sne', a, b))), 'options->lower_vector_cmp'),
    (('fany_nequal4', a, b), ('fsat', ('fdot4', ('sne', a, b), ('sne', a, b))), 'options->lower_vector_cmp'),
+   (('fany_nequal8', a, b), ('fsat', ('fdot8', ('sne', a, b), ('sne', a, b))), 'options->lower_vector_cmp'),
+   (('fany_nequal16', a, b), ('fsat', ('fdot16', ('sne', a, b), ('sne', a, b))), 'options->lower_vector_cmp'),
+])
 
-   (('ball_iequal2', a, b), ('iand', ('ieq', 'a.x', 'b.x'), ('ieq', 'a.y', 'b.y')), 'options->lower_vector_cmp'),
-   (('ball_iequal3', a, b), ('iand', ('iand', ('ieq', 'a.x', 'b.x'), ('ieq', 'a.y', 'b.y')), ('ieq', 'a.z', 'b.z')), 'options->lower_vector_cmp'),
-   (('ball_iequal4', a, b), ('iand', ('iand', ('ieq', 'a.x', 'b.x'), ('ieq', 'a.y', 'b.y')), ('iand', ('ieq', 'a.z', 'b.z'), ('ieq', 'a.w', 'b.w'))), 'options->lower_vector_cmp'),
+def vector_cmp(reduce_op, cmp_op, comps):
+   if len(comps) == 1:
+      return (cmp_op, 'a.' + comps[0], 'b.' + comps[0])
+   else:
+      mid = len(comps) // 2
+      return (reduce_op, vector_cmp(reduce_op, cmp_op, comps[:mid]),
+                         vector_cmp(reduce_op, cmp_op, comps[mid:]))
 
-   (('bany_inequal2', a, b), ('ior', ('ine', 'a.x', 'b.x'), ('ine', 'a.y', 'b.y')), 'options->lower_vector_cmp'),
-   (('bany_inequal3', a, b), ('ior', ('ior', ('ine', 'a.x', 'b.x'), ('ine', 'a.y', 'b.y')), ('ine', 'a.z', 'b.z')), 'options->lower_vector_cmp'),
-   (('bany_inequal4', a, b), ('ior', ('ior', ('ine', 'a.x', 'b.x'), ('ine', 'a.y', 'b.y')), ('ior', ('ine', 'a.z', 'b.z'), ('ine', 'a.w', 'b.w'))), 'options->lower_vector_cmp'),
+for op in [
+   ('ball_iequal', 'ieq', 'iand'),
+   ('ball_fequal', 'feq', 'iand'),
+   ('bany_inequal', 'ine', 'ior'),
+   ('bany_fnequal', 'fneu', 'ior'),
+]:
+   optimizations.extend([
+      ((op[0] + '2', a, b), vector_cmp(op[2], op[1], 'xy'), 'options->lower_vector_cmp'),
+      ((op[0] + '3', a, b), vector_cmp(op[2], op[1], 'xyz'), 'options->lower_vector_cmp'),
+      ((op[0] + '4', a, b), vector_cmp(op[2], op[1], 'xyzw'), 'options->lower_vector_cmp'),
+      ((op[0] + '8', a, b), vector_cmp(op[2], op[1], 'abcdefgh'), 'options->lower_vector_cmp'),
+      ((op[0] + '16', a, b), vector_cmp(op[2], op[1], 'abcdefghijklmnop'), 'options->lower_vector_cmp'),
+   ])
 
-   (('ball_fequal2', a, b), ('iand', ('feq', 'a.x', 'b.x'), ('feq', 'a.y', 'b.y')), 'options->lower_vector_cmp'),
-   (('ball_fequal3', a, b), ('iand', ('iand', ('feq', 'a.x', 'b.x'), ('feq', 'a.y', 'b.y')), ('feq', 'a.z', 'b.z')), 'options->lower_vector_cmp'),
-   (('ball_fequal4', a, b), ('iand', ('iand', ('feq', 'a.x', 'b.x'), ('feq', 'a.y', 'b.y')), ('iand', ('feq', 'a.z', 'b.z'), ('feq', 'a.w', 'b.w'))), 'options->lower_vector_cmp'),
-
-   (('bany_fnequal2', a, b), ('ior', ('fneu', 'a.x', 'b.x'), ('fneu', 'a.y', 'b.y')), 'options->lower_vector_cmp'),
-   (('bany_fnequal3', a, b), ('ior', ('ior', ('fneu', 'a.x', 'b.x'), ('fneu', 'a.y', 'b.y')), ('fneu', 'a.z', 'b.z')), 'options->lower_vector_cmp'),
-   (('bany_fnequal4', a, b), ('ior', ('ior', ('fneu', 'a.x', 'b.x'), ('fneu', 'a.y', 'b.y')), ('ior', ('fneu', 'a.z', 'b.z'), ('fneu', 'a.w', 'b.w'))), 'options->lower_vector_cmp'),
-
+optimizations.extend([
    (('feq', ('seq', a, b), 1.0), ('feq', a, b)),
    (('feq', ('sne', a, b), 1.0), ('fneu', a, b)),
    (('feq', ('slt', a, b), 1.0), ('flt', a, b)),
@@ -1210,13 +1246,17 @@ optimizations.extend([
    (('fneu', 'a(is_a_number)', a), False),
    # Logical and bit operations
    (('iand', a, a), a),
-   (('iand', a, ~0), a),
    (('iand', a, 0), 0),
+   (('iand', a, -1), a),
+   (('iand', a, ('inot', a)), 0),
    (('ior', a, a), a),
    (('ior', a, 0), a),
-   (('ior', a, True), True),
+   (('ior', a, -1), -1),
+   (('ior', a, ('inot', a)), -1),
    (('ixor', a, a), 0),
    (('ixor', a, 0), a),
+   (('ixor', a, ('ixor', a, b)), b),
+   (('ixor', a, -1), ('inot', a)),
    (('inot', ('inot', a)), a),
    (('ior', ('iand', a, b), b), b),
    (('ior', ('ior', a, b), b), ('ior', a, b)),
@@ -1229,6 +1269,7 @@ optimizations.extend([
    (('ishl', 0, a), 0),
    (('ishl', a, 0), a),
    (('ishr', 0, a), 0),
+   (('ishr', -1, a), -1),
    (('ishr', a, 0), a),
    (('ushr', 0, a), 0),
    (('ushr', a, 0), a),
@@ -1240,10 +1281,14 @@ optimizations.extend([
    (('ior', ('ushr@16', a, b), ('ishl@16', a, ('isub', 16, b))), ('uror', a, b), '!options->lower_rotate'),
    (('ior', ('ushr@32', a, b), ('ishl@32', a, ('iadd', 32, ('ineg', b)))), ('uror', a, b), '!options->lower_rotate'),
    (('ior', ('ushr@32', a, b), ('ishl@32', a, ('isub', 32, b))), ('uror', a, b), '!options->lower_rotate'),
+   (('urol@8',  a, b), ('ior', ('ishl', a, b), ('ushr', a, ('isub',  8, b))), 'options->lower_rotate'),
    (('urol@16', a, b), ('ior', ('ishl', a, b), ('ushr', a, ('isub', 16, b))), 'options->lower_rotate'),
    (('urol@32', a, b), ('ior', ('ishl', a, b), ('ushr', a, ('isub', 32, b))), 'options->lower_rotate'),
+   (('urol@64', a, b), ('ior', ('ishl', a, b), ('ushr', a, ('isub', 64, b))), 'options->lower_rotate'),
+   (('uror@8',  a, b), ('ior', ('ushr', a, b), ('ishl', a, ('isub',  8, b))), 'options->lower_rotate'),
    (('uror@16', a, b), ('ior', ('ushr', a, b), ('ishl', a, ('isub', 16, b))), 'options->lower_rotate'),
    (('uror@32', a, b), ('ior', ('ushr', a, b), ('ishl', a, ('isub', 32, b))), 'options->lower_rotate'),
+   (('uror@64', a, b), ('ior', ('ushr', a, b), ('ishl', a, ('isub', 64, b))), 'options->lower_rotate'),
    # Exponential/logarithmic identities
    (('~fexp2', ('flog2', a)), a), # 2^lg2(a) = a
    (('~flog2', ('fexp2', a)), a), # lg2(2^a) = a
@@ -1385,6 +1430,8 @@ optimizations.extend([
    (('ffloor', 'a(is_integral)'), a),
    (('fceil', 'a(is_integral)'), a),
    (('ftrunc', 'a(is_integral)'), a),
+   (('fround_even', 'a(is_integral)'), a),
+
    # fract(x) = x - floor(x), so fract(NaN) = NaN
    (('~ffract', 'a(is_integral)'), 0.0),
    (('fabs', 'a(is_not_negative)'), a),
@@ -1445,6 +1492,12 @@ optimizations.extend([
    # Packing and then unpacking does nothing
    (('unpack_64_2x32_split_x', ('pack_64_2x32_split', a, b)), a),
    (('unpack_64_2x32_split_y', ('pack_64_2x32_split', a, b)), b),
+   (('unpack_64_2x32_split_x', ('pack_64_2x32', a)), 'a.x'),
+   (('unpack_64_2x32_split_y', ('pack_64_2x32', a)), 'a.y'),
+   (('unpack_64_2x32_split_x', ('u2u64', 'a@32')), a),
+   (('unpack_64_2x32_split_y', ('u2u64', a)), 0),
+   (('unpack_64_2x32_split_x', ('i2i64', 'a@32')), a),
+   (('unpack_64_2x32_split_y', ('i2i64(is_used_once)', 'a@32')), ('ishr', a, 31)),
    (('unpack_64_2x32', ('pack_64_2x32_split', a, b)), ('vec2', a, b)),
    (('unpack_64_2x32', ('pack_64_2x32', a)), a),
    (('unpack_double_2x32_dxil', ('pack_double_2x32_dxil', a)), a),
@@ -1640,17 +1693,53 @@ optimizations.extend([
    (('bcsel', ('ige', ('find_lsb', a), 0), ('find_lsb', a), -1), ('find_lsb', a)),
    (('bcsel', ('ige', ('ifind_msb', a), 0), ('ifind_msb', a), -1), ('ifind_msb', a)),
    (('bcsel', ('ige', ('ufind_msb', a), 0), ('ufind_msb', a), -1), ('ufind_msb', a)),
+   (('bcsel', ('ige', ('ifind_msb_rev', a), 0), ('ifind_msb_rev', a), -1), ('ifind_msb_rev', a)),
+   (('bcsel', ('ige', ('ufind_msb_rev', a), 0), ('ufind_msb_rev', a), -1), ('ufind_msb_rev', a)),
 
    (('bcsel', ('ine', a, 0), ('find_lsb', a), -1), ('find_lsb', a)),
    (('bcsel', ('ine', a, 0), ('ifind_msb', a), -1), ('ifind_msb', a)),
    (('bcsel', ('ine', a, 0), ('ufind_msb', a), -1), ('ufind_msb', a)),
+   (('bcsel', ('ine', a, 0), ('ifind_msb_rev', a), -1), ('ifind_msb_rev', a)),
+   (('bcsel', ('ine', a, 0), ('ufind_msb_rev', a), -1), ('ufind_msb_rev', a)),
 
    (('bcsel', ('ine', a, -1), ('ifind_msb', a), -1), ('ifind_msb', a)),
+   (('bcsel', ('ine', a, -1), ('ifind_msb_rev', a), -1), ('ifind_msb_rev', a)),
+
+   (('bcsel', ('ine', ('ifind_msb', 'a@32'), -1), ('iadd', 31, ('ineg', ('ifind_msb', a))), -1), ('ifind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ine', ('ufind_msb', 'a@32'), -1), ('iadd', 31, ('ineg', ('ufind_msb', a))), -1), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ieq', ('ifind_msb', 'a@32'), -1), -1, ('iadd', 31, ('ineg', ('ifind_msb', a)))), ('ifind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ieq', ('ufind_msb', 'a@32'), -1), -1, ('iadd', 31, ('ineg', ('ufind_msb', a)))), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ine', ('ifind_msb', 'a@32'), -1), ('iadd', 31, ('ineg', ('ifind_msb', a))), ('ifind_msb', a)), ('ifind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ine', ('ufind_msb', 'a@32'), -1), ('iadd', 31, ('ineg', ('ufind_msb', a))), ('ufind_msb', a)), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ieq', ('ifind_msb', 'a@32'), -1), ('ifind_msb', a), ('iadd', 31, ('ineg', ('ifind_msb', a)))), ('ifind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ieq', ('ufind_msb', 'a@32'), -1), ('ufind_msb', a), ('iadd', 31, ('ineg', ('ufind_msb', a)))), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ine', 'a@32', 0), ('iadd', 31, ('ineg', ('ufind_msb', a))), -1), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ieq', 'a@32', 0), -1, ('iadd', 31, ('ineg', ('ufind_msb', a)))), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ine', 'a@32', 0), ('iadd', 31, ('ineg', ('ufind_msb', a))), ('ufind_msb', a)), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('bcsel', ('ieq', 'a@32', 0), ('ufind_msb', a), ('iadd', 31, ('ineg', ('ufind_msb', a)))), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+
+   (('bcsel', ('ine', ('ifind_msb_rev', 'a@32'), -1), ('iadd', 31, ('ineg', ('ifind_msb_rev', a))), -1), ('ifind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ine', ('ufind_msb_rev', 'a@32'), -1), ('iadd', 31, ('ineg', ('ufind_msb_rev', a))), -1), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ieq', ('ifind_msb_rev', 'a@32'), -1), -1, ('iadd', 31, ('ineg', ('ifind_msb_rev', a)))), ('ifind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ieq', ('ufind_msb_rev', 'a@32'), -1), -1, ('iadd', 31, ('ineg', ('ufind_msb_rev', a)))), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ine', ('ifind_msb_rev', 'a@32'), -1), ('iadd', 31, ('ineg', ('ifind_msb_rev', a))), ('ifind_msb_rev', a)), ('ifind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ine', ('ufind_msb_rev', 'a@32'), -1), ('iadd', 31, ('ineg', ('ufind_msb_rev', a))), ('ufind_msb_rev', a)), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ieq', ('ifind_msb_rev', 'a@32'), -1), ('ifind_msb_rev', a), ('iadd', 31, ('ineg', ('ifind_msb_rev', a)))), ('ifind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ieq', ('ufind_msb_rev', 'a@32'), -1), ('ufind_msb_rev', a), ('iadd', 31, ('ineg', ('ufind_msb_rev', a)))), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ine', 'a@32', 0), ('iadd', 31, ('ineg', ('ufind_msb_rev', a))), -1), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ieq', 'a@32', 0), -1, ('iadd', 31, ('ineg', ('ufind_msb_rev', a)))), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ine', 'a@32', 0), ('iadd', 31, ('ineg', ('ufind_msb_rev', a))), ('ufind_msb_rev', a)), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+   (('bcsel', ('ieq', 'a@32', 0), ('ufind_msb_rev', a), ('iadd', 31, ('ineg', ('ufind_msb_rev', a)))), ('ufind_msb', a), '!options->lower_find_msb_to_reverse'),
+
+   (('find_lsb', ('bitfield_reverse', a)), ('ufind_msb_rev', a), 'options->has_find_msb_rev'),
+   (('ufind_msb_rev', ('bitfield_reverse', a)), ('find_lsb', a), '!options->lower_find_lsb'),
 
    (('~fmul', ('bcsel(is_used_once)', c, -1.0, 1.0), b), ('bcsel', c, ('fneg', b), b)),
    (('~fmul', ('bcsel(is_used_once)', c, 1.0, -1.0), b), ('bcsel', c, b, ('fneg', b))),
    (('~fmulz', ('bcsel(is_used_once)', c, -1.0, 1.0), b), ('bcsel', c, ('fneg', b), b)),
    (('~fmulz', ('bcsel(is_used_once)', c, 1.0, -1.0), b), ('bcsel', c, b, ('fneg', b))),
+   (('fabs', ('bcsel(is_used_once)', b, ('fneg', a), a)), ('fabs', a)),
+   (('fabs', ('bcsel(is_used_once)', b, a, ('fneg', a))), ('fabs', a)),
    (('~bcsel', ('flt', a, 0.0), ('fneg', a), a), ('fabs', a)),
 
    (('bcsel', a, ('bcsel', b, c, d), d), ('bcsel', ('iand', a, b), c, d)),
@@ -1675,9 +1764,12 @@ optimizations.extend([
    (('irhadd@64', a, b), ('isub', ('ior', a, b), ('ishr', ('ixor', a, b), 1)), 'options->lower_hadd64 || (options->lower_int64_options & nir_lower_iadd64) != 0'),
    (('urhadd@64', a, b), ('isub', ('ior', a, b), ('ushr', ('ixor', a, b), 1)), 'options->lower_hadd64 || (options->lower_int64_options & nir_lower_iadd64) != 0'),
 
+   (('imul_32x16', a, b), ('imul', a, ('extract_i16', b, 0)), 'options->lower_mul_32x16'),
+   (('umul_32x16', a, b), ('imul', a, ('extract_u16', b, 0)), 'options->lower_mul_32x16'),
+
    (('uadd_sat@64', a, b), ('bcsel', ('ult', ('iadd', a, b), a), -1, ('iadd', a, b)), 'options->lower_uadd_sat || (options->lower_int64_options & nir_lower_iadd64) != 0'),
    (('uadd_sat', a, b), ('bcsel', ('ult', ('iadd', a, b), a), -1, ('iadd', a, b)), 'options->lower_uadd_sat'),
-   (('usub_sat', a, b), ('bcsel', ('ult', a, b), 0, ('isub', a, b)), 'options->lower_uadd_sat'),
+   (('usub_sat', a, b), ('bcsel', ('ult', a, b), 0, ('isub', a, b)), 'options->lower_usub_sat'),
    (('usub_sat@64', a, b), ('bcsel', ('ult', a, b), 0, ('isub', a, b)), '(options->lower_int64_options & nir_lower_usub_sat64) != 0'),
 
    # int64_t sum = a + b;
@@ -1785,6 +1877,16 @@ optimizations.extend([
    (('bfm', 'bits', ('iand', 31, 'offset')), ('bfm', 'bits', 'offset')),
    (('bfm', ('iand', 31, 'bits'), 'offset'), ('bfm', 'bits', 'offset')),
 
+   # Optimizations for ubitfield_extract(value, offset, umin(bits, 32-(offset&0x1f))) and such
+   (('ult', a, ('umin', ('iand', a, b), c)), False),
+   (('ult', 31, ('umin', '#bits(is_ult_32)', a)), False),
+   (('ubfe', 'value', 'offset', ('umin', 'width', ('iadd', 32, ('ineg', ('iand', 31, 'offset'))))),
+    ('ubfe', 'value', 'offset', 'width')),
+   (('ibfe', 'value', 'offset', ('umin', 'width', ('iadd', 32, ('ineg', ('iand', 31, 'offset'))))),
+    ('ibfe', 'value', 'offset', 'width')),
+   (('bfm', ('umin', 'width', ('iadd', 32, ('ineg', ('iand', 31, 'offset')))), 'offset'),
+    ('bfm', 'width', 'offset')),
+
    # Section 8.8 (Integer Functions) of the GLSL 4.60 spec says:
    #
    #    If bits is zero, the result will be zero.
@@ -1834,6 +1936,8 @@ optimizations.extend([
       ('isub', 31, ('ufind_msb_rev', 'value')),
       ('ufind_msb_rev', 'value')),
      'options->lower_find_msb_to_reverse'),
+
+   (('uclz', a), ('umin', 32, ('ufind_msb_rev', a)), 'options->lower_uclz'),
 
    (('find_lsb', 'value'),
     ('ufind_msb', ('iand', 'value', ('ineg', 'value'))),
@@ -1970,22 +2074,6 @@ optimizations.extend([
    (('imul24', a, '#b@32(is_pos_power_of_two)'), ('ishl', a, ('find_lsb', b)), '!options->lower_bitops'),
    (('imul24', a, '#b@32(is_neg_power_of_two)'), ('ineg', ('ishl', a, ('find_lsb', ('iabs', b)))), '!options->lower_bitops'),
    (('imul24', a, 0), (0)),
-
-   (('fcsel', ('slt', 0, a), b, c), ('fcsel_gt', a, b, c), "options->has_fused_comp_and_csel"),
-   (('fcsel', ('slt', a, 0), b, c), ('fcsel_gt', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
-   (('fcsel', ('sge', a, 0), b, c), ('fcsel_ge', a, b, c), "options->has_fused_comp_and_csel"),
-   (('fcsel', ('sge', 0, a), b, c), ('fcsel_ge', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
-
-   (('bcsel', ('ilt', 0, 'a@32'), 'b@32', 'c@32'), ('i32csel_gt', a, b, c), "options->has_fused_comp_and_csel"),
-   (('bcsel', ('ilt', 'a@32', 0), 'b@32', 'c@32'), ('i32csel_ge', a, c, b), "options->has_fused_comp_and_csel"),
-   (('bcsel', ('ige', 'a@32', 0), 'b@32', 'c@32'), ('i32csel_ge', a, b, c), "options->has_fused_comp_and_csel"),
-   (('bcsel', ('ige', 0, 'a@32'), 'b@32', 'c@32'), ('i32csel_gt', a, c, b), "options->has_fused_comp_and_csel"),
-
-   (('bcsel', ('flt', 0, 'a@32'), 'b@32', 'c@32'), ('fcsel_gt', a, b, c), "options->has_fused_comp_and_csel"),
-   (('bcsel', ('flt', 'a@32', 0), 'b@32', 'c@32'), ('fcsel_gt', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
-   (('bcsel', ('fge', 'a@32', 0), 'b@32', 'c@32'), ('fcsel_ge', a, b, c), "options->has_fused_comp_and_csel"),
-   (('bcsel', ('fge', 0, 'a@32'), 'b@32', 'c@32'), ('fcsel_ge', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
-
 ])
 
 # bit_size dependent lowerings
@@ -2413,7 +2501,7 @@ for op in ['fpow']:
         (('bcsel', a, (op, b, c), (op + '(is_used_once)', d, c)), (op, ('bcsel', a, b, d), c)),
     ]
 
-for op in ['frcp', 'frsq', 'fsqrt', 'fexp2', 'flog2', 'fsign', 'fsin', 'fcos', 'fneg', 'fabs', 'fsign']:
+for op in ['frcp', 'frsq', 'fsqrt', 'fexp2', 'flog2', 'fsign', 'fsin', 'fcos', 'fsin_amd', 'fcos_amd', 'fneg', 'fabs', 'fsign']:
     optimizations += [
         (('bcsel', c, (op + '(is_used_once)', a), (op + '(is_used_once)', b)), (op, ('bcsel', c, a, b))),
     ]
@@ -2424,7 +2512,9 @@ for op in ['ineg', 'iabs', 'inot', 'isign']:
     ]
 
 optimizations.extend([
-    (('fisnormal', 'a@32'), ('ult', 0x1ffffff, ('iadd', ('ishl', a, 1), 0x1000000)), 'options->lower_fisnormal')
+    (('fisnormal', 'a@16'), ('ult', 0xfff, ('iadd', ('ishl', a, 1), 0x800)), 'options->lower_fisnormal'),
+    (('fisnormal', 'a@32'), ('ult', 0x1ffffff, ('iadd', ('ishl', a, 1), 0x1000000)), 'options->lower_fisnormal'),
+    (('fisnormal', 'a@64'), ('ult', 0x3fffffffffffff, ('iadd', ('ishl', a, 1), 0x20000000000000)), 'options->lower_fisnormal')
     ])
 
 # This section contains optimizations to propagate downsizing conversions of
@@ -2551,17 +2641,45 @@ late_optimizations = [
 
    # nir_lower_to_source_mods will collapse this, but its existence during the
    # optimization loop can prevent other optimizations.
-   (('fneg', ('fneg', a)), a),
+   (('fneg', ('fneg', a)), a)
+]
 
-   # re-combine inexact mul+add to ffma. Do this before fsub so that a * b - c
-   # gets combined to fma(a, b, -c).
-   (('~fadd@16', ('fmul', a, b), c), ('ffma', a, b, c), 'options->fuse_ffma16'),
-   (('~fadd@32', ('fmul', a, b), c), ('ffma', a, b, c), 'options->fuse_ffma32'),
-   (('~fadd@64', ('fmul', a, b), c), ('ffma', a, b, c), 'options->fuse_ffma64'),
-   (('~fadd@32', ('fmulz', a, b), c), ('ffmaz', a, b, c), 'options->fuse_ffma32'),
+# re-combine inexact mul+add to ffma. Do this before fsub so that a * b - c
+# gets combined to fma(a, b, -c).
+for sz, mulz in itertools.product([16, 32, 64], [False, True]):
+    # fmulz/ffmaz only for fp32
+    if mulz and sz != 32:
+        continue
 
+    # Fuse the correct fmul. Only consider fmuls where the only users are fadd
+    # (or fneg/fabs which are assumed to be propagated away), as a heuristic to
+    # avoid fusing in cases where it's harmful.
+    fmul = ('fmulz' if mulz else 'fmul') + '(is_only_used_by_fadd)'
+    ffma = 'ffmaz' if mulz else 'ffma'
+
+    fadd = '~fadd@{}'.format(sz)
+    option = 'options->fuse_ffma{}'.format(sz)
+
+    late_optimizations.extend([
+        ((fadd, (fmul, a, b), c), (ffma, a, b, c), option),
+
+        ((fadd, ('fneg(is_only_used_by_fadd)', (fmul, a, b)), c),
+         (ffma, ('fneg', a), b, c), option),
+
+        ((fadd, ('fabs(is_only_used_by_fadd)', (fmul, a, b)), c),
+         (ffma, ('fabs', a), ('fabs', b), c), option),
+
+        ((fadd, ('fneg(is_only_used_by_fadd)', ('fabs', (fmul, a, b))), c),
+         (ffma, ('fneg', ('fabs', a)), ('fabs', b), c), option),
+    ])
+
+late_optimizations.extend([
    # Subtractions get lowered during optimization, so we need to recombine them
-   (('fadd', a, ('fneg', 'b')), ('fsub', 'a', 'b'), 'options->has_fsub'),
+   (('fadd@8', a, ('fneg', 'b')), ('fsub', 'a', 'b'), 'options->has_fsub'),
+   (('fadd@16', a, ('fneg', 'b')), ('fsub', 'a', 'b'), 'options->has_fsub'),
+   (('fadd@32', a, ('fneg', 'b')), ('fsub', 'a', 'b'), 'options->has_fsub'),
+   (('fadd@64', a, ('fneg', 'b')), ('fsub', 'a', 'b'), 'options->has_fsub && !(options->lower_doubles_options & nir_lower_dsub)'),
+
    (('fneg', a), ('fmul', a, -1.0), 'options->lower_fneg'),
    (('iadd', a, ('ineg', 'b')), ('isub', 'a', 'b'), 'options->has_isub || options->lower_ineg'),
    (('ineg', a), ('isub', 0, a), 'options->lower_ineg'),
@@ -2611,6 +2729,15 @@ late_optimizations = [
    (('fdph', a, b), ('fdph_replicated', a, b), 'options->fdot_replicates'),
 
    (('~flrp', ('fadd(is_used_once)', a, b), ('fadd(is_used_once)', a, c), d), ('fadd', ('flrp', b, c, d), a)),
+
+   # Approximate handling of fround_even for DX9 addressing from gallium nine on
+   # DX9-class hardware with no proper fround support.  This is in
+   # late_optimizations so that the is_integral() opts in the main pass get a
+   # chance to eliminate the fround_even first.
+   (('fround_even', a), ('bcsel',
+                         ('feq', ('ffract', a), 0.5),
+                         ('fadd', ('ffloor', ('fadd', a, 0.5)), 1.0),
+                         ('ffloor', ('fadd', a, 0.5))), 'options->lower_fround_even'),
 
    # A similar operation could apply to any ffma(#a, b, #(-a/2)), but this
    # particular operation is common for expanding values stored in a texture
@@ -2723,7 +2850,7 @@ late_optimizations = [
    (('extract_i8', ('extract_u8', a, b), 0), ('extract_i8', a, b)),
    (('extract_u8', ('extract_i8', a, b), 0), ('extract_u8', a, b)),
    (('extract_u8', ('extract_u8', a, b), 0), ('extract_u8', a, b)),
-]
+])
 
 # A few more extract cases we'd rather leave late
 for N in [16, 32]:
@@ -2828,6 +2955,21 @@ late_optimizations += [
   (('i2imp', a), ('u2u16', a)),
   (('u2fmp', a), ('u2f16', a)),
   (('fisfinite', a), ('flt', ('fabs', a), float("inf"))),
+
+  (('fcsel', ('slt', 0, a), b, c), ('fcsel_gt', a, b, c), "options->has_fused_comp_and_csel"),
+  (('fcsel', ('slt', a, 0), b, c), ('fcsel_gt', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
+  (('fcsel', ('sge', a, 0), b, c), ('fcsel_ge', a, b, c), "options->has_fused_comp_and_csel"),
+  (('fcsel', ('sge', 0, a), b, c), ('fcsel_ge', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
+
+  (('bcsel', ('ilt', 0, 'a@32'), 'b@32', 'c@32'), ('i32csel_gt', a, b, c), "options->has_fused_comp_and_csel"),
+  (('bcsel', ('ilt', 'a@32', 0), 'b@32', 'c@32'), ('i32csel_ge', a, c, b), "options->has_fused_comp_and_csel"),
+  (('bcsel', ('ige', 'a@32', 0), 'b@32', 'c@32'), ('i32csel_ge', a, b, c), "options->has_fused_comp_and_csel"),
+  (('bcsel', ('ige', 0, 'a@32'), 'b@32', 'c@32'), ('i32csel_gt', a, c, b), "options->has_fused_comp_and_csel"),
+
+  (('bcsel', ('flt', 0, 'a@32'), 'b@32', 'c@32'), ('fcsel_gt', a, b, c), "options->has_fused_comp_and_csel"),
+  (('bcsel', ('flt', 'a@32', 0), 'b@32', 'c@32'), ('fcsel_gt', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
+  (('bcsel', ('fge', 'a@32', 0), 'b@32', 'c@32'), ('fcsel_ge', a, b, c), "options->has_fused_comp_and_csel"),
+  (('bcsel', ('fge', 0, 'a@32'), 'b@32', 'c@32'), ('fcsel_ge', ('fneg', a), b, c), "options->has_fused_comp_and_csel"),
 ]
 
 distribute_src_mods = [

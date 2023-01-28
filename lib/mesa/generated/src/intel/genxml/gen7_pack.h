@@ -31,10 +31,8 @@
 #define GFX7_PACK_H
 
 #include <stdio.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <assert.h>
-#include <math.h>
+
+#include "util/bitpack_helpers.h"
 
 #ifndef __gen_validate_value
 #define __gen_validate_value(x)
@@ -48,67 +46,6 @@
 #else
 #define NDEBUG_UNUSED
 #endif
-
-union __intel_value {
-   float f;
-   uint32_t dw;
-};
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_mbo(uint32_t start, uint32_t end)
-{
-   return (~0ull >> (64 - (end - start + 1))) << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_uint(uint64_t v, uint32_t start, NDEBUG_UNUSED uint32_t end)
-{
-   __gen_validate_value(v);
-
-#ifndef NDEBUG
-   const int width = end - start + 1;
-   if (width < 64) {
-      const uint64_t max = (1ull << width) - 1;
-      assert(v <= max);
-   }
-#endif
-
-   return v << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_uint_nonzero(uint64_t v, uint32_t start, uint32_t end)
-{
-   assert(v != 0ull);
-   return __gen_uint(v, start, end);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sint(int64_t v, uint32_t start, uint32_t end)
-{
-   const int width = end - start + 1;
-
-   __gen_validate_value(v);
-
-#ifndef NDEBUG
-   if (width < 64) {
-      const int64_t max = (1ll << (width - 1)) - 1;
-      const int64_t min = -(1ll << (width - 1));
-      assert(min <= v && v <= max);
-   }
-#endif
-
-   const uint64_t mask = ~0ull >> (64 - width);
-
-   return (v & mask) << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sint_nonzero(int64_t v, uint32_t start, uint32_t end)
-{
-   assert(v != 0ll);
-   return __gen_sint(v, start, end);
-}
 
 static inline __attribute__((always_inline)) uint64_t
 __gen_offset(uint64_t v, NDEBUG_UNUSED uint32_t start, NDEBUG_UNUSED uint32_t end)
@@ -144,71 +81,6 @@ __gen_address(__gen_user_data *data, void *location,
    } else {
       return addr_u64;
    }
-}
-
-static inline __attribute__((always_inline)) uint32_t
-__gen_float(float v)
-{
-   __gen_validate_value(v);
-   return ((union __intel_value) { .f = (v) }).dw;
-}
-
-static inline __attribute__((always_inline)) uint32_t
-__gen_float_nonzero(float v)
-{
-   assert(v != 0.0f);
-   return __gen_float(v);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sfixed(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
-{
-   __gen_validate_value(v);
-
-   const float factor = (1 << fract_bits);
-
-#ifndef NDEBUG
-   const float max = ((1 << (end - start)) - 1) / factor;
-   const float min = -(1 << (end - start)) / factor;
-   assert(min <= v && v <= max);
-#endif
-
-   const int64_t int_val = llroundf(v * factor);
-   const uint64_t mask = ~0ull >> (64 - (end - start + 1));
-
-   return (int_val & mask) << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_sfixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
-{
-   assert(v != 0.0f);
-   return __gen_sfixed(v, start, end, fract_bits);
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_ufixed(float v, uint32_t start, NDEBUG_UNUSED uint32_t end, uint32_t fract_bits)
-{
-   __gen_validate_value(v);
-
-   const float factor = (1 << fract_bits);
-
-#ifndef NDEBUG
-   const float max = ((1 << (end - start + 1)) - 1) / factor;
-   const float min = 0.0f;
-   assert(min <= v && v <= max);
-#endif
-
-   const uint64_t uint_val = llroundf(v * factor);
-
-   return uint_val << start;
-}
-
-static inline __attribute__((always_inline)) uint64_t
-__gen_ufixed_nonzero(float v, uint32_t start, uint32_t end, uint32_t fract_bits)
-{
-   assert(v != 0.0f);
-   return __gen_ufixed(v, start, end, fract_bits);
 }
 
 #ifndef __gen_address_type
@@ -386,15 +258,15 @@ GFX7_3DSTATE_CONSTANT_BODY_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ReadLength[0], 0, 15) |
-      __gen_uint(values->ReadLength[1], 16, 31);
+      util_bitpack_uint(values->ReadLength[0], 0, 15) |
+      util_bitpack_uint(values->ReadLength[1], 16, 31);
 
    dw[1] =
-      __gen_uint(values->ReadLength[2], 0, 15) |
-      __gen_uint(values->ReadLength[3], 16, 31);
+      util_bitpack_uint(values->ReadLength[2], 0, 15) |
+      util_bitpack_uint(values->ReadLength[3], 16, 31);
 
    const uint32_t v2 =
-      __gen_uint_nonzero(values->MOCS, 0, 4);
+      util_bitpack_uint_nonzero(values->MOCS, 0, 4);
    dw[2] = __gen_address(data, &dw[2], values->Buffer[0], v2, 5, 31);
 
    dw[3] = __gen_address(data, &dw[3], values->Buffer[1], 0, 5, 31);
@@ -460,33 +332,33 @@ GFX7_BLEND_STATE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DestinationBlendFactor, 0, 4) |
-      __gen_uint(values->SourceBlendFactor, 5, 9) |
-      __gen_uint(values->ColorBlendFunction, 11, 13) |
-      __gen_uint(values->DestinationAlphaBlendFactor, 15, 19) |
-      __gen_uint(values->SourceAlphaBlendFactor, 20, 24) |
-      __gen_uint(values->AlphaBlendFunction, 26, 28) |
-      __gen_uint(values->IndependentAlphaBlendEnable, 30, 30) |
-      __gen_uint(values->ColorBufferBlendEnable, 31, 31);
+      util_bitpack_uint(values->DestinationBlendFactor, 0, 4) |
+      util_bitpack_uint(values->SourceBlendFactor, 5, 9) |
+      util_bitpack_uint(values->ColorBlendFunction, 11, 13) |
+      util_bitpack_uint(values->DestinationAlphaBlendFactor, 15, 19) |
+      util_bitpack_uint(values->SourceAlphaBlendFactor, 20, 24) |
+      util_bitpack_uint(values->AlphaBlendFunction, 26, 28) |
+      util_bitpack_uint(values->IndependentAlphaBlendEnable, 30, 30) |
+      util_bitpack_uint(values->ColorBufferBlendEnable, 31, 31);
 
    dw[1] =
-      __gen_uint(values->PostBlendColorClampEnable, 0, 0) |
-      __gen_uint(values->PreBlendColorClampEnable, 1, 1) |
-      __gen_uint(values->ColorClampRange, 2, 3) |
-      __gen_uint(values->YDitherOffset, 8, 9) |
-      __gen_uint(values->XDitherOffset, 10, 11) |
-      __gen_uint(values->ColorDitherEnable, 12, 12) |
-      __gen_uint(values->AlphaTestFunction, 13, 15) |
-      __gen_uint(values->AlphaTestEnable, 16, 16) |
-      __gen_uint(values->LogicOpFunction, 18, 21) |
-      __gen_uint(values->LogicOpEnable, 22, 22) |
-      __gen_uint(values->WriteDisableBlue, 24, 24) |
-      __gen_uint(values->WriteDisableGreen, 25, 25) |
-      __gen_uint(values->WriteDisableRed, 26, 26) |
-      __gen_uint(values->WriteDisableAlpha, 27, 27) |
-      __gen_uint(values->AlphaToCoverageDitherEnable, 29, 29) |
-      __gen_uint(values->AlphaToOneEnable, 30, 30) |
-      __gen_uint(values->AlphaToCoverageEnable, 31, 31);
+      util_bitpack_uint(values->PostBlendColorClampEnable, 0, 0) |
+      util_bitpack_uint(values->PreBlendColorClampEnable, 1, 1) |
+      util_bitpack_uint(values->ColorClampRange, 2, 3) |
+      util_bitpack_uint(values->YDitherOffset, 8, 9) |
+      util_bitpack_uint(values->XDitherOffset, 10, 11) |
+      util_bitpack_uint(values->ColorDitherEnable, 12, 12) |
+      util_bitpack_uint(values->AlphaTestFunction, 13, 15) |
+      util_bitpack_uint(values->AlphaTestEnable, 16, 16) |
+      util_bitpack_uint(values->LogicOpFunction, 18, 21) |
+      util_bitpack_uint(values->LogicOpEnable, 22, 22) |
+      util_bitpack_uint(values->WriteDisableBlue, 24, 24) |
+      util_bitpack_uint(values->WriteDisableGreen, 25, 25) |
+      util_bitpack_uint(values->WriteDisableRed, 26, 26) |
+      util_bitpack_uint(values->WriteDisableAlpha, 27, 27) |
+      util_bitpack_uint(values->AlphaToCoverageDitherEnable, 29, 29) |
+      util_bitpack_uint(values->AlphaToOneEnable, 30, 30) |
+      util_bitpack_uint(values->AlphaToCoverageEnable, 31, 31);
 }
 
 #define GFX7_BLEND_STATE_length                0
@@ -515,10 +387,10 @@ GFX7_CC_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_float(values->MinimumDepth);
+      util_bitpack_float(values->MinimumDepth);
 
    dw[1] =
-      __gen_float(values->MaximumDepth);
+      util_bitpack_float(values->MaximumDepth);
 }
 
 #define GFX7_COLOR_CALC_STATE_length           6
@@ -545,26 +417,26 @@ GFX7_COLOR_CALC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->AlphaTestFormat, 0, 0) |
-      __gen_uint(values->RoundDisableFunctionDisable, 15, 15) |
-      __gen_uint(values->BackfaceStencilReferenceValue, 16, 23) |
-      __gen_uint(values->StencilReferenceValue, 24, 31);
+      util_bitpack_uint(values->AlphaTestFormat, 0, 0) |
+      util_bitpack_uint(values->RoundDisableFunctionDisable, 15, 15) |
+      util_bitpack_uint(values->BackfaceStencilReferenceValue, 16, 23) |
+      util_bitpack_uint(values->StencilReferenceValue, 24, 31);
 
    dw[1] =
-      __gen_uint(values->AlphaReferenceValueAsUNORM8, 0, 31) |
-      __gen_float(values->AlphaReferenceValueAsFLOAT32);
+      util_bitpack_uint(values->AlphaReferenceValueAsUNORM8, 0, 31) |
+      util_bitpack_float(values->AlphaReferenceValueAsFLOAT32);
 
    dw[2] =
-      __gen_float(values->BlendConstantColorRed);
+      util_bitpack_float(values->BlendConstantColorRed);
 
    dw[3] =
-      __gen_float(values->BlendConstantColorGreen);
+      util_bitpack_float(values->BlendConstantColorGreen);
 
    dw[4] =
-      __gen_float(values->BlendConstantColorBlue);
+      util_bitpack_float(values->BlendConstantColorBlue);
 
    dw[5] =
-      __gen_float(values->BlendConstantColorAlpha);
+      util_bitpack_float(values->BlendConstantColorAlpha);
 }
 
 #define GFX7_DEPTH_STENCIL_STATE_length        3
@@ -597,28 +469,28 @@ GFX7_DEPTH_STENCIL_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->BackfaceStencilPassDepthPassOp, 3, 5) |
-      __gen_uint(values->BackfaceStencilPassDepthFailOp, 6, 8) |
-      __gen_uint(values->BackfaceStencilFailOp, 9, 11) |
-      __gen_uint(values->BackfaceStencilTestFunction, 12, 14) |
-      __gen_uint(values->DoubleSidedStencilEnable, 15, 15) |
-      __gen_uint(values->StencilBufferWriteEnable, 18, 18) |
-      __gen_uint(values->StencilPassDepthPassOp, 19, 21) |
-      __gen_uint(values->StencilPassDepthFailOp, 22, 24) |
-      __gen_uint(values->StencilFailOp, 25, 27) |
-      __gen_uint(values->StencilTestFunction, 28, 30) |
-      __gen_uint(values->StencilTestEnable, 31, 31);
+      util_bitpack_uint(values->BackfaceStencilPassDepthPassOp, 3, 5) |
+      util_bitpack_uint(values->BackfaceStencilPassDepthFailOp, 6, 8) |
+      util_bitpack_uint(values->BackfaceStencilFailOp, 9, 11) |
+      util_bitpack_uint(values->BackfaceStencilTestFunction, 12, 14) |
+      util_bitpack_uint(values->DoubleSidedStencilEnable, 15, 15) |
+      util_bitpack_uint(values->StencilBufferWriteEnable, 18, 18) |
+      util_bitpack_uint(values->StencilPassDepthPassOp, 19, 21) |
+      util_bitpack_uint(values->StencilPassDepthFailOp, 22, 24) |
+      util_bitpack_uint(values->StencilFailOp, 25, 27) |
+      util_bitpack_uint(values->StencilTestFunction, 28, 30) |
+      util_bitpack_uint(values->StencilTestEnable, 31, 31);
 
    dw[1] =
-      __gen_uint(values->BackfaceStencilWriteMask, 0, 7) |
-      __gen_uint(values->BackfaceStencilTestMask, 8, 15) |
-      __gen_uint(values->StencilWriteMask, 16, 23) |
-      __gen_uint(values->StencilTestMask, 24, 31);
+      util_bitpack_uint(values->BackfaceStencilWriteMask, 0, 7) |
+      util_bitpack_uint(values->BackfaceStencilTestMask, 8, 15) |
+      util_bitpack_uint(values->StencilWriteMask, 16, 23) |
+      util_bitpack_uint(values->StencilTestMask, 24, 31);
 
    dw[2] =
-      __gen_uint(values->DepthBufferWriteEnable, 26, 26) |
-      __gen_uint(values->DepthTestFunction, 27, 29) |
-      __gen_uint(values->DepthTestEnable, 31, 31);
+      util_bitpack_uint(values->DepthBufferWriteEnable, 26, 26) |
+      util_bitpack_uint(values->DepthTestFunction, 27, 29) |
+      util_bitpack_uint(values->DepthTestEnable, 31, 31);
 }
 
 #define GFX7_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_length      2
@@ -656,31 +528,31 @@ GFX7_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused))
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MBErrorConcealmentPSliceWeightPredictionDisable, 0, 0) |
-      __gen_uint(values->MBErrorConcealmentPSliceMotionVectorsOverrideDisable, 1, 1) |
-      __gen_uint(values->MBErrorConcealmentPSliceReferenceIndexOverrideDisable, 2, 2) |
-      __gen_uint(values->MBErrorConcealmentBSpatialWeightPredictionDisable, 3, 3) |
-      __gen_uint(values->MBErrorConcealmentBSpatialMotionVectorsOverrideDisable, 4, 4) |
-      __gen_uint(values->MBErrorConcealmentBSpatialReferenceIndexOverrideDisable, 5, 5) |
-      __gen_uint(values->MBErrorConcealmentBSpatialPredictionMode, 6, 7) |
-      __gen_uint(values->MBHeaderErrorHandling, 8, 8) |
-      __gen_uint(values->EntropyErrorHandling, 10, 10) |
-      __gen_uint(values->MPRErrorHandling, 12, 12) |
-      __gen_uint(values->BSDPrematureCompleteErrorHandling, 14, 14) |
-      __gen_uint(values->ConcealmentPictureID, 16, 21) |
-      __gen_uint(values->MBErrorConcealmentBTemporalWeightPredictionDisable, 24, 24) |
-      __gen_uint(values->MBErrorConcealmentBTemporalMotionVectorsOverrideEnable, 25, 25) |
-      __gen_uint(values->MBErrorConcealmentBTemporalReferenceIndexOverrideEnable, 26, 26) |
-      __gen_uint(values->MBErrorConcealmentBTemporalPredictionMode, 27, 28) |
-      __gen_uint(values->InitCurrentMBNumber, 30, 30) |
-      __gen_uint(values->ConcealmentMethod, 31, 31);
+      util_bitpack_uint(values->MBErrorConcealmentPSliceWeightPredictionDisable, 0, 0) |
+      util_bitpack_uint(values->MBErrorConcealmentPSliceMotionVectorsOverrideDisable, 1, 1) |
+      util_bitpack_uint(values->MBErrorConcealmentPSliceReferenceIndexOverrideDisable, 2, 2) |
+      util_bitpack_uint(values->MBErrorConcealmentBSpatialWeightPredictionDisable, 3, 3) |
+      util_bitpack_uint(values->MBErrorConcealmentBSpatialMotionVectorsOverrideDisable, 4, 4) |
+      util_bitpack_uint(values->MBErrorConcealmentBSpatialReferenceIndexOverrideDisable, 5, 5) |
+      util_bitpack_uint(values->MBErrorConcealmentBSpatialPredictionMode, 6, 7) |
+      util_bitpack_uint(values->MBHeaderErrorHandling, 8, 8) |
+      util_bitpack_uint(values->EntropyErrorHandling, 10, 10) |
+      util_bitpack_uint(values->MPRErrorHandling, 12, 12) |
+      util_bitpack_uint(values->BSDPrematureCompleteErrorHandling, 14, 14) |
+      util_bitpack_uint(values->ConcealmentPictureID, 16, 21) |
+      util_bitpack_uint(values->MBErrorConcealmentBTemporalWeightPredictionDisable, 24, 24) |
+      util_bitpack_uint(values->MBErrorConcealmentBTemporalMotionVectorsOverrideEnable, 25, 25) |
+      util_bitpack_uint(values->MBErrorConcealmentBTemporalReferenceIndexOverrideEnable, 26, 26) |
+      util_bitpack_uint(values->MBErrorConcealmentBTemporalPredictionMode, 27, 28) |
+      util_bitpack_uint(values->InitCurrentMBNumber, 30, 30) |
+      util_bitpack_uint(values->ConcealmentMethod, 31, 31);
 
    dw[1] =
-      __gen_uint(values->FirstMBBitOffset, 0, 2) |
-      __gen_uint(values->LastSlice, 3, 3) |
-      __gen_uint(values->EmulationPreventionBytePresent, 4, 4) |
-      __gen_uint(values->FixPrevMBSkipped, 7, 7) |
-      __gen_uint(values->FirstMBByteOffsetofSliceDataorSliceHeader, 16, 31);
+      util_bitpack_uint(values->FirstMBBitOffset, 0, 2) |
+      util_bitpack_uint(values->LastSlice, 3, 3) |
+      util_bitpack_uint(values->EmulationPreventionBytePresent, 4, 4) |
+      util_bitpack_uint(values->FixPrevMBSkipped, 7, 7) |
+      util_bitpack_uint(values->FirstMBByteOffsetofSliceDataorSliceHeader, 16, 31);
 }
 
 #define GFX7_INTERFACE_DESCRIPTOR_DATA_length      8
@@ -728,30 +600,30 @@ GFX7_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *dat
       __gen_offset(values->KernelStartPointer, 6, 31);
 
    dw[1] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->ThreadPriority, 17, 17) |
-      __gen_uint(values->SingleProgramFlow, 18, 18);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->ThreadPriority, 17, 17) |
+      util_bitpack_uint(values->SingleProgramFlow, 18, 18);
 
    dw[2] =
-      __gen_uint(values->SamplerCount, 2, 4) |
+      util_bitpack_uint(values->SamplerCount, 2, 4) |
       __gen_offset(values->SamplerStatePointer, 5, 31);
 
    dw[3] =
-      __gen_uint(values->BindingTableEntryCount, 0, 4) |
+      util_bitpack_uint(values->BindingTableEntryCount, 0, 4) |
       __gen_offset(values->BindingTablePointer, 5, 15);
 
    dw[4] =
-      __gen_uint(values->ConstantURBEntryReadOffset, 0, 15) |
-      __gen_uint(values->ConstantURBEntryReadLength, 16, 31);
+      util_bitpack_uint(values->ConstantURBEntryReadOffset, 0, 15) |
+      util_bitpack_uint(values->ConstantURBEntryReadLength, 16, 31);
 
    dw[5] =
-      __gen_uint(values->NumberofThreadsinGPGPUThreadGroup, 0, 7) |
-      __gen_uint(values->SharedLocalMemorySize, 16, 20) |
-      __gen_uint(values->BarrierEnable, 21, 21) |
-      __gen_uint(values->RoundingMode, 22, 23);
+      util_bitpack_uint(values->NumberofThreadsinGPGPUThreadGroup, 0, 7) |
+      util_bitpack_uint(values->SharedLocalMemorySize, 16, 20) |
+      util_bitpack_uint(values->BarrierEnable, 21, 21) |
+      util_bitpack_uint(values->RoundingMode, 22, 23);
 
    dw[6] = 0;
 
@@ -773,9 +645,9 @@ GFX7_MEMORY_OBJECT_CONTROL_STATE_pack(__attribute__((unused)) __gen_user_data *d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->L3CacheabilityControlL3CC, 0, 0) |
-      __gen_uint(values->LLCCacheabilityControlLLCCC, 1, 1) |
-      __gen_uint(values->GraphicsDataTypeGFDT, 2, 2);
+      util_bitpack_uint(values->L3CacheabilityControlL3CC, 0, 0) |
+      util_bitpack_uint(values->LLCCacheabilityControlLLCCC, 1, 1) |
+      util_bitpack_uint(values->GraphicsDataTypeGFDT, 2, 2);
 }
 
 #define GFX7_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_length      2
@@ -797,15 +669,15 @@ GFX7_MFD_MPEG2_BSD_OBJECT_INLINE_DATA_DESCRIPTION_pack(__attribute__((unused)) _
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->FirstMBBitOffset, 0, 2) |
-      __gen_uint(values->LastMB, 3, 3) |
-      __gen_uint(values->LastPicSlice, 5, 5) |
-      __gen_uint(values->MBCount, 8, 14) |
-      __gen_uint(values->SliceVerticalPosition, 16, 22) |
-      __gen_uint(values->SliceHorizontalPosition, 24, 30);
+      util_bitpack_uint(values->FirstMBBitOffset, 0, 2) |
+      util_bitpack_uint(values->LastMB, 3, 3) |
+      util_bitpack_uint(values->LastPicSlice, 5, 5) |
+      util_bitpack_uint(values->MBCount, 8, 14) |
+      util_bitpack_uint(values->SliceVerticalPosition, 16, 22) |
+      util_bitpack_uint(values->SliceHorizontalPosition, 24, 30);
 
    dw[1] =
-      __gen_uint(values->QuantizerScaleCode, 24, 28);
+      util_bitpack_uint(values->QuantizerScaleCode, 24, 28);
 }
 
 #define GFX7_PALETTE_ENTRY_length              1
@@ -824,10 +696,10 @@ GFX7_PALETTE_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->Blue, 0, 7) |
-      __gen_uint(values->Green, 8, 15) |
-      __gen_uint(values->Red, 16, 23) |
-      __gen_uint(values->Alpha, 24, 31);
+      util_bitpack_uint(values->Blue, 0, 7) |
+      util_bitpack_uint(values->Green, 8, 15) |
+      util_bitpack_uint(values->Red, 16, 23) |
+      util_bitpack_uint(values->Alpha, 24, 31);
 }
 
 #define GFX7_RENDER_SURFACE_STATE_length       8
@@ -924,66 +796,66 @@ GFX7_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->CubeFaceEnablePositiveZ, 0, 0) |
-      __gen_uint(values->CubeFaceEnableNegativeZ, 1, 1) |
-      __gen_uint(values->CubeFaceEnablePositiveY, 2, 2) |
-      __gen_uint(values->CubeFaceEnableNegativeY, 3, 3) |
-      __gen_uint(values->CubeFaceEnablePositiveX, 4, 4) |
-      __gen_uint(values->CubeFaceEnableNegativeX, 5, 5) |
-      __gen_uint(values->MediaBoundaryPixelMode, 6, 7) |
-      __gen_uint(values->RenderCacheReadWriteMode, 8, 8) |
-      __gen_uint(values->SurfaceArraySpacing, 10, 10) |
-      __gen_uint(values->VerticalLineStrideOffset, 11, 11) |
-      __gen_uint(values->VerticalLineStride, 12, 12) |
-      __gen_uint(values->TileWalk, 13, 13) |
-      __gen_uint(values->TiledSurface, 14, 14) |
-      __gen_uint(values->SurfaceHorizontalAlignment, 15, 15) |
-      __gen_uint(values->SurfaceVerticalAlignment, 16, 17) |
-      __gen_uint(values->SurfaceFormat, 18, 26) |
-      __gen_uint(values->SurfaceArray, 28, 28) |
-      __gen_uint(values->SurfaceType, 29, 31);
+      util_bitpack_uint(values->CubeFaceEnablePositiveZ, 0, 0) |
+      util_bitpack_uint(values->CubeFaceEnableNegativeZ, 1, 1) |
+      util_bitpack_uint(values->CubeFaceEnablePositiveY, 2, 2) |
+      util_bitpack_uint(values->CubeFaceEnableNegativeY, 3, 3) |
+      util_bitpack_uint(values->CubeFaceEnablePositiveX, 4, 4) |
+      util_bitpack_uint(values->CubeFaceEnableNegativeX, 5, 5) |
+      util_bitpack_uint(values->MediaBoundaryPixelMode, 6, 7) |
+      util_bitpack_uint(values->RenderCacheReadWriteMode, 8, 8) |
+      util_bitpack_uint(values->SurfaceArraySpacing, 10, 10) |
+      util_bitpack_uint(values->VerticalLineStrideOffset, 11, 11) |
+      util_bitpack_uint(values->VerticalLineStride, 12, 12) |
+      util_bitpack_uint(values->TileWalk, 13, 13) |
+      util_bitpack_uint(values->TiledSurface, 14, 14) |
+      util_bitpack_uint(values->SurfaceHorizontalAlignment, 15, 15) |
+      util_bitpack_uint(values->SurfaceVerticalAlignment, 16, 17) |
+      util_bitpack_uint(values->SurfaceFormat, 18, 26) |
+      util_bitpack_uint(values->SurfaceArray, 28, 28) |
+      util_bitpack_uint(values->SurfaceType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[2] =
-      __gen_uint(values->Width, 0, 13) |
-      __gen_uint(values->Height, 16, 29);
+      util_bitpack_uint(values->Width, 0, 13) |
+      util_bitpack_uint(values->Height, 16, 29);
 
    dw[3] =
-      __gen_uint(values->SurfacePitch, 0, 17) |
-      __gen_uint(values->Depth, 21, 31);
+      util_bitpack_uint(values->SurfacePitch, 0, 17) |
+      util_bitpack_uint(values->Depth, 21, 31);
 
    dw[4] =
-      __gen_uint(values->MultisamplePositionPaletteIndex, 0, 2) |
-      __gen_uint(values->StrbufMinimumArrayElement, 0, 26) |
-      __gen_uint(values->NumberofMultisamples, 3, 5) |
-      __gen_uint(values->MultisampledSurfaceStorageFormat, 6, 6) |
-      __gen_uint(values->RenderTargetViewExtent, 7, 17) |
-      __gen_uint(values->MinimumArrayElement, 18, 28) |
-      __gen_uint(values->RenderTargetRotation, 29, 30);
+      util_bitpack_uint(values->MultisamplePositionPaletteIndex, 0, 2) |
+      util_bitpack_uint(values->StrbufMinimumArrayElement, 0, 26) |
+      util_bitpack_uint(values->NumberofMultisamples, 3, 5) |
+      util_bitpack_uint(values->MultisampledSurfaceStorageFormat, 6, 6) |
+      util_bitpack_uint(values->RenderTargetViewExtent, 7, 17) |
+      util_bitpack_uint(values->MinimumArrayElement, 18, 28) |
+      util_bitpack_uint(values->RenderTargetRotation, 29, 30);
 
    dw[5] =
-      __gen_uint(values->MIPCountLOD, 0, 3) |
-      __gen_uint(values->SurfaceMinLOD, 4, 7) |
-      __gen_uint_nonzero(values->MOCS, 16, 19) |
-      __gen_uint(values->YOffset, 20, 23) |
-      __gen_uint(values->XOffset, 25, 31);
+      util_bitpack_uint(values->MIPCountLOD, 0, 3) |
+      util_bitpack_uint(values->SurfaceMinLOD, 4, 7) |
+      util_bitpack_uint_nonzero(values->MOCS, 16, 19) |
+      util_bitpack_uint(values->YOffset, 20, 23) |
+      util_bitpack_uint(values->XOffset, 25, 31);
 
    const uint32_t v6 =
-      __gen_uint(values->MCSEnable, 0, 0) |
-      __gen_uint(values->YOffsetforUVPlane, 0, 13) |
-      __gen_uint(values->AppendCounterEnable, 1, 1) |
-      __gen_uint(values->AuxiliarySurfacePitch, 3, 11) |
-      __gen_uint(values->XOffsetforUVPlane, 16, 29) |
-      __gen_uint(values->ReservedMBZ, 30, 31);
+      util_bitpack_uint(values->MCSEnable, 0, 0) |
+      util_bitpack_uint(values->YOffsetforUVPlane, 0, 13) |
+      util_bitpack_uint(values->AppendCounterEnable, 1, 1) |
+      util_bitpack_uint(values->AuxiliarySurfacePitch, 3, 11) |
+      util_bitpack_uint(values->XOffsetforUVPlane, 16, 29) |
+      util_bitpack_uint(values->ReservedMBZ, 30, 31);
    dw[6] = __gen_address(data, &dw[6], values->AuxiliarySurfaceBaseAddress, v6, 12, 31);
 
    dw[7] =
-      __gen_ufixed(values->ResourceMinLOD, 0, 11, 8) |
-      __gen_uint(values->AlphaClearColor, 28, 28) |
-      __gen_uint(values->BlueClearColor, 29, 29) |
-      __gen_uint(values->GreenClearColor, 30, 30) |
-      __gen_uint(values->RedClearColor, 31, 31);
+      util_bitpack_ufixed(values->ResourceMinLOD, 0, 11, 8) |
+      util_bitpack_uint(values->AlphaClearColor, 28, 28) |
+      util_bitpack_uint(values->BlueClearColor, 29, 29) |
+      util_bitpack_uint(values->GreenClearColor, 30, 30) |
+      util_bitpack_uint(values->RedClearColor, 31, 31);
 }
 
 #define GFX7_SAMPLER_BORDER_COLOR_STATE_length      4
@@ -1006,20 +878,20 @@ GFX7_SAMPLER_BORDER_COLOR_STATE_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->BorderColorUnormRed, 0, 7) |
-      __gen_float(values->BorderColorFloatRed) |
-      __gen_uint(values->BorderColorUnormGreen, 8, 15) |
-      __gen_uint(values->BorderColorUnormBlue, 16, 23) |
-      __gen_uint(values->BorderColorUnormAlpha, 24, 31);
+      util_bitpack_uint(values->BorderColorUnormRed, 0, 7) |
+      util_bitpack_float(values->BorderColorFloatRed) |
+      util_bitpack_uint(values->BorderColorUnormGreen, 8, 15) |
+      util_bitpack_uint(values->BorderColorUnormBlue, 16, 23) |
+      util_bitpack_uint(values->BorderColorUnormAlpha, 24, 31);
 
    dw[1] =
-      __gen_float(values->BorderColorFloatGreen);
+      util_bitpack_float(values->BorderColorFloatGreen);
 
    dw[2] =
-      __gen_float(values->BorderColorFloatBlue);
+      util_bitpack_float(values->BorderColorFloatBlue);
 
    dw[3] =
-      __gen_float(values->BorderColorFloatAlpha);
+      util_bitpack_float(values->BorderColorFloatAlpha);
 }
 
 #define GFX7_SAMPLER_STATE_length              4
@@ -1102,41 +974,41 @@ GFX7_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->AnisotropicAlgorithm, 0, 0) |
-      __gen_sfixed(values->TextureLODBias, 1, 13, 8) |
-      __gen_uint(values->MinModeFilter, 14, 16) |
-      __gen_uint(values->MagModeFilter, 17, 19) |
-      __gen_uint(values->MipModeFilter, 20, 21) |
-      __gen_ufixed(values->BaseMipLevel, 22, 26, 1) |
-      __gen_uint(values->LODPreClampEnable, 28, 28) |
-      __gen_uint(values->TextureBorderColorMode, 29, 29) |
-      __gen_uint(values->SamplerDisable, 31, 31);
+      util_bitpack_uint(values->AnisotropicAlgorithm, 0, 0) |
+      util_bitpack_sfixed(values->TextureLODBias, 1, 13, 8) |
+      util_bitpack_uint(values->MinModeFilter, 14, 16) |
+      util_bitpack_uint(values->MagModeFilter, 17, 19) |
+      util_bitpack_uint(values->MipModeFilter, 20, 21) |
+      util_bitpack_ufixed(values->BaseMipLevel, 22, 26, 1) |
+      util_bitpack_uint(values->LODPreClampEnable, 28, 28) |
+      util_bitpack_uint(values->TextureBorderColorMode, 29, 29) |
+      util_bitpack_uint(values->SamplerDisable, 31, 31);
 
    dw[1] =
-      __gen_uint(values->CubeSurfaceControlMode, 0, 0) |
-      __gen_uint(values->ShadowFunction, 1, 3) |
-      __gen_ufixed(values->MaxLOD, 8, 19, 8) |
-      __gen_ufixed(values->MinLOD, 20, 31, 8);
+      util_bitpack_uint(values->CubeSurfaceControlMode, 0, 0) |
+      util_bitpack_uint(values->ShadowFunction, 1, 3) |
+      util_bitpack_ufixed(values->MaxLOD, 8, 19, 8) |
+      util_bitpack_ufixed(values->MinLOD, 20, 31, 8);
 
    dw[2] =
       __gen_offset(values->BorderColorPointer, 5, 31);
 
    dw[3] =
-      __gen_uint(values->TCZAddressControlMode, 0, 2) |
-      __gen_uint(values->TCYAddressControlMode, 3, 5) |
-      __gen_uint(values->TCXAddressControlMode, 6, 8) |
-      __gen_uint(values->NonnormalizedCoordinateEnable, 10, 10) |
-      __gen_uint(values->TrilinearFilterQuality, 11, 12) |
-      __gen_uint(values->RAddressMinFilterRoundingEnable, 13, 13) |
-      __gen_uint(values->RAddressMagFilterRoundingEnable, 14, 14) |
-      __gen_uint(values->VAddressMinFilterRoundingEnable, 15, 15) |
-      __gen_uint(values->VAddressMagFilterRoundingEnable, 16, 16) |
-      __gen_uint(values->UAddressMinFilterRoundingEnable, 17, 17) |
-      __gen_uint(values->UAddressMagFilterRoundingEnable, 18, 18) |
-      __gen_uint(values->MaximumAnisotropy, 19, 21) |
-      __gen_uint(values->ChromaKeyMode, 22, 22) |
-      __gen_uint(values->ChromaKeyIndex, 23, 24) |
-      __gen_uint(values->ChromaKeyEnable, 25, 25);
+      util_bitpack_uint(values->TCZAddressControlMode, 0, 2) |
+      util_bitpack_uint(values->TCYAddressControlMode, 3, 5) |
+      util_bitpack_uint(values->TCXAddressControlMode, 6, 8) |
+      util_bitpack_uint(values->NonnormalizedCoordinateEnable, 10, 10) |
+      util_bitpack_uint(values->TrilinearFilterQuality, 11, 12) |
+      util_bitpack_uint(values->RAddressMinFilterRoundingEnable, 13, 13) |
+      util_bitpack_uint(values->RAddressMagFilterRoundingEnable, 14, 14) |
+      util_bitpack_uint(values->VAddressMinFilterRoundingEnable, 15, 15) |
+      util_bitpack_uint(values->VAddressMagFilterRoundingEnable, 16, 16) |
+      util_bitpack_uint(values->UAddressMinFilterRoundingEnable, 17, 17) |
+      util_bitpack_uint(values->UAddressMagFilterRoundingEnable, 18, 18) |
+      util_bitpack_uint(values->MaximumAnisotropy, 19, 21) |
+      util_bitpack_uint(values->ChromaKeyMode, 22, 22) |
+      util_bitpack_uint(values->ChromaKeyIndex, 23, 24) |
+      util_bitpack_uint(values->ChromaKeyEnable, 25, 25);
 }
 
 #define GFX7_SCISSOR_RECT_length               2
@@ -1155,12 +1027,12 @@ GFX7_SCISSOR_RECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ScissorRectangleXMin, 0, 15) |
-      __gen_uint(values->ScissorRectangleYMin, 16, 31);
+      util_bitpack_uint(values->ScissorRectangleXMin, 0, 15) |
+      util_bitpack_uint(values->ScissorRectangleYMin, 16, 31);
 
    dw[1] =
-      __gen_uint(values->ScissorRectangleXMax, 0, 15) |
-      __gen_uint(values->ScissorRectangleYMax, 16, 31);
+      util_bitpack_uint(values->ScissorRectangleXMax, 0, 15) |
+      util_bitpack_uint(values->ScissorRectangleYMax, 16, 31);
 }
 
 #define GFX7_SF_CLIP_VIEWPORT_length          16
@@ -1185,38 +1057,38 @@ GFX7_SF_CLIP_VIEWPORT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_float(values->ViewportMatrixElementm00);
+      util_bitpack_float(values->ViewportMatrixElementm00);
 
    dw[1] =
-      __gen_float(values->ViewportMatrixElementm11);
+      util_bitpack_float(values->ViewportMatrixElementm11);
 
    dw[2] =
-      __gen_float(values->ViewportMatrixElementm22);
+      util_bitpack_float(values->ViewportMatrixElementm22);
 
    dw[3] =
-      __gen_float(values->ViewportMatrixElementm30);
+      util_bitpack_float(values->ViewportMatrixElementm30);
 
    dw[4] =
-      __gen_float(values->ViewportMatrixElementm31);
+      util_bitpack_float(values->ViewportMatrixElementm31);
 
    dw[5] =
-      __gen_float(values->ViewportMatrixElementm32);
+      util_bitpack_float(values->ViewportMatrixElementm32);
 
    dw[6] = 0;
 
    dw[7] = 0;
 
    dw[8] =
-      __gen_float(values->XMinClipGuardband);
+      util_bitpack_float(values->XMinClipGuardband);
 
    dw[9] =
-      __gen_float(values->XMaxClipGuardband);
+      util_bitpack_float(values->XMaxClipGuardband);
 
    dw[10] =
-      __gen_float(values->YMinClipGuardband);
+      util_bitpack_float(values->YMinClipGuardband);
 
    dw[11] =
-      __gen_float(values->YMaxClipGuardband);
+      util_bitpack_float(values->YMaxClipGuardband);
 
    dw[12] = 0;
 
@@ -1255,14 +1127,14 @@ GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->SourceAttribute, 0, 4) |
-      __gen_uint(values->SwizzleSelect, 6, 7) |
-      __gen_uint(values->ConstantSource, 9, 10) |
-      __gen_uint(values->SwizzleControlMode, 11, 11) |
-      __gen_uint(values->ComponentOverrideX, 12, 12) |
-      __gen_uint(values->ComponentOverrideY, 13, 13) |
-      __gen_uint(values->ComponentOverrideZ, 14, 14) |
-      __gen_uint(values->ComponentOverrideW, 15, 15);
+      util_bitpack_uint(values->SourceAttribute, 0, 4) |
+      util_bitpack_uint(values->SwizzleSelect, 6, 7) |
+      util_bitpack_uint(values->ConstantSource, 9, 10) |
+      util_bitpack_uint(values->SwizzleControlMode, 11, 11) |
+      util_bitpack_uint(values->ComponentOverrideX, 12, 12) |
+      util_bitpack_uint(values->ComponentOverrideY, 13, 13) |
+      util_bitpack_uint(values->ComponentOverrideZ, 14, 14) |
+      util_bitpack_uint(values->ComponentOverrideW, 15, 15);
 }
 
 #define GFX7_SO_DECL_length                    1
@@ -1281,10 +1153,10 @@ GFX7_SO_DECL_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ComponentMask, 0, 3) |
-      __gen_uint(values->RegisterIndex, 4, 9) |
-      __gen_uint(values->HoleFlag, 11, 11) |
-      __gen_uint(values->OutputBufferSlot, 12, 13);
+      util_bitpack_uint(values->ComponentMask, 0, 3) |
+      util_bitpack_uint(values->RegisterIndex, 4, 9) |
+      util_bitpack_uint(values->HoleFlag, 11, 11) |
+      util_bitpack_uint(values->OutputBufferSlot, 12, 13);
 }
 
 #define GFX7_SO_DECL_ENTRY_length              2
@@ -1309,8 +1181,8 @@ GFX7_SO_DECL_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SO_DECL_pack(data, &v0_1, &values->Stream1Decl);
 
    dw[0] =
-      __gen_uint(v0_0, 0, 15) |
-      __gen_uint(v0_1, 16, 31);
+      util_bitpack_uint(v0_0, 0, 15) |
+      util_bitpack_uint(v0_1, 16, 31);
 
    uint32_t v1_0;
    GFX7_SO_DECL_pack(data, &v1_0, &values->Stream2Decl);
@@ -1319,8 +1191,8 @@ GFX7_SO_DECL_ENTRY_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SO_DECL_pack(data, &v1_1, &values->Stream3Decl);
 
    dw[1] =
-      __gen_uint(v1_0, 0, 15) |
-      __gen_uint(v1_1, 16, 31);
+      util_bitpack_uint(v1_0, 0, 15) |
+      util_bitpack_uint(v1_1, 16, 31);
 }
 
 #define GFX7_VERTEX_BUFFER_STATE_length        4
@@ -1347,20 +1219,20 @@ GFX7_VERTEX_BUFFER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->BufferPitch, 0, 11) |
-      __gen_uint(values->VertexFetchInvalidate, 12, 12) |
-      __gen_uint(values->NullVertexBuffer, 13, 13) |
-      __gen_uint(values->AddressModifyEnable, 14, 14) |
-      __gen_uint_nonzero(values->MOCS, 16, 19) |
-      __gen_uint(values->BufferAccessType, 20, 20) |
-      __gen_uint(values->VertexBufferIndex, 26, 31);
+      util_bitpack_uint(values->BufferPitch, 0, 11) |
+      util_bitpack_uint(values->VertexFetchInvalidate, 12, 12) |
+      util_bitpack_uint(values->NullVertexBuffer, 13, 13) |
+      util_bitpack_uint(values->AddressModifyEnable, 14, 14) |
+      util_bitpack_uint_nonzero(values->MOCS, 16, 19) |
+      util_bitpack_uint(values->BufferAccessType, 20, 20) |
+      util_bitpack_uint(values->VertexBufferIndex, 26, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->EndAddress, 0, 0, 31);
 
    dw[3] =
-      __gen_uint(values->InstanceDataStepRate, 0, 31);
+      util_bitpack_uint(values->InstanceDataStepRate, 0, 31);
 }
 
 #define GFX7_VERTEX_ELEMENT_STATE_length       2
@@ -1384,17 +1256,17 @@ GFX7_VERTEX_ELEMENT_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->SourceElementOffset, 0, 11) |
-      __gen_uint(values->EdgeFlagEnable, 15, 15) |
-      __gen_uint(values->SourceElementFormat, 16, 24) |
-      __gen_uint(values->Valid, 25, 25) |
-      __gen_uint(values->VertexBufferIndex, 26, 31);
+      util_bitpack_uint(values->SourceElementOffset, 0, 11) |
+      util_bitpack_uint(values->EdgeFlagEnable, 15, 15) |
+      util_bitpack_uint(values->SourceElementFormat, 16, 24) |
+      util_bitpack_uint(values->Valid, 25, 25) |
+      util_bitpack_uint(values->VertexBufferIndex, 26, 31);
 
    dw[1] =
-      __gen_uint(values->Component3Control, 16, 18) |
-      __gen_uint(values->Component2Control, 20, 22) |
-      __gen_uint(values->Component1Control, 24, 26) |
-      __gen_uint(values->Component0Control, 28, 30);
+      util_bitpack_uint(values->Component3Control, 16, 18) |
+      util_bitpack_uint(values->Component2Control, 20, 22) |
+      util_bitpack_uint(values->Component1Control, 24, 26) |
+      util_bitpack_uint(values->Component0Control, 28, 30);
 }
 
 #define GFX7_3DPRIMITIVE_length                7
@@ -1434,33 +1306,33 @@ GFX7_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->PredicateEnable, 8, 8) |
-      __gen_uint(values->IndirectParameterEnable, 10, 10) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint(values->IndirectParameterEnable, 10, 10) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PrimitiveTopologyType, 0, 5) |
-      __gen_uint(values->VertexAccessType, 8, 8) |
-      __gen_uint(values->EndOffsetEnable, 9, 9);
+      util_bitpack_uint(values->PrimitiveTopologyType, 0, 5) |
+      util_bitpack_uint(values->VertexAccessType, 8, 8) |
+      util_bitpack_uint(values->EndOffsetEnable, 9, 9);
 
    dw[2] =
-      __gen_uint(values->VertexCountPerInstance, 0, 31);
+      util_bitpack_uint(values->VertexCountPerInstance, 0, 31);
 
    dw[3] =
-      __gen_uint(values->StartVertexLocation, 0, 31);
+      util_bitpack_uint(values->StartVertexLocation, 0, 31);
 
    dw[4] =
-      __gen_uint(values->InstanceCount, 0, 31);
+      util_bitpack_uint(values->InstanceCount, 0, 31);
 
    dw[5] =
-      __gen_uint(values->StartInstanceLocation, 0, 31);
+      util_bitpack_uint(values->StartInstanceLocation, 0, 31);
 
    dw[6] =
-      __gen_sint(values->BaseVertexLocation, 0, 31);
+      util_bitpack_sint(values->BaseVertexLocation, 0, 31);
 }
 
 #define GFX7_3DSTATE_AA_LINE_PARAMETERS_length      3
@@ -1492,19 +1364,19 @@ GFX7_3DSTATE_AA_LINE_PARAMETERS_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_ufixed(values->AACoverageSlope, 0, 7, 8) |
-      __gen_ufixed(values->AACoverageBias, 16, 23, 8);
+      util_bitpack_ufixed(values->AACoverageSlope, 0, 7, 8) |
+      util_bitpack_ufixed(values->AACoverageBias, 16, 23, 8);
 
    dw[2] =
-      __gen_ufixed(values->AACoverageEndCapSlope, 0, 7, 8) |
-      __gen_ufixed(values->AACoverageEndCapBias, 16, 23, 8);
+      util_bitpack_ufixed(values->AACoverageEndCapSlope, 0, 7, 8) |
+      util_bitpack_ufixed(values->AACoverageEndCapBias, 16, 23, 8);
 }
 
 #define GFX7_3DSTATE_BINDING_TABLE_POINTERS_DS_length      2
@@ -1533,11 +1405,11 @@ GFX7_3DSTATE_BINDING_TABLE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoDSBindingTable, 5, 15);
@@ -1569,11 +1441,11 @@ GFX7_3DSTATE_BINDING_TABLE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoGSBindingTable, 5, 15);
@@ -1605,11 +1477,11 @@ GFX7_3DSTATE_BINDING_TABLE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoHSBindingTable, 5, 15);
@@ -1641,11 +1513,11 @@ GFX7_3DSTATE_BINDING_TABLE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoPSBindingTable, 5, 15);
@@ -1677,11 +1549,11 @@ GFX7_3DSTATE_BINDING_TABLE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoVSBindingTable, 5, 15);
@@ -1713,14 +1585,14 @@ GFX7_3DSTATE_BLEND_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_mbo(0, 0) |
+      util_bitpack_ones(0, 0) |
       __gen_offset(values->BlendStatePointer, 6, 31);
 }
 
@@ -1750,14 +1622,14 @@ GFX7_3DSTATE_CC_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data *dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_mbo(0, 0) |
+      util_bitpack_ones(0, 0) |
       __gen_offset(values->ColorCalcStatePointer, 6, 31);
 }
 
@@ -1789,20 +1661,20 @@ GFX7_3DSTATE_CHROMA_KEY_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ChromaKeyTableIndex, 30, 31);
+      util_bitpack_uint(values->ChromaKeyTableIndex, 30, 31);
 
    dw[2] =
-      __gen_uint(values->ChromaKeyLowValue, 0, 31);
+      util_bitpack_uint(values->ChromaKeyLowValue, 0, 31);
 
    dw[3] =
-      __gen_uint(values->ChromaKeyHighValue, 0, 31);
+      util_bitpack_uint(values->ChromaKeyHighValue, 0, 31);
 }
 
 #define GFX7_3DSTATE_CLEAR_PARAMS_length       3
@@ -1832,17 +1704,17 @@ GFX7_3DSTATE_CLEAR_PARAMS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->DepthClearValue, 0, 31);
+      util_bitpack_uint(values->DepthClearValue, 0, 31);
 
    dw[2] =
-      __gen_uint(values->DepthClearValueValid, 0, 0);
+      util_bitpack_uint(values->DepthClearValueValid, 0, 0);
 }
 
 #define GFX7_3DSTATE_CLIP_length               4
@@ -1909,39 +1781,39 @@ GFX7_3DSTATE_CLIP_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->UserClipDistanceCullTestEnableBitmask, 0, 7) |
-      __gen_uint(values->StatisticsEnable, 10, 10) |
-      __gen_uint(values->CullMode, 16, 17) |
-      __gen_uint(values->EarlyCullEnable, 18, 18) |
-      __gen_uint(values->VertexSubPixelPrecisionSelect, 19, 19) |
-      __gen_uint(values->FrontWinding, 20, 20);
+      util_bitpack_uint(values->UserClipDistanceCullTestEnableBitmask, 0, 7) |
+      util_bitpack_uint(values->StatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->CullMode, 16, 17) |
+      util_bitpack_uint(values->EarlyCullEnable, 18, 18) |
+      util_bitpack_uint(values->VertexSubPixelPrecisionSelect, 19, 19) |
+      util_bitpack_uint(values->FrontWinding, 20, 20);
 
    dw[2] =
-      __gen_uint(values->TriangleFanProvokingVertexSelect, 0, 1) |
-      __gen_uint(values->LineStripListProvokingVertexSelect, 2, 3) |
-      __gen_uint(values->TriangleStripListProvokingVertexSelect, 4, 5) |
-      __gen_uint(values->NonPerspectiveBarycentricEnable, 8, 8) |
-      __gen_uint(values->PerspectiveDivideDisable, 9, 9) |
-      __gen_uint(values->ClipMode, 13, 15) |
-      __gen_uint(values->UserClipDistanceClipTestEnableBitmask, 16, 23) |
-      __gen_uint(values->GuardbandClipTestEnable, 26, 26) |
-      __gen_uint(values->ViewportZClipTestEnable, 27, 27) |
-      __gen_uint(values->ViewportXYClipTestEnable, 28, 28) |
-      __gen_uint(values->APIMode, 30, 30) |
-      __gen_uint(values->ClipEnable, 31, 31);
+      util_bitpack_uint(values->TriangleFanProvokingVertexSelect, 0, 1) |
+      util_bitpack_uint(values->LineStripListProvokingVertexSelect, 2, 3) |
+      util_bitpack_uint(values->TriangleStripListProvokingVertexSelect, 4, 5) |
+      util_bitpack_uint(values->NonPerspectiveBarycentricEnable, 8, 8) |
+      util_bitpack_uint(values->PerspectiveDivideDisable, 9, 9) |
+      util_bitpack_uint(values->ClipMode, 13, 15) |
+      util_bitpack_uint(values->UserClipDistanceClipTestEnableBitmask, 16, 23) |
+      util_bitpack_uint(values->GuardbandClipTestEnable, 26, 26) |
+      util_bitpack_uint(values->ViewportZClipTestEnable, 27, 27) |
+      util_bitpack_uint(values->ViewportXYClipTestEnable, 28, 28) |
+      util_bitpack_uint(values->APIMode, 30, 30) |
+      util_bitpack_uint(values->ClipEnable, 31, 31);
 
    dw[3] =
-      __gen_uint(values->MaximumVPIndex, 0, 3) |
-      __gen_uint(values->ForceZeroRTAIndexEnable, 5, 5) |
-      __gen_ufixed(values->MaximumPointWidth, 6, 16, 3) |
-      __gen_ufixed(values->MinimumPointWidth, 17, 27, 3);
+      util_bitpack_uint(values->MaximumVPIndex, 0, 3) |
+      util_bitpack_uint(values->ForceZeroRTAIndexEnable, 5, 5) |
+      util_bitpack_ufixed(values->MaximumPointWidth, 6, 16, 3) |
+      util_bitpack_ufixed(values->MinimumPointWidth, 17, 27, 3);
 }
 
 #define GFX7_3DSTATE_CONSTANT_DS_length        7
@@ -1970,11 +1842,11 @@ GFX7_3DSTATE_CONSTANT_DS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    GFX7_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
@@ -2005,11 +1877,11 @@ GFX7_3DSTATE_CONSTANT_GS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    GFX7_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
@@ -2040,11 +1912,11 @@ GFX7_3DSTATE_CONSTANT_HS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    GFX7_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
@@ -2075,11 +1947,11 @@ GFX7_3DSTATE_CONSTANT_PS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    GFX7_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
@@ -2110,11 +1982,11 @@ GFX7_3DSTATE_CONSTANT_VS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    GFX7_3DSTATE_CONSTANT_BODY_pack(data, &dw[1], &values->ConstantBody);
 }
@@ -2169,38 +2041,38 @@ GFX7_3DSTATE_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SurfacePitch, 0, 17) |
-      __gen_uint(values->SurfaceFormat, 18, 20) |
-      __gen_uint(values->HierarchicalDepthBufferEnable, 22, 22) |
-      __gen_uint(values->StencilWriteEnable, 27, 27) |
-      __gen_uint(values->DepthWriteEnable, 28, 28) |
-      __gen_uint(values->SurfaceType, 29, 31);
+      util_bitpack_uint(values->SurfacePitch, 0, 17) |
+      util_bitpack_uint(values->SurfaceFormat, 18, 20) |
+      util_bitpack_uint(values->HierarchicalDepthBufferEnable, 22, 22) |
+      util_bitpack_uint(values->StencilWriteEnable, 27, 27) |
+      util_bitpack_uint(values->DepthWriteEnable, 28, 28) |
+      util_bitpack_uint(values->SurfaceType, 29, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 
    dw[3] =
-      __gen_uint(values->LOD, 0, 3) |
-      __gen_uint(values->Width, 4, 17) |
-      __gen_uint(values->Height, 18, 31);
+      util_bitpack_uint(values->LOD, 0, 3) |
+      util_bitpack_uint(values->Width, 4, 17) |
+      util_bitpack_uint(values->Height, 18, 31);
 
    dw[4] =
-      __gen_uint_nonzero(values->MOCS, 0, 3) |
-      __gen_uint(values->MinimumArrayElement, 10, 20) |
-      __gen_uint(values->Depth, 21, 31);
+      util_bitpack_uint_nonzero(values->MOCS, 0, 3) |
+      util_bitpack_uint(values->MinimumArrayElement, 10, 20) |
+      util_bitpack_uint(values->Depth, 21, 31);
 
    dw[5] =
-      __gen_sint(values->DepthCoordinateOffsetX, 0, 15) |
-      __gen_sint(values->DepthCoordinateOffsetY, 16, 31);
+      util_bitpack_sint(values->DepthCoordinateOffsetX, 0, 15) |
+      util_bitpack_sint(values->DepthCoordinateOffsetY, 16, 31);
 
    dw[6] =
-      __gen_uint(values->RenderTargetViewExtent, 21, 31);
+      util_bitpack_uint(values->RenderTargetViewExtent, 21, 31);
 }
 
 #define GFX7_3DSTATE_DEPTH_STENCIL_STATE_POINTERS_length      2
@@ -2229,14 +2101,14 @@ GFX7_3DSTATE_DEPTH_STENCIL_STATE_POINTERS_pack(__attribute__((unused)) __gen_use
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_mbo(0, 0) |
+      util_bitpack_ones(0, 0) |
       __gen_offset(values->PointertoDEPTH_STENCIL_STATE, 6, 31);
 }
 
@@ -2271,23 +2143,23 @@ GFX7_3DSTATE_DRAWING_RECTANGLE_pack(__attribute__((unused)) __gen_user_data *dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ClippedDrawingRectangleXMin, 0, 15) |
-      __gen_uint(values->ClippedDrawingRectangleYMin, 16, 31);
+      util_bitpack_uint(values->ClippedDrawingRectangleXMin, 0, 15) |
+      util_bitpack_uint(values->ClippedDrawingRectangleYMin, 16, 31);
 
    dw[2] =
-      __gen_uint(values->ClippedDrawingRectangleXMax, 0, 15) |
-      __gen_uint(values->ClippedDrawingRectangleYMax, 16, 31);
+      util_bitpack_uint(values->ClippedDrawingRectangleXMax, 0, 15) |
+      util_bitpack_uint(values->ClippedDrawingRectangleYMax, 16, 31);
 
    dw[3] =
-      __gen_sint(values->DrawingRectangleOriginX, 0, 15) |
-      __gen_sint(values->DrawingRectangleOriginY, 16, 31);
+      util_bitpack_sint(values->DrawingRectangleOriginX, 0, 15) |
+      util_bitpack_sint(values->DrawingRectangleOriginY, 16, 31);
 }
 
 #define GFX7_3DSTATE_DS_length                 6
@@ -2340,39 +2212,39 @@ GFX7_3DSTATE_DS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->KernelStartPointer, 6, 31);
 
    dw[2] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SamplerCount, 27, 29) |
-      __gen_uint(values->VectorMaskEnable, 30, 30) |
-      __gen_uint(values->SingleDomainPointDispatch, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SamplerCount, 27, 29) |
+      util_bitpack_uint(values->VectorMaskEnable, 30, 30) |
+      util_bitpack_uint(values->SingleDomainPointDispatch, 31, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
-      __gen_uint(values->PatchURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->PatchURBEntryReadLength, 11, 17) |
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 20, 24);
+      util_bitpack_uint(values->PatchURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->PatchURBEntryReadLength, 11, 17) |
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 20, 24);
 
    dw[5] =
-      __gen_uint(values->Enable, 0, 0) |
-      __gen_uint(values->DSCacheDisable, 1, 1) |
-      __gen_uint(values->ComputeWCoordinateEnable, 2, 2) |
-      __gen_uint(values->StatisticsEnable, 10, 10) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 31);
+      util_bitpack_uint(values->Enable, 0, 0) |
+      util_bitpack_uint(values->DSCacheDisable, 1, 1) |
+      util_bitpack_uint(values->ComputeWCoordinateEnable, 2, 2) |
+      util_bitpack_uint(values->StatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 31);
 }
 
 #define GFX7_3DSTATE_GS_length                 7
@@ -2448,52 +2320,52 @@ GFX7_3DSTATE_GS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->KernelStartPointer, 6, 31);
 
    dw[2] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->ThreadPriority, 17, 17) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SamplerCount, 27, 29) |
-      __gen_uint(values->VectorMaskEnable, 30, 30) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->ThreadPriority, 17, 17) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SamplerCount, 27, 29) |
+      util_bitpack_uint(values->VectorMaskEnable, 30, 30) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->IncludeVertexHandles, 10, 10) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->OutputTopology, 17, 22) |
-      __gen_uint(values->OutputVertexSize, 23, 28);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 0, 3) |
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->IncludeVertexHandles, 10, 10) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->OutputTopology, 17, 22) |
+      util_bitpack_uint(values->OutputVertexSize, 23, 28);
 
    dw[5] =
-      __gen_uint(values->Enable, 0, 0) |
-      __gen_uint(values->DiscardAdjacency, 1, 1) |
-      __gen_uint(values->ReorderMode, 2, 2) |
-      __gen_uint(values->Hint, 3, 3) |
-      __gen_uint(values->IncludePrimitiveID, 4, 4) |
-      __gen_uint(values->GSInvocationsIncrementValue, 5, 9) |
-      __gen_uint(values->StatisticsEnable, 10, 10) |
-      __gen_uint(values->DispatchMode, 11, 12) |
-      __gen_uint(values->DefaultStreamID, 13, 14) |
-      __gen_uint(values->InstanceControl, 15, 19) |
-      __gen_uint(values->ControlDataHeaderSize, 20, 23) |
-      __gen_uint(values->ControlDataFormat, 24, 24) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 31);
+      util_bitpack_uint(values->Enable, 0, 0) |
+      util_bitpack_uint(values->DiscardAdjacency, 1, 1) |
+      util_bitpack_uint(values->ReorderMode, 2, 2) |
+      util_bitpack_uint(values->Hint, 3, 3) |
+      util_bitpack_uint(values->IncludePrimitiveID, 4, 4) |
+      util_bitpack_uint(values->GSInvocationsIncrementValue, 5, 9) |
+      util_bitpack_uint(values->StatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->DispatchMode, 11, 12) |
+      util_bitpack_uint(values->DefaultStreamID, 13, 14) |
+      util_bitpack_uint(values->InstanceControl, 15, 19) |
+      util_bitpack_uint(values->ControlDataHeaderSize, 20, 23) |
+      util_bitpack_uint(values->ControlDataFormat, 24, 24) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 31);
 
    dw[6] =
       __gen_offset(values->SemaphoreHandle, 0, 11);
@@ -2527,15 +2399,15 @@ GFX7_3DSTATE_HIER_DEPTH_BUFFER_pack(__attribute__((unused)) __gen_user_data *dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SurfacePitch, 0, 16) |
-      __gen_uint_nonzero(values->MOCS, 25, 28);
+      util_bitpack_uint(values->SurfacePitch, 0, 16) |
+      util_bitpack_uint_nonzero(values->MOCS, 25, 28);
 
    dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 }
@@ -2591,39 +2463,39 @@ GFX7_3DSTATE_HS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->MaximumNumberofThreads, 0, 6) |
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SamplerCount, 27, 29);
+      util_bitpack_uint(values->MaximumNumberofThreads, 0, 6) |
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SamplerCount, 27, 29);
 
    dw[2] =
-      __gen_uint(values->InstanceCount, 0, 3) |
-      __gen_uint(values->StatisticsEnable, 29, 29) |
-      __gen_uint(values->Enable, 31, 31);
+      util_bitpack_uint(values->InstanceCount, 0, 3) |
+      util_bitpack_uint(values->StatisticsEnable, 29, 29) |
+      util_bitpack_uint(values->Enable, 31, 31);
 
    dw[3] =
       __gen_offset(values->KernelStartPointer, 6, 31);
 
    const uint32_t v4 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[4] = __gen_address(data, &dw[4], values->ScratchSpaceBasePointer, v4, 10, 31);
 
    dw[5] =
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 19, 23) |
-      __gen_uint(values->IncludeVertexHandles, 24, 24) |
-      __gen_uint(values->VectorMaskEnable, 26, 26) |
-      __gen_uint(values->SingleProgramFlow, 27, 27);
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 19, 23) |
+      util_bitpack_uint(values->IncludeVertexHandles, 24, 24) |
+      util_bitpack_uint(values->VectorMaskEnable, 26, 26) |
+      util_bitpack_uint(values->SingleProgramFlow, 27, 27);
 
    dw[6] =
       __gen_offset(values->SemaphoreHandle, 0, 11);
@@ -2662,14 +2534,14 @@ GFX7_3DSTATE_INDEX_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->IndexFormat, 8, 9) |
-      __gen_uint(values->CutIndexEnable, 10, 10) |
-      __gen_uint_nonzero(values->MOCS, 12, 15) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->IndexFormat, 8, 9) |
+      util_bitpack_uint(values->CutIndexEnable, 10, 10) |
+      util_bitpack_uint_nonzero(values->MOCS, 12, 15) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->BufferStartingAddress, 0, 0, 31);
 
@@ -2707,21 +2579,21 @@ GFX7_3DSTATE_LINE_STIPPLE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->LineStipplePattern, 0, 15) |
-      __gen_uint(values->CurrentStippleIndex, 16, 19) |
-      __gen_uint(values->CurrentRepeatCounter, 21, 29) |
-      __gen_uint(values->ModifyEnableCurrentRepeatCounterCurrentStippleIndex, 31, 31);
+      util_bitpack_uint(values->LineStipplePattern, 0, 15) |
+      util_bitpack_uint(values->CurrentStippleIndex, 16, 19) |
+      util_bitpack_uint(values->CurrentRepeatCounter, 21, 29) |
+      util_bitpack_uint(values->ModifyEnableCurrentRepeatCounterCurrentStippleIndex, 31, 31);
 
    dw[2] =
-      __gen_uint(values->LineStippleRepeatCount, 0, 8) |
-      __gen_ufixed(values->LineStippleInverseRepeatCount, 15, 31, 16);
+      util_bitpack_uint(values->LineStippleRepeatCount, 0, 8) |
+      util_bitpack_ufixed(values->LineStippleInverseRepeatCount, 15, 31, 16);
 }
 
 #define GFX7_3DSTATE_MONOFILTER_SIZE_length      2
@@ -2751,15 +2623,15 @@ GFX7_3DSTATE_MONOFILTER_SIZE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->MonochromeFilterHeight, 0, 2) |
-      __gen_uint(values->MonochromeFilterWidth, 3, 5);
+      util_bitpack_uint(values->MonochromeFilterHeight, 0, 2) |
+      util_bitpack_uint(values->MonochromeFilterWidth, 3, 5);
 }
 
 #define GFX7_3DSTATE_MULTISAMPLE_length        4
@@ -2810,35 +2682,35 @@ GFX7_3DSTATE_MULTISAMPLE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->NumberofMultisamples, 1, 3) |
-      __gen_uint(values->PixelLocation, 4, 4);
+      util_bitpack_uint(values->NumberofMultisamples, 1, 3) |
+      util_bitpack_uint(values->PixelLocation, 4, 4);
 
    dw[2] =
-      __gen_ufixed(values->Sample0YOffset, 0, 3, 4) |
-      __gen_ufixed(values->Sample0XOffset, 4, 7, 4) |
-      __gen_ufixed(values->Sample1YOffset, 8, 11, 4) |
-      __gen_ufixed(values->Sample1XOffset, 12, 15, 4) |
-      __gen_ufixed(values->Sample2YOffset, 16, 19, 4) |
-      __gen_ufixed(values->Sample2XOffset, 20, 23, 4) |
-      __gen_ufixed(values->Sample3YOffset, 24, 27, 4) |
-      __gen_ufixed(values->Sample3XOffset, 28, 31, 4);
+      util_bitpack_ufixed(values->Sample0YOffset, 0, 3, 4) |
+      util_bitpack_ufixed(values->Sample0XOffset, 4, 7, 4) |
+      util_bitpack_ufixed(values->Sample1YOffset, 8, 11, 4) |
+      util_bitpack_ufixed(values->Sample1XOffset, 12, 15, 4) |
+      util_bitpack_ufixed(values->Sample2YOffset, 16, 19, 4) |
+      util_bitpack_ufixed(values->Sample2XOffset, 20, 23, 4) |
+      util_bitpack_ufixed(values->Sample3YOffset, 24, 27, 4) |
+      util_bitpack_ufixed(values->Sample3XOffset, 28, 31, 4);
 
    dw[3] =
-      __gen_ufixed(values->Sample4YOffset, 0, 3, 4) |
-      __gen_ufixed(values->Sample4XOffset, 4, 7, 4) |
-      __gen_ufixed(values->Sample5YOffset, 8, 11, 4) |
-      __gen_ufixed(values->Sample5XOffset, 12, 15, 4) |
-      __gen_ufixed(values->Sample6YOffset, 16, 19, 4) |
-      __gen_ufixed(values->Sample6XOffset, 20, 23, 4) |
-      __gen_ufixed(values->Sample7YOffset, 24, 27, 4) |
-      __gen_ufixed(values->Sample7XOffset, 28, 31, 4);
+      util_bitpack_ufixed(values->Sample4YOffset, 0, 3, 4) |
+      util_bitpack_ufixed(values->Sample4XOffset, 4, 7, 4) |
+      util_bitpack_ufixed(values->Sample5YOffset, 8, 11, 4) |
+      util_bitpack_ufixed(values->Sample5XOffset, 12, 15, 4) |
+      util_bitpack_ufixed(values->Sample6YOffset, 16, 19, 4) |
+      util_bitpack_ufixed(values->Sample6XOffset, 20, 23, 4) |
+      util_bitpack_ufixed(values->Sample7YOffset, 24, 27, 4) |
+      util_bitpack_ufixed(values->Sample7XOffset, 28, 31, 4);
 }
 
 #define GFX7_3DSTATE_POLY_STIPPLE_OFFSET_length      2
@@ -2868,15 +2740,15 @@ GFX7_3DSTATE_POLY_STIPPLE_OFFSET_pack(__attribute__((unused)) __gen_user_data *d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PolygonStippleYOffset, 0, 4) |
-      __gen_uint(values->PolygonStippleXOffset, 8, 12);
+      util_bitpack_uint(values->PolygonStippleYOffset, 0, 4) |
+      util_bitpack_uint(values->PolygonStippleXOffset, 8, 12);
 }
 
 #define GFX7_3DSTATE_POLY_STIPPLE_PATTERN_length     33
@@ -2905,107 +2777,107 @@ GFX7_3DSTATE_POLY_STIPPLE_PATTERN_pack(__attribute__((unused)) __gen_user_data *
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PatternRow[0], 0, 31);
+      util_bitpack_uint(values->PatternRow[0], 0, 31);
 
    dw[2] =
-      __gen_uint(values->PatternRow[1], 0, 31);
+      util_bitpack_uint(values->PatternRow[1], 0, 31);
 
    dw[3] =
-      __gen_uint(values->PatternRow[2], 0, 31);
+      util_bitpack_uint(values->PatternRow[2], 0, 31);
 
    dw[4] =
-      __gen_uint(values->PatternRow[3], 0, 31);
+      util_bitpack_uint(values->PatternRow[3], 0, 31);
 
    dw[5] =
-      __gen_uint(values->PatternRow[4], 0, 31);
+      util_bitpack_uint(values->PatternRow[4], 0, 31);
 
    dw[6] =
-      __gen_uint(values->PatternRow[5], 0, 31);
+      util_bitpack_uint(values->PatternRow[5], 0, 31);
 
    dw[7] =
-      __gen_uint(values->PatternRow[6], 0, 31);
+      util_bitpack_uint(values->PatternRow[6], 0, 31);
 
    dw[8] =
-      __gen_uint(values->PatternRow[7], 0, 31);
+      util_bitpack_uint(values->PatternRow[7], 0, 31);
 
    dw[9] =
-      __gen_uint(values->PatternRow[8], 0, 31);
+      util_bitpack_uint(values->PatternRow[8], 0, 31);
 
    dw[10] =
-      __gen_uint(values->PatternRow[9], 0, 31);
+      util_bitpack_uint(values->PatternRow[9], 0, 31);
 
    dw[11] =
-      __gen_uint(values->PatternRow[10], 0, 31);
+      util_bitpack_uint(values->PatternRow[10], 0, 31);
 
    dw[12] =
-      __gen_uint(values->PatternRow[11], 0, 31);
+      util_bitpack_uint(values->PatternRow[11], 0, 31);
 
    dw[13] =
-      __gen_uint(values->PatternRow[12], 0, 31);
+      util_bitpack_uint(values->PatternRow[12], 0, 31);
 
    dw[14] =
-      __gen_uint(values->PatternRow[13], 0, 31);
+      util_bitpack_uint(values->PatternRow[13], 0, 31);
 
    dw[15] =
-      __gen_uint(values->PatternRow[14], 0, 31);
+      util_bitpack_uint(values->PatternRow[14], 0, 31);
 
    dw[16] =
-      __gen_uint(values->PatternRow[15], 0, 31);
+      util_bitpack_uint(values->PatternRow[15], 0, 31);
 
    dw[17] =
-      __gen_uint(values->PatternRow[16], 0, 31);
+      util_bitpack_uint(values->PatternRow[16], 0, 31);
 
    dw[18] =
-      __gen_uint(values->PatternRow[17], 0, 31);
+      util_bitpack_uint(values->PatternRow[17], 0, 31);
 
    dw[19] =
-      __gen_uint(values->PatternRow[18], 0, 31);
+      util_bitpack_uint(values->PatternRow[18], 0, 31);
 
    dw[20] =
-      __gen_uint(values->PatternRow[19], 0, 31);
+      util_bitpack_uint(values->PatternRow[19], 0, 31);
 
    dw[21] =
-      __gen_uint(values->PatternRow[20], 0, 31);
+      util_bitpack_uint(values->PatternRow[20], 0, 31);
 
    dw[22] =
-      __gen_uint(values->PatternRow[21], 0, 31);
+      util_bitpack_uint(values->PatternRow[21], 0, 31);
 
    dw[23] =
-      __gen_uint(values->PatternRow[22], 0, 31);
+      util_bitpack_uint(values->PatternRow[22], 0, 31);
 
    dw[24] =
-      __gen_uint(values->PatternRow[23], 0, 31);
+      util_bitpack_uint(values->PatternRow[23], 0, 31);
 
    dw[25] =
-      __gen_uint(values->PatternRow[24], 0, 31);
+      util_bitpack_uint(values->PatternRow[24], 0, 31);
 
    dw[26] =
-      __gen_uint(values->PatternRow[25], 0, 31);
+      util_bitpack_uint(values->PatternRow[25], 0, 31);
 
    dw[27] =
-      __gen_uint(values->PatternRow[26], 0, 31);
+      util_bitpack_uint(values->PatternRow[26], 0, 31);
 
    dw[28] =
-      __gen_uint(values->PatternRow[27], 0, 31);
+      util_bitpack_uint(values->PatternRow[27], 0, 31);
 
    dw[29] =
-      __gen_uint(values->PatternRow[28], 0, 31);
+      util_bitpack_uint(values->PatternRow[28], 0, 31);
 
    dw[30] =
-      __gen_uint(values->PatternRow[29], 0, 31);
+      util_bitpack_uint(values->PatternRow[29], 0, 31);
 
    dw[31] =
-      __gen_uint(values->PatternRow[30], 0, 31);
+      util_bitpack_uint(values->PatternRow[30], 0, 31);
 
    dw[32] =
-      __gen_uint(values->PatternRow[31], 0, 31);
+      util_bitpack_uint(values->PatternRow[31], 0, 31);
 }
 
 #define GFX7_3DSTATE_PS_length                 8
@@ -3073,48 +2945,48 @@ GFX7_3DSTATE_PS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->KernelStartPointer0, 6, 31);
 
    dw[2] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->MaskStackExceptionEnable, 11, 11) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->RoundingMode, 14, 15) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->DenormalMode, 26, 26) |
-      __gen_uint(values->SamplerCount, 27, 29) |
-      __gen_uint(values->VectorMaskEnable, 30, 30) |
-      __gen_uint(values->SingleProgramFlow, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->MaskStackExceptionEnable, 11, 11) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->RoundingMode, 14, 15) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->DenormalMode, 26, 26) |
+      util_bitpack_uint(values->SamplerCount, 27, 29) |
+      util_bitpack_uint(values->VectorMaskEnable, 30, 30) |
+      util_bitpack_uint(values->SingleProgramFlow, 31, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
-      __gen_uint(values->_8PixelDispatchEnable, 0, 0) |
-      __gen_uint(values->_16PixelDispatchEnable, 1, 1) |
-      __gen_uint(values->_32PixelDispatchEnable, 2, 2) |
-      __gen_uint(values->PositionXYOffsetSelect, 3, 4) |
-      __gen_uint(values->RenderTargetResolveEnable, 6, 6) |
-      __gen_uint(values->DualSourceBlendEnable, 7, 7) |
-      __gen_uint(values->RenderTargetFastClearEnable, 8, 8) |
-      __gen_uint(values->oMaskPresenttoRenderTarget, 9, 9) |
-      __gen_uint(values->AttributeEnable, 10, 10) |
-      __gen_uint(values->PushConstantEnable, 11, 11) |
-      __gen_uint(values->MaximumNumberofThreads, 24, 31);
+      util_bitpack_uint(values->_8PixelDispatchEnable, 0, 0) |
+      util_bitpack_uint(values->_16PixelDispatchEnable, 1, 1) |
+      util_bitpack_uint(values->_32PixelDispatchEnable, 2, 2) |
+      util_bitpack_uint(values->PositionXYOffsetSelect, 3, 4) |
+      util_bitpack_uint(values->RenderTargetResolveEnable, 6, 6) |
+      util_bitpack_uint(values->DualSourceBlendEnable, 7, 7) |
+      util_bitpack_uint(values->RenderTargetFastClearEnable, 8, 8) |
+      util_bitpack_uint(values->oMaskPresenttoRenderTarget, 9, 9) |
+      util_bitpack_uint(values->AttributeEnable, 10, 10) |
+      util_bitpack_uint(values->PushConstantEnable, 11, 11) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 24, 31);
 
    dw[5] =
-      __gen_uint(values->DispatchGRFStartRegisterForConstantSetupData2, 0, 6) |
-      __gen_uint(values->DispatchGRFStartRegisterForConstantSetupData1, 8, 14) |
-      __gen_uint(values->DispatchGRFStartRegisterForConstantSetupData0, 16, 22);
+      util_bitpack_uint(values->DispatchGRFStartRegisterForConstantSetupData2, 0, 6) |
+      util_bitpack_uint(values->DispatchGRFStartRegisterForConstantSetupData1, 8, 14) |
+      util_bitpack_uint(values->DispatchGRFStartRegisterForConstantSetupData0, 16, 22);
 
    dw[6] =
       __gen_offset(values->KernelStartPointer1, 6, 31);
@@ -3152,15 +3024,15 @@ GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_DS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ConstantBufferSize, 0, 4) |
-      __gen_uint(values->ConstantBufferOffset, 16, 19);
+      util_bitpack_uint(values->ConstantBufferSize, 0, 4) |
+      util_bitpack_uint(values->ConstantBufferOffset, 16, 19);
 }
 
 #define GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_GS_length      2
@@ -3192,15 +3064,15 @@ GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_GS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ConstantBufferSize, 0, 4) |
-      __gen_uint(values->ConstantBufferOffset, 16, 19);
+      util_bitpack_uint(values->ConstantBufferSize, 0, 4) |
+      util_bitpack_uint(values->ConstantBufferOffset, 16, 19);
 }
 
 #define GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_HS_length      2
@@ -3232,15 +3104,15 @@ GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_HS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ConstantBufferSize, 0, 4) |
-      __gen_uint(values->ConstantBufferOffset, 16, 19);
+      util_bitpack_uint(values->ConstantBufferSize, 0, 4) |
+      util_bitpack_uint(values->ConstantBufferOffset, 16, 19);
 }
 
 #define GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_PS_length      2
@@ -3272,15 +3144,15 @@ GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_PS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ConstantBufferSize, 0, 4) |
-      __gen_uint(values->ConstantBufferOffset, 16, 19);
+      util_bitpack_uint(values->ConstantBufferSize, 0, 4) |
+      util_bitpack_uint(values->ConstantBufferOffset, 16, 19);
 }
 
 #define GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_VS_length      2
@@ -3312,15 +3184,15 @@ GFX7_3DSTATE_PUSH_CONSTANT_ALLOC_VS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ConstantBufferSize, 0, 4) |
-      __gen_uint(values->ConstantBufferOffset, 16, 19);
+      util_bitpack_uint(values->ConstantBufferSize, 0, 4) |
+      util_bitpack_uint(values->ConstantBufferOffset, 16, 19);
 }
 
 #define GFX7_3DSTATE_SAMPLER_PALETTE_LOAD0_length_bias      2
@@ -3347,11 +3219,11 @@ GFX7_3DSTATE_SAMPLER_PALETTE_LOAD0_pack(__attribute__((unused)) __gen_user_data 
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_3DSTATE_SAMPLER_PALETTE_LOAD1_length_bias      2
@@ -3379,11 +3251,11 @@ GFX7_3DSTATE_SAMPLER_PALETTE_LOAD1_pack(__attribute__((unused)) __gen_user_data 
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_3DSTATE_SAMPLER_STATE_POINTERS_DS_length      2
@@ -3412,11 +3284,11 @@ GFX7_3DSTATE_SAMPLER_STATE_POINTERS_DS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoDSSamplerState, 5, 31);
@@ -3448,11 +3320,11 @@ GFX7_3DSTATE_SAMPLER_STATE_POINTERS_GS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoGSSamplerState, 5, 31);
@@ -3484,11 +3356,11 @@ GFX7_3DSTATE_SAMPLER_STATE_POINTERS_HS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoHSSamplerState, 5, 31);
@@ -3520,11 +3392,11 @@ GFX7_3DSTATE_SAMPLER_STATE_POINTERS_PS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoPSSamplerState, 5, 31);
@@ -3556,11 +3428,11 @@ GFX7_3DSTATE_SAMPLER_STATE_POINTERS_VS_pack(__attribute__((unused)) __gen_user_d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->PointertoVSSamplerState, 5, 31);
@@ -3592,14 +3464,14 @@ GFX7_3DSTATE_SAMPLE_MASK_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SampleMask, 0, 7);
+      util_bitpack_uint(values->SampleMask, 0, 7);
 }
 
 #define GFX7_3DSTATE_SBE_length               14
@@ -3656,19 +3528,19 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 15) |
-      __gen_uint(values->PointSpriteTextureCoordinateOrigin, 20, 20) |
-      __gen_uint(values->AttributeSwizzleEnable, 21, 21) |
-      __gen_uint(values->NumberofSFOutputAttributes, 22, 27) |
-      __gen_uint(values->AttributeSwizzleControlMode, 28, 28);
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 15) |
+      util_bitpack_uint(values->PointSpriteTextureCoordinateOrigin, 20, 20) |
+      util_bitpack_uint(values->AttributeSwizzleEnable, 21, 21) |
+      util_bitpack_uint(values->NumberofSFOutputAttributes, 22, 27) |
+      util_bitpack_uint(values->AttributeSwizzleControlMode, 28, 28);
 
    uint32_t v2_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v2_0, &values->Attribute[0]);
@@ -3677,8 +3549,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v2_1, &values->Attribute[1]);
 
    dw[2] =
-      __gen_uint(v2_0, 0, 15) |
-      __gen_uint(v2_1, 16, 31);
+      util_bitpack_uint(v2_0, 0, 15) |
+      util_bitpack_uint(v2_1, 16, 31);
 
    uint32_t v3_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v3_0, &values->Attribute[2]);
@@ -3687,8 +3559,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v3_1, &values->Attribute[3]);
 
    dw[3] =
-      __gen_uint(v3_0, 0, 15) |
-      __gen_uint(v3_1, 16, 31);
+      util_bitpack_uint(v3_0, 0, 15) |
+      util_bitpack_uint(v3_1, 16, 31);
 
    uint32_t v4_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v4_0, &values->Attribute[4]);
@@ -3697,8 +3569,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v4_1, &values->Attribute[5]);
 
    dw[4] =
-      __gen_uint(v4_0, 0, 15) |
-      __gen_uint(v4_1, 16, 31);
+      util_bitpack_uint(v4_0, 0, 15) |
+      util_bitpack_uint(v4_1, 16, 31);
 
    uint32_t v5_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v5_0, &values->Attribute[6]);
@@ -3707,8 +3579,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v5_1, &values->Attribute[7]);
 
    dw[5] =
-      __gen_uint(v5_0, 0, 15) |
-      __gen_uint(v5_1, 16, 31);
+      util_bitpack_uint(v5_0, 0, 15) |
+      util_bitpack_uint(v5_1, 16, 31);
 
    uint32_t v6_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v6_0, &values->Attribute[8]);
@@ -3717,8 +3589,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v6_1, &values->Attribute[9]);
 
    dw[6] =
-      __gen_uint(v6_0, 0, 15) |
-      __gen_uint(v6_1, 16, 31);
+      util_bitpack_uint(v6_0, 0, 15) |
+      util_bitpack_uint(v6_1, 16, 31);
 
    uint32_t v7_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v7_0, &values->Attribute[10]);
@@ -3727,8 +3599,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v7_1, &values->Attribute[11]);
 
    dw[7] =
-      __gen_uint(v7_0, 0, 15) |
-      __gen_uint(v7_1, 16, 31);
+      util_bitpack_uint(v7_0, 0, 15) |
+      util_bitpack_uint(v7_1, 16, 31);
 
    uint32_t v8_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_0, &values->Attribute[12]);
@@ -3737,8 +3609,8 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v8_1, &values->Attribute[13]);
 
    dw[8] =
-      __gen_uint(v8_0, 0, 15) |
-      __gen_uint(v8_1, 16, 31);
+      util_bitpack_uint(v8_0, 0, 15) |
+      util_bitpack_uint(v8_1, 16, 31);
 
    uint32_t v9_0;
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v9_0, &values->Attribute[14]);
@@ -3747,34 +3619,34 @@ GFX7_3DSTATE_SBE_pack(__attribute__((unused)) __gen_user_data *data,
    GFX7_SF_OUTPUT_ATTRIBUTE_DETAIL_pack(data, &v9_1, &values->Attribute[15]);
 
    dw[9] =
-      __gen_uint(v9_0, 0, 15) |
-      __gen_uint(v9_1, 16, 31);
+      util_bitpack_uint(v9_0, 0, 15) |
+      util_bitpack_uint(v9_1, 16, 31);
 
    dw[10] =
-      __gen_uint(values->PointSpriteTextureCoordinateEnable, 0, 31);
+      util_bitpack_uint(values->PointSpriteTextureCoordinateEnable, 0, 31);
 
    dw[11] =
-      __gen_uint(values->ConstantInterpolationEnable, 0, 31);
+      util_bitpack_uint(values->ConstantInterpolationEnable, 0, 31);
 
    dw[12] =
-      __gen_uint(values->Attribute0WrapShortestEnables, 0, 3) |
-      __gen_uint(values->Attribute1WrapShortestEnables, 4, 7) |
-      __gen_uint(values->Attribute2WrapShortestEnables, 8, 11) |
-      __gen_uint(values->Attribute3WrapShortestEnables, 12, 15) |
-      __gen_uint(values->Attribute4WrapShortestEnables, 16, 19) |
-      __gen_uint(values->Attribute5WrapShortestEnables, 20, 23) |
-      __gen_uint(values->Attribute6WrapShortestEnables, 24, 27) |
-      __gen_uint(values->Attribute7WrapShortestEnables, 28, 31);
+      util_bitpack_uint(values->Attribute0WrapShortestEnables, 0, 3) |
+      util_bitpack_uint(values->Attribute1WrapShortestEnables, 4, 7) |
+      util_bitpack_uint(values->Attribute2WrapShortestEnables, 8, 11) |
+      util_bitpack_uint(values->Attribute3WrapShortestEnables, 12, 15) |
+      util_bitpack_uint(values->Attribute4WrapShortestEnables, 16, 19) |
+      util_bitpack_uint(values->Attribute5WrapShortestEnables, 20, 23) |
+      util_bitpack_uint(values->Attribute6WrapShortestEnables, 24, 27) |
+      util_bitpack_uint(values->Attribute7WrapShortestEnables, 28, 31);
 
    dw[13] =
-      __gen_uint(values->Attribute8WrapShortestEnables, 0, 3) |
-      __gen_uint(values->Attribute9WrapShortestEnables, 4, 7) |
-      __gen_uint(values->Attribute10WrapShortestEnables, 8, 11) |
-      __gen_uint(values->Attribute11WrapShortestEnables, 12, 15) |
-      __gen_uint(values->Attribute12WrapShortestEnables, 16, 19) |
-      __gen_uint(values->Attribute13WrapShortestEnables, 20, 23) |
-      __gen_uint(values->Attribute14WrapShortestEnables, 24, 27) |
-      __gen_uint(values->Attribute15WrapShortestEnables, 28, 31);
+      util_bitpack_uint(values->Attribute8WrapShortestEnables, 0, 3) |
+      util_bitpack_uint(values->Attribute9WrapShortestEnables, 4, 7) |
+      util_bitpack_uint(values->Attribute10WrapShortestEnables, 8, 11) |
+      util_bitpack_uint(values->Attribute11WrapShortestEnables, 12, 15) |
+      util_bitpack_uint(values->Attribute12WrapShortestEnables, 16, 19) |
+      util_bitpack_uint(values->Attribute13WrapShortestEnables, 20, 23) |
+      util_bitpack_uint(values->Attribute14WrapShortestEnables, 24, 27) |
+      util_bitpack_uint(values->Attribute15WrapShortestEnables, 28, 31);
 }
 
 #define GFX7_3DSTATE_SCISSOR_STATE_POINTERS_length      2
@@ -3803,11 +3675,11 @@ GFX7_3DSTATE_SCISSOR_STATE_POINTERS_pack(__attribute__((unused)) __gen_user_data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->ScissorRectPointer, 5, 31);
@@ -3899,50 +3771,50 @@ GFX7_3DSTATE_SF_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->FrontWinding, 0, 0) |
-      __gen_uint(values->ViewportTransformEnable, 1, 1) |
-      __gen_uint(values->BackFaceFillMode, 3, 4) |
-      __gen_uint(values->FrontFaceFillMode, 5, 6) |
-      __gen_uint(values->GlobalDepthOffsetEnablePoint, 7, 7) |
-      __gen_uint(values->GlobalDepthOffsetEnableWireframe, 8, 8) |
-      __gen_uint(values->GlobalDepthOffsetEnableSolid, 9, 9) |
-      __gen_uint(values->StatisticsEnable, 10, 10) |
-      __gen_uint(values->LegacyGlobalDepthBiasEnable, 11, 11) |
-      __gen_uint(values->DepthBufferSurfaceFormat, 12, 14);
+      util_bitpack_uint(values->FrontWinding, 0, 0) |
+      util_bitpack_uint(values->ViewportTransformEnable, 1, 1) |
+      util_bitpack_uint(values->BackFaceFillMode, 3, 4) |
+      util_bitpack_uint(values->FrontFaceFillMode, 5, 6) |
+      util_bitpack_uint(values->GlobalDepthOffsetEnablePoint, 7, 7) |
+      util_bitpack_uint(values->GlobalDepthOffsetEnableWireframe, 8, 8) |
+      util_bitpack_uint(values->GlobalDepthOffsetEnableSolid, 9, 9) |
+      util_bitpack_uint(values->StatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->LegacyGlobalDepthBiasEnable, 11, 11) |
+      util_bitpack_uint(values->DepthBufferSurfaceFormat, 12, 14);
 
    dw[2] =
-      __gen_uint(values->MultisampleRasterizationMode, 8, 9) |
-      __gen_uint(values->ScissorRectangleEnable, 11, 11) |
-      __gen_uint(values->LineEndCapAntialiasingRegionWidth, 16, 17) |
-      __gen_ufixed(values->LineWidth, 18, 27, 7) |
-      __gen_uint(values->CullMode, 29, 30) |
-      __gen_uint(values->AntialiasingEnable, 31, 31);
+      util_bitpack_uint(values->MultisampleRasterizationMode, 8, 9) |
+      util_bitpack_uint(values->ScissorRectangleEnable, 11, 11) |
+      util_bitpack_uint(values->LineEndCapAntialiasingRegionWidth, 16, 17) |
+      util_bitpack_ufixed(values->LineWidth, 18, 27, 7) |
+      util_bitpack_uint(values->CullMode, 29, 30) |
+      util_bitpack_uint(values->AntialiasingEnable, 31, 31);
 
    dw[3] =
-      __gen_ufixed(values->PointWidth, 0, 10, 3) |
-      __gen_uint(values->PointWidthSource, 11, 11) |
-      __gen_uint(values->VertexSubPixelPrecisionSelect, 12, 12) |
-      __gen_uint(values->AALineDistanceMode, 14, 14) |
-      __gen_uint(values->TriangleFanProvokingVertexSelect, 25, 26) |
-      __gen_uint(values->LineStripListProvokingVertexSelect, 27, 28) |
-      __gen_uint(values->TriangleStripListProvokingVertexSelect, 29, 30) |
-      __gen_uint(values->LastPixelEnable, 31, 31);
+      util_bitpack_ufixed(values->PointWidth, 0, 10, 3) |
+      util_bitpack_uint(values->PointWidthSource, 11, 11) |
+      util_bitpack_uint(values->VertexSubPixelPrecisionSelect, 12, 12) |
+      util_bitpack_uint(values->AALineDistanceMode, 14, 14) |
+      util_bitpack_uint(values->TriangleFanProvokingVertexSelect, 25, 26) |
+      util_bitpack_uint(values->LineStripListProvokingVertexSelect, 27, 28) |
+      util_bitpack_uint(values->TriangleStripListProvokingVertexSelect, 29, 30) |
+      util_bitpack_uint(values->LastPixelEnable, 31, 31);
 
    dw[4] =
-      __gen_float(values->GlobalDepthOffsetConstant);
+      util_bitpack_float(values->GlobalDepthOffsetConstant);
 
    dw[5] =
-      __gen_float(values->GlobalDepthOffsetScale);
+      util_bitpack_float(values->GlobalDepthOffsetScale);
 
    dw[6] =
-      __gen_float(values->GlobalDepthOffsetClamp);
+      util_bitpack_float(values->GlobalDepthOffsetClamp);
 }
 
 #define GFX7_3DSTATE_SO_BUFFER_length          4
@@ -3975,16 +3847,16 @@ GFX7_3DSTATE_SO_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SurfacePitch, 0, 11) |
-      __gen_uint_nonzero(values->MOCS, 25, 28) |
-      __gen_uint(values->SOBufferIndex, 29, 30);
+      util_bitpack_uint(values->SurfacePitch, 0, 11) |
+      util_bitpack_uint_nonzero(values->MOCS, 25, 28) |
+      util_bitpack_uint(values->SOBufferIndex, 29, 30);
 
    dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 2, 31);
 
@@ -4023,23 +3895,23 @@ GFX7_3DSTATE_SO_DECL_LIST_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 8) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 8) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->StreamtoBufferSelects0, 0, 3) |
-      __gen_uint(values->StreamtoBufferSelects1, 4, 7) |
-      __gen_uint(values->StreamtoBufferSelects2, 8, 11) |
-      __gen_uint(values->StreamtoBufferSelects3, 12, 15);
+      util_bitpack_uint(values->StreamtoBufferSelects0, 0, 3) |
+      util_bitpack_uint(values->StreamtoBufferSelects1, 4, 7) |
+      util_bitpack_uint(values->StreamtoBufferSelects2, 8, 11) |
+      util_bitpack_uint(values->StreamtoBufferSelects3, 12, 15);
 
    dw[2] =
-      __gen_uint(values->NumEntries0, 0, 7) |
-      __gen_uint(values->NumEntries1, 8, 15) |
-      __gen_uint(values->NumEntries2, 16, 23) |
-      __gen_uint(values->NumEntries3, 24, 31);
+      util_bitpack_uint(values->NumEntries0, 0, 7) |
+      util_bitpack_uint(values->NumEntries1, 8, 15) |
+      util_bitpack_uint(values->NumEntries2, 16, 23) |
+      util_bitpack_uint(values->NumEntries3, 24, 31);
 }
 
 #define GFX7_3DSTATE_STENCIL_BUFFER_length      3
@@ -4070,15 +3942,15 @@ GFX7_3DSTATE_STENCIL_BUFFER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SurfacePitch, 0, 16) |
-      __gen_uint_nonzero(values->MOCS, 25, 28);
+      util_bitpack_uint(values->SurfacePitch, 0, 16) |
+      util_bitpack_uint_nonzero(values->MOCS, 25, 28);
 
    dw[2] = __gen_address(data, &dw[2], values->SurfaceBaseAddress, 0, 0, 31);
 }
@@ -4127,32 +3999,32 @@ GFX7_3DSTATE_STREAMOUT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SOBufferEnable0, 8, 8) |
-      __gen_uint(values->SOBufferEnable1, 9, 9) |
-      __gen_uint(values->SOBufferEnable2, 10, 10) |
-      __gen_uint(values->SOBufferEnable3, 11, 11) |
-      __gen_uint(values->SOStatisticsEnable, 25, 25) |
-      __gen_uint(values->ReorderMode, 26, 26) |
-      __gen_uint(values->RenderStreamSelect, 27, 28) |
-      __gen_uint(values->RenderingDisable, 30, 30) |
-      __gen_uint(values->SOFunctionEnable, 31, 31);
+      util_bitpack_uint(values->SOBufferEnable0, 8, 8) |
+      util_bitpack_uint(values->SOBufferEnable1, 9, 9) |
+      util_bitpack_uint(values->SOBufferEnable2, 10, 10) |
+      util_bitpack_uint(values->SOBufferEnable3, 11, 11) |
+      util_bitpack_uint(values->SOStatisticsEnable, 25, 25) |
+      util_bitpack_uint(values->ReorderMode, 26, 26) |
+      util_bitpack_uint(values->RenderStreamSelect, 27, 28) |
+      util_bitpack_uint(values->RenderingDisable, 30, 30) |
+      util_bitpack_uint(values->SOFunctionEnable, 31, 31);
 
    dw[2] =
-      __gen_uint(values->Stream0VertexReadLength, 0, 4) |
-      __gen_uint(values->Stream0VertexReadOffset, 5, 5) |
-      __gen_uint(values->Stream1VertexReadLength, 8, 12) |
-      __gen_uint(values->Stream1VertexReadOffset, 13, 13) |
-      __gen_uint(values->Stream2VertexReadLength, 16, 20) |
-      __gen_uint(values->Stream2VertexReadOffset, 21, 21) |
-      __gen_uint(values->Stream3VertexReadLength, 24, 28) |
-      __gen_uint(values->Stream3VertexReadOffset, 29, 29);
+      util_bitpack_uint(values->Stream0VertexReadLength, 0, 4) |
+      util_bitpack_uint(values->Stream0VertexReadOffset, 5, 5) |
+      util_bitpack_uint(values->Stream1VertexReadLength, 8, 12) |
+      util_bitpack_uint(values->Stream1VertexReadOffset, 13, 13) |
+      util_bitpack_uint(values->Stream2VertexReadLength, 16, 20) |
+      util_bitpack_uint(values->Stream2VertexReadOffset, 21, 21) |
+      util_bitpack_uint(values->Stream3VertexReadLength, 24, 28) |
+      util_bitpack_uint(values->Stream3VertexReadOffset, 29, 29);
 }
 
 #define GFX7_3DSTATE_TE_length                 4
@@ -4199,24 +4071,24 @@ GFX7_3DSTATE_TE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->TEEnable, 0, 0) |
-      __gen_uint(values->TEMode, 1, 2) |
-      __gen_uint(values->TEDomain, 4, 5) |
-      __gen_uint(values->OutputTopology, 8, 9) |
-      __gen_uint(values->Partitioning, 12, 13);
+      util_bitpack_uint(values->TEEnable, 0, 0) |
+      util_bitpack_uint(values->TEMode, 1, 2) |
+      util_bitpack_uint(values->TEDomain, 4, 5) |
+      util_bitpack_uint(values->OutputTopology, 8, 9) |
+      util_bitpack_uint(values->Partitioning, 12, 13);
 
    dw[2] =
-      __gen_float(values->MaximumTessellationFactorOdd);
+      util_bitpack_float(values->MaximumTessellationFactorOdd);
 
    dw[3] =
-      __gen_float(values->MaximumTessellationFactorNotOdd);
+      util_bitpack_float(values->MaximumTessellationFactorNotOdd);
 }
 
 #define GFX7_3DSTATE_URB_DS_length             2
@@ -4247,16 +4119,16 @@ GFX7_3DSTATE_URB_DS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->DSNumberofURBEntries, 0, 15) |
-      __gen_uint(values->DSURBEntryAllocationSize, 16, 24) |
-      __gen_uint(values->DSURBStartingAddress, 25, 29);
+      util_bitpack_uint(values->DSNumberofURBEntries, 0, 15) |
+      util_bitpack_uint(values->DSURBEntryAllocationSize, 16, 24) |
+      util_bitpack_uint(values->DSURBStartingAddress, 25, 29);
 }
 
 #define GFX7_3DSTATE_URB_GS_length             2
@@ -4287,16 +4159,16 @@ GFX7_3DSTATE_URB_GS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->GSNumberofURBEntries, 0, 15) |
-      __gen_uint(values->GSURBEntryAllocationSize, 16, 24) |
-      __gen_uint(values->GSURBStartingAddress, 25, 29);
+      util_bitpack_uint(values->GSNumberofURBEntries, 0, 15) |
+      util_bitpack_uint(values->GSURBEntryAllocationSize, 16, 24) |
+      util_bitpack_uint(values->GSURBStartingAddress, 25, 29);
 }
 
 #define GFX7_3DSTATE_URB_HS_length             2
@@ -4327,16 +4199,16 @@ GFX7_3DSTATE_URB_HS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->HSNumberofURBEntries, 0, 15) |
-      __gen_uint(values->HSURBEntryAllocationSize, 16, 24) |
-      __gen_uint(values->HSURBStartingAddress, 25, 29);
+      util_bitpack_uint(values->HSNumberofURBEntries, 0, 15) |
+      util_bitpack_uint(values->HSURBEntryAllocationSize, 16, 24) |
+      util_bitpack_uint(values->HSURBStartingAddress, 25, 29);
 }
 
 #define GFX7_3DSTATE_URB_VS_length             2
@@ -4367,16 +4239,16 @@ GFX7_3DSTATE_URB_VS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->VSNumberofURBEntries, 0, 15) |
-      __gen_uint(values->VSURBEntryAllocationSize, 16, 24) |
-      __gen_uint(values->VSURBStartingAddress, 25, 29);
+      util_bitpack_uint(values->VSNumberofURBEntries, 0, 15) |
+      util_bitpack_uint(values->VSURBEntryAllocationSize, 16, 24) |
+      util_bitpack_uint(values->VSURBStartingAddress, 25, 29);
 }
 
 #define GFX7_3DSTATE_VERTEX_BUFFERS_length_bias      2
@@ -4404,11 +4276,11 @@ GFX7_3DSTATE_VERTEX_BUFFERS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_3DSTATE_VERTEX_ELEMENTS_length_bias      2
@@ -4436,11 +4308,11 @@ GFX7_3DSTATE_VERTEX_ELEMENTS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_3DSTATE_VF_STATISTICS_length      1
@@ -4467,11 +4339,11 @@ GFX7_3DSTATE_VF_STATISTICS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->StatisticsEnable, 0, 0) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->StatisticsEnable, 0, 0) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_3DSTATE_VIEWPORT_STATE_POINTERS_CC_length      2
@@ -4500,11 +4372,11 @@ GFX7_3DSTATE_VIEWPORT_STATE_POINTERS_CC_pack(__attribute__((unused)) __gen_user_
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->CCViewportPointer, 5, 31);
@@ -4536,11 +4408,11 @@ GFX7_3DSTATE_VIEWPORT_STATE_POINTERS_SF_CLIP_pack(__attribute__((unused)) __gen_
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->SFClipViewportPointer, 6, 31);
@@ -4595,38 +4467,38 @@ GFX7_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->KernelStartPointer, 6, 31);
 
    dw[2] =
-      __gen_uint(values->SoftwareExceptionEnable, 7, 7) |
-      __gen_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
-      __gen_uint(values->FloatingPointMode, 16, 16) |
-      __gen_uint(values->BindingTableEntryCount, 18, 25) |
-      __gen_uint(values->SamplerCount, 27, 29) |
-      __gen_uint(values->VectorMaskEnable, 30, 30) |
-      __gen_uint(values->SingleVertexDispatch, 31, 31);
+      util_bitpack_uint(values->SoftwareExceptionEnable, 7, 7) |
+      util_bitpack_uint(values->IllegalOpcodeExceptionEnable, 13, 13) |
+      util_bitpack_uint(values->FloatingPointMode, 16, 16) |
+      util_bitpack_uint(values->BindingTableEntryCount, 18, 25) |
+      util_bitpack_uint(values->SamplerCount, 27, 29) |
+      util_bitpack_uint(values->VectorMaskEnable, 30, 30) |
+      util_bitpack_uint(values->SingleVertexDispatch, 31, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[3] = __gen_address(data, &dw[3], values->ScratchSpaceBasePointer, v3, 10, 31);
 
    dw[4] =
-      __gen_uint(values->VertexURBEntryReadOffset, 4, 9) |
-      __gen_uint(values->VertexURBEntryReadLength, 11, 16) |
-      __gen_uint(values->DispatchGRFStartRegisterForURBData, 20, 24);
+      util_bitpack_uint(values->VertexURBEntryReadOffset, 4, 9) |
+      util_bitpack_uint(values->VertexURBEntryReadLength, 11, 16) |
+      util_bitpack_uint(values->DispatchGRFStartRegisterForURBData, 20, 24);
 
    dw[5] =
-      __gen_uint(values->Enable, 0, 0) |
-      __gen_uint(values->VertexCacheDisable, 1, 1) |
-      __gen_uint(values->StatisticsEnable, 10, 10) |
-      __gen_uint(values->MaximumNumberofThreads, 25, 31);
+      util_bitpack_uint(values->Enable, 0, 0) |
+      util_bitpack_uint(values->VertexCacheDisable, 1, 1) |
+      util_bitpack_uint(values->StatisticsEnable, 10, 10) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 25, 31);
 }
 
 #define GFX7_3DSTATE_WM_length                 3
@@ -4703,36 +4575,36 @@ GFX7_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->MultisampleRasterizationMode, 0, 1) |
-      __gen_uint(values->PointRasterizationRule, 2, 2) |
-      __gen_uint(values->LineStippleEnable, 3, 3) |
-      __gen_uint(values->PolygonStippleEnable, 4, 4) |
-      __gen_uint(values->LineAntialiasingRegionWidth, 6, 7) |
-      __gen_uint(values->LineEndCapAntialiasingRegionWidth, 8, 9) |
-      __gen_uint(values->PixelShaderUsesInputCoverageMask, 10, 10) |
-      __gen_uint(values->BarycentricInterpolationMode, 11, 16) |
-      __gen_uint(values->PositionZWInterpolationMode, 17, 18) |
-      __gen_uint(values->PixelShaderUsesSourceW, 19, 19) |
-      __gen_uint(values->PixelShaderUsesSourceDepth, 20, 20) |
-      __gen_uint(values->EarlyDepthStencilControl, 21, 22) |
-      __gen_uint(values->PixelShaderComputedDepthMode, 23, 24) |
-      __gen_uint(values->PixelShaderKillsPixel, 25, 25) |
-      __gen_uint(values->LegacyDiamondLineRasterization, 26, 26) |
-      __gen_uint(values->HierarchicalDepthBufferResolveEnable, 27, 27) |
-      __gen_uint(values->DepthBufferResolveEnable, 28, 28) |
-      __gen_uint(values->ThreadDispatchEnable, 29, 29) |
-      __gen_uint(values->DepthBufferClear, 30, 30) |
-      __gen_uint(values->StatisticsEnable, 31, 31);
+      util_bitpack_uint(values->MultisampleRasterizationMode, 0, 1) |
+      util_bitpack_uint(values->PointRasterizationRule, 2, 2) |
+      util_bitpack_uint(values->LineStippleEnable, 3, 3) |
+      util_bitpack_uint(values->PolygonStippleEnable, 4, 4) |
+      util_bitpack_uint(values->LineAntialiasingRegionWidth, 6, 7) |
+      util_bitpack_uint(values->LineEndCapAntialiasingRegionWidth, 8, 9) |
+      util_bitpack_uint(values->PixelShaderUsesInputCoverageMask, 10, 10) |
+      util_bitpack_uint(values->BarycentricInterpolationMode, 11, 16) |
+      util_bitpack_uint(values->PositionZWInterpolationMode, 17, 18) |
+      util_bitpack_uint(values->PixelShaderUsesSourceW, 19, 19) |
+      util_bitpack_uint(values->PixelShaderUsesSourceDepth, 20, 20) |
+      util_bitpack_uint(values->EarlyDepthStencilControl, 21, 22) |
+      util_bitpack_uint(values->PixelShaderComputedDepthMode, 23, 24) |
+      util_bitpack_uint(values->PixelShaderKillsPixel, 25, 25) |
+      util_bitpack_uint(values->LegacyDiamondLineRasterization, 26, 26) |
+      util_bitpack_uint(values->HierarchicalDepthBufferResolveEnable, 27, 27) |
+      util_bitpack_uint(values->DepthBufferResolveEnable, 28, 28) |
+      util_bitpack_uint(values->ThreadDispatchEnable, 29, 29) |
+      util_bitpack_uint(values->DepthBufferClear, 30, 30) |
+      util_bitpack_uint(values->StatisticsEnable, 31, 31);
 
    dw[2] =
-      __gen_uint(values->MultisampleDispatchMode, 31, 31);
+      util_bitpack_uint(values->MultisampleDispatchMode, 31, 31);
 }
 
 #define GFX7_GPGPU_OBJECT_length               8
@@ -4775,37 +4647,37 @@ GFX7_GPGPU_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->PredicateEnable, 8, 8) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 4) |
-      __gen_uint(values->SharedLocalMemoryFixedOffset, 7, 7);
+      util_bitpack_uint(values->InterfaceDescriptorOffset, 0, 4) |
+      util_bitpack_uint(values->SharedLocalMemoryFixedOffset, 7, 7);
 
    dw[2] =
-      __gen_uint(values->IndirectDataLength, 0, 16) |
-      __gen_uint(values->HalfSliceDestinationSelect, 17, 18) |
-      __gen_uint(values->EndofThreadGroup, 24, 24) |
-      __gen_uint(values->SharedLocalMemoryOffset, 28, 31);
+      util_bitpack_uint(values->IndirectDataLength, 0, 16) |
+      util_bitpack_uint(values->HalfSliceDestinationSelect, 17, 18) |
+      util_bitpack_uint(values->EndofThreadGroup, 24, 24) |
+      util_bitpack_uint(values->SharedLocalMemoryOffset, 28, 31);
 
    dw[3] =
       __gen_offset(values->IndirectDataStartAddress, 0, 31);
 
    dw[4] =
-      __gen_uint(values->ThreadGroupIDX, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDX, 0, 31);
 
    dw[5] =
-      __gen_uint(values->ThreadGroupIDY, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDY, 0, 31);
 
    dw[6] =
-      __gen_uint(values->ThreadGroupIDZ, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDZ, 0, 31);
 
    dw[7] =
-      __gen_uint(values->ExecutionMask, 0, 31);
+      util_bitpack_uint(values->ExecutionMask, 0, 31);
 }
 
 #define GFX7_GPGPU_WALKER_length              11
@@ -4851,46 +4723,46 @@ GFX7_GPGPU_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->PredicateEnable, 8, 8) |
-      __gen_uint(values->IndirectParameterEnable, 10, 10) |
-      __gen_uint(values->SubOpcodeA, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint(values->IndirectParameterEnable, 10, 10) |
+      util_bitpack_uint(values->SubOpcodeA, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 4);
+      util_bitpack_uint(values->InterfaceDescriptorOffset, 0, 4);
 
    dw[2] =
-      __gen_uint(values->ThreadWidthCounterMaximum, 0, 5) |
-      __gen_uint(values->ThreadHeightCounterMaximum, 8, 13) |
-      __gen_uint(values->ThreadDepthCounterMaximum, 16, 21) |
-      __gen_uint(values->SIMDSize, 30, 31);
+      util_bitpack_uint(values->ThreadWidthCounterMaximum, 0, 5) |
+      util_bitpack_uint(values->ThreadHeightCounterMaximum, 8, 13) |
+      util_bitpack_uint(values->ThreadDepthCounterMaximum, 16, 21) |
+      util_bitpack_uint(values->SIMDSize, 30, 31);
 
    dw[3] =
-      __gen_uint(values->ThreadGroupIDStartingX, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDStartingX, 0, 31);
 
    dw[4] =
-      __gen_uint(values->ThreadGroupIDXDimension, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDXDimension, 0, 31);
 
    dw[5] =
-      __gen_uint(values->ThreadGroupIDStartingY, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDStartingY, 0, 31);
 
    dw[6] =
-      __gen_uint(values->ThreadGroupIDYDimension, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDYDimension, 0, 31);
 
    dw[7] =
-      __gen_uint(values->ThreadGroupIDStartingZ, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDStartingZ, 0, 31);
 
    dw[8] =
-      __gen_uint(values->ThreadGroupIDZDimension, 0, 31);
+      util_bitpack_uint(values->ThreadGroupIDZDimension, 0, 31);
 
    dw[9] =
-      __gen_uint(values->RightExecutionMask, 0, 31);
+      util_bitpack_uint(values->RightExecutionMask, 0, 31);
 
    dw[10] =
-      __gen_uint(values->BottomExecutionMask, 0, 31);
+      util_bitpack_uint(values->BottomExecutionMask, 0, 31);
 }
 
 #define GFX7_MEDIA_CURBE_LOAD_length           4
@@ -4920,19 +4792,19 @@ GFX7_MEDIA_CURBE_LOAD_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = 0;
 
    dw[2] =
-      __gen_uint(values->CURBETotalDataLength, 0, 16);
+      util_bitpack_uint(values->CURBETotalDataLength, 0, 16);
 
    dw[3] =
-      __gen_uint(values->CURBEDataStartAddress, 0, 31);
+      util_bitpack_uint(values->CURBEDataStartAddress, 0, 31);
 }
 
 #define GFX7_MEDIA_INTERFACE_DESCRIPTOR_LOAD_length      4
@@ -4962,16 +4834,16 @@ GFX7_MEDIA_INTERFACE_DESCRIPTOR_LOAD_pack(__attribute__((unused)) __gen_user_dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = 0;
 
    dw[2] =
-      __gen_uint(values->InterfaceDescriptorTotalLength, 0, 16);
+      util_bitpack_uint(values->InterfaceDescriptorTotalLength, 0, 16);
 
    dw[3] =
       __gen_offset(values->InterfaceDescriptorDataStartAddress, 0, 31);
@@ -5020,31 +4892,31 @@ GFX7_MEDIA_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->MediaCommandSubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->MediaCommandPipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->MediaCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->MediaCommandPipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 4);
+      util_bitpack_uint(values->InterfaceDescriptorOffset, 0, 4);
 
    dw[2] =
-      __gen_uint(values->IndirectDataLength, 0, 16) |
-      __gen_uint(values->HalfSliceDestinationSelect, 17, 18) |
-      __gen_uint(values->UseScoreboard, 21, 21) |
-      __gen_uint(values->ThreadSynchronization, 24, 24) |
-      __gen_uint(values->ChildrenPresent, 31, 31);
+      util_bitpack_uint(values->IndirectDataLength, 0, 16) |
+      util_bitpack_uint(values->HalfSliceDestinationSelect, 17, 18) |
+      util_bitpack_uint(values->UseScoreboard, 21, 21) |
+      util_bitpack_uint(values->ThreadSynchronization, 24, 24) |
+      util_bitpack_uint(values->ChildrenPresent, 31, 31);
 
    dw[3] = __gen_address(data, &dw[3], values->IndirectDataStartAddress, 0, 0, 31);
 
    dw[4] =
-      __gen_uint(values->ScoreboardX, 0, 8) |
-      __gen_uint(values->ScoredboardY, 16, 24);
+      util_bitpack_uint(values->ScoreboardX, 0, 8) |
+      util_bitpack_uint(values->ScoredboardY, 16, 24);
 
    dw[5] =
-      __gen_uint(values->ScoreboardMask, 0, 7) |
-      __gen_uint(values->ScoreboardColor, 16, 19);
+      util_bitpack_uint(values->ScoreboardMask, 0, 7) |
+      util_bitpack_uint(values->ScoreboardColor, 16, 19);
 }
 
 #define GFX7_MEDIA_OBJECT_PRT_length          16
@@ -5079,57 +4951,57 @@ GFX7_MEDIA_OBJECT_PRT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 4);
+      util_bitpack_uint(values->InterfaceDescriptorOffset, 0, 4);
 
    dw[2] =
-      __gen_uint(values->PRT_FenceType, 22, 22) |
-      __gen_uint(values->PRT_FenceNeeded, 23, 23) |
-      __gen_uint(values->ChildrenPresent, 31, 31);
+      util_bitpack_uint(values->PRT_FenceType, 22, 22) |
+      util_bitpack_uint(values->PRT_FenceNeeded, 23, 23) |
+      util_bitpack_uint(values->ChildrenPresent, 31, 31);
 
    dw[3] = 0;
 
    dw[4] =
-      __gen_uint(values->InlineData[0], 0, 31);
+      util_bitpack_uint(values->InlineData[0], 0, 31);
 
    dw[5] =
-      __gen_uint(values->InlineData[1], 0, 31);
+      util_bitpack_uint(values->InlineData[1], 0, 31);
 
    dw[6] =
-      __gen_uint(values->InlineData[2], 0, 31);
+      util_bitpack_uint(values->InlineData[2], 0, 31);
 
    dw[7] =
-      __gen_uint(values->InlineData[3], 0, 31);
+      util_bitpack_uint(values->InlineData[3], 0, 31);
 
    dw[8] =
-      __gen_uint(values->InlineData[4], 0, 31);
+      util_bitpack_uint(values->InlineData[4], 0, 31);
 
    dw[9] =
-      __gen_uint(values->InlineData[5], 0, 31);
+      util_bitpack_uint(values->InlineData[5], 0, 31);
 
    dw[10] =
-      __gen_uint(values->InlineData[6], 0, 31);
+      util_bitpack_uint(values->InlineData[6], 0, 31);
 
    dw[11] =
-      __gen_uint(values->InlineData[7], 0, 31);
+      util_bitpack_uint(values->InlineData[7], 0, 31);
 
    dw[12] =
-      __gen_uint(values->InlineData[8], 0, 31);
+      util_bitpack_uint(values->InlineData[8], 0, 31);
 
    dw[13] =
-      __gen_uint(values->InlineData[9], 0, 31);
+      util_bitpack_uint(values->InlineData[9], 0, 31);
 
    dw[14] =
-      __gen_uint(values->InlineData[10], 0, 31);
+      util_bitpack_uint(values->InlineData[10], 0, 31);
 
    dw[15] =
-      __gen_uint(values->InlineData[11], 0, 31);
+      util_bitpack_uint(values->InlineData[11], 0, 31);
 }
 
 #define GFX7_MEDIA_OBJECT_WALKER_length_bias      2
@@ -5194,20 +5066,20 @@ GFX7_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 4);
+      util_bitpack_uint(values->InterfaceDescriptorOffset, 0, 4);
 
    dw[2] =
-      __gen_uint(values->IndirectDataLength, 0, 16) |
-      __gen_uint(values->UseScoreboard, 21, 21) |
-      __gen_uint(values->ThreadSynchronization, 24, 24) |
-      __gen_uint(values->ChildrenPresent, 31, 31);
+      util_bitpack_uint(values->IndirectDataLength, 0, 16) |
+      util_bitpack_uint(values->UseScoreboard, 21, 21) |
+      util_bitpack_uint(values->ThreadSynchronization, 24, 24) |
+      util_bitpack_uint(values->ChildrenPresent, 31, 31);
 
    dw[3] =
       __gen_offset(values->IndirectDataStartAddress, 0, 31);
@@ -5215,55 +5087,55 @@ GFX7_MEDIA_OBJECT_WALKER_pack(__attribute__((unused)) __gen_user_data *data,
    dw[4] = 0;
 
    dw[5] =
-      __gen_uint(values->ScoreboardMask, 0, 7);
+      util_bitpack_uint(values->ScoreboardMask, 0, 7);
 
    dw[6] =
-      __gen_sint(values->MidLoopUnitX, 8, 9) |
-      __gen_sint(values->LocalMidLoopUnitY, 12, 13) |
-      __gen_uint(values->MiddleLoopExtraSteps, 16, 20) |
-      __gen_uint(values->ColorCountMinusOne, 24, 27) |
-      __gen_uint(values->Repel, 30, 30) |
-      __gen_uint(values->DualMode, 31, 31);
+      util_bitpack_sint(values->MidLoopUnitX, 8, 9) |
+      util_bitpack_sint(values->LocalMidLoopUnitY, 12, 13) |
+      util_bitpack_uint(values->MiddleLoopExtraSteps, 16, 20) |
+      util_bitpack_uint(values->ColorCountMinusOne, 24, 27) |
+      util_bitpack_uint(values->Repel, 30, 30) |
+      util_bitpack_uint(values->DualMode, 31, 31);
 
    dw[7] =
-      __gen_uint(values->LocalLoopExecCount, 0, 9) |
-      __gen_uint(values->GlobalLoopExecCount, 16, 25);
+      util_bitpack_uint(values->LocalLoopExecCount, 0, 9) |
+      util_bitpack_uint(values->GlobalLoopExecCount, 16, 25);
 
    dw[8] =
-      __gen_uint(values->BlockResolutionX, 0, 8) |
-      __gen_uint(values->BlockResolutionY, 16, 24);
+      util_bitpack_uint(values->BlockResolutionX, 0, 8) |
+      util_bitpack_uint(values->BlockResolutionY, 16, 24);
 
    dw[9] =
-      __gen_uint(values->LocalStartX, 0, 8) |
-      __gen_uint(values->LocalStartY, 16, 24);
+      util_bitpack_uint(values->LocalStartX, 0, 8) |
+      util_bitpack_uint(values->LocalStartY, 16, 24);
 
    dw[10] =
-      __gen_uint(values->LocalEndX, 0, 8) |
-      __gen_uint(values->LocalEndY, 16, 24);
+      util_bitpack_uint(values->LocalEndX, 0, 8) |
+      util_bitpack_uint(values->LocalEndY, 16, 24);
 
    dw[11] =
-      __gen_sint(values->LocalOuterLoopStrideX, 0, 9) |
-      __gen_sint(values->LocalOuterLoopStrideY, 16, 25);
+      util_bitpack_sint(values->LocalOuterLoopStrideX, 0, 9) |
+      util_bitpack_sint(values->LocalOuterLoopStrideY, 16, 25);
 
    dw[12] =
-      __gen_sint(values->LocalInnerLoopUnitX, 0, 9) |
-      __gen_sint(values->LocalInnerLoopUnitY, 16, 25);
+      util_bitpack_sint(values->LocalInnerLoopUnitX, 0, 9) |
+      util_bitpack_sint(values->LocalInnerLoopUnitY, 16, 25);
 
    dw[13] =
-      __gen_uint(values->GlobalResolutionX, 0, 8) |
-      __gen_uint(values->GlobalResolutionY, 16, 24);
+      util_bitpack_uint(values->GlobalResolutionX, 0, 8) |
+      util_bitpack_uint(values->GlobalResolutionY, 16, 24);
 
    dw[14] =
-      __gen_sint(values->GlobalStartX, 0, 9) |
-      __gen_sint(values->GlobalStartY, 16, 25);
+      util_bitpack_sint(values->GlobalStartX, 0, 9) |
+      util_bitpack_sint(values->GlobalStartY, 16, 25);
 
    dw[15] =
-      __gen_sint(values->GlobalOuterLoopStrideX, 0, 9) |
-      __gen_sint(values->GlobalOuterLoopStrideY, 16, 25);
+      util_bitpack_sint(values->GlobalOuterLoopStrideX, 0, 9) |
+      util_bitpack_sint(values->GlobalOuterLoopStrideY, 16, 25);
 
    dw[16] =
-      __gen_sint(values->GlobalInnerLoopUnitX, 0, 9) |
-      __gen_sint(values->GlobalInnerLoopUnitY, 16, 25);
+      util_bitpack_sint(values->GlobalInnerLoopUnitX, 0, 9) |
+      util_bitpack_sint(values->GlobalInnerLoopUnitY, 16, 25);
 }
 
 #define GFX7_MEDIA_STATE_FLUSH_length          2
@@ -5293,15 +5165,15 @@ GFX7_MEDIA_STATE_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InterfaceDescriptorOffset, 0, 5) |
-      __gen_uint(values->WatermarkRequired, 6, 6);
+      util_bitpack_uint(values->InterfaceDescriptorOffset, 0, 5) |
+      util_bitpack_uint(values->WatermarkRequired, 6, 6);
 }
 
 #define GFX7_MEDIA_VFE_STATE_length            8
@@ -5368,54 +5240,54 @@ GFX7_MEDIA_VFE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 15) |
-      __gen_uint(values->SubOpcode, 16, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 15) |
+      util_bitpack_uint(values->SubOpcode, 16, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->PerThreadScratchSpace, 0, 3);
+      util_bitpack_uint(values->PerThreadScratchSpace, 0, 3);
    dw[1] = __gen_address(data, &dw[1], values->ScratchSpaceBasePointer, v1, 10, 31);
 
    dw[2] =
-      __gen_uint(values->GPGPUMode, 2, 2) |
-      __gen_uint(values->GatewayMMIOAccessControl, 3, 4) |
-      __gen_uint(values->BypassGatewayControl, 6, 6) |
-      __gen_uint(values->ResetGatewayTimer, 7, 7) |
-      __gen_uint(values->NumberofURBEntries, 8, 15) |
-      __gen_uint(values->MaximumNumberofThreads, 16, 31);
+      util_bitpack_uint(values->GPGPUMode, 2, 2) |
+      util_bitpack_uint(values->GatewayMMIOAccessControl, 3, 4) |
+      util_bitpack_uint(values->BypassGatewayControl, 6, 6) |
+      util_bitpack_uint(values->ResetGatewayTimer, 7, 7) |
+      util_bitpack_uint(values->NumberofURBEntries, 8, 15) |
+      util_bitpack_uint(values->MaximumNumberofThreads, 16, 31);
 
    dw[3] = 0;
 
    dw[4] =
-      __gen_uint(values->CURBEAllocationSize, 0, 15) |
-      __gen_uint(values->URBEntryAllocationSize, 16, 31);
+      util_bitpack_uint(values->CURBEAllocationSize, 0, 15) |
+      util_bitpack_uint(values->URBEntryAllocationSize, 16, 31);
 
    dw[5] =
-      __gen_uint(values->ScoreboardMask, 0, 7) |
-      __gen_uint(values->ScoreboardType, 30, 30) |
-      __gen_uint(values->ScoreboardEnable, 31, 31);
+      util_bitpack_uint(values->ScoreboardMask, 0, 7) |
+      util_bitpack_uint(values->ScoreboardType, 30, 30) |
+      util_bitpack_uint(values->ScoreboardEnable, 31, 31);
 
    dw[6] =
-      __gen_sint(values->Scoreboard0DeltaX, 0, 3) |
-      __gen_sint(values->Scoreboard0DeltaY, 4, 7) |
-      __gen_sint(values->Scoreboard1DeltaX, 8, 11) |
-      __gen_sint(values->Scoreboard1DeltaY, 12, 15) |
-      __gen_sint(values->Scoreboard2DeltaX, 16, 19) |
-      __gen_sint(values->Scoreboard2DeltaY, 20, 23) |
-      __gen_sint(values->Scoreboard3DeltaX, 24, 27) |
-      __gen_sint(values->Scoreboard3DeltaY, 28, 31);
+      util_bitpack_sint(values->Scoreboard0DeltaX, 0, 3) |
+      util_bitpack_sint(values->Scoreboard0DeltaY, 4, 7) |
+      util_bitpack_sint(values->Scoreboard1DeltaX, 8, 11) |
+      util_bitpack_sint(values->Scoreboard1DeltaY, 12, 15) |
+      util_bitpack_sint(values->Scoreboard2DeltaX, 16, 19) |
+      util_bitpack_sint(values->Scoreboard2DeltaY, 20, 23) |
+      util_bitpack_sint(values->Scoreboard3DeltaX, 24, 27) |
+      util_bitpack_sint(values->Scoreboard3DeltaY, 28, 31);
 
    dw[7] =
-      __gen_sint(values->Scoreboard4DeltaX, 0, 3) |
-      __gen_sint(values->Scoreboard4DeltaY, 4, 7) |
-      __gen_sint(values->Scoreboard5DeltaX, 8, 11) |
-      __gen_sint(values->Scoreboard5DeltaY, 12, 15) |
-      __gen_sint(values->Scoreboard6DeltaX, 16, 19) |
-      __gen_sint(values->Scoreboard6DeltaY, 20, 23) |
-      __gen_sint(values->Scoreboard7DeltaX, 24, 27) |
-      __gen_sint(values->Scoreboard7DeltaY, 28, 31);
+      util_bitpack_sint(values->Scoreboard4DeltaX, 0, 3) |
+      util_bitpack_sint(values->Scoreboard4DeltaY, 4, 7) |
+      util_bitpack_sint(values->Scoreboard5DeltaX, 8, 11) |
+      util_bitpack_sint(values->Scoreboard5DeltaY, 12, 15) |
+      util_bitpack_sint(values->Scoreboard6DeltaX, 16, 19) |
+      util_bitpack_sint(values->Scoreboard6DeltaY, 20, 23) |
+      util_bitpack_sint(values->Scoreboard7DeltaX, 24, 27) |
+      util_bitpack_sint(values->Scoreboard7DeltaY, 28, 31);
 }
 
 #define GFX7_MFC_AVC_PAK_OBJECT_length        11
@@ -5449,42 +5321,42 @@ GFX7_MFC_AVC_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectPAKMVDataLength, 0, 9);
+      util_bitpack_uint(values->IndirectPAKMVDataLength, 0, 9);
 
    dw[2] =
       __gen_offset(values->IndirectPAKMVDataStartAddressOffset, 0, 28);
 
    dw[3] =
-      __gen_uint(values->InlineData[0], 0, 31);
+      util_bitpack_uint(values->InlineData[0], 0, 31);
 
    dw[4] =
-      __gen_uint(values->InlineData[1], 0, 31);
+      util_bitpack_uint(values->InlineData[1], 0, 31);
 
    dw[5] =
-      __gen_uint(values->InlineData[2], 0, 31);
+      util_bitpack_uint(values->InlineData[2], 0, 31);
 
    dw[6] =
-      __gen_uint(values->InlineData[3], 0, 31);
+      util_bitpack_uint(values->InlineData[3], 0, 31);
 
    dw[7] =
-      __gen_uint(values->InlineData[4], 0, 31);
+      util_bitpack_uint(values->InlineData[4], 0, 31);
 
    dw[8] =
-      __gen_uint(values->InlineData[5], 0, 31);
+      util_bitpack_uint(values->InlineData[5], 0, 31);
 
    dw[9] =
-      __gen_uint(values->InlineData[6], 0, 31);
+      util_bitpack_uint(values->InlineData[6], 0, 31);
 
    dw[10] =
-      __gen_uint(values->InlineData[7], 0, 31);
+      util_bitpack_uint(values->InlineData[7], 0, 31);
 }
 
 #define GFX7_MFC_MPEG2_PAK_OBJECT_length       9
@@ -5515,36 +5387,36 @@ GFX7_MFC_MPEG2_PAK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InlineData[0], 0, 31);
+      util_bitpack_uint(values->InlineData[0], 0, 31);
 
    dw[2] =
-      __gen_uint(values->InlineData[1], 0, 31);
+      util_bitpack_uint(values->InlineData[1], 0, 31);
 
    dw[3] =
-      __gen_uint(values->InlineData[2], 0, 31);
+      util_bitpack_uint(values->InlineData[2], 0, 31);
 
    dw[4] =
-      __gen_uint(values->InlineData[3], 0, 31);
+      util_bitpack_uint(values->InlineData[3], 0, 31);
 
    dw[5] =
-      __gen_uint(values->InlineData[4], 0, 31);
+      util_bitpack_uint(values->InlineData[4], 0, 31);
 
    dw[6] =
-      __gen_uint(values->InlineData[5], 0, 31);
+      util_bitpack_uint(values->InlineData[5], 0, 31);
 
    dw[7] =
-      __gen_uint(values->InlineData[6], 0, 31);
+      util_bitpack_uint(values->InlineData[6], 0, 31);
 
    dw[8] =
-      __gen_uint(values->InlineData[7], 0, 31);
+      util_bitpack_uint(values->InlineData[7], 0, 31);
 }
 
 #define GFX7_MFC_MPEG2_SLICEGROUP_STATE_length      8
@@ -5623,70 +5495,70 @@ GFX7_MFC_MPEG2_SLICEGROUP_STATE_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->StreamID, 0, 1) |
-      __gen_uint(values->SliceID, 4, 7) |
-      __gen_uint(values->IntraSliceFlag, 12, 12) |
-      __gen_uint(values->IntraSlice, 13, 13) |
-      __gen_uint(values->FirstSliceHeaderDisable, 14, 14) |
-      __gen_uint(values->TailInsertionPresent, 15, 15) |
-      __gen_uint(values->SliceDataInsertionPresent, 16, 16) |
-      __gen_uint(values->HeaderInsertionPresent, 17, 17) |
-      __gen_uint(values->CompressedBitStreamOutputDisable, 18, 18) |
-      __gen_uint(values->LastSlice, 19, 19) |
-      __gen_uint(values->MBTypeSkipConversionDisable, 20, 20) |
-      __gen_uint(values->RateControlPanicType, 22, 22) |
-      __gen_uint(values->RateControlPanicEnable, 23, 23) |
-      __gen_uint(values->RateControlStableTolerance, 24, 27) |
-      __gen_uint(values->RateControlTriggleMode, 28, 29) |
-      __gen_uint(values->ResetRateControlCounter, 30, 30) |
-      __gen_uint(values->RateControlCounterEnable, 31, 31);
+      util_bitpack_uint(values->StreamID, 0, 1) |
+      util_bitpack_uint(values->SliceID, 4, 7) |
+      util_bitpack_uint(values->IntraSliceFlag, 12, 12) |
+      util_bitpack_uint(values->IntraSlice, 13, 13) |
+      util_bitpack_uint(values->FirstSliceHeaderDisable, 14, 14) |
+      util_bitpack_uint(values->TailInsertionPresent, 15, 15) |
+      util_bitpack_uint(values->SliceDataInsertionPresent, 16, 16) |
+      util_bitpack_uint(values->HeaderInsertionPresent, 17, 17) |
+      util_bitpack_uint(values->CompressedBitStreamOutputDisable, 18, 18) |
+      util_bitpack_uint(values->LastSlice, 19, 19) |
+      util_bitpack_uint(values->MBTypeSkipConversionDisable, 20, 20) |
+      util_bitpack_uint(values->RateControlPanicType, 22, 22) |
+      util_bitpack_uint(values->RateControlPanicEnable, 23, 23) |
+      util_bitpack_uint(values->RateControlStableTolerance, 24, 27) |
+      util_bitpack_uint(values->RateControlTriggleMode, 28, 29) |
+      util_bitpack_uint(values->ResetRateControlCounter, 30, 30) |
+      util_bitpack_uint(values->RateControlCounterEnable, 31, 31);
 
    dw[2] =
-      __gen_uint(values->FirstMBXCount, 0, 7) |
-      __gen_uint(values->FirstMBYCount, 8, 15) |
-      __gen_uint(values->NextSliceGroupMBXCount, 16, 23) |
-      __gen_uint(values->NextSliceGroupMBYCount, 24, 31);
+      util_bitpack_uint(values->FirstMBXCount, 0, 7) |
+      util_bitpack_uint(values->FirstMBYCount, 8, 15) |
+      util_bitpack_uint(values->NextSliceGroupMBXCount, 16, 23) |
+      util_bitpack_uint(values->NextSliceGroupMBYCount, 24, 31);
 
    dw[3] =
-      __gen_uint(values->SliceGroupQP, 0, 5) |
-      __gen_uint(values->SliceGroupSkip, 8, 8);
+      util_bitpack_uint(values->SliceGroupQP, 0, 5) |
+      util_bitpack_uint(values->SliceGroupSkip, 8, 8);
 
    dw[4] =
       __gen_offset(values->IndirectPAKBSEDataStartAddress, 0, 28);
 
    dw[5] =
-      __gen_uint(values->GrowInit, 0, 3) |
-      __gen_uint(values->GrowResistance, 4, 7) |
-      __gen_uint(values->ShrinkInit, 8, 11) |
-      __gen_uint(values->ShrinkResistance, 12, 15) |
-      __gen_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
-      __gen_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
+      util_bitpack_uint(values->GrowInit, 0, 3) |
+      util_bitpack_uint(values->GrowResistance, 4, 7) |
+      util_bitpack_uint(values->ShrinkInit, 8, 11) |
+      util_bitpack_uint(values->ShrinkResistance, 12, 15) |
+      util_bitpack_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
+      util_bitpack_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
 
    dw[6] =
-      __gen_uint(values->Correct1, 0, 3) |
-      __gen_uint(values->Correct2, 4, 7) |
-      __gen_uint(values->Correct3, 8, 11) |
-      __gen_uint(values->Correct4, 12, 15) |
-      __gen_uint(values->Correct5, 16, 19) |
-      __gen_uint(values->Correct6, 20, 23);
+      util_bitpack_uint(values->Correct1, 0, 3) |
+      util_bitpack_uint(values->Correct2, 4, 7) |
+      util_bitpack_uint(values->Correct3, 8, 11) |
+      util_bitpack_uint(values->Correct4, 12, 15) |
+      util_bitpack_uint(values->Correct5, 16, 19) |
+      util_bitpack_uint(values->Correct6, 20, 23);
 
    dw[7] =
-      __gen_uint(values->CV0, 0, 3) |
-      __gen_uint(values->CV1, 4, 7) |
-      __gen_uint(values->CV2, 8, 11) |
-      __gen_uint(values->CV3, 12, 15) |
-      __gen_uint(values->CV4, 16, 19) |
-      __gen_uint(values->CV5, 20, 23) |
-      __gen_uint(values->CV6, 24, 27) |
-      __gen_uint(values->CV7, 28, 31);
+      util_bitpack_uint(values->CV0, 0, 3) |
+      util_bitpack_uint(values->CV1, 4, 7) |
+      util_bitpack_uint(values->CV2, 8, 11) |
+      util_bitpack_uint(values->CV3, 12, 15) |
+      util_bitpack_uint(values->CV4, 16, 19) |
+      util_bitpack_uint(values->CV5, 20, 23) |
+      util_bitpack_uint(values->CV6, 24, 27) |
+      util_bitpack_uint(values->CV7, 28, 31);
 }
 
 #define GFX7_MFD_AVC_BSD_OBJECT_length         6
@@ -5719,15 +5591,15 @@ GFX7_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+      util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
 
@@ -5773,96 +5645,96 @@ GFX7_MFD_AVC_DPB_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->NonExistingFrame[0], 0, 0) |
-      __gen_uint(values->NonExistingFrame[1], 1, 1) |
-      __gen_uint(values->NonExistingFrame[2], 2, 2) |
-      __gen_uint(values->NonExistingFrame[3], 3, 3) |
-      __gen_uint(values->NonExistingFrame[4], 4, 4) |
-      __gen_uint(values->NonExistingFrame[5], 5, 5) |
-      __gen_uint(values->NonExistingFrame[6], 6, 6) |
-      __gen_uint(values->NonExistingFrame[7], 7, 7) |
-      __gen_uint(values->NonExistingFrame[8], 8, 8) |
-      __gen_uint(values->NonExistingFrame[9], 9, 9) |
-      __gen_uint(values->NonExistingFrame[10], 10, 10) |
-      __gen_uint(values->NonExistingFrame[11], 11, 11) |
-      __gen_uint(values->NonExistingFrame[12], 12, 12) |
-      __gen_uint(values->NonExistingFrame[13], 13, 13) |
-      __gen_uint(values->NonExistingFrame[14], 14, 14) |
-      __gen_uint(values->NonExistingFrame[15], 15, 15) |
-      __gen_uint(values->LongTermFrame[0], 16, 16) |
-      __gen_uint(values->LongTermFrame[1], 17, 17) |
-      __gen_uint(values->LongTermFrame[2], 18, 18) |
-      __gen_uint(values->LongTermFrame[3], 19, 19) |
-      __gen_uint(values->LongTermFrame[4], 20, 20) |
-      __gen_uint(values->LongTermFrame[5], 21, 21) |
-      __gen_uint(values->LongTermFrame[6], 22, 22) |
-      __gen_uint(values->LongTermFrame[7], 23, 23) |
-      __gen_uint(values->LongTermFrame[8], 24, 24) |
-      __gen_uint(values->LongTermFrame[9], 25, 25) |
-      __gen_uint(values->LongTermFrame[10], 26, 26) |
-      __gen_uint(values->LongTermFrame[11], 27, 27) |
-      __gen_uint(values->LongTermFrame[12], 28, 28) |
-      __gen_uint(values->LongTermFrame[13], 29, 29) |
-      __gen_uint(values->LongTermFrame[14], 30, 30) |
-      __gen_uint(values->LongTermFrame[15], 31, 31);
+      util_bitpack_uint(values->NonExistingFrame[0], 0, 0) |
+      util_bitpack_uint(values->NonExistingFrame[1], 1, 1) |
+      util_bitpack_uint(values->NonExistingFrame[2], 2, 2) |
+      util_bitpack_uint(values->NonExistingFrame[3], 3, 3) |
+      util_bitpack_uint(values->NonExistingFrame[4], 4, 4) |
+      util_bitpack_uint(values->NonExistingFrame[5], 5, 5) |
+      util_bitpack_uint(values->NonExistingFrame[6], 6, 6) |
+      util_bitpack_uint(values->NonExistingFrame[7], 7, 7) |
+      util_bitpack_uint(values->NonExistingFrame[8], 8, 8) |
+      util_bitpack_uint(values->NonExistingFrame[9], 9, 9) |
+      util_bitpack_uint(values->NonExistingFrame[10], 10, 10) |
+      util_bitpack_uint(values->NonExistingFrame[11], 11, 11) |
+      util_bitpack_uint(values->NonExistingFrame[12], 12, 12) |
+      util_bitpack_uint(values->NonExistingFrame[13], 13, 13) |
+      util_bitpack_uint(values->NonExistingFrame[14], 14, 14) |
+      util_bitpack_uint(values->NonExistingFrame[15], 15, 15) |
+      util_bitpack_uint(values->LongTermFrame[0], 16, 16) |
+      util_bitpack_uint(values->LongTermFrame[1], 17, 17) |
+      util_bitpack_uint(values->LongTermFrame[2], 18, 18) |
+      util_bitpack_uint(values->LongTermFrame[3], 19, 19) |
+      util_bitpack_uint(values->LongTermFrame[4], 20, 20) |
+      util_bitpack_uint(values->LongTermFrame[5], 21, 21) |
+      util_bitpack_uint(values->LongTermFrame[6], 22, 22) |
+      util_bitpack_uint(values->LongTermFrame[7], 23, 23) |
+      util_bitpack_uint(values->LongTermFrame[8], 24, 24) |
+      util_bitpack_uint(values->LongTermFrame[9], 25, 25) |
+      util_bitpack_uint(values->LongTermFrame[10], 26, 26) |
+      util_bitpack_uint(values->LongTermFrame[11], 27, 27) |
+      util_bitpack_uint(values->LongTermFrame[12], 28, 28) |
+      util_bitpack_uint(values->LongTermFrame[13], 29, 29) |
+      util_bitpack_uint(values->LongTermFrame[14], 30, 30) |
+      util_bitpack_uint(values->LongTermFrame[15], 31, 31);
 
    dw[2] =
-      __gen_uint(values->UsedforReference[0], 0, 1) |
-      __gen_uint(values->UsedforReference[1], 2, 3) |
-      __gen_uint(values->UsedforReference[2], 4, 5) |
-      __gen_uint(values->UsedforReference[3], 6, 7) |
-      __gen_uint(values->UsedforReference[4], 8, 9) |
-      __gen_uint(values->UsedforReference[5], 10, 11) |
-      __gen_uint(values->UsedforReference[6], 12, 13) |
-      __gen_uint(values->UsedforReference[7], 14, 15) |
-      __gen_uint(values->UsedforReference[8], 16, 17) |
-      __gen_uint(values->UsedforReference[9], 18, 19) |
-      __gen_uint(values->UsedforReference[10], 20, 21) |
-      __gen_uint(values->UsedforReference[11], 22, 23) |
-      __gen_uint(values->UsedforReference[12], 24, 25) |
-      __gen_uint(values->UsedforReference[13], 26, 27) |
-      __gen_uint(values->UsedforReference[14], 28, 29) |
-      __gen_uint(values->UsedforReference[15], 30, 31);
+      util_bitpack_uint(values->UsedforReference[0], 0, 1) |
+      util_bitpack_uint(values->UsedforReference[1], 2, 3) |
+      util_bitpack_uint(values->UsedforReference[2], 4, 5) |
+      util_bitpack_uint(values->UsedforReference[3], 6, 7) |
+      util_bitpack_uint(values->UsedforReference[4], 8, 9) |
+      util_bitpack_uint(values->UsedforReference[5], 10, 11) |
+      util_bitpack_uint(values->UsedforReference[6], 12, 13) |
+      util_bitpack_uint(values->UsedforReference[7], 14, 15) |
+      util_bitpack_uint(values->UsedforReference[8], 16, 17) |
+      util_bitpack_uint(values->UsedforReference[9], 18, 19) |
+      util_bitpack_uint(values->UsedforReference[10], 20, 21) |
+      util_bitpack_uint(values->UsedforReference[11], 22, 23) |
+      util_bitpack_uint(values->UsedforReference[12], 24, 25) |
+      util_bitpack_uint(values->UsedforReference[13], 26, 27) |
+      util_bitpack_uint(values->UsedforReference[14], 28, 29) |
+      util_bitpack_uint(values->UsedforReference[15], 30, 31);
 
    dw[3] =
-      __gen_uint(values->LTSTFrameNumberList[0], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[1], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[0], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[1], 16, 31);
 
    dw[4] =
-      __gen_uint(values->LTSTFrameNumberList[2], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[3], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[2], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[3], 16, 31);
 
    dw[5] =
-      __gen_uint(values->LTSTFrameNumberList[4], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[5], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[4], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[5], 16, 31);
 
    dw[6] =
-      __gen_uint(values->LTSTFrameNumberList[6], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[7], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[6], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[7], 16, 31);
 
    dw[7] =
-      __gen_uint(values->LTSTFrameNumberList[8], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[9], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[8], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[9], 16, 31);
 
    dw[8] =
-      __gen_uint(values->LTSTFrameNumberList[10], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[11], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[10], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[11], 16, 31);
 
    dw[9] =
-      __gen_uint(values->LTSTFrameNumberList[12], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[13], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[12], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[13], 16, 31);
 
    dw[10] =
-      __gen_uint(values->LTSTFrameNumberList[14], 0, 15) |
-      __gen_uint(values->LTSTFrameNumberList[15], 16, 31);
+      util_bitpack_uint(values->LTSTFrameNumberList[14], 0, 15) |
+      util_bitpack_uint(values->LTSTFrameNumberList[15], 16, 31);
 }
 
 #define GFX7_MFD_AVC_SLICEADDR_length          3
@@ -5894,15 +5766,15 @@ GFX7_MFD_AVC_SLICEADDR_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+      util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
 }
@@ -5940,27 +5812,27 @@ GFX7_MFD_IT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectITMVDataLength, 0, 9);
+      util_bitpack_uint(values->IndirectITMVDataLength, 0, 9);
 
    dw[2] =
       __gen_offset(values->IndirectITMVDataStartAddressOffset, 0, 28);
 
    dw[3] =
-      __gen_uint(values->IndirectITCOEFFDataLength, 0, 11);
+      util_bitpack_uint(values->IndirectITCOEFFDataLength, 0, 11);
 
    dw[4] =
       __gen_offset(values->IndirectITCOEFFDataStartAddressOffset, 0, 28);
 
    dw[5] =
-      __gen_uint(values->IndirectITDBLKControlDataLength, 0, 5);
+      util_bitpack_uint(values->IndirectITDBLKControlDataLength, 0, 5);
 
    dw[6] =
       __gen_offset(values->IndirectITDBLKControlDataStartAddressOffset, 0, 28);
@@ -6001,30 +5873,30 @@ GFX7_MFD_JPEG_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectDataLength, 0, 31);
+      util_bitpack_uint(values->IndirectDataLength, 0, 31);
 
    dw[2] =
       __gen_offset(values->IndirectDataStartAddress, 0, 28);
 
    dw[3] =
-      __gen_uint(values->ScanVerticalPosition, 0, 12) |
-      __gen_uint(values->ScanHorizontalPosition, 16, 28);
+      util_bitpack_uint(values->ScanVerticalPosition, 0, 12) |
+      util_bitpack_uint(values->ScanHorizontalPosition, 16, 28);
 
    dw[4] =
-      __gen_uint(values->MCUCount, 0, 25) |
-      __gen_uint(values->ScanComponents, 27, 29) |
-      __gen_uint(values->Interleaved, 30, 30);
+      util_bitpack_uint(values->MCUCount, 0, 25) |
+      util_bitpack_uint(values->ScanComponents, 27, 29) |
+      util_bitpack_uint(values->Interleaved, 30, 30);
 
    dw[5] =
-      __gen_uint(values->RestartInterval, 0, 15);
+      util_bitpack_uint(values->RestartInterval, 0, 15);
 }
 
 #define GFX7_MFD_MPEG2_BSD_OBJECT_length       5
@@ -6057,15 +5929,15 @@ GFX7_MFD_MPEG2_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectBSDDataLength, 0, 31);
+      util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
    dw[2] =
       __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
@@ -6107,27 +5979,27 @@ GFX7_MFD_VC1_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->IndirectBSDDataLength, 0, 23);
+      util_bitpack_uint(values->IndirectBSDDataLength, 0, 23);
 
    dw[2] =
       __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 
    dw[3] =
-      __gen_uint(values->NextSliceVerticalPosition, 0, 8) |
-      __gen_uint(values->SliceStartVerticalPosition, 16, 23);
+      util_bitpack_uint(values->NextSliceVerticalPosition, 0, 8) |
+      util_bitpack_uint(values->SliceStartVerticalPosition, 16, 23);
 
    dw[4] =
-      __gen_uint(values->FirstMBBitOffset, 0, 2) |
-      __gen_uint(values->EmulationPreventionBytePresent, 4, 4) |
-      __gen_uint(values->FirstMBByteOffsetofSliceDataorSliceHeader, 16, 31);
+      util_bitpack_uint(values->FirstMBBitOffset, 0, 2) |
+      util_bitpack_uint(values->EmulationPreventionBytePresent, 4, 4) |
+      util_bitpack_uint(values->FirstMBByteOffsetofSliceDataorSliceHeader, 16, 31);
 }
 
 #define GFX7_MFD_VC1_LONG_PIC_STATE_length      6
@@ -6230,73 +6102,73 @@ GFX7_MFD_VC1_LONG_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PictureWidthInMBs, 0, 7) |
-      __gen_uint(values->PictureHeightInMBs, 16, 23);
+      util_bitpack_uint(values->PictureWidthInMBs, 0, 7) |
+      util_bitpack_uint(values->PictureHeightInMBs, 16, 23);
 
    dw[2] =
-      __gen_uint(values->VC1Profile, 0, 0) |
-      __gen_uint(values->SecondField, 3, 3) |
-      __gen_uint(values->OverlapSmoothingEnable, 4, 4) |
-      __gen_uint(values->LoopFilterEnable, 5, 5) |
-      __gen_uint(values->RangeReductionEnable, 6, 6) |
-      __gen_uint(values->RangeReductionScale, 7, 7) |
-      __gen_uint(values->MVMode, 8, 11) |
-      __gen_uint(values->SyncMarker, 12, 12) |
-      __gen_uint(values->InterpolationRounderControl, 13, 13) |
-      __gen_uint(values->ImplicitQuantizer, 14, 14) |
-      __gen_uint(values->DMVSurfaceValid, 15, 15) |
-      __gen_uint(values->BitplaneBufferPitch, 24, 31);
+      util_bitpack_uint(values->VC1Profile, 0, 0) |
+      util_bitpack_uint(values->SecondField, 3, 3) |
+      util_bitpack_uint(values->OverlapSmoothingEnable, 4, 4) |
+      util_bitpack_uint(values->LoopFilterEnable, 5, 5) |
+      util_bitpack_uint(values->RangeReductionEnable, 6, 6) |
+      util_bitpack_uint(values->RangeReductionScale, 7, 7) |
+      util_bitpack_uint(values->MVMode, 8, 11) |
+      util_bitpack_uint(values->SyncMarker, 12, 12) |
+      util_bitpack_uint(values->InterpolationRounderControl, 13, 13) |
+      util_bitpack_uint(values->ImplicitQuantizer, 14, 14) |
+      util_bitpack_uint(values->DMVSurfaceValid, 15, 15) |
+      util_bitpack_uint(values->BitplaneBufferPitch, 24, 31);
 
    dw[3] =
-      __gen_uint(values->BScaleFactor, 0, 7) |
-      __gen_uint(values->PQValue, 8, 12) |
-      __gen_uint(values->AlternativePQValue, 16, 20) |
-      __gen_uint(values->FrameCodingMode, 24, 25) |
-      __gen_uint(values->PictureType, 26, 28) |
-      __gen_uint(values->CONDOVER, 29, 30);
+      util_bitpack_uint(values->BScaleFactor, 0, 7) |
+      util_bitpack_uint(values->PQValue, 8, 12) |
+      util_bitpack_uint(values->AlternativePQValue, 16, 20) |
+      util_bitpack_uint(values->FrameCodingMode, 24, 25) |
+      util_bitpack_uint(values->PictureType, 26, 28) |
+      util_bitpack_uint(values->CONDOVER, 29, 30);
 
    dw[4] =
-      __gen_uint(values->PQUniform, 0, 0) |
-      __gen_uint(values->HalfQP, 1, 1) |
-      __gen_uint(values->AlternativePQConfiguration, 2, 3) |
-      __gen_uint(values->AlternativePQEdgeMask, 4, 7) |
-      __gen_uint(values->ExtendedMVRange, 8, 9) |
-      __gen_uint(values->ExtendedDMVRange, 10, 11) |
-      __gen_uint(values->ForwardReferenceDistance, 16, 19) |
-      __gen_uint(values->BackwardReferenceDistance, 20, 23) |
-      __gen_uint(values->NumberofReferences, 24, 24) |
-      __gen_uint(values->ReferenceFieldPicturePolarity, 25, 25) |
-      __gen_uint(values->FastUVMotionCompensation, 26, 26) |
-      __gen_uint(values->FourMVSwitch, 27, 27) |
-      __gen_uint(values->UnifiedMVMode, 28, 29);
+      util_bitpack_uint(values->PQUniform, 0, 0) |
+      util_bitpack_uint(values->HalfQP, 1, 1) |
+      util_bitpack_uint(values->AlternativePQConfiguration, 2, 3) |
+      util_bitpack_uint(values->AlternativePQEdgeMask, 4, 7) |
+      util_bitpack_uint(values->ExtendedMVRange, 8, 9) |
+      util_bitpack_uint(values->ExtendedDMVRange, 10, 11) |
+      util_bitpack_uint(values->ForwardReferenceDistance, 16, 19) |
+      util_bitpack_uint(values->BackwardReferenceDistance, 20, 23) |
+      util_bitpack_uint(values->NumberofReferences, 24, 24) |
+      util_bitpack_uint(values->ReferenceFieldPicturePolarity, 25, 25) |
+      util_bitpack_uint(values->FastUVMotionCompensation, 26, 26) |
+      util_bitpack_uint(values->FourMVSwitch, 27, 27) |
+      util_bitpack_uint(values->UnifiedMVMode, 28, 29);
 
    dw[5] =
-      __gen_uint(values->CodedBlockPatternTable, 0, 2) |
-      __gen_uint(values->IntraTransformDCTable, 3, 3) |
-      __gen_uint(values->PicturelevelTransformChromaACCodingSetIndex, 4, 5) |
-      __gen_uint(values->PicturelevelTransformLumaACCodingSetIndex, 6, 7) |
-      __gen_uint(values->MBModeTable, 8, 10) |
-      __gen_uint(values->MBTransformType, 11, 11) |
-      __gen_uint(values->PicturelevelTransformType, 12, 13) |
-      __gen_uint(values->_2MVBlockPatternTable, 16, 17) |
-      __gen_uint(values->_4MVBlockPatternTable, 18, 19) |
-      __gen_uint(values->MVTable, 20, 22) |
-      __gen_uint(values->FIELDTXRaw, 24, 24) |
-      __gen_uint(values->ACPREDRaw, 25, 25) |
-      __gen_uint(values->OVERFLAGSRaw, 26, 26) |
-      __gen_uint(values->DIRECTMBRaw, 27, 27) |
-      __gen_uint(values->SKIPMBRaw, 28, 28) |
-      __gen_uint(values->MVTYPEMBRaw, 29, 29) |
-      __gen_uint(values->FORWARDMBRaw, 30, 30) |
-      __gen_uint(values->BitplaneBufferPresent, 31, 31);
+      util_bitpack_uint(values->CodedBlockPatternTable, 0, 2) |
+      util_bitpack_uint(values->IntraTransformDCTable, 3, 3) |
+      util_bitpack_uint(values->PicturelevelTransformChromaACCodingSetIndex, 4, 5) |
+      util_bitpack_uint(values->PicturelevelTransformLumaACCodingSetIndex, 6, 7) |
+      util_bitpack_uint(values->MBModeTable, 8, 10) |
+      util_bitpack_uint(values->MBTransformType, 11, 11) |
+      util_bitpack_uint(values->PicturelevelTransformType, 12, 13) |
+      util_bitpack_uint(values->_2MVBlockPatternTable, 16, 17) |
+      util_bitpack_uint(values->_4MVBlockPatternTable, 18, 19) |
+      util_bitpack_uint(values->MVTable, 20, 22) |
+      util_bitpack_uint(values->FIELDTXRaw, 24, 24) |
+      util_bitpack_uint(values->ACPREDRaw, 25, 25) |
+      util_bitpack_uint(values->OVERFLAGSRaw, 26, 26) |
+      util_bitpack_uint(values->DIRECTMBRaw, 27, 27) |
+      util_bitpack_uint(values->SKIPMBRaw, 28, 28) |
+      util_bitpack_uint(values->MVTYPEMBRaw, 29, 29) |
+      util_bitpack_uint(values->FORWARDMBRaw, 30, 30) |
+      util_bitpack_uint(values->BitplaneBufferPresent, 31, 31);
 }
 
 #define GFX7_MFD_VC1_SHORT_PIC_STATE_length      5
@@ -6368,58 +6240,58 @@ GFX7_MFD_VC1_SHORT_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->PictureWidth, 0, 7) |
-      __gen_uint(values->PictureHeight, 16, 23);
+      util_bitpack_uint(values->PictureWidth, 0, 7) |
+      util_bitpack_uint(values->PictureHeight, 16, 23);
 
    dw[2] =
-      __gen_uint(values->PictureStructure, 0, 1) |
-      __gen_uint(values->SecondField, 3, 3) |
-      __gen_uint(values->IntraPicture, 4, 4) |
-      __gen_uint(values->BackwardPredictionPresent, 5, 5) |
-      __gen_uint(values->VC1Profile, 11, 11) |
-      __gen_uint(values->DMVSurfaceValid, 15, 15) |
-      __gen_uint(values->MVMode, 16, 19) |
-      __gen_uint(values->InterpolationRounderControl, 23, 23) |
-      __gen_uint(values->BitplaneBufferPitch, 24, 31);
+      util_bitpack_uint(values->PictureStructure, 0, 1) |
+      util_bitpack_uint(values->SecondField, 3, 3) |
+      util_bitpack_uint(values->IntraPicture, 4, 4) |
+      util_bitpack_uint(values->BackwardPredictionPresent, 5, 5) |
+      util_bitpack_uint(values->VC1Profile, 11, 11) |
+      util_bitpack_uint(values->DMVSurfaceValid, 15, 15) |
+      util_bitpack_uint(values->MVMode, 16, 19) |
+      util_bitpack_uint(values->InterpolationRounderControl, 23, 23) |
+      util_bitpack_uint(values->BitplaneBufferPitch, 24, 31);
 
    dw[3] =
-      __gen_uint(values->variablesizedtransformcoding, 0, 0) |
-      __gen_uint(values->DQUANT, 1, 2) |
-      __gen_uint(values->EXTENDED_MVPresent, 3, 3) |
-      __gen_uint(values->FastUVMotionCompensation, 4, 4) |
-      __gen_uint(values->LoopFilterEnable, 5, 5) |
-      __gen_uint(values->REFDIST_FLAG, 6, 6) |
-      __gen_uint(values->PANSCANPresent, 7, 7) |
-      __gen_uint(values->MAXBFRAMES, 8, 10) |
-      __gen_uint(values->RANGEREDPresent, 11, 11) |
-      __gen_uint(values->SYNCMARKERPresent, 12, 12) |
-      __gen_uint(values->MULTIRESPresent, 13, 13) |
-      __gen_uint(values->QUANTIZER, 14, 15) |
-      __gen_uint(values->PPicRefDistance, 16, 20) |
-      __gen_uint(values->ProgressivePicType, 22, 23) |
-      __gen_uint(values->RangeReductionEnable, 28, 28) |
-      __gen_uint(values->RangeReductionScale, 29, 29) |
-      __gen_uint(values->OverlapSmoothingEnable, 30, 30);
+      util_bitpack_uint(values->variablesizedtransformcoding, 0, 0) |
+      util_bitpack_uint(values->DQUANT, 1, 2) |
+      util_bitpack_uint(values->EXTENDED_MVPresent, 3, 3) |
+      util_bitpack_uint(values->FastUVMotionCompensation, 4, 4) |
+      util_bitpack_uint(values->LoopFilterEnable, 5, 5) |
+      util_bitpack_uint(values->REFDIST_FLAG, 6, 6) |
+      util_bitpack_uint(values->PANSCANPresent, 7, 7) |
+      util_bitpack_uint(values->MAXBFRAMES, 8, 10) |
+      util_bitpack_uint(values->RANGEREDPresent, 11, 11) |
+      util_bitpack_uint(values->SYNCMARKERPresent, 12, 12) |
+      util_bitpack_uint(values->MULTIRESPresent, 13, 13) |
+      util_bitpack_uint(values->QUANTIZER, 14, 15) |
+      util_bitpack_uint(values->PPicRefDistance, 16, 20) |
+      util_bitpack_uint(values->ProgressivePicType, 22, 23) |
+      util_bitpack_uint(values->RangeReductionEnable, 28, 28) |
+      util_bitpack_uint(values->RangeReductionScale, 29, 29) |
+      util_bitpack_uint(values->OverlapSmoothingEnable, 30, 30);
 
    dw[4] =
-      __gen_uint(values->EXTENDED_DMVPresent, 0, 0) |
-      __gen_uint(values->PSF, 1, 1) |
-      __gen_uint(values->REFPIC, 2, 2) |
-      __gen_uint(values->FINTERFLAG, 3, 3) |
-      __gen_uint(values->TFCNTRFLAG, 4, 4) |
-      __gen_uint(values->INTERLACE, 5, 5) |
-      __gen_uint(values->PULLDOWN, 6, 6) |
-      __gen_uint(values->POSTPROC, 7, 7) |
-      __gen_uint(values->_4MVAllowed, 8, 8) |
-      __gen_uint(values->BFractionEnumeration, 24, 28);
+      util_bitpack_uint(values->EXTENDED_DMVPresent, 0, 0) |
+      util_bitpack_uint(values->PSF, 1, 1) |
+      util_bitpack_uint(values->REFPIC, 2, 2) |
+      util_bitpack_uint(values->FINTERFLAG, 3, 3) |
+      util_bitpack_uint(values->TFCNTRFLAG, 4, 4) |
+      util_bitpack_uint(values->INTERLACE, 5, 5) |
+      util_bitpack_uint(values->PULLDOWN, 6, 6) |
+      util_bitpack_uint(values->POSTPROC, 7, 7) |
+      util_bitpack_uint(values->_4MVAllowed, 8, 8) |
+      util_bitpack_uint(values->BFractionEnumeration, 24, 28);
 }
 
 #define GFX7_MFX_AVC_DIRECTMODE_STATE_length     69
@@ -6474,12 +6346,12 @@ GFX7_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = 0;
 
@@ -6546,244 +6418,244 @@ GFX7_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data
    dw[32] = 0;
 
    const uint32_t v33 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[0], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[0], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[0], 0, 1) |
-      __gen_uint(values->DirectMVBufferWriteArbitrationPriorityControl[0], 4, 5) |
-      __gen_uint(values->DirectMVBufferWriteGraphicsDataType[0], 2, 2) |
-      __gen_uint(values->DirectMVBufferWriteCacheabilityControl[0], 0, 1);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[0], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[0], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[0], 0, 1) |
+      util_bitpack_uint(values->DirectMVBufferWriteArbitrationPriorityControl[0], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferWriteGraphicsDataType[0], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferWriteCacheabilityControl[0], 0, 1);
    dw[33] = __gen_address(data, &dw[33], values->DirectMVBufferWriteAddress[0], v33, 6, 31);
 
    const uint32_t v34 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[1], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[1], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[1], 0, 1) |
-      __gen_uint(values->DirectMVBufferWriteArbitrationPriorityControl[1], 4, 5) |
-      __gen_uint(values->DirectMVBufferWriteGraphicsDataType[1], 2, 2) |
-      __gen_uint(values->DirectMVBufferWriteCacheabilityControl[1], 0, 1);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[1], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[1], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[1], 0, 1) |
+      util_bitpack_uint(values->DirectMVBufferWriteArbitrationPriorityControl[1], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferWriteGraphicsDataType[1], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferWriteCacheabilityControl[1], 0, 1);
    dw[34] = __gen_address(data, &dw[34], values->DirectMVBufferWriteAddress[1], v34, 6, 31);
 
    const uint32_t v35 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[2], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[2], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[2], 0, 1) |
-      __gen_uint(values->POCList[0], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[2], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[2], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[2], 0, 1) |
+      util_bitpack_uint(values->POCList[0], 0, 31);
    dw[35] = __gen_address(data, &dw[35], values->DirectMVBufferAddress[0], v35, 6, 31);
 
    const uint32_t v36 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[3], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[3], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[3], 0, 1) |
-      __gen_uint(values->POCList[1], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[3], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[3], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[3], 0, 1) |
+      util_bitpack_uint(values->POCList[1], 0, 31);
    dw[36] = __gen_address(data, &dw[36], values->DirectMVBufferAddress[1], v36, 6, 31);
 
    const uint32_t v37 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[4], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[4], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[4], 0, 1) |
-      __gen_uint(values->POCList[2], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[4], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[4], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[4], 0, 1) |
+      util_bitpack_uint(values->POCList[2], 0, 31);
    dw[37] = __gen_address(data, &dw[37], values->DirectMVBufferAddress[2], v37, 6, 31);
 
    const uint32_t v38 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[5], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[5], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[5], 0, 1) |
-      __gen_uint(values->POCList[3], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[5], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[5], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[5], 0, 1) |
+      util_bitpack_uint(values->POCList[3], 0, 31);
    dw[38] = __gen_address(data, &dw[38], values->DirectMVBufferAddress[3], v38, 6, 31);
 
    const uint32_t v39 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[6], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[6], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[6], 0, 1) |
-      __gen_uint(values->POCList[4], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[6], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[6], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[6], 0, 1) |
+      util_bitpack_uint(values->POCList[4], 0, 31);
    dw[39] = __gen_address(data, &dw[39], values->DirectMVBufferAddress[4], v39, 6, 31);
 
    const uint32_t v40 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[7], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[7], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[7], 0, 1) |
-      __gen_uint(values->POCList[5], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[7], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[7], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[7], 0, 1) |
+      util_bitpack_uint(values->POCList[5], 0, 31);
    dw[40] = __gen_address(data, &dw[40], values->DirectMVBufferAddress[5], v40, 6, 31);
 
    const uint32_t v41 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[8], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[8], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[8], 0, 1) |
-      __gen_uint(values->POCList[6], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[8], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[8], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[8], 0, 1) |
+      util_bitpack_uint(values->POCList[6], 0, 31);
    dw[41] = __gen_address(data, &dw[41], values->DirectMVBufferAddress[6], v41, 6, 31);
 
    const uint32_t v42 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[9], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[9], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[9], 0, 1) |
-      __gen_uint(values->POCList[7], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[9], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[9], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[9], 0, 1) |
+      util_bitpack_uint(values->POCList[7], 0, 31);
    dw[42] = __gen_address(data, &dw[42], values->DirectMVBufferAddress[7], v42, 6, 31);
 
    const uint32_t v43 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[10], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[10], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[10], 0, 1) |
-      __gen_uint(values->POCList[8], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[10], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[10], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[10], 0, 1) |
+      util_bitpack_uint(values->POCList[8], 0, 31);
    dw[43] = __gen_address(data, &dw[43], values->DirectMVBufferAddress[8], v43, 6, 31);
 
    const uint32_t v44 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[11], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[11], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[11], 0, 1) |
-      __gen_uint(values->POCList[9], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[11], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[11], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[11], 0, 1) |
+      util_bitpack_uint(values->POCList[9], 0, 31);
    dw[44] = __gen_address(data, &dw[44], values->DirectMVBufferAddress[9], v44, 6, 31);
 
    const uint32_t v45 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[12], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[12], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[12], 0, 1) |
-      __gen_uint(values->POCList[10], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[12], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[12], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[12], 0, 1) |
+      util_bitpack_uint(values->POCList[10], 0, 31);
    dw[45] = __gen_address(data, &dw[45], values->DirectMVBufferAddress[10], v45, 6, 31);
 
    const uint32_t v46 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[13], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[13], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[13], 0, 1) |
-      __gen_uint(values->POCList[11], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[13], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[13], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[13], 0, 1) |
+      util_bitpack_uint(values->POCList[11], 0, 31);
    dw[46] = __gen_address(data, &dw[46], values->DirectMVBufferAddress[11], v46, 6, 31);
 
    const uint32_t v47 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[14], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[14], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[14], 0, 1) |
-      __gen_uint(values->POCList[12], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[14], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[14], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[14], 0, 1) |
+      util_bitpack_uint(values->POCList[12], 0, 31);
    dw[47] = __gen_address(data, &dw[47], values->DirectMVBufferAddress[12], v47, 6, 31);
 
    const uint32_t v48 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[15], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[15], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[15], 0, 1) |
-      __gen_uint(values->POCList[13], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[15], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[15], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[15], 0, 1) |
+      util_bitpack_uint(values->POCList[13], 0, 31);
    dw[48] = __gen_address(data, &dw[48], values->DirectMVBufferAddress[13], v48, 6, 31);
 
    const uint32_t v49 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[16], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[16], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[16], 0, 1) |
-      __gen_uint(values->POCList[14], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[16], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[16], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[16], 0, 1) |
+      util_bitpack_uint(values->POCList[14], 0, 31);
    dw[49] = __gen_address(data, &dw[49], values->DirectMVBufferAddress[14], v49, 6, 31);
 
    const uint32_t v50 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[17], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[17], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[17], 0, 1) |
-      __gen_uint(values->POCList[15], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[17], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[17], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[17], 0, 1) |
+      util_bitpack_uint(values->POCList[15], 0, 31);
    dw[50] = __gen_address(data, &dw[50], values->DirectMVBufferAddress[15], v50, 6, 31);
 
    const uint32_t v51 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[18], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[18], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[18], 0, 1) |
-      __gen_uint(values->POCList[16], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[18], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[18], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[18], 0, 1) |
+      util_bitpack_uint(values->POCList[16], 0, 31);
    dw[51] = __gen_address(data, &dw[51], values->DirectMVBufferAddress[16], v51, 6, 31);
 
    const uint32_t v52 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[19], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[19], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[19], 0, 1) |
-      __gen_uint(values->POCList[17], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[19], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[19], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[19], 0, 1) |
+      util_bitpack_uint(values->POCList[17], 0, 31);
    dw[52] = __gen_address(data, &dw[52], values->DirectMVBufferAddress[17], v52, 6, 31);
 
    const uint32_t v53 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[20], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[20], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[20], 0, 1) |
-      __gen_uint(values->POCList[18], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[20], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[20], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[20], 0, 1) |
+      util_bitpack_uint(values->POCList[18], 0, 31);
    dw[53] = __gen_address(data, &dw[53], values->DirectMVBufferAddress[18], v53, 6, 31);
 
    const uint32_t v54 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[21], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[21], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[21], 0, 1) |
-      __gen_uint(values->POCList[19], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[21], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[21], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[21], 0, 1) |
+      util_bitpack_uint(values->POCList[19], 0, 31);
    dw[54] = __gen_address(data, &dw[54], values->DirectMVBufferAddress[19], v54, 6, 31);
 
    const uint32_t v55 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[22], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[22], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[22], 0, 1) |
-      __gen_uint(values->POCList[20], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[22], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[22], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[22], 0, 1) |
+      util_bitpack_uint(values->POCList[20], 0, 31);
    dw[55] = __gen_address(data, &dw[55], values->DirectMVBufferAddress[20], v55, 6, 31);
 
    const uint32_t v56 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[23], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[23], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[23], 0, 1) |
-      __gen_uint(values->POCList[21], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[23], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[23], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[23], 0, 1) |
+      util_bitpack_uint(values->POCList[21], 0, 31);
    dw[56] = __gen_address(data, &dw[56], values->DirectMVBufferAddress[21], v56, 6, 31);
 
    const uint32_t v57 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[24], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[24], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[24], 0, 1) |
-      __gen_uint(values->POCList[22], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[24], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[24], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[24], 0, 1) |
+      util_bitpack_uint(values->POCList[22], 0, 31);
    dw[57] = __gen_address(data, &dw[57], values->DirectMVBufferAddress[22], v57, 6, 31);
 
    const uint32_t v58 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[25], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[25], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[25], 0, 1) |
-      __gen_uint(values->POCList[23], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[25], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[25], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[25], 0, 1) |
+      util_bitpack_uint(values->POCList[23], 0, 31);
    dw[58] = __gen_address(data, &dw[58], values->DirectMVBufferAddress[23], v58, 6, 31);
 
    const uint32_t v59 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[26], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[26], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[26], 0, 1) |
-      __gen_uint(values->POCList[24], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[26], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[26], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[26], 0, 1) |
+      util_bitpack_uint(values->POCList[24], 0, 31);
    dw[59] = __gen_address(data, &dw[59], values->DirectMVBufferAddress[24], v59, 6, 31);
 
    const uint32_t v60 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[27], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[27], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[27], 0, 1) |
-      __gen_uint(values->POCList[25], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[27], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[27], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[27], 0, 1) |
+      util_bitpack_uint(values->POCList[25], 0, 31);
    dw[60] = __gen_address(data, &dw[60], values->DirectMVBufferAddress[25], v60, 6, 31);
 
    const uint32_t v61 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[28], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[28], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[28], 0, 1) |
-      __gen_uint(values->POCList[26], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[28], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[28], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[28], 0, 1) |
+      util_bitpack_uint(values->POCList[26], 0, 31);
    dw[61] = __gen_address(data, &dw[61], values->DirectMVBufferAddress[26], v61, 6, 31);
 
    const uint32_t v62 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[29], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[29], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[29], 0, 1) |
-      __gen_uint(values->POCList[27], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[29], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[29], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[29], 0, 1) |
+      util_bitpack_uint(values->POCList[27], 0, 31);
    dw[62] = __gen_address(data, &dw[62], values->DirectMVBufferAddress[27], v62, 6, 31);
 
    const uint32_t v63 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[30], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[30], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[30], 0, 1) |
-      __gen_uint(values->POCList[28], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[30], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[30], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[30], 0, 1) |
+      util_bitpack_uint(values->POCList[28], 0, 31);
    dw[63] = __gen_address(data, &dw[63], values->DirectMVBufferAddress[28], v63, 6, 31);
 
    const uint32_t v64 =
-      __gen_uint(values->DirectMVBufferArbitrationPriorityControl[31], 4, 5) |
-      __gen_uint(values->DirectMVBufferGraphicsDataType[31], 2, 2) |
-      __gen_uint(values->DirectMVBufferCacheabilityControl[31], 0, 1) |
-      __gen_uint(values->POCList[29], 0, 31);
+      util_bitpack_uint(values->DirectMVBufferArbitrationPriorityControl[31], 4, 5) |
+      util_bitpack_uint(values->DirectMVBufferGraphicsDataType[31], 2, 2) |
+      util_bitpack_uint(values->DirectMVBufferCacheabilityControl[31], 0, 1) |
+      util_bitpack_uint(values->POCList[29], 0, 31);
    dw[64] = __gen_address(data, &dw[64], values->DirectMVBufferAddress[29], v64, 6, 31);
 
    dw[65] =
-      __gen_uint(values->POCList[30], 0, 31);
+      util_bitpack_uint(values->POCList[30], 0, 31);
 
    dw[66] =
-      __gen_uint(values->POCList[31], 0, 31);
+      util_bitpack_uint(values->POCList[31], 0, 31);
 
    dw[67] =
-      __gen_uint(values->POCList[32], 0, 31);
+      util_bitpack_uint(values->POCList[32], 0, 31);
 
    dw[68] =
-      __gen_uint(values->POCList[33], 0, 31);
+      util_bitpack_uint(values->POCList[33], 0, 31);
 }
 
 #define GFX7_MFX_AVC_IMG_STATE_length         14
@@ -6903,96 +6775,96 @@ GFX7_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->FrameSize, 0, 15);
+      util_bitpack_uint(values->FrameSize, 0, 15);
 
    dw[2] =
-      __gen_uint(values->FrameWidth, 0, 7) |
-      __gen_uint(values->FrameHeight, 16, 23);
+      util_bitpack_uint(values->FrameWidth, 0, 7) |
+      util_bitpack_uint(values->FrameHeight, 16, 23);
 
    dw[3] =
-      __gen_uint(values->ImageStructure, 8, 9) |
-      __gen_uint(values->WeightedBiPredictionIDC, 10, 11) |
-      __gen_uint(values->WeightedPredictionEnable, 12, 12) |
-      __gen_uint(values->FirstChromaQPOffset, 16, 20) |
-      __gen_uint(values->SecondChromaQPOffset, 24, 28);
+      util_bitpack_uint(values->ImageStructure, 8, 9) |
+      util_bitpack_uint(values->WeightedBiPredictionIDC, 10, 11) |
+      util_bitpack_uint(values->WeightedPredictionEnable, 12, 12) |
+      util_bitpack_uint(values->FirstChromaQPOffset, 16, 20) |
+      util_bitpack_uint(values->SecondChromaQPOffset, 24, 28);
 
    dw[4] =
-      __gen_uint(values->FieldPicture, 0, 0) |
-      __gen_uint(values->MBAFFMode, 1, 1) |
-      __gen_uint(values->FrameMBOnly, 2, 2) |
-      __gen_uint(values->_8x8IDCTTransformMode, 3, 3) |
-      __gen_uint(values->Direct8x8Inference, 4, 4) |
-      __gen_uint(values->ConstrainedIntraPrediction, 5, 5) |
-      __gen_uint(values->NonReferencePicture, 6, 6) |
-      __gen_uint(values->EntropyCodingSyncEnable, 7, 7) |
-      __gen_uint(values->MBMVFormat, 8, 8) |
-      __gen_uint(values->ChromaFormatIDC, 10, 11) |
-      __gen_uint(values->MVUnpackedEnable, 12, 12) |
-      __gen_uint(values->LoadBitstreamPointerPerSlice, 14, 14) |
-      __gen_uint(values->MBStatusRead, 15, 15) |
-      __gen_uint(values->MinimumFrameSize, 16, 31);
+      util_bitpack_uint(values->FieldPicture, 0, 0) |
+      util_bitpack_uint(values->MBAFFMode, 1, 1) |
+      util_bitpack_uint(values->FrameMBOnly, 2, 2) |
+      util_bitpack_uint(values->_8x8IDCTTransformMode, 3, 3) |
+      util_bitpack_uint(values->Direct8x8Inference, 4, 4) |
+      util_bitpack_uint(values->ConstrainedIntraPrediction, 5, 5) |
+      util_bitpack_uint(values->NonReferencePicture, 6, 6) |
+      util_bitpack_uint(values->EntropyCodingSyncEnable, 7, 7) |
+      util_bitpack_uint(values->MBMVFormat, 8, 8) |
+      util_bitpack_uint(values->ChromaFormatIDC, 10, 11) |
+      util_bitpack_uint(values->MVUnpackedEnable, 12, 12) |
+      util_bitpack_uint(values->LoadBitstreamPointerPerSlice, 14, 14) |
+      util_bitpack_uint(values->MBStatusRead, 15, 15) |
+      util_bitpack_uint(values->MinimumFrameSize, 16, 31);
 
    dw[5] =
-      __gen_uint(values->IntraMBMaxBitControl, 0, 0) |
-      __gen_uint(values->InterMBMaxBitControl, 1, 1) |
-      __gen_uint(values->FrameBitrateMaxReport, 2, 2) |
-      __gen_uint(values->FrameBitrateMinReport, 3, 3) |
-      __gen_uint(values->ForceIPCMControl, 7, 7) |
-      __gen_uint(values->MBLevelRateControl, 9, 9) |
-      __gen_uint(values->MinimumFrameSizeUnits, 10, 11) |
-      __gen_uint(values->InterMBForceCBPtoZeroControl, 12, 12) |
-      __gen_uint(values->NonFirstPass, 16, 16) |
-      __gen_uint(values->TrellisQuantizationChromaDisable, 27, 27) |
-      __gen_uint(values->TrellisQuantizationRounding, 28, 30) |
-      __gen_uint(values->TrellisQuantizationEnable, 31, 31);
+      util_bitpack_uint(values->IntraMBMaxBitControl, 0, 0) |
+      util_bitpack_uint(values->InterMBMaxBitControl, 1, 1) |
+      util_bitpack_uint(values->FrameBitrateMaxReport, 2, 2) |
+      util_bitpack_uint(values->FrameBitrateMinReport, 3, 3) |
+      util_bitpack_uint(values->ForceIPCMControl, 7, 7) |
+      util_bitpack_uint(values->MBLevelRateControl, 9, 9) |
+      util_bitpack_uint(values->MinimumFrameSizeUnits, 10, 11) |
+      util_bitpack_uint(values->InterMBForceCBPtoZeroControl, 12, 12) |
+      util_bitpack_uint(values->NonFirstPass, 16, 16) |
+      util_bitpack_uint(values->TrellisQuantizationChromaDisable, 27, 27) |
+      util_bitpack_uint(values->TrellisQuantizationRounding, 28, 30) |
+      util_bitpack_uint(values->TrellisQuantizationEnable, 31, 31);
 
    dw[6] =
-      __gen_uint(values->IntraMBConformanceMaxSize, 0, 11) |
-      __gen_uint(values->InterMBConformanceMaxSize, 16, 27);
+      util_bitpack_uint(values->IntraMBConformanceMaxSize, 0, 11) |
+      util_bitpack_uint(values->InterMBConformanceMaxSize, 16, 27);
 
    dw[7] = 0;
 
    dw[8] =
-      __gen_sint(values->SliceDeltaQPMax0, 0, 7) |
-      __gen_sint(values->SliceDeltaQPMax1, 8, 15) |
-      __gen_uint(values->SliceDeltaQPMax2, 16, 23) |
-      __gen_sint(values->SliceDeltaQPMax3, 24, 31);
+      util_bitpack_sint(values->SliceDeltaQPMax0, 0, 7) |
+      util_bitpack_sint(values->SliceDeltaQPMax1, 8, 15) |
+      util_bitpack_uint(values->SliceDeltaQPMax2, 16, 23) |
+      util_bitpack_sint(values->SliceDeltaQPMax3, 24, 31);
 
    dw[9] =
-      __gen_sint(values->SliceDeltaQPMin0, 0, 7) |
-      __gen_sint(values->SliceDeltaQPMin1, 8, 15) |
-      __gen_sint(values->SliceDeltaQPMin2, 16, 23) |
-      __gen_sint(values->SliceDeltaQPMin3, 24, 31);
+      util_bitpack_sint(values->SliceDeltaQPMin0, 0, 7) |
+      util_bitpack_sint(values->SliceDeltaQPMin1, 8, 15) |
+      util_bitpack_sint(values->SliceDeltaQPMin2, 16, 23) |
+      util_bitpack_sint(values->SliceDeltaQPMin3, 24, 31);
 
    dw[10] =
-      __gen_uint(values->FrameBitrateMin, 0, 13) |
-      __gen_uint(values->FrameBitrateMinUnitMode, 14, 14) |
-      __gen_uint(values->FrameBitrateMinUnit, 15, 15) |
-      __gen_uint(values->FrameBitrateMax, 16, 29) |
-      __gen_uint(values->FrameBitrateMaxUnitMode, 30, 30) |
-      __gen_uint(values->FrameBitrateMaxUnit, 31, 31);
+      util_bitpack_uint(values->FrameBitrateMin, 0, 13) |
+      util_bitpack_uint(values->FrameBitrateMinUnitMode, 14, 14) |
+      util_bitpack_uint(values->FrameBitrateMinUnit, 15, 15) |
+      util_bitpack_uint(values->FrameBitrateMax, 16, 29) |
+      util_bitpack_uint(values->FrameBitrateMaxUnitMode, 30, 30) |
+      util_bitpack_uint(values->FrameBitrateMaxUnit, 31, 31);
 
    dw[11] =
-      __gen_uint(values->FrameBitrateMinDelta, 0, 14) |
-      __gen_uint(values->FrameBitrateMaxDelta, 16, 30) |
-      __gen_uint(values->SliceStatsStreamOutEnable, 31, 31);
+      util_bitpack_uint(values->FrameBitrateMinDelta, 0, 14) |
+      util_bitpack_uint(values->FrameBitrateMaxDelta, 16, 30) |
+      util_bitpack_uint(values->SliceStatsStreamOutEnable, 31, 31);
 
    dw[12] = 0;
 
    dw[13] =
-      __gen_sint(values->InitialQPValue, 0, 7) |
-      __gen_uint(values->NumberofActiveReferencePicturesfromL0, 8, 13) |
-      __gen_uint(values->NumberofActiveReferencePicturesfromL1, 16, 21) |
-      __gen_uint(values->NumberofReferenceFrames, 24, 28) |
-      __gen_uint(values->CurrentPictureHasPerformedMMCO5, 29, 29);
+      util_bitpack_sint(values->InitialQPValue, 0, 7) |
+      util_bitpack_uint(values->NumberofActiveReferencePicturesfromL0, 8, 13) |
+      util_bitpack_uint(values->NumberofActiveReferencePicturesfromL1, 16, 21) |
+      util_bitpack_uint(values->NumberofReferenceFrames, 24, 28) |
+      util_bitpack_uint(values->CurrentPictureHasPerformedMMCO5, 29, 29);
 }
 
 #define GFX7_MFX_AVC_REF_IDX_STATE_length     10
@@ -7024,63 +6896,63 @@ GFX7_MFX_AVC_REF_IDX_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ReferencePictureListSelect, 0, 0);
+      util_bitpack_uint(values->ReferencePictureListSelect, 0, 0);
 
    dw[2] =
-      __gen_uint(values->ReferenceListEntry[0], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[1], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[2], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[3], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[0], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[1], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[2], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[3], 24, 31);
 
    dw[3] =
-      __gen_uint(values->ReferenceListEntry[4], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[5], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[6], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[7], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[4], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[5], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[6], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[7], 24, 31);
 
    dw[4] =
-      __gen_uint(values->ReferenceListEntry[8], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[9], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[10], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[11], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[8], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[9], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[10], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[11], 24, 31);
 
    dw[5] =
-      __gen_uint(values->ReferenceListEntry[12], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[13], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[14], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[15], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[12], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[13], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[14], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[15], 24, 31);
 
    dw[6] =
-      __gen_uint(values->ReferenceListEntry[16], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[17], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[18], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[19], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[16], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[17], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[18], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[19], 24, 31);
 
    dw[7] =
-      __gen_uint(values->ReferenceListEntry[20], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[21], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[22], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[23], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[20], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[21], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[22], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[23], 24, 31);
 
    dw[8] =
-      __gen_uint(values->ReferenceListEntry[24], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[25], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[26], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[27], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[24], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[25], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[26], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[27], 24, 31);
 
    dw[9] =
-      __gen_uint(values->ReferenceListEntry[28], 0, 7) |
-      __gen_uint(values->ReferenceListEntry[29], 8, 15) |
-      __gen_uint(values->ReferenceListEntry[30], 16, 23) |
-      __gen_uint(values->ReferenceListEntry[31], 24, 31);
+      util_bitpack_uint(values->ReferenceListEntry[28], 0, 7) |
+      util_bitpack_uint(values->ReferenceListEntry[29], 8, 15) |
+      util_bitpack_uint(values->ReferenceListEntry[30], 16, 23) |
+      util_bitpack_uint(values->ReferenceListEntry[31], 24, 31);
 }
 
 #define GFX7_MFX_AVC_SLICE_STATE_length       10
@@ -7194,80 +7066,80 @@ GFX7_MFX_AVC_SLICE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SliceType, 0, 3);
+      util_bitpack_uint(values->SliceType, 0, 3);
 
    dw[2] =
-      __gen_uint(values->Log2WeightDenominatorLuma, 0, 2) |
-      __gen_uint(values->Log2WeightDenominatorChroma, 8, 10) |
-      __gen_uint(values->NumberofReferencePicturesinInterpredictionList0, 16, 21) |
-      __gen_uint(values->NumberofReferencePicturesinInterpredictionList1, 24, 29);
+      util_bitpack_uint(values->Log2WeightDenominatorLuma, 0, 2) |
+      util_bitpack_uint(values->Log2WeightDenominatorChroma, 8, 10) |
+      util_bitpack_uint(values->NumberofReferencePicturesinInterpredictionList0, 16, 21) |
+      util_bitpack_uint(values->NumberofReferencePicturesinInterpredictionList1, 24, 29);
 
    dw[3] =
-      __gen_sint(values->SliceAlphaC0OffsetDiv2, 0, 3) |
-      __gen_sint(values->SliceBetaOffsetDiv2, 8, 11) |
-      __gen_uint(values->SliceQuantizationParameter, 16, 21) |
-      __gen_uint(values->CABACInitIDC, 24, 25) |
-      __gen_uint(values->DisableDeblockingFilterIndicator, 27, 28) |
-      __gen_uint(values->DirectPredictionType, 29, 29) |
-      __gen_uint(values->WeightedPredictionIndicator, 30, 31);
+      util_bitpack_sint(values->SliceAlphaC0OffsetDiv2, 0, 3) |
+      util_bitpack_sint(values->SliceBetaOffsetDiv2, 8, 11) |
+      util_bitpack_uint(values->SliceQuantizationParameter, 16, 21) |
+      util_bitpack_uint(values->CABACInitIDC, 24, 25) |
+      util_bitpack_uint(values->DisableDeblockingFilterIndicator, 27, 28) |
+      util_bitpack_uint(values->DirectPredictionType, 29, 29) |
+      util_bitpack_uint(values->WeightedPredictionIndicator, 30, 31);
 
    dw[4] =
-      __gen_uint(values->SliceStartMBNumber, 0, 14) |
-      __gen_uint(values->SliceHorizontalPosition, 16, 23) |
-      __gen_uint(values->SliceVerticalPosition, 24, 31);
+      util_bitpack_uint(values->SliceStartMBNumber, 0, 14) |
+      util_bitpack_uint(values->SliceHorizontalPosition, 16, 23) |
+      util_bitpack_uint(values->SliceVerticalPosition, 24, 31);
 
    dw[5] =
-      __gen_uint(values->NextSliceHorizontalPosition, 0, 7) |
-      __gen_uint(values->NextSliceVerticalPosition, 16, 23);
+      util_bitpack_uint(values->NextSliceHorizontalPosition, 0, 7) |
+      util_bitpack_uint(values->NextSliceVerticalPosition, 16, 23);
 
    dw[6] =
-      __gen_uint(values->StreamID, 0, 1) |
-      __gen_uint(values->SliceID, 4, 7) |
-      __gen_uint(values->CABACZeroWordInsertionEnable, 12, 12) |
-      __gen_uint(values->EmulationByteSliceInsertEnable, 13, 13) |
-      __gen_uint(values->TailInsertionPresent, 15, 15) |
-      __gen_uint(values->SliceDataInsertionPresent, 16, 16) |
-      __gen_uint(values->HeaderInsertionPresent, 17, 17) |
-      __gen_uint(values->LastSliceGroup, 19, 19) |
-      __gen_uint(values->MBTypeSkipConversionDisable, 20, 20) |
-      __gen_uint(values->MBTypeDirectConversionDisable, 21, 21) |
-      __gen_uint(values->RateControlPanicType, 22, 22) |
-      __gen_uint(values->RateControlPanicEnable, 23, 23) |
-      __gen_uint(values->RateControlStableTolerance, 24, 27) |
-      __gen_uint(values->RateControlTriggleMode, 28, 29) |
-      __gen_uint(values->ResetRateControlCounter, 30, 30) |
-      __gen_uint(values->RateControlCounterEnable, 31, 31);
+      util_bitpack_uint(values->StreamID, 0, 1) |
+      util_bitpack_uint(values->SliceID, 4, 7) |
+      util_bitpack_uint(values->CABACZeroWordInsertionEnable, 12, 12) |
+      util_bitpack_uint(values->EmulationByteSliceInsertEnable, 13, 13) |
+      util_bitpack_uint(values->TailInsertionPresent, 15, 15) |
+      util_bitpack_uint(values->SliceDataInsertionPresent, 16, 16) |
+      util_bitpack_uint(values->HeaderInsertionPresent, 17, 17) |
+      util_bitpack_uint(values->LastSliceGroup, 19, 19) |
+      util_bitpack_uint(values->MBTypeSkipConversionDisable, 20, 20) |
+      util_bitpack_uint(values->MBTypeDirectConversionDisable, 21, 21) |
+      util_bitpack_uint(values->RateControlPanicType, 22, 22) |
+      util_bitpack_uint(values->RateControlPanicEnable, 23, 23) |
+      util_bitpack_uint(values->RateControlStableTolerance, 24, 27) |
+      util_bitpack_uint(values->RateControlTriggleMode, 28, 29) |
+      util_bitpack_uint(values->ResetRateControlCounter, 30, 30) |
+      util_bitpack_uint(values->RateControlCounterEnable, 31, 31);
 
    dw[7] =
       __gen_offset(values->IndirectPAKBSEDataStartAddress, 0, 28);
 
    dw[8] =
-      __gen_uint(values->GrowInit, 0, 3) |
-      __gen_uint(values->GrowResistance, 4, 7) |
-      __gen_uint(values->ShrinkInit, 8, 11) |
-      __gen_uint(values->ShrinkResistance, 12, 15) |
-      __gen_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
-      __gen_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
+      util_bitpack_uint(values->GrowInit, 0, 3) |
+      util_bitpack_uint(values->GrowResistance, 4, 7) |
+      util_bitpack_uint(values->ShrinkInit, 8, 11) |
+      util_bitpack_uint(values->ShrinkResistance, 12, 15) |
+      util_bitpack_uint(values->QPMaxPositiveModifierMagnitude, 16, 23) |
+      util_bitpack_uint(values->QPMaxNegativeModifierMagnitude, 24, 31);
 
    dw[9] =
-      __gen_uint(values->Correct1, 0, 3) |
-      __gen_uint(values->Correct2, 4, 7) |
-      __gen_uint(values->Correct3, 8, 11) |
-      __gen_uint(values->Correct4, 12, 15) |
-      __gen_uint(values->Correct5, 16, 19) |
-      __gen_uint(values->Correct6, 20, 23) |
-      __gen_uint(values->RoundIntra, 24, 26) |
-      __gen_uint(values->RoundIntraEnable, 27, 27) |
-      __gen_uint(values->RoundInter, 28, 30) |
-      __gen_uint(values->RoundInterEnable, 31, 31);
+      util_bitpack_uint(values->Correct1, 0, 3) |
+      util_bitpack_uint(values->Correct2, 4, 7) |
+      util_bitpack_uint(values->Correct3, 8, 11) |
+      util_bitpack_uint(values->Correct4, 12, 15) |
+      util_bitpack_uint(values->Correct5, 16, 19) |
+      util_bitpack_uint(values->Correct6, 20, 23) |
+      util_bitpack_uint(values->RoundIntra, 24, 26) |
+      util_bitpack_uint(values->RoundIntraEnable, 27, 27) |
+      util_bitpack_uint(values->RoundInter, 28, 30) |
+      util_bitpack_uint(values->RoundInterEnable, 31, 31);
 }
 
 #define GFX7_MFX_AVC_WEIGHTOFFSET_STATE_length     98
@@ -7301,303 +7173,303 @@ GFX7_MFX_AVC_WEIGHTOFFSET_STATE_pack(__attribute__((unused)) __gen_user_data *da
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->WeightandOffsetSelect, 0, 0);
+      util_bitpack_uint(values->WeightandOffsetSelect, 0, 0);
 
    dw[2] =
-      __gen_uint(values->WeightOffset[0], 0, 31);
+      util_bitpack_uint(values->WeightOffset[0], 0, 31);
 
    dw[3] =
-      __gen_uint(values->WeightOffset[1], 0, 31);
+      util_bitpack_uint(values->WeightOffset[1], 0, 31);
 
    dw[4] =
-      __gen_uint(values->WeightOffset[2], 0, 31);
+      util_bitpack_uint(values->WeightOffset[2], 0, 31);
 
    dw[5] =
-      __gen_uint(values->WeightOffset[3], 0, 31);
+      util_bitpack_uint(values->WeightOffset[3], 0, 31);
 
    dw[6] =
-      __gen_uint(values->WeightOffset[4], 0, 31);
+      util_bitpack_uint(values->WeightOffset[4], 0, 31);
 
    dw[7] =
-      __gen_uint(values->WeightOffset[5], 0, 31);
+      util_bitpack_uint(values->WeightOffset[5], 0, 31);
 
    dw[8] =
-      __gen_uint(values->WeightOffset[6], 0, 31);
+      util_bitpack_uint(values->WeightOffset[6], 0, 31);
 
    dw[9] =
-      __gen_uint(values->WeightOffset[7], 0, 31);
+      util_bitpack_uint(values->WeightOffset[7], 0, 31);
 
    dw[10] =
-      __gen_uint(values->WeightOffset[8], 0, 31);
+      util_bitpack_uint(values->WeightOffset[8], 0, 31);
 
    dw[11] =
-      __gen_uint(values->WeightOffset[9], 0, 31);
+      util_bitpack_uint(values->WeightOffset[9], 0, 31);
 
    dw[12] =
-      __gen_uint(values->WeightOffset[10], 0, 31);
+      util_bitpack_uint(values->WeightOffset[10], 0, 31);
 
    dw[13] =
-      __gen_uint(values->WeightOffset[11], 0, 31);
+      util_bitpack_uint(values->WeightOffset[11], 0, 31);
 
    dw[14] =
-      __gen_uint(values->WeightOffset[12], 0, 31);
+      util_bitpack_uint(values->WeightOffset[12], 0, 31);
 
    dw[15] =
-      __gen_uint(values->WeightOffset[13], 0, 31);
+      util_bitpack_uint(values->WeightOffset[13], 0, 31);
 
    dw[16] =
-      __gen_uint(values->WeightOffset[14], 0, 31);
+      util_bitpack_uint(values->WeightOffset[14], 0, 31);
 
    dw[17] =
-      __gen_uint(values->WeightOffset[15], 0, 31);
+      util_bitpack_uint(values->WeightOffset[15], 0, 31);
 
    dw[18] =
-      __gen_uint(values->WeightOffset[16], 0, 31);
+      util_bitpack_uint(values->WeightOffset[16], 0, 31);
 
    dw[19] =
-      __gen_uint(values->WeightOffset[17], 0, 31);
+      util_bitpack_uint(values->WeightOffset[17], 0, 31);
 
    dw[20] =
-      __gen_uint(values->WeightOffset[18], 0, 31);
+      util_bitpack_uint(values->WeightOffset[18], 0, 31);
 
    dw[21] =
-      __gen_uint(values->WeightOffset[19], 0, 31);
+      util_bitpack_uint(values->WeightOffset[19], 0, 31);
 
    dw[22] =
-      __gen_uint(values->WeightOffset[20], 0, 31);
+      util_bitpack_uint(values->WeightOffset[20], 0, 31);
 
    dw[23] =
-      __gen_uint(values->WeightOffset[21], 0, 31);
+      util_bitpack_uint(values->WeightOffset[21], 0, 31);
 
    dw[24] =
-      __gen_uint(values->WeightOffset[22], 0, 31);
+      util_bitpack_uint(values->WeightOffset[22], 0, 31);
 
    dw[25] =
-      __gen_uint(values->WeightOffset[23], 0, 31);
+      util_bitpack_uint(values->WeightOffset[23], 0, 31);
 
    dw[26] =
-      __gen_uint(values->WeightOffset[24], 0, 31);
+      util_bitpack_uint(values->WeightOffset[24], 0, 31);
 
    dw[27] =
-      __gen_uint(values->WeightOffset[25], 0, 31);
+      util_bitpack_uint(values->WeightOffset[25], 0, 31);
 
    dw[28] =
-      __gen_uint(values->WeightOffset[26], 0, 31);
+      util_bitpack_uint(values->WeightOffset[26], 0, 31);
 
    dw[29] =
-      __gen_uint(values->WeightOffset[27], 0, 31);
+      util_bitpack_uint(values->WeightOffset[27], 0, 31);
 
    dw[30] =
-      __gen_uint(values->WeightOffset[28], 0, 31);
+      util_bitpack_uint(values->WeightOffset[28], 0, 31);
 
    dw[31] =
-      __gen_uint(values->WeightOffset[29], 0, 31);
+      util_bitpack_uint(values->WeightOffset[29], 0, 31);
 
    dw[32] =
-      __gen_uint(values->WeightOffset[30], 0, 31);
+      util_bitpack_uint(values->WeightOffset[30], 0, 31);
 
    dw[33] =
-      __gen_uint(values->WeightOffset[31], 0, 31);
+      util_bitpack_uint(values->WeightOffset[31], 0, 31);
 
    dw[34] =
-      __gen_uint(values->WeightOffset[32], 0, 31);
+      util_bitpack_uint(values->WeightOffset[32], 0, 31);
 
    dw[35] =
-      __gen_uint(values->WeightOffset[33], 0, 31);
+      util_bitpack_uint(values->WeightOffset[33], 0, 31);
 
    dw[36] =
-      __gen_uint(values->WeightOffset[34], 0, 31);
+      util_bitpack_uint(values->WeightOffset[34], 0, 31);
 
    dw[37] =
-      __gen_uint(values->WeightOffset[35], 0, 31);
+      util_bitpack_uint(values->WeightOffset[35], 0, 31);
 
    dw[38] =
-      __gen_uint(values->WeightOffset[36], 0, 31);
+      util_bitpack_uint(values->WeightOffset[36], 0, 31);
 
    dw[39] =
-      __gen_uint(values->WeightOffset[37], 0, 31);
+      util_bitpack_uint(values->WeightOffset[37], 0, 31);
 
    dw[40] =
-      __gen_uint(values->WeightOffset[38], 0, 31);
+      util_bitpack_uint(values->WeightOffset[38], 0, 31);
 
    dw[41] =
-      __gen_uint(values->WeightOffset[39], 0, 31);
+      util_bitpack_uint(values->WeightOffset[39], 0, 31);
 
    dw[42] =
-      __gen_uint(values->WeightOffset[40], 0, 31);
+      util_bitpack_uint(values->WeightOffset[40], 0, 31);
 
    dw[43] =
-      __gen_uint(values->WeightOffset[41], 0, 31);
+      util_bitpack_uint(values->WeightOffset[41], 0, 31);
 
    dw[44] =
-      __gen_uint(values->WeightOffset[42], 0, 31);
+      util_bitpack_uint(values->WeightOffset[42], 0, 31);
 
    dw[45] =
-      __gen_uint(values->WeightOffset[43], 0, 31);
+      util_bitpack_uint(values->WeightOffset[43], 0, 31);
 
    dw[46] =
-      __gen_uint(values->WeightOffset[44], 0, 31);
+      util_bitpack_uint(values->WeightOffset[44], 0, 31);
 
    dw[47] =
-      __gen_uint(values->WeightOffset[45], 0, 31);
+      util_bitpack_uint(values->WeightOffset[45], 0, 31);
 
    dw[48] =
-      __gen_uint(values->WeightOffset[46], 0, 31);
+      util_bitpack_uint(values->WeightOffset[46], 0, 31);
 
    dw[49] =
-      __gen_uint(values->WeightOffset[47], 0, 31);
+      util_bitpack_uint(values->WeightOffset[47], 0, 31);
 
    dw[50] =
-      __gen_uint(values->WeightOffset[48], 0, 31);
+      util_bitpack_uint(values->WeightOffset[48], 0, 31);
 
    dw[51] =
-      __gen_uint(values->WeightOffset[49], 0, 31);
+      util_bitpack_uint(values->WeightOffset[49], 0, 31);
 
    dw[52] =
-      __gen_uint(values->WeightOffset[50], 0, 31);
+      util_bitpack_uint(values->WeightOffset[50], 0, 31);
 
    dw[53] =
-      __gen_uint(values->WeightOffset[51], 0, 31);
+      util_bitpack_uint(values->WeightOffset[51], 0, 31);
 
    dw[54] =
-      __gen_uint(values->WeightOffset[52], 0, 31);
+      util_bitpack_uint(values->WeightOffset[52], 0, 31);
 
    dw[55] =
-      __gen_uint(values->WeightOffset[53], 0, 31);
+      util_bitpack_uint(values->WeightOffset[53], 0, 31);
 
    dw[56] =
-      __gen_uint(values->WeightOffset[54], 0, 31);
+      util_bitpack_uint(values->WeightOffset[54], 0, 31);
 
    dw[57] =
-      __gen_uint(values->WeightOffset[55], 0, 31);
+      util_bitpack_uint(values->WeightOffset[55], 0, 31);
 
    dw[58] =
-      __gen_uint(values->WeightOffset[56], 0, 31);
+      util_bitpack_uint(values->WeightOffset[56], 0, 31);
 
    dw[59] =
-      __gen_uint(values->WeightOffset[57], 0, 31);
+      util_bitpack_uint(values->WeightOffset[57], 0, 31);
 
    dw[60] =
-      __gen_uint(values->WeightOffset[58], 0, 31);
+      util_bitpack_uint(values->WeightOffset[58], 0, 31);
 
    dw[61] =
-      __gen_uint(values->WeightOffset[59], 0, 31);
+      util_bitpack_uint(values->WeightOffset[59], 0, 31);
 
    dw[62] =
-      __gen_uint(values->WeightOffset[60], 0, 31);
+      util_bitpack_uint(values->WeightOffset[60], 0, 31);
 
    dw[63] =
-      __gen_uint(values->WeightOffset[61], 0, 31);
+      util_bitpack_uint(values->WeightOffset[61], 0, 31);
 
    dw[64] =
-      __gen_uint(values->WeightOffset[62], 0, 31);
+      util_bitpack_uint(values->WeightOffset[62], 0, 31);
 
    dw[65] =
-      __gen_uint(values->WeightOffset[63], 0, 31);
+      util_bitpack_uint(values->WeightOffset[63], 0, 31);
 
    dw[66] =
-      __gen_uint(values->WeightOffset[64], 0, 31);
+      util_bitpack_uint(values->WeightOffset[64], 0, 31);
 
    dw[67] =
-      __gen_uint(values->WeightOffset[65], 0, 31);
+      util_bitpack_uint(values->WeightOffset[65], 0, 31);
 
    dw[68] =
-      __gen_uint(values->WeightOffset[66], 0, 31);
+      util_bitpack_uint(values->WeightOffset[66], 0, 31);
 
    dw[69] =
-      __gen_uint(values->WeightOffset[67], 0, 31);
+      util_bitpack_uint(values->WeightOffset[67], 0, 31);
 
    dw[70] =
-      __gen_uint(values->WeightOffset[68], 0, 31);
+      util_bitpack_uint(values->WeightOffset[68], 0, 31);
 
    dw[71] =
-      __gen_uint(values->WeightOffset[69], 0, 31);
+      util_bitpack_uint(values->WeightOffset[69], 0, 31);
 
    dw[72] =
-      __gen_uint(values->WeightOffset[70], 0, 31);
+      util_bitpack_uint(values->WeightOffset[70], 0, 31);
 
    dw[73] =
-      __gen_uint(values->WeightOffset[71], 0, 31);
+      util_bitpack_uint(values->WeightOffset[71], 0, 31);
 
    dw[74] =
-      __gen_uint(values->WeightOffset[72], 0, 31);
+      util_bitpack_uint(values->WeightOffset[72], 0, 31);
 
    dw[75] =
-      __gen_uint(values->WeightOffset[73], 0, 31);
+      util_bitpack_uint(values->WeightOffset[73], 0, 31);
 
    dw[76] =
-      __gen_uint(values->WeightOffset[74], 0, 31);
+      util_bitpack_uint(values->WeightOffset[74], 0, 31);
 
    dw[77] =
-      __gen_uint(values->WeightOffset[75], 0, 31);
+      util_bitpack_uint(values->WeightOffset[75], 0, 31);
 
    dw[78] =
-      __gen_uint(values->WeightOffset[76], 0, 31);
+      util_bitpack_uint(values->WeightOffset[76], 0, 31);
 
    dw[79] =
-      __gen_uint(values->WeightOffset[77], 0, 31);
+      util_bitpack_uint(values->WeightOffset[77], 0, 31);
 
    dw[80] =
-      __gen_uint(values->WeightOffset[78], 0, 31);
+      util_bitpack_uint(values->WeightOffset[78], 0, 31);
 
    dw[81] =
-      __gen_uint(values->WeightOffset[79], 0, 31);
+      util_bitpack_uint(values->WeightOffset[79], 0, 31);
 
    dw[82] =
-      __gen_uint(values->WeightOffset[80], 0, 31);
+      util_bitpack_uint(values->WeightOffset[80], 0, 31);
 
    dw[83] =
-      __gen_uint(values->WeightOffset[81], 0, 31);
+      util_bitpack_uint(values->WeightOffset[81], 0, 31);
 
    dw[84] =
-      __gen_uint(values->WeightOffset[82], 0, 31);
+      util_bitpack_uint(values->WeightOffset[82], 0, 31);
 
    dw[85] =
-      __gen_uint(values->WeightOffset[83], 0, 31);
+      util_bitpack_uint(values->WeightOffset[83], 0, 31);
 
    dw[86] =
-      __gen_uint(values->WeightOffset[84], 0, 31);
+      util_bitpack_uint(values->WeightOffset[84], 0, 31);
 
    dw[87] =
-      __gen_uint(values->WeightOffset[85], 0, 31);
+      util_bitpack_uint(values->WeightOffset[85], 0, 31);
 
    dw[88] =
-      __gen_uint(values->WeightOffset[86], 0, 31);
+      util_bitpack_uint(values->WeightOffset[86], 0, 31);
 
    dw[89] =
-      __gen_uint(values->WeightOffset[87], 0, 31);
+      util_bitpack_uint(values->WeightOffset[87], 0, 31);
 
    dw[90] =
-      __gen_uint(values->WeightOffset[88], 0, 31);
+      util_bitpack_uint(values->WeightOffset[88], 0, 31);
 
    dw[91] =
-      __gen_uint(values->WeightOffset[89], 0, 31);
+      util_bitpack_uint(values->WeightOffset[89], 0, 31);
 
    dw[92] =
-      __gen_uint(values->WeightOffset[90], 0, 31);
+      util_bitpack_uint(values->WeightOffset[90], 0, 31);
 
    dw[93] =
-      __gen_uint(values->WeightOffset[91], 0, 31);
+      util_bitpack_uint(values->WeightOffset[91], 0, 31);
 
    dw[94] =
-      __gen_uint(values->WeightOffset[92], 0, 31);
+      util_bitpack_uint(values->WeightOffset[92], 0, 31);
 
    dw[95] =
-      __gen_uint(values->WeightOffset[93], 0, 31);
+      util_bitpack_uint(values->WeightOffset[93], 0, 31);
 
    dw[96] =
-      __gen_uint(values->WeightOffset[94], 0, 31);
+      util_bitpack_uint(values->WeightOffset[94], 0, 31);
 
    dw[97] =
-      __gen_uint(values->WeightOffset[95], 0, 31);
+      util_bitpack_uint(values->WeightOffset[95], 0, 31);
 }
 
 #define GFX7_MFX_BSP_BUF_BASE_ADDR_STATE_length      4
@@ -7645,23 +7517,23 @@ GFX7_MFX_BSP_BUF_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->BSDMPCRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->BSDMPCRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
    dw[1] = __gen_address(data, &dw[1], values->BSDMPCRowStoreScratchBufferAddress, v1, 6, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->MPRRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MPRRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
    dw[2] = __gen_address(data, &dw[2], values->MPRRowStoreScratchBufferAddress, v2, 6, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->BitplaneReadBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->BitplaneReadBufferArbitrationPriorityControl, 4, 5);
    dw[3] = __gen_address(data, &dw[3], values->BitplaneReadBufferAddress, v3, 6, 31);
 }
 
@@ -7740,35 +7612,35 @@ GFX7_MFX_DBK_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->PreDeblockingSourceCacheabilityControl, 0, 1) |
-      __gen_uint(values->PreDeblockingSourceGraphicsDataType, 2, 2) |
-      __gen_uint(values->PreDeblockingSourceArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->PreDeblockingSourceCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->PreDeblockingSourceGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->PreDeblockingSourceArbitrationPriorityControl, 4, 5);
    dw[1] = __gen_address(data, &dw[1], values->PreDeblockingSourceAddress, v1, 6, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->DeblockingControlCacheabilityControl, 0, 1) |
-      __gen_uint(values->DeblockingControlGraphicsDataType, 2, 2) |
-      __gen_uint(values->DeblockingControlArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->DeblockingControlCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->DeblockingControlGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->DeblockingControlArbitrationPriorityControl, 4, 5);
    dw[2] = __gen_address(data, &dw[2], values->DeblockingControlAddress, v2, 6, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->DeblockingCacheabilityControl, 0, 1) |
-      __gen_uint(values->DeblockingGraphicsDataType, 2, 2) |
-      __gen_uint(values->DeblockingArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->DeblockingCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->DeblockingGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->DeblockingArbitrationPriorityControl, 4, 5);
    dw[3] = __gen_address(data, &dw[3], values->DeblockingAddress, v3, 6, 31);
 
    const uint32_t v4 =
-      __gen_uint(values->DeblockRowStoreCacheabilityControl, 0, 1) |
-      __gen_uint(values->DeblockRowStoreGraphicsDataType, 2, 2) |
-      __gen_uint(values->DeblockRowStoreArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->DeblockRowStoreCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->DeblockRowStoreGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->DeblockRowStoreArbitrationPriorityControl, 4, 5);
    dw[4] = __gen_address(data, &dw[4], values->DeblockRowStoreAddress, v4, 6, 31);
 }
 
@@ -7808,19 +7680,19 @@ GFX7_MFX_FQM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->AVC, 0, 1) |
-      __gen_uint(values->MPEG2, 0, 1);
+      util_bitpack_uint(values->AVC, 0, 1) |
+      util_bitpack_uint(values->MPEG2, 0, 1);
 
    const uint64_t v2 =
-      __gen_uint(values->ForwardQuantizerMatrix, 0, 1023);
+      util_bitpack_uint(values->ForwardQuantizerMatrix, 0, 1023);
    dw[2] = v2;
    dw[3] = v2 >> 32;
 }
@@ -7917,49 +7789,49 @@ GFX7_MFX_IND_OBJ_BASE_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *d
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->MFXIndirectBitstreamObjectCacheabilityControl, 0, 1) |
-      __gen_uint(values->MFXIndirectBitstreamObjectGraphicsDataType, 2, 2) |
-      __gen_uint(values->MFXIndirectBitstreamObjectArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MFXIndirectBitstreamObjectCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->MFXIndirectBitstreamObjectGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->MFXIndirectBitstreamObjectArbitrationPriorityControl, 4, 5);
    dw[1] = __gen_address(data, &dw[1], values->MFXIndirectBitstreamObjectAddress, v1, 12, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->MFXIndirectBitstreamObjectAccessUpperBound, 0, 12, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->MFXIndirectMVObjectCacheabilityControl, 0, 1) |
-      __gen_uint(values->MFXIndirectMVObjectGraphicsDataType, 2, 2) |
-      __gen_uint(values->MFXIndirectMVObjectArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MFXIndirectMVObjectCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->MFXIndirectMVObjectGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->MFXIndirectMVObjectArbitrationPriorityControl, 4, 5);
    dw[3] = __gen_address(data, &dw[3], values->MFXIndirectMVObjectAddress, v3, 12, 31);
 
    dw[4] = __gen_address(data, &dw[4], values->MFXIndirectMVObjectAccessUpperBound, 0, 12, 31);
 
    const uint32_t v5 =
-      __gen_uint(values->MFDIndirectITCOEFFObjectCacheabilityControl, 0, 1) |
-      __gen_uint(values->MFDIndirectITCOEFFObjectGraphicsDataType, 2, 2) |
-      __gen_uint(values->MFDIndirectITCOEFFObjectArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MFDIndirectITCOEFFObjectCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->MFDIndirectITCOEFFObjectGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->MFDIndirectITCOEFFObjectArbitrationPriorityControl, 4, 5);
    dw[5] = __gen_address(data, &dw[5], values->MFDIndirectITCOEFFObjectAddress, v5, 12, 31);
 
    dw[6] = __gen_address(data, &dw[6], values->MFDIndirectITCOEFFObjectAccessUpperBound, 0, 12, 31);
 
    const uint32_t v7 =
-      __gen_uint(values->MFDIndirectITDBLKObjectCacheabilityControl, 0, 1) |
-      __gen_uint(values->MFDIndirectITDBLKObjectGraphicsDataType, 2, 2) |
-      __gen_uint(values->MFDIndirectITDBLKObjectArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MFDIndirectITDBLKObjectCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->MFDIndirectITDBLKObjectGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->MFDIndirectITDBLKObjectArbitrationPriorityControl, 4, 5);
    dw[7] = __gen_address(data, &dw[7], values->MFDIndirectITDBLKObjectAddress, v7, 12, 31);
 
    dw[8] = __gen_address(data, &dw[8], values->MFDIndirectITDBLKObjectAccessUpperBound, 0, 12, 31);
 
    const uint32_t v9 =
-      __gen_uint(values->MFCIndirectPAKBSEObjectCacheabilityControl, 0, 1) |
-      __gen_uint(values->MFCIndirectPAKBSEObjectGraphicsDataType, 2, 2) |
-      __gen_uint(values->MFCIndirectPAKBSEObjectArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MFCIndirectPAKBSEObjectCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->MFCIndirectPAKBSEObjectGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->MFCIndirectPAKBSEObjectArbitrationPriorityControl, 4, 5);
    dw[9] = __gen_address(data, &dw[9], values->MFCIndirectPAKBSEObjectAddress, v9, 12, 31);
 
    dw[10] = __gen_address(data, &dw[10], values->MFCIndirectPAKBSEObjectAccessUpperBound, 0, 12, 31);
@@ -7998,313 +7870,313 @@ GFX7_MFX_JPEG_HUFF_TABLE_STATE_pack(__attribute__((unused)) __gen_user_data *dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->HuffmanTableID, 0, 0);
+      util_bitpack_uint(values->HuffmanTableID, 0, 0);
 
    dw[2] =
-      __gen_uint(values->DC_BITS[0], 0, 7) |
-      __gen_uint(values->DC_BITS[1], 8, 15) |
-      __gen_uint(values->DC_BITS[2], 16, 23) |
-      __gen_uint(values->DC_BITS[3], 24, 31);
+      util_bitpack_uint(values->DC_BITS[0], 0, 7) |
+      util_bitpack_uint(values->DC_BITS[1], 8, 15) |
+      util_bitpack_uint(values->DC_BITS[2], 16, 23) |
+      util_bitpack_uint(values->DC_BITS[3], 24, 31);
 
    dw[3] =
-      __gen_uint(values->DC_BITS[4], 0, 7) |
-      __gen_uint(values->DC_BITS[5], 8, 15) |
-      __gen_uint(values->DC_BITS[6], 16, 23) |
-      __gen_uint(values->DC_BITS[7], 24, 31);
+      util_bitpack_uint(values->DC_BITS[4], 0, 7) |
+      util_bitpack_uint(values->DC_BITS[5], 8, 15) |
+      util_bitpack_uint(values->DC_BITS[6], 16, 23) |
+      util_bitpack_uint(values->DC_BITS[7], 24, 31);
 
    dw[4] =
-      __gen_uint(values->DC_BITS[8], 0, 7) |
-      __gen_uint(values->DC_BITS[9], 8, 15) |
-      __gen_uint(values->DC_BITS[10], 16, 23) |
-      __gen_uint(values->DC_BITS[11], 24, 31);
+      util_bitpack_uint(values->DC_BITS[8], 0, 7) |
+      util_bitpack_uint(values->DC_BITS[9], 8, 15) |
+      util_bitpack_uint(values->DC_BITS[10], 16, 23) |
+      util_bitpack_uint(values->DC_BITS[11], 24, 31);
 
    dw[5] =
-      __gen_uint(values->DC_HUFFVAL[0], 0, 7) |
-      __gen_uint(values->DC_HUFFVAL[1], 8, 15) |
-      __gen_uint(values->DC_HUFFVAL[2], 16, 23) |
-      __gen_uint(values->DC_HUFFVAL[3], 24, 31);
+      util_bitpack_uint(values->DC_HUFFVAL[0], 0, 7) |
+      util_bitpack_uint(values->DC_HUFFVAL[1], 8, 15) |
+      util_bitpack_uint(values->DC_HUFFVAL[2], 16, 23) |
+      util_bitpack_uint(values->DC_HUFFVAL[3], 24, 31);
 
    dw[6] =
-      __gen_uint(values->DC_HUFFVAL[4], 0, 7) |
-      __gen_uint(values->DC_HUFFVAL[5], 8, 15) |
-      __gen_uint(values->DC_HUFFVAL[6], 16, 23) |
-      __gen_uint(values->DC_HUFFVAL[7], 24, 31);
+      util_bitpack_uint(values->DC_HUFFVAL[4], 0, 7) |
+      util_bitpack_uint(values->DC_HUFFVAL[5], 8, 15) |
+      util_bitpack_uint(values->DC_HUFFVAL[6], 16, 23) |
+      util_bitpack_uint(values->DC_HUFFVAL[7], 24, 31);
 
    dw[7] =
-      __gen_uint(values->DC_HUFFVAL[8], 0, 7) |
-      __gen_uint(values->DC_HUFFVAL[9], 8, 15) |
-      __gen_uint(values->DC_HUFFVAL[10], 16, 23) |
-      __gen_uint(values->DC_HUFFVAL[11], 24, 31);
+      util_bitpack_uint(values->DC_HUFFVAL[8], 0, 7) |
+      util_bitpack_uint(values->DC_HUFFVAL[9], 8, 15) |
+      util_bitpack_uint(values->DC_HUFFVAL[10], 16, 23) |
+      util_bitpack_uint(values->DC_HUFFVAL[11], 24, 31);
 
    const uint64_t v8 =
-      __gen_uint(values->AC_BITS[0], 0, 15) |
-      __gen_uint(values->AC_BITS[1], 8, 23) |
-      __gen_uint(values->AC_BITS[2], 16, 31) |
-      __gen_uint(values->AC_BITS[3], 24, 39) |
-      __gen_uint(values->AC_BITS[4], 32, 47) |
-      __gen_uint(values->AC_BITS[5], 40, 55) |
-      __gen_uint(values->AC_BITS[6], 48, 63) |
-      __gen_uint(values->AC_BITS[7], 56, 71) |
-      __gen_uint(values->AC_BITS[8], 64, 79) |
-      __gen_uint(values->AC_BITS[9], 72, 87) |
-      __gen_uint(values->AC_BITS[10], 80, 95) |
-      __gen_uint(values->AC_BITS[11], 88, 103) |
-      __gen_uint(values->AC_BITS[12], 96, 111) |
-      __gen_uint(values->AC_BITS[13], 104, 119) |
-      __gen_uint(values->AC_BITS[14], 112, 127) |
-      __gen_uint(values->AC_BITS[15], 120, 135) |
-      __gen_uint(values->AC_HUFFVAL[0], 128, 135) |
-      __gen_uint(values->AC_HUFFVAL[1], 136, 143) |
-      __gen_uint(values->AC_HUFFVAL[2], 144, 151) |
-      __gen_uint(values->AC_HUFFVAL[3], 152, 159);
+      util_bitpack_uint(values->AC_BITS[0], 0, 15) |
+      util_bitpack_uint(values->AC_BITS[1], 8, 23) |
+      util_bitpack_uint(values->AC_BITS[2], 16, 31) |
+      util_bitpack_uint(values->AC_BITS[3], 24, 39) |
+      util_bitpack_uint(values->AC_BITS[4], 32, 47) |
+      util_bitpack_uint(values->AC_BITS[5], 40, 55) |
+      util_bitpack_uint(values->AC_BITS[6], 48, 63) |
+      util_bitpack_uint(values->AC_BITS[7], 56, 71) |
+      util_bitpack_uint(values->AC_BITS[8], 64, 79) |
+      util_bitpack_uint(values->AC_BITS[9], 72, 87) |
+      util_bitpack_uint(values->AC_BITS[10], 80, 95) |
+      util_bitpack_uint(values->AC_BITS[11], 88, 103) |
+      util_bitpack_uint(values->AC_BITS[12], 96, 111) |
+      util_bitpack_uint(values->AC_BITS[13], 104, 119) |
+      util_bitpack_uint(values->AC_BITS[14], 112, 127) |
+      util_bitpack_uint(values->AC_BITS[15], 120, 135) |
+      util_bitpack_uint(values->AC_HUFFVAL[0], 128, 135) |
+      util_bitpack_uint(values->AC_HUFFVAL[1], 136, 143) |
+      util_bitpack_uint(values->AC_HUFFVAL[2], 144, 151) |
+      util_bitpack_uint(values->AC_HUFFVAL[3], 152, 159);
    dw[8] = v8;
    dw[9] = v8 >> 32;
 
    dw[13] =
-      __gen_uint(values->AC_HUFFVAL[4], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[5], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[6], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[7], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[4], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[5], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[6], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[7], 24, 31);
 
    dw[14] =
-      __gen_uint(values->AC_HUFFVAL[8], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[9], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[10], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[11], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[8], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[9], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[10], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[11], 24, 31);
 
    dw[15] =
-      __gen_uint(values->AC_HUFFVAL[12], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[13], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[14], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[15], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[12], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[13], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[14], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[15], 24, 31);
 
    dw[16] =
-      __gen_uint(values->AC_HUFFVAL[16], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[17], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[18], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[19], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[16], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[17], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[18], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[19], 24, 31);
 
    dw[17] =
-      __gen_uint(values->AC_HUFFVAL[20], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[21], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[22], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[23], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[20], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[21], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[22], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[23], 24, 31);
 
    dw[18] =
-      __gen_uint(values->AC_HUFFVAL[24], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[25], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[26], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[27], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[24], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[25], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[26], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[27], 24, 31);
 
    dw[19] =
-      __gen_uint(values->AC_HUFFVAL[28], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[29], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[30], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[31], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[28], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[29], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[30], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[31], 24, 31);
 
    dw[20] =
-      __gen_uint(values->AC_HUFFVAL[32], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[33], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[34], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[35], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[32], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[33], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[34], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[35], 24, 31);
 
    dw[21] =
-      __gen_uint(values->AC_HUFFVAL[36], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[37], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[38], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[39], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[36], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[37], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[38], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[39], 24, 31);
 
    dw[22] =
-      __gen_uint(values->AC_HUFFVAL[40], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[41], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[42], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[43], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[40], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[41], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[42], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[43], 24, 31);
 
    dw[23] =
-      __gen_uint(values->AC_HUFFVAL[44], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[45], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[46], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[47], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[44], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[45], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[46], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[47], 24, 31);
 
    dw[24] =
-      __gen_uint(values->AC_HUFFVAL[48], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[49], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[50], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[51], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[48], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[49], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[50], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[51], 24, 31);
 
    dw[25] =
-      __gen_uint(values->AC_HUFFVAL[52], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[53], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[54], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[55], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[52], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[53], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[54], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[55], 24, 31);
 
    dw[26] =
-      __gen_uint(values->AC_HUFFVAL[56], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[57], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[58], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[59], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[56], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[57], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[58], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[59], 24, 31);
 
    dw[27] =
-      __gen_uint(values->AC_HUFFVAL[60], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[61], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[62], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[63], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[60], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[61], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[62], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[63], 24, 31);
 
    dw[28] =
-      __gen_uint(values->AC_HUFFVAL[64], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[65], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[66], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[67], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[64], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[65], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[66], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[67], 24, 31);
 
    dw[29] =
-      __gen_uint(values->AC_HUFFVAL[68], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[69], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[70], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[71], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[68], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[69], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[70], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[71], 24, 31);
 
    dw[30] =
-      __gen_uint(values->AC_HUFFVAL[72], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[73], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[74], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[75], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[72], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[73], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[74], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[75], 24, 31);
 
    dw[31] =
-      __gen_uint(values->AC_HUFFVAL[76], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[77], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[78], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[79], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[76], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[77], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[78], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[79], 24, 31);
 
    dw[32] =
-      __gen_uint(values->AC_HUFFVAL[80], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[81], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[82], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[83], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[80], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[81], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[82], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[83], 24, 31);
 
    dw[33] =
-      __gen_uint(values->AC_HUFFVAL[84], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[85], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[86], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[87], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[84], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[85], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[86], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[87], 24, 31);
 
    dw[34] =
-      __gen_uint(values->AC_HUFFVAL[88], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[89], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[90], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[91], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[88], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[89], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[90], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[91], 24, 31);
 
    dw[35] =
-      __gen_uint(values->AC_HUFFVAL[92], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[93], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[94], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[95], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[92], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[93], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[94], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[95], 24, 31);
 
    dw[36] =
-      __gen_uint(values->AC_HUFFVAL[96], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[97], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[98], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[99], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[96], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[97], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[98], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[99], 24, 31);
 
    dw[37] =
-      __gen_uint(values->AC_HUFFVAL[100], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[101], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[102], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[103], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[100], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[101], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[102], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[103], 24, 31);
 
    dw[38] =
-      __gen_uint(values->AC_HUFFVAL[104], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[105], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[106], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[107], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[104], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[105], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[106], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[107], 24, 31);
 
    dw[39] =
-      __gen_uint(values->AC_HUFFVAL[108], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[109], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[110], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[111], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[108], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[109], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[110], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[111], 24, 31);
 
    dw[40] =
-      __gen_uint(values->AC_HUFFVAL[112], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[113], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[114], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[115], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[112], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[113], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[114], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[115], 24, 31);
 
    dw[41] =
-      __gen_uint(values->AC_HUFFVAL[116], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[117], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[118], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[119], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[116], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[117], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[118], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[119], 24, 31);
 
    dw[42] =
-      __gen_uint(values->AC_HUFFVAL[120], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[121], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[122], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[123], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[120], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[121], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[122], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[123], 24, 31);
 
    dw[43] =
-      __gen_uint(values->AC_HUFFVAL[124], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[125], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[126], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[127], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[124], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[125], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[126], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[127], 24, 31);
 
    dw[44] =
-      __gen_uint(values->AC_HUFFVAL[128], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[129], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[130], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[131], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[128], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[129], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[130], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[131], 24, 31);
 
    dw[45] =
-      __gen_uint(values->AC_HUFFVAL[132], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[133], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[134], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[135], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[132], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[133], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[134], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[135], 24, 31);
 
    dw[46] =
-      __gen_uint(values->AC_HUFFVAL[136], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[137], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[138], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[139], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[136], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[137], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[138], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[139], 24, 31);
 
    dw[47] =
-      __gen_uint(values->AC_HUFFVAL[140], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[141], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[142], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[143], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[140], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[141], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[142], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[143], 24, 31);
 
    dw[48] =
-      __gen_uint(values->AC_HUFFVAL[144], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[145], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[146], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[147], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[144], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[145], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[146], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[147], 24, 31);
 
    dw[49] =
-      __gen_uint(values->AC_HUFFVAL[148], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[149], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[150], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[151], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[148], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[149], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[150], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[151], 24, 31);
 
    dw[50] =
-      __gen_uint(values->AC_HUFFVAL[152], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[153], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[154], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[155], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[152], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[153], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[154], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[155], 24, 31);
 
    dw[51] =
-      __gen_uint(values->AC_HUFFVAL[156], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL[157], 8, 15) |
-      __gen_uint(values->AC_HUFFVAL[158], 16, 23) |
-      __gen_uint(values->AC_HUFFVAL[159], 24, 31);
+      util_bitpack_uint(values->AC_HUFFVAL[156], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL[157], 8, 15) |
+      util_bitpack_uint(values->AC_HUFFVAL[158], 16, 23) |
+      util_bitpack_uint(values->AC_HUFFVAL[159], 24, 31);
 
    dw[52] =
-      __gen_uint(values->AC_HUFFVAL2[0], 0, 7) |
-      __gen_uint(values->AC_HUFFVAL2[1], 8, 15);
+      util_bitpack_uint(values->AC_HUFFVAL2[0], 0, 7) |
+      util_bitpack_uint(values->AC_HUFFVAL2[1], 8, 15);
 
    dw[53] = 0;
 
@@ -9894,20 +9766,20 @@ GFX7_MFX_JPEG_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->InputFormatYUV, 0, 2) |
-      __gen_uint(values->Rotation, 4, 5);
+      util_bitpack_uint(values->InputFormatYUV, 0, 2) |
+      util_bitpack_uint(values->Rotation, 4, 5);
 
    dw[2] =
-      __gen_uint(values->FrameWidthInBlocks, 0, 12) |
-      __gen_uint(values->FrameHeightInBlocks, 16, 28);
+      util_bitpack_uint(values->FrameWidthInBlocks, 0, 12) |
+      util_bitpack_uint(values->FrameHeightInBlocks, 16, 28);
 }
 
 #define GFX7_MFX_MPEG2_PIC_STATE_length        2
@@ -10004,26 +9876,26 @@ GFX7_MFX_MPEG2_PIC_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ScanOrder, 6, 6) |
-      __gen_uint(values->IntraVLCFormat, 7, 7) |
-      __gen_uint(values->QuantizerScaleType, 8, 8) |
-      __gen_uint(values->ConcealmentMV, 9, 9) |
-      __gen_uint(values->FramePredictionFrameDCT, 10, 10) |
-      __gen_uint(values->TopFieldFirst, 11, 11) |
-      __gen_uint(values->PictureStructure, 12, 13) |
-      __gen_uint(values->IntraDCPrecision, 14, 15) |
-      __gen_uint(values->F_code00, 16, 19) |
-      __gen_uint(values->F_code01, 20, 23) |
-      __gen_uint(values->F_code10, 24, 27) |
-      __gen_uint(values->F_code11, 28, 31);
+      util_bitpack_uint(values->ScanOrder, 6, 6) |
+      util_bitpack_uint(values->IntraVLCFormat, 7, 7) |
+      util_bitpack_uint(values->QuantizerScaleType, 8, 8) |
+      util_bitpack_uint(values->ConcealmentMV, 9, 9) |
+      util_bitpack_uint(values->FramePredictionFrameDCT, 10, 10) |
+      util_bitpack_uint(values->TopFieldFirst, 11, 11) |
+      util_bitpack_uint(values->PictureStructure, 12, 13) |
+      util_bitpack_uint(values->IntraDCPrecision, 14, 15) |
+      util_bitpack_uint(values->F_code00, 16, 19) |
+      util_bitpack_uint(values->F_code01, 20, 23) |
+      util_bitpack_uint(values->F_code10, 24, 27) |
+      util_bitpack_uint(values->F_code11, 28, 31);
 }
 
 #define GFX7_MFX_PAK_INSERT_OBJECT_length_bias      2
@@ -10066,23 +9938,23 @@ GFX7_MFX_PAK_INSERT_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->BitstreamStartReset, 0, 0) |
-      __gen_uint(values->EndofSlice, 1, 1) |
-      __gen_uint(values->LastHeader, 2, 2) |
-      __gen_uint(values->EmulationByteBitsInsertEnable, 3, 3) |
-      __gen_uint(values->SkipEmulationByteCount, 4, 7) |
-      __gen_uint(values->DataBitsInLastDW, 8, 13) |
-      __gen_uint(values->SliceHeaderIndicator, 14, 14) |
-      __gen_uint(values->HeaderLengthExcludedFromSize, 15, 15) |
-      __gen_uint(values->DataByteOffset, 16, 17);
+      util_bitpack_uint(values->BitstreamStartReset, 0, 0) |
+      util_bitpack_uint(values->EndofSlice, 1, 1) |
+      util_bitpack_uint(values->LastHeader, 2, 2) |
+      util_bitpack_uint(values->EmulationByteBitsInsertEnable, 3, 3) |
+      util_bitpack_uint(values->SkipEmulationByteCount, 4, 7) |
+      util_bitpack_uint(values->DataBitsInLastDW, 8, 13) |
+      util_bitpack_uint(values->SliceHeaderIndicator, 14, 14) |
+      util_bitpack_uint(values->HeaderLengthExcludedFromSize, 15, 15) |
+      util_bitpack_uint(values->DataByteOffset, 16, 17);
 }
 
 #define GFX7_MFX_PIPE_BUF_ADDR_STATE_length     24
@@ -10202,147 +10074,147 @@ GFX7_MFX_PIPE_BUF_ADDR_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->PreDeblockingDestinationArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->PreDeblockingDestinationArbitrationPriorityControl, 4, 5);
    dw[1] = __gen_address(data, &dw[1], values->PreDeblockingDestinationAddress, v1, 6, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->PostDeblockingDestinationCacheabilityControl, 0, 1) |
-      __gen_uint(values->PostDeblockingDestinationGraphicsDataType, 2, 2) |
-      __gen_uint(values->PostDeblockingDestinationArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->PostDeblockingDestinationCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->PostDeblockingDestinationGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->PostDeblockingDestinationArbitrationPriorityControl, 4, 5);
    dw[2] = __gen_address(data, &dw[2], values->PostDeblockingDestinationAddress, v2, 6, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->OriginalUncompressedPictureSourceCacheabilityControl, 0, 1) |
-      __gen_uint(values->OriginalUncompressedPictureSourceGraphicsDataType, 2, 2) |
-      __gen_uint(values->OriginalUncompressedPictureSourceArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->OriginalUncompressedPictureSourceCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->OriginalUncompressedPictureSourceGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->OriginalUncompressedPictureSourceArbitrationPriorityControl, 4, 5);
    dw[3] = __gen_address(data, &dw[3], values->OriginalUncompressedPictureSourceAddress, v3, 6, 31);
 
    const uint32_t v4 =
-      __gen_uint(values->StreamOutDataDestinationCacheabilityControl, 0, 1) |
-      __gen_uint(values->StreamOutDataDestinationGraphicsDataType, 2, 2) |
-      __gen_uint(values->StreamOutDataDestinationArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->StreamOutDataDestinationCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->StreamOutDataDestinationGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->StreamOutDataDestinationArbitrationPriorityControl, 4, 5);
    dw[4] = __gen_address(data, &dw[4], values->StreamOutDataDestinationAddress, v4, 6, 31);
 
    const uint32_t v5 =
-      __gen_uint(values->IntraRowStoreScratchBufferCacheabilityControl, 0, 1) |
-      __gen_uint(values->IntraRowStoreScratchBufferGraphicsDataType, 2, 2) |
-      __gen_uint(values->IntraRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->IntraRowStoreScratchBufferCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->IntraRowStoreScratchBufferGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->IntraRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
    dw[5] = __gen_address(data, &dw[5], values->IntraRowStoreScratchBufferAddress, v5, 6, 31);
 
    const uint32_t v6 =
-      __gen_uint(values->DeblockingFilterRowStoreScratchBufferCacheabilityControl, 0, 1) |
-      __gen_uint(values->DeblockingFilterRowStoreScratchBufferGraphicsDataType, 2, 2) |
-      __gen_uint(values->DeblockingFilterRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->DeblockingFilterRowStoreScratchBufferCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->DeblockingFilterRowStoreScratchBufferGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->DeblockingFilterRowStoreScratchBufferArbitrationPriorityControl, 4, 5);
    dw[6] = __gen_address(data, &dw[6], values->DeblockingFilterRowStoreScratchBufferAddress, v6, 6, 31);
 
    const uint32_t v7 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[0], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[0], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[0], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[0], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[0], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[0], 0, 1);
    dw[7] = __gen_address(data, &dw[7], values->ReferencePictureAddress[0], v7, 6, 31);
 
    const uint32_t v8 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[1], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[1], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[1], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[1], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[1], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[1], 0, 1);
    dw[8] = __gen_address(data, &dw[8], values->ReferencePictureAddress[1], v8, 6, 31);
 
    const uint32_t v9 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[2], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[2], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[2], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[2], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[2], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[2], 0, 1);
    dw[9] = __gen_address(data, &dw[9], values->ReferencePictureAddress[2], v9, 6, 31);
 
    const uint32_t v10 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[3], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[3], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[3], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[3], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[3], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[3], 0, 1);
    dw[10] = __gen_address(data, &dw[10], values->ReferencePictureAddress[3], v10, 6, 31);
 
    const uint32_t v11 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[4], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[4], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[4], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[4], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[4], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[4], 0, 1);
    dw[11] = __gen_address(data, &dw[11], values->ReferencePictureAddress[4], v11, 6, 31);
 
    const uint32_t v12 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[5], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[5], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[5], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[5], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[5], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[5], 0, 1);
    dw[12] = __gen_address(data, &dw[12], values->ReferencePictureAddress[5], v12, 6, 31);
 
    const uint32_t v13 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[6], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[6], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[6], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[6], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[6], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[6], 0, 1);
    dw[13] = __gen_address(data, &dw[13], values->ReferencePictureAddress[6], v13, 6, 31);
 
    const uint32_t v14 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[7], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[7], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[7], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[7], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[7], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[7], 0, 1);
    dw[14] = __gen_address(data, &dw[14], values->ReferencePictureAddress[7], v14, 6, 31);
 
    const uint32_t v15 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[8], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[8], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[8], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[8], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[8], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[8], 0, 1);
    dw[15] = __gen_address(data, &dw[15], values->ReferencePictureAddress[8], v15, 6, 31);
 
    const uint32_t v16 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[9], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[9], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[9], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[9], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[9], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[9], 0, 1);
    dw[16] = __gen_address(data, &dw[16], values->ReferencePictureAddress[9], v16, 6, 31);
 
    const uint32_t v17 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[10], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[10], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[10], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[10], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[10], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[10], 0, 1);
    dw[17] = __gen_address(data, &dw[17], values->ReferencePictureAddress[10], v17, 6, 31);
 
    const uint32_t v18 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[11], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[11], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[11], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[11], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[11], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[11], 0, 1);
    dw[18] = __gen_address(data, &dw[18], values->ReferencePictureAddress[11], v18, 6, 31);
 
    const uint32_t v19 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[12], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[12], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[12], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[12], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[12], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[12], 0, 1);
    dw[19] = __gen_address(data, &dw[19], values->ReferencePictureAddress[12], v19, 6, 31);
 
    const uint32_t v20 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[13], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[13], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[13], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[13], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[13], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[13], 0, 1);
    dw[20] = __gen_address(data, &dw[20], values->ReferencePictureAddress[13], v20, 6, 31);
 
    const uint32_t v21 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[14], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[14], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[14], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[14], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[14], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[14], 0, 1);
    dw[21] = __gen_address(data, &dw[21], values->ReferencePictureAddress[14], v21, 6, 31);
 
    const uint32_t v22 =
-      __gen_uint(values->ReferencePictureArbitrationPriorityControl[15], 4, 5) |
-      __gen_uint(values->ReferencePictureGraphicsDataType[15], 2, 2) |
-      __gen_uint(values->ReferencePictureCacheabilityControl[15], 0, 1);
+      util_bitpack_uint(values->ReferencePictureArbitrationPriorityControl[15], 4, 5) |
+      util_bitpack_uint(values->ReferencePictureGraphicsDataType[15], 2, 2) |
+      util_bitpack_uint(values->ReferencePictureCacheabilityControl[15], 0, 1);
    dw[22] = __gen_address(data, &dw[22], values->ReferencePictureAddress[15], v22, 6, 31);
 
    const uint32_t v23 =
-      __gen_uint(values->MBStatusBufferCacheabilityControl, 0, 1) |
-      __gen_uint(values->MBStatusBufferGraphicsDataType, 2, 2) |
-      __gen_uint(values->MBStatusBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->MBStatusBufferCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->MBStatusBufferGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->MBStatusBufferArbitrationPriorityControl, 4, 5);
    dw[23] = __gen_address(data, &dw[23], values->MBStatusBufferAddress, v23, 6, 31);
 }
 
@@ -10396,29 +10268,29 @@ GFX7_MFX_PIPE_MODE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->StandardSelect, 0, 3) |
-      __gen_uint(values->CodecSelect, 4, 4) |
-      __gen_uint(values->StitchMode, 5, 5) |
-      __gen_uint(values->PreDeblockingOutputEnable, 8, 8) |
-      __gen_uint(values->PostDeblockingOutputEnable, 9, 9) |
-      __gen_uint(values->StreamOutEnable, 10, 10) |
-      __gen_uint(values->PicErrorStatusReportEnable, 11, 11) |
-      __gen_uint(values->DecoderModeSelect, 15, 16) |
-      __gen_uint(values->DecoderShortFormatMode, 17, 17) |
-      __gen_uint(values->ExtendedStreamOutEnable, 18, 18);
+      util_bitpack_uint(values->StandardSelect, 0, 3) |
+      util_bitpack_uint(values->CodecSelect, 4, 4) |
+      util_bitpack_uint(values->StitchMode, 5, 5) |
+      util_bitpack_uint(values->PreDeblockingOutputEnable, 8, 8) |
+      util_bitpack_uint(values->PostDeblockingOutputEnable, 9, 9) |
+      util_bitpack_uint(values->StreamOutEnable, 10, 10) |
+      util_bitpack_uint(values->PicErrorStatusReportEnable, 11, 11) |
+      util_bitpack_uint(values->DecoderModeSelect, 15, 16) |
+      util_bitpack_uint(values->DecoderShortFormatMode, 17, 17) |
+      util_bitpack_uint(values->ExtendedStreamOutEnable, 18, 18);
 
    dw[2] = 0;
 
    dw[3] =
-      __gen_uint(values->PicStatusErrorReportID, 0, 31);
+      util_bitpack_uint(values->PicStatusErrorReportID, 0, 31);
 
    dw[4] = 0;
 }
@@ -10459,112 +10331,112 @@ GFX7_MFX_QM_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->AVC, 0, 1) |
-      __gen_uint(values->MPEG2, 0, 1);
+      util_bitpack_uint(values->AVC, 0, 1) |
+      util_bitpack_uint(values->MPEG2, 0, 1);
 
    dw[2] =
-      __gen_uint(values->ForwardQuantizerMatrix[0], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[1], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[2], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[3], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[0], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[1], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[2], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[3], 24, 31);
 
    dw[3] =
-      __gen_uint(values->ForwardQuantizerMatrix[4], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[5], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[6], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[7], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[4], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[5], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[6], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[7], 24, 31);
 
    dw[4] =
-      __gen_uint(values->ForwardQuantizerMatrix[8], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[9], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[10], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[11], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[8], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[9], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[10], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[11], 24, 31);
 
    dw[5] =
-      __gen_uint(values->ForwardQuantizerMatrix[12], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[13], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[14], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[15], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[12], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[13], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[14], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[15], 24, 31);
 
    dw[6] =
-      __gen_uint(values->ForwardQuantizerMatrix[16], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[17], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[18], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[19], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[16], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[17], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[18], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[19], 24, 31);
 
    dw[7] =
-      __gen_uint(values->ForwardQuantizerMatrix[20], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[21], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[22], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[23], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[20], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[21], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[22], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[23], 24, 31);
 
    dw[8] =
-      __gen_uint(values->ForwardQuantizerMatrix[24], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[25], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[26], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[27], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[24], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[25], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[26], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[27], 24, 31);
 
    dw[9] =
-      __gen_uint(values->ForwardQuantizerMatrix[28], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[29], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[30], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[31], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[28], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[29], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[30], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[31], 24, 31);
 
    dw[10] =
-      __gen_uint(values->ForwardQuantizerMatrix[32], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[33], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[34], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[35], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[32], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[33], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[34], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[35], 24, 31);
 
    dw[11] =
-      __gen_uint(values->ForwardQuantizerMatrix[36], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[37], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[38], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[39], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[36], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[37], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[38], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[39], 24, 31);
 
    dw[12] =
-      __gen_uint(values->ForwardQuantizerMatrix[40], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[41], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[42], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[43], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[40], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[41], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[42], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[43], 24, 31);
 
    dw[13] =
-      __gen_uint(values->ForwardQuantizerMatrix[44], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[45], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[46], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[47], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[44], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[45], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[46], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[47], 24, 31);
 
    dw[14] =
-      __gen_uint(values->ForwardQuantizerMatrix[48], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[49], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[50], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[51], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[48], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[49], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[50], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[51], 24, 31);
 
    dw[15] =
-      __gen_uint(values->ForwardQuantizerMatrix[52], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[53], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[54], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[55], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[52], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[53], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[54], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[55], 24, 31);
 
    dw[16] =
-      __gen_uint(values->ForwardQuantizerMatrix[56], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[57], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[58], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[59], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[56], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[57], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[58], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[59], 24, 31);
 
    dw[17] =
-      __gen_uint(values->ForwardQuantizerMatrix[60], 0, 7) |
-      __gen_uint(values->ForwardQuantizerMatrix[61], 8, 15) |
-      __gen_uint(values->ForwardQuantizerMatrix[62], 16, 23) |
-      __gen_uint(values->ForwardQuantizerMatrix[63], 24, 31);
+      util_bitpack_uint(values->ForwardQuantizerMatrix[60], 0, 7) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[61], 8, 15) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[62], 16, 23) |
+      util_bitpack_uint(values->ForwardQuantizerMatrix[63], 24, 31);
 
    dw[18] = 0;
 
@@ -10628,16 +10500,16 @@ GFX7_MFX_STATE_POINTER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->StatePointerIndex, 0, 1) |
-      __gen_uint(values->StatePointer, 5, 31);
+      util_bitpack_uint(values->StatePointerIndex, 0, 1) |
+      util_bitpack_uint(values->StatePointer, 5, 31);
 }
 
 #define GFX7_MFX_STITCH_OBJECT_length_bias      2
@@ -10673,21 +10545,21 @@ GFX7_MFX_STITCH_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->EndofSlice, 1, 1) |
-      __gen_uint(values->LastHeader, 2, 2) |
-      __gen_uint(values->SourceDataEndingBitInclusion, 8, 13) |
-      __gen_uint(values->SourceDataStartingByteOffset, 16, 17);
+      util_bitpack_uint(values->EndofSlice, 1, 1) |
+      util_bitpack_uint(values->LastHeader, 2, 2) |
+      util_bitpack_uint(values->SourceDataEndingBitInclusion, 8, 13) |
+      util_bitpack_uint(values->SourceDataStartingByteOffset, 16, 17);
 
    dw[2] =
-      __gen_uint(values->IndirectDataLength, 0, 18);
+      util_bitpack_uint(values->IndirectDataLength, 0, 18);
 
    dw[3] =
       __gen_offset(values->IndirectDataStartAddress, 0, 31);
@@ -10748,35 +10620,35 @@ GFX7_MFX_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = 0;
 
    dw[2] =
-      __gen_uint(values->CrVCbUPixelOffsetVDirection, 0, 1) |
-      __gen_uint(values->Width, 4, 17) |
-      __gen_uint(values->Height, 18, 31);
+      util_bitpack_uint(values->CrVCbUPixelOffsetVDirection, 0, 1) |
+      util_bitpack_uint(values->Width, 4, 17) |
+      util_bitpack_uint(values->Height, 18, 31);
 
    dw[3] =
-      __gen_uint(values->TileWalk, 0, 0) |
-      __gen_uint(values->TiledSurface, 1, 1) |
-      __gen_uint(values->HalfPitchforChroma, 2, 2) |
-      __gen_uint(values->SurfacePitch, 3, 19) |
-      __gen_uint(values->InterleaveChroma, 27, 27) |
-      __gen_uint(values->SurfaceFormat, 28, 31);
+      util_bitpack_uint(values->TileWalk, 0, 0) |
+      util_bitpack_uint(values->TiledSurface, 1, 1) |
+      util_bitpack_uint(values->HalfPitchforChroma, 2, 2) |
+      util_bitpack_uint(values->SurfacePitch, 3, 19) |
+      util_bitpack_uint(values->InterleaveChroma, 27, 27) |
+      util_bitpack_uint(values->SurfaceFormat, 28, 31);
 
    dw[4] =
-      __gen_uint(values->YOffsetforUCb, 0, 14) |
-      __gen_uint(values->XOffsetforUCb, 16, 30);
+      util_bitpack_uint(values->YOffsetforUCb, 0, 14) |
+      util_bitpack_uint(values->XOffsetforUCb, 16, 30);
 
    dw[5] =
-      __gen_uint(values->YOffsetforVCr, 0, 15) |
-      __gen_uint(values->XOffsetforVCr, 16, 28);
+      util_bitpack_uint(values->YOffsetforVCr, 0, 15) |
+      util_bitpack_uint(values->XOffsetforVCr, 16, 28);
 }
 
 #define GFX7_MFX_VC1_DIRECTMODE_STATE_length      3
@@ -10830,23 +10702,23 @@ GFX7_MFX_VC1_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->DirectMVWriteBufferCacheabilityControl, 0, 1) |
-      __gen_uint(values->DirectMVWriteBufferGraphicsDataType, 2, 2) |
-      __gen_uint(values->DirectMVWriteBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->DirectMVWriteBufferCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->DirectMVWriteBufferGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->DirectMVWriteBufferArbitrationPriorityControl, 4, 5);
    dw[1] = __gen_address(data, &dw[1], values->DirectMVWriteBufferAddress, v1, 6, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->DirectMVReadBufferCacheabilityControl, 0, 1) |
-      __gen_uint(values->DirectMVReadBufferGraphicsDataType, 2, 2) |
-      __gen_uint(values->DirectMVReadBufferArbitrationPriorityControl, 4, 5);
+      util_bitpack_uint(values->DirectMVReadBufferCacheabilityControl, 0, 1) |
+      util_bitpack_uint(values->DirectMVReadBufferGraphicsDataType, 2, 2) |
+      util_bitpack_uint(values->DirectMVReadBufferArbitrationPriorityControl, 4, 5);
    dw[2] = __gen_address(data, &dw[2], values->DirectMVReadBufferAddress, v2, 6, 31);
 }
 
@@ -10898,43 +10770,43 @@ GFX7_MFX_VC1_PRED_PIPE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 11) |
-      __gen_uint(values->SubOpcodeB, 16, 20) |
-      __gen_uint(values->SubOpcodeA, 21, 23) |
-      __gen_uint(values->MediaCommandOpcode, 24, 26) |
-      __gen_uint(values->Pipeline, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 11) |
+      util_bitpack_uint(values->SubOpcodeB, 16, 20) |
+      util_bitpack_uint(values->SubOpcodeA, 21, 23) |
+      util_bitpack_uint(values->MediaCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->Pipeline, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->ReferenceFrameBoundaryReplicationMode, 4, 7) |
-      __gen_uint(values->Vin_intensitycomp_Single_BWDen, 8, 9) |
-      __gen_uint(values->Vin_intensitycomp_Single_FWDen, 10, 11) |
-      __gen_uint(values->Vin_intensitycomp_Double_BWDen, 12, 13) |
-      __gen_uint(values->Vin_intensitycomp_Double_FWDen, 14, 15);
+      util_bitpack_uint(values->ReferenceFrameBoundaryReplicationMode, 4, 7) |
+      util_bitpack_uint(values->Vin_intensitycomp_Single_BWDen, 8, 9) |
+      util_bitpack_uint(values->Vin_intensitycomp_Single_FWDen, 10, 11) |
+      util_bitpack_uint(values->Vin_intensitycomp_Double_BWDen, 12, 13) |
+      util_bitpack_uint(values->Vin_intensitycomp_Double_FWDen, 14, 15);
 
    dw[2] =
-      __gen_uint(values->LumScale1singleFWD, 0, 5) |
-      __gen_uint(values->LumScale2singleFWD, 8, 13) |
-      __gen_uint(values->LumShift1singleFWD, 16, 21) |
-      __gen_uint(values->LumShift2singleFWD, 24, 29);
+      util_bitpack_uint(values->LumScale1singleFWD, 0, 5) |
+      util_bitpack_uint(values->LumScale2singleFWD, 8, 13) |
+      util_bitpack_uint(values->LumShift1singleFWD, 16, 21) |
+      util_bitpack_uint(values->LumShift2singleFWD, 24, 29);
 
    dw[3] =
-      __gen_uint(values->LumScale1doubleFWD, 0, 5) |
-      __gen_uint(values->LumScale2doubleFWD, 8, 13) |
-      __gen_uint(values->LumShift1doubleFWD, 16, 21) |
-      __gen_uint(values->LumShift2doubleFWD, 24, 29);
+      util_bitpack_uint(values->LumScale1doubleFWD, 0, 5) |
+      util_bitpack_uint(values->LumScale2doubleFWD, 8, 13) |
+      util_bitpack_uint(values->LumShift1doubleFWD, 16, 21) |
+      util_bitpack_uint(values->LumShift2doubleFWD, 24, 29);
 
    dw[4] =
-      __gen_uint(values->LumScale1singleBWD, 0, 5) |
-      __gen_uint(values->LumScale2singleBWD, 8, 13) |
-      __gen_uint(values->LumShift1singleBWD, 16, 21) |
-      __gen_uint(values->LumShift2singleBWD, 24, 29);
+      util_bitpack_uint(values->LumScale1singleBWD, 0, 5) |
+      util_bitpack_uint(values->LumScale2singleBWD, 8, 13) |
+      util_bitpack_uint(values->LumShift1singleBWD, 16, 21) |
+      util_bitpack_uint(values->LumShift2singleBWD, 24, 29);
 
    dw[5] =
-      __gen_uint(values->LumScale1doubleBWD, 0, 5) |
-      __gen_uint(values->LumScale2doubleBWD, 8, 13) |
-      __gen_uint(values->LumShift1doubleBWD, 16, 21) |
-      __gen_uint(values->LumShift2doubleBWD, 24, 29);
+      util_bitpack_uint(values->LumScale1doubleBWD, 0, 5) |
+      util_bitpack_uint(values->LumScale2doubleBWD, 8, 13) |
+      util_bitpack_uint(values->LumShift1doubleBWD, 16, 21) |
+      util_bitpack_uint(values->LumShift2doubleBWD, 24, 29);
 }
 
 #define GFX7_MFX_WAIT_length                   1
@@ -10961,11 +10833,11 @@ GFX7_MFX_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 5) |
-      __gen_uint(values->MFXSyncControlFlag, 8, 8) |
-      __gen_uint(values->SubOpcode, 16, 26) |
-      __gen_uint(values->CommandSubtype, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 5) |
+      util_bitpack_uint(values->MFXSyncControlFlag, 8, 8) |
+      util_bitpack_uint(values->SubOpcode, 16, 26) |
+      util_bitpack_uint(values->CommandSubtype, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_ARB_CHECK_length               1
@@ -10987,8 +10859,8 @@ GFX7_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_ARB_ON_OFF_length              1
@@ -11011,9 +10883,9 @@ GFX7_MI_ARB_ON_OFF_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ArbitrationEnable, 0, 0) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->ArbitrationEnable, 0, 0) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_BATCH_BUFFER_END_length        1
@@ -11035,8 +10907,8 @@ GFX7_MI_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_BATCH_BUFFER_START_length      2
@@ -11065,11 +10937,11 @@ GFX7_MI_BATCH_BUFFER_START_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->AddressSpaceIndicator, 8, 8) |
-      __gen_uint(values->ClearCommandBufferEnable, 11, 11) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->AddressSpaceIndicator, 8, 8) |
+      util_bitpack_uint(values->ClearCommandBufferEnable, 11, 11) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = __gen_address(data, &dw[1], values->BatchBufferStartAddress, 0, 2, 31);
 }
@@ -11099,13 +10971,13 @@ GFX7_MI_CLFLUSH_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 9) |
-      __gen_uint(values->UseGlobalGTT, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 9) |
+      util_bitpack_uint(values->UseGlobalGTT, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->StartingCachelineOffset, 6, 11);
+      util_bitpack_uint(values->StartingCachelineOffset, 6, 11);
    dw[1] = __gen_address(data, &dw[1], values->PageBaseAddress, v1, 12, 31);
 
    dw[2] = __gen_address(data, &dw[2], values->PageBaseAddressHigh, 0, 0, 15);
@@ -11137,14 +11009,14 @@ GFX7_MI_CONDITIONAL_BATCH_BUFFER_END_pack(__attribute__((unused)) __gen_user_dat
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->CompareSemaphore, 21, 21) |
-      __gen_uint(values->UseGlobalGTT, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->CompareSemaphore, 21, 21) |
+      util_bitpack_uint(values->UseGlobalGTT, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->CompareDataDword, 0, 31);
+      util_bitpack_uint(values->CompareDataDword, 0, 31);
 }
 
 #define GFX7_MI_FLUSH_length                   1
@@ -11177,13 +11049,13 @@ GFX7_MI_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->StateInstructionCacheInvalidate, 1, 1) |
-      __gen_uint(values->RenderCacheFlushInhibit, 2, 2) |
-      __gen_uint(values->GlobalSnapshotCountReset, 3, 3) |
-      __gen_uint(values->GenericMediaStateClear, 4, 4) |
-      __gen_uint(values->IndirectStatePointersDisable, 5, 5) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->StateInstructionCacheInvalidate, 1, 1) |
+      util_bitpack_uint(values->RenderCacheFlushInhibit, 2, 2) |
+      util_bitpack_uint(values->GlobalSnapshotCountReset, 3, 3) |
+      util_bitpack_uint(values->GenericMediaStateClear, 4, 4) |
+      util_bitpack_uint(values->IndirectStatePointersDisable, 5, 5) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_FLUSH_DW_length                4
@@ -11218,25 +11090,25 @@ GFX7_MI_FLUSH_DW_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 5) |
-      __gen_uint(values->VideoPipelineCacheInvalidate, 7, 7) |
-      __gen_uint(values->NotifyEnable, 8, 8) |
-      __gen_uint(values->PostSyncOperation, 14, 15) |
-      __gen_uint(values->SynchronizeGFDTSurface, 17, 17) |
-      __gen_uint(values->TLBInvalidate, 18, 18) |
-      __gen_uint(values->StoreDataIndex, 21, 21) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 5) |
+      util_bitpack_uint(values->VideoPipelineCacheInvalidate, 7, 7) |
+      util_bitpack_uint(values->NotifyEnable, 8, 8) |
+      util_bitpack_uint(values->PostSyncOperation, 14, 15) |
+      util_bitpack_uint(values->SynchronizeGFDTSurface, 17, 17) |
+      util_bitpack_uint(values->TLBInvalidate, 18, 18) |
+      util_bitpack_uint(values->StoreDataIndex, 21, 21) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->DestinationAddressType, 2, 2);
+      util_bitpack_uint(values->DestinationAddressType, 2, 2);
    dw[1] = __gen_address(data, &dw[1], values->Address, v1, 3, 31);
 
    dw[2] =
-      __gen_uint(values->ImmediateData[0], 0, 31);
+      util_bitpack_uint(values->ImmediateData[0], 0, 31);
 
    dw[3] =
-      __gen_uint(values->ImmediateData[1], 0, 31);
+      util_bitpack_uint(values->ImmediateData[1], 0, 31);
 }
 
 #define GFX7_MI_LOAD_REGISTER_IMM_length       3
@@ -11264,16 +11136,16 @@ GFX7_MI_LOAD_REGISTER_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->ByteWriteDisables, 8, 11) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->ByteWriteDisables, 8, 11) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->RegisterOffset, 2, 22);
 
    dw[2] =
-      __gen_uint(values->DataDWord, 0, 31);
+      util_bitpack_uint(values->DataDWord, 0, 31);
 }
 
 #define GFX7_MI_LOAD_REGISTER_MEM_length       3
@@ -11301,11 +11173,11 @@ GFX7_MI_LOAD_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->AsyncModeEnable, 21, 21) |
-      __gen_uint(values->UseGlobalGTT, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->AsyncModeEnable, 21, 21) |
+      util_bitpack_uint(values->UseGlobalGTT, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->RegisterAddress, 2, 22);
@@ -11334,10 +11206,10 @@ GFX7_MI_NOOP_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->IdentificationNumber, 0, 21) |
-      __gen_uint(values->IdentificationNumberRegisterWriteEnable, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->IdentificationNumber, 0, 21) |
+      util_bitpack_uint(values->IdentificationNumberRegisterWriteEnable, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_PREDICATE_length               1
@@ -11373,11 +11245,11 @@ GFX7_MI_PREDICATE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->CompareOperation, 0, 1) |
-      __gen_uint(values->CombineOperation, 3, 4) |
-      __gen_uint(values->LoadOperation, 6, 7) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->CompareOperation, 0, 1) |
+      util_bitpack_uint(values->CombineOperation, 3, 4) |
+      util_bitpack_uint(values->LoadOperation, 6, 7) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_REPORT_HEAD_length             1
@@ -11399,8 +11271,8 @@ GFX7_MI_REPORT_HEAD_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_REPORT_PERF_COUNT_length       3
@@ -11427,16 +11299,16 @@ GFX7_MI_REPORT_PERF_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 5) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 5) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->UseGlobalGTT, 0, 0);
+      util_bitpack_uint(values->UseGlobalGTT, 0, 0);
    dw[1] = __gen_address(data, &dw[1], values->MemoryAddress, v1, 6, 31);
 
    dw[2] =
-      __gen_uint(values->ReportID, 0, 31);
+      util_bitpack_uint(values->ReportID, 0, 31);
 }
 
 #define GFX7_MI_SEMAPHORE_MBOX_length          3
@@ -11465,13 +11337,13 @@ GFX7_MI_SEMAPHORE_MBOX_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->RegisterSelect, 16, 17) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->RegisterSelect, 16, 17) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->SemaphoreDataDword, 0, 31);
+      util_bitpack_uint(values->SemaphoreDataDword, 0, 31);
 
    dw[2] = 0;
 }
@@ -11503,16 +11375,16 @@ GFX7_MI_SET_CONTEXT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->RestoreInhibit, 0, 0) |
-      __gen_uint(values->ForceRestore, 1, 1) |
-      __gen_uint(values->ExtendedStateRestoreEnable, 2, 2) |
-      __gen_uint(values->ExtendedStateSaveEnable, 3, 3) |
-      __gen_uint(values->ReservedMustbe1, 8, 8);
+      util_bitpack_uint(values->RestoreInhibit, 0, 0) |
+      util_bitpack_uint(values->ForceRestore, 1, 1) |
+      util_bitpack_uint(values->ExtendedStateRestoreEnable, 2, 2) |
+      util_bitpack_uint(values->ExtendedStateSaveEnable, 3, 3) |
+      util_bitpack_uint(values->ReservedMustbe1, 8, 8);
    dw[1] = __gen_address(data, &dw[1], values->LogicalContextAddress, v1, 12, 31);
 }
 
@@ -11541,19 +11413,19 @@ GFX7_MI_STORE_DATA_IMM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 5) |
-      __gen_uint(values->UseGlobalGTT, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 5) |
+      util_bitpack_uint(values->UseGlobalGTT, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] = 0;
 
    const uint32_t v2 =
-      __gen_uint(values->CoreModeEnable, 0, 0);
+      util_bitpack_uint(values->CoreModeEnable, 0, 0);
    dw[2] = __gen_address(data, &dw[2], values->Address, v2, 2, 31);
 
    const uint64_t v3 =
-      __gen_uint(values->ImmediateData, 0, 63);
+      util_bitpack_uint(values->ImmediateData, 0, 63);
    dw[3] = v3;
    dw[4] = v3 >> 32;
 }
@@ -11582,15 +11454,15 @@ GFX7_MI_STORE_DATA_INDEX_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->Offset, 2, 11);
+      util_bitpack_uint(values->Offset, 2, 11);
 
    dw[2] =
-      __gen_uint(values->DataDWord0, 0, 31);
+      util_bitpack_uint(values->DataDWord0, 0, 31);
 }
 
 #define GFX7_MI_STORE_REGISTER_MEM_length      3
@@ -11617,10 +11489,10 @@ GFX7_MI_STORE_REGISTER_MEM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->UseGlobalGTT, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->UseGlobalGTT, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->RegisterAddress, 2, 22);
@@ -11648,9 +11520,9 @@ GFX7_MI_SUSPEND_FLUSH_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->SuspendFlush, 0, 0) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->SuspendFlush, 0, 0) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_TOPOLOGY_FILTER_length         1
@@ -11673,9 +11545,9 @@ GFX7_MI_TOPOLOGY_FILTER_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->TopologyFilterValue, 0, 5) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->TopologyFilterValue, 0, 5) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_URB_CLEAR_length               2
@@ -11701,13 +11573,13 @@ GFX7_MI_URB_CLEAR_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->URBAddress, 0, 13) |
-      __gen_uint(values->URBClearLength, 16, 28);
+      util_bitpack_uint(values->URBClearLength, 16, 28);
 }
 
 #define GFX7_MI_USER_INTERRUPT_length          1
@@ -11729,8 +11601,8 @@ GFX7_MI_USER_INTERRUPT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_MI_WAIT_FOR_EVENT_length          1
@@ -11769,24 +11641,24 @@ GFX7_MI_WAIT_FOR_EVENT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DisplayPipeAScanLineWaitEnable, 0, 0) |
-      __gen_uint(values->DisplayPlaneAFlipPendingWaitEnable, 1, 1) |
-      __gen_uint(values->DisplaySpriteAFlipPendingWaitEnable, 2, 2) |
-      __gen_uint(values->DisplayPipeAVerticalBlankWaitEnable, 3, 3) |
-      __gen_uint(values->DisplayPipeAHorizontalBlankWaitEnable, 5, 5) |
-      __gen_uint(values->DisplayPipeBScanLineWaitEnable, 8, 8) |
-      __gen_uint(values->DisplayPlaneBFlipPendingWaitEnable, 9, 9) |
-      __gen_uint(values->DisplaySpriteBFlipPendingWaitEnable, 10, 10) |
-      __gen_uint(values->DisplayPipeBVerticalBlankWaitEnable, 11, 11) |
-      __gen_uint(values->DisplayPipeBHorizontalBlankWaitEnable, 13, 13) |
-      __gen_uint(values->DisplayPipeCScanLineWaitEnable, 14, 14) |
-      __gen_uint(values->DisplayPlaneCFlipPendingWaitEnable, 15, 15) |
-      __gen_uint(values->ConditionCodeWaitSelect, 16, 19) |
-      __gen_uint(values->DisplaySpriteCFlipPendingWaitEnable, 20, 20) |
-      __gen_uint(values->DisplayPipeCVerticalBlankWaitEnable, 21, 21) |
-      __gen_uint(values->DisplayPipeCHorizontalBlankWaitEnable, 22, 22) |
-      __gen_uint(values->MICommandOpcode, 23, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DisplayPipeAScanLineWaitEnable, 0, 0) |
+      util_bitpack_uint(values->DisplayPlaneAFlipPendingWaitEnable, 1, 1) |
+      util_bitpack_uint(values->DisplaySpriteAFlipPendingWaitEnable, 2, 2) |
+      util_bitpack_uint(values->DisplayPipeAVerticalBlankWaitEnable, 3, 3) |
+      util_bitpack_uint(values->DisplayPipeAHorizontalBlankWaitEnable, 5, 5) |
+      util_bitpack_uint(values->DisplayPipeBScanLineWaitEnable, 8, 8) |
+      util_bitpack_uint(values->DisplayPlaneBFlipPendingWaitEnable, 9, 9) |
+      util_bitpack_uint(values->DisplaySpriteBFlipPendingWaitEnable, 10, 10) |
+      util_bitpack_uint(values->DisplayPipeBVerticalBlankWaitEnable, 11, 11) |
+      util_bitpack_uint(values->DisplayPipeBHorizontalBlankWaitEnable, 13, 13) |
+      util_bitpack_uint(values->DisplayPipeCScanLineWaitEnable, 14, 14) |
+      util_bitpack_uint(values->DisplayPlaneCFlipPendingWaitEnable, 15, 15) |
+      util_bitpack_uint(values->ConditionCodeWaitSelect, 16, 19) |
+      util_bitpack_uint(values->DisplaySpriteCFlipPendingWaitEnable, 20, 20) |
+      util_bitpack_uint(values->DisplayPipeCVerticalBlankWaitEnable, 21, 21) |
+      util_bitpack_uint(values->DisplayPipeCHorizontalBlankWaitEnable, 22, 22) |
+      util_bitpack_uint(values->MICommandOpcode, 23, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_PIPELINE_SELECT_length            1
@@ -11816,11 +11688,11 @@ GFX7_PIPELINE_SELECT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->PipelineSelection, 0, 1) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->PipelineSelection, 0, 1) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 }
 
 #define GFX7_PIPE_CONTROL_length               5
@@ -11879,39 +11751,39 @@ GFX7_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
-      __gen_uint(values->DepthCacheFlushEnable, 0, 0) |
-      __gen_uint(values->StallAtPixelScoreboard, 1, 1) |
-      __gen_uint(values->StateCacheInvalidationEnable, 2, 2) |
-      __gen_uint(values->ConstantCacheInvalidationEnable, 3, 3) |
-      __gen_uint(values->VFCacheInvalidationEnable, 4, 4) |
-      __gen_uint(values->DCFlushEnable, 5, 5) |
-      __gen_uint(values->PipeControlFlushEnable, 7, 7) |
-      __gen_uint(values->NotifyEnable, 8, 8) |
-      __gen_uint(values->IndirectStatePointersDisable, 9, 9) |
-      __gen_uint(values->TextureCacheInvalidationEnable, 10, 10) |
-      __gen_uint(values->InstructionCacheInvalidateEnable, 11, 11) |
-      __gen_uint(values->RenderTargetCacheFlushEnable, 12, 12) |
-      __gen_uint(values->DepthStallEnable, 13, 13) |
-      __gen_uint(values->PostSyncOperation, 14, 15) |
-      __gen_uint(values->GenericMediaStateClear, 16, 16) |
-      __gen_uint(values->TLBInvalidate, 18, 18) |
-      __gen_uint(values->GlobalSnapshotCountReset, 19, 19) |
-      __gen_uint(values->CommandStreamerStallEnable, 20, 20) |
-      __gen_uint(values->StoreDataIndex, 21, 21) |
-      __gen_uint(values->LRIPostSyncOperation, 23, 23) |
-      __gen_uint(values->DestinationAddressType, 24, 24);
+      util_bitpack_uint(values->DepthCacheFlushEnable, 0, 0) |
+      util_bitpack_uint(values->StallAtPixelScoreboard, 1, 1) |
+      util_bitpack_uint(values->StateCacheInvalidationEnable, 2, 2) |
+      util_bitpack_uint(values->ConstantCacheInvalidationEnable, 3, 3) |
+      util_bitpack_uint(values->VFCacheInvalidationEnable, 4, 4) |
+      util_bitpack_uint(values->DCFlushEnable, 5, 5) |
+      util_bitpack_uint(values->PipeControlFlushEnable, 7, 7) |
+      util_bitpack_uint(values->NotifyEnable, 8, 8) |
+      util_bitpack_uint(values->IndirectStatePointersDisable, 9, 9) |
+      util_bitpack_uint(values->TextureCacheInvalidationEnable, 10, 10) |
+      util_bitpack_uint(values->InstructionCacheInvalidateEnable, 11, 11) |
+      util_bitpack_uint(values->RenderTargetCacheFlushEnable, 12, 12) |
+      util_bitpack_uint(values->DepthStallEnable, 13, 13) |
+      util_bitpack_uint(values->PostSyncOperation, 14, 15) |
+      util_bitpack_uint(values->GenericMediaStateClear, 16, 16) |
+      util_bitpack_uint(values->TLBInvalidate, 18, 18) |
+      util_bitpack_uint(values->GlobalSnapshotCountReset, 19, 19) |
+      util_bitpack_uint(values->CommandStreamerStallEnable, 20, 20) |
+      util_bitpack_uint(values->StoreDataIndex, 21, 21) |
+      util_bitpack_uint(values->LRIPostSyncOperation, 23, 23) |
+      util_bitpack_uint(values->DestinationAddressType, 24, 24);
 
    dw[2] = __gen_address(data, &dw[2], values->Address, 0, 2, 31);
 
    const uint64_t v3 =
-      __gen_uint(values->ImmediateData, 0, 63);
+      util_bitpack_uint(values->ImmediateData, 0, 63);
    dw[3] = v3;
    dw[4] = v3 >> 32;
 }
@@ -11966,53 +11838,53 @@ GFX7_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint(values->StatelessDataPortAccessForceWriteThru, 3, 3) |
-      __gen_uint_nonzero(values->StatelessDataPortAccessMOCS, 4, 7) |
-      __gen_uint_nonzero(values->GeneralStateMOCS, 8, 11);
+      util_bitpack_uint(values->GeneralStateBaseAddressModifyEnable, 0, 0) |
+      util_bitpack_uint(values->StatelessDataPortAccessForceWriteThru, 3, 3) |
+      util_bitpack_uint_nonzero(values->StatelessDataPortAccessMOCS, 4, 7) |
+      util_bitpack_uint_nonzero(values->GeneralStateMOCS, 8, 11);
    dw[1] = __gen_address(data, &dw[1], values->GeneralStateBaseAddress, v1, 12, 31);
 
    const uint32_t v2 =
-      __gen_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint_nonzero(values->SurfaceStateMOCS, 8, 11);
+      util_bitpack_uint(values->SurfaceStateBaseAddressModifyEnable, 0, 0) |
+      util_bitpack_uint_nonzero(values->SurfaceStateMOCS, 8, 11);
    dw[2] = __gen_address(data, &dw[2], values->SurfaceStateBaseAddress, v2, 12, 31);
 
    const uint32_t v3 =
-      __gen_uint(values->DynamicStateBaseAddressModifyEnable, 0, 0) |
-      __gen_uint_nonzero(values->DynamicStateMOCS, 8, 11);
+      util_bitpack_uint(values->DynamicStateBaseAddressModifyEnable, 0, 0) |
+      util_bitpack_uint_nonzero(values->DynamicStateMOCS, 8, 11);
    dw[3] = __gen_address(data, &dw[3], values->DynamicStateBaseAddress, v3, 12, 31);
 
    const uint32_t v4 =
-      __gen_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0) |
-      __gen_uint_nonzero(values->IndirectObjectMOCS, 8, 11);
+      util_bitpack_uint(values->IndirectObjectBaseAddressModifyEnable, 0, 0) |
+      util_bitpack_uint_nonzero(values->IndirectObjectMOCS, 8, 11);
    dw[4] = __gen_address(data, &dw[4], values->IndirectObjectBaseAddress, v4, 12, 31);
 
    const uint32_t v5 =
-      __gen_uint(values->InstructionBaseAddressModifyEnable, 0, 0) |
-      __gen_uint_nonzero(values->InstructionMOCS, 8, 11);
+      util_bitpack_uint(values->InstructionBaseAddressModifyEnable, 0, 0) |
+      util_bitpack_uint_nonzero(values->InstructionMOCS, 8, 11);
    dw[5] = __gen_address(data, &dw[5], values->InstructionBaseAddress, v5, 12, 31);
 
    const uint32_t v6 =
-      __gen_uint(values->GeneralStateAccessUpperBoundModifyEnable, 0, 0);
+      util_bitpack_uint(values->GeneralStateAccessUpperBoundModifyEnable, 0, 0);
    dw[6] = __gen_address(data, &dw[6], values->GeneralStateAccessUpperBound, v6, 12, 31);
 
    const uint32_t v7 =
-      __gen_uint(values->DynamicStateAccessUpperBoundModifyEnable, 0, 0);
+      util_bitpack_uint(values->DynamicStateAccessUpperBoundModifyEnable, 0, 0);
    dw[7] = __gen_address(data, &dw[7], values->DynamicStateAccessUpperBound, v7, 12, 31);
 
    const uint32_t v8 =
-      __gen_uint(values->IndirectObjectAccessUpperBoundModifyEnable, 0, 0);
+      util_bitpack_uint(values->IndirectObjectAccessUpperBoundModifyEnable, 0, 0);
    dw[8] = __gen_address(data, &dw[8], values->IndirectObjectAccessUpperBound, v8, 12, 31);
 
    const uint32_t v9 =
-      __gen_uint(values->InstructionAccessUpperBoundModifyEnable, 0, 0);
+      util_bitpack_uint(values->InstructionAccessUpperBoundModifyEnable, 0, 0);
    dw[9] = __gen_address(data, &dw[9], values->InstructionAccessUpperBound, v9, 12, 31);
 }
 
@@ -12043,14 +11915,14 @@ GFX7_STATE_PREFETCH_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint(values->PrefetchCount, 0, 2);
+      util_bitpack_uint(values->PrefetchCount, 0, 2);
    dw[1] = __gen_address(data, &dw[1], values->PrefetchPointer, v1, 6, 31);
 }
 
@@ -12080,11 +11952,11 @@ GFX7_STATE_SIP_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    dw[1] =
       __gen_offset(values->SystemInstructionPointer, 4, 31);
@@ -12117,14 +11989,14 @@ GFX7_SWTESS_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->DWordLength, 0, 7) |
-      __gen_uint(values->_3DCommandSubOpcode, 16, 23) |
-      __gen_uint(values->_3DCommandOpcode, 24, 26) |
-      __gen_uint(values->CommandSubType, 27, 28) |
-      __gen_uint(values->CommandType, 29, 31);
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
 
    const uint32_t v1 =
-      __gen_uint_nonzero(values->SWTessellationMOCS, 8, 11);
+      util_bitpack_uint_nonzero(values->SWTessellationMOCS, 8, 11);
    dw[1] = __gen_address(data, &dw[1], values->SWTessellationBaseAddress, v1, 12, 31);
 }
 
@@ -12152,10 +12024,10 @@ GFX7_BCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->ValidBit, 0, 0) |
-      __gen_uint(values->FaultType, 1, 2) |
-      __gen_uint(values->SRCIDofFault, 3, 10) |
-      __gen_uint(values->GTTSEL, 11, 11);
+      util_bitpack_uint(values->ValidBit, 0, 0) |
+      util_bitpack_uint(values->FaultType, 1, 2) |
+      util_bitpack_uint(values->SRCIDofFault, 3, 10) |
+      util_bitpack_uint(values->GTTSEL, 11, 11);
    dw[0] = __gen_address(data, &dw[0], values->VirtualAddressofFault, v0, 12, 31);
 }
 
@@ -12176,10 +12048,10 @@ GFX7_BCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->RingEnable, 0, 0) |
-      __gen_uint(values->BlitterIDLE, 1, 1) |
-      __gen_uint(values->GABIDLE, 2, 2) |
-      __gen_uint(values->BCSDone, 3, 3);
+      util_bitpack_uint(values->RingEnable, 0, 0) |
+      util_bitpack_uint(values->BlitterIDLE, 1, 1) |
+      util_bitpack_uint(values->GABIDLE, 2, 2) |
+      util_bitpack_uint(values->BCSDone, 3, 3);
 }
 
 #define GFX7_BCS_RING_BUFFER_CTL_num      0x2203c
@@ -12205,12 +12077,12 @@ GFX7_BCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->RingBufferEnable, 0, 0) |
-      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
-      __gen_uint(values->DisableRegisterAccesses, 8, 8) |
-      __gen_uint(values->SemaphoreWait, 10, 10) |
-      __gen_uint(values->RBWait, 11, 11) |
-      __gen_uint(values->BufferLengthinpages1, 12, 20);
+      util_bitpack_uint(values->RingBufferEnable, 0, 0) |
+      util_bitpack_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      util_bitpack_uint(values->DisableRegisterAccesses, 8, 8) |
+      util_bitpack_uint(values->SemaphoreWait, 10, 10) |
+      util_bitpack_uint(values->RBWait, 11, 11) |
+      util_bitpack_uint(values->BufferLengthinpages1, 12, 20);
 }
 
 #define GFX7_CL_INVOCATION_COUNT_num      0x2338
@@ -12227,7 +12099,7 @@ GFX7_CL_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->CLInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->CLInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12246,7 +12118,7 @@ GFX7_CL_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->CLPrimitivesCountReport, 0, 63);
+      util_bitpack_uint(values->CLPrimitivesCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12265,7 +12137,7 @@ GFX7_CS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->CSInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->CSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12284,7 +12156,7 @@ GFX7_DS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->DSInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->DSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12310,14 +12182,14 @@ GFX7_ERR_INT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->PrimaryAGTTFaultStatus, 0, 0) |
-      __gen_uint(values->PrimaryBGTTFaultStatus, 1, 1) |
-      __gen_uint(values->SpriteAGTTFaultStatus, 2, 2) |
-      __gen_uint(values->SpriteBGTTFaultStatus, 3, 3) |
-      __gen_uint(values->CursorAGTTFaultStatus, 4, 4) |
-      __gen_uint(values->CursorBGTTFaultStatus, 5, 5) |
-      __gen_uint(values->Invalidpagetableentrydata, 6, 6) |
-      __gen_uint(values->InvalidGTTpagetableentry, 7, 7);
+      util_bitpack_uint(values->PrimaryAGTTFaultStatus, 0, 0) |
+      util_bitpack_uint(values->PrimaryBGTTFaultStatus, 1, 1) |
+      util_bitpack_uint(values->SpriteAGTTFaultStatus, 2, 2) |
+      util_bitpack_uint(values->SpriteBGTTFaultStatus, 3, 3) |
+      util_bitpack_uint(values->CursorAGTTFaultStatus, 4, 4) |
+      util_bitpack_uint(values->CursorBGTTFaultStatus, 5, 5) |
+      util_bitpack_uint(values->Invalidpagetableentrydata, 6, 6) |
+      util_bitpack_uint(values->InvalidGTTpagetableentry, 7, 7);
 }
 
 #define GFX7_GFX_ARB_ERROR_RPT_num        0x40a0
@@ -12342,15 +12214,15 @@ GFX7_GFX_ARB_ERROR_RPT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->TLBPageFaultError, 0, 0) |
-      __gen_uint(values->ContextPageFaultError, 1, 1) |
-      __gen_uint(values->InvalidPageDirectoryentryerror, 2, 2) |
-      __gen_uint(values->HardwareStatusPageFaultError, 3, 3) |
-      __gen_uint(values->TLBPageVTDTranslationError, 4, 4) |
-      __gen_uint(values->ContextPageVTDTranslationError, 5, 5) |
-      __gen_uint(values->PageDirectoryEntryVTDTranslationError, 6, 6) |
-      __gen_uint(values->HardwareStatusPageVTDTranslationError, 7, 7) |
-      __gen_uint(values->UnloadedPDError, 8, 8);
+      util_bitpack_uint(values->TLBPageFaultError, 0, 0) |
+      util_bitpack_uint(values->ContextPageFaultError, 1, 1) |
+      util_bitpack_uint(values->InvalidPageDirectoryentryerror, 2, 2) |
+      util_bitpack_uint(values->HardwareStatusPageFaultError, 3, 3) |
+      util_bitpack_uint(values->TLBPageVTDTranslationError, 4, 4) |
+      util_bitpack_uint(values->ContextPageVTDTranslationError, 5, 5) |
+      util_bitpack_uint(values->PageDirectoryEntryVTDTranslationError, 6, 6) |
+      util_bitpack_uint(values->HardwareStatusPageVTDTranslationError, 7, 7) |
+      util_bitpack_uint(values->UnloadedPDError, 8, 8);
 }
 
 #define GFX7_GS_INVOCATION_COUNT_num      0x2328
@@ -12367,7 +12239,7 @@ GFX7_GS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->GSInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->GSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12386,7 +12258,7 @@ GFX7_GS_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->GSPrimitivesCountReport, 0, 63);
+      util_bitpack_uint(values->GSPrimitivesCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12405,7 +12277,7 @@ GFX7_HS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->HSInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->HSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12424,7 +12296,7 @@ GFX7_IA_PRIMITIVES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->IAPrimitivesCountReport, 0, 63);
+      util_bitpack_uint(values->IAPrimitivesCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12443,7 +12315,7 @@ GFX7_IA_VERTICES_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->IAVerticesCountReport, 0, 63);
+      util_bitpack_uint(values->IAVerticesCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12481,26 +12353,26 @@ GFX7_INSTDONE_1_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->PRB0RingEnable, 0, 0) |
-      __gen_uint(values->VFGDone, 1, 1) |
-      __gen_uint(values->VSDone, 2, 2) |
-      __gen_uint(values->HSDone, 3, 3) |
-      __gen_uint(values->TEDone, 4, 4) |
-      __gen_uint(values->DSDone, 5, 5) |
-      __gen_uint(values->GSDone, 6, 6) |
-      __gen_uint(values->SOLDone, 7, 7) |
-      __gen_uint(values->CLDone, 8, 8) |
-      __gen_uint(values->SFDone, 9, 9) |
-      __gen_uint(values->TDGDone, 12, 12) |
-      __gen_uint(values->URBMDone, 13, 13) |
-      __gen_uint(values->SVGDone, 14, 14) |
-      __gen_uint(values->GAFSDone, 15, 15) |
-      __gen_uint(values->VFEDone, 16, 16) |
-      __gen_uint(values->TSGDone, 17, 17) |
-      __gen_uint(values->GAFMDone, 18, 18) |
-      __gen_uint(values->GAMDone, 19, 19) |
-      __gen_uint(values->SDEDone, 22, 22) |
-      __gen_uint(values->RCCFBCCSDone, 23, 23);
+      util_bitpack_uint(values->PRB0RingEnable, 0, 0) |
+      util_bitpack_uint(values->VFGDone, 1, 1) |
+      util_bitpack_uint(values->VSDone, 2, 2) |
+      util_bitpack_uint(values->HSDone, 3, 3) |
+      util_bitpack_uint(values->TEDone, 4, 4) |
+      util_bitpack_uint(values->DSDone, 5, 5) |
+      util_bitpack_uint(values->GSDone, 6, 6) |
+      util_bitpack_uint(values->SOLDone, 7, 7) |
+      util_bitpack_uint(values->CLDone, 8, 8) |
+      util_bitpack_uint(values->SFDone, 9, 9) |
+      util_bitpack_uint(values->TDGDone, 12, 12) |
+      util_bitpack_uint(values->URBMDone, 13, 13) |
+      util_bitpack_uint(values->SVGDone, 14, 14) |
+      util_bitpack_uint(values->GAFSDone, 15, 15) |
+      util_bitpack_uint(values->VFEDone, 16, 16) |
+      util_bitpack_uint(values->TSGDone, 17, 17) |
+      util_bitpack_uint(values->GAFMDone, 18, 18) |
+      util_bitpack_uint(values->GAMDone, 19, 19) |
+      util_bitpack_uint(values->SDEDone, 22, 22) |
+      util_bitpack_uint(values->RCCFBCCSDone, 23, 23);
 }
 
 #define GFX7_INSTPM_num                   0x20c0
@@ -12524,14 +12396,14 @@ GFX7_INSTPM_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->_3DStateInstructionDisable, 1, 1) |
-      __gen_uint(values->_3DRenderingInstructionDisable, 2, 2) |
-      __gen_uint(values->MediaInstructionDisable, 3, 3) |
-      __gen_uint(values->CONSTANT_BUFFERAddressOffsetDisable, 6, 6) |
-      __gen_uint(values->_3DStateInstructionDisableMask, 17, 17) |
-      __gen_uint(values->_3DRenderingInstructionDisableMask, 18, 18) |
-      __gen_uint(values->MediaInstructionDisableMask, 19, 19) |
-      __gen_uint(values->CONSTANT_BUFFERAddressOffsetDisableMask, 22, 22);
+      util_bitpack_uint(values->_3DStateInstructionDisable, 1, 1) |
+      util_bitpack_uint(values->_3DRenderingInstructionDisable, 2, 2) |
+      util_bitpack_uint(values->MediaInstructionDisable, 3, 3) |
+      util_bitpack_uint(values->CONSTANT_BUFFERAddressOffsetDisable, 6, 6) |
+      util_bitpack_uint(values->_3DStateInstructionDisableMask, 17, 17) |
+      util_bitpack_uint(values->_3DRenderingInstructionDisableMask, 18, 18) |
+      util_bitpack_uint(values->MediaInstructionDisableMask, 19, 19) |
+      util_bitpack_uint(values->CONSTANT_BUFFERAddressOffsetDisableMask, 22, 22);
 }
 
 #define GFX7_L3CNTLREG2_num               0xb020
@@ -12555,14 +12427,14 @@ GFX7_L3CNTLREG2_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->SLMEnable, 0, 0) |
-      __gen_uint(values->URBAllocation, 1, 6) |
-      __gen_uint(values->URBLowBandwidth, 7, 7) |
-      __gen_uint(values->ALLAllocation, 8, 13) |
-      __gen_uint(values->ROAllocation, 14, 19) |
-      __gen_uint(values->ROLowBandwidth, 20, 20) |
-      __gen_uint(values->DCAllocation, 21, 26) |
-      __gen_uint(values->DCLowBandwidth, 27, 27);
+      util_bitpack_uint(values->SLMEnable, 0, 0) |
+      util_bitpack_uint(values->URBAllocation, 1, 6) |
+      util_bitpack_uint(values->URBLowBandwidth, 7, 7) |
+      util_bitpack_uint(values->ALLAllocation, 8, 13) |
+      util_bitpack_uint(values->ROAllocation, 14, 19) |
+      util_bitpack_uint(values->ROLowBandwidth, 20, 20) |
+      util_bitpack_uint(values->DCAllocation, 21, 26) |
+      util_bitpack_uint(values->DCLowBandwidth, 27, 27);
 }
 
 #define GFX7_L3CNTLREG3_num               0xb024
@@ -12584,22 +12456,22 @@ GFX7_L3CNTLREG3_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->ISAllocation, 1, 6) |
-      __gen_uint(values->ISLowBandwidth, 7, 7) |
-      __gen_uint(values->CAllocation, 8, 13) |
-      __gen_uint(values->CLowBandwidth, 14, 14) |
-      __gen_uint(values->TAllocation, 15, 20) |
-      __gen_uint(values->TLowBandwidth, 21, 21);
+      util_bitpack_uint(values->ISAllocation, 1, 6) |
+      util_bitpack_uint(values->ISLowBandwidth, 7, 7) |
+      util_bitpack_uint(values->CAllocation, 8, 13) |
+      util_bitpack_uint(values->CLowBandwidth, 14, 14) |
+      util_bitpack_uint(values->TAllocation, 15, 20) |
+      util_bitpack_uint(values->TLowBandwidth, 21, 21);
 }
 
 #define GFX7_L3SQCREG1_num                0xb010
 #define GFX7_L3SQCREG1_length                  1
 struct GFX7_L3SQCREG1 {
+   uint32_t                             L3SQHighPriorityCreditInitialization;
+#define SQHPCI_DEFAULT                           3
    uint32_t                             L3SQGeneralPriorityCreditInitialization;
 #define SQGPCI_DEFAULT                           7
 #define BYT_SQGPCI_DEFAULT                       13
-   uint32_t                             L3SQHighPriorityCreditInitialization;
-#define SQHPCI_DEFAULT                           3
    bool                                 ConvertDC_UC;
    bool                                 ConvertIS_UC;
    bool                                 ConvertC_UC;
@@ -12614,12 +12486,12 @@ GFX7_L3SQCREG1_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->L3SQGeneralPriorityCreditInitialization, 20, 23) |
-      __gen_uint(values->L3SQHighPriorityCreditInitialization, 16, 19) |
-      __gen_uint(values->ConvertDC_UC, 24, 24) |
-      __gen_uint(values->ConvertIS_UC, 25, 25) |
-      __gen_uint(values->ConvertC_UC, 26, 26) |
-      __gen_uint(values->ConvertT_UC, 27, 27);
+      util_bitpack_uint(values->L3SQHighPriorityCreditInitialization, 16, 19) |
+      util_bitpack_uint(values->L3SQGeneralPriorityCreditInitialization, 20, 23) |
+      util_bitpack_uint(values->ConvertDC_UC, 24, 24) |
+      util_bitpack_uint(values->ConvertIS_UC, 25, 25) |
+      util_bitpack_uint(values->ConvertC_UC, 26, 26) |
+      util_bitpack_uint(values->ConvertT_UC, 27, 27);
 }
 
 #define GFX7_PS_INVOCATION_COUNT_num      0x2348
@@ -12636,7 +12508,7 @@ GFX7_PS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->PSInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->PSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12665,10 +12537,10 @@ GFX7_RCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->ValidBit, 0, 0) |
-      __gen_uint(values->FaultType, 1, 2) |
-      __gen_uint(values->SRCIDofFault, 3, 10) |
-      __gen_uint(values->GTTSEL, 11, 11);
+      util_bitpack_uint(values->ValidBit, 0, 0) |
+      util_bitpack_uint(values->FaultType, 1, 2) |
+      util_bitpack_uint(values->SRCIDofFault, 3, 10) |
+      util_bitpack_uint(values->GTTSEL, 11, 11);
    dw[0] = __gen_address(data, &dw[0], values->VirtualAddressofFault, v0, 12, 31);
 }
 
@@ -12693,11 +12565,11 @@ GFX7_RCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->RingBufferEnable, 0, 0) |
-      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
-      __gen_uint(values->SemaphoreWait, 10, 10) |
-      __gen_uint(values->RBWait, 11, 11) |
-      __gen_uint(values->BufferLengthinpages1, 12, 20);
+      util_bitpack_uint(values->RingBufferEnable, 0, 0) |
+      util_bitpack_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      util_bitpack_uint(values->SemaphoreWait, 10, 10) |
+      util_bitpack_uint(values->RBWait, 11, 11) |
+      util_bitpack_uint(values->BufferLengthinpages1, 12, 20);
 }
 
 #define GFX7_ROW_INSTDONE_num             0xe164
@@ -12730,23 +12602,23 @@ GFX7_ROW_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->BCDone, 0, 0) |
-      __gen_uint(values->PSDDone, 1, 1) |
-      __gen_uint(values->DCDone, 2, 2) |
-      __gen_uint(values->DAPRDone, 3, 3) |
-      __gen_uint(values->TDLDone, 6, 6) |
-      __gen_uint(values->GWDone, 8, 8) |
-      __gen_uint(values->ICDone, 12, 12) |
-      __gen_uint(values->EU00DoneSS0, 16, 16) |
-      __gen_uint(values->EU01DoneSS0, 17, 17) |
-      __gen_uint(values->EU02DoneSS0, 18, 18) |
-      __gen_uint(values->EU03DoneSS0, 19, 19) |
-      __gen_uint(values->MA0DoneSS0, 20, 20) |
-      __gen_uint(values->EU10DoneSS0, 21, 21) |
-      __gen_uint(values->EU11DoneSS0, 22, 22) |
-      __gen_uint(values->EU12DoneSS0, 23, 23) |
-      __gen_uint(values->EU13DoneSS0, 24, 24) |
-      __gen_uint(values->MA1Done, 25, 25);
+      util_bitpack_uint(values->BCDone, 0, 0) |
+      util_bitpack_uint(values->PSDDone, 1, 1) |
+      util_bitpack_uint(values->DCDone, 2, 2) |
+      util_bitpack_uint(values->DAPRDone, 3, 3) |
+      util_bitpack_uint(values->TDLDone, 6, 6) |
+      util_bitpack_uint(values->GWDone, 8, 8) |
+      util_bitpack_uint(values->ICDone, 12, 12) |
+      util_bitpack_uint(values->EU00DoneSS0, 16, 16) |
+      util_bitpack_uint(values->EU01DoneSS0, 17, 17) |
+      util_bitpack_uint(values->EU02DoneSS0, 18, 18) |
+      util_bitpack_uint(values->EU03DoneSS0, 19, 19) |
+      util_bitpack_uint(values->MA0DoneSS0, 20, 20) |
+      util_bitpack_uint(values->EU10DoneSS0, 21, 21) |
+      util_bitpack_uint(values->EU11DoneSS0, 22, 22) |
+      util_bitpack_uint(values->EU12DoneSS0, 23, 23) |
+      util_bitpack_uint(values->EU13DoneSS0, 24, 24) |
+      util_bitpack_uint(values->MA1Done, 25, 25);
 }
 
 #define GFX7_RPSTAT1_num                  0xa01c
@@ -12764,8 +12636,8 @@ GFX7_RPSTAT1_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->PreviousGTFrequency, 0, 6) |
-      __gen_uint(values->CurrentGTFrequency, 7, 14);
+      util_bitpack_uint(values->PreviousGTFrequency, 0, 6) |
+      util_bitpack_uint(values->CurrentGTFrequency, 7, 14);
 }
 
 #define GFX7_SAMPLER_INSTDONE_num         0xe160
@@ -12800,25 +12672,25 @@ GFX7_SAMPLER_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->VMEDone, 0, 0) |
-      __gen_uint(values->PL0Done, 1, 1) |
-      __gen_uint(values->SO0Done, 2, 2) |
-      __gen_uint(values->DG0Done, 3, 3) |
-      __gen_uint(values->FT0Done, 4, 4) |
-      __gen_uint(values->DM0Done, 5, 5) |
-      __gen_uint(values->SCDone, 6, 6) |
-      __gen_uint(values->FL0Done, 7, 7) |
-      __gen_uint(values->QCDone, 8, 8) |
-      __gen_uint(values->SVSMDone, 9, 9) |
-      __gen_uint(values->SI0Done, 10, 10) |
-      __gen_uint(values->MT0Done, 11, 11) |
-      __gen_uint(values->AVSDone, 12, 12) |
-      __gen_uint(values->IEFDone, 13, 13) |
-      __gen_uint(values->VDIDone, 14, 14) |
-      __gen_uint(values->SVSMARB3, 15, 15) |
-      __gen_uint(values->SVSMARB2, 16, 16) |
-      __gen_uint(values->SVSMARB1, 17, 17) |
-      __gen_uint(values->SVSMAdapter, 18, 18);
+      util_bitpack_uint(values->VMEDone, 0, 0) |
+      util_bitpack_uint(values->PL0Done, 1, 1) |
+      util_bitpack_uint(values->SO0Done, 2, 2) |
+      util_bitpack_uint(values->DG0Done, 3, 3) |
+      util_bitpack_uint(values->FT0Done, 4, 4) |
+      util_bitpack_uint(values->DM0Done, 5, 5) |
+      util_bitpack_uint(values->SCDone, 6, 6) |
+      util_bitpack_uint(values->FL0Done, 7, 7) |
+      util_bitpack_uint(values->QCDone, 8, 8) |
+      util_bitpack_uint(values->SVSMDone, 9, 9) |
+      util_bitpack_uint(values->SI0Done, 10, 10) |
+      util_bitpack_uint(values->MT0Done, 11, 11) |
+      util_bitpack_uint(values->AVSDone, 12, 12) |
+      util_bitpack_uint(values->IEFDone, 13, 13) |
+      util_bitpack_uint(values->VDIDone, 14, 14) |
+      util_bitpack_uint(values->SVSMARB3, 15, 15) |
+      util_bitpack_uint(values->SVSMARB2, 16, 16) |
+      util_bitpack_uint(values->SVSMARB1, 17, 17) |
+      util_bitpack_uint(values->SVSMAdapter, 18, 18);
 }
 
 #define GFX7_SC_INSTDONE_num              0x7100
@@ -12850,22 +12722,22 @@ GFX7_SC_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->SVLDone, 0, 0) |
-      __gen_uint(values->WMFEDone, 1, 1) |
-      __gen_uint(values->WMBEDone, 2, 2) |
-      __gen_uint(values->HIZDone, 3, 3) |
-      __gen_uint(values->STCDone, 4, 4) |
-      __gen_uint(values->IZDone, 5, 5) |
-      __gen_uint(values->SBEDone, 6, 6) |
-      __gen_uint(values->RCZDone, 8, 8) |
-      __gen_uint(values->RCCDone, 9, 9) |
-      __gen_uint(values->RCPBEDone, 10, 10) |
-      __gen_uint(values->RCPFEDone, 11, 11) |
-      __gen_uint(values->DAPBDone, 12, 12) |
-      __gen_uint(values->DAPRBEDone, 13, 13) |
-      __gen_uint(values->IECPDone, 14, 14) |
-      __gen_uint(values->SARBDone, 15, 15) |
-      __gen_uint(values->VSCDone, 16, 16);
+      util_bitpack_uint(values->SVLDone, 0, 0) |
+      util_bitpack_uint(values->WMFEDone, 1, 1) |
+      util_bitpack_uint(values->WMBEDone, 2, 2) |
+      util_bitpack_uint(values->HIZDone, 3, 3) |
+      util_bitpack_uint(values->STCDone, 4, 4) |
+      util_bitpack_uint(values->IZDone, 5, 5) |
+      util_bitpack_uint(values->SBEDone, 6, 6) |
+      util_bitpack_uint(values->RCZDone, 8, 8) |
+      util_bitpack_uint(values->RCCDone, 9, 9) |
+      util_bitpack_uint(values->RCPBEDone, 10, 10) |
+      util_bitpack_uint(values->RCPFEDone, 11, 11) |
+      util_bitpack_uint(values->DAPBDone, 12, 12) |
+      util_bitpack_uint(values->DAPRBEDone, 13, 13) |
+      util_bitpack_uint(values->IECPDone, 14, 14) |
+      util_bitpack_uint(values->SARBDone, 15, 15) |
+      util_bitpack_uint(values->VSCDone, 16, 16);
 }
 
 #define GFX7_SO_NUM_PRIMS_WRITTEN0_num    0x5200
@@ -12882,7 +12754,7 @@ GFX7_SO_NUM_PRIMS_WRITTEN0_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->NumPrimsWrittenCount, 0, 63);
+      util_bitpack_uint(values->NumPrimsWrittenCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12901,7 +12773,7 @@ GFX7_SO_NUM_PRIMS_WRITTEN1_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->NumPrimsWrittenCount, 0, 63);
+      util_bitpack_uint(values->NumPrimsWrittenCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12920,7 +12792,7 @@ GFX7_SO_NUM_PRIMS_WRITTEN2_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->NumPrimsWrittenCount, 0, 63);
+      util_bitpack_uint(values->NumPrimsWrittenCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12939,7 +12811,7 @@ GFX7_SO_NUM_PRIMS_WRITTEN3_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->NumPrimsWrittenCount, 0, 63);
+      util_bitpack_uint(values->NumPrimsWrittenCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12958,7 +12830,7 @@ GFX7_SO_PRIM_STORAGE_NEEDED0_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->PrimStorageNeededCount, 0, 63);
+      util_bitpack_uint(values->PrimStorageNeededCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12977,7 +12849,7 @@ GFX7_SO_PRIM_STORAGE_NEEDED1_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->PrimStorageNeededCount, 0, 63);
+      util_bitpack_uint(values->PrimStorageNeededCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -12996,7 +12868,7 @@ GFX7_SO_PRIM_STORAGE_NEEDED2_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->PrimStorageNeededCount, 0, 63);
+      util_bitpack_uint(values->PrimStorageNeededCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -13015,7 +12887,7 @@ GFX7_SO_PRIM_STORAGE_NEEDED3_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->PrimStorageNeededCount, 0, 63);
+      util_bitpack_uint(values->PrimStorageNeededCount, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }
@@ -13112,10 +12984,10 @@ GFX7_VCS_FAULT_REG_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint32_t v0 =
-      __gen_uint(values->ValidBit, 0, 0) |
-      __gen_uint(values->FaultType, 1, 2) |
-      __gen_uint(values->SRCIDofFault, 3, 10) |
-      __gen_uint(values->GTTSEL, 11, 11);
+      util_bitpack_uint(values->ValidBit, 0, 0) |
+      util_bitpack_uint(values->FaultType, 1, 2) |
+      util_bitpack_uint(values->SRCIDofFault, 3, 10) |
+      util_bitpack_uint(values->GTTSEL, 11, 11);
    dw[0] = __gen_address(data, &dw[0], values->VirtualAddressofFault, v0, 12, 31);
 }
 
@@ -13163,37 +13035,37 @@ GFX7_VCS_INSTDONE_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->RingEnable, 0, 0) |
-      __gen_uint(values->USBDone, 1, 1) |
-      __gen_uint(values->QRCDone, 2, 2) |
-      __gen_uint(values->SECDone, 3, 3) |
-      __gen_uint(values->MPCDone, 4, 4) |
-      __gen_uint(values->VFTDone, 5, 5) |
-      __gen_uint(values->BSPDone, 6, 6) |
-      __gen_uint(values->VLFDone, 7, 7) |
-      __gen_uint(values->VOPDone, 8, 8) |
-      __gen_uint(values->VMCDone, 9, 9) |
-      __gen_uint(values->VIPDone, 10, 10) |
-      __gen_uint(values->VITDone, 11, 11) |
-      __gen_uint(values->VDSDone, 12, 12) |
-      __gen_uint(values->VMXDone, 13, 13) |
-      __gen_uint(values->VCPDone, 14, 14) |
-      __gen_uint(values->VCDDone, 15, 15) |
-      __gen_uint(values->VADDone, 16, 16) |
-      __gen_uint(values->VMDDone, 17, 17) |
-      __gen_uint(values->VISDone, 18, 18) |
-      __gen_uint(values->VACDone, 19, 19) |
-      __gen_uint(values->VAMDone, 20, 20) |
-      __gen_uint(values->JPGDone, 21, 21) |
-      __gen_uint(values->VBPDone, 22, 22) |
-      __gen_uint(values->VHRDone, 23, 23) |
-      __gen_uint(values->VCIDone, 24, 24) |
-      __gen_uint(values->VCRDone, 25, 25) |
-      __gen_uint(values->VINDone, 26, 26) |
-      __gen_uint(values->VPRDone, 27, 27) |
-      __gen_uint(values->VTQDone, 28, 28) |
-      __gen_uint(values->VCSDone, 30, 30) |
-      __gen_uint(values->GACDone, 31, 31);
+      util_bitpack_uint(values->RingEnable, 0, 0) |
+      util_bitpack_uint(values->USBDone, 1, 1) |
+      util_bitpack_uint(values->QRCDone, 2, 2) |
+      util_bitpack_uint(values->SECDone, 3, 3) |
+      util_bitpack_uint(values->MPCDone, 4, 4) |
+      util_bitpack_uint(values->VFTDone, 5, 5) |
+      util_bitpack_uint(values->BSPDone, 6, 6) |
+      util_bitpack_uint(values->VLFDone, 7, 7) |
+      util_bitpack_uint(values->VOPDone, 8, 8) |
+      util_bitpack_uint(values->VMCDone, 9, 9) |
+      util_bitpack_uint(values->VIPDone, 10, 10) |
+      util_bitpack_uint(values->VITDone, 11, 11) |
+      util_bitpack_uint(values->VDSDone, 12, 12) |
+      util_bitpack_uint(values->VMXDone, 13, 13) |
+      util_bitpack_uint(values->VCPDone, 14, 14) |
+      util_bitpack_uint(values->VCDDone, 15, 15) |
+      util_bitpack_uint(values->VADDone, 16, 16) |
+      util_bitpack_uint(values->VMDDone, 17, 17) |
+      util_bitpack_uint(values->VISDone, 18, 18) |
+      util_bitpack_uint(values->VACDone, 19, 19) |
+      util_bitpack_uint(values->VAMDone, 20, 20) |
+      util_bitpack_uint(values->JPGDone, 21, 21) |
+      util_bitpack_uint(values->VBPDone, 22, 22) |
+      util_bitpack_uint(values->VHRDone, 23, 23) |
+      util_bitpack_uint(values->VCIDone, 24, 24) |
+      util_bitpack_uint(values->VCRDone, 25, 25) |
+      util_bitpack_uint(values->VINDone, 26, 26) |
+      util_bitpack_uint(values->VPRDone, 27, 27) |
+      util_bitpack_uint(values->VTQDone, 28, 28) |
+      util_bitpack_uint(values->VCSDone, 30, 30) |
+      util_bitpack_uint(values->GACDone, 31, 31);
 }
 
 #define GFX7_VCS_RING_BUFFER_CTL_num      0x1203c
@@ -13219,12 +13091,12 @@ GFX7_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
-      __gen_uint(values->RingBufferEnable, 0, 0) |
-      __gen_uint(values->AutomaticReportHeadPointer, 1, 2) |
-      __gen_uint(values->DisableRegisterAccesses, 8, 8) |
-      __gen_uint(values->SemaphoreWait, 10, 10) |
-      __gen_uint(values->RBWait, 11, 11) |
-      __gen_uint(values->BufferLengthinpages1, 12, 20);
+      util_bitpack_uint(values->RingBufferEnable, 0, 0) |
+      util_bitpack_uint(values->AutomaticReportHeadPointer, 1, 2) |
+      util_bitpack_uint(values->DisableRegisterAccesses, 8, 8) |
+      util_bitpack_uint(values->SemaphoreWait, 10, 10) |
+      util_bitpack_uint(values->RBWait, 11, 11) |
+      util_bitpack_uint(values->BufferLengthinpages1, 12, 20);
 }
 
 #define GFX7_VS_INVOCATION_COUNT_num      0x2320
@@ -13241,7 +13113,7 @@ GFX7_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    const uint64_t v0 =
-      __gen_uint(values->VSInvocationCountReport, 0, 63);
+      util_bitpack_uint(values->VSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
 }

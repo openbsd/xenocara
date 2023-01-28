@@ -158,6 +158,25 @@ void
 isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
                             const struct isl_surf_fill_state_info *restrict info)
 {
+#ifndef NDEBUG
+   isl_surf_usage_flags_t _base_usage =
+      info->view->usage & (ISL_SURF_USAGE_RENDER_TARGET_BIT |
+                           ISL_SURF_USAGE_TEXTURE_BIT |
+                           ISL_SURF_USAGE_STORAGE_BIT);
+   /* They may only specify one of the above bits at a time */
+   assert(__builtin_popcount(_base_usage) == 1);
+   /* The only other allowed bit is ISL_SURF_USAGE_CUBE_BIT */
+   assert((info->view->usage & ~ISL_SURF_USAGE_CUBE_BIT) == _base_usage);
+#endif
+
+   if (info->surf->dim == ISL_SURF_DIM_3D) {
+      assert(info->view->base_array_layer + info->view->array_len <=
+             info->surf->logical_level0_px.depth);
+   } else {
+      assert(info->view->base_array_layer + info->view->array_len <=
+             info->surf->logical_level0_px.array_len);
+   }
+
    struct GENX(RENDER_SURFACE_STATE) s = { 0 };
 
    s.SurfaceType = get_surftype(info->surf->dim, info->view->usage);
@@ -343,9 +362,16 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
    }
 
 #if GFX_VER >= 12
-   /* Wa_1806565034: Only set SurfaceArray if arrayed surface is > 1. */
+   /* Wa_1806565034:
+    *
+    *    "Only set SurfaceArray if arrayed surface is > 1."
+    *
+    * Since this is a performance workaround, we only enable it when robust
+    * image access is disabled. Otherwise layered robust access is not
+    * specification compliant.
+    */
    s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D &&
-      info->view->array_len > 1;
+      (info->robust_image_access || info->view->array_len > 1);
 #elif GFX_VER >= 7
    s.SurfaceArray = info->surf->dim != ISL_SURF_DIM_3D;
 #endif
@@ -374,6 +400,11 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
     */
    s.TiledResourceMode = NONE;
    s.MipTailStartLOD = 15;
+#endif
+
+#if GFX_VERx10 >= 125
+   /* Setting L1 caching policy to Write-back mode. */
+   s.L1CacheControl = L1CC_WB;
 #endif
 
 #if GFX_VER >= 6
@@ -439,11 +470,30 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
    s.CubeFaceEnableNegativeX = 1;
 
 #if GFX_VER >= 6
+   /* From the Broadwell PRM for "Number of Multisamples":
+    *
+    *    "If this field is any value other than MULTISAMPLECOUNT_1, Surface
+    *    Min LOD, Mip Count / LOD, and Resource Min LOD must be set to zero."
+    *
+    * This is fine because no 3D API allows multisampling and mipmapping at
+    * the same time.
+    */
+   if (info->surf->samples > 1) {
+      assert(info->view->min_lod_clamp == 0);
+      assert(info->view->base_level == 0);
+      assert(info->view->levels == 1);
+   }
    s.NumberofMultisamples = ffs(info->surf->samples) - 1;
 #if GFX_VER >= 7
    s.MultisampledSurfaceStorageFormat =
       isl_encode_multisample_layout[info->surf->msaa_layout];
 #endif
+#endif
+
+#if GFX_VER >= 7
+   s.ResourceMinLOD = info->view->min_lod_clamp;
+#else
+   assert(info->view->min_lod_clamp == 0);
 #endif
 
 #if (GFX_VERx10 >= 75)
@@ -556,7 +606,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
           * say:
           *
           *    "If Number of multisamples > 1, programming this value means
-          *    MSAA compression is enabled for that surface. Auxillary surface
+          *    MSAA compression is enabled for that surface. Auxiliary surface
           *    is MSC with tile y."
           *
           * Since this interpretation ignores whether the surface is
@@ -637,7 +687,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
 #endif
    }
 
-   /* The auxiliary buffer info is filled when it's useable by the HW.
+   /* The auxiliary buffer info is filled when it's usable by the HW.
     *
     * Starting with Gfx12, the only form of compression that can be used
     * with RENDER_SURFACE_STATE which requires an aux surface is MCS.
@@ -691,7 +741,7 @@ isl_genX(surf_fill_state_s)(const struct isl_device *dev, void *state,
          /* From the SKL PRM, Programming Note under Sampler Output Channel
           * Mapping:
           *
-          *    If a surface has an associated HiZ Auxilliary surface, the
+          *    If a surface has an associated HiZ Auxiliary surface, the
           *    Sampler L2 Bypass Mode Disable field in the RENDER_SURFACE_STATE
           *    must be set.
           */
@@ -777,7 +827,7 @@ isl_genX(buffer_fill_state_s)(const struct isl_device *dev, void *state,
    uint64_t buffer_size = info->size_B;
 
    /* Uniform and Storage buffers need to have surface size not less that the
-    * aligned 32-bit size of the buffer. To calculate the array lenght on
+    * aligned 32-bit size of the buffer. To calculate the array length on
     * unsized arrays in StorageBuffer the last 2 bits store the padding size
     * added to the surface, so we can calculate latter the original buffer
     * size to know the number of elements.
@@ -893,6 +943,11 @@ isl_genX(buffer_fill_state_s)(const struct isl_device *dev, void *state,
    s.MOCS = info->mocs;
 #endif
 
+#if GFX_VERx10 >= 125
+   /* Setting L1 caching policy to Write-back mode. */
+   s.L1CacheControl = L1CC_WB;
+#endif
+
 #if (GFX_VERx10 >= 75)
    s.ShaderChannelSelectRed = (enum GENX(ShaderChannelSelect)) info->swizzle.r;
    s.ShaderChannelSelectGreen = (enum GENX(ShaderChannelSelect)) info->swizzle.g;
@@ -904,8 +959,8 @@ isl_genX(buffer_fill_state_s)(const struct isl_device *dev, void *state,
 }
 
 void
-isl_genX(null_fill_state)(const struct isl_device *dev, void *state,
-                          const struct isl_null_fill_state_info *restrict info)
+isl_genX(null_fill_state_s)(const struct isl_device *dev, void *state,
+                            const struct isl_null_fill_state_info *restrict info)
 {
    struct GENX(RENDER_SURFACE_STATE) s = {
       .SurfaceType = SURFTYPE_NULL,

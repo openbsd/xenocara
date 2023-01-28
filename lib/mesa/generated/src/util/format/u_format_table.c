@@ -19824,6 +19824,118 @@ util_format_r10g10b10x2_snorm_pack_rgba_8unorm(uint8_t *restrict dst_row, unsign
 }
 
 void
+util_format_r10g10b10x2_sint_unpack_signed(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
+{
+   int *dst = dst_row;
+   for (unsigned x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b = ((int32_t)(value << 2) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t r = ((int32_t)(value << 22) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r = ((int32_t)(value << 22) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t b = ((int32_t)(value << 2) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+      src += 4;
+      dst += 4;
+   }
+}
+
+void
+util_format_r10g10b10x2_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const int *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) << 20) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
+util_format_r10g10b10x2_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j)
+{
+   int *dst = in_dst;
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b = ((int32_t)(value << 2) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t r = ((int32_t)(value << 22) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r = ((int32_t)(value << 22) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t b = ((int32_t)(value << 2) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+void
+util_format_r10g10b10x2_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const unsigned *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[2], 511)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[1], 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)MIN2(src[0], 511)) & 0x3ff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((uint32_t)MIN2(src[0], 511)) & 0x3ff) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[1], 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[2], 511)) & 0x3ff) << 20) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
 util_format_a4r4_unorm_unpack_rgba_float(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
 {
    float *dst = dst_row;
@@ -24191,6 +24303,354 @@ util_format_r64_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_strid
          memcpy(dst, &pixel, sizeof pixel);
          src += 4;
          dst += 8;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+struct util_format_r64g64_sint {
+#if UTIL_ARCH_BIG_ENDIAN
+   int64_t r;
+   int64_t g;
+#else
+   int64_t r;
+   int64_t g;
+#endif
+};
+
+void
+util_format_r64g64_sint_unpack_signed(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
+{
+   int *dst = dst_row;
+   for (unsigned x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r64g64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+      src += 16;
+      dst += 4;
+   }
+}
+
+void
+util_format_r64g64_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const int *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         memcpy(dst, &pixel, sizeof pixel);
+#else
+         struct util_format_r64g64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         memcpy(dst, &pixel, sizeof pixel);
+#endif
+         src += 4;
+         dst += 16;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
+util_format_r64g64_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j)
+{
+   int *dst = in_dst;
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r64g64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+void
+util_format_r64g64_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const unsigned *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         memcpy(dst, &pixel, sizeof pixel);
+#else
+         struct util_format_r64g64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         memcpy(dst, &pixel, sizeof pixel);
+#endif
+         src += 4;
+         dst += 16;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+struct util_format_r64g64b64_sint {
+#if UTIL_ARCH_BIG_ENDIAN
+   int64_t r;
+   int64_t g;
+   int64_t b;
+#else
+   int64_t r;
+   int64_t g;
+   int64_t b;
+#endif
+};
+
+void
+util_format_r64g64b64_sint_unpack_signed(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
+{
+   int *dst = dst_row;
+   for (unsigned x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r64g64b64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#endif
+      src += 24;
+      dst += 4;
+   }
+}
+
+void
+util_format_r64g64b64_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const int *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         memcpy(dst, &pixel, sizeof pixel);
+#else
+         struct util_format_r64g64b64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         memcpy(dst, &pixel, sizeof pixel);
+#endif
+         src += 4;
+         dst += 24;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
+util_format_r64g64b64_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j)
+{
+   int *dst = in_dst;
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#else
+         struct util_format_r64g64b64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+void
+util_format_r64g64b64_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const unsigned *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         memcpy(dst, &pixel, sizeof pixel);
+#else
+         struct util_format_r64g64b64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         memcpy(dst, &pixel, sizeof pixel);
+#endif
+         src += 4;
+         dst += 24;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+struct util_format_r64g64b64a64_sint {
+#if UTIL_ARCH_BIG_ENDIAN
+   int64_t r;
+   int64_t g;
+   int64_t b;
+   int64_t a;
+#else
+   int64_t r;
+   int64_t g;
+   int64_t b;
+   int64_t a;
+#endif
+};
+
+void
+util_format_r64g64b64a64_sint_unpack_signed(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
+{
+   int *dst = dst_row;
+   for (unsigned x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64a64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = (int)CLAMP(pixel.a, -2147483648, 2147483647); /* a */
+#else
+         struct util_format_r64g64b64a64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = (int)CLAMP(pixel.a, -2147483648, 2147483647); /* a */
+#endif
+      src += 32;
+      dst += 4;
+   }
+}
+
+void
+util_format_r64g64b64a64_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const int *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64a64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         pixel.a = (int64_t)src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+#else
+         struct util_format_r64g64b64a64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         pixel.a = (int64_t)src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+#endif
+         src += 4;
+         dst += 32;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
+util_format_r64g64b64a64_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j)
+{
+   int *dst = in_dst;
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64a64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = (int)CLAMP(pixel.a, -2147483648, 2147483647); /* a */
+#else
+         struct util_format_r64g64b64a64_sint pixel;
+         memcpy(&pixel, src, sizeof pixel);
+         dst[0] = (int)CLAMP(pixel.r, -2147483648, 2147483647); /* r */
+         dst[1] = (int)CLAMP(pixel.g, -2147483648, 2147483647); /* g */
+         dst[2] = (int)CLAMP(pixel.b, -2147483648, 2147483647); /* b */
+         dst[3] = (int)CLAMP(pixel.a, -2147483648, 2147483647); /* a */
+#endif
+}
+
+void
+util_format_r64g64b64a64_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const unsigned *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         struct util_format_r64g64b64a64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         pixel.a = (int64_t)src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+#else
+         struct util_format_r64g64b64a64_sint pixel = {0};
+         pixel.r = (int64_t)src[0];
+         pixel.g = (int64_t)src[1];
+         pixel.b = (int64_t)src[2];
+         pixel.a = (int64_t)src[3];
+         memcpy(dst, &pixel, sizeof pixel);
+#endif
+         src += 4;
+         dst += 32;
       }
       dst_row += dst_stride;
       src_row += src_stride/sizeof(*src_row);
@@ -29409,6 +29869,118 @@ util_format_b10g10r10x2_snorm_pack_rgba_8unorm(uint8_t *restrict dst_row, unsign
    }
 }
 
+void
+util_format_b10g10r10x2_sint_unpack_signed(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
+{
+   int *dst = dst_row;
+   for (unsigned x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r = ((int32_t)(value << 2) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t b = ((int32_t)(value << 22) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b = ((int32_t)(value << 22) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t r = ((int32_t)(value << 2) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+      src += 4;
+      dst += 4;
+   }
+}
+
+void
+util_format_b10g10r10x2_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const int *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((uint32_t)CLAMP(src[2], -512, 511)) & 0x3ff) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[1], -512, 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)CLAMP(src[0], -512, 511)) & 0x3ff) << 20) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
+util_format_b10g10r10x2_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j)
+{
+   int *dst = in_dst;
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t r = ((int32_t)(value << 2) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t b = ((int32_t)(value << 22) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t b = ((int32_t)(value << 22) ) >> 22;
+         int32_t g = ((int32_t)(value << 12) ) >> 22;
+         int32_t r = ((int32_t)(value << 2) ) >> 22;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = (int)b; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+void
+util_format_b10g10r10x2_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const unsigned *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[0], 511)) & 0x3ff) << 20) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[1], 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)(((uint32_t)MIN2(src[2], 511)) & 0x3ff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((uint32_t)MIN2(src[2], 511)) & 0x3ff) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[1], 511)) & 0x3ff) << 10) ;
+         value |= (uint32_t)((uint32_t)(((uint32_t)MIN2(src[0], 511)) & 0x3ff) << 20) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
 struct util_format_r16g16b16x16_unorm {
 #if UTIL_ARCH_BIG_ENDIAN
    uint16_t r;
@@ -32903,6 +33475,110 @@ util_format_g16r16_snorm_pack_rgba_8unorm(uint8_t *restrict dst_row, unsigned ds
 }
 
 void
+util_format_g16r16_sint_unpack_signed(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
+{
+   int *dst = dst_row;
+   for (unsigned x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g = ((int32_t)(value) ) >> 16;
+         int32_t r = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g = ((int32_t)(value << 16) ) >> 16;
+         int32_t r = ((int32_t)(value) ) >> 16;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+      src += 4;
+      dst += 4;
+   }
+}
+
+void
+util_format_g16r16_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const int *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((uint32_t)((int16_t)CLAMP(src[1], -32768, 32767)) << 16) ;
+         value |= (uint32_t)(((int16_t)CLAMP(src[0], -32768, 32767)) & 0xffff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)CLAMP(src[1], -32768, 32767)) & 0xffff) ;
+         value |= (uint32_t)((uint32_t)((int16_t)CLAMP(src[0], -32768, 32767)) << 16) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
+util_format_g16r16_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j)
+{
+   int *dst = in_dst;
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g = ((int32_t)(value) ) >> 16;
+         int32_t r = ((int32_t)(value << 16) ) >> 16;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#else
+         uint32_t value = *(const uint32_t *)src;
+         int32_t g = ((int32_t)(value << 16) ) >> 16;
+         int32_t r = ((int32_t)(value) ) >> 16;
+         dst[0] = (int)r; /* r */
+         dst[1] = (int)g; /* g */
+         dst[2] = 0; /* b */
+         dst[3] = 1; /* a */
+#endif
+}
+
+void
+util_format_g16r16_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height)
+{
+   unsigned x, y;
+   for(y = 0; y < height; y += 1) {
+      const unsigned *src = src_row;
+      uint8_t *dst = dst_row;
+      for(x = 0; x < width; x += 1) {
+#if UTIL_ARCH_BIG_ENDIAN
+         uint32_t value = 0;
+         value |= (uint32_t)((uint32_t)((int16_t)MIN2(src[1], 32767)) << 16) ;
+         value |= (uint32_t)(((int16_t)MIN2(src[0], 32767)) & 0xffff) ;
+         *(uint32_t *)dst = value;
+#else
+         uint32_t value = 0;
+         value |= (uint32_t)(((int16_t)MIN2(src[1], 32767)) & 0xffff) ;
+         value |= (uint32_t)((uint32_t)((int16_t)MIN2(src[0], 32767)) << 16) ;
+         *(uint32_t *)dst = value;
+#endif
+         src += 4;
+         dst += 4;
+      }
+      dst_row += dst_stride;
+      src_row += src_stride/sizeof(*src_row);
+   }
+}
+
+void
 util_format_a8b8g8r8_snorm_unpack_rgba_float(void *restrict dst_row, const uint8_t *restrict src, unsigned width)
 {
    float *dst = dst_row;
@@ -33427,7 +34103,7 @@ util_format_x8b8g8r8_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_
 }
 
 static const struct util_format_description
-util_format_descriptions[] = {
+util_format_descriptions[PIPE_FORMAT_COUNT] = {
    [PIPE_FORMAT_NONE] = {
       PIPE_FORMAT_NONE,
       "PIPE_FORMAT_NONE",
@@ -42896,6 +43572,51 @@ util_format_descriptions[] = {
       UTIL_FORMAT_COLORSPACE_RGB,
    },
 
+   [PIPE_FORMAT_R10G10B10X2_SINT] = {
+      PIPE_FORMAT_R10G10B10X2_SINT,
+      "PIPE_FORMAT_R10G10B10X2_SINT",
+      "r10g10b10x2_sint",
+      {1, 1, 1, 32},	/* block */
+      UTIL_FORMAT_LAYOUT_PLAIN,
+      4,	/* nr_channels */
+      FALSE,	/* is_array */
+      TRUE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      FALSE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30},	/* x = x */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 20},	/* y = b */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 0}	/* w = r */
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 0},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 10},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 20},	/* z = b */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30}	/* w = x */
+   },
+#endif
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      PIPE_SWIZZLE_W,	/* r */
+      PIPE_SWIZZLE_Z,	/* g */
+      PIPE_SWIZZLE_Y,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_Z,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#endif
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
    [PIPE_FORMAT_YV12] = {
       PIPE_FORMAT_YV12,
       "PIPE_FORMAT_YV12",
@@ -43027,6 +43748,33 @@ util_format_descriptions[] = {
       PIPE_SWIZZLE_Y,	/* u */
       PIPE_SWIZZLE_Z,	/* v */
       PIPE_SWIZZLE_W	/* ignored */
+   },
+      UTIL_FORMAT_COLORSPACE_YUV,
+   },
+
+   [PIPE_FORMAT_Y8_400_UNORM] = {
+      PIPE_FORMAT_Y8_400_UNORM,
+      "PIPE_FORMAT_Y8_400_UNORM",
+      "y8_400_unorm",
+      {1, 1, 1, 8},	/* block */
+      UTIL_FORMAT_LAYOUT_OTHER,
+      1,	/* nr_channels */
+      FALSE,	/* is_array */
+      FALSE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      TRUE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+   {
+      {UTIL_FORMAT_TYPE_UNSIGNED, TRUE, FALSE, 8, 0},	/* x = x */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+   {
+      PIPE_SWIZZLE_X,	/* y */
+      PIPE_SWIZZLE_0,	/* u */
+      PIPE_SWIZZLE_0,	/* v */
+      PIPE_SWIZZLE_1	/* ignored */
    },
       UTIL_FORMAT_COLORSPACE_YUV,
    },
@@ -45236,6 +45984,141 @@ util_format_descriptions[] = {
       UTIL_FORMAT_COLORSPACE_RGB,
    },
 
+   [PIPE_FORMAT_R64G64_SINT] = {
+      PIPE_FORMAT_R64G64_SINT,
+      "PIPE_FORMAT_R64G64_SINT",
+      "r64g64_sint",
+      {1, 1, 1, 128},	/* block */
+      UTIL_FORMAT_LAYOUT_PLAIN,
+      2,	/* nr_channels */
+      TRUE,	/* is_array */
+      FALSE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      FALSE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 64},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 0},	/* y = g */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 0},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 64},	/* y = g */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_0,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_0,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#endif
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
+   [PIPE_FORMAT_R64G64B64_SINT] = {
+      PIPE_FORMAT_R64G64B64_SINT,
+      "PIPE_FORMAT_R64G64B64_SINT",
+      "r64g64b64_sint",
+      {1, 1, 1, 192},	/* block */
+      UTIL_FORMAT_LAYOUT_PLAIN,
+      3,	/* nr_channels */
+      TRUE,	/* is_array */
+      FALSE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      FALSE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 128},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 64},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 0},	/* z = b */
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 0},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 64},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 128},	/* z = b */
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_Z,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_Z,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#endif
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
+   [PIPE_FORMAT_R64G64B64A64_SINT] = {
+      PIPE_FORMAT_R64G64B64A64_SINT,
+      "PIPE_FORMAT_R64G64B64A64_SINT",
+      "r64g64b64a64_sint",
+      {1, 1, 1, 256},	/* block */
+      UTIL_FORMAT_LAYOUT_PLAIN,
+      4,	/* nr_channels */
+      TRUE,	/* is_array */
+      FALSE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      FALSE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 192},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 128},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 64},	/* z = b */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 0}	/* w = a */
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 0},	/* x = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 64},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 128},	/* z = b */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 64, 192}	/* w = a */
+   },
+#endif
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_Z,	/* b */
+      PIPE_SWIZZLE_W	/* a */
+   },
+#else
+   {
+      PIPE_SWIZZLE_X,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_Z,	/* b */
+      PIPE_SWIZZLE_W	/* a */
+   },
+#endif
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
    [PIPE_FORMAT_A8_UINT] = {
       PIPE_FORMAT_A8_UINT,
       "PIPE_FORMAT_A8_UINT",
@@ -47252,6 +48135,51 @@ util_format_descriptions[] = {
       UTIL_FORMAT_COLORSPACE_RGB,
    },
 
+   [PIPE_FORMAT_B10G10R10X2_SINT] = {
+      PIPE_FORMAT_B10G10R10X2_SINT,
+      "PIPE_FORMAT_B10G10R10X2_SINT",
+      "b10g10r10x2_sint",
+      {1, 1, 1, 32},	/* block */
+      UTIL_FORMAT_LAYOUT_PLAIN,
+      4,	/* nr_channels */
+      FALSE,	/* is_array */
+      TRUE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      FALSE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30},	/* x = x */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 20},	/* y = r */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 10},	/* z = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 0}	/* w = b */
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 0},	/* x = b */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 10},	/* y = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 10, 20},	/* z = r */
+      {UTIL_FORMAT_TYPE_VOID, FALSE, FALSE, 2, 30}	/* w = x */
+   },
+#endif
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      PIPE_SWIZZLE_Y,	/* r */
+      PIPE_SWIZZLE_Z,	/* g */
+      PIPE_SWIZZLE_W,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      PIPE_SWIZZLE_Z,	/* r */
+      PIPE_SWIZZLE_Y,	/* g */
+      PIPE_SWIZZLE_X,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#endif
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
    [PIPE_FORMAT_R16G16B16X16_UNORM] = {
       PIPE_FORMAT_R16G16B16X16_UNORM,
       "PIPE_FORMAT_R16G16B16X16_UNORM",
@@ -48512,6 +49440,51 @@ util_format_descriptions[] = {
       UTIL_FORMAT_COLORSPACE_RGB,
    },
 
+   [PIPE_FORMAT_G16R16_SINT] = {
+      PIPE_FORMAT_G16R16_SINT,
+      "PIPE_FORMAT_G16R16_SINT",
+      "g16r16_sint",
+      {1, 1, 1, 32},	/* block */
+      UTIL_FORMAT_LAYOUT_PLAIN,
+      2,	/* nr_channels */
+      TRUE,	/* is_array */
+      TRUE,	/* is_bitmask */
+      FALSE,	/* is_mixed */
+      FALSE,	/* is_unorm */
+      FALSE,	/* is_snorm */
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 16, 16},	/* x = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 16, 0},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#else
+   {
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 16, 0},	/* x = g */
+      {UTIL_FORMAT_TYPE_SIGNED, FALSE, TRUE, 16, 16},	/* y = r */
+      {0, 0, 0, 0, 0},
+      {0, 0, 0, 0, 0}
+   },
+#endif
+#if UTIL_ARCH_BIG_ENDIAN
+   {
+      PIPE_SWIZZLE_Y,	/* r */
+      PIPE_SWIZZLE_X,	/* g */
+      PIPE_SWIZZLE_0,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#else
+   {
+      PIPE_SWIZZLE_Y,	/* r */
+      PIPE_SWIZZLE_X,	/* g */
+      PIPE_SWIZZLE_0,	/* b */
+      PIPE_SWIZZLE_1	/* a */
+   },
+#endif
+      UTIL_FORMAT_COLORSPACE_RGB,
+   },
+
    [PIPE_FORMAT_A8B8G8R8_SNORM] = {
       PIPE_FORMAT_A8B8G8R8_SNORM,
       "PIPE_FORMAT_A8B8G8R8_SNORM",
@@ -48694,17 +49667,15 @@ util_format_descriptions[] = {
 
 };
 
-const struct util_format_description *
+ATTRIBUTE_RETURNS_NONNULL const struct util_format_description *
 util_format_description(enum pipe_format format)
 {
-   if (format >= ARRAY_SIZE(util_format_descriptions))
-      return NULL;
-
+   assert(format < PIPE_FORMAT_COUNT);
    return &util_format_descriptions[format];
 }
 
 static const struct util_format_pack_description
-util_format_pack_descriptions[] = {
+util_format_pack_descriptions[PIPE_FORMAT_COUNT] = {
    [PIPE_FORMAT_NONE] = {
       .pack_rgba_8unorm = &util_format_none_pack_rgba_8unorm,
       .pack_rgba_float = &util_format_none_pack_rgba_float,
@@ -49757,11 +50728,17 @@ util_format_pack_descriptions[] = {
       .pack_rgba_float = &util_format_r10g10b10x2_snorm_pack_rgba_float,
    },
 
+   [PIPE_FORMAT_R10G10B10X2_SINT] = {
+      .pack_rgba_uint = &util_format_r10g10b10x2_sint_pack_unsigned,
+      .pack_rgba_sint = &util_format_r10g10b10x2_sint_pack_signed,
+   },
+
    [PIPE_FORMAT_YV12] = { 0 },
    [PIPE_FORMAT_YV16] = { 0 },
    [PIPE_FORMAT_IYUV] = { 0 },
    [PIPE_FORMAT_NV12] = { 0 },
    [PIPE_FORMAT_NV21] = { 0 },
+   [PIPE_FORMAT_Y8_400_UNORM] = { 0 },
    [PIPE_FORMAT_R8_G8B8_420_UNORM] = { 0 },
    [PIPE_FORMAT_G8_B8R8_420_UNORM] = { 0 },
    [PIPE_FORMAT_G8_B8_R8_420_UNORM] = { 0 },
@@ -49975,6 +50952,21 @@ util_format_pack_descriptions[] = {
    [PIPE_FORMAT_R64_SINT] = {
       .pack_rgba_uint = &util_format_r64_sint_pack_unsigned,
       .pack_rgba_sint = &util_format_r64_sint_pack_signed,
+   },
+
+   [PIPE_FORMAT_R64G64_SINT] = {
+      .pack_rgba_uint = &util_format_r64g64_sint_pack_unsigned,
+      .pack_rgba_sint = &util_format_r64g64_sint_pack_signed,
+   },
+
+   [PIPE_FORMAT_R64G64B64_SINT] = {
+      .pack_rgba_uint = &util_format_r64g64b64_sint_pack_unsigned,
+      .pack_rgba_sint = &util_format_r64g64b64_sint_pack_signed,
+   },
+
+   [PIPE_FORMAT_R64G64B64A64_SINT] = {
+      .pack_rgba_uint = &util_format_r64g64b64a64_sint_pack_unsigned,
+      .pack_rgba_sint = &util_format_r64g64b64a64_sint_pack_signed,
    },
 
    [PIPE_FORMAT_A8_UINT] = {
@@ -50237,6 +51229,11 @@ util_format_pack_descriptions[] = {
       .pack_rgba_float = &util_format_b10g10r10x2_snorm_pack_rgba_float,
    },
 
+   [PIPE_FORMAT_B10G10R10X2_SINT] = {
+      .pack_rgba_uint = &util_format_b10g10r10x2_sint_pack_unsigned,
+      .pack_rgba_sint = &util_format_b10g10r10x2_sint_pack_signed,
+   },
+
    [PIPE_FORMAT_R16G16B16X16_UNORM] = {
       .pack_rgba_8unorm = &util_format_r16g16b16x16_unorm_pack_rgba_8unorm,
       .pack_rgba_float = &util_format_r16g16b16x16_unorm_pack_rgba_float,
@@ -50377,6 +51374,11 @@ util_format_pack_descriptions[] = {
       .pack_rgba_float = &util_format_g16r16_snorm_pack_rgba_float,
    },
 
+   [PIPE_FORMAT_G16R16_SINT] = {
+      .pack_rgba_uint = &util_format_g16r16_sint_pack_unsigned,
+      .pack_rgba_sint = &util_format_g16r16_sint_pack_signed,
+   },
+
    [PIPE_FORMAT_A8B8G8R8_SNORM] = {
       .pack_rgba_8unorm = &util_format_a8b8g8r8_snorm_pack_rgba_8unorm,
       .pack_rgba_float = &util_format_a8b8g8r8_snorm_pack_rgba_float,
@@ -50399,17 +51401,15 @@ util_format_pack_descriptions[] = {
 
 };
 
-const struct util_format_pack_description *
+ATTRIBUTE_RETURNS_NONNULL const struct util_format_pack_description *
 util_format_pack_description(enum pipe_format format)
 {
-   if (format >= ARRAY_SIZE(util_format_pack_descriptions))
-      return NULL;
-
+   assert(format < PIPE_FORMAT_COUNT);
    return &util_format_pack_descriptions[format];
 }
 
 static const struct util_format_unpack_description
-util_format_unpack_descriptions[] = {
+util_format_unpack_descriptions[PIPE_FORMAT_COUNT] = {
    [PIPE_FORMAT_NONE] = {
       .unpack_rgba_8unorm = &util_format_none_unpack_rgba_8unorm,
       .unpack_rgba = &util_format_none_unpack_rgba_float,
@@ -51277,11 +52277,15 @@ util_format_unpack_descriptions[] = {
       .unpack_rgba_8unorm = &util_format_r10g10b10x2_snorm_unpack_rgba_8unorm,
       .unpack_rgba = &util_format_r10g10b10x2_snorm_unpack_rgba_float,
    },
+   [PIPE_FORMAT_R10G10B10X2_SINT] = {
+      .unpack_rgba = &util_format_r10g10b10x2_sint_unpack_signed,
+   },
    [PIPE_FORMAT_YV12] = { 0 },
    [PIPE_FORMAT_YV16] = { 0 },
    [PIPE_FORMAT_IYUV] = { 0 },
    [PIPE_FORMAT_NV12] = { 0 },
    [PIPE_FORMAT_NV21] = { 0 },
+   [PIPE_FORMAT_Y8_400_UNORM] = { 0 },
    [PIPE_FORMAT_R8_G8B8_420_UNORM] = { 0 },
    [PIPE_FORMAT_G8_B8R8_420_UNORM] = { 0 },
    [PIPE_FORMAT_G8_B8_R8_420_UNORM] = { 0 },
@@ -51428,6 +52432,15 @@ util_format_unpack_descriptions[] = {
    },
    [PIPE_FORMAT_R64_SINT] = {
       .unpack_rgba = &util_format_r64_sint_unpack_signed,
+   },
+   [PIPE_FORMAT_R64G64_SINT] = {
+      .unpack_rgba = &util_format_r64g64_sint_unpack_signed,
+   },
+   [PIPE_FORMAT_R64G64B64_SINT] = {
+      .unpack_rgba = &util_format_r64g64b64_sint_unpack_signed,
+   },
+   [PIPE_FORMAT_R64G64B64A64_SINT] = {
+      .unpack_rgba = &util_format_r64g64b64a64_sint_unpack_signed,
    },
    [PIPE_FORMAT_A8_UINT] = {
       .unpack_rgba = &util_format_a8_uint_unpack_unsigned,
@@ -51589,6 +52602,9 @@ util_format_unpack_descriptions[] = {
       .unpack_rgba_8unorm = &util_format_b10g10r10x2_snorm_unpack_rgba_8unorm,
       .unpack_rgba = &util_format_b10g10r10x2_snorm_unpack_rgba_float,
    },
+   [PIPE_FORMAT_B10G10R10X2_SINT] = {
+      .unpack_rgba = &util_format_b10g10r10x2_sint_unpack_signed,
+   },
    [PIPE_FORMAT_R16G16B16X16_UNORM] = {
       .unpack_rgba_8unorm = &util_format_r16g16b16x16_unorm_unpack_rgba_8unorm,
       .unpack_rgba = &util_format_r16g16b16x16_unorm_unpack_rgba_float,
@@ -51688,6 +52704,9 @@ util_format_unpack_descriptions[] = {
       .unpack_rgba_8unorm = &util_format_g16r16_snorm_unpack_rgba_8unorm,
       .unpack_rgba = &util_format_g16r16_snorm_unpack_rgba_float,
    },
+   [PIPE_FORMAT_G16R16_SINT] = {
+      .unpack_rgba = &util_format_g16r16_sint_unpack_signed,
+   },
    [PIPE_FORMAT_A8B8G8R8_SNORM] = {
       .unpack_rgba_8unorm = &util_format_a8b8g8r8_snorm_unpack_rgba_8unorm,
       .unpack_rgba = &util_format_a8b8g8r8_snorm_unpack_rgba_float,
@@ -51704,16 +52723,14 @@ util_format_unpack_descriptions[] = {
    },
 };
 
-const struct util_format_unpack_description *
+ATTRIBUTE_RETURNS_NONNULL const struct util_format_unpack_description *
 util_format_unpack_description_generic(enum pipe_format format)
 {
-   if (format >= ARRAY_SIZE(util_format_unpack_descriptions))
-      return NULL;
-
+   assert(format < PIPE_FORMAT_COUNT);
    return &util_format_unpack_descriptions[format];
 }
 
-static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
+static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[PIPE_FORMAT_COUNT] = {
   [PIPE_FORMAT_NONE] = &util_format_none_fetch_rgba,
   [PIPE_FORMAT_B8G8R8A8_UNORM] = &util_format_b8g8r8a8_unorm_fetch_rgba,
   [PIPE_FORMAT_B8G8R8X8_UNORM] = &util_format_b8g8r8x8_unorm_fetch_rgba,
@@ -51978,11 +52995,13 @@ static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
   [PIPE_FORMAT_R32G32B32A32_FIXED] = &util_format_r32g32b32a32_fixed_fetch_rgba,
   [PIPE_FORMAT_R10G10B10X2_USCALED] = &util_format_r10g10b10x2_uscaled_fetch_rgba,
   [PIPE_FORMAT_R10G10B10X2_SNORM] = &util_format_r10g10b10x2_snorm_fetch_rgba,
+  [PIPE_FORMAT_R10G10B10X2_SINT] = &util_format_r10g10b10x2_sint_fetch_rgba,
   [PIPE_FORMAT_YV12] = NULL,
   [PIPE_FORMAT_YV16] = NULL,
   [PIPE_FORMAT_IYUV] = NULL,
   [PIPE_FORMAT_NV12] = NULL,
   [PIPE_FORMAT_NV21] = NULL,
+  [PIPE_FORMAT_Y8_400_UNORM] = NULL,
   [PIPE_FORMAT_R8_G8B8_420_UNORM] = NULL,
   [PIPE_FORMAT_G8_B8R8_420_UNORM] = NULL,
   [PIPE_FORMAT_G8_B8_R8_420_UNORM] = NULL,
@@ -52042,6 +53061,9 @@ static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
   [PIPE_FORMAT_R64G64B64_UINT] = &util_format_r64g64b64_uint_fetch_rgba,
   [PIPE_FORMAT_R64G64B64A64_UINT] = &util_format_r64g64b64a64_uint_fetch_rgba,
   [PIPE_FORMAT_R64_SINT] = &util_format_r64_sint_fetch_rgba,
+  [PIPE_FORMAT_R64G64_SINT] = &util_format_r64g64_sint_fetch_rgba,
+  [PIPE_FORMAT_R64G64B64_SINT] = &util_format_r64g64b64_sint_fetch_rgba,
+  [PIPE_FORMAT_R64G64B64A64_SINT] = &util_format_r64g64b64a64_sint_fetch_rgba,
   [PIPE_FORMAT_A8_UINT] = &util_format_a8_uint_fetch_rgba,
   [PIPE_FORMAT_I8_UINT] = &util_format_i8_uint_fetch_rgba,
   [PIPE_FORMAT_L8_UINT] = &util_format_l8_uint_fetch_rgba,
@@ -52094,6 +53116,7 @@ static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
   [PIPE_FORMAT_R8G8B8X8_SINT] = &util_format_r8g8b8x8_sint_fetch_rgba,
   [PIPE_FORMAT_B10G10R10X2_UNORM] = &util_format_b10g10r10x2_unorm_fetch_rgba,
   [PIPE_FORMAT_B10G10R10X2_SNORM] = &util_format_b10g10r10x2_snorm_fetch_rgba,
+  [PIPE_FORMAT_B10G10R10X2_SINT] = &util_format_b10g10r10x2_sint_fetch_rgba,
   [PIPE_FORMAT_R16G16B16X16_UNORM] = &util_format_r16g16b16x16_unorm_fetch_rgba,
   [PIPE_FORMAT_R16G16B16X16_SNORM] = &util_format_r16g16b16x16_snorm_fetch_rgba,
   [PIPE_FORMAT_R16G16B16X16_FLOAT] = &util_format_r16g16b16x16_float_fetch_rgba,
@@ -52122,6 +53145,7 @@ static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
   [PIPE_FORMAT_G8R8_SINT] = &util_format_g8r8_sint_fetch_rgba,
   [PIPE_FORMAT_G16R16_UNORM] = &util_format_g16r16_unorm_fetch_rgba,
   [PIPE_FORMAT_G16R16_SNORM] = &util_format_g16r16_snorm_fetch_rgba,
+  [PIPE_FORMAT_G16R16_SINT] = &util_format_g16r16_sint_fetch_rgba,
   [PIPE_FORMAT_A8B8G8R8_SNORM] = &util_format_a8b8g8r8_snorm_fetch_rgba,
   [PIPE_FORMAT_A8B8G8R8_SINT] = &util_format_a8b8g8r8_sint_fetch_rgba,
   [PIPE_FORMAT_X8B8G8R8_SNORM] = &util_format_x8b8g8r8_snorm_fetch_rgba,
@@ -52131,9 +53155,7 @@ static const util_format_fetch_rgba_func_ptr util_format_fetch_rgba_table[] = {
 util_format_fetch_rgba_func_ptr
 util_format_fetch_rgba_func(enum pipe_format format)
 {
-   if (format >= ARRAY_SIZE(util_format_fetch_rgba_table))
-      return NULL;
-
+   assert(format < PIPE_FORMAT_COUNT);
    return util_format_fetch_rgba_table[format];
 }
 

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:10 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:34 jsg Exp $
 
 LIB=	intel_common
 
@@ -8,6 +8,7 @@ SRCS=	intel_aux_map.c \
 	intel_batch_decoder.c \
 	intel_decoder.c \
 	intel_disasm.c \
+	intel_engine.c \
 	intel_gem.c \
 	intel_l3_config.c \
 	intel_measure.c \

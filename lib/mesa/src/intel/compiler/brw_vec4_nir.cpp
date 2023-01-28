@@ -270,7 +270,7 @@ vec4_visitor::get_indirect_offset(nir_intrinsic_instr *instr)
    if (nir_src_is_const(*offset_src)) {
       /* The only constant offset we should find is 0.  brw_nir.c's
        * add_const_offset_to_base() will fold other constant offsets
-       * into instr->const_index[0].
+       * into the base index.
        */
       assert(nir_src_as_uint(*offset_src) == 0);
       return src_reg();
@@ -285,7 +285,7 @@ setup_imm_df(const vec4_builder &bld, double v)
    const intel_device_info *devinfo = bld.shader->devinfo;
    assert(devinfo->ver == 7);
 
-   /* gfx7.5 does not support DF immediates straighforward but the DIM
+   /* gfx7.5 does not support DF immediates straightforward but the DIM
     * instruction allows to set the 64-bit immediate value.
     */
    if (devinfo->verx10 == 75) {
@@ -403,7 +403,7 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
       dest = get_nir_dest(instr->dest);
       dest.writemask = brw_writemask_for_size(instr->num_components);
 
-      src = src_reg(ATTR, instr->const_index[0] + load_offset,
+      src = src_reg(ATTR, nir_intrinsic_base(instr) + load_offset,
                     glsl_type::uvec4_type);
       src = retype(src, dest.type);
 
@@ -416,7 +416,7 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
    case nir_intrinsic_store_output: {
       assert(nir_src_bit_size(instr->src[0]) == 32);
       unsigned store_offset = nir_src_as_uint(instr->src[1]);
-      int varying = instr->const_index[0] + store_offset;
+      int varying = nir_intrinsic_base(instr) + store_offset;
       src = get_nir_src(instr->src[0], BRW_REGISTER_TYPE_F,
                         instr->num_components);
 
@@ -549,7 +549,7 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
       break;
 
    case nir_intrinsic_load_vertex_id:
-      unreachable("should be lowered by lower_vertex_id()");
+      unreachable("should be lowered by vertex_id_zero_based");
 
    case nir_intrinsic_load_vertex_id_zero_base:
    case nir_intrinsic_load_base_vertex:
@@ -606,7 +606,7 @@ vec4_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
          dest.writemask = WRITEMASK_XYZW;
 
          emit(SHADER_OPCODE_MOV_INDIRECT, dest, src,
-              indirect, brw_imm_ud(instr->const_index[1]));
+              indirect, brw_imm_ud(nir_intrinsic_range(instr)));
       }
       break;
    }
@@ -851,7 +851,7 @@ emit_find_msb_using_lzd(const vec4_builder &bld,
        * For all negative number cases, including 0x80000000 and
        * 0xffffffff, the correct value is obtained from LZD if instead of
        * negating the (already negative) value the logical-not is used.  A
-       * conditonal logical-not can be achieved in two instructions.
+       * conditional logical-not can be achieved in two instructions.
        */
       temp = src_reg(bld.vgrf(BRW_REGISTER_TYPE_D));
 
@@ -1302,7 +1302,7 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
        * turn that into a predicate.  This leads us to an XOR.l instruction.
        *
        * Technically, according to the PRM, you're not allowed to use .l on a
-       * XOR instruction.  However, emperical experiments and Curro's reading
+       * XOR instruction.  However, empirical experiments and Curro's reading
        * of the simulator source both indicate that it's safe.
        */
       src_reg tmp = src_reg(this, glsl_type::ivec4_type);
@@ -1897,10 +1897,10 @@ vec4_visitor::nir_emit_alu(nir_alu_instr *instr)
       break;
 
    case nir_op_fdiv:
-      unreachable("not reached: should be lowered by DIV_TO_MUL_RCP in the compiler");
+      unreachable("not reached: should be lowered by lower_fdiv in the compiler");
 
    case nir_op_fmod:
-      unreachable("not reached: should be lowered by MOD_TO_FLOOR in the compiler");
+      unreachable("not reached: should be lowered by lower_fmod in the compiler");
 
    case nir_op_fsub:
    case nir_op_isub:

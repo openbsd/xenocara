@@ -81,6 +81,98 @@ offset(const fs_reg &reg, const brw::fs_builder &bld, unsigned delta)
 struct shader_stats {
    const char *scheduler_mode;
    unsigned promoted_constants;
+   unsigned spill_count;
+   unsigned fill_count;
+};
+
+/** Register numbers for thread payload fields. */
+struct thread_payload {
+   /** The number of thread payload registers the hardware will supply. */
+   uint8_t num_regs;
+
+   virtual ~thread_payload() = default;
+
+protected:
+   thread_payload() : num_regs() {}
+};
+
+struct vs_thread_payload : public thread_payload {
+   vs_thread_payload();
+
+   fs_reg urb_handles;
+};
+
+struct tcs_thread_payload : public thread_payload {
+   tcs_thread_payload(const fs_visitor &v);
+
+   fs_reg patch_urb_output;
+   fs_reg primitive_id;
+   fs_reg icp_handle_start;
+};
+
+struct tes_thread_payload : public thread_payload {
+   tes_thread_payload();
+
+   fs_reg patch_urb_input;
+   fs_reg primitive_id;
+   fs_reg coords[3];
+   fs_reg urb_output;
+};
+
+struct gs_thread_payload : public thread_payload {
+   gs_thread_payload(const fs_visitor &v);
+
+   fs_reg urb_handles;
+   fs_reg primitive_id;
+   fs_reg icp_handle_start;
+};
+
+struct fs_thread_payload : public thread_payload {
+   fs_thread_payload(const fs_visitor &v,
+                     bool &source_depth_to_render_target,
+                     bool &runtime_check_aads_emit);
+
+   uint8_t subspan_coord_reg[2];
+   uint8_t source_depth_reg[2];
+   uint8_t source_w_reg[2];
+   uint8_t aa_dest_stencil_reg[2];
+   uint8_t dest_depth_reg[2];
+   uint8_t sample_pos_reg[2];
+   uint8_t sample_mask_in_reg[2];
+   uint8_t depth_w_coef_reg[2];
+   uint8_t barycentric_coord_reg[BRW_BARYCENTRIC_MODE_COUNT][2];
+   uint8_t local_invocation_id_reg[2];
+};
+
+struct cs_thread_payload : public thread_payload {
+   cs_thread_payload(const fs_visitor &v);
+
+   void load_subgroup_id(const brw::fs_builder &bld, fs_reg &dest) const;
+
+protected:
+   fs_reg subgroup_id_;
+};
+
+struct task_mesh_thread_payload : public cs_thread_payload {
+   task_mesh_thread_payload(const fs_visitor &v);
+
+   fs_reg extended_parameter_0;
+   fs_reg local_index;
+   fs_reg inline_parameter;
+
+   fs_reg urb_output;
+
+   /* URB to read Task memory inputs. Only valid for MESH stage. */
+   fs_reg task_urb_input;
+};
+
+struct bs_thread_payload : public thread_payload {
+   bs_thread_payload();
+
+   fs_reg global_arg_ptr;
+   fs_reg local_arg_ptr;
+
+   void load_shader_type(const brw::fs_builder &bld, fs_reg &dest) const;
 };
 
 /**
@@ -129,14 +221,10 @@ public:
    bool run_mesh(bool allow_spilling);
    void optimize();
    void allocate_registers(bool allow_spilling);
-   void setup_fs_payload_gfx4();
-   void setup_fs_payload_gfx6();
-   void setup_vs_payload();
-   void setup_gs_payload();
-   void setup_cs_payload();
    bool fixup_sends_duplicate_payload();
    void fixup_3src_null_dest();
    void emit_dummy_memory_fence_before_eot();
+   void emit_dummy_mov_instruction();
    bool fixup_nomask_control_flow();
    void assign_curb_setup();
    void assign_urb_setup();
@@ -170,6 +258,7 @@ public:
    bool opt_drop_redundant_mov_to_flags();
    bool opt_register_renaming();
    bool opt_bank_conflicts();
+   bool opt_split_sends();
    bool register_coalesce();
    bool compute_to_mrf();
    bool eliminate_find_live_channel();
@@ -196,6 +285,7 @@ public:
    bool lower_simd_width();
    bool lower_barycentrics();
    bool lower_derivatives();
+   bool lower_find_live_channel();
    bool lower_scoreboard();
    bool lower_sub_sat();
    bool opt_combine_constants();
@@ -214,7 +304,7 @@ public:
    fs_reg emit_mcs_fetch(const fs_reg &coordinate, unsigned components,
                          const fs_reg &texture,
                          const fs_reg &texture_handle);
-   fs_reg resolve_source_modifiers(const fs_reg &src);
+   fs_reg resolve_source_modifiers(const brw::fs_builder &bld, const fs_reg &src);
    void emit_fsign(const class brw::fs_builder &, const nir_alu_instr *instr,
                    fs_reg result, fs_reg *op, unsigned fsign_src);
    void emit_shader_float_controls_execution_mode();
@@ -293,7 +383,7 @@ public:
    fs_reg get_indirect_offset(nir_intrinsic_instr *instr);
    fs_reg get_tcs_single_patch_icp_handle(const brw::fs_builder &bld,
                                           nir_intrinsic_instr *instr);
-   fs_reg get_tcs_eight_patch_icp_handle(const brw::fs_builder &bld,
+   fs_reg get_tcs_multi_patch_icp_handle(const brw::fs_builder &bld,
                                          nir_intrinsic_instr *instr);
    struct brw_reg get_tcs_output_urb_handle();
 
@@ -309,7 +399,6 @@ public:
    fs_inst *emit_single_fb_write(const brw::fs_builder &bld,
                                  fs_reg color1, fs_reg color2,
                                  fs_reg src0_alpha, unsigned components);
-   void emit_alpha_to_coverage_workaround(const fs_reg &src0_alpha);
    void emit_fb_writes();
    fs_inst *emit_non_coherent_fb_read(const brw::fs_builder &bld,
                                       const fs_reg &dst, unsigned target);
@@ -324,16 +413,21 @@ public:
    void emit_gs_input_load(const fs_reg &dst, const nir_src &vertex_src,
                            unsigned base_offset, const nir_src &offset_src,
                            unsigned num_components, unsigned first_component);
+   bool mark_last_urb_write_with_eot();
+   void emit_tcs_thread_end();
    void emit_urb_fence();
    void emit_cs_terminate();
    fs_reg emit_work_group_id_setup();
 
    void emit_task_mesh_store(const brw::fs_builder &bld,
-                             nir_intrinsic_instr *instr);
+                             nir_intrinsic_instr *instr,
+                             const fs_reg &urb_handle);
    void emit_task_mesh_load(const brw::fs_builder &bld,
-                            nir_intrinsic_instr *instr);
+                            nir_intrinsic_instr *instr,
+                            const fs_reg &urb_handle);
 
    void emit_barrier();
+   void emit_tcs_barrier();
 
    fs_reg get_timestamp(const brw::fs_builder &bld);
 
@@ -368,8 +462,6 @@ public:
     */
    int *push_constant_loc;
 
-   fs_reg subgroup_id;
-   fs_reg group_size[3];
    fs_reg scratch_base;
    fs_reg frag_depth;
    fs_reg frag_stencil;
@@ -387,22 +479,51 @@ public:
    bool failed;
    char *fail_msg;
 
-   /** Register numbers for thread payload fields. */
-   struct thread_payload {
-      uint8_t subspan_coord_reg[2];
-      uint8_t source_depth_reg[2];
-      uint8_t source_w_reg[2];
-      uint8_t aa_dest_stencil_reg[2];
-      uint8_t dest_depth_reg[2];
-      uint8_t sample_pos_reg[2];
-      uint8_t sample_mask_in_reg[2];
-      uint8_t depth_w_coef_reg[2];
-      uint8_t barycentric_coord_reg[BRW_BARYCENTRIC_MODE_COUNT][2];
-      uint8_t local_invocation_id_reg[2];
+   thread_payload *payload_;
 
-      /** The number of thread payload registers the hardware will supply. */
-      uint8_t num_regs;
-   } payload;
+   thread_payload &payload() {
+      return *this->payload_;
+   }
+
+   vs_thread_payload &vs_payload() {
+      assert(stage == MESA_SHADER_VERTEX);
+      return *static_cast<vs_thread_payload *>(this->payload_);
+   }
+
+   tcs_thread_payload &tcs_payload() {
+      assert(stage == MESA_SHADER_TESS_CTRL);
+      return *static_cast<tcs_thread_payload *>(this->payload_);
+   }
+
+   tes_thread_payload &tes_payload() {
+      assert(stage == MESA_SHADER_TESS_EVAL);
+      return *static_cast<tes_thread_payload *>(this->payload_);
+   }
+
+   gs_thread_payload &gs_payload() {
+      assert(stage == MESA_SHADER_GEOMETRY);
+      return *static_cast<gs_thread_payload *>(this->payload_);
+   }
+
+   fs_thread_payload &fs_payload() {
+      assert(stage == MESA_SHADER_FRAGMENT);
+      return *static_cast<fs_thread_payload *>(this->payload_);
+   };
+
+   cs_thread_payload &cs_payload() {
+      assert(gl_shader_stage_uses_workgroup(stage));
+      return *static_cast<cs_thread_payload *>(this->payload_);
+   }
+
+   task_mesh_thread_payload &task_mesh_payload() {
+      assert(stage == MESA_SHADER_TASK || stage == MESA_SHADER_MESH);
+      return *static_cast<task_mesh_thread_payload *>(this->payload_);
+   }
+
+   bs_thread_payload &bs_payload() {
+      assert(stage >= MESA_SHADER_RAYGEN && stage <= MESA_SHADER_CALLABLE);
+      return *static_cast<bs_thread_payload *>(this->payload_);
+   }
 
    bool source_depth_to_render_target;
    bool runtime_check_aads_emit;
@@ -647,14 +768,24 @@ fs_reg setup_imm_b(const brw::fs_builder &bld,
 fs_reg setup_imm_ub(const brw::fs_builder &bld,
                    uint8_t v);
 
-enum brw_barycentric_mode brw_barycentric_mode(enum glsl_interp_mode mode,
-                                               nir_intrinsic_op op);
+enum brw_barycentric_mode brw_barycentric_mode(nir_intrinsic_instr *intr);
 
 uint32_t brw_fb_write_msg_control(const fs_inst *inst,
                                   const struct brw_wm_prog_data *prog_data);
 
 void brw_compute_urb_setup_index(struct brw_wm_prog_data *wm_prog_data);
 
-void brw_nir_lower_simd(nir_shader *nir, unsigned dispatch_width);
+bool brw_nir_lower_simd(nir_shader *nir, unsigned dispatch_width);
+
+namespace brw {
+   class fs_builder;
+}
+
+fs_reg brw_sample_mask_reg(const brw::fs_builder &bld);
+void brw_emit_predicate_on_sample_mask(const brw::fs_builder &bld, fs_inst *inst);
+
+int brw_get_subgroup_id_param_index(const intel_device_info *devinfo,
+                                    const brw_stage_prog_data *prog_data);
+
 
 #endif /* BRW_FS_H */

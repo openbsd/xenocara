@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/02/24 02:29:48 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:33 jsg Exp $
 
 LIB=	aco
 
@@ -38,7 +38,7 @@ SRCS+=	aco_opcodes.cpp
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
-CXXFLAGS+=	${CXX_VIS_ARGS} ${PICFLAG} -fno-exceptions -fno-rtti -DNOMINMAX
+CXXFLAGS+=	${CXX_VIS_ARGS} ${PICFLAG} -fno-exceptions -fno-rtti
 
 LLVM_CXXFLAGS!= llvm-config --cxxflags
 CXXFLAGS+=	${LLVM_CXXFLAGS}

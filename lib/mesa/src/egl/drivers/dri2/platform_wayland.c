@@ -1355,7 +1355,7 @@ create_wl_buffer(struct dri2_egl_display *dri2_dpy,
                  struct dri2_egl_surface *dri2_surf,
                  __DRIimage *image)
 {
-   struct wl_buffer *ret;
+   struct wl_buffer *ret = NULL;
    EGLBoolean query;
    int width, height, fourcc, num_planes;
    uint64_t modifier = DRM_FORMAT_MOD_INVALID;
@@ -1459,11 +1459,28 @@ create_wl_buffer(struct dri2_egl_display *dri2_dpy,
       ret = zwp_linux_buffer_params_v1_create_immed(params, width, height,
                                                     fourcc, 0);
       zwp_linux_buffer_params_v1_destroy(params);
+   } else {
+      struct wl_drm *wl_drm =
+         dri2_surf ? dri2_surf->wl_drm_wrapper : dri2_dpy->wl_drm;
+      int fd = -1, stride;
 
-      return ret;
+      if (num_planes > 1)
+         return NULL;
+
+      query = dri2_dpy->image->queryImage(image, __DRI_IMAGE_ATTRIB_FD, &fd);
+      query &= dri2_dpy->image->queryImage(image, __DRI_IMAGE_ATTRIB_STRIDE, &stride);
+      if (!query) {
+         if (fd >= 0)
+            close(fd);
+         return NULL;
+      }
+
+      ret = wl_drm_create_prime_buffer(wl_drm, fd, width, height, fourcc, 0,
+                                       stride, 0, 0, 0, 0);
+      close(fd);
    }
 
-   return NULL;
+   return ret;
 }
 
 static EGLBoolean
@@ -1509,6 +1526,17 @@ dri2_wl_swap_buffers_with_damage(_EGLDisplay *disp,
    for (int i = 0; i < ARRAY_SIZE(dri2_surf->color_buffers); i++)
       if (dri2_surf->color_buffers[i].age > 0)
          dri2_surf->color_buffers[i].age++;
+
+   /* Flush (and finish glthread) before:
+    *   - update_buffers_if_needed because the unmarshalling thread
+    *     may be running currently, and we would concurrently alloc/free
+    *     the back bo.
+    *   - swapping current/back because flushing may free the buffer and
+    *     dri_image and reallocate them using get_back_bo (which causes a
+    *     a crash because 'current' becomes NULL).
+    */
+   dri2_flush_drawable_for_swapbuffers(disp, draw);
+   dri2_dpy->flush->invalidate(dri2_surf->dri_drawable);
 
    /* Make sure we have a back buffer in case we're swapping without ever
     * rendering. */
@@ -1571,9 +1599,6 @@ dri2_wl_swap_buffers_with_damage(_EGLDisplay *disp,
                                  0, 0, dri2_surf->base.Width,
                                  dri2_surf->base.Height, 0);
    }
-
-   dri2_flush_drawable_for_swapbuffers(disp, draw);
-   dri2_dpy->flush->invalidate(dri2_surf->dri_drawable);
 
    wl_surface_commit(dri2_surf->wl_surface_wrapper);
 
@@ -1710,16 +1735,21 @@ drm_handle_device(void *data, struct wl_drm *drm, const char *device)
 static void
 drm_handle_format(void *data, struct wl_drm *drm, uint32_t format)
 {
-   /* deprecated, as compositors already support the dma-buf protocol extension
-    * and so we can rely on dmabuf_handle_modifier() to receive formats and
-    * modifiers */
+   struct dri2_egl_display *dri2_dpy = data;
+   int visual_idx = dri2_wl_visual_idx_from_fourcc(format);
+
+   if (visual_idx == -1)
+      return;
+
+   BITSET_SET(dri2_dpy->formats.formats_bitmap, visual_idx);
 }
 
 static void
 drm_handle_capabilities(void *data, struct wl_drm *drm, uint32_t value)
 {
-   /* deprecated, as compositors already support the dma-buf protocol extension
-    * and so we can rely on it to create wl_buffer's */
+   struct dri2_egl_display *dri2_dpy = data;
+
+   dri2_dpy->capabilities = value;
 }
 
 static void
@@ -1909,10 +1939,10 @@ registry_handle_global_drm(void *data, struct wl_registry *registry,
 {
    struct dri2_egl_display *dri2_dpy = data;
 
-   if (strcmp(interface, "wl_drm") == 0) {
+   if (strcmp(interface, wl_drm_interface.name) == 0) {
       dri2_dpy->wl_drm_version = MIN2(version, 2);
       dri2_dpy->wl_drm_name = name;
-   } else if (strcmp(interface, "zwp_linux_dmabuf_v1") == 0 && version >= 3) {
+   } else if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0 && version >= 3) {
       dri2_dpy->wl_dmabuf =
          wl_registry_bind(registry, name, &zwp_linux_dmabuf_v1_interface,
                           MIN2(version, ZWP_LINUX_DMABUF_V1_GET_DEFAULT_FEEDBACK_SINCE_VERSION));
@@ -2089,13 +2119,12 @@ dri2_initialize_wayland_drm(_EGLDisplay *disp)
    wl_registry_add_listener(dri2_dpy->wl_registry,
                             &registry_listener_drm, dri2_dpy);
 
-   /* The compositor must expose the dma-buf interface. */
-   if (roundtrip(dri2_dpy) < 0 || dri2_dpy->wl_dmabuf == NULL)
+   if (roundtrip(dri2_dpy) < 0)
       goto cleanup;
 
    /* Get default dma-buf feedback */
-   if (zwp_linux_dmabuf_v1_get_version(dri2_dpy->wl_dmabuf) >=
-       ZWP_LINUX_DMABUF_V1_GET_DEFAULT_FEEDBACK_SINCE_VERSION) {
+   if (dri2_dpy->wl_dmabuf && zwp_linux_dmabuf_v1_get_version(dri2_dpy->wl_dmabuf) >=
+                              ZWP_LINUX_DMABUF_V1_GET_DEFAULT_FEEDBACK_SINCE_VERSION) {
       dmabuf_feedback_format_table_init(&dri2_dpy->format_table);
       dri2_dpy->wl_dmabuf_feedback =
          zwp_linux_dmabuf_v1_get_default_feedback(dri2_dpy->wl_dmabuf);
@@ -2103,7 +2132,6 @@ dri2_initialize_wayland_drm(_EGLDisplay *disp)
                                                 &dmabuf_feedback_listener, dri2_dpy);
    }
 
-   /* Receive events from the interfaces */
    if (roundtrip(dri2_dpy) < 0)
       goto cleanup;
 
@@ -2189,6 +2217,19 @@ dri2_initialize_wayland_drm(_EGLDisplay *disp)
    dri2_setup_screen(disp);
 
    dri2_wl_setup_swap_interval(disp);
+
+   if (dri2_dpy->wl_drm) {
+      /* To use Prime, we must have _DRI_IMAGE v7 at least. createImageFromFds
+       * support indicates that Prime export/import is supported by the driver.
+       * We deprecated the support to GEM names API, so we bail out if the
+       * driver does not suport Prime. */
+      if (!(dri2_dpy->capabilities & WL_DRM_CAPABILITY_PRIME) ||
+          (dri2_dpy->image->base.version < 7) ||
+          (dri2_dpy->image->createImageFromFds == NULL)) {
+         _eglLog(_EGL_WARNING, "wayland-egl: display does not support prime");
+         goto cleanup;
+      }
+   }
 
    if (dri2_dpy->is_different_gpu &&
        (dri2_dpy->image->base.version < 9 ||
@@ -2581,7 +2622,7 @@ registry_handle_global_swrast(void *data, struct wl_registry *registry,
 {
    struct dri2_egl_display *dri2_dpy = data;
 
-   if (strcmp(interface, "wl_shm") == 0) {
+   if (strcmp(interface, wl_shm_interface.name) == 0) {
       dri2_dpy->wl_shm =
          wl_registry_bind(registry, name, &wl_shm_interface, 1);
       wl_shm_add_listener(dri2_dpy->wl_shm, &shm_listener, dri2_dpy);

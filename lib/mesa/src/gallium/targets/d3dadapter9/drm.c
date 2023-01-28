@@ -47,6 +47,13 @@
 
 #define DBG_CHANNEL DBG_ADAPTER
 
+/* On non-x86 archs, Box86 has issues with thread_submit. */
+#if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
+#define DEFAULT_THREADSUBMIT true
+#else
+#define DEFAULT_THREADSUBMIT false
+#endif
+
 const driOptionDescription __driConfigOptionsNine[] = {
     DRI_CONF_SECTION_PERFORMANCE
          DRI_CONF_VBLANK_MODE(DRI_CONF_VBLANK_DEF_INTERVAL_1)
@@ -54,7 +61,7 @@ const driOptionDescription __driConfigOptionsNine[] = {
     DRI_CONF_SECTION_NINE
         DRI_CONF_NINE_OVERRIDEVENDOR(-1)
         DRI_CONF_NINE_THROTTLE(-2)
-        DRI_CONF_NINE_THREADSUBMIT(true)
+        DRI_CONF_NINE_THREADSUBMIT(DEFAULT_THREADSUBMIT)
         DRI_CONF_NINE_ALLOWDISCARDDELAYEDRELEASE(true)
         DRI_CONF_NINE_TEARFREEDISCARD(true)
         DRI_CONF_NINE_CSMT(-1)

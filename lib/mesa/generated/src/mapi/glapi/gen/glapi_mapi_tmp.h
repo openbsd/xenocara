@@ -910,11 +910,11 @@ GLAPI GLhandleARB APIENTRY GLAPI_PREFIX(GetHandleARB)(GLenum pname);
 GLAPI void APIENTRY GLAPI_PREFIX(GetInfoLogARB)(GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *infoLog);
 GLAPI void APIENTRY GLAPI_PREFIX(GetObjectParameterfvARB)(GLhandleARB obj, GLenum pname, GLfloat *params);
 GLAPI void APIENTRY GLAPI_PREFIX(GetObjectParameterivARB)(GLhandleARB obj, GLenum pname, GLint *params);
-GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstancedEXT)(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
+GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstancedEXT)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(BindFramebuffer)(GLenum target, GLuint framebuffer);
 GLAPI void APIENTRY GLAPI_PREFIX(BindRenderbuffer)(GLenum target, GLuint renderbuffer);
@@ -1226,8 +1226,8 @@ GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fEXT)(GLfloat red, GLfloat green
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3f)(GLfloat red, GLfloat green, GLfloat blue);
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fvEXT)(const GLfloat *v);
 GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fv)(const GLfloat *v);
-GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElementsEXT)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElements)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount);
+GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElementsEXT)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount);
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordfEXT)(GLfloat coord);
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordf)(GLfloat coord);
 GLAPI void APIENTRY GLAPI_PREFIX(FogCoordfvEXT)(const GLfloat *coord);
@@ -1311,6 +1311,8 @@ GLAPI void APIENTRY GLAPI_PREFIX(PointParameterxv)(GLenum pname, const GLfixed *
 GLAPI void APIENTRY GLAPI_PREFIX(TexParameterxv)(GLenum target, GLenum pname, const GLfixed *params);
 GLAPI void APIENTRY GLAPI_PREFIX(BlendBarrier)(void);
 GLAPI void APIENTRY GLAPI_PREFIX(PrimitiveBoundingBox)(GLfloat minX, GLfloat minY, GLfloat minZ, GLfloat minW, GLfloat maxX, GLfloat maxY, GLfloat maxZ, GLfloat maxW);
+GLAPI void APIENTRY GLAPI_PREFIX(GetObjectLabelEXT)(GLenum type, GLuint object, GLsizei bufSize, GLsizei *length, GLchar *label);
+GLAPI void APIENTRY GLAPI_PREFIX(LabelObjectEXT)(GLenum type, GLuint object, GLsizei length, const GLchar *label);
 #undef MAPI_TMP_DEFINES
 #endif /* MAPI_TMP_DEFINES */
 
@@ -7574,14 +7576,14 @@ GLAPI void APIENTRY GLAPI_PREFIX(GetObjectParameterivARB)(GLhandleARB obj, GLenu
    ((void (APIENTRY *)(GLhandleARB obj, GLenum pname, GLint *params)) _func)(obj, pname, params);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[659];
    ((void (APIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)) _func)(mode, first, count, primcount);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
+GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[659];
@@ -7595,14 +7597,14 @@ GLAPI void APIENTRY GLAPI_PREFIX(DrawArraysInstancedEXT)(GLenum mode, GLint firs
    ((void (APIENTRY *)(GLenum mode, GLint first, GLsizei count, GLsizei primcount)) _func)(mode, first, count, primcount);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
+GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[660];
    ((void (APIENTRY *)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
+GLAPI void APIENTRY GLAPI_PREFIX(DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices, GLsizei primcount)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[660];
@@ -9786,14 +9788,14 @@ GLAPI void APIENTRY GLAPI_PREFIX(SecondaryColor3fv)(const GLfloat *v)
    ((void (APIENTRY *)(const GLfloat *v)) _func)(v);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElementsEXT)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
+GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElements)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1173];
    ((void (APIENTRY *)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)) _func)(mode, count, type, indices, primcount);
 }
 
-GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElements)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
+GLAPI void APIENTRY GLAPI_PREFIX(MultiDrawElementsEXT)(GLenum mode, const GLsizei *count, GLenum type, const GLvoid * const *indices, GLsizei primcount)
 {
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1173];
@@ -10379,6 +10381,20 @@ GLAPI void APIENTRY GLAPI_PREFIX(PrimitiveBoundingBox)(GLfloat minX, GLfloat min
    const struct _glapi_table *_tbl = entry_current_get();
    mapi_func _func = ((const mapi_func *) _tbl)[1419];
    ((void (APIENTRY *)(GLfloat minX, GLfloat minY, GLfloat minZ, GLfloat minW, GLfloat maxX, GLfloat maxY, GLfloat maxZ, GLfloat maxW)) _func)(minX, minY, minZ, minW, maxX, maxY, maxZ, maxW);
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(GetObjectLabelEXT)(GLenum type, GLuint object, GLsizei bufSize, GLsizei *length, GLchar *label)
+{
+   const struct _glapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1662];
+   ((void (APIENTRY *)(GLenum type, GLuint object, GLsizei bufSize, GLsizei *length, GLchar *label)) _func)(type, object, bufSize, length, label);
+}
+
+GLAPI void APIENTRY GLAPI_PREFIX(LabelObjectEXT)(GLenum type, GLuint object, GLsizei length, const GLchar *label)
+{
+   const struct _glapi_table *_tbl = entry_current_get();
+   mapi_func _func = ((const mapi_func *) _tbl)[1663];
+   ((void (APIENTRY *)(GLenum type, GLuint object, GLsizei length, const GLchar *label)) _func)(type, object, length, label);
 }
 
 /* does not need public_entries */
@@ -13074,23 +13090,23 @@ STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectParameterfvARB))"\n"
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectParameterivARB))"\n"
 "\t"STUB_ASM_CODE("658")"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DrawArraysInstancedARB))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DrawArraysInstanced))"\n"
 "\t"STUB_ASM_CODE("659")"\n"
 
-".globl "GLAPI_PREFIX_STR(DrawArraysInstanced)"\n"
-".set "GLAPI_PREFIX_STR(DrawArraysInstanced)", "GLAPI_PREFIX_STR(DrawArraysInstancedARB)"\n"
+".globl "GLAPI_PREFIX_STR(DrawArraysInstancedARB)"\n"
+".set "GLAPI_PREFIX_STR(DrawArraysInstancedARB)", "GLAPI_PREFIX_STR(DrawArraysInstanced)"\n"
 
 ".globl "GLAPI_PREFIX_STR(DrawArraysInstancedEXT)"\n"
-".set "GLAPI_PREFIX_STR(DrawArraysInstancedEXT)", "GLAPI_PREFIX_STR(DrawArraysInstancedARB)"\n"
+".set "GLAPI_PREFIX_STR(DrawArraysInstancedEXT)", "GLAPI_PREFIX_STR(DrawArraysInstanced)"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DrawElementsInstancedARB))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(DrawElementsInstanced))"\n"
 "\t"STUB_ASM_CODE("660")"\n"
 
-".globl "GLAPI_PREFIX_STR(DrawElementsInstanced)"\n"
-".set "GLAPI_PREFIX_STR(DrawElementsInstanced)", "GLAPI_PREFIX_STR(DrawElementsInstancedARB)"\n"
+".globl "GLAPI_PREFIX_STR(DrawElementsInstancedARB)"\n"
+".set "GLAPI_PREFIX_STR(DrawElementsInstancedARB)", "GLAPI_PREFIX_STR(DrawElementsInstanced)"\n"
 
 ".globl "GLAPI_PREFIX_STR(DrawElementsInstancedEXT)"\n"
-".set "GLAPI_PREFIX_STR(DrawElementsInstancedEXT)", "GLAPI_PREFIX_STR(DrawElementsInstancedARB)"\n"
+".set "GLAPI_PREFIX_STR(DrawElementsInstancedEXT)", "GLAPI_PREFIX_STR(DrawElementsInstanced)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BindFramebuffer))"\n"
 "\t"STUB_ASM_CODE("661")"\n"
@@ -14022,11 +14038,11 @@ STUB_ASM_ENTRY(GLAPI_PREFIX_STR(SecondaryColor3fvEXT))"\n"
 ".globl "GLAPI_PREFIX_STR(SecondaryColor3fv)"\n"
 ".set "GLAPI_PREFIX_STR(SecondaryColor3fv)", "GLAPI_PREFIX_STR(SecondaryColor3fvEXT)"\n"
 
-STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawElementsEXT))"\n"
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(MultiDrawElements))"\n"
 "\t"STUB_ASM_CODE("1173")"\n"
 
-".globl "GLAPI_PREFIX_STR(MultiDrawElements)"\n"
-".set "GLAPI_PREFIX_STR(MultiDrawElements)", "GLAPI_PREFIX_STR(MultiDrawElementsEXT)"\n"
+".globl "GLAPI_PREFIX_STR(MultiDrawElementsEXT)"\n"
+".set "GLAPI_PREFIX_STR(MultiDrawElementsEXT)", "GLAPI_PREFIX_STR(MultiDrawElements)"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(FogCoordfEXT))"\n"
 "\t"STUB_ASM_CODE("1174")"\n"
@@ -14276,6 +14292,12 @@ STUB_ASM_ENTRY(GLAPI_PREFIX_STR(BlendBarrier))"\n"
 
 STUB_ASM_ENTRY(GLAPI_PREFIX_STR(PrimitiveBoundingBox))"\n"
 "\t"STUB_ASM_CODE("1419")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(GetObjectLabelEXT))"\n"
+"\t"STUB_ASM_CODE("1662")"\n"
+
+STUB_ASM_ENTRY(GLAPI_PREFIX_STR(LabelObjectEXT))"\n"
+"\t"STUB_ASM_CODE("1663")"\n"
 
 );
 #undef MAPI_TMP_STUB_ASM_GCC_NO_HIDDEN

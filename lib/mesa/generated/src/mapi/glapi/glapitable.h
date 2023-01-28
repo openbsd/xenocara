@@ -707,8 +707,8 @@ struct _glapi_table
    void (GLAPIENTRYP GetInfoLogARB)(GLhandleARB obj, GLsizei maxLength, GLsizei * length, GLcharARB * infoLog); /* 656 */
    void (GLAPIENTRYP GetObjectParameterfvARB)(GLhandleARB obj, GLenum pname, GLfloat * params); /* 657 */
    void (GLAPIENTRYP GetObjectParameterivARB)(GLhandleARB obj, GLenum pname, GLint * params); /* 658 */
-   void (GLAPIENTRYP DrawArraysInstancedARB)(GLenum mode, GLint first, GLsizei count, GLsizei primcount); /* 659 */
-   void (GLAPIENTRYP DrawElementsInstancedARB)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount); /* 660 */
+   void (GLAPIENTRYP DrawArraysInstanced)(GLenum mode, GLint first, GLsizei count, GLsizei primcount); /* 659 */
+   void (GLAPIENTRYP DrawElementsInstanced)(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount); /* 660 */
    void (GLAPIENTRYP BindFramebuffer)(GLenum target, GLuint framebuffer); /* 661 */
    void (GLAPIENTRYP BindRenderbuffer)(GLenum target, GLuint renderbuffer); /* 662 */
    void (GLAPIENTRYP BlitFramebuffer)(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter); /* 663 */
@@ -1221,7 +1221,7 @@ struct _glapi_table
    void (GLAPIENTRYP PushDebugGroup)(GLenum source, GLuint id, GLsizei length, const GLchar * message); /* 1170 */
    void (GLAPIENTRYP SecondaryColor3fEXT)(GLfloat red, GLfloat green, GLfloat blue); /* 1171 */
    void (GLAPIENTRYP SecondaryColor3fvEXT)(const GLfloat * v); /* 1172 */
-   void (GLAPIENTRYP MultiDrawElementsEXT)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount); /* 1173 */
+   void (GLAPIENTRYP MultiDrawElements)(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount); /* 1173 */
    void (GLAPIENTRYP FogCoordfEXT)(GLfloat coord); /* 1174 */
    void (GLAPIENTRYP FogCoordfvEXT)(const GLfloat * coord); /* 1175 */
    void (GLAPIENTRYP ResizeBuffersMESA)(void); /* 1176 */
@@ -1706,6 +1706,16 @@ struct _glapi_table
    void (GLAPIENTRYP VertexAttribs4hvNV)(GLuint index, GLsizei n, const GLhalfNV * v); /* 1655 */
    void (GLAPIENTRYP TexPageCommitmentARB)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLboolean commit); /* 1656 */
    void (GLAPIENTRYP TexturePageCommitmentEXT)(GLuint texture, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLboolean commit); /* 1657 */
+   void (GLAPIENTRYP ImportMemoryWin32HandleEXT)(GLuint memory, GLuint64 size, GLenum handleType, GLvoid * handle); /* 1658 */
+   void (GLAPIENTRYP ImportSemaphoreWin32HandleEXT)(GLuint semaphore, GLenum handleType, GLvoid * handle); /* 1659 */
+   void (GLAPIENTRYP ImportMemoryWin32NameEXT)(GLuint memory, GLuint64 size, GLenum handleType, const GLvoid * name); /* 1660 */
+   void (GLAPIENTRYP ImportSemaphoreWin32NameEXT)(GLuint semaphore, GLenum handleType, const GLvoid * handle); /* 1661 */
+   void (GLAPIENTRYP GetObjectLabelEXT)(GLenum type, GLuint object, GLsizei bufSize, GLsizei * length, GLchar * label); /* 1662 */
+   void (GLAPIENTRYP LabelObjectEXT)(GLenum type, GLuint object, GLsizei length, const GLchar * label); /* 1663 */
+   void (GLAPIENTRYP DrawArraysUserBuf)(void); /* 1664 */
+   void (GLAPIENTRYP DrawElementsUserBuf)(void); /* 1665 */
+   void (GLAPIENTRYP MultiDrawArraysUserBuf)(void); /* 1666 */
+   void (GLAPIENTRYP MultiDrawElementsUserBuf)(void); /* 1667 */
 };
 
 #ifdef __cplusplus

@@ -124,10 +124,17 @@ etna_transfer_unmap(struct pipe_context *pctx, struct pipe_transfer *ptrans)
       etna_bo_cpu_fini(etna_resource(trans->rsc)->bo);
 
    if (ptrans->usage & PIPE_MAP_WRITE) {
+      if (etna_resource_needs_flush(rsc)) {
+         if (ptrans->usage & PIPE_MAP_DISCARD_WHOLE_RESOURCE)
+            rsc->flush_seqno = rsc->seqno;
+         else
+            etna_copy_resource(pctx, &rsc->base, &rsc->base, 0, rsc->base.last_level);
+      }
+
       if (trans->rsc) {
          /* We have a temporary resource due to either tile status or
           * tiling format. Write back the updated buffer contents.
-          * FIXME: we need to invalidate the tile status. */
+          */
          etna_copy_resource_box(pctx, ptrans->resource, trans->rsc, ptrans->level, &ptrans->box);
       } else if (trans->staging) {
          /* map buffer object */
@@ -156,6 +163,7 @@ etna_transfer_unmap(struct pipe_context *pctx, struct pipe_transfer *ptrans)
          FREE(trans->staging);
       }
 
+      rsc->levels[ptrans->level].ts_valid = false;
       rsc->seqno++;
 
       if (rsc->base.bind & PIPE_BIND_SAMPLER_VIEW) {
@@ -222,6 +230,7 @@ etna_transfer_map(struct pipe_context *pctx, struct pipe_resource *prsc,
     */
    if ((usage & PIPE_MAP_DISCARD_RANGE) &&
        !(usage & PIPE_MAP_UNSYNCHRONIZED) &&
+       !(prsc->flags & PIPE_RESOURCE_FLAG_MAP_PERSISTENT) &&
        prsc->last_level == 0 &&
        prsc->width0 == box->width &&
        prsc->height0 == box->height &&
@@ -268,12 +277,6 @@ etna_transfer_map(struct pipe_context *pctx, struct pipe_resource *prsc,
       if (usage & PIPE_MAP_DIRECTLY) {
          slab_free(&ctx->transfer_pool, trans);
          BUG("unsupported map flags %#x with tile status/tiled layout", usage);
-         return NULL;
-      }
-
-      if (prsc->depth0 > 1 && rsc->ts_bo) {
-         slab_free(&ctx->transfer_pool, trans);
-         BUG("resource has depth >1 with tile status");
          return NULL;
       }
 
@@ -374,6 +377,7 @@ etna_transfer_map(struct pipe_context *pctx, struct pipe_resource *prsc,
     * transfers without a temporary resource.
     */
    if (trans->rsc || !(usage & PIPE_MAP_UNSYNCHRONIZED)) {
+      enum etna_resource_status status = etna_resource_status(ctx, rsc);
       uint32_t prep_flags = 0;
 
       /*
@@ -382,23 +386,12 @@ etna_transfer_map(struct pipe_context *pctx, struct pipe_resource *prsc,
        * current GPU usage (reads must wait for GPU writes, writes must have
        * exclusive access to the buffer).
        */
-      mtx_lock(&ctx->lock);
-
-      if ((trans->rsc && (etna_resource(trans->rsc)->status & ETNA_PENDING_WRITE)) ||
+      if ((trans->rsc && (status & ETNA_PENDING_WRITE)) ||
           (!trans->rsc &&
-           (((usage & PIPE_MAP_READ) && (rsc->status & ETNA_PENDING_WRITE)) ||
-           ((usage & PIPE_MAP_WRITE) && rsc->status)))) {
-         mtx_lock(&rsc->lock);
-         set_foreach(rsc->pending_ctx, entry) {
-            struct etna_context *pend_ctx = (struct etna_context *)entry->key;
-            struct pipe_context *pend_pctx = &pend_ctx->base;
-
-            pend_pctx->flush(pend_pctx, NULL, 0);
-         }
-         mtx_unlock(&rsc->lock);
+           (((usage & PIPE_MAP_READ) && (status & ETNA_PENDING_WRITE)) ||
+           ((usage & PIPE_MAP_WRITE) && status)))) {
+         pctx->flush(pctx, NULL, 0);
       }
-
-      mtx_unlock(&ctx->lock);
 
       if (usage & PIPE_MAP_READ)
          prep_flags |= DRM_ETNA_PREP_READ;

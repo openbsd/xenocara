@@ -79,7 +79,7 @@ get_mul_for_src(nir_alu_src *src, unsigned num_components,
 
    nir_alu_instr *alu = nir_instr_as_alu(instr);
 
-   /* We want to bail if any of the other ALU operations involved is labled
+   /* We want to bail if any of the other ALU operations involved is labeled
     * exact.  One reason for this is that, while the value that is changing is
     * actually the result of the add and not the multiply, the intention of
     * the user when they specify an exact multiply is that they want *that*
@@ -243,7 +243,7 @@ brw_nir_opt_peephole_ffma_instr(nir_builder *b,
       for (unsigned j = 0; j < add->dest.dest.ssa.num_components; j++)
          ffma->src[i].swizzle[j] = mul->src[i].swizzle[swizzle[j]];
    }
-   nir_alu_src_copy(&ffma->src[2], &add->src[1 - add_mul_src]);
+   nir_alu_src_copy(&ffma->src[2], &add->src[1 - add_mul_src], ffma);
 
    assert(add->dest.dest.is_ssa);
 

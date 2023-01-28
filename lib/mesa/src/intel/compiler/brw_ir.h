@@ -90,7 +90,7 @@ struct backend_reg : private brw_reg
 struct bblock_t;
 
 struct backend_instruction : public exec_node {
-   bool is_3src(const struct intel_device_info *devinfo) const;
+   bool is_3src(const struct brw_compiler *compiler) const;
    bool is_tex() const;
    bool is_math() const;
    bool is_control_flow() const;
@@ -174,6 +174,10 @@ struct backend_instruction {
    bool check_tdr:1; /**< Only valid for SEND; turns it into a SENDC */
    bool send_has_side_effects:1; /**< Only valid for SHADER_OPCODE_SEND */
    bool send_is_volatile:1; /**< Only valid for SHADER_OPCODE_SEND */
+   bool send_ex_desc_scratch:1; /**< Only valid for SHADER_OPCODE_SEND, use
+                                 *   the scratch surface offset to build
+                                 *   extended descriptor
+                                 */
    bool eot:1;
 
    /* Chooses which flag subregister (f0.0 to f1.1) is used for conditional

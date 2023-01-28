@@ -44,6 +44,7 @@
     const char * vk_BlendOverlapEXT_to_str(VkBlendOverlapEXT input);
     const char * vk_BorderColor_to_str(VkBorderColor input);
     const char * vk_BuildAccelerationStructureModeKHR_to_str(VkBuildAccelerationStructureModeKHR input);
+    const char * vk_BuildMicromapModeEXT_to_str(VkBuildMicromapModeEXT input);
     const char * vk_ChromaLocation_to_str(VkChromaLocation input);
     const char * vk_CoarseSampleOrderTypeNV_to_str(VkCoarseSampleOrderTypeNV input);
     const char * vk_ColorSpaceKHR_to_str(VkColorSpaceKHR input);
@@ -53,12 +54,16 @@
     const char * vk_ComponentTypeNV_to_str(VkComponentTypeNV input);
     const char * vk_ConservativeRasterizationModeEXT_to_str(VkConservativeRasterizationModeEXT input);
     const char * vk_CopyAccelerationStructureModeKHR_to_str(VkCopyAccelerationStructureModeKHR input);
+    const char * vk_CopyMicromapModeEXT_to_str(VkCopyMicromapModeEXT input);
     const char * vk_CoverageModulationModeNV_to_str(VkCoverageModulationModeNV input);
     const char * vk_CoverageReductionModeNV_to_str(VkCoverageReductionModeNV input);
     const char * vk_DebugReportObjectTypeEXT_to_str(VkDebugReportObjectTypeEXT input);
     const char * vk_DescriptorType_to_str(VkDescriptorType input);
     const char * vk_DescriptorUpdateTemplateType_to_str(VkDescriptorUpdateTemplateType input);
+    const char * vk_DeviceAddressBindingTypeEXT_to_str(VkDeviceAddressBindingTypeEXT input);
     const char * vk_DeviceEventTypeEXT_to_str(VkDeviceEventTypeEXT input);
+    const char * vk_DeviceFaultAddressTypeEXT_to_str(VkDeviceFaultAddressTypeEXT input);
+    const char * vk_DeviceFaultVendorBinaryHeaderVersionEXT_to_str(VkDeviceFaultVendorBinaryHeaderVersionEXT input);
     const char * vk_DeviceMemoryReportEventTypeEXT_to_str(VkDeviceMemoryReportEventTypeEXT input);
     const char * vk_DiscardRectangleModeEXT_to_str(VkDiscardRectangleModeEXT input);
     const char * vk_DisplayEventTypeEXT_to_str(VkDisplayEventTypeEXT input);
@@ -85,7 +90,12 @@
     const char * vk_LineRasterizationModeEXT_to_str(VkLineRasterizationModeEXT input);
     const char * vk_LogicOp_to_str(VkLogicOp input);
     const char * vk_MemoryOverallocationBehaviorAMD_to_str(VkMemoryOverallocationBehaviorAMD input);
+    const char * vk_MicromapTypeEXT_to_str(VkMicromapTypeEXT input);
     const char * vk_ObjectType_to_str(VkObjectType input);
+    const char * vk_OpacityMicromapFormatEXT_to_str(VkOpacityMicromapFormatEXT input);
+    const char * vk_OpacityMicromapSpecialIndexEXT_to_str(VkOpacityMicromapSpecialIndexEXT input);
+    const char * vk_OpticalFlowPerformanceLevelNV_to_str(VkOpticalFlowPerformanceLevelNV input);
+    const char * vk_OpticalFlowSessionBindingPointNV_to_str(VkOpticalFlowSessionBindingPointNV input);
     const char * vk_PerformanceConfigurationTypeINTEL_to_str(VkPerformanceConfigurationTypeINTEL input);
     const char * vk_PerformanceCounterScopeKHR_to_str(VkPerformanceCounterScopeKHR input);
     const char * vk_PerformanceCounterStorageKHR_to_str(VkPerformanceCounterStorageKHR input);
@@ -97,6 +107,8 @@
     const char * vk_PipelineBindPoint_to_str(VkPipelineBindPoint input);
     const char * vk_PipelineCacheHeaderVersion_to_str(VkPipelineCacheHeaderVersion input);
     const char * vk_PipelineExecutableStatisticFormatKHR_to_str(VkPipelineExecutableStatisticFormatKHR input);
+    const char * vk_PipelineRobustnessBufferBehaviorEXT_to_str(VkPipelineRobustnessBufferBehaviorEXT input);
+    const char * vk_PipelineRobustnessImageBehaviorEXT_to_str(VkPipelineRobustnessImageBehaviorEXT input);
     const char * vk_PointClippingBehavior_to_str(VkPointClippingBehavior input);
     const char * vk_PolygonMode_to_str(VkPolygonMode input);
     const char * vk_PresentModeKHR_to_str(VkPresentModeKHR input);
@@ -126,6 +138,7 @@
     const char * vk_StencilOp_to_str(VkStencilOp input);
     const char * vk_StructureType_to_str(VkStructureType input);
     const char * vk_SubpassContents_to_str(VkSubpassContents input);
+    const char * vk_SubpassMergeStatusEXT_to_str(VkSubpassMergeStatusEXT input);
     const char * vk_SystemAllocationScope_to_str(VkSystemAllocationScope input);
     const char * vk_TessellationDomainOrigin_to_str(VkTessellationDomainOrigin input);
     const char * vk_TimeDomainEXT_to_str(VkTimeDomainEXT input);
@@ -135,6 +148,15 @@
     const char * vk_ValidationFeatureEnableEXT_to_str(VkValidationFeatureEnableEXT input);
     const char * vk_VendorId_to_str(VkVendorId input);
     const char * vk_VertexInputRate_to_str(VkVertexInputRate input);
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    const char * vk_VideoEncodeH264RateControlStructureEXT_to_str(VkVideoEncodeH264RateControlStructureEXT input);
+#endif
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    const char * vk_VideoEncodeH265RateControlStructureEXT_to_str(VkVideoEncodeH265RateControlStructureEXT input);
+#endif
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    const char * vk_VideoEncodeTuningModeKHR_to_str(VkVideoEncodeTuningModeKHR input);
+#endif
     const char * vk_ViewportCoordinateSwizzleNV_to_str(VkViewportCoordinateSwizzleNV input);
 
     size_t vk_structure_type_size(const struct VkBaseInStructure *item);

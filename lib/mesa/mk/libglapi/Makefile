@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:34 jsg Exp $
 
 LIB=	glapi
 
@@ -15,6 +15,11 @@ SRCS+=	u_current.c \
 CFLAGS+=	${C_VIS_ARGS}
 CPPFLAGS+=	-DMAPI_MODE_GLAPI \
 		-DMAPI_ABI_HEADER=\"${MESA_SRC}/generated/src/mapi/shared-glapi/glapi_mapi_tmp.h\"
+
+LDADD+=	-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
+	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
+	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
+	-Wl,--gc-sections -pthread -lm -Wl,--end-group
 
 obj: _xenocara_obj
 

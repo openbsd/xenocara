@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2022/09/02 05:46:39 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:34 jsg Exp $
 
 LIB=	intel-driver-ds
 
@@ -11,7 +11,7 @@ SRCS+=	intel_tracepoints.c
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS}
-CXXFLAGS+=	-std=c++17
+CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/intel/ds \
 		-I${MESA_SRC}/src/mesa \

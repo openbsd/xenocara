@@ -37,6 +37,20 @@
 #include <signal.h>
 #include <stdio.h>
 
+#include "util/detect_os.h"
+
+#if DETECT_OS_WINDOWS
+#include <io.h>
+
+/**
+ * Access flags W_OK are defined by mingw, but not defined by MSVC, we defined it according to
+ * https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/access-waccess
+ */
+#ifndef W_OK
+#define W_OK 02
+#endif
+#endif /* DETECT_OS_WINDOWS */
+
 #include "hud/hud_context.h"
 #include "hud/hud_private.h"
 
@@ -694,7 +708,7 @@ hud_stop_queries(struct hud_context *hud, struct pipe_context *pipe)
              * per frame. It will eventually reach an equilibrium.
              */
             if (gr->current_value <
-                LIST_ENTRY(struct hud_graph, next, head)->current_value) {
+                list_entry(next, struct hud_graph, head)->current_value) {
                list_del(&gr->head);
                list_add(&gr->head, &next->head);
             }
@@ -1011,14 +1025,7 @@ static void strcat_without_spaces(char *dst, const char *src)
 }
 
 
-#ifdef PIPE_OS_WINDOWS
-#define W_OK 0
-static int
-access(const char *pathname, int mode)
-{
-   /* no-op */
-   return 0;
-}
+#if DETECT_OS_WINDOWS
 
 #define PATH_SEP "\\"
 
@@ -1269,6 +1276,9 @@ hud_parse_env_var(struct hud_context *hud, struct pipe_screen *screen,
       else if (strcmp(name, "API-thread-num-syncs") == 0) {
          hud_thread_counter_install(pane, name, HUD_COUNTER_SYNCS);
       }
+      else if (strcmp(name, "API-thread-num-batches") == 0) {
+         hud_thread_counter_install(pane, name, HUD_COUNTER_BATCHES);
+      }
       else if (strcmp(name, "main-thread-busy") == 0) {
          hud_thread_busy_install(pane, name, true);
       }
@@ -1432,9 +1442,8 @@ hud_parse_env_var(struct hud_context *hud, struct pipe_screen *screen,
          strip_hyphens(s);
          if (added && !list_is_empty(&pane->graph_list)) {
             struct hud_graph *graph;
-            graph = LIST_ENTRY(struct hud_graph, pane->graph_list.prev, head);
-            strncpy(graph->name, s, sizeof(graph->name)-1);
-            graph->name[sizeof(graph->name)-1] = 0;
+            graph = list_entry(pane->graph_list.prev, struct hud_graph, head);
+            snprintf(graph->name, sizeof(graph->name), "%s", s);
          }
       }
 
@@ -1936,7 +1945,6 @@ hud_create(struct cso_context *cso, struct st_context_iface *st,
    hud->font_sampler_state.wrap_s = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
    hud->font_sampler_state.wrap_t = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
    hud->font_sampler_state.wrap_r = PIPE_TEX_WRAP_CLAMP_TO_EDGE;
-   hud->font_sampler_state.normalized_coords = 1;
 
    /* constants */
    hud->constbuf.buffer_size = sizeof(hud->constants);

@@ -35,7 +35,7 @@
  *   Keith Whitwell <keithw@vmware.com>
  */
 
-
+#include "main/context.h"
 #include "main/errors.h"
 
 #include "main/image.h"
@@ -67,22 +67,11 @@
 #include "draw/draw_context.h"
 #include "cso_cache/cso_context.h"
 
-
-/**
- * Translate OpenGL primtive type (GL_POINTS, GL_TRIANGLE_STRIP, etc) to
- * the corresponding Gallium type.
- */
-static unsigned
-translate_prim(const struct gl_context *ctx, unsigned prim)
-{
-   /* GL prims should match Gallium prims, spot-check a few */
-   STATIC_ASSERT(GL_POINTS == PIPE_PRIM_POINTS);
-   STATIC_ASSERT(GL_QUADS == PIPE_PRIM_QUADS);
-   STATIC_ASSERT(GL_TRIANGLE_STRIP_ADJACENCY == PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY);
-   STATIC_ASSERT(GL_PATCHES == PIPE_PRIM_PATCHES);
-
-   return prim;
-}
+/* GL prims should match Gallium prims, spot-check a few */
+static_assert(GL_POINTS == PIPE_PRIM_POINTS, "enum mismatch");
+static_assert(GL_QUADS == PIPE_PRIM_QUADS, "enum mismatch");
+static_assert(GL_TRIANGLE_STRIP_ADJACENCY == PIPE_PRIM_TRIANGLE_STRIP_ADJACENCY, "enum mismatch");
+static_assert(GL_PATCHES == PIPE_PRIM_PATCHES, "enum mismatch");
 
 static inline void
 prepare_draw(struct st_context *st, struct gl_context *ctx, uint64_t state_mask,
@@ -217,23 +206,38 @@ st_draw_gallium_multimode(struct gl_context *ctx,
    }
 }
 
+static void
+rewrite_partial_stride_indirect(struct st_context *st,
+                            const struct pipe_draw_info *info,
+                            const struct pipe_draw_indirect_info *indirect,
+                            const struct pipe_draw_start_count_bias draw)
+{
+   unsigned draw_count = 0;
+   struct u_indirect_params *new_draws = util_draw_indirect_read(st->pipe, info, indirect, &draw_count);
+   if (!new_draws)
+      return;
+   for (unsigned i = 0; i < draw_count; i++)
+      cso_draw_vbo(st->cso_context, &new_draws[i].info, i, NULL, new_draws[i].draw);
+   free(new_draws);
+}
+
 void
 st_indirect_draw_vbo(struct gl_context *ctx,
-                     GLuint mode,
-                     struct gl_buffer_object *indirect_data,
-                     GLsizeiptr indirect_offset,
-                     unsigned draw_count,
-                     unsigned stride,
-                     struct gl_buffer_object *indirect_draw_count,
-                     GLsizeiptr indirect_draw_count_offset,
-                     const struct _mesa_index_buffer *ib,
-                     bool primitive_restart,
-                     unsigned restart_index)
+                     GLenum mode, GLenum index_type,
+                     GLintptr indirect_offset,
+                     GLintptr indirect_draw_count_offset,
+                     GLsizei draw_count, GLsizei stride)
 {
+   struct gl_buffer_object *indirect_data = ctx->DrawIndirectBuffer;
+   struct gl_buffer_object *indirect_draw_count = ctx->ParameterBuffer;
    struct st_context *st = st_context(ctx);
    struct pipe_draw_info info;
    struct pipe_draw_indirect_info indirect;
    struct pipe_draw_start_count_bias draw = {0};
+
+   /* If indirect_draw_count is set, drawcount is the maximum draw count.*/
+   if (!draw_count)
+      return;
 
    assert(stride);
    prepare_draw(st, ctx, ST_PIPELINE_RENDER_STATE_MASK, ST_PIPELINE_RENDER);
@@ -242,21 +246,33 @@ st_indirect_draw_vbo(struct gl_context *ctx,
    util_draw_init_info(&info);
    info.max_index = ~0u; /* so that u_vbuf can tell that it's unknown */
 
-   if (ib) {
-      struct gl_buffer_object *bufobj = ib->obj;
+   switch (index_type) {
+   case GL_UNSIGNED_BYTE:
+      info.index_size = 1;
+      break;
+   case GL_UNSIGNED_SHORT:
+      info.index_size = 2;
+      break;
+   case GL_UNSIGNED_INT:
+      info.index_size = 4;
+      break;
+   }
+
+   if (info.index_size) {
+      struct gl_buffer_object *bufobj = ctx->Array.VAO->IndexBufferObj;
 
       /* indices are always in a real VBO */
       assert(bufobj);
 
-      info.index_size = 1 << ib->index_size_shift;
       info.index.resource = bufobj->buffer;
-      draw.start = pointer_to_offset(ib->ptr) >> ib->index_size_shift;
+      draw.start = 0;
 
-      info.restart_index = restart_index;
-      info.primitive_restart = primitive_restart;
+      unsigned index_size_shift = util_logbase2(info.index_size);
+      info.restart_index = ctx->Array._RestartIndex[index_size_shift];
+      info.primitive_restart = ctx->Array._PrimitiveRestart[index_size_shift];
    }
 
-   info.mode = translate_prim(ctx, mode);
+   info.mode = mode;
    indirect.buffer = indirect_data->buffer;
    indirect.offset = indirect_offset;
 
@@ -276,6 +292,15 @@ st_indirect_draw_vbo(struct gl_context *ctx,
    } else {
       indirect.draw_count = draw_count;
       indirect.stride = stride;
+      if (!st->has_indirect_partial_stride && stride &&
+          (draw_count > 1 || indirect_draw_count)) {
+         /* DrawElementsIndirectCommand or DrawArraysIndirectCommand */
+         const size_t struct_size = info.index_size ? sizeof(uint32_t) * 5 : sizeof(uint32_t) * 4;
+         if (indirect.stride && indirect.stride < struct_size) {
+            rewrite_partial_stride_indirect(st, &info, &indirect, draw);
+            return;
+         }
+      }
       if (indirect_draw_count) {
          indirect.indirect_draw_count =
             indirect_draw_count->buffer;
@@ -283,6 +308,9 @@ st_indirect_draw_vbo(struct gl_context *ctx,
       }
       cso_draw_vbo(st->cso_context, &info, 0, &indirect, draw);
    }
+
+   if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH)
+      _mesa_flush(ctx);
 }
 
 void
@@ -300,7 +328,7 @@ st_draw_transform_feedback(struct gl_context *ctx, GLenum mode,
    memset(&indirect, 0, sizeof(indirect));
    util_draw_init_info(&info);
    info.max_index = ~0u; /* so that u_vbuf can tell that it's unknown */
-   info.mode = translate_prim(ctx, mode);
+   info.mode = mode;
    info.instance_count = num_instances;
 
    /* Transform feedback drawing is always non-indexed. */
@@ -494,4 +522,71 @@ st_draw_quad(struct st_context *st,
    pipe_resource_reference(&vb.buffer.resource, NULL);
 
    return true;
+}
+
+static void
+st_hw_select_draw_gallium(struct gl_context *ctx,
+                          struct pipe_draw_info *info,
+                          unsigned drawid_offset,
+                          const struct pipe_draw_start_count_bias *draws,
+                          unsigned num_draws)
+{
+   struct st_context *st = st_context(ctx);
+
+   prepare_draw(st, ctx, ST_PIPELINE_RENDER_STATE_MASK, ST_PIPELINE_RENDER);
+
+   if (!prepare_indexed_draw(st, ctx, info, draws, num_draws))
+      return;
+
+   if (!st_draw_hw_select_prepare_common(ctx) ||
+       !st_draw_hw_select_prepare_mode(ctx, info))
+      return;
+
+   cso_multi_draw(st->cso_context, info, drawid_offset, draws, num_draws);
+}
+
+static void
+st_hw_select_draw_gallium_multimode(struct gl_context *ctx,
+                                    struct pipe_draw_info *info,
+                                    const struct pipe_draw_start_count_bias *draws,
+                                    const unsigned char *mode,
+                                    unsigned num_draws)
+{
+   struct st_context *st = st_context(ctx);
+
+   prepare_draw(st, ctx, ST_PIPELINE_RENDER_STATE_MASK, ST_PIPELINE_RENDER);
+
+   if (!prepare_indexed_draw(st, ctx, info, draws, num_draws))
+      return;
+
+   if (!st_draw_hw_select_prepare_common(ctx))
+      return;
+
+   unsigned i, first;
+   struct cso_context *cso = st->cso_context;
+
+   /* Find consecutive draws where mode doesn't vary. */
+   for (i = 0, first = 0; i <= num_draws; i++) {
+      if (i == num_draws || mode[i] != mode[first]) {
+         info->mode = mode[first];
+
+         if (st_draw_hw_select_prepare_mode(ctx, info))
+            cso_multi_draw(cso, info, 0, &draws[first], i - first);
+
+         first = i;
+
+         /* We can pass the reference only once. st_buffer_object keeps
+          * the reference alive for later draws.
+          */
+         info->take_index_buffer_ownership = false;
+      }
+   }
+}
+
+void
+st_init_hw_select_draw_functions(struct pipe_screen *screen,
+                                 struct dd_function_table *functions)
+{
+   functions->DrawGallium = st_hw_select_draw_gallium;
+   functions->DrawGalliumMultiMode = st_hw_select_draw_gallium_multimode;
 }

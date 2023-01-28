@@ -67,7 +67,6 @@
 
 #include "pipe/p_context.h"
 #include "pipe/p_defines.h"
-#include "tgsi/tgsi_ureg.h"
 #include "util/format/u_format.h"
 #include "util/u_inlines.h"
 #include "util/u_math.h"
@@ -748,7 +747,8 @@ draw_textured_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
    const unsigned fb_height = _mesa_geometric_height(ctx->DrawBuffer);
    GLfloat x0, y0, x1, y1;
    ASSERTED GLsizei maxSize;
-   boolean normalized = sv[0]->texture->target == PIPE_TEXTURE_2D;
+   boolean normalized = sv[0]->texture->target == PIPE_TEXTURE_2D ||
+                        (sv[0]->texture->target == PIPE_TEXTURE_RECT && st->lower_rect_tex);
    unsigned cso_state_mask;
 
    assert(sv[0]->texture->target == st->internal_target);
@@ -837,7 +837,7 @@ draw_textured_quad(struct gl_context *ctx, GLint x, GLint y, GLfloat z,
       sampler.min_img_filter = PIPE_TEX_FILTER_NEAREST;
       sampler.min_mip_filter = PIPE_TEX_MIPFILTER_NONE;
       sampler.mag_img_filter = PIPE_TEX_FILTER_NEAREST;
-      sampler.normalized_coords = normalized;
+      sampler.unnormalized_coords = !normalized;
 
       if (fpv) {
          /* drawing a color image */

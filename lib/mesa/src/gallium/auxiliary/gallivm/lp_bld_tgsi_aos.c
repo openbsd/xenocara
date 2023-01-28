@@ -110,7 +110,7 @@ emit_fetch_constant(
    struct lp_type type = bld_base->base.type;
    LLVMValueRef res;
    unsigned chan;
-
+   LLVMTypeRef i8t = LLVMInt8TypeInContext(bld_base->base.gallivm->context);
    assert(!reg->Register.Indirect);
 
    /*
@@ -127,9 +127,9 @@ emit_fetch_constant(
       index = lp_build_const_int32(bld->bld_base.base.gallivm,
                                    reg->Register.Index * 4 + chan);
 
-      scalar_ptr = LLVMBuildGEP(builder, bld->consts_ptr, &index, 1, "");
+      scalar_ptr = LLVMBuildGEP2(builder, i8t, bld->consts_ptr, &index, 1, "");
 
-      scalar = LLVMBuildLoad(builder, scalar_ptr, "");
+      scalar = LLVMBuildLoad2(builder, i8t, scalar_ptr, "");
 
       lp_build_name(scalar, "const[%u].%c", reg->Register.Index, "xyzw"[chan]);
 
@@ -206,7 +206,8 @@ emit_fetch_temporary(
    struct lp_build_tgsi_aos_context * bld = lp_aos_context(bld_base);
    LLVMBuilderRef builder = bld_base->base.gallivm->builder;
    LLVMValueRef temp_ptr = bld->temps[reg->Register.Index];
-   LLVMValueRef res = LLVMBuildLoad(builder, temp_ptr, "");
+   LLVMTypeRef vec_type = lp_build_vec_type(bld->bld_base.base.gallivm, bld->bld_base.base.type);
+   LLVMValueRef res = LLVMBuildLoad2(builder, vec_type, temp_ptr, "");
    assert(!reg->Register.Indirect);
    if (!res)
       return bld->bld_base.base.undef;
@@ -286,8 +287,8 @@ lp_emit_store_aos(
 
    if (mask) {
       LLVMValueRef orig_value;
-
-      orig_value = LLVMBuildLoad(builder, ptr, "");
+      LLVMTypeRef vec_type = lp_build_vec_type(bld->bld_base.base.gallivm, bld->bld_base.base.type);
+      orig_value = LLVMBuildLoad2(builder, vec_type, ptr, "");
       value = lp_build_select(&bld->bld_base.base,
                               mask, value, orig_value);
    }

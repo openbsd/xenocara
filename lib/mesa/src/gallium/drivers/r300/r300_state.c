@@ -890,7 +890,7 @@ void r300_mark_fb_state_dirty(struct r300_context *r300,
 
     if (r300->cmask_in_use) {
         r300->fb_state.size += 6;
-        if (r300->screen->caps.is_r500 && r300->screen->info.drm_minor >= 29) {
+        if (r300->screen->caps.is_r500) {
             r300->fb_state.size += 3;
         }
     }
@@ -1064,7 +1064,8 @@ static void* r300_create_fs_state(struct pipe_context* pipe,
     tgsi_scan_shader(fs->state.tokens, &info);
     for (int i = 0; i < PIPE_MAX_SHADER_SAMPLER_VIEWS; i++) {
         if (info.sampler_targets[i] == TGSI_TEXTURE_SHADOW1D ||
-            info.sampler_targets[i] == TGSI_TEXTURE_SHADOW2D) {
+            info.sampler_targets[i] == TGSI_TEXTURE_SHADOW2D ||
+            info.sampler_targets[i] == TGSI_TEXTURE_SHADOWRECT) {
             precompile_state.unit[i].compare_mode_enabled = true;
             precompile_state.unit[i].texture_compare_func = PIPE_FUNC_LESS;
         }
@@ -1218,7 +1219,7 @@ static void* r300_create_rs_state(struct pipe_context* pipe,
 
     /* Line control. */
     line_control = pack_float_16_6x(state->line_width) |
-        R300_GA_LINE_CNTL_END_TYPE_COMP;
+        (state->line_smooth ? R300_GA_LINE_CNTL_END_TYPE_COMP : R300_GA_LINE_CNTL_END_TYPE_SQR);
 
     /* Enable polygon mode */
     polygon_mode = 0;
@@ -2075,7 +2076,7 @@ static void r300_set_constant_buffer(struct pipe_context *pipe,
         struct r300_resource *rbuf = r300_resource(cb->buffer);
 
         if (rbuf && rbuf->malloced_buffer)
-            mapped = (uint32_t*)rbuf->malloced_buffer;
+            mapped = (uint32_t*)(rbuf->malloced_buffer + cb->buffer_offset);
         else
             return;
     }

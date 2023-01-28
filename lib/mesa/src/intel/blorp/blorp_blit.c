@@ -84,6 +84,7 @@ blorp_blit_get_frag_coords(nir_builder *b,
       coord = nir_isub(b, coord, nir_load_var(b, v->v_dst_offset));
 
    if (key->persample_msaa_dispatch) {
+      b->shader->info.fs.uses_sample_shading = true;
       return nir_vec3(b, nir_channel(b, coord, 0), nir_channel(b, coord, 1),
                       nir_load_sample_id(b));
    } else {
@@ -940,7 +941,7 @@ bit_cast_color(struct nir_builder *b, nir_ssa_def *color,
       /* Restrict to only the channels we actually have */
       const unsigned src_channels =
          isl_format_get_num_channels(key->src_format);
-      color = nir_channels(b, color, (1 << src_channels) - 1);
+      color = nir_trim_vector(b, color, src_channels);
 
       color = nir_format_bitcast_uvec_unmasked(b, color, src_bpc, dst_bpc);
    }
@@ -1394,7 +1395,7 @@ brw_blorp_build_nir_shader(struct blorp_context *blorp,
                             nir_imm_float(&b, 0.5f));
          color = blorp_nir_tex(&b, &v, key, src_pos);
       } else {
-         /* Gfx7+ hardware doesn't automaticaly blend. */
+         /* Gfx7+ hardware doesn't automatically blend. */
          color = blorp_nir_combine_samples(&b, &v, src_pos, key->src_samples,
                                            key->tex_aux_usage,
                                            key->texture_data_type,
@@ -2455,9 +2456,9 @@ blorp_blit_supports_compute(struct blorp_context *blorp,
    }
 }
 
-static bool
-blitter_supports_aux(const struct intel_device_info *devinfo,
-                     enum isl_aux_usage aux_usage)
+bool
+blorp_blitter_supports_aux(const struct intel_device_info *devinfo,
+                           enum isl_aux_usage aux_usage)
 {
    switch (aux_usage) {
    case ISL_AUX_USAGE_NONE:
@@ -2485,10 +2486,10 @@ blorp_copy_supports_blitter(struct blorp_context *blorp,
    if (dst_surf->samples > 1 || src_surf->samples > 1)
       return false;
 
-   if (!blitter_supports_aux(devinfo, dst_aux_usage))
+   if (!blorp_blitter_supports_aux(devinfo, dst_aux_usage))
       return false;
 
-   if (!blitter_supports_aux(devinfo, src_aux_usage))
+   if (!blorp_blitter_supports_aux(devinfo, src_aux_usage))
       return false;
 
    const struct isl_format_layout *fmtl =
@@ -2527,7 +2528,7 @@ blorp_blit(struct blorp_batch *batch,
 {
    struct blorp_params params;
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_BLIT;
+   params.op = BLORP_OP_BLIT;
    const bool compute = batch->flags & BLORP_BATCH_USE_COMPUTE;
    if (compute) {
       assert(blorp_blit_supports_compute(batch->blorp,
@@ -2868,7 +2869,7 @@ blorp_copy(struct blorp_batch *batch,
       return;
 
    blorp_params_init(&params);
-   params.snapshot_type = INTEL_SNAPSHOT_COPY;
+   params.op = BLORP_OP_COPY;
 
    const bool compute = batch->flags & BLORP_BATCH_USE_COMPUTE;
    if (compute) {

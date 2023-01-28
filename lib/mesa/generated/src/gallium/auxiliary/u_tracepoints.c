@@ -20,13 +20,13 @@
  * IN THE SOFTWARE.
  */
 
-#include "pipe/p_state.h"
-#include "util/format/u_format.h"
-
 #include "u_tracepoints.h"
 
+
 #define __NEEDS_TRACE_PRIV
+#include "util/u_debug.h"
 #include "util/perf/u_trace_priv.h"
+
 
 /*
  * surface
@@ -41,14 +41,28 @@ static void __print_surface(FILE *out, const void *arg) {
            , __entry->format
    );
 }
+
+static void __print_json_surface(FILE *out, const void *arg) {
+   const struct trace_surface *__entry =
+      (const struct trace_surface *)arg;
+   fprintf(out, "\"unstructured\": \"%ux%u@%u, fmt=%s\""
+           , __entry->width
+           , __entry->height
+           , __entry->nr_samples
+           , __entry->format
+   );
+}
+
 static const struct u_tracepoint __tp_surface = {
     ALIGN_POT(sizeof(struct trace_surface), 8),   /* keep size 64b aligned */
     "surface",
     false,
     __print_surface,
+    __print_json_surface,
 };
 void __trace_surface(
-     struct u_trace *ut, void *cs
+     struct u_trace *ut
+   , void *cs
    , const struct pipe_surface * psurf
 ) {
    struct trace_surface *__entry =
@@ -73,14 +87,29 @@ static void __print_framebuffer(FILE *out, const void *arg) {
            , __entry->nr_cbufs
    );
 }
+
+static void __print_json_framebuffer(FILE *out, const void *arg) {
+   const struct trace_framebuffer *__entry =
+      (const struct trace_framebuffer *)arg;
+   fprintf(out, "\"unstructured\": \"%ux%ux%u@%u, nr_cbufs: %u\""
+           , __entry->width
+           , __entry->height
+           , __entry->layers
+           , __entry->samples
+           , __entry->nr_cbufs
+   );
+}
+
 static const struct u_tracepoint __tp_framebuffer = {
     ALIGN_POT(sizeof(struct trace_framebuffer), 8),   /* keep size 64b aligned */
     "framebuffer",
     false,
     __print_framebuffer,
+    __print_json_framebuffer,
 };
 void __trace_framebuffer(
-     struct u_trace *ut, void *cs
+     struct u_trace *ut
+   , void *cs
    , const struct pipe_framebuffer_state * pfb
 ) {
    struct trace_framebuffer *__entry =
@@ -108,14 +137,31 @@ static void __print_grid_info(FILE *out, const void *arg) {
            , __entry->grid_z
    );
 }
+
+static void __print_json_grid_info(FILE *out, const void *arg) {
+   const struct trace_grid_info *__entry =
+      (const struct trace_grid_info *)arg;
+   fprintf(out, "\"unstructured\": \"work_dim=%u, block=%ux%ux%u, grid=%ux%ux%u\""
+           , __entry->work_dim
+           , __entry->block_x
+           , __entry->block_y
+           , __entry->block_z
+           , __entry->grid_x
+           , __entry->grid_y
+           , __entry->grid_z
+   );
+}
+
 static const struct u_tracepoint __tp_grid_info = {
     ALIGN_POT(sizeof(struct trace_grid_info), 8),   /* keep size 64b aligned */
     "grid_info",
     false,
     __print_grid_info,
+    __print_json_grid_info,
 };
 void __trace_grid_info(
-     struct u_trace *ut, void *cs
+     struct u_trace *ut
+   , void *cs
    , const struct pipe_grid_info * pgrid
 ) {
    struct trace_grid_info *__entry =

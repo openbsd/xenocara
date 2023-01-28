@@ -92,9 +92,17 @@ enum {
 
 void brw_nir_analyze_boolean_resolves(nir_shader *nir);
 
+struct brw_nir_compiler_opts {
+   /* Soft floating point implementation shader */
+   const nir_shader *softfp64;
+
+   /* Whether robust image access is enabled */
+   bool robust_image_access;
+};
+
 void brw_preprocess_nir(const struct brw_compiler *compiler,
                         nir_shader *nir,
-                        const nir_shader *softfp64);
+                        const struct brw_nir_compiler_opts *opts);
 
 void
 brw_nir_link_shaders(const struct brw_compiler *compiler,
@@ -141,6 +149,8 @@ bool brw_nir_apply_attribute_workarounds(nir_shader *nir,
                                          const uint8_t *attrib_wa_flags);
 
 bool brw_nir_apply_trig_workarounds(nir_shader *nir);
+
+bool brw_nir_limit_trig_input_range_workaround(nir_shader *nir);
 
 void brw_nir_apply_tcs_quads_workaround(nir_shader *nir);
 

@@ -251,7 +251,9 @@ struct fd_context {
    struct list_head acc_active_queries dt;
    /*@}*/
 
-   uint8_t patch_vertices;
+   float default_outer_level[4] dt;
+   float default_inner_level[2] dt;
+   uint8_t patch_vertices dt;
 
    /* Whether we need to recheck the active_queries list next
     * fd_batch_update_queries().
@@ -349,13 +351,16 @@ struct fd_context {
    /* points to either scissor or disabled_scissor depending on rast state: */
    struct pipe_scissor_state *current_scissor dt;
 
-   struct pipe_scissor_state scissor dt;
+   /* Note that all the scissor state that is traced is inclusive, ie the
+    * maxiumum maxx is one less than the width.
+    */
+   struct pipe_scissor_state scissor[PIPE_MAX_VIEWPORTS] dt;
 
    /* we don't have a disable/enable bit for scissor, so instead we keep
     * a disabled-scissor state which matches the entire bound framebuffer
     * and use that when scissor is not enabled.
     */
-   struct pipe_scissor_state disabled_scissor dt;
+   struct pipe_scissor_state disabled_scissor[PIPE_MAX_VIEWPORTS] dt;
 
    /* Per vsc pipe bo's (a2xx-a5xx): */
    struct fd_bo *vsc_pipe_bo[32] dt;
@@ -397,8 +402,11 @@ struct fd_context {
    /* local context fb state, for when ctx->batch is null: */
    struct pipe_framebuffer_state framebuffer dt;
    struct pipe_poly_stipple stipple dt;
-   struct pipe_viewport_state viewport dt;
-   struct pipe_scissor_state viewport_scissor dt;
+   struct pipe_viewport_state viewport[PIPE_MAX_VIEWPORTS] dt;
+   struct pipe_scissor_state viewport_scissor[PIPE_MAX_VIEWPORTS] dt;
+   struct {
+      unsigned x, y;
+   } guardband dt;
    struct fd_constbuf_stateobj constbuf[PIPE_SHADER_TYPES] dt;
    struct fd_shaderbuf_stateobj shaderbuf[PIPE_SHADER_TYPES] dt;
    struct fd_shaderimg_stateobj shaderimg[PIPE_SHADER_TYPES] dt;
@@ -590,32 +598,19 @@ fd_context_dirty_resource(enum fd_dirty_3d_state dirty)
                    FD_DIRTY_TEX | FD_DIRTY_STREAMOUT);
 }
 
-#ifdef __cplusplus
-#define or_dirty(d, mask)                                                      \
-   do {                                                                        \
-      decltype(mask) _d = (d);                                                 \
-      d = (decltype(mask))(_d | (mask));                                       \
-   } while (0)
-#else
-#define or_dirty(d, mask)                                                      \
-   do {                                                                        \
-      d |= (mask);                                                             \
-   } while (0)
-#endif
-
 /* Mark specified non-shader-stage related state as dirty: */
 static inline void
 fd_context_dirty(struct fd_context *ctx, enum fd_dirty_3d_state dirty) assert_dt
 {
    assert(util_is_power_of_two_nonzero(dirty));
-   STATIC_ASSERT(ffs(dirty) <= ARRAY_SIZE(ctx->gen_dirty_map));
+   assert(ffs(dirty) <= ARRAY_SIZE(ctx->gen_dirty_map));
 
    ctx->gen_dirty |= ctx->gen_dirty_map[ffs(dirty) - 1];
 
    if (fd_context_dirty_resource(dirty))
-      or_dirty(dirty, FD_DIRTY_RESOURCE);
+      or_mask(dirty, FD_DIRTY_RESOURCE);
 
-   or_dirty(ctx->dirty, dirty);
+   or_mask(ctx->dirty, dirty);
 }
 
 static inline void
@@ -639,7 +634,7 @@ fd_context_dirty_shader(struct fd_context *ctx, enum pipe_shader_type shader,
 
    ctx->gen_dirty |= ctx->gen_dirty_shader_map[shader][ffs(dirty) - 1];
 
-   or_dirty(ctx->dirty_shader[shader], dirty);
+   or_mask(ctx->dirty_shader[shader], dirty);
    fd_context_dirty(ctx, map[ffs(dirty) - 1]);
 }
 

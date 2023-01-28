@@ -1,9 +1,9 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2009 VMware, Inc.
  * Copyright 2007 VMware, Inc.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -11,11 +11,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -23,7 +23,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 /**
@@ -65,7 +65,6 @@
 #include "util/format/u_format.h"
 #include "util/u_dump.h"
 #include "util/u_string.h"
-#include "util/simple_list.h"
 #include "util/u_dual_blend.h"
 #include "util/u_upload_mgr.h"
 #include "util/os_time.h"
@@ -110,11 +109,15 @@
 #include "lp_screen.h"
 #include "compiler/nir/nir_serialize.h"
 #include "util/mesa-sha1.h"
+
+
 /** Fragment shader number (for debugging) */
 static unsigned fs_no = 0;
 
+
 static void
 load_unswizzled_block(struct gallivm_state *gallivm,
+                      LLVMTypeRef base_type,
                       LLVMValueRef base_ptr,
                       LLVMValueRef stride,
                       unsigned block_width,
@@ -132,9 +135,8 @@ static inline boolean
 is_arithmetic_format(const struct util_format_description *format_desc)
 {
    boolean arith = false;
-   unsigned i;
 
-   for (i = 0; i < format_desc->nr_channels; ++i) {
+   for (unsigned i = 0; i < format_desc->nr_channels; ++i) {
       arith |= format_desc->channel[i].size != format_desc->channel[0].size;
       arith |= (format_desc->channel[i].size % 8) != 0;
    }
@@ -142,10 +144,11 @@ is_arithmetic_format(const struct util_format_description *format_desc)
    return arith;
 }
 
+
 /**
  * Checks if this format requires special handling due to required expansion
- * to floats for blending, and furthermore has "natural" packed AoS -> unpacked
- * SoA conversion.
+ * to floats for blending, and furthermore has "natural" packed AoS ->
+ * unpacked SoA conversion.
  */
 static inline boolean
 format_expands_to_float_soa(const struct util_format_description *format_desc)
@@ -168,7 +171,6 @@ lp_mem_type_from_format_desc(const struct util_format_description *format_desc,
                              struct lp_type* type)
 {
    unsigned i;
-   unsigned chan;
 
    if (format_expands_to_float_soa(format_desc)) {
       /* just make this a uint with width of block */
@@ -181,10 +183,11 @@ lp_mem_type_from_format_desc(const struct util_format_description *format_desc,
       return;
    }
 
-   for (i = 0; i < 4; i++)
+   for (i = 0; i < 4; i++) {
       if (format_desc->channel[i].type != UTIL_FORMAT_TYPE_VOID)
          break;
-   chan = i;
+   }
+   unsigned chan = i;
 
    memset(type, 0, sizeof(struct lp_type));
    type->floating = format_desc->channel[chan].type == UTIL_FORMAT_TYPE_FLOAT;
@@ -196,7 +199,7 @@ lp_mem_type_from_format_desc(const struct util_format_description *format_desc,
       type->width = 0;
       type->length = 1;
 
-      for (i = 0; i < format_desc->nr_channels; ++i) {
+      for (unsigned i = 0; i < format_desc->nr_channels; ++i) {
          type->width += format_desc->channel[i].size;
       }
    } else {
@@ -204,6 +207,7 @@ lp_mem_type_from_format_desc(const struct util_format_description *format_desc,
       type->length = format_desc->nr_channels;
    }
 }
+
 
 /**
  * Expand the relevant bits of mask_input to a n*4-dword mask for the
@@ -223,22 +227,21 @@ generate_quad_mask(struct gallivm_state *gallivm,
                    LLVMValueRef mask_input) /* int64 */
 {
    LLVMBuilderRef builder = gallivm->builder;
-   struct lp_type mask_type;
    LLVMTypeRef i32t = LLVMInt32TypeInContext(gallivm->context);
    LLVMValueRef bits[16];
    LLVMValueRef mask, bits_vec;
-   int shift, i;
 
    /*
     * XXX: We'll need a different path for 16 x u8
     */
    assert(fs_type.width == 32);
    assert(fs_type.length <= ARRAY_SIZE(bits));
-   mask_type = lp_int_type(fs_type);
+   struct lp_type mask_type = lp_int_type(fs_type);
 
    /*
     * mask_input >>= (quad * 4)
     */
+   int shift;
    switch (first_quad) {
    case 0:
       shift = 0;
@@ -259,15 +262,13 @@ generate_quad_mask(struct gallivm_state *gallivm,
       shift = 0;
    }
 
-   mask_input = LLVMBuildLShr(builder, mask_input, lp_build_const_int64(gallivm, 16 * sample), "");
-   mask_input = LLVMBuildTrunc(builder, mask_input,
-                               i32t, "");
-   mask_input = LLVMBuildAnd(builder, mask_input, lp_build_const_int32(gallivm, 0xffff), "");
-
-   mask_input = LLVMBuildLShr(builder,
-                              mask_input,
-                              LLVMConstInt(i32t, shift, 0),
-                              "");
+   mask_input = LLVMBuildLShr(builder, mask_input,
+                              lp_build_const_int64(gallivm, 16 * sample), "");
+   mask_input = LLVMBuildTrunc(builder, mask_input, i32t, "");
+   mask_input = LLVMBuildAnd(builder, mask_input,
+                             lp_build_const_int32(gallivm, 0xffff), "");
+   mask_input = LLVMBuildLShr(builder, mask_input,
+                              LLVMConstInt(i32t, shift, 0), "");
 
    /*
     * mask = { mask_input & (1 << i), for i in [0,3] }
@@ -276,7 +277,7 @@ generate_quad_mask(struct gallivm_state *gallivm,
                              lp_build_vec_type(gallivm, mask_type),
                              mask_input);
 
-   for (i = 0; i < fs_type.length / 4; i++) {
+   for (int i = 0; i < fs_type.length / 4; i++) {
       unsigned j = 2 * (i % 2) + (i / 2) * 8;
       bits[4*i + 0] = LLVMConstInt(i32t, 1ULL << (j + 0), 0);
       bits[4*i + 1] = LLVMConstInt(i32t, 1ULL << (j + 1), 0);
@@ -303,17 +304,16 @@ generate_quad_mask(struct gallivm_state *gallivm,
 #define LATE_DEPTH_WRITE  0x8
 #define EARLY_DEPTH_TEST_INFERRED  0x10 //only with EARLY_DEPTH_TEST
 
-static int
-find_output_by_semantic( const struct tgsi_shader_info *info,
-			 unsigned semantic,
-			 unsigned index )
-{
-   int i;
 
-   for (i = 0; i < info->num_outputs; i++)
+static int
+find_output_by_semantic(const struct tgsi_shader_info *info,
+                        enum tgsi_semantic semantic,
+                        unsigned index)
+{
+   for (int i = 0; i < info->num_outputs; i++)
       if (info->output_semantic_name[i] == semantic &&
-	  info->output_semantic_index[i] == index)
-	 return i;
+          info->output_semantic_index[i] == index)
+         return i;
 
    return -1;
 }
@@ -323,7 +323,8 @@ find_output_by_semantic( const struct tgsi_shader_info *info,
  * Fetch the specified lp_jit_viewport structure for a given viewport_index.
  */
 static LLVMValueRef
-lp_llvm_viewport(LLVMValueRef context_ptr,
+lp_llvm_viewport(LLVMTypeRef context_type,
+                 LLVMValueRef context_ptr,
                  struct gallivm_state *gallivm,
                  LLVMValueRef viewport_index)
 {
@@ -332,12 +333,13 @@ lp_llvm_viewport(LLVMValueRef context_ptr,
    LLVMValueRef res;
    struct lp_type viewport_type =
       lp_type_float_vec(32, 32 * LP_JIT_VIEWPORT_NUM_FIELDS);
+   LLVMTypeRef vtype = lp_build_vec_type(gallivm, viewport_type);
 
-   ptr = lp_jit_context_viewports(gallivm, context_ptr);
+   ptr = lp_jit_context_viewports(gallivm, context_type, context_ptr);
    ptr = LLVMBuildPointerCast(builder, ptr,
-            LLVMPointerType(lp_build_vec_type(gallivm, viewport_type), 0), "");
+            LLVMPointerType(vtype, 0), "");
 
-   res = lp_build_pointer_get(builder, ptr, viewport_index);
+   res = lp_build_pointer_get2(builder, vtype, ptr, viewport_index);
 
    return res;
 }
@@ -346,8 +348,12 @@ lp_llvm_viewport(LLVMValueRef context_ptr,
 static LLVMValueRef
 lp_build_depth_clamp(struct gallivm_state *gallivm,
                      LLVMBuilderRef builder,
+                     bool depth_clamp,
+                     bool restrict_depth,
                      struct lp_type type,
+                     LLVMTypeRef context_type,
                      LLVMValueRef context_ptr,
+                     LLVMTypeRef thread_data_type,
                      LLVMValueRef thread_data_ptr,
                      LLVMValueRef z)
 {
@@ -358,6 +364,12 @@ lp_build_depth_clamp(struct gallivm_state *gallivm,
    assert(type.floating);
    lp_build_context_init(&f32_bld, gallivm, type);
 
+   if (restrict_depth)
+      z = lp_build_clamp(&f32_bld, z, f32_bld.zero, f32_bld.one);
+
+   if (!depth_clamp)
+      return z;
+
    /*
     * Assumes clamping of the viewport index will occur in setup/gs. Value
     * is passed through the rasterization stage via lp_rast_shader_inputs.
@@ -366,13 +378,14 @@ lp_build_depth_clamp(struct gallivm_state *gallivm,
     *      semantics.
     */
    viewport_index = lp_jit_thread_data_raster_state_viewport_index(gallivm,
-                       thread_data_ptr);
+                                                                   thread_data_type,
+                                                                   thread_data_ptr);
 
    /*
     * Load the min and max depth from the lp_jit_context.viewports
     * array of lp_jit_viewport structures.
     */
-   viewport = lp_llvm_viewport(context_ptr, gallivm, viewport_index);
+   viewport = lp_llvm_viewport(context_type, context_ptr, gallivm, viewport_index);
 
    /* viewports[viewport_index].min_depth */
    min_depth = LLVMBuildExtractElement(builder, viewport,
@@ -390,12 +403,14 @@ lp_build_depth_clamp(struct gallivm_state *gallivm,
    return lp_build_clamp(&f32_bld, z, min_depth, max_depth);
 }
 
+
 static void
 lp_build_sample_alpha_to_coverage(struct gallivm_state *gallivm,
                                   struct lp_type type,
                                   unsigned coverage_samples,
                                   LLVMValueRef num_loop,
                                   LLVMValueRef loop_counter,
+                                  LLVMTypeRef coverage_mask_type,
                                   LLVMValueRef coverage_mask_store,
                                   LLVMValueRef alpha)
 {
@@ -410,31 +425,39 @@ lp_build_sample_alpha_to_coverage(struct gallivm_state *gallivm,
 
       LLVMValueRef s_mask_idx = LLVMBuildMul(builder, lp_build_const_int32(gallivm, s), num_loop, "");
       s_mask_idx = LLVMBuildAdd(builder, s_mask_idx, loop_counter, "");
-      LLVMValueRef s_mask_ptr = LLVMBuildGEP(builder, coverage_mask_store, &s_mask_idx, 1, "");
-      LLVMValueRef s_mask = LLVMBuildLoad(builder, s_mask_ptr, "");
+      LLVMValueRef s_mask_ptr = LLVMBuildGEP2(builder, coverage_mask_type,
+                                              coverage_mask_store, &s_mask_idx, 1, "");
+      LLVMValueRef s_mask = LLVMBuildLoad2(builder, coverage_mask_type, s_mask_ptr, "");
       s_mask = LLVMBuildAnd(builder, s_mask, test, "");
       LLVMBuildStore(builder, s_mask, s_mask_ptr);
    }
 };
 
+
 struct lp_build_fs_llvm_iface {
    struct lp_build_fs_iface base;
    struct lp_build_interp_soa_context *interp;
    struct lp_build_for_loop_state *loop_state;
+   LLVMTypeRef mask_type;
    LLVMValueRef mask_store;
    LLVMValueRef sample_id;
    LLVMValueRef color_ptr_ptr;
    LLVMValueRef color_stride_ptr;
    LLVMValueRef color_sample_stride_ptr;
+   LLVMValueRef zs_base_ptr;
+   LLVMValueRef zs_stride;
+   LLVMValueRef zs_sample_stride;
    const struct lp_fragment_shader_variant_key *key;
 };
 
-static LLVMValueRef fs_interp(const struct lp_build_fs_iface *iface,
-                              struct lp_build_context *bld,
-                              unsigned attrib, unsigned chan,
-                              bool centroid, bool sample,
-                              LLVMValueRef attrib_indir,
-                              LLVMValueRef offsets[2])
+
+static LLVMValueRef
+fs_interp(const struct lp_build_fs_iface *iface,
+          struct lp_build_context *bld,
+          unsigned attrib, unsigned chan,
+          bool centroid, bool sample,
+          LLVMValueRef attrib_indir,
+          LLVMValueRef offsets[2])
 {
    struct lp_build_fs_llvm_iface *fs_iface = (struct lp_build_fs_llvm_iface *)iface;
    struct lp_build_interp_soa_context *interp = fs_iface->interp;
@@ -445,28 +468,76 @@ static LLVMValueRef fs_interp(const struct lp_build_fs_iface *iface,
       loc = TGSI_INTERPOLATE_LOC_SAMPLE;
 
    return lp_build_interp_soa(interp, bld->gallivm, fs_iface->loop_state->counter,
-                              fs_iface->mask_store,
+                              fs_iface->mask_type, fs_iface->mask_store,
                               attrib, chan, loc, attrib_indir, offsets);
 }
 
-static void fs_fb_fetch(const struct lp_build_fs_iface *iface,
-                        struct lp_build_context *bld,
-                        int location,
-                        LLVMValueRef result[4])
-{
-   assert(location >= FRAG_RESULT_DATA0 && location <= FRAG_RESULT_DATA7);
-   const int cbuf = location - FRAG_RESULT_DATA0;
 
+/**
+ * Convert depth-stencil format to a single component one, returning
+ * PIPE_FORMAT_NONE if it doesn't contain the required component.
+ */
+static enum pipe_format
+select_zs_component_format(enum pipe_format format,
+                           bool fetch_stencil)
+{
+   const struct util_format_description* desc = util_format_description(format);
+   if (fetch_stencil && !util_format_has_stencil(desc))
+      return PIPE_FORMAT_NONE;
+   if (!fetch_stencil && !util_format_has_depth(desc))
+      return PIPE_FORMAT_NONE;
+
+   switch (format) {
+   case PIPE_FORMAT_Z24_UNORM_S8_UINT:
+      return fetch_stencil ? PIPE_FORMAT_X24S8_UINT : PIPE_FORMAT_Z24X8_UNORM;
+   case PIPE_FORMAT_S8_UINT_Z24_UNORM:
+      return fetch_stencil ? PIPE_FORMAT_S8X24_UINT : PIPE_FORMAT_X8Z24_UNORM;
+   case PIPE_FORMAT_Z32_FLOAT_S8X24_UINT:
+      return fetch_stencil ? PIPE_FORMAT_X32_S8X24_UINT : format;
+   default:
+      return format;
+   }
+}
+
+static void
+fs_fb_fetch(const struct lp_build_fs_iface *iface,
+            struct lp_build_context *bld,
+            int location,
+            LLVMValueRef result[4])
+{
    struct lp_build_fs_llvm_iface *fs_iface = (struct lp_build_fs_llvm_iface *)iface;
    struct gallivm_state *gallivm = bld->gallivm;
    LLVMBuilderRef builder = gallivm->builder;
+   LLVMTypeRef int32_type = LLVMInt32TypeInContext(gallivm->context);
+   LLVMTypeRef int8_type = LLVMInt8TypeInContext(gallivm->context);
+   LLVMTypeRef int8p_type = LLVMPointerType(int8_type, 0);
    const struct lp_fragment_shader_variant_key *key = fs_iface->key;
-   LLVMValueRef index = lp_build_const_int32(gallivm, cbuf);
-   LLVMValueRef color_ptr = LLVMBuildLoad(builder, LLVMBuildGEP(builder, fs_iface->color_ptr_ptr, &index, 1, ""), "");
-   LLVMValueRef stride = LLVMBuildLoad(builder, LLVMBuildGEP(builder, fs_iface->color_stride_ptr, &index, 1, ""), "");
 
-   enum pipe_format cbuf_format = key->cbuf_format[cbuf];
-   const struct util_format_description* out_format_desc = util_format_description(cbuf_format);
+   LLVMValueRef buf_ptr;
+   LLVMValueRef stride;
+   enum pipe_format buf_format;
+
+   const bool fetch_stencil = location == FRAG_RESULT_STENCIL;
+   const bool fetch_zs = fetch_stencil || location == FRAG_RESULT_DEPTH;
+   if (fetch_zs) {
+      buf_ptr = fs_iface->zs_base_ptr;
+      stride = fs_iface->zs_stride;
+      buf_format = select_zs_component_format(key->zsbuf_format, fetch_stencil);
+   } else {
+      assert(location >= FRAG_RESULT_DATA0 && location <= FRAG_RESULT_DATA7);
+      const int cbuf = location - FRAG_RESULT_DATA0;
+      LLVMValueRef index = lp_build_const_int32(gallivm, cbuf);
+
+      buf_ptr = LLVMBuildLoad2(builder, int8p_type,
+                               LLVMBuildGEP2(builder, int8p_type,
+                                             fs_iface->color_ptr_ptr, &index, 1, ""), "");
+      stride = LLVMBuildLoad2(builder, int32_type,
+                              LLVMBuildGEP2(builder, int32_type,
+                                            fs_iface->color_stride_ptr, &index, 1, ""), "");
+      buf_format = key->cbuf_format[cbuf];
+   }
+
+   const struct util_format_description* out_format_desc = util_format_description(buf_format);
    if (out_format_desc->format == PIPE_FORMAT_NONE) {
       result[0] = result[1] = result[2] = result[3] = bld->undef;
       return;
@@ -477,14 +548,27 @@ static void fs_fb_fetch(const struct lp_build_fs_iface *iface,
    unsigned block_width = block_size / block_height;
 
    if (key->multisample) {
-      LLVMValueRef sample_stride = LLVMBuildLoad(builder,
-                                                 LLVMBuildGEP(builder, fs_iface->color_sample_stride_ptr,
-                                                              &index, 1, ""), "");
+      LLVMValueRef sample_stride;
+
+      if (fetch_zs) {
+         sample_stride = fs_iface->zs_sample_stride;
+      } else {
+         LLVMValueRef index = lp_build_const_int32(gallivm, location - FRAG_RESULT_DATA0);
+         sample_stride = LLVMBuildLoad2(builder, int32_type,
+                                       LLVMBuildGEP2(builder,
+                                                     int32_type,
+                                                     fs_iface->color_sample_stride_ptr,
+                                                     &index, 1, ""), "");
+      }
+
       LLVMValueRef sample_offset = LLVMBuildMul(builder, sample_stride, fs_iface->sample_id, "");
-      color_ptr = LLVMBuildGEP(builder, color_ptr, &sample_offset, 1, "");
+      buf_ptr = LLVMBuildGEP2(builder, int8_type,
+                              buf_ptr, &sample_offset, 1, "");
    }
-   /* fragment shader executes on 4x4 blocks. depending on vector width it can execute 2 or 4 iterations.
-    * only move to the next row once the top row has completed 8 wide 1 iteration, 4 wide 2 iterations */
+
+   /* fragment shader executes on 4x4 blocks. depending on vector width it can
+    * execute 2 or 4 iterations.  only move to the next row once the top row
+    * has completed 8 wide 1 iteration, 4 wide 2 iterations */
    LLVMValueRef x_offset = NULL, y_offset = NULL;
    if (!key->resource_1d) {
       LLVMValueRef counter = fs_iface->loop_state->counter;
@@ -505,7 +589,9 @@ static void fs_fb_fetch(const struct lp_build_fs_iface *iface,
 
       if (block_size == 8) {
          /* remap the raw slots into the fragment shader execution mode. */
-         /* this math took me way too long to work out, I'm sure it's overkill. */
+         /* this math took me way too long to work out, I'm sure it's
+          * overkill.
+          */
          x = (i & 1) + ((i >> 2) << 1);
          if (!key->resource_1d)
             y = (i & 2) >> 1;
@@ -533,16 +619,18 @@ static void fs_fb_fetch(const struct lp_build_fs_iface *iface,
        out_format_desc->channel[0].pure_integer) {
       if (out_format_desc->channel[0].type == UTIL_FORMAT_TYPE_SIGNED) {
          texel_type = lp_type_int_vec(bld->type.width, bld->type.width * bld->type.length);
-      }
-      else if (out_format_desc->channel[0].type == UTIL_FORMAT_TYPE_UNSIGNED) {
+      } else if (out_format_desc->channel[0].type == UTIL_FORMAT_TYPE_UNSIGNED) {
          texel_type = lp_type_uint_vec(bld->type.width, bld->type.width * bld->type.length);
       }
+   } else if (fetch_stencil) {
+      texel_type = lp_type_uint_vec(bld->type.width, bld->type.width * bld->type.length);
    }
 
    lp_build_fetch_rgba_soa(gallivm, out_format_desc, texel_type,
-                           true, color_ptr, offset,
+                           true, buf_ptr, offset,
                            NULL, NULL, NULL, result);
 }
+
 
 /**
  * Generate the fragment shader, depth/stencil test, and alpha tests.
@@ -553,12 +641,15 @@ generate_fs_loop(struct gallivm_state *gallivm,
                  const struct lp_fragment_shader_variant_key *key,
                  LLVMBuilderRef builder,
                  struct lp_type type,
+                 LLVMTypeRef context_type,
                  LLVMValueRef context_ptr,
+                 LLVMTypeRef sample_pos_type,
                  LLVMValueRef sample_pos_array,
                  LLVMValueRef num_loop,
                  struct lp_build_interp_soa_context *interp,
                  const struct lp_build_sampler_soa *sampler,
                  const struct lp_build_image_soa *image,
+                 LLVMTypeRef mask_type,
                  LLVMValueRef mask_store,
                  LLVMValueRef (*out_color)[4],
                  LLVMValueRef depth_base_ptr,
@@ -568,21 +659,15 @@ generate_fs_loop(struct gallivm_state *gallivm,
                  LLVMValueRef color_stride_ptr,
                  LLVMValueRef color_sample_stride_ptr,
                  LLVMValueRef facing,
+                 LLVMTypeRef thread_data_type,
                  LLVMValueRef thread_data_ptr)
 {
-   const struct util_format_description *zs_format_desc = NULL;
    const struct tgsi_token *tokens = shader->base.tokens;
    struct lp_type int_type = lp_int_type(type);
-   LLVMTypeRef vec_type, int_vec_type;
    LLVMValueRef mask_ptr = NULL, mask_val = NULL;
-   LLVMValueRef consts_ptr, num_consts_ptr;
-   LLVMValueRef ssbo_ptr, num_ssbo_ptr;
    LLVMValueRef z;
    LLVMValueRef z_value, s_value;
    LLVMValueRef z_fb, s_fb;
-   LLVMValueRef depth_ptr;
-   LLVMValueRef stencil_refs[2];
-   LLVMValueRef outputs[PIPE_MAX_SHADER_OUTPUTS][TGSI_NUM_CHANNELS];
    LLVMValueRef zs_samples = lp_build_const_int32(gallivm, key->zsbuf_nr_samples);
    LLVMValueRef z_out = NULL, s_out = NULL;
    struct lp_build_for_loop_state loop_state, sample_loop_state = {0};
@@ -598,33 +683,34 @@ generate_fs_loop(struct gallivm_state *gallivm,
    const boolean dual_source_blend = key->blend.rt[0].blend_enable &&
                                      util_blend_state_is_dual(&key->blend, 0);
    const bool post_depth_coverage = shader->info.base.properties[TGSI_PROPERTY_FS_POST_DEPTH_COVERAGE];
-   unsigned attrib;
-   unsigned chan;
-   unsigned cbuf;
-   unsigned depth_mode;
 
    struct lp_bld_tgsi_system_values system_values;
 
    memset(&system_values, 0, sizeof(system_values));
 
    /* truncate then sign extend. */
-   system_values.front_facing = LLVMBuildTrunc(gallivm->builder, facing, LLVMInt1TypeInContext(gallivm->context), "");
-   system_values.front_facing = LLVMBuildSExt(gallivm->builder, system_values.front_facing, LLVMInt32TypeInContext(gallivm->context), "");
-   system_values.view_index = lp_jit_thread_data_raster_state_view_index(gallivm,
-                                                                         thread_data_ptr);
+   system_values.front_facing =
+      LLVMBuildTrunc(gallivm->builder, facing,
+                     LLVMInt1TypeInContext(gallivm->context), "");
+   system_values.front_facing =
+      LLVMBuildSExt(gallivm->builder, system_values.front_facing,
+                    LLVMInt32TypeInContext(gallivm->context), "");
+   system_values.view_index =
+      lp_jit_thread_data_raster_state_view_index(gallivm,
+                                                 thread_data_type,
+                                                 thread_data_ptr);
+
+   unsigned depth_mode;
+   const struct util_format_description *zs_format_desc = NULL;
    if (key->depth.enabled ||
        key->stencil[0].enabled) {
-
       zs_format_desc = util_format_description(key->zsbuf_format);
-      assert(zs_format_desc);
 
-      if (shader->info.base.properties[TGSI_PROPERTY_FS_EARLY_DEPTH_STENCIL])
+      if (shader->info.base.properties[TGSI_PROPERTY_FS_EARLY_DEPTH_STENCIL]) {
          depth_mode = EARLY_DEPTH_TEST | EARLY_DEPTH_WRITE;
-      else if (!shader->info.base.writes_z && !shader->info.base.writes_stencil &&
-               !shader->info.base.uses_fbfetch) {
-         if (shader->info.base.writes_memory)
-            depth_mode = LATE_DEPTH_TEST | LATE_DEPTH_WRITE;
-         else if (key->alpha.enabled ||
+      } else if (!shader->info.base.writes_z && !shader->info.base.writes_stencil &&
+               !shader->info.base.uses_fbfetch && !shader->info.base.writes_memory) {
+         if (key->alpha.enabled ||
              key->blend.alpha_to_coverage ||
              shader->info.base.uses_kill ||
              shader->info.base.writes_samplemask) {
@@ -640,11 +726,10 @@ generate_fs_loop(struct gallivm_state *gallivm,
                depth_mode = LATE_DEPTH_TEST | LATE_DEPTH_WRITE;
             else
                depth_mode = EARLY_DEPTH_TEST | LATE_DEPTH_WRITE | EARLY_DEPTH_TEST_INFERRED;
-         }
-         else
+         } else {
             depth_mode = EARLY_DEPTH_TEST | EARLY_DEPTH_WRITE | EARLY_DEPTH_TEST_INFERRED;
-      }
-      else {
+         }
+      } else {
          depth_mode = LATE_DEPTH_TEST | LATE_DEPTH_WRITE;
       }
 
@@ -653,26 +738,25 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                         (key->stencil[1].enabled &&
                                          key->stencil[1].writemask))))
          depth_mode &= ~(LATE_DEPTH_WRITE | EARLY_DEPTH_WRITE);
-   }
-   else {
+   } else {
       depth_mode = 0;
    }
 
-   vec_type = lp_build_vec_type(gallivm, type);
-   int_vec_type = lp_build_vec_type(gallivm, int_type);
+   LLVMTypeRef vec_type = lp_build_vec_type(gallivm, type);
+   LLVMTypeRef int_vec_type = lp_build_vec_type(gallivm, int_type);
 
-   stencil_refs[0] = lp_jit_context_stencil_ref_front_value(gallivm, context_ptr);
-   stencil_refs[1] = lp_jit_context_stencil_ref_back_value(gallivm, context_ptr);
+   LLVMValueRef stencil_refs[2];
+   stencil_refs[0] = lp_jit_context_stencil_ref_front_value(gallivm, context_type, context_ptr);
+   stencil_refs[1] = lp_jit_context_stencil_ref_back_value(gallivm, context_type, context_ptr);
    /* convert scalar stencil refs into vectors */
    stencil_refs[0] = lp_build_broadcast(gallivm, int_vec_type, stencil_refs[0]);
    stencil_refs[1] = lp_build_broadcast(gallivm, int_vec_type, stencil_refs[1]);
 
-   consts_ptr = lp_jit_context_constants(gallivm, context_ptr);
-   num_consts_ptr = lp_jit_context_num_constants(gallivm, context_ptr);
+   LLVMValueRef consts_ptr = lp_jit_context_constants(gallivm, context_type, context_ptr);
 
-   ssbo_ptr = lp_jit_context_ssbos(gallivm, context_ptr);
-   num_ssbo_ptr = lp_jit_context_num_ssbos(gallivm, context_ptr);
+   LLVMValueRef ssbo_ptr = lp_jit_context_ssbos(gallivm, context_type, context_ptr);
 
+   LLVMValueRef outputs[PIPE_MAX_SHADER_OUTPUTS][TGSI_NUM_CHANNELS];
    memset(outputs, 0, sizeof outputs);
 
    /* Allocate color storage for each fragment sample */
@@ -680,8 +764,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
    if (key->min_samples > 1)
       color_store_size = LLVMBuildMul(builder, num_loop, lp_build_const_int32(gallivm, key->min_samples), "");
 
-   for(cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
-      for(chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
+   for (unsigned cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
+      for (unsigned chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
          out_color[cbuf][chan] = lp_build_array_alloca(gallivm,
                                                        lp_build_vec_type(gallivm,
                                                                          type),
@@ -690,7 +774,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
    }
    if (dual_source_blend) {
       assert(key->nr_cbufs <= 1);
-      for(chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
+      for (unsigned chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
          out_color[1][chan] = lp_build_array_alloca(gallivm,
                                                     lp_build_vec_type(gallivm,
                                                                       type),
@@ -722,7 +806,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
       for (unsigned s = 0; s < key->coverage_samples; s++) {
          LLVMValueRef s_mask_idx = LLVMBuildMul(builder, num_loop, lp_build_const_int32(gallivm, s), "");
          s_mask_idx = LLVMBuildAdd(builder, s_mask_idx, loop_state.counter, "");
-         LLVMValueRef s_mask = lp_build_pointer_get(builder, mask_store, s_mask_idx);
+         LLVMValueRef s_mask = lp_build_pointer_get2(builder, mask_type, mask_store, s_mask_idx);
          if (s == 0)
             mask_val = s_mask;
          else
@@ -733,9 +817,9 @@ generate_fs_loop(struct gallivm_state *gallivm,
       }
    } else {
       sample_mask_in = lp_build_const_int_vec(gallivm, type, 1);
-      mask_ptr = LLVMBuildGEP(builder, mask_store,
+      mask_ptr = LLVMBuildGEP2(builder, mask_type, mask_store,
                               &loop_state.counter, 1, "mask_ptr");
-      mask_val = LLVMBuildLoad(builder, mask_ptr, "");
+      mask_val = LLVMBuildLoad2(builder, mask_type, mask_ptr, "");
 
       LLVMValueRef mask_in = LLVMBuildAnd(builder, mask_val, lp_build_const_int_vec(gallivm, type, 1), "");
       sample_mask_in = LLVMBuildOr(builder, sample_mask_in, mask_in, "");
@@ -748,8 +832,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
       lp_build_mask_check(&mask);
 
    /* Create storage for recombining sample masks after early Z pass. */
-   LLVMValueRef s_mask_or = lp_build_alloca(gallivm, lp_build_int_vec_type(gallivm, type), "cov_mask_early_depth");
-   LLVMBuildStore(builder, LLVMConstNull(lp_build_int_vec_type(gallivm, type)), s_mask_or);
+   LLVMValueRef s_mask_or = lp_build_alloca(gallivm, int_vec_type, "cov_mask_early_depth");
+   LLVMBuildStore(builder, LLVMConstNull(int_vec_type), s_mask_or);
 
    /* Create storage for post depth sample mask */
    LLVMValueRef post_depth_sample_mask_in = NULL;
@@ -770,10 +854,9 @@ generate_fs_loop(struct gallivm_state *gallivm,
          struct lp_type s_type = zs_type;
          if (zs_format_desc->block.bits < type.width)
             z_type.width = type.width;
-         if (zs_format_desc->block.bits == 8)
+         if (zs_format_desc->block.bits == 8) {
             s_type.width = type.width;
-
-         else if (zs_format_desc->block.bits > 32) {
+         } else if (zs_format_desc->block.bits > 32) {
             z_type.width = z_type.width / 2;
             s_type.width = s_type.width / 2;
             s_type.floating = 0;
@@ -794,31 +877,34 @@ generate_fs_loop(struct gallivm_state *gallivm,
 
       LLVMValueRef s_mask_idx = LLVMBuildMul(builder, sample_loop_state.counter, num_loop, "");
       s_mask_idx = LLVMBuildAdd(builder, s_mask_idx, loop_state.counter, "");
-      s_mask_ptr = LLVMBuildGEP(builder, mask_store, &s_mask_idx, 1, "");
+      s_mask_ptr = LLVMBuildGEP2(builder, mask_type, mask_store, &s_mask_idx, 1, "");
 
-      s_mask = LLVMBuildLoad(builder, s_mask_ptr, "");
+      s_mask = LLVMBuildLoad2(builder, mask_type, s_mask_ptr, "");
       s_mask = LLVMBuildAnd(builder, s_mask, mask_val, "");
    }
 
 
    /* for multisample Z needs to be interpolated at sample points for testing. */
-   lp_build_interp_soa_update_pos_dyn(interp, gallivm, loop_state.counter, key->multisample ? sample_loop_state.counter : NULL);
+   lp_build_interp_soa_update_pos_dyn(interp, gallivm, loop_state.counter,
+                                      key->multisample
+                                      ? sample_loop_state.counter : NULL);
    z = interp->pos[2];
 
-   depth_ptr = depth_base_ptr;
+   LLVMValueRef depth_ptr = depth_base_ptr;
    if (key->multisample) {
-      LLVMValueRef sample_offset = LLVMBuildMul(builder, sample_loop_state.counter, depth_sample_stride, "");
-      depth_ptr = LLVMBuildGEP(builder, depth_ptr, &sample_offset, 1, "");
+      LLVMValueRef sample_offset =
+         LLVMBuildMul(builder, sample_loop_state.counter,
+                      depth_sample_stride, "");
+      depth_ptr = LLVMBuildGEP2(builder, LLVMInt8TypeInContext(gallivm->context),
+                                depth_ptr, &sample_offset, 1, "");
    }
 
    if (depth_mode & EARLY_DEPTH_TEST) {
-      /*
-       * Clamp according to ARB_depth_clamp semantics.
-       */
-      if (key->depth_clamp) {
-         z = lp_build_depth_clamp(gallivm, builder, type, context_ptr,
-                                  thread_data_ptr, z);
-      }
+      z = lp_build_depth_clamp(gallivm, builder, key->depth_clamp,
+                               key->restrict_depth_values, type,
+                               context_type, context_ptr,
+                               thread_data_type, thread_data_ptr, z);
+
       lp_build_depth_stencil_load_swizzled(gallivm, type,
                                            zs_format_desc, key->resource_1d,
                                            depth_ptr, depth_stride,
@@ -834,7 +920,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                   z, z_fb, s_fb,
                                   facing,
                                   &z_value, &s_value,
-                                  !simple_shader && !key->multisample);
+                                  !simple_shader && !key->multisample,
+                                  key->restrict_depth_values);
 
       if (depth_mode & EARLY_DEPTH_WRITE) {
          lp_build_depth_stencil_write_swizzled(gallivm, type,
@@ -844,9 +931,9 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                                z_value, s_value);
       }
       /*
-       * Note mask check if stencil is enabled must be after ds write not after
-       * stencil test otherwise new stencil values may not get written if all
-       * fragments got killed by depth/stencil test.
+       * Note mask check if stencil is enabled must be after ds write not
+       * after stencil test otherwise new stencil values may not get written
+       * if all fragments got killed by depth/stencil test.
        */
       if (!simple_shader && key->stencil[0].enabled && !key->multisample)
          lp_build_mask_check(&mask);
@@ -867,13 +954,13 @@ generate_fs_loop(struct gallivm_state *gallivm,
        * Recombine the resulting coverage masks post early Z into the fragment
        * shader execution mask.
        */
-      LLVMValueRef tmp_s_mask_or = LLVMBuildLoad(builder, s_mask_or, "");
+      LLVMValueRef tmp_s_mask_or = LLVMBuildLoad2(builder, int_vec_type, s_mask_or, "");
       tmp_s_mask_or = LLVMBuildOr(builder, tmp_s_mask_or, s_mask, "");
       LLVMBuildStore(builder, tmp_s_mask_or, s_mask_or);
 
       if (post_depth_coverage) {
          LLVMValueRef mask_bit_idx = LLVMBuildShl(builder, lp_build_const_int32(gallivm, 1), sample_loop_state.counter, "");
-         LLVMValueRef post_depth_mask_in = LLVMBuildLoad(builder, post_depth_sample_mask_in, "");
+         LLVMValueRef post_depth_mask_in = LLVMBuildLoad2(builder, int_vec_type, post_depth_sample_mask_in, "");
          mask_bit_idx = LLVMBuildAnd(builder, s_mask, lp_build_broadcast(gallivm, int_vec_type, mask_bit_idx), "");
          post_depth_mask_in = LLVMBuildOr(builder, post_depth_mask_in, mask_bit_idx, "");
          LLVMBuildStore(builder, post_depth_mask_in, post_depth_sample_mask_in);
@@ -884,7 +971,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
       lp_build_for_loop_end(&sample_loop_state);
 
       /* recombined all the coverage masks in the shader exec mask. */
-      tmp_s_mask_or = LLVMBuildLoad(builder, s_mask_or, "");
+      tmp_s_mask_or = LLVMBuildLoad2(builder, int_vec_type, s_mask_or, "");
       lp_build_mask_update(&mask, tmp_s_mask_or);
 
       if (key->min_samples == 1) {
@@ -908,10 +995,10 @@ generate_fs_loop(struct gallivm_state *gallivm,
    }
 
    if (post_depth_coverage) {
-      system_values.sample_mask_in = LLVMBuildLoad(builder, post_depth_sample_mask_in, "");
-   }
-   else
+      system_values.sample_mask_in = LLVMBuildLoad2(builder, int_vec_type, post_depth_sample_mask_in, "");
+   } else {
       system_values.sample_mask_in = sample_mask_in;
+   }
    if (key->multisample && key->min_samples > 1) {
       lp_build_for_loop_begin(&sample_loop_state, gallivm,
                               lp_build_const_int32(gallivm, 0),
@@ -921,8 +1008,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
 
       LLVMValueRef s_mask_idx = LLVMBuildMul(builder, sample_loop_state.counter, num_loop, "");
       s_mask_idx = LLVMBuildAdd(builder, s_mask_idx, loop_state.counter, "");
-      s_mask_ptr = LLVMBuildGEP(builder, mask_store, &s_mask_idx, 1, "");
-      s_mask = LLVMBuildLoad(builder, s_mask_ptr, "");
+      s_mask_ptr = LLVMBuildGEP2(builder, mask_type, mask_store, &s_mask_idx, 1, "");
+      s_mask = LLVMBuildLoad2(builder, mask_type, s_mask_ptr, "");
       lp_build_mask_force(&mask, s_mask);
       lp_build_interp_soa_update_pos_dyn(interp, gallivm, loop_state.counter, sample_loop_state.counter);
       system_values.sample_id = sample_loop_state.counter;
@@ -934,8 +1021,10 @@ generate_fs_loop(struct gallivm_state *gallivm,
 
    }
    system_values.sample_pos = sample_pos_array;
+   system_values.sample_pos_type = sample_pos_type;
 
-   lp_build_interp_soa_update_inputs_dyn(interp, gallivm, loop_state.counter, mask_store, sample_loop_state.counter);
+   lp_build_interp_soa_update_inputs_dyn(interp, gallivm, loop_state.counter,
+                                         mask_type, mask_store, sample_loop_state.counter);
 
    struct lp_build_fs_llvm_iface fs_iface = {
      .base.interp_fn = fs_interp,
@@ -943,10 +1032,14 @@ generate_fs_loop(struct gallivm_state *gallivm,
      .interp = interp,
      .loop_state = &loop_state,
      .sample_id = system_values.sample_id,
+     .mask_type = mask_type,
      .mask_store = mask_store,
      .color_ptr_ptr = color_ptr_ptr,
      .color_stride_ptr = color_stride_ptr,
      .color_sample_stride_ptr = color_sample_stride_ptr,
+     .zs_base_ptr = depth_base_ptr,
+     .zs_stride = depth_stride,
+     .zs_sample_stride = depth_sample_stride,
      .key = key,
    };
 
@@ -957,17 +1050,17 @@ generate_fs_loop(struct gallivm_state *gallivm,
    params.mask = &mask;
    params.fs_iface = &fs_iface.base;
    params.consts_ptr = consts_ptr;
-   params.const_sizes_ptr = num_consts_ptr;
    params.system_values = &system_values;
    params.inputs = interp->inputs;
+   params.context_type = context_type;
    params.context_ptr = context_ptr;
+   params.thread_data_type = thread_data_type;
    params.thread_data_ptr = thread_data_ptr;
    params.sampler = sampler;
    params.info = &shader->info.base;
    params.ssbo_ptr = ssbo_ptr;
-   params.ssbo_sizes_ptr = num_ssbo_ptr;
    params.image = image;
-   params.aniso_filter_table = lp_jit_context_aniso_filter_table(gallivm, context_ptr);
+   params.aniso_filter_table = lp_jit_context_aniso_filter_table(gallivm, context_type, context_ptr);
 
    /* Build the actual shader */
    if (shader->base.type == PIPE_SHADER_IR_TGSI)
@@ -985,10 +1078,10 @@ generate_fs_loop(struct gallivm_state *gallivm,
 
       if (color0 != -1 && outputs[color0][3]) {
          const struct util_format_description *cbuf_format_desc;
-         LLVMValueRef alpha = LLVMBuildLoad(builder, outputs[color0][3], "alpha");
+         LLVMValueRef alpha = LLVMBuildLoad2(builder, vec_type, outputs[color0][3], "alpha");
          LLVMValueRef alpha_ref_value;
 
-         alpha_ref_value = lp_jit_context_alpha_ref_value(gallivm, context_ptr);
+         alpha_ref_value = lp_jit_context_alpha_ref_value(gallivm, context_type, context_ptr);
          alpha_ref_value = lp_build_broadcast(gallivm, vec_type, alpha_ref_value);
 
          cbuf_format_desc = util_format_description(key->cbuf_format[0]);
@@ -1006,7 +1099,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                            0);
 
       if (color0 != -1 && outputs[color0][3]) {
-         LLVMValueRef alpha = LLVMBuildLoad(builder, outputs[color0][3], "alpha");
+         LLVMValueRef alpha = LLVMBuildLoad2(builder, vec_type, outputs[color0][3], "alpha");
 
          if (!key->multisample) {
             lp_build_alpha_to_coverage(gallivm, type,
@@ -1015,20 +1108,23 @@ generate_fs_loop(struct gallivm_state *gallivm,
          } else {
             lp_build_sample_alpha_to_coverage(gallivm, type, key->coverage_samples, num_loop,
                                               loop_state.counter,
-                                              mask_store, alpha);
+                                              mask_type, mask_store, alpha);
          }
       }
    }
-   if (key->blend.alpha_to_one && key->multisample) {
-      for (attrib = 0; attrib < shader->info.base.num_outputs; ++attrib) {
+
+   if (key->blend.alpha_to_one) {
+      for (unsigned attrib = 0; attrib < shader->info.base.num_outputs; ++attrib) {
          unsigned cbuf = shader->info.base.output_semantic_index[attrib];
          if ((shader->info.base.output_semantic_name[attrib] == TGSI_SEMANTIC_COLOR) &&
              ((cbuf < key->nr_cbufs) || (cbuf == 1 && dual_source_blend)))
             if (outputs[cbuf][3]) {
-               LLVMBuildStore(builder, lp_build_const_vec(gallivm, type, 1.0), outputs[cbuf][3]);
+               LLVMBuildStore(builder, lp_build_const_vec(gallivm, type, 1.0),
+                              outputs[cbuf][3]);
             }
       }
    }
+
    if (shader->info.base.writes_samplemask) {
       LLVMValueRef output_smask = NULL;
       int smaski = find_output_by_semantic(&shader->info.base,
@@ -1038,7 +1134,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
       lp_build_context_init(&smask_bld, gallivm, int_type);
 
       assert(smaski >= 0);
-      output_smask = LLVMBuildLoad(builder, outputs[smaski][0], "smask");
+      output_smask = LLVMBuildLoad2(builder, vec_type, outputs[smaski][0], "smask");
       output_smask = LLVMBuildBitCast(builder, output_smask, smask_bld.vec_type, "");
       if (!key->multisample && key->no_ms_sample_mask_out) {
          output_smask = lp_build_and(&smask_bld, output_smask, smask_bld.one);
@@ -1048,7 +1144,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
 
       if (key->min_samples > 1) {
          /* only the bit corresponding to this sample is to be used. */
-         LLVMValueRef tmp_mask = LLVMBuildLoad(builder, out_sample_mask_storage, "tmp_mask");
+         LLVMValueRef tmp_mask = LLVMBuildLoad2(builder, int_vec_type, out_sample_mask_storage, "tmp_mask");
          LLVMValueRef out_smask_idx = LLVMBuildShl(builder, lp_build_const_int32(gallivm, 1), sample_loop_state.counter, "");
          LLVMValueRef smask_bit = LLVMBuildAnd(builder, output_smask, lp_build_broadcast(gallivm, int_vec_type, out_smask_idx), "");
          output_smask = LLVMBuildOr(builder, tmp_mask, smask_bit, "");
@@ -1061,12 +1157,12 @@ generate_fs_loop(struct gallivm_state *gallivm,
       int pos0 = find_output_by_semantic(&shader->info.base,
                                          TGSI_SEMANTIC_POSITION,
                                          0);
-      LLVMValueRef out = LLVMBuildLoad(builder, outputs[pos0][2], "");
+      LLVMValueRef out = LLVMBuildLoad2(builder, vec_type, outputs[pos0][2], "");
       LLVMValueRef idx = loop_state.counter;
       if (key->min_samples > 1)
          idx = LLVMBuildAdd(builder, idx,
                             LLVMBuildMul(builder, sample_loop_state.counter, num_loop, ""), "");
-      LLVMValueRef ptr = LLVMBuildGEP(builder, z_out, &idx, 1, "");
+      LLVMValueRef ptr = LLVMBuildGEP2(builder, vec_type, z_out, &idx, 1, "");
       LLVMBuildStore(builder, out, ptr);
    }
 
@@ -1074,31 +1170,34 @@ generate_fs_loop(struct gallivm_state *gallivm,
       int sten_out = find_output_by_semantic(&shader->info.base,
                                              TGSI_SEMANTIC_STENCIL,
                                              0);
-      LLVMValueRef out = LLVMBuildLoad(builder, outputs[sten_out][1], "output.s");
+      LLVMValueRef out = LLVMBuildLoad2(builder, vec_type,
+                                        outputs[sten_out][1], "output.s");
       LLVMValueRef idx = loop_state.counter;
       if (key->min_samples > 1)
          idx = LLVMBuildAdd(builder, idx,
                             LLVMBuildMul(builder, sample_loop_state.counter, num_loop, ""), "");
-      LLVMValueRef ptr = LLVMBuildGEP(builder, s_out, &idx, 1, "");
+      LLVMValueRef ptr = LLVMBuildGEP2(builder, vec_type, s_out, &idx, 1, "");
       LLVMBuildStore(builder, out, ptr);
    }
 
    bool has_cbuf0_write = false;
    /* Color write - per fragment sample */
-   for (attrib = 0; attrib < shader->info.base.num_outputs; ++attrib)
-   {
+   for (unsigned attrib = 0; attrib < shader->info.base.num_outputs; ++attrib) {
       unsigned cbuf = shader->info.base.output_semantic_index[attrib];
-      if ((shader->info.base.output_semantic_name[attrib] == TGSI_SEMANTIC_COLOR) &&
-           ((cbuf < key->nr_cbufs) || (cbuf == 1 && dual_source_blend)))
-      {
-         if (cbuf == 0 && shader->info.base.properties[TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS]) {
-            /* XXX: there is an edge case with FB fetch where gl_FragColor and gl_LastFragData[0]
-             * are used together. This creates both FRAG_RESULT_COLOR and FRAG_RESULT_DATA* output
-             * variables. This loop then writes to cbuf 0 twice, owerwriting the correct value
-             * from gl_FragColor with some garbage. This case is excercised in one of deqp tests.
-             * A similar bug can happen if gl_SecondaryFragColorEXT and gl_LastFragData[1]
-             * are mixed in the same fashion...
-             * This workaround will break if gl_LastFragData[0] goes in outputs list before
+      if ((shader->info.base.output_semantic_name[attrib]
+           == TGSI_SEMANTIC_COLOR) &&
+           ((cbuf < key->nr_cbufs) || (cbuf == 1 && dual_source_blend))) {
+         if (cbuf == 0 &&
+             shader->info.base.properties[TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS]) {
+            /* XXX: there is an edge case with FB fetch where gl_FragColor and
+             * gl_LastFragData[0] are used together. This creates both
+             * FRAG_RESULT_COLOR and FRAG_RESULT_DATA* output variables. This
+             * loop then writes to cbuf 0 twice, owerwriting the correct value
+             * from gl_FragColor with some garbage. This case is excercised in
+             * one of deqp tests.  A similar bug can happen if
+             * gl_SecondaryFragColorEXT and gl_LastFragData[1] are mixed in
+             * the same fashion...  This workaround will break if
+             * gl_LastFragData[0] goes in outputs list before
              * gl_FragColor. This doesn't seem to happen though.
              */
             if (has_cbuf0_write)
@@ -1106,19 +1205,19 @@ generate_fs_loop(struct gallivm_state *gallivm,
             has_cbuf0_write = true;
          }
 
-         for(chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
-            if(outputs[attrib][chan]) {
+         for (unsigned chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
+            if (outputs[attrib][chan]) {
                /* XXX: just initialize outputs to point at colors[] and
                 * skip this.
                 */
-               LLVMValueRef out = LLVMBuildLoad(builder, outputs[attrib][chan], "");
+               LLVMValueRef out = LLVMBuildLoad2(builder, vec_type, outputs[attrib][chan], "");
                LLVMValueRef color_ptr;
                LLVMValueRef color_idx = loop_state.counter;
                if (key->min_samples > 1)
                   color_idx = LLVMBuildAdd(builder, color_idx,
                                            LLVMBuildMul(builder, sample_loop_state.counter, num_loop, ""), "");
-               color_ptr = LLVMBuildGEP(builder, out_color[cbuf][chan],
-                                        &color_idx, 1, "");
+               color_ptr = LLVMBuildGEP2(builder, vec_type, out_color[cbuf][chan],
+                                         &color_idx, 1, "");
                lp_build_name(out, "color%u.%c", attrib, "rgba"[chan]);
                LLVMBuildStore(builder, out, color_ptr);
             }
@@ -1141,10 +1240,10 @@ generate_fs_loop(struct gallivm_state *gallivm,
       /* load the per-sample coverage mask */
       LLVMValueRef s_mask_idx = LLVMBuildMul(builder, sample_loop_state.counter, num_loop, "");
       s_mask_idx = LLVMBuildAdd(builder, s_mask_idx, loop_state.counter, "");
-      s_mask_ptr = LLVMBuildGEP(builder, mask_store, &s_mask_idx, 1, "");
+      s_mask_ptr = LLVMBuildGEP2(builder, mask_type, mask_store, &s_mask_idx, 1, "");
 
       /* combine the execution mask post fragment shader with the coverage mask. */
-      s_mask = LLVMBuildLoad(builder, s_mask_ptr, "");
+      s_mask = LLVMBuildLoad2(builder, mask_type, s_mask_ptr, "");
       if (key->min_samples == 1)
          s_mask = LLVMBuildAnd(builder, s_mask, lp_build_mask_value(&mask), "");
 
@@ -1154,7 +1253,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
           (!(depth_mode & EARLY_DEPTH_TEST) || (depth_mode & (EARLY_DEPTH_TEST_INFERRED)))) {
          LLVMValueRef out_smask_idx = LLVMBuildShl(builder, lp_build_const_int32(gallivm, 1), sample_loop_state.counter, "");
          out_smask_idx = lp_build_broadcast(gallivm, int_vec_type, out_smask_idx);
-         LLVMValueRef output_smask = LLVMBuildLoad(builder, out_sample_mask_storage, "");
+         LLVMValueRef output_smask = LLVMBuildLoad2(builder, int_vec_type, out_sample_mask_storage, "");
          LLVMValueRef smask_bit = LLVMBuildAnd(builder, output_smask, out_smask_idx, "");
          LLVMValueRef cmp = LLVMBuildICmp(builder, LLVMIntNE, smask_bit, lp_build_const_int_vec(gallivm, int_type, 0), "");
          smask_bit = LLVMBuildSExt(builder, cmp, int_vec_type, "");
@@ -1166,7 +1265,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
    depth_ptr = depth_base_ptr;
    if (key->multisample) {
       LLVMValueRef sample_offset = LLVMBuildMul(builder, sample_loop_state.counter, depth_sample_stride, "");
-      depth_ptr = LLVMBuildGEP(builder, depth_ptr, &sample_offset, 1, "");
+      depth_ptr = LLVMBuildGEP2(builder, LLVMInt8TypeInContext(gallivm->context),
+                                depth_ptr, &sample_offset, 1, "");
    }
 
    /* Late Z test */
@@ -1176,8 +1276,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
          if (key->min_samples > 1)
             idx = LLVMBuildAdd(builder, idx,
                                LLVMBuildMul(builder, sample_loop_state.counter, num_loop, ""), "");
-         LLVMValueRef ptr = LLVMBuildGEP(builder, z_out, &idx, 1, "");
-         z = LLVMBuildLoad(builder, ptr, "output.z");
+         LLVMValueRef ptr = LLVMBuildGEP2(builder, vec_type, z_out, &idx, 1, "");
+         z = LLVMBuildLoad2(builder, vec_type, ptr, "output.z");
       } else {
          if (key->multisample) {
             lp_build_interp_soa_update_pos_dyn(interp, gallivm, loop_state.counter, key->multisample ? sample_loop_state.counter : NULL);
@@ -1188,24 +1288,18 @@ generate_fs_loop(struct gallivm_state *gallivm,
       /*
        * Clamp according to ARB_depth_clamp semantics.
        */
-      if (key->depth_clamp) {
-         z = lp_build_depth_clamp(gallivm, builder, type, context_ptr,
-                                  thread_data_ptr, z);
-      } else {
-         struct lp_build_context f32_bld;
-         lp_build_context_init(&f32_bld, gallivm, type);
-         z = lp_build_clamp(&f32_bld, z,
-                            lp_build_const_vec(gallivm, type, 0.0),
-                            lp_build_const_vec(gallivm, type, 1.0));
-      }
+      z = lp_build_depth_clamp(gallivm, builder, key->depth_clamp,
+                               key->restrict_depth_values, type,
+                               context_type, context_ptr,
+                               thread_data_type, thread_data_ptr, z);
 
       if (shader->info.base.writes_stencil) {
          LLVMValueRef idx = loop_state.counter;
          if (key->min_samples > 1)
             idx = LLVMBuildAdd(builder, idx,
                                LLVMBuildMul(builder, sample_loop_state.counter, num_loop, ""), "");
-         LLVMValueRef ptr = LLVMBuildGEP(builder, s_out, &idx, 1, "");
-         stencil_refs[0] = LLVMBuildLoad(builder, ptr, "output.s");
+         LLVMValueRef ptr = LLVMBuildGEP2(builder, vec_type, s_out, &idx, 1, "");
+         stencil_refs[0] = LLVMBuildLoad2(builder, vec_type, ptr, "output.s");
          /* there's only one value, and spec says to discard additional bits */
          LLVMValueRef s_max_mask = lp_build_const_int_vec(gallivm, int_type, 255);
          stencil_refs[0] = LLVMBuildBitCast(builder, stencil_refs[0], int_vec_type, "");
@@ -1229,7 +1323,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                   z, z_fb, s_fb,
                                   facing,
                                   &z_value, &s_value,
-                                  !simple_shader);
+                                  !simple_shader,
+                                  key->restrict_depth_values);
       /* Late Z write */
       if (depth_mode & LATE_DEPTH_WRITE) {
          lp_build_depth_stencil_write_swizzled(gallivm, type,
@@ -1238,19 +1333,17 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                                depth_ptr, depth_stride,
                                                z_value, s_value);
       }
-   }
-   else if ((depth_mode & EARLY_DEPTH_TEST) &&
-            (depth_mode & LATE_DEPTH_WRITE))
-   {
+   } else if ((depth_mode & EARLY_DEPTH_TEST) &&
+              (depth_mode & LATE_DEPTH_WRITE)) {
       /* Need to apply a reduced mask to the depth write.  Reload the
        * depth value, update from zs_value with the new mask value and
        * write that out.
        */
       if (key->multisample) {
-         z_value = LLVMBuildBitCast(builder, lp_build_pointer_get(builder, z_sample_value_store, sample_loop_state.counter), z_type, "");;
-         s_value = lp_build_pointer_get(builder, s_sample_value_store, sample_loop_state.counter);
-         z_fb = LLVMBuildBitCast(builder, lp_build_pointer_get(builder, z_fb_store, sample_loop_state.counter), z_fb_type, "");
-         s_fb = lp_build_pointer_get(builder, s_fb_store, sample_loop_state.counter);
+         z_value = LLVMBuildBitCast(builder, lp_build_pointer_get2(builder, int_vec_type, z_sample_value_store, sample_loop_state.counter), z_type, "");
+         s_value = lp_build_pointer_get2(builder, int_vec_type, s_sample_value_store, sample_loop_state.counter);
+         z_fb = LLVMBuildBitCast(builder, lp_build_pointer_get2(builder, int_vec_type, z_fb_store, sample_loop_state.counter), z_fb_type, "");
+         s_fb = lp_build_pointer_get2(builder, int_vec_type, s_fb_store, sample_loop_state.counter);
       }
       lp_build_depth_stencil_write_swizzled(gallivm, type,
                                             zs_format_desc, key->resource_1d,
@@ -1260,7 +1353,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
    }
 
    if (key->occlusion_count) {
-      LLVMValueRef counter = lp_jit_thread_data_counter(gallivm, thread_data_ptr);
+      LLVMValueRef counter = lp_jit_thread_data_counter(gallivm, thread_data_type, thread_data_ptr);
       lp_build_name(counter, "counter");
 
       lp_build_occlusion_count(gallivm, type,
@@ -1275,7 +1368,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
       /* if the shader writes sample mask use that */
          LLVMValueRef out_smask_idx = LLVMBuildShl(builder, lp_build_const_int32(gallivm, 1), sample_loop_state.counter, "");
          out_smask_idx = lp_build_broadcast(gallivm, int_vec_type, out_smask_idx);
-         LLVMValueRef output_smask = LLVMBuildLoad(builder, out_sample_mask_storage, "");
+         LLVMValueRef output_smask = LLVMBuildLoad2(builder, int_vec_type, out_sample_mask_storage, "");
          LLVMValueRef smask_bit = LLVMBuildAnd(builder, output_smask, out_smask_idx, "");
          LLVMValueRef cmp = LLVMBuildICmp(builder, LLVMIntNE, smask_bit, lp_build_const_int_vec(gallivm, int_type, 0), "");
          smask_bit = LLVMBuildSExt(builder, cmp, int_vec_type, "");
@@ -1298,7 +1391,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
 
 
 /**
- * This function will reorder pixels from the fragment shader SoA to memory layout AoS
+ * This function will reorder pixels from the fragment shader SoA to memory
+ * layout AoS
  *
  * Fragment Shader outputs pixels in small 2x2 blocks
  *  e.g. (0, 0), (1, 0), (0, 1), (1, 1) ; (2, 0) ...
@@ -1325,19 +1419,9 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
                     bool pad_inline)
 {
    LLVMValueRef src[16];
-
-   bool swizzle_pad;
-   bool twiddle;
-   bool split;
-
    unsigned pixels = type.length / 4;
-   unsigned reorder_group;
-   unsigned src_channels;
-   unsigned src_count;
-   unsigned i;
-
-   src_channels = dst_channels < 3 ? dst_channels : 4;
-   src_count = num_fs * src_channels;
+   unsigned src_channels = dst_channels < 3 ? dst_channels : 4;
+   unsigned src_count = num_fs * src_channels;
 
    assert(pixels == 2 || pixels == 1);
    assert(num_fs * src_channels <= ARRAY_SIZE(src));
@@ -1345,21 +1429,21 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
    /*
     * Transpose from SoA -> AoS
     */
-   for (i = 0; i < num_fs; ++i) {
-      lp_build_transpose_aos_n(gallivm, type, &fs_src[i][0], src_channels, &src[i * src_channels]);
+   for (unsigned i = 0; i < num_fs; ++i) {
+      lp_build_transpose_aos_n(gallivm, type, &fs_src[i][0], src_channels,
+                               &src[i * src_channels]);
    }
 
    /*
     * Pick transformation options
     */
-   swizzle_pad = false;
-   twiddle = false;
-   split = false;
-   reorder_group = 0;
+   bool swizzle_pad = false;
+   bool twiddle = false;
+   bool split = false;
+   unsigned reorder_group = 0;
 
    if (dst_channels == 1) {
       twiddle = true;
-
       if (pixels == 2) {
          split = true;
       }
@@ -1383,7 +1467,7 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
     * Split the src in half
     */
    if (split) {
-      for (i = num_fs; i > 0; --i) {
+      for (unsigned i = num_fs; i > 0; --i) {
          src[(i - 1)*2 + 1] = lp_build_extract_range(gallivm, src[i - 1], 4, 4);
          src[(i - 1)*2 + 0] = lp_build_extract_range(gallivm, src[i - 1], 0, 4);
       }
@@ -1403,7 +1487,7 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
        */
       const unsigned reorder_sw[] = { 0, 2, 1, 3 };
 
-      for (i = 0; i < src_count; ++i) {
+      for (unsigned i = 0; i < src_count; ++i) {
          unsigned group = i / reorder_group;
          unsigned block = (group / 4) * 4 * reorder_group;
          unsigned j = block + (reorder_sw[group % 4] * reorder_group) + (i % reorder_group);
@@ -1429,15 +1513,16 @@ generate_fs_twiddle(struct gallivm_state *gallivm,
       unsigned char swizzles[16];
       unsigned elems = pixels * dst_channels;
 
-      for (i = 0; i < type.length; ++i) {
+      for (unsigned i = 0; i < type.length; ++i) {
          if (i < elems)
             swizzles[i] = i % dst_channels + (i / dst_channels) * 4;
          else
             swizzles[i] = LP_BLD_SWIZZLE_DONTCARE;
       }
 
-      for (i = 0; i < src_count; ++i) {
-         dst[i] = lp_build_swizzle_aos_n(gallivm, dst[i], swizzles, type.length, type.length);
+      for (unsigned i = 0; i < src_count; ++i) {
+         dst[i] = lp_build_swizzle_aos_n(gallivm, dst[i], swizzles,
+                                         type.length, type.length);
       }
    }
 
@@ -1461,12 +1546,11 @@ fs_twiddle_transpose(struct gallivm_state *gallivm,
                      unsigned src_count,
                      LLVMValueRef *dst)
 {
-   unsigned i, j;
    struct lp_type type64, type16, type32;
    LLVMTypeRef type64_t, type8_t, type16_t, type32_t;
    LLVMBuilderRef builder = gallivm->builder;
    LLVMValueRef tmp[4], shuf[8];
-   for (j = 0; j < 2; j++) {
+   for (unsigned j = 0; j < 2; j++) {
       shuf[j*4 + 0] = lp_build_const_int32(gallivm, j*4 + 0);
       shuf[j*4 + 1] = lp_build_const_int32(gallivm, j*4 + 2);
       shuf[j*4 + 2] = lp_build_const_int32(gallivm, j*4 + 1);
@@ -1507,13 +1591,13 @@ fs_twiddle_transpose(struct gallivm_state *gallivm,
       LLVMValueRef shuf_vec;
       shuf_vec = LLVMConstVector(shuf, 4);
 
-      for (i = 0; i < 2; i++) {
+      for (unsigned i = 0; i < 2; i++) {
          tmp[i] = LLVMBuildBitCast(builder, tmp[i], type32_t, "");
          tmp[i] = LLVMBuildShuffleVector(builder, tmp[i], tmp[i], shuf_vec, "");
          dst[i] = LLVMBuildBitCast(builder, tmp[i], type8_t, "");
       }
    } else {
-      for (j = 0; j < 2; j++) {
+      for (unsigned j = 0; j < 2; j++) {
          LLVMValueRef lo, hi, lo2, hi2;
           /*
           * Note that if we only really have 3 valid channels (rgb)
@@ -1538,6 +1622,7 @@ fs_twiddle_transpose(struct gallivm_state *gallivm,
  */
 static void
 load_unswizzled_block(struct gallivm_state *gallivm,
+                      LLVMTypeRef base_type,
                       LLVMValueRef base_ptr,
                       LLVMValueRef stride,
                       unsigned block_width,
@@ -1548,13 +1633,12 @@ load_unswizzled_block(struct gallivm_state *gallivm,
                       unsigned dst_alignment)
 {
    LLVMBuilderRef builder = gallivm->builder;
-   unsigned row_size = dst_count / block_height;
-   unsigned i;
+   const unsigned row_size = dst_count / block_height;
 
    /* Ensure block exactly fits into dst */
    assert((block_width * block_height) % dst_count == 0);
 
-   for (i = 0; i < dst_count; ++i) {
+   for (unsigned i = 0; i < dst_count; ++i) {
       unsigned x = i % row_size;
       unsigned y = i / row_size;
 
@@ -1567,11 +1651,13 @@ load_unswizzled_block(struct gallivm_state *gallivm,
       gep[0] = lp_build_const_int32(gallivm, 0);
       gep[1] = LLVMBuildAdd(builder, bx, by, "");
 
-      dst_ptr = LLVMBuildGEP(builder, base_ptr, gep, 2, "");
+      dst_ptr = LLVMBuildGEP2(builder, base_type, base_ptr, gep, 2, "");
       dst_ptr = LLVMBuildBitCast(builder, dst_ptr,
                                  LLVMPointerType(lp_build_vec_type(gallivm, dst_type), 0), "");
 
-      dst[i] = LLVMBuildLoad(builder, dst_ptr, "");
+      dst[i] = LLVMBuildLoad2(builder,
+                              lp_build_vec_type(gallivm, dst_type),
+                              dst_ptr, "");
 
       LLVMSetAlignment(dst[i], dst_alignment);
    }
@@ -1583,23 +1669,23 @@ load_unswizzled_block(struct gallivm_state *gallivm,
  */
 static void
 store_unswizzled_block(struct gallivm_state *gallivm,
+                       LLVMTypeRef base_type,
                        LLVMValueRef base_ptr,
                        LLVMValueRef stride,
                        unsigned block_width,
                        unsigned block_height,
-                       LLVMValueRef* src,
+                       LLVMValueRef src[],   // [src_count]
                        struct lp_type src_type,
                        unsigned src_count,
                        unsigned src_alignment)
 {
    LLVMBuilderRef builder = gallivm->builder;
-   unsigned row_size = src_count / block_height;
-   unsigned i;
+   const unsigned row_size = src_count / block_height;
 
    /* Ensure src exactly fits into block */
    assert((block_width * block_height) % src_count == 0);
 
-   for (i = 0; i < src_count; ++i) {
+   for (unsigned i = 0; i < src_count; ++i) {
       unsigned x = i % row_size;
       unsigned y = i / row_size;
 
@@ -1612,7 +1698,7 @@ store_unswizzled_block(struct gallivm_state *gallivm,
       gep[0] = lp_build_const_int32(gallivm, 0);
       gep[1] = LLVMBuildAdd(builder, bx, by, "");
 
-      src_ptr = LLVMBuildGEP(builder, base_ptr, gep, 2, "");
+      src_ptr = LLVMBuildGEP2(builder, base_type, base_ptr, gep, 2, "");
       src_ptr = LLVMBuildBitCast(builder, src_ptr,
                                  LLVMPointerType(lp_build_vec_type(gallivm, src_type), 0), "");
 
@@ -1633,9 +1719,6 @@ static inline void
 lp_blend_type_from_format_desc(const struct util_format_description *format_desc,
                                struct lp_type* type)
 {
-   unsigned i;
-   unsigned chan;
-
    if (format_expands_to_float_soa(format_desc)) {
       /* always use ordinary floats for blending */
       type->floating = true;
@@ -1647,10 +1730,11 @@ lp_blend_type_from_format_desc(const struct util_format_description *format_desc
       return;
    }
 
+   unsigned i;
    for (i = 0; i < 4; i++)
       if (format_desc->channel[i].type != UTIL_FORMAT_TYPE_VOID)
          break;
-   chan = i;
+   const unsigned chan = i;
 
    memset(type, 0, sizeof(struct lp_type));
    type->floating = format_desc->channel[chan].type == UTIL_FORMAT_TYPE_FLOAT;
@@ -1660,7 +1744,7 @@ lp_blend_type_from_format_desc(const struct util_format_description *format_desc
    type->width    = format_desc->channel[chan].size;
    type->length   = format_desc->nr_channels;
 
-   for (i = 1; i < format_desc->nr_channels; ++i) {
+   for (unsigned i = 1; i < format_desc->nr_channels; ++i) {
       if (format_desc->channel[i].size > type->width)
          type->width = format_desc->channel[i].size;
    }
@@ -1717,11 +1801,16 @@ scale_bits(struct gallivm_state *gallivm,
       if (delta_bits <= dst_bits) {
 
          if (dst_bits == 4) {
-            struct lp_type flt_type = lp_type_float_vec(32, src_type.length * 32);
+            struct lp_type flt_type =
+               lp_type_float_vec(32, src_type.length * 32);
 
-            result = lp_build_unsigned_norm_to_float(gallivm, src_bits, flt_type, src);
-            result = lp_build_clamped_float_to_unsigned_norm(gallivm, flt_type, dst_bits, result);
-            result = LLVMBuildTrunc(gallivm->builder, result, lp_build_int_vec_type(gallivm, src_type), "");
+            result = lp_build_unsigned_norm_to_float(gallivm, src_bits,
+                                                     flt_type, src);
+            result = lp_build_clamped_float_to_unsigned_norm(gallivm, flt_type,
+                                                             dst_bits, result);
+            result = LLVMBuildTrunc(gallivm->builder, result,
+                                    lp_build_int_vec_type(gallivm, src_type),
+                                    "");
             return result;
          }
 
@@ -1731,32 +1820,32 @@ scale_bits(struct gallivm_state *gallivm,
           * This gives the wrong rounding.
           */
 
-         result = LLVMBuildLShr(builder,
-                                src,
-                                lp_build_const_int_vec(gallivm, src_type, delta_bits),
+         result = LLVMBuildLShr(builder, src,
+                                lp_build_const_int_vec(gallivm, src_type,
+                                                       delta_bits),
                                 "");
-
       } else {
          /*
           * Try more accurate rescaling.
           */
 
          /*
-          * Drop the least significant bits to make space for the multiplication.
+          * Drop the least significant bits to make space for the
+          * multiplication.
           *
-          * XXX: A better approach would be to use a wider integer type as intermediate.  But
-          * this is enough to convert alpha from 16bits -> 2 when rendering to
-          * PIPE_FORMAT_R10G10B10A2_UNORM.
+          * XXX: A better approach would be to use a wider integer type as
+          * intermediate.  But this is enough to convert alpha from 16bits ->
+          * 2 when rendering to PIPE_FORMAT_R10G10B10A2_UNORM.
           */
-         result = LLVMBuildLShr(builder,
-                                src,
-                                lp_build_const_int_vec(gallivm, src_type, dst_bits),
+         result = LLVMBuildLShr(builder, src,
+                                lp_build_const_int_vec(gallivm, src_type,
+                                                       dst_bits),
                                 "");
 
 
-         result = LLVMBuildMul(builder,
-                               result,
-                               lp_build_const_int_vec(gallivm, src_type, (1LL << dst_bits) - 1),
+         result = LLVMBuildMul(builder, result,
+                               lp_build_const_int_vec(gallivm, src_type,
+                                                      (1LL << dst_bits) - 1),
                                "");
 
          /*
@@ -1765,9 +1854,9 @@ scale_bits(struct gallivm_state *gallivm,
           * TODO: Handle signed integers too.
           */
          if (!src_type.sign) {
-            result = LLVMBuildAdd(builder,
-                                  result,
-                                  lp_build_const_int_vec(gallivm, src_type, (1LL << (delta_bits - 1))),
+            result = LLVMBuildAdd(builder, result,
+                                  lp_build_const_int_vec(gallivm, src_type,
+                                                    (1LL << (delta_bits - 1))),
                                   "");
          }
 
@@ -1829,7 +1918,8 @@ have_smallfloat_format(struct lp_type dst_type,
 {
    return ((dst_type.floating && dst_type.width != 32) ||
     /* due to format handling hacks this format doesn't have floating set
-     * here (and actually has width set to 32 too) so special case this. */
+     * here (and actually has width set to 32 too) so special case this.
+     */
     (format == PIPE_FORMAT_R11G11B10_FLOAT));
 }
 
@@ -1858,9 +1948,9 @@ convert_to_blend_type(struct gallivm_state *gallivm,
 
    /*
     * full custom path for packed floats and srgb formats - none of the later
-    * functions would do anything useful, and given the lp_type representation they
-    * can't be fixed. Should really have some SoA blend path for these kind of
-    * formats rather than hacking them in here.
+    * functions would do anything useful, and given the lp_type representation
+    * they can't be fixed. Should really have some SoA blend path for these
+    * kind of formats rather than hacking them in here.
     */
    if (format_expands_to_float_soa(src_fmt)) {
       LLVMValueRef tmpsrc[4];
@@ -1910,8 +2000,7 @@ convert_to_blend_type(struct gallivm_state *gallivm,
          }
          if (src_fmt->format == PIPE_FORMAT_R11G11B10_FLOAT) {
             lp_build_r11g11b10_to_float(gallivm, tmps, tmpsoa);
-         }
-         else {
+         } else {
             lp_build_unpack_rgba_soa(gallivm, src_fmt, dst_type, tmps, tmpsoa);
          }
          lp_build_transpose_aos(gallivm, dst_type, tmpsoa, &src[i * 4]);
@@ -2026,9 +2115,9 @@ convert_from_blend_type(struct gallivm_state *gallivm,
 
    /*
     * full custom path for packed floats and srgb formats - none of the later
-    * functions would do anything useful, and given the lp_type representation they
-    * can't be fixed. Should really have some SoA blend path for these kind of
-    * formats rather than hacking them in here.
+    * functions would do anything useful, and given the lp_type representation
+    * they can't be fixed. Should really have some SoA blend path for these
+    * kind of formats rather than hacking them in here.
     */
    if (format_expands_to_float_soa(src_fmt)) {
       /*
@@ -2048,8 +2137,7 @@ convert_from_blend_type(struct gallivm_state *gallivm,
 
          if (src_fmt->format == PIPE_FORMAT_R11G11B10_FLOAT) {
             tmpdst = lp_build_float_to_r11g11b10(gallivm, tmpsoa);
-         }
-         else {
+         } else {
             tmpdst = lp_build_float_to_srgb_packed(gallivm, src_fmt,
                                                    src_type, tmpsoa);
          }
@@ -2059,7 +2147,8 @@ convert_from_blend_type(struct gallivm_state *gallivm,
             unsigned j;
             /*
              * for 8-wide aos transpose has given us wrong order not matching
-             * output order. HMPF. Also need to split the output values manually.
+             * output order. HMPF. Also need to split the output values
+             * manually.
              */
             for (j = 0; j < 4; j++) {
                shuffles[j * 2] = lp_build_const_int32(gallivm, j);
@@ -2069,8 +2158,7 @@ convert_from_blend_type(struct gallivm_state *gallivm,
                                             LLVMConstVector(shuffles, 8), "");
             src[i * 2] = lp_build_extract_range(gallivm, tmpaos, 0, 4);
             src[i * 2 + 1] = lp_build_extract_range(gallivm, tmpaos, 4, 4);
-         }
-         else {
+         } else {
             src[i] = tmpdst;
          }
       }
@@ -2213,8 +2301,7 @@ convert_alpha(struct gallivm_state *gallivm,
               LLVMValueRef* src_alpha)
 {
    LLVMBuilderRef builder = gallivm->builder;
-   unsigned i, j;
-   unsigned length = row_type.length;
+   const unsigned length = row_type.length;
    row_type.length = alpha_type.length;
 
    /* Twiddle the alpha to match pixels */
@@ -2224,8 +2311,9 @@ convert_alpha(struct gallivm_state *gallivm,
     * TODO this should use single lp_build_conv call for
     * src_count == 1 && dst_channels == 1 case (dropping the concat below)
     */
-   for (i = 0; i < block_height; ++i) {
-      lp_build_conv(gallivm, alpha_type, row_type, &src_alpha[i], 1, &src_alpha[i], 1);
+   for (unsigned i = 0; i < block_height; ++i) {
+      lp_build_conv(gallivm, alpha_type, row_type, &src_alpha[i], 1,
+                    &src_alpha[i], 1);
    }
 
    alpha_type = row_type;
@@ -2233,23 +2321,26 @@ convert_alpha(struct gallivm_state *gallivm,
 
    /* If only one channel we can only need the single alpha value per pixel */
    if (src_count == 1 && dst_channels == 1) {
-
-      lp_build_concat_n(gallivm, alpha_type, src_alpha, block_height, src_alpha, src_count);
+      lp_build_concat_n(gallivm, alpha_type, src_alpha, block_height,
+                        src_alpha, src_count);
    } else {
       /* If there are more srcs than rows then we need to split alpha up */
       if (src_count > block_height) {
-         for (i = src_count; i > 0; --i) {
+         for (unsigned i = src_count; i > 0; --i) {
             unsigned pixels = block_size / src_count;
             unsigned idx = i - 1;
 
-            src_alpha[idx] = lp_build_extract_range(gallivm, src_alpha[(idx * pixels) / 4],
-                                                    (idx * pixels) % 4, pixels);
+            src_alpha[idx] =
+               lp_build_extract_range(gallivm, src_alpha[(idx * pixels) / 4],
+                                      (idx * pixels) % 4, pixels);
          }
       }
 
-      /* If there is a src for each pixel broadcast the alpha across whole row */
+      /* If there is a src for each pixel broadcast the alpha across whole
+       * row
+       */
       if (src_count == block_size) {
-         for (i = 0; i < src_count; ++i) {
+         for (unsigned i = 0; i < src_count; ++i) {
             src_alpha[i] = lp_build_broadcast(gallivm,
                               lp_build_vec_type(gallivm, row_type), src_alpha[i]);
          }
@@ -2265,7 +2356,7 @@ convert_alpha(struct gallivm_state *gallivm,
          }
 
          /* Broadcast alpha across all channels, e.g. a1a2 to a1a1a1a1a2a2a2a2 */
-         for (j = 0; j < row_type.length; ++j) {
+         for (unsigned j = 0; j < row_type.length; ++j) {
             if (j < pixels * channels) {
                shuffles[j] = lp_build_const_int32(gallivm, j / channels);
             } else {
@@ -2273,7 +2364,7 @@ convert_alpha(struct gallivm_state *gallivm,
             }
          }
 
-         for (i = 0; i < src_count; ++i) {
+         for (unsigned i = 0; i < src_count; ++i) {
             unsigned idx1 = i, idx2 = i;
 
             if (alpha_span > 1){
@@ -2305,7 +2396,9 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
                           struct lp_type fs_type,
                           LLVMValueRef* fs_mask,
                           LLVMValueRef fs_out_color[PIPE_MAX_COLOR_BUFS][TGSI_NUM_CHANNELS][4],
+                          LLVMTypeRef context_type,
                           LLVMValueRef context_ptr,
+                          LLVMTypeRef color_type,
                           LLVMValueRef color_ptr,
                           LLVMValueRef stride,
                           unsigned partial_mask,
@@ -2326,42 +2419,28 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    LLVMValueRef src[4 * 4];
    LLVMValueRef src1[4 * 4];
    LLVMValueRef dst[4 * 4];
-   LLVMValueRef blend_color;
-   LLVMValueRef blend_alpha;
-   LLVMValueRef i32_zero;
-   LLVMValueRef check_mask;
-   LLVMValueRef undef_src_val;
 
    struct lp_build_mask_context mask_ctx;
-   struct lp_type mask_type;
-   struct lp_type blend_type;
-   struct lp_type row_type;
-   struct lp_type dst_type;
-   struct lp_type ls_type;
 
    unsigned char swizzle[TGSI_NUM_CHANNELS];
-   unsigned vector_width;
    unsigned src_channels = TGSI_NUM_CHANNELS;
-   unsigned dst_channels;
-   unsigned dst_count;
-   unsigned src_count;
-   unsigned i, j;
 
-   const struct util_format_description* out_format_desc = util_format_description(out_format);
-
-   unsigned dst_alignment;
+   const struct util_format_description *out_format_desc =
+      util_format_description(out_format);
 
    bool pad_inline = is_arithmetic_format(out_format_desc);
-   bool has_alpha = false;
-   const boolean dual_source_blend = variant->key.blend.rt[0].blend_enable &&
-                                     util_blend_state_is_dual(&variant->key.blend, 0);
+   const boolean dual_source_blend =
+      variant->key.blend.rt[0].blend_enable &&
+      util_blend_state_is_dual(&variant->key.blend, 0);
 
    const boolean is_1d = variant->key.resource_1d;
-   boolean twiddle_after_convert = FALSE;
-   unsigned num_fullblock_fs = is_1d ? 2 * num_fs : num_fs;
+   const unsigned num_fullblock_fs = is_1d ? 2 * num_fs : num_fs;
    LLVMValueRef fpstate = 0;
 
+   LLVMTypeRef fs_vec_type = lp_build_vec_type(gallivm, fs_type);
+
    /* Get type from output format */
+   struct lp_type row_type, dst_type;
    lp_blend_type_from_format_desc(out_format_desc, &row_type);
    lp_mem_type_from_format_desc(out_format_desc, &dst_type);
 
@@ -2382,18 +2461,19 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
       lp_build_fpstate_set_denorms_zero(gallivm, FALSE);
    }
 
-   mask_type = lp_int32_vec4_type();
+   struct lp_type mask_type = lp_int32_vec4_type();
    mask_type.length = fs_type.length;
 
-   for (i = num_fs; i < num_fullblock_fs; i++) {
+   for (unsigned i = num_fs; i < num_fullblock_fs; i++) {
       fs_mask[i] = lp_build_zero(gallivm, mask_type);
    }
 
    /* Do not bother executing code when mask is empty.. */
    if (do_branch) {
-      check_mask = LLVMConstNull(lp_build_int_vec_type(gallivm, mask_type));
+      LLVMValueRef check_mask =
+         LLVMConstNull(lp_build_int_vec_type(gallivm, mask_type));
 
-      for (i = 0; i < num_fullblock_fs; ++i) {
+      for (unsigned i = 0; i < num_fullblock_fs; ++i) {
          check_mask = LLVMBuildOr(builder, check_mask, fs_mask[i], "");
       }
 
@@ -2402,18 +2482,20 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    }
 
    partial_mask |= !variant->opaque;
-   i32_zero = lp_build_const_int32(gallivm, 0);
+   LLVMValueRef i32_zero = lp_build_const_int32(gallivm, 0);
 
-   undef_src_val = lp_build_undef(gallivm, fs_type);
+   LLVMValueRef undef_src_val = lp_build_undef(gallivm, fs_type);
 
    row_type.length = fs_type.length;
-   vector_width    = dst_type.floating ? lp_native_vector_width : lp_integer_vector_width;
+   unsigned vector_width =
+      dst_type.floating ? lp_native_vector_width : lp_integer_vector_width;
 
    /* Compute correct swizzle and count channels */
    memset(swizzle, LP_BLD_SWIZZLE_DONTCARE, TGSI_NUM_CHANNELS);
-   dst_channels = 0;
+   unsigned dst_channels = 0;
 
-   for (i = 0; i < TGSI_NUM_CHANNELS; ++i) {
+   bool has_alpha = false;
+   for (unsigned i = 0; i < TGSI_NUM_CHANNELS; ++i) {
       /* Ensure channel is used */
       if (out_format_desc->swizzle[i] >= TGSI_NUM_CHANNELS) {
          continue;
@@ -2455,7 +2537,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    /* If 3 channels then pad to include alpha for 4 element transpose */
    if (dst_channels == 3) {
       assert (!has_alpha);
-      for (i = 0; i < TGSI_NUM_CHANNELS; i++) {
+      for (unsigned i = 0; i < TGSI_NUM_CHANNELS; i++) {
          if (swizzle[i] > TGSI_NUM_CHANNELS)
             swizzle[i] = 3;
       }
@@ -2476,23 +2558,23 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    /*
     * Load shader output
     */
-   for (i = 0; i < num_fullblock_fs; ++i) {
+   for (unsigned i = 0; i < num_fullblock_fs; ++i) {
       /* Always load alpha for use in blending */
       LLVMValueRef alpha;
       if (i < num_fs) {
-         alpha = LLVMBuildLoad(builder, fs_out_color[rt][alpha_channel][i], "");
-      }
-      else {
+         alpha = LLVMBuildLoad2(builder, fs_vec_type,
+                                fs_out_color[rt][alpha_channel][i], "");
+      } else {
          alpha = undef_src_val;
       }
 
       /* Load each channel */
-      for (j = 0; j < dst_channels; ++j) {
+      for (unsigned j = 0; j < dst_channels; ++j) {
          assert(swizzle[j] < 4);
          if (i < num_fs) {
-            fs_src[i][j] = LLVMBuildLoad(builder, fs_out_color[rt][swizzle[j]][i], "");
-         }
-         else {
+            fs_src[i][j] = LLVMBuildLoad2(builder, fs_vec_type,
+                                          fs_out_color[rt][swizzle[j]][i], "");
+         } else {
             fs_src[i][j] = undef_src_val;
          }
       }
@@ -2512,11 +2594,14 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
          src_mask[i*2 + 0]  = lp_build_extract_range(gallivm, fs_mask[i],
                                                      0, src_channels);
          src_mask[i*2 + 1]  = lp_build_extract_range(gallivm, fs_mask[i],
-                                                     src_channels, src_channels);
+                                                     src_channels,
+                                                     src_channels);
 
-         src_alpha[i*2 + 0] = lp_build_extract_range(gallivm, alpha, 0, src_channels);
+         src_alpha[i*2 + 0] = lp_build_extract_range(gallivm, alpha,
+                                                     0, src_channels);
          src_alpha[i*2 + 1] = lp_build_extract_range(gallivm, alpha,
-                                                     src_channels, src_channels);
+                                                     src_channels,
+                                                     src_channels);
       } else {
          src_mask[i] = fs_mask[i];
          src_alpha[i] = alpha;
@@ -2524,21 +2609,21 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    }
    if (dual_source_blend) {
       /* same as above except different src/dst, skip masks and comments... */
-      for (i = 0; i < num_fullblock_fs; ++i) {
+      for (unsigned i = 0; i < num_fullblock_fs; ++i) {
          LLVMValueRef alpha;
          if (i < num_fs) {
-            alpha = LLVMBuildLoad(builder, fs_out_color[1][alpha_channel][i], "");
-         }
-         else {
+            alpha = LLVMBuildLoad2(builder, fs_vec_type,
+                                   fs_out_color[1][alpha_channel][i], "");
+         } else {
             alpha = undef_src_val;
          }
 
-         for (j = 0; j < dst_channels; ++j) {
+         for (unsigned j = 0; j < dst_channels; ++j) {
             assert(swizzle[j] < 4);
             if (i < num_fs) {
-               fs_src1[i][j] = LLVMBuildLoad(builder, fs_out_color[1][swizzle[j]][i], "");
-            }
-            else {
+               fs_src1[i][j] = LLVMBuildLoad2(builder, fs_vec_type,
+                                              fs_out_color[1][swizzle[j]][i], "");
+            } else {
                fs_src1[i][j] = undef_src_val;
             }
          }
@@ -2562,14 +2647,15 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
        */
       fs_type.floating = 0;
       fs_type.sign = dst_type.sign;
-      for (i = 0; i < num_fullblock_fs; ++i) {
-         for (j = 0; j < dst_channels; ++j) {
+      fs_vec_type = lp_build_vec_type(gallivm, fs_type);
+      for (unsigned i = 0; i < num_fullblock_fs; ++i) {
+         for (unsigned j = 0; j < dst_channels; ++j) {
             fs_src[i][j] = LLVMBuildBitCast(builder, fs_src[i][j],
-                                            lp_build_vec_type(gallivm, fs_type), "");
+                                            fs_vec_type, "");
          }
          if (dst_channels == 3 && !has_alpha) {
             fs_src[i][3] = LLVMBuildBitCast(builder, fs_src[i][3],
-                                            lp_build_vec_type(gallivm, fs_type), "");
+                                            fs_vec_type, "");
          }
       }
    }
@@ -2583,6 +2669,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * unpack only with 128bit vectors).
     * Note: for 16bit sizes really need matching pack conversion code
     */
+   boolean twiddle_after_convert = FALSE;
    if (!is_1d && dst_channels != 3 && dst_type.width == 8) {
       twiddle_after_convert = TRUE;
    }
@@ -2590,6 +2677,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    /*
     * Pixel twiddle from fragment shader order to memory order
     */
+   unsigned src_count;
    if (!twiddle_after_convert) {
       src_count = generate_fs_twiddle(gallivm, fs_type, num_fullblock_fs,
                                       dst_channels, fs_src, src, pad_inline);
@@ -2605,8 +2693,8 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
        * for true AVX2 path untwiddle needs to be different).
        * For now just order by colors first (so we can use unpack later).
        */
-      for (j = 0; j < num_fullblock_fs; j++) {
-         for (i = 0; i < dst_channels; i++) {
+      for (unsigned j = 0; j < num_fullblock_fs; j++) {
+         for (unsigned i = 0; i < dst_channels; i++) {
             src[i*num_fullblock_fs + j] = fs_src[j][i];
             if (dual_source_blend) {
                src1[i*num_fullblock_fs + j] = fs_src1[j][i];
@@ -2620,19 +2708,21 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
       unsigned ds = src_count / (num_fullblock_fs * src_channels);
       row_type.length /= ds;
       fs_type.length = row_type.length;
+      fs_vec_type = lp_build_vec_type(gallivm, fs_type);
    }
 
-   blend_type = row_type;
+   struct lp_type blend_type = row_type;
    mask_type.length = 4;
 
    /* Convert src to row_type */
    if (dual_source_blend) {
       struct lp_type old_row_type = row_type;
       lp_build_conv_auto(gallivm, fs_type, &row_type, src, src_count, src);
-      src_count = lp_build_conv_auto(gallivm, fs_type, &old_row_type, src1, src_count, src1);
-   }
-   else {
-      src_count = lp_build_conv_auto(gallivm, fs_type, &row_type, src, src_count, src);
+      src_count = lp_build_conv_auto(gallivm, fs_type, &old_row_type,
+                                     src1, src_count, src1);
+   } else {
+      src_count = lp_build_conv_auto(gallivm, fs_type, &row_type,
+                                     src, src_count, src);
    }
 
    /* If the rows are not an SSE vector, combine them to become SSE size! */
@@ -2642,9 +2732,10 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
 
       assert(src_count >= (vector_width / bits));
 
-      dst_count = src_count / (vector_width / bits);
+      const unsigned dst_count = src_count / (vector_width / bits);
 
-      combined = lp_build_concat_n(gallivm, row_type, src, src_count, src, dst_count);
+      combined = lp_build_concat_n(gallivm, row_type, src, src_count,
+                                   src, dst_count);
       if (dual_source_blend) {
          lp_build_concat_n(gallivm, row_type, src1, src_count, src1, dst_count);
       }
@@ -2666,14 +2757,19 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    /*
     * Blend Colour conversion
     */
-   blend_color = lp_jit_context_f_blend_color(gallivm, context_ptr);
+   LLVMValueRef blend_color =
+      lp_jit_context_f_blend_color(gallivm, context_type, context_ptr);
    blend_color = LLVMBuildPointerCast(builder, blend_color,
-                    LLVMPointerType(lp_build_vec_type(gallivm, fs_type), 0), "");
-   blend_color = LLVMBuildLoad(builder, LLVMBuildGEP(builder, blend_color,
-                               &i32_zero, 1, ""), "");
+                                      LLVMPointerType(fs_vec_type, 0),
+                                      "");
+   blend_color = LLVMBuildLoad2(builder, fs_vec_type,
+                                LLVMBuildGEP2(builder, fs_vec_type,
+                                              blend_color,
+                                              &i32_zero, 1, ""), "");
 
    /* Convert */
-   lp_build_conv(gallivm, fs_type, blend_type, &blend_color, 1, &blend_color, 1);
+   lp_build_conv(gallivm, fs_type, blend_type, &blend_color, 1,
+                 &blend_color, 1);
 
    if (out_format_desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB) {
       /*
@@ -2684,59 +2780,68 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
        * force has_alpha to be true.)
        * TODO: should skip this with "fake" blend, since post-blend conversion
        * will clamp anyway.
-       * TODO: could also skip this if fragment color clamping is enabled. We
-       * don't support it natively so it gets baked into the shader however, so
-       * can't really tell here.
+       * TODO: could also skip this if fragment color clamping is enabled.
+       * We don't support it natively so it gets baked into the shader
+       * however, so can't really tell here.
        */
       struct lp_build_context f32_bld;
       assert(row_type.floating);
       lp_build_context_init(&f32_bld, gallivm, row_type);
-      for (i = 0; i < src_count; i++) {
+      for (unsigned i = 0; i < src_count; i++) {
          src[i] = lp_build_clamp_zero_one_nanzero(&f32_bld, src[i]);
       }
       if (dual_source_blend) {
-         for (i = 0; i < src_count; i++) {
+         for (unsigned i = 0; i < src_count; i++) {
             src1[i] = lp_build_clamp_zero_one_nanzero(&f32_bld, src1[i]);
          }
       }
       /* probably can't be different than row_type but better safe than sorry... */
       lp_build_context_init(&f32_bld, gallivm, blend_type);
-      blend_color = lp_build_clamp(&f32_bld, blend_color, f32_bld.zero, f32_bld.one);
+      blend_color = lp_build_clamp(&f32_bld, blend_color,
+                                   f32_bld.zero, f32_bld.one);
    }
 
    /* Extract alpha */
-   blend_alpha = lp_build_extract_broadcast(gallivm, blend_type, row_type, blend_color, lp_build_const_int32(gallivm, 3));
+   LLVMValueRef blend_alpha =
+      lp_build_extract_broadcast(gallivm, blend_type, row_type,
+                                 blend_color,
+                                 lp_build_const_int32(gallivm, 3));
 
    /* Swizzle to appropriate channels, e.g. from RGBA to BGRA BGRA */
-   pad_inline &= (dst_channels * (block_size / src_count) * row_type.width) != vector_width;
+   pad_inline &= (dst_channels * (block_size / src_count) * row_type.width)
+      != vector_width;
    if (pad_inline) {
       /* Use all 4 channels e.g. from RGBA RGBA to RGxx RGxx */
-      blend_color = lp_build_swizzle_aos_n(gallivm, blend_color, swizzle, TGSI_NUM_CHANNELS, row_type.length);
+      blend_color = lp_build_swizzle_aos_n(gallivm, blend_color, swizzle,
+                                           TGSI_NUM_CHANNELS, row_type.length);
    } else {
       /* Only use dst_channels e.g. RGBA RGBA to RG RG xxxx */
-      blend_color = lp_build_swizzle_aos_n(gallivm, blend_color, swizzle, dst_channels, row_type.length);
+      blend_color = lp_build_swizzle_aos_n(gallivm, blend_color, swizzle,
+                                           dst_channels, row_type.length);
    }
 
    /*
     * Mask conversion
     */
-   lp_bld_quad_twiddle(gallivm, mask_type, &src_mask[0], block_height, &src_mask[0]);
+   lp_bld_quad_twiddle(gallivm, mask_type, &src_mask[0],
+                       block_height, &src_mask[0]);
 
    if (src_count < block_height) {
       lp_build_concat_n(gallivm, mask_type, src_mask, 4, src_mask, src_count);
    } else if (src_count > block_height) {
-      for (i = src_count; i > 0; --i) {
+      for (unsigned i = src_count; i > 0; --i) {
          unsigned pixels = block_size / src_count;
          unsigned idx = i - 1;
 
-         src_mask[idx] = lp_build_extract_range(gallivm, src_mask[(idx * pixels) / 4],
+         src_mask[idx] = lp_build_extract_range(gallivm,
+                                                src_mask[(idx * pixels) / 4],
                                                 (idx * pixels) % 4, pixels);
       }
    }
 
    assert(mask_type.width == 32);
 
-   for (i = 0; i < src_count; ++i) {
+   for (unsigned i = 0; i < src_count; ++i) {
       unsigned pixels = block_size / src_count;
       unsigned pixel_width = row_type.width * dst_channels;
 
@@ -2752,14 +2857,16 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
           * generate the most efficient code (could use some pack).
           */
          src_mask[i] = LLVMBuildIntCast(builder, src_mask[i],
-                                        lp_build_int_vec_type(gallivm, mask_type), "");
+                                        lp_build_int_vec_type(gallivm,
+                                                              mask_type), "");
 
          mask_type.length *= dst_channels;
          mask_type.width /= dst_channels;
       }
 
       src_mask[i] = LLVMBuildBitCast(builder, src_mask[i],
-                                     lp_build_int_vec_type(gallivm, mask_type), "");
+                                     lp_build_int_vec_type(gallivm, mask_type),
+                                     "");
       src_mask[i] = lp_build_pad_vector(gallivm, src_mask[i], row_type.length);
    }
 
@@ -2785,6 +2892,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    /*
     * Load dst from memory
     */
+   unsigned dst_count;
    if (src_count < block_height) {
       dst_count = block_height;
    } else {
@@ -2810,10 +2918,10 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * 1d tex but can't distinguish here) so need to stick with per-pixel
     * alignment in this case.
     */
+   unsigned dst_alignment;
    if (is_1d) {
       dst_alignment = (out_format_desc->block.bits + 7)/(out_format_desc->block.width * 8);
-   }
-   else {
+   } else {
       dst_alignment = dst_type.length * dst_type.width / 8;
    }
    /* Force power-of-two alignment by extracting only the least-significant-bit */
@@ -2824,7 +2932,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     */
    dst_alignment = MIN2(16, dst_alignment);
 
-   ls_type = dst_type;
+   struct lp_type ls_type = dst_type;
 
    if (dst_count > src_count) {
       if ((dst_type.width == 8 || dst_type.width == 16) &&
@@ -2849,16 +2957,15 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
    }
 
    if (is_1d) {
-      load_unswizzled_block(gallivm, color_ptr, stride, block_width, 1,
+      load_unswizzled_block(gallivm, color_type, color_ptr, stride, block_width, 1,
                             dst, ls_type, dst_count / 4, dst_alignment);
-      for (i = dst_count / 4; i < dst_count; i++) {
+      for (unsigned i = dst_count / 4; i < dst_count; i++) {
          dst[i] = lp_build_undef(gallivm, ls_type);
       }
-
-   }
-   else {
-      load_unswizzled_block(gallivm, color_ptr, stride, block_width, block_height,
-                            dst, ls_type, dst_count, dst_alignment);
+   } else {
+      load_unswizzled_block(gallivm, color_type, color_ptr, stride, block_width,
+                            block_height, dst, ls_type, dst_count,
+                            dst_alignment);
    }
 
 
@@ -2868,15 +2975,15 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * This is necessary as we can only read 1 row from memory at a time,
     * so the minimum dst_count will ever be at this point is 4.
     *
-    * With, for example, R8 format you can have all 16 pixels in a 128 bit vector,
-    * this will take the 4 dsts and combine them into 1 src so we can perform blending
-    * on all 16 pixels in that single vector at once.
+    * With, for example, R8 format you can have all 16 pixels in a 128 bit
+    * vector, this will take the 4 dsts and combine them into 1 src so we can
+    * perform blending on all 16 pixels in that single vector at once.
     */
    if (dst_count > src_count) {
       if (ls_type.length != dst_type.length && ls_type.length == 1) {
          LLVMTypeRef elem_type = lp_build_elem_type(gallivm, ls_type);
          LLVMTypeRef ls_vec_type = LLVMVectorType(elem_type, 1);
-         for (i = 0; i < dst_count; i++) {
+         for (unsigned i = 0; i < dst_count; i++) {
             dst[i] = LLVMBuildBitCast(builder, dst[i], ls_vec_type, "");
          }
       }
@@ -2886,7 +2993,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
       if (ls_type.length != dst_type.length) {
          struct lp_type tmp_type = dst_type;
          tmp_type.length = dst_type.length * 4 / src_count;
-         for (i = 0; i < src_count; i++) {
+         for (unsigned i = 0; i < src_count; i++) {
             dst[i] = LLVMBuildBitCast(builder, dst[i],
                                       lp_build_vec_type(gallivm, tmp_type), "");
          }
@@ -2914,7 +3021,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * used for SRGB here and I think OpenGL expects this to work as expected
     * (that is incoming values converted to srgb then logic op applied).
     */
-   for (i = 0; i < src_count; ++i) {
+   for (unsigned i = 0; i < src_count; ++i) {
       dst[i] = lp_build_blend_aos(gallivm,
                                   &variant->key.blend,
                                   out_format,
@@ -2940,16 +3047,21 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
       row_type.length = dst_type.length * (dst_count / src_count);
 
       if (src_count == 1) {
-         dst[1] = lp_build_extract_range(gallivm, dst[0], row_type.length / 2, row_type.length / 2);
-         dst[0] = lp_build_extract_range(gallivm, dst[0], 0, row_type.length / 2);
+         dst[1] = lp_build_extract_range(gallivm, dst[0],
+                                         row_type.length / 2,
+                                         row_type.length / 2);
+         dst[0] = lp_build_extract_range(gallivm, dst[0],
+                                         0, row_type.length / 2);
 
          row_type.length /= 2;
          src_count *= 2;
       }
 
-      dst[3] = lp_build_extract_range(gallivm, dst[1], row_type.length / 2, row_type.length / 2);
+      dst[3] = lp_build_extract_range(gallivm, dst[1], row_type.length / 2,
+                                      row_type.length / 2);
       dst[2] = lp_build_extract_range(gallivm, dst[1], 0, row_type.length / 2);
-      dst[1] = lp_build_extract_range(gallivm, dst[0], row_type.length / 2, row_type.length / 2);
+      dst[1] = lp_build_extract_range(gallivm, dst[0], row_type.length / 2,
+                                      row_type.length / 2);
       dst[0] = lp_build_extract_range(gallivm, dst[0], 0, row_type.length / 2);
 
       row_type.length /= 2;
@@ -2960,11 +3072,11 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
     * Store blend result to memory
     */
    if (is_1d) {
-      store_unswizzled_block(gallivm, color_ptr, stride, block_width, 1,
+      store_unswizzled_block(gallivm, color_type, color_ptr, stride, block_width, 1,
                              dst, dst_type, dst_count / 4, dst_alignment);
-   }
-   else {
-      store_unswizzled_block(gallivm, color_ptr, stride, block_width, block_height,
+   } else {
+      store_unswizzled_block(gallivm, color_type, color_ptr, stride, block_width,
+                             block_height,
                              dst, dst_type, dst_count, dst_alignment);
    }
 
@@ -2990,18 +3102,20 @@ generate_fragment(struct llvmpipe_context *lp,
                   struct lp_fragment_shader_variant *variant,
                   unsigned partial_mask)
 {
+   assert(partial_mask == RAST_WHOLE ||
+          partial_mask == RAST_EDGE_TEST);
+
    struct gallivm_state *gallivm = variant->gallivm;
    struct lp_fragment_shader_variant_key *key = &variant->key;
    struct lp_shader_input inputs[PIPE_MAX_SHADER_INPUTS];
-   char func_name[64];
-   struct lp_type fs_type;
-   struct lp_type blend_type;
    LLVMTypeRef fs_elem_type;
    LLVMTypeRef blend_vec_type;
    LLVMTypeRef arg_types[15];
    LLVMTypeRef func_type;
    LLVMTypeRef int32_type = LLVMInt32TypeInContext(gallivm->context);
+   LLVMTypeRef int32p_type = LLVMPointerType(int32_type, 0);
    LLVMTypeRef int8_type = LLVMInt8TypeInContext(gallivm->context);
+   LLVMTypeRef int8p_type = LLVMPointerType(int8_type, 0);
    LLVMValueRef context_ptr;
    LLVMValueRef x;
    LLVMValueRef y;
@@ -3018,17 +3132,11 @@ generate_fragment(struct llvmpipe_context *lp,
    LLVMValueRef thread_data_ptr;
    LLVMBasicBlockRef block;
    LLVMBuilderRef builder;
-   struct lp_build_sampler_soa *sampler;
-   struct lp_build_image_soa *image;
    struct lp_build_interp_soa_context interp;
    LLVMValueRef fs_mask[(16 / 4) * LP_MAX_SAMPLES];
    LLVMValueRef fs_out_color[LP_MAX_SAMPLES][PIPE_MAX_COLOR_BUFS][TGSI_NUM_CHANNELS][16 / 4];
    LLVMValueRef function;
    LLVMValueRef facing;
-   unsigned num_fs;
-   unsigned i;
-   unsigned chan;
-   unsigned cbuf;
    boolean cbuf0_write_all;
    const boolean dual_source_blend = key->blend.rt[0].blend_enable &&
                                      util_blend_state_is_dual(&key->blend, 0);
@@ -3037,13 +3145,14 @@ generate_fragment(struct llvmpipe_context *lp,
 
    /* Adjust color input interpolation according to flatshade state:
     */
-   memcpy(inputs, shader->inputs, shader->info.base.num_inputs * sizeof inputs[0]);
-   for (i = 0; i < shader->info.base.num_inputs; i++) {
+   memcpy(inputs, shader->inputs,
+          shader->info.base.num_inputs * sizeof inputs[0]);
+   for (unsigned i = 0; i < shader->info.base.num_inputs; i++) {
       if (inputs[i].interp == LP_INTERP_COLOR) {
-	 if (key->flatshade)
-	    inputs[i].interp = LP_INTERP_CONSTANT;
-	 else
-	    inputs[i].interp = LP_INTERP_PERSPECTIVE;
+         if (key->flatshade)
+            inputs[i].interp = LP_INTERP_CONSTANT;
+         else
+            inputs[i].interp = LP_INTERP_PERSPECTIVE;
       }
    }
 
@@ -3054,6 +3163,7 @@ generate_fragment(struct llvmpipe_context *lp,
    /* TODO: actually pick these based on the fs and color buffer
     * characteristics. */
 
+   struct lp_type fs_type;
    memset(&fs_type, 0, sizeof fs_type);
    fs_type.floating = TRUE;      /* floating point values */
    fs_type.sign = TRUE;          /* values are signed */
@@ -3061,6 +3171,7 @@ generate_fragment(struct llvmpipe_context *lp,
    fs_type.width = 32;           /* 32-bit float */
    fs_type.length = MIN2(lp_native_vector_width / 32, 16); /* n*4 elements per vector */
 
+   struct lp_type blend_type;
    memset(&blend_type, 0, sizeof blend_type);
    blend_type.floating = FALSE; /* values are integers */
    blend_type.sign = FALSE;     /* values are unsigned */
@@ -3068,7 +3179,7 @@ generate_fragment(struct llvmpipe_context *lp,
    blend_type.width = 8;        /* 8-bit ubyte values */
    blend_type.length = 16;      /* 16 elements per vector */
 
-   /* 
+   /*
     * Generate the function prototype. Any change here must be reflected in
     * lp_jit.h's lp_jit_frag_func function pointer type, and vice-versa.
     */
@@ -3077,6 +3188,7 @@ generate_fragment(struct llvmpipe_context *lp,
 
    blend_vec_type = lp_build_vec_type(gallivm, blend_type);
 
+   char func_name[64];
    snprintf(func_name, sizeof(func_name), "fs_variant_%s",
             partial_mask ? "partial" : "whole");
 
@@ -3087,13 +3199,13 @@ generate_fragment(struct llvmpipe_context *lp,
    arg_types[4] = LLVMPointerType(fs_elem_type, 0);    /* a0 */
    arg_types[5] = LLVMPointerType(fs_elem_type, 0);    /* dadx */
    arg_types[6] = LLVMPointerType(fs_elem_type, 0);    /* dady */
-   arg_types[7] = LLVMPointerType(LLVMPointerType(int8_type, 0), 0);  /* color */
-   arg_types[8] = LLVMPointerType(int8_type, 0);       /* depth */
+   arg_types[7] = LLVMPointerType(int8p_type, 0);  /* color */
+   arg_types[8] = int8p_type;       /* depth */
    arg_types[9] = LLVMInt64TypeInContext(gallivm->context);  /* mask_input */
    arg_types[10] = variant->jit_thread_data_ptr_type;  /* per thread data */
-   arg_types[11] = LLVMPointerType(int32_type, 0);     /* stride */
+   arg_types[11] = int32p_type;     /* stride */
    arg_types[12] = int32_type;                         /* depth_stride */
-   arg_types[13] = LLVMPointerType(int32_type, 0);     /* color sample strides */
+   arg_types[13] = int32p_type;     /* color sample strides */
    arg_types[14] = int32_type;                         /* depth sample stride */
 
    func_type = LLVMFunctionType(LLVMVoidTypeInContext(gallivm->context),
@@ -3107,8 +3219,8 @@ generate_fragment(struct llvmpipe_context *lp,
    /* XXX: need to propagate noalias down into color param now we are
     * passing a pointer-to-pointer?
     */
-   for(i = 0; i < ARRAY_SIZE(arg_types); ++i)
-      if(LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind)
+   for (unsigned i = 0; i < ARRAY_SIZE(arg_types); ++i)
+      if (LLVMGetTypeKind(arg_types[i]) == LLVMPointerTypeKind)
          lp_add_function_attr(function, i + 1, LP_FUNC_ATTR_NOALIAS);
 
    if (variant->gallivm->cache->data_size)
@@ -3165,19 +3277,25 @@ generate_fragment(struct llvmpipe_context *lp,
     */
    if (shader->info.base.num_instructions > 1) {
       LLVMValueRef invocs, val;
-      invocs = lp_jit_thread_data_invocations(gallivm, thread_data_ptr);
-      val = LLVMBuildLoad(builder, invocs, "");
+      LLVMTypeRef invocs_type = LLVMInt64TypeInContext(gallivm->context);
+      invocs = lp_jit_thread_data_invocations(gallivm, variant->jit_thread_data_type, thread_data_ptr);
+      val = LLVMBuildLoad2(builder, invocs_type, invocs, "");
       val = LLVMBuildAdd(builder, val,
-                         LLVMConstInt(LLVMInt64TypeInContext(gallivm->context), 1, 0),
+                         LLVMConstInt(LLVMInt64TypeInContext(gallivm->context),
+                                      1, 0),
                          "invoc_count");
       LLVMBuildStore(builder, val, invocs);
    }
 
    /* code generated texture sampling */
-   sampler = lp_llvm_sampler_soa_create(lp_fs_variant_key_samplers(key), key->nr_samplers);
-   image = lp_llvm_image_soa_create(lp_fs_variant_key_images(key), key->nr_images);
+   struct lp_build_sampler_soa *sampler =
+      lp_llvm_sampler_soa_create(lp_fs_variant_key_samplers(key),
+                                 MAX2(key->nr_samplers,
+                                      key->nr_sampler_views));
+   struct lp_build_image_soa *image =
+      lp_llvm_image_soa_create(lp_fs_variant_key_images(key), key->nr_images);
 
-   num_fs = 16 / fs_type.length; /* number of loops per 4x4 stamp */
+   unsigned num_fs = 16 / fs_type.length; /* number of loops per 4x4 stamp */
    /* for 1d resources only run "upper half" of stamp */
    if (key->resource_1d)
       num_fs /= 2;
@@ -3185,26 +3303,35 @@ generate_fragment(struct llvmpipe_context *lp,
    {
       LLVMValueRef num_loop = lp_build_const_int32(gallivm, num_fs);
       LLVMTypeRef mask_type = lp_build_int_vec_type(gallivm, fs_type);
-      LLVMValueRef num_loop_samp = lp_build_const_int32(gallivm, num_fs * key->coverage_samples);
-      LLVMValueRef mask_store = lp_build_array_alloca(gallivm, mask_type,
-                                                      num_loop_samp, "mask_store");
-
+      LLVMValueRef num_loop_samp =
+         lp_build_const_int32(gallivm, num_fs * key->coverage_samples);
+      LLVMValueRef mask_store =
+         lp_build_array_alloca(gallivm, mask_type,
+                               num_loop_samp, "mask_store");
       LLVMTypeRef flt_type = LLVMFloatTypeInContext(gallivm->context);
-      LLVMValueRef glob_sample_pos = LLVMAddGlobal(gallivm->module, LLVMArrayType(flt_type, key->coverage_samples * 2), "");
+      LLVMValueRef glob_sample_pos =
+         LLVMAddGlobal(gallivm->module,
+                       LLVMArrayType(flt_type, key->coverage_samples * 2), "");
       LLVMValueRef sample_pos_array;
 
       if (key->multisample && key->coverage_samples == 4) {
          LLVMValueRef sample_pos_arr[8];
          for (unsigned i = 0; i < 4; i++) {
-            sample_pos_arr[i * 2] = LLVMConstReal(flt_type, lp_sample_pos_4x[i][0]);
-            sample_pos_arr[i * 2 + 1] = LLVMConstReal(flt_type, lp_sample_pos_4x[i][1]);
+            sample_pos_arr[i * 2] = LLVMConstReal(flt_type,
+                                                  lp_sample_pos_4x[i][0]);
+            sample_pos_arr[i * 2 + 1] = LLVMConstReal(flt_type,
+                                                      lp_sample_pos_4x[i][1]);
          }
-         sample_pos_array = LLVMConstArray(LLVMFloatTypeInContext(gallivm->context), sample_pos_arr, 8);
+         sample_pos_array =
+            LLVMConstArray(LLVMFloatTypeInContext(gallivm->context),
+                           sample_pos_arr, 8);
       } else {
          LLVMValueRef sample_pos_arr[2];
          sample_pos_arr[0] = LLVMConstReal(flt_type, 0.5);
          sample_pos_arr[1] = LLVMConstReal(flt_type, 0.5);
-         sample_pos_array = LLVMConstArray(LLVMFloatTypeInContext(gallivm->context), sample_pos_arr, 2);
+         sample_pos_array =
+            LLVMConstArray(LLVMFloatTypeInContext(gallivm->context),
+                           sample_pos_arr, 2);
       }
       LLVMSetInitializer(glob_sample_pos, sample_pos_array);
 
@@ -3222,32 +3349,43 @@ generate_fragment(struct llvmpipe_context *lp,
                                shader->info.base.num_inputs,
                                inputs,
                                pixel_center_integer,
-                               key->coverage_samples, glob_sample_pos,
+                               key->coverage_samples,
+                               LLVMTypeOf(sample_pos_array),
+                               glob_sample_pos,
                                num_loop,
-                               key->depth_clamp,
                                builder, fs_type,
                                a0_ptr, dadx_ptr, dady_ptr,
                                x, y);
 
-      for (i = 0; i < num_fs; i++) {
+      for (unsigned i = 0; i < num_fs; i++) {
          if (key->multisample) {
-            LLVMValueRef smask_val = LLVMBuildLoad(builder, lp_jit_context_sample_mask(gallivm, context_ptr), "");
+            LLVMValueRef smask_val =
+               LLVMBuildLoad2(builder, int32_type,
+                              lp_jit_context_sample_mask(gallivm, variant->jit_context_type, context_ptr),
+                              "");
 
             /*
-             * For multisampling, extract the per-sample mask from the incoming 64-bit mask,
-             * store to the per sample mask storage. Or all of them together to generate
-             * the fragment shader mask. (sample shading TODO).
-             * Take the incoming state coverage mask into account.
+             * For multisampling, extract the per-sample mask from the
+             * incoming 64-bit mask, store to the per sample mask storage. Or
+             * all of them together to generate the fragment shader
+             * mask. (sample shading TODO).  Take the incoming state coverage
+             * mask into account.
              */
             for (unsigned s = 0; s < key->coverage_samples; s++) {
-               LLVMValueRef sindexi = lp_build_const_int32(gallivm, i + (s * num_fs));
-               LLVMValueRef sample_mask_ptr = LLVMBuildGEP(builder, mask_store,
-                                                           &sindexi, 1, "sample_mask_ptr");
-               LLVMValueRef s_mask = generate_quad_mask(gallivm, fs_type,
-                                                        i*fs_type.length/4, s, mask_input);
-
-               LLVMValueRef smask_bit = LLVMBuildAnd(builder, smask_val, lp_build_const_int32(gallivm, (1 << s)), "");
-               LLVMValueRef cmp = LLVMBuildICmp(builder, LLVMIntNE, smask_bit, lp_build_const_int32(gallivm, 0), "");
+               LLVMValueRef sindexi =
+                  lp_build_const_int32(gallivm, i + (s * num_fs));
+               LLVMValueRef sample_mask_ptr =
+                  LLVMBuildGEP2(builder, mask_type, mask_store, &sindexi, 1,
+                                "sample_mask_ptr");
+               LLVMValueRef s_mask =
+                  generate_quad_mask(gallivm, fs_type,
+                                     i * fs_type.length / 4, s, mask_input);
+               LLVMValueRef smask_bit =
+                  LLVMBuildAnd(builder, smask_val,
+                               lp_build_const_int32(gallivm, (1 << s)), "");
+               LLVMValueRef cmp =
+                  LLVMBuildICmp(builder, LLVMIntNE, smask_bit,
+                                lp_build_const_int32(gallivm, 0), "");
                smask_bit = LLVMBuildSExt(builder, cmp, int32_type, "");
                smask_bit = lp_build_broadcast(gallivm, mask_type, smask_bit);
 
@@ -3257,14 +3395,13 @@ generate_fragment(struct llvmpipe_context *lp,
          } else {
             LLVMValueRef mask;
             LLVMValueRef indexi = lp_build_const_int32(gallivm, i);
-            LLVMValueRef mask_ptr = LLVMBuildGEP(builder, mask_store,
-                                                 &indexi, 1, "mask_ptr");
+            LLVMValueRef mask_ptr = LLVMBuildGEP2(builder, mask_type, mask_store,
+                                                  &indexi, 1, "mask_ptr");
 
             if (partial_mask) {
                mask = generate_quad_mask(gallivm, fs_type,
-                                         i*fs_type.length/4, 0, mask_input);
-            }
-            else {
+                                         i * fs_type.length / 4, 0, mask_input);
+            } else {
                mask = lp_build_const_int_vec(gallivm, fs_type, ~0);
             }
             LLVMBuildStore(builder, mask, mask_ptr);
@@ -3275,12 +3412,15 @@ generate_fragment(struct llvmpipe_context *lp,
                        shader, key,
                        builder,
                        fs_type,
+                       variant->jit_context_type,
                        context_ptr,
+                       LLVMTypeOf(sample_pos_array),
                        glob_sample_pos,
                        num_loop,
                        &interp,
                        sampler,
                        image,
+                       mask_type,
                        mask_store, /* output */
                        color_store,
                        depth_ptr,
@@ -3290,36 +3430,40 @@ generate_fragment(struct llvmpipe_context *lp,
                        stride_ptr,
                        color_sample_stride_ptr,
                        facing,
+                       variant->jit_thread_data_type,
                        thread_data_ptr);
 
-      for (i = 0; i < num_fs; i++) {
+      LLVMTypeRef fs_vec_type = lp_build_vec_type(gallivm, fs_type);
+      for (unsigned i = 0; i < num_fs; i++) {
          LLVMValueRef ptr;
          for (unsigned s = 0; s < key->coverage_samples; s++) {
             int idx = (i + (s * num_fs));
             LLVMValueRef sindexi = lp_build_const_int32(gallivm, idx);
-            ptr = LLVMBuildGEP(builder, mask_store, &sindexi, 1, "");
+            ptr = LLVMBuildGEP2(builder, mask_type, mask_store, &sindexi, 1, "");
 
-            fs_mask[idx] = LLVMBuildLoad(builder, ptr, "smask");
+            fs_mask[idx] = LLVMBuildLoad2(builder, mask_type, ptr, "smask");
          }
 
          for (unsigned s = 0; s < key->min_samples; s++) {
             /* This is fucked up need to reorganize things */
             int idx = s * num_fs + i;
             LLVMValueRef sindexi = lp_build_const_int32(gallivm, idx);
-            for (cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
-               for (chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
-                  ptr = LLVMBuildGEP(builder,
-                                     color_store[cbuf * !cbuf0_write_all][chan],
-                                     &sindexi, 1, "");
+            for (unsigned cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
+               for (unsigned chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
+                  ptr = LLVMBuildGEP2(builder, fs_vec_type,
+                                      color_store[cbuf * !cbuf0_write_all][chan],
+                                      &sindexi, 1, "");
                   fs_out_color[s][cbuf][chan][i] = ptr;
                }
             }
             if (dual_source_blend) {
-               /* only support one dual source blend target hence always use output 1 */
-               for (chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
-                  ptr = LLVMBuildGEP(builder,
-                                     color_store[1][chan],
-                                     &sindexi, 1, "");
+               /* only support one dual source blend target hence always use
+                * output 1
+                */
+               for (unsigned chan = 0; chan < TGSI_NUM_CHANNELS; ++chan) {
+                  ptr = LLVMBuildGEP2(builder, fs_vec_type,
+                                      color_store[1][chan],
+                                      &sindexi, 1, "");
                   fs_out_color[s][1][chan][i] = ptr;
                }
             }
@@ -3327,11 +3471,11 @@ generate_fragment(struct llvmpipe_context *lp,
       }
    }
 
-   sampler->destroy(sampler);
-   image->destroy(image);
-   /* Loop over color outputs / color buffers to do blending.
-    */
-   for(cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
+   lp_llvm_sampler_soa_destroy(sampler);
+   lp_llvm_image_soa_destroy(image);
+
+   /* Loop over color outputs / color buffers to do blending */
+   for (unsigned cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
       if (key->cbuf_format[cbuf] != PIPE_FORMAT_NONE) {
          LLVMValueRef color_ptr;
          LLVMValueRef stride;
@@ -3343,37 +3487,45 @@ generate_fragment(struct llvmpipe_context *lp,
                                || key->alpha.enabled)
                               && !shader->info.base.uses_kill);
 
-         color_ptr = LLVMBuildLoad(builder,
-                                   LLVMBuildGEP(builder, color_ptr_ptr,
-                                                &index, 1, ""),
-                                   "");
+         color_ptr = LLVMBuildLoad2(builder, int8p_type,
+                                    LLVMBuildGEP2(builder, int8p_type, color_ptr_ptr,
+                                                 &index, 1, ""),
+                                    "");
 
-         stride = LLVMBuildLoad(builder,
-                                LLVMBuildGEP(builder, stride_ptr, &index, 1, ""),
-                                "");
+         stride = LLVMBuildLoad2(builder, int32_type,
+                                 LLVMBuildGEP2(builder, int32_type, stride_ptr,
+                                             &index, 1, ""),
+                                 "");
 
          if (key->cbuf_nr_samples[cbuf] > 1)
-            sample_stride = LLVMBuildLoad(builder,
-                                          LLVMBuildGEP(builder, color_sample_stride_ptr,
-                                                       &index, 1, ""), "");
+            sample_stride = LLVMBuildLoad2(builder, int32_type,
+                                           LLVMBuildGEP2(builder,
+                                                         int32_type,
+                                                         color_sample_stride_ptr,
+                                                         &index, 1, ""), "");
 
          for (unsigned s = 0; s < key->cbuf_nr_samples[cbuf]; s++) {
             unsigned mask_idx = num_fs * (key->multisample ? s : 0);
             unsigned out_idx = key->min_samples == 1 ? 0 : s;
-            LLVMValueRef out_ptr = color_ptr;;
+            LLVMValueRef out_ptr = color_ptr;
 
             if (sample_stride) {
-               LLVMValueRef sample_offset = LLVMBuildMul(builder, sample_stride, lp_build_const_int32(gallivm, s), "");
-               out_ptr = LLVMBuildGEP(builder, out_ptr, &sample_offset, 1, "");
+               LLVMValueRef sample_offset =
+                  LLVMBuildMul(builder, sample_stride,
+                               lp_build_const_int32(gallivm, s), "");
+               out_ptr = LLVMBuildGEP2(builder, int8_type, out_ptr, &sample_offset, 1, "");
             }
-            out_ptr = LLVMBuildBitCast(builder, out_ptr, LLVMPointerType(blend_vec_type, 0), "");
+            out_ptr = LLVMBuildBitCast(builder, out_ptr,
+                                       LLVMPointerType(blend_vec_type, 0), "");
 
             lp_build_name(out_ptr, "color_ptr%d", cbuf);
 
             generate_unswizzled_blend(gallivm, cbuf, variant,
                                       key->cbuf_format[cbuf],
-                                      num_fs, fs_type, &fs_mask[mask_idx], fs_out_color[out_idx],
-                                      context_ptr, out_ptr, stride,
+                                      num_fs, fs_type, &fs_mask[mask_idx],
+                                      fs_out_color[out_idx],
+                                      variant->jit_context_type,
+                                      context_ptr, blend_vec_type, out_ptr, stride,
                                       partial_mask, do_branch);
          }
       }
@@ -3388,8 +3540,6 @@ generate_fragment(struct llvmpipe_context *lp,
 static void
 dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
 {
-   unsigned i;
-
    debug_printf("fs variant %p:\n", (void *) key);
 
    if (key->flatshade) {
@@ -3398,12 +3548,15 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
    if (key->depth_clamp)
       debug_printf("depth_clamp = 1\n");
 
+   if (key->restrict_depth_values)
+      debug_printf("restrict_depth_values = 1\n");
+
    if (key->multisample) {
       debug_printf("multisample = 1\n");
       debug_printf("coverage samples = %d\n", key->coverage_samples);
       debug_printf("min samples = %d\n", key->min_samples);
    }
-   for (i = 0; i < key->nr_cbufs; ++i) {
+   for (unsigned i = 0; i < key->nr_cbufs; ++i) {
       debug_printf("cbuf_format[%u] = %s\n", i, util_format_name(key->cbuf_format[i]));
       debug_printf("cbuf nr_samples[%u] = %d\n", i, key->cbuf_nr_samples[i]);
    }
@@ -3416,7 +3569,7 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
       debug_printf("depth.writemask = %u\n", key->depth.writemask);
    }
 
-   for (i = 0; i < 2; ++i) {
+   for (unsigned i = 0; i < 2; ++i) {
       if (key->stencil[i].enabled) {
          debug_printf("stencil[%u].func = %s\n", i, util_str_func(key->stencil[i].func, TRUE));
          debug_printf("stencil[%u].fail_op = %s\n", i, util_str_stencil_op(key->stencil[i].fail_op, TRUE));
@@ -3437,8 +3590,7 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
 
    if (key->blend.logicop_enable) {
       debug_printf("blend.logicop_func = %s\n", util_str_logicop(key->blend.logicop_func, TRUE));
-   }
-   else if (key->blend.rt[0].blend_enable) {
+   } else if (key->blend.rt[0].blend_enable) {
       debug_printf("blend.rgb_func = %s\n",   util_str_blend_func  (key->blend.rt[0].rgb_func, TRUE));
       debug_printf("blend.rgb_src_factor = %s\n",   util_str_blend_factor(key->blend.rt[0].rgb_src_factor, TRUE));
       debug_printf("blend.rgb_dst_factor = %s\n",   util_str_blend_factor(key->blend.rt[0].rgb_dst_factor, TRUE));
@@ -3450,7 +3602,7 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
    if (key->blend.alpha_to_coverage) {
       debug_printf("blend.alpha_to_coverage is enabled\n");
    }
-   for (i = 0; i < key->nr_samplers; ++i) {
+   for (unsigned i = 0; i < key->nr_samplers; ++i) {
       const struct lp_sampler_static_state *samplers = lp_fs_variant_key_samplers(key);
       const struct lp_static_sampler_state *sampler = &samplers[i].sampler_state;
       debug_printf("sampler[%u] = \n", i);
@@ -3474,7 +3626,7 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
       debug_printf("  .reduction_mode = %u\n", sampler->reduction_mode);
       debug_printf("  .aniso = %u\n", sampler->aniso);
    }
-   for (i = 0; i < key->nr_sampler_views; ++i) {
+   for (unsigned i = 0; i < key->nr_sampler_views; ++i) {
       const struct lp_sampler_static_state *samplers = lp_fs_variant_key_samplers(key);
       const struct lp_static_texture_state *texture = &samplers[i].texture_state;
       debug_printf("texture[%u] = \n", i);
@@ -3490,7 +3642,7 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
                    texture->pot_depth);
    }
    struct lp_image_static_state *images = lp_fs_variant_key_images(key);
-   for (i = 0; i < key->nr_images; ++i) {
+   for (unsigned i = 0; i < key->nr_images; ++i) {
       const struct lp_static_texture_state *image = &images[i].image_state;
       debug_printf("image[%u] = \n", i);
       debug_printf("  .format = %s\n",
@@ -3506,10 +3658,11 @@ dump_fs_variant_key(struct lp_fragment_shader_variant_key *key)
    }
 }
 
+
 const char *
 lp_debug_fs_kind(enum lp_fs_kind kind)
 {
-   switch(kind) {
+   switch (kind) {
    case LP_FS_KIND_GENERAL:
       return "GENERAL";
    case LP_FS_KIND_BLIT_RGBA:
@@ -3524,6 +3677,7 @@ lp_debug_fs_kind(enum lp_fs_kind kind)
       return "unknown";
    }
 }
+
 
 void
 lp_debug_fs_variant(struct lp_fragment_shader_variant *variant)
@@ -3542,9 +3696,10 @@ lp_debug_fs_variant(struct lp_fragment_shader_variant *variant)
    debug_printf("\n");
 }
 
+
 static void
 lp_fs_get_ir_cache_key(struct lp_fragment_shader_variant *variant,
-                            unsigned char ir_sha1_cache_key[20])
+                       unsigned char ir_sha1_cache_key[20])
 {
    struct blob blob = { 0 };
    unsigned ir_size;
@@ -3564,6 +3719,7 @@ lp_fs_get_ir_cache_key(struct lp_fragment_shader_variant *variant,
    blob_finish(&blob);
 }
 
+
 /**
  * Generate a new fragment shader variant from the shader code and
  * other state indicated by the key.
@@ -3573,29 +3729,22 @@ generate_variant(struct llvmpipe_context *lp,
                  struct lp_fragment_shader *shader,
                  const struct lp_fragment_shader_variant_key *key)
 {
-   struct llvmpipe_screen *screen = llvmpipe_screen(lp->pipe.screen);
-   struct lp_fragment_shader_variant *variant;
-   const struct util_format_description *cbuf0_format_desc = NULL;
-   boolean fullcolormask;
-   boolean no_kill;
-   boolean linear;
-   char module_name[64];
-   unsigned char ir_sha1_cache_key[20];
-   struct lp_cached_code cached = { 0 };
-   bool needs_caching = false;
-   variant = MALLOC(sizeof *variant + shader->variant_key_size - sizeof variant->key);
+   struct lp_fragment_shader_variant *variant =
+      MALLOC(sizeof *variant + shader->variant_key_size - sizeof variant->key);
    if (!variant)
       return NULL;
 
    memset(variant, 0, sizeof(*variant));
-   snprintf(module_name, sizeof(module_name), "fs%u_variant%u",
-            shader->no, shader->variants_created);
 
    pipe_reference_init(&variant->reference, 1);
    lp_fs_reference(lp, &variant->shader, shader);
 
    memcpy(&variant->key, key, shader->variant_key_size);
 
+   struct llvmpipe_screen *screen = llvmpipe_screen(lp->pipe.screen);
+   struct lp_cached_code cached = { 0 };
+   unsigned char ir_sha1_cache_key[20];
+   bool needs_caching = false;
    if (shader->base.ir.nir) {
       lp_fs_get_ir_cache_key(variant, ir_sha1_cache_key);
 
@@ -3603,6 +3752,10 @@ generate_variant(struct llvmpipe_context *lp,
       if (!cached.data_size)
          needs_caching = true;
    }
+
+   char module_name[64];
+   snprintf(module_name, sizeof(module_name), "fs%u_variant%u",
+            shader->no, shader->variants_created);
    variant->gallivm = gallivm_create(module_name, lp->context, &cached);
    if (!variant->gallivm) {
       FREE(variant);
@@ -3613,20 +3766,21 @@ generate_variant(struct llvmpipe_context *lp,
    variant->list_item_local.base = variant;
    variant->no = shader->variants_created++;
 
-
-
    /*
     * Determine whether we are touching all channels in the color buffer.
     */
-   fullcolormask = FALSE;
+   const struct util_format_description *cbuf0_format_desc = NULL;
+   boolean fullcolormask = FALSE;
    if (key->nr_cbufs == 1) {
       cbuf0_format_desc = util_format_description(key->cbuf_format[0]);
-      fullcolormask = util_format_colormask_full(cbuf0_format_desc, key->blend.rt[0].colormask);
+      fullcolormask = util_format_colormask_full(cbuf0_format_desc,
+                                                 key->blend.rt[0].colormask);
    }
 
    /* The scissor is ignored here as only tiles inside the scissoring
-    * rectangle will refer to this */
-   no_kill =
+    * rectangle will refer to this.
+    */
+   const boolean no_kill =
          fullcolormask &&
          !key->stencil[0].enabled &&
          !key->alpha.enabled &&
@@ -3665,14 +3819,16 @@ generate_variant(struct llvmpipe_context *lp,
    if (variant->opaque &&
        (shader->kind == LP_FS_KIND_BLIT_RGBA ||
         shader->kind == LP_FS_KIND_BLIT_RGB1)) {
-      unsigned target, min_img_filter, mag_img_filter, min_mip_filter;
-      enum pipe_format texture_format;
-      struct lp_sampler_static_state *samp0 = lp_fs_variant_key_sampler_idx(key, 0);
+      const struct lp_sampler_static_state *samp0 =
+         lp_fs_variant_key_sampler_idx(key, 0);
       assert(samp0);
-      texture_format = samp0->texture_state.format;
-      target = samp0->texture_state.target;
-      min_img_filter = samp0->sampler_state.min_img_filter;
-      mag_img_filter = samp0->sampler_state.mag_img_filter;
+
+      const enum pipe_format texture_format = samp0->texture_state.format;
+      const enum pipe_texture_target target = samp0->texture_state.target;
+      const unsigned min_img_filter = samp0->sampler_state.min_img_filter;
+      const unsigned mag_img_filter = samp0->sampler_state.mag_img_filter;
+
+      unsigned min_mip_filter;
       if (samp0->texture_state.level_zero_only) {
          min_mip_filter = PIPE_TEX_MIPFILTER_NONE;
       } else {
@@ -3690,13 +3846,15 @@ generate_variant(struct llvmpipe_context *lp,
             (texture_format == PIPE_FORMAT_B8G8R8A8_UNORM ||
              texture_format == PIPE_FORMAT_B8G8R8X8_UNORM) &&
             (key->cbuf_format[0] == PIPE_FORMAT_B8G8R8A8_UNORM ||
-             key->cbuf_format[0] == PIPE_FORMAT_B8G8R8X8_UNORM))))
+             key->cbuf_format[0] == PIPE_FORMAT_B8G8R8X8_UNORM)))) {
          variant->blit = 1;
+      }
    }
 
-
-   /* Whether this is a candidate for the linear path */
-   linear =
+   /* Determine whether this shader + pipeline state is a candidate for
+    * the linear path.
+    */
+   const boolean linear_pipeline =
          !key->stencil[0].enabled &&
          !key->depth.enabled &&
          !shader->info.base.uses_kill &&
@@ -3713,7 +3871,7 @@ generate_variant(struct llvmpipe_context *lp,
    llvmpipe_fs_variant_fastpath(variant);
 
    lp_jit_init_types(variant);
-   
+
    if (variant->jit_function[RAST_EDGE_TEST] == NULL)
       generate_fragment(lp, shader, variant, RAST_EDGE_TEST);
 
@@ -3724,7 +3882,7 @@ generate_variant(struct llvmpipe_context *lp,
       }
    }
 
-   if (linear) {
+   if (linear_pipeline) {
       /* Currently keeping both the old fastpaths and new linear path
        * active.  The older code is still somewhat faster for the cases
        * it covers.
@@ -3769,17 +3927,18 @@ generate_variant(struct llvmpipe_context *lp,
    }
 
    if (variant->function[RAST_WHOLE]) {
-         variant->jit_function[RAST_WHOLE] = (lp_jit_frag_func)
-               gallivm_jit_function(variant->gallivm,
-                                    variant->function[RAST_WHOLE]);
+      variant->jit_function[RAST_WHOLE] = (lp_jit_frag_func)
+         gallivm_jit_function(variant->gallivm,
+                              variant->function[RAST_WHOLE]);
    } else if (!variant->jit_function[RAST_WHOLE]) {
-      variant->jit_function[RAST_WHOLE] = variant->jit_function[RAST_EDGE_TEST];
+      variant->jit_function[RAST_WHOLE] = (lp_jit_frag_func)
+         variant->jit_function[RAST_EDGE_TEST];
    }
 
-   if (linear) {
+   if (linear_pipeline) {
       if (variant->linear_function) {
          variant->jit_linear_llvm = (lp_jit_linear_llvm_func)
-               gallivm_jit_function(variant->gallivm, variant->linear_function);
+            gallivm_jit_function(variant->gallivm, variant->linear_function);
       }
 
       /*
@@ -3804,19 +3963,14 @@ llvmpipe_create_fs_state(struct pipe_context *pipe,
                          const struct pipe_shader_state *templ)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
-   struct lp_fragment_shader *shader;
-   int nr_samplers;
-   int nr_sampler_views;
-   int nr_images;
-   int i;
 
-   shader = CALLOC_STRUCT(lp_fragment_shader);
+   struct lp_fragment_shader *shader = CALLOC_STRUCT(lp_fragment_shader);
    if (!shader)
       return NULL;
 
    pipe_reference_init(&shader->reference, 1);
    shader->no = fs_no++;
-   make_empty_list(&shader->variants);
+   list_inithead(&shader->variants.list);
 
    shader->base.type = templ->type;
    if (templ->type == PIPE_SHADER_IR_TGSI) {
@@ -3837,12 +3991,16 @@ llvmpipe_create_fs_state(struct pipe_context *pipe,
       return NULL;
    }
 
-   nr_samplers = shader->info.base.file_max[TGSI_FILE_SAMPLER] + 1;
-   nr_sampler_views = shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] + 1;
-   nr_images = shader->info.base.file_max[TGSI_FILE_IMAGE] + 1;
-   shader->variant_key_size = lp_fs_variant_key_size(MAX2(nr_samplers, nr_sampler_views), nr_images);
+   const int nr_samplers = shader->info.base.file_max[TGSI_FILE_SAMPLER] + 1;
+   const int nr_sampler_views =
+      shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] + 1;
+   const int nr_images = shader->info.base.file_max[TGSI_FILE_IMAGE] + 1;
 
-   for (i = 0; i < shader->info.base.num_inputs; i++) {
+   shader->variant_key_size = lp_fs_variant_key_size(MAX2(nr_samplers,
+                                                          nr_sampler_views),
+                                                     nr_images);
+
+   for (int i = 0; i < shader->info.base.num_inputs; i++) {
       shader->inputs[i].usage_mask = shader->info.base.input_usage_mask[i];
       shader->inputs[i].location = shader->info.base.input_interpolate_loc[i];
 
@@ -3881,12 +4039,11 @@ llvmpipe_create_fs_state(struct pipe_context *pipe,
    }
 
    if (LP_DEBUG & DEBUG_TGSI && templ->type == PIPE_SHADER_IR_TGSI) {
-      unsigned attrib;
       debug_printf("llvmpipe: Create fragment shader #%u %p:\n",
                    shader->no, (void *) shader);
       tgsi_dump(templ->tokens, 0);
       debug_printf("usage masks:\n");
-      for (attrib = 0; attrib < shader->info.base.num_inputs; ++attrib) {
+      for (unsigned attrib = 0; attrib < shader->info.base.num_inputs; ++attrib) {
          unsigned usage_mask = shader->info.base.input_usage_mask[attrib];
          debug_printf("  IN[%u].%s%s%s%s\n",
                       attrib,
@@ -3931,10 +4088,9 @@ llvmpipe_bind_fs_state(struct pipe_context *pipe, void *fs)
  * Remove shader variant from two lists: the shader's variant list
  * and the context's variant list.
  */
-
-static
-void llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
-                                    struct lp_fragment_shader_variant *variant)
+static void
+llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
+                               struct lp_fragment_shader_variant *variant)
 {
    if ((LP_DEBUG & DEBUG_FS) || (gallivm_debug & GALLIVM_DEBUG_IR)) {
       debug_printf("llvmpipe: del fs #%u var %u v created %u v cached %u "
@@ -3946,25 +4102,25 @@ void llvmpipe_remove_shader_variant(struct llvmpipe_context *lp,
    }
 
    /* remove from shader's list */
-   remove_from_list(&variant->list_item_local);
+   list_del(&variant->list_item_local.list);
    variant->shader->variants_cached--;
 
    /* remove from context's list */
-   remove_from_list(&variant->list_item_global);
+   list_del(&variant->list_item_global.list);
    lp->nr_fs_variants--;
    lp->nr_fs_instrs -= variant->nr_instrs;
 }
 
+
 void
 llvmpipe_destroy_shader_variant(struct llvmpipe_context *lp,
-                               struct lp_fragment_shader_variant *variant)
+                                struct lp_fragment_shader_variant *variant)
 {
    gallivm_destroy(variant->gallivm);
-
    lp_fs_reference(lp, &variant->shader, NULL);
-
    FREE(variant);
 }
+
 
 void
 llvmpipe_destroy_fs(struct llvmpipe_context *llvmpipe,
@@ -3980,26 +4136,25 @@ llvmpipe_destroy_fs(struct llvmpipe_context *llvmpipe,
    FREE(shader);
 }
 
+
 static void
 llvmpipe_delete_fs_state(struct pipe_context *pipe, void *fs)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
    struct lp_fragment_shader *shader = fs;
-   struct lp_fs_variant_list_item *li;
+   struct lp_fs_variant_list_item *li, *next;
 
    /* Delete all the variants */
-   li = first_elem(&shader->variants);
-   while(!at_end(&shader->variants, li)) {
-      struct lp_fs_variant_list_item *next = next_elem(li);
+   LIST_FOR_EACH_ENTRY_SAFE(li, next, &shader->variants.list, list) {
       struct lp_fragment_shader_variant *variant;
       variant = li->base;
       llvmpipe_remove_shader_variant(llvmpipe, li->base);
       lp_fs_variant_reference(llvmpipe, &variant, NULL);
-      li = next;
    }
 
    lp_fs_reference(llvmpipe, &shader, NULL);
 }
+
 
 static void
 llvmpipe_set_constant_buffer(struct pipe_context *pipe,
@@ -4018,12 +4173,12 @@ llvmpipe_set_constant_buffer(struct pipe_context *pipe,
                              take_ownership);
 
    /* user_buffer is only valid until the next set_constant_buffer (at most,
-    * possibly until shader deletion), so we need to upload it now to make sure
-    * it doesn't get updated/freed out from under us.
+    * possibly until shader deletion), so we need to upload it now to make
+    * sure it doesn't get updated/freed out from under us.
     */
    if (constants->user_buffer) {
-      u_upload_data(llvmpipe->pipe.const_uploader, 0, constants->buffer_size, 16,
-                    constants->user_buffer, &constants->buffer_offset,
+      u_upload_data(llvmpipe->pipe.const_uploader, 0, constants->buffer_size,
+                    16, constants->user_buffer, &constants->buffer_offset,
                     &constants->buffer);
    }
    if (constants->buffer) {
@@ -4041,25 +4196,30 @@ llvmpipe_set_constant_buffer(struct pipe_context *pipe,
       const unsigned size = cb ? cb->buffer_size : 0;
 
       const ubyte *data = NULL;
-      if (constants->buffer)
-         data = (ubyte *) llvmpipe_resource_data(constants->buffer) + constants->buffer_offset;
+      if (constants->buffer) {
+         data = (ubyte *) llvmpipe_resource_data(constants->buffer)
+            + constants->buffer_offset;
+      }
 
       draw_set_mapped_constant_buffer(llvmpipe->draw, shader,
                                       index, data, size);
-   }
-   else if (shader == PIPE_SHADER_COMPUTE)
+   } else if (shader == PIPE_SHADER_COMPUTE) {
       llvmpipe->cs_dirty |= LP_CSNEW_CONSTANTS;
-   else
+   } else {
       llvmpipe->dirty |= LP_NEW_FS_CONSTANTS;
+   }
 }
+
 
 static void
 llvmpipe_set_shader_buffers(struct pipe_context *pipe,
                             enum pipe_shader_type shader, unsigned start_slot,
-                            unsigned count, const struct pipe_shader_buffer *buffers,
+                            unsigned count,
+                            const struct pipe_shader_buffer *buffers,
                             unsigned writable_bitmask)
 {
    struct llvmpipe_context *llvmpipe = llvmpipe_context(pipe);
+
    unsigned i, idx;
    for (i = start_slot, idx = 0; i < start_slot + count; i++, idx++) {
       const struct pipe_shader_buffer *buffer = buffers ? &buffers[idx] : NULL;
@@ -4085,7 +4245,7 @@ llvmpipe_set_shader_buffers(struct pipe_context *pipe,
          draw_set_mapped_shader_buffer(llvmpipe->draw, shader,
                                        i, data, size);
       } else if (shader == PIPE_SHADER_COMPUTE) {
-	 llvmpipe->cs_dirty |= LP_CSNEW_SSBOS;
+         llvmpipe->cs_dirty |= LP_CSNEW_SSBOS;
       } else if (shader == PIPE_SHADER_FRAGMENT) {
          llvmpipe->fs_ssbo_write_mask &= ~(((1 << count) - 1) << start_slot);
          llvmpipe->fs_ssbo_write_mask |= writable_bitmask << start_slot;
@@ -4094,9 +4254,10 @@ llvmpipe_set_shader_buffers(struct pipe_context *pipe,
    }
 }
 
+
 static void
 llvmpipe_set_shader_images(struct pipe_context *pipe,
-                            enum pipe_shader_type shader, unsigned start_slot,
+                           enum pipe_shader_type shader, unsigned start_slot,
                            unsigned count, unsigned unbind_num_trailing_slots,
                            const struct pipe_image_view *images)
 {
@@ -4121,14 +4282,13 @@ llvmpipe_set_shader_images(struct pipe_context *pipe,
        shader == PIPE_SHADER_GEOMETRY ||
        shader == PIPE_SHADER_TESS_CTRL ||
        shader == PIPE_SHADER_TESS_EVAL) {
-      draw_set_images(llvmpipe->draw,
-                      shader,
-                      llvmpipe->images[shader],
+      draw_set_images(llvmpipe->draw, shader, llvmpipe->images[shader],
                       start_slot + count);
-   } else if (shader == PIPE_SHADER_COMPUTE)
+   } else if (shader == PIPE_SHADER_COMPUTE) {
       llvmpipe->cs_dirty |= LP_CSNEW_IMAGES;
-   else
+   } else {
       llvmpipe->dirty |= LP_NEW_FS_IMAGES;
+   }
 
    if (unbind_num_trailing_slots) {
       llvmpipe_set_shader_images(pipe, shader, start_slot + count,
@@ -4136,13 +4296,14 @@ llvmpipe_set_shader_images(struct pipe_context *pipe,
    }
 }
 
+
 /**
  * Return the blend factor equivalent to a destination alpha of one.
  */
-static inline unsigned
-force_dst_alpha_one(unsigned factor, boolean clamped_zero)
+static inline enum pipe_blendfactor
+force_dst_alpha_one(enum pipe_blendfactor factor, boolean clamped_zero)
 {
-   switch(factor) {
+   switch (factor) {
    case PIPE_BLENDFACTOR_DST_ALPHA:
       return PIPE_BLENDFACTOR_ONE;
    case PIPE_BLENDFACTOR_INV_DST_ALPHA:
@@ -4152,9 +4313,9 @@ force_dst_alpha_one(unsigned factor, boolean clamped_zero)
          return PIPE_BLENDFACTOR_ZERO;
       else
          return PIPE_BLENDFACTOR_SRC_ALPHA_SATURATE;
+   default:
+      return factor;
    }
-
-   return factor;
 }
 
 
@@ -4170,15 +4331,13 @@ make_variant_key(struct llvmpipe_context *lp,
                  struct lp_fragment_shader *shader,
                  char *store)
 {
-   unsigned i;
-   struct lp_fragment_shader_variant_key *key;
-
-   key = (struct lp_fragment_shader_variant_key *)store;
+   struct lp_fragment_shader_variant_key *key =
+      (struct lp_fragment_shader_variant_key *)store;
 
    memset(key, 0, sizeof(*key));
 
    if (lp->framebuffer.zsbuf) {
-      enum pipe_format zsbuf_format = lp->framebuffer.zsbuf->format;
+      const enum pipe_format zsbuf_format = lp->framebuffer.zsbuf->format;
       const struct util_format_description *zsbuf_desc =
          util_format_description(zsbuf_format);
 
@@ -4192,12 +4351,22 @@ make_variant_key(struct llvmpipe_context *lp,
       if (lp->depth_stencil->stencil[0].enabled &&
           util_format_has_stencil(zsbuf_desc)) {
          key->zsbuf_format = zsbuf_format;
-         memcpy(&key->stencil, &lp->depth_stencil->stencil, sizeof key->stencil);
+         memcpy(&key->stencil, &lp->depth_stencil->stencil,
+                sizeof key->stencil);
       }
       if (llvmpipe_resource_is_1d(lp->framebuffer.zsbuf->texture)) {
          key->resource_1d = TRUE;
       }
-      key->zsbuf_nr_samples = util_res_sample_count(lp->framebuffer.zsbuf->texture);
+      key->zsbuf_nr_samples =
+         util_res_sample_count(lp->framebuffer.zsbuf->texture);
+
+      /*
+       * Restrict depth values if the API is clamped (GL, VK with ext)
+       * for non float Z buffer
+       */
+      key->restrict_depth_values =
+         !(lp->rasterizer->unclamped_fragment_depth_values &&
+           util_format_get_depth_only(zsbuf_format) == PIPE_FORMAT_Z32_FLOAT);
    }
 
    /*
@@ -4205,15 +4374,18 @@ make_variant_key(struct llvmpipe_context *lp,
     */
    key->depth_clamp = lp->rasterizer->depth_clamp;
 
-   /* alpha test only applies if render buffer 0 is non-integer (or does not exist) */
+   /* alpha test only applies if render buffer 0 is non-integer
+    * (or does not exist)
+    */
    if (!lp->framebuffer.nr_cbufs ||
        !lp->framebuffer.cbufs[0] ||
        !util_format_is_pure_integer(lp->framebuffer.cbufs[0]->format)) {
       key->alpha.enabled = lp->depth_stencil->alpha_enabled;
    }
-   if(key->alpha.enabled)
+   if (key->alpha.enabled) {
       key->alpha.func = lp->depth_stencil->alpha_func;
-   /* alpha.ref_value is passed in jit_context */
+      /* alpha.ref_value is passed in jit_context */
+   }
 
    key->flatshade = lp->rasterizer->flatshade;
    key->multisample = lp->rasterizer->multisample;
@@ -4227,28 +4399,55 @@ make_variant_key(struct llvmpipe_context *lp,
    key->coverage_samples = 1;
    key->min_samples = 1;
    if (key->multisample) {
-      key->coverage_samples = util_framebuffer_get_num_samples(&lp->framebuffer);
-      key->min_samples = lp->min_samples == 1 ? 1 : key->coverage_samples;
+      key->coverage_samples =
+         util_framebuffer_get_num_samples(&lp->framebuffer);
+      /* Per EXT_shader_framebuffer_fetch spec:
+       *
+       *   "1. How is framebuffer data treated during multisample rendering?
+       *
+       *    RESOLVED: Reading the value of gl_LastFragData produces a
+       *    different result for each sample. This implies that all or part
+       *    of the shader be run once for each sample, but has no additional
+       *    implications on fragment shader input variables which may still
+       *    be interpolated per pixel by the implementation."
+       *
+       * ARM_shader_framebuffer_fetch_depth_stencil spec further says:
+       *
+       *   "(1) When multisampling is enabled, does the shader run per sample?
+       *
+       *    RESOLVED.
+       *
+       *    This behavior is inherited from either
+       *    EXT_shader_framebuffer_fetch or ARM_shader_framebuffer_fetch as
+       *    described in the interactions section.  If neither extension is
+       *    supported, the shader runs once per fragment."
+       *
+       * Therefore we should always enable per-sample shading when FB fetch is
+       * used.
+       */
+      if (lp->min_samples > 1 || shader->info.base.uses_fbfetch)
+         key->min_samples = key->coverage_samples;
    }
    key->nr_cbufs = lp->framebuffer.nr_cbufs;
 
    if (!key->blend.independent_blend_enable) {
-      /* we always need independent blend otherwise the fixups below won't work */
-      for (i = 1; i < key->nr_cbufs; i++) {
-         memcpy(&key->blend.rt[i], &key->blend.rt[0], sizeof(key->blend.rt[0]));
+      // we always need independent blend otherwise the fixups below won't work
+      for (unsigned i = 1; i < key->nr_cbufs; i++) {
+         memcpy(&key->blend.rt[i], &key->blend.rt[0],
+                sizeof(key->blend.rt[0]));
       }
       key->blend.independent_blend_enable = 1;
    }
 
-   for (i = 0; i < lp->framebuffer.nr_cbufs; i++) {
+   for (unsigned i = 0; i < lp->framebuffer.nr_cbufs; i++) {
       struct pipe_rt_blend_state *blend_rt = &key->blend.rt[i];
 
       if (lp->framebuffer.cbufs[i]) {
-         enum pipe_format format = lp->framebuffer.cbufs[i]->format;
-         const struct util_format_description *format_desc;
+         const enum pipe_format format = lp->framebuffer.cbufs[i]->format;
 
          key->cbuf_format[i] = format;
-         key->cbuf_nr_samples[i] = util_res_sample_count(lp->framebuffer.cbufs[i]->texture);
+         key->cbuf_nr_samples[i] =
+            util_res_sample_count(lp->framebuffer.cbufs[i]->texture);
 
          /*
           * Figure out if this is a 1d resource. Note that OpenGL allows crazy
@@ -4259,7 +4458,8 @@ make_variant_key(struct llvmpipe_context *lp,
             key->resource_1d = TRUE;
          }
 
-         format_desc = util_format_description(format);
+         const struct util_format_description *format_desc =
+            util_format_description(format);
          assert(format_desc->colorspace == UTIL_FORMAT_COLORSPACE_RGB ||
                 format_desc->colorspace == UTIL_FORMAT_COLORSPACE_SRGB);
 
@@ -4293,7 +4493,7 @@ make_variant_key(struct llvmpipe_context *lp,
           */
          if (format_desc->swizzle[3] > PIPE_SWIZZLE_W ||
              format_desc->swizzle[3] == format_desc->swizzle[0]) {
-            /* Doesn't cover mixed snorm/unorm but can't render to them anyway */
+            // Doesn't cover mixed snorm/unorm but can't render to them anyway
             boolean clamped_zero = !util_format_is_float(format) &&
                                    !util_format_is_snorm(format);
             blend_rt->rgb_src_factor =
@@ -4304,8 +4504,7 @@ make_variant_key(struct llvmpipe_context *lp,
             blend_rt->alpha_src_factor = blend_rt->rgb_src_factor;
             blend_rt->alpha_dst_factor = blend_rt->rgb_dst_factor;
          }
-      }
-      else {
+      } else {
          /* no color buffer for this fragment output */
          key->cbuf_format[i] = PIPE_FORMAT_NONE;
          key->cbuf_nr_samples[i] = 0;
@@ -4318,17 +4517,19 @@ make_variant_key(struct llvmpipe_context *lp,
     */
    key->nr_samplers = shader->info.base.file_max[TGSI_FILE_SAMPLER] + 1;
 
-   if (shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] != -1)
-      key->nr_sampler_views = shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] + 1;
+   if (shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] != -1) {
+      key->nr_sampler_views =
+         shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] + 1;
+   }
 
-   struct lp_sampler_static_state *fs_sampler;
+   struct lp_sampler_static_state *fs_sampler =
+      lp_fs_variant_key_samplers(key);
 
-   fs_sampler = lp_fs_variant_key_samplers(key);
+   memset(fs_sampler, 0,
+          MAX2(key->nr_samplers, key->nr_sampler_views) * sizeof *fs_sampler);
 
-   memset(fs_sampler, 0, MAX2(key->nr_samplers, key->nr_sampler_views) * sizeof *fs_sampler);
-
-   for(i = 0; i < key->nr_samplers; ++i) {
-      if(shader->info.base.file_mask[TGSI_FILE_SAMPLER] & (1 << i)) {
+   for (unsigned i = 0; i < key->nr_samplers; ++i) {
+      if (shader->info.base.file_mask[TGSI_FILE_SAMPLER] & (1 << i)) {
          lp_sampler_static_sampler_state(&fs_sampler[i].sampler_state,
                                          lp->samplers[PIPE_SHADER_FRAGMENT][i]);
       }
@@ -4340,40 +4541,44 @@ make_variant_key(struct llvmpipe_context *lp,
     * if we want to skip the holes here (without rescanning tgsi).
     */
    if (shader->info.base.file_max[TGSI_FILE_SAMPLER_VIEW] != -1) {
-      for(i = 0; i < key->nr_sampler_views; ++i) {
+      for (unsigned i = 0; i < key->nr_sampler_views; ++i) {
          /*
           * Note sview may exceed what's representable by file_mask.
           * This will still work, the only downside is that not actually
           * used views may be included in the shader key.
           */
-         if(shader->info.base.file_mask[TGSI_FILE_SAMPLER_VIEW] & (1u << (i & 31))) {
+         if ((shader->info.base.file_mask[TGSI_FILE_SAMPLER_VIEW]
+              & (1u << (i & 31))) || i > 31) {
             lp_sampler_static_texture_state(&fs_sampler[i].texture_state,
-                                            lp->sampler_views[PIPE_SHADER_FRAGMENT][i]);
+                                  lp->sampler_views[PIPE_SHADER_FRAGMENT][i]);
          }
       }
-   }
-   else {
+   } else {
       key->nr_sampler_views = key->nr_samplers;
-      for(i = 0; i < key->nr_sampler_views; ++i) {
-         if(shader->info.base.file_mask[TGSI_FILE_SAMPLER] & (1 << i)) {
+      for (unsigned i = 0; i < key->nr_sampler_views; ++i) {
+         if ((shader->info.base.file_mask[TGSI_FILE_SAMPLER] & (1 << i)) || i > 31) {
             lp_sampler_static_texture_state(&fs_sampler[i].texture_state,
-                                            lp->sampler_views[PIPE_SHADER_FRAGMENT][i]);
+                                 lp->sampler_views[PIPE_SHADER_FRAGMENT][i]);
          }
       }
    }
 
-   struct lp_image_static_state *lp_image;
-   lp_image = lp_fs_variant_key_images(key);
+   struct lp_image_static_state *lp_image = lp_fs_variant_key_images(key);
    key->nr_images = shader->info.base.file_max[TGSI_FILE_IMAGE] + 1;
-   for (i = 0; i < key->nr_images; ++i) {
-      if (shader->info.base.file_mask[TGSI_FILE_IMAGE] & (1 << i)) {
+
+   if (key->nr_images)
+      memset(lp_image, 0,
+             key->nr_images * sizeof *lp_image);
+   for (unsigned i = 0; i < key->nr_images; ++i) {
+      if ((shader->info.base.file_mask[TGSI_FILE_IMAGE] & (1 << i)) || i > 31) {
          lp_sampler_static_texture_state_image(&lp_image[i].image_state,
-                                               &lp->images[PIPE_SHADER_FRAGMENT][i]);
+                                      &lp->images[PIPE_SHADER_FRAGMENT][i]);
       }
    }
 
    if (shader->kind == LP_FS_KIND_AERO_MINIFICATION) {
-      struct lp_sampler_static_state *samp0 = lp_fs_variant_key_sampler_idx(key, 0);
+      struct lp_sampler_static_state *samp0 =
+         lp_fs_variant_key_sampler_idx(key, 0);
       assert(samp0);
       samp0->sampler_state.min_img_filter = PIPE_TEX_FILTER_NEAREST;
       samp0->sampler_state.mag_img_filter = PIPE_TEX_FILTER_NEAREST;
@@ -4387,38 +4592,32 @@ make_variant_key(struct llvmpipe_context *lp,
  * Update fragment shader state.  This is called just prior to drawing
  * something when some fragment-related state has changed.
  */
-void 
+void
 llvmpipe_update_fs(struct llvmpipe_context *lp)
 {
    struct lp_fragment_shader *shader = lp->fs;
-   struct lp_fragment_shader_variant_key *key;
+
+   char store[LP_FS_MAX_VARIANT_KEY_SIZE];
+   const struct lp_fragment_shader_variant_key *key =
+      make_variant_key(lp, shader, store);
+
    struct lp_fragment_shader_variant *variant = NULL;
    struct lp_fs_variant_list_item *li;
-   char store[LP_FS_MAX_VARIANT_KEY_SIZE];
-
-   key = make_variant_key(lp, shader, store);
-
    /* Search the variants for one which matches the key */
-   li = first_elem(&shader->variants);
-   while(!at_end(&shader->variants, li)) {
-      if(memcmp(&li->base->key, key, shader->variant_key_size) == 0) {
+   LIST_FOR_EACH_ENTRY(li, &shader->variants.list, list) {
+      if (memcmp(&li->base->key, key, shader->variant_key_size) == 0) {
          variant = li->base;
          break;
       }
-      li = next_elem(li);
    }
 
    if (variant) {
       /* Move this variant to the head of the list to implement LRU
        * deletion of shader's when we have too many.
        */
-      move_to_head(&lp->fs_variants_list, &variant->list_item_global);
-   }
-   else {
+      list_move_to(&variant->list_item_global.list, &lp->fs_variants_list.list);
+   } else {
       /* variant not found, create it now */
-      int64_t t0, t1, dt;
-      unsigned i;
-      unsigned variants_to_cull;
 
       if (LP_DEBUG & DEBUG_FS) {
          debug_printf("%u variants,\t%u instrs,\t%u instrs/variant\n",
@@ -4430,7 +4629,9 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
       /* First, check if we've exceeded the max number of shader variants.
        * If so, free 6.25% of them (the least recently used ones).
        */
-      variants_to_cull = lp->nr_fs_variants >= LP_MAX_SHADER_VARIANTS ? LP_MAX_SHADER_VARIANTS / 16 : 0;
+      const unsigned variants_to_cull =
+         lp->nr_fs_variants >= LP_MAX_SHADER_VARIANTS
+         ? LP_MAX_SHADER_VARIANTS / 16 : 0;
 
       if (variants_to_cull ||
           lp->nr_fs_instrs >= LP_MAX_SHADER_INSTRUCTIONS) {
@@ -4443,17 +4644,21 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
          }
 
          /*
-          * We need to re-check lp->nr_fs_variants because an arbitrarliy large
-          * number of shader variants (potentially all of them) could be
-          * pending for destruction on flush.
+          * We need to re-check lp->nr_fs_variants because an arbitrarily
+          * large number of shader variants (potentially all of them) could
+          * be pending for destruction on flush.
           */
 
-         for (i = 0; i < variants_to_cull || lp->nr_fs_instrs >= LP_MAX_SHADER_INSTRUCTIONS; i++) {
+         for (unsigned i = 0;
+              i < variants_to_cull ||
+                 lp->nr_fs_instrs >= LP_MAX_SHADER_INSTRUCTIONS;
+              i++) {
             struct lp_fs_variant_list_item *item;
-            if (is_empty_list(&lp->fs_variants_list)) {
+            if (list_is_empty(&lp->fs_variants_list.list)) {
                break;
             }
-            item = last_elem(&lp->fs_variants_list);
+            item = list_last_entry(&lp->fs_variants_list.list,
+                                   struct lp_fs_variant_list_item, list);
             assert(item);
             assert(item->base);
             llvmpipe_remove_shader_variant(lp, item->base);
@@ -4465,17 +4670,17 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
       /*
        * Generate the new variant.
        */
-      t0 = os_time_get();
+      int64_t t0 = os_time_get();
       variant = generate_variant(lp, shader, key);
-      t1 = os_time_get();
-      dt = t1 - t0;
+      int64_t t1 = os_time_get();
+      int64_t dt = t1 - t0;
       LP_COUNT_ADD(llvm_compile_time, dt);
       LP_COUNT_ADD(nr_llvm_compiles, 2);  /* emit vs. omit in/out test */
 
       /* Put the new variant into the list */
       if (variant) {
-         insert_at_head(&shader->variants, &variant->list_item_local);
-         insert_at_head(&lp->fs_variants_list, &variant->list_item_global);
+         list_add(&variant->list_item_local.list, &shader->variants.list);
+         list_add(&variant->list_item_global.list, &lp->fs_variants_list.list);
          lp->nr_fs_variants++;
          lp->nr_fs_instrs += variant->nr_instrs;
          shader->variants_cached++;
@@ -4487,20 +4692,13 @@ llvmpipe_update_fs(struct llvmpipe_context *lp)
 }
 
 
-
-
-
 void
 llvmpipe_init_fs_funcs(struct llvmpipe_context *llvmpipe)
 {
    llvmpipe->pipe.create_fs_state = llvmpipe_create_fs_state;
    llvmpipe->pipe.bind_fs_state   = llvmpipe_bind_fs_state;
    llvmpipe->pipe.delete_fs_state = llvmpipe_delete_fs_state;
-
    llvmpipe->pipe.set_constant_buffer = llvmpipe_set_constant_buffer;
-
    llvmpipe->pipe.set_shader_buffers = llvmpipe_set_shader_buffers;
    llvmpipe->pipe.set_shader_images = llvmpipe_set_shader_images;
 }
-
-

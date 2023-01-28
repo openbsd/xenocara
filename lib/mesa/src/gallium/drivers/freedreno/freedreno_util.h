@@ -27,6 +27,8 @@
 #ifndef FREEDRENO_UTIL_H_
 #define FREEDRENO_UTIL_H_
 
+#include "common/freedreno_common.h"
+
 #include "drm/freedreno_drmif.h"
 #include "drm/freedreno_ringbuffer.h"
 
@@ -96,6 +98,7 @@ enum fd_debug_flag {
    FD_DBG_LAYOUT       = BITFIELD_BIT(26),
    FD_DBG_NOFP16       = BITFIELD_BIT(27),
    FD_DBG_NOHW         = BITFIELD_BIT(28),
+   FD_DBG_NOSBIN       = BITFIELD_BIT(29),
 };
 /* clang-format on */
 
@@ -166,6 +169,12 @@ struct __perf_time_state {
        ? os_time_get_nano()                                                    \
        : 0)
 
+#define DEFINE_CAST(parent, child)                                             \
+   static inline struct child *child(struct parent *x)                         \
+   {                                                                           \
+      return (struct child *)x;                                                \
+   }
+
 struct fd_context;
 
 /**
@@ -223,9 +232,6 @@ static inline void
 fd_context_access_end(struct fd_context *ctx) release_cap(fd_context_access_cap)
 {
 }
-
-/* for conditionally setting boolean flag(s): */
-#define COND(bool, val) ((bool) ? (val) : 0)
 
 #define CP_REG(reg) ((0x4 << 16) | ((unsigned int)((reg) - (0x2000))))
 
@@ -421,18 +427,6 @@ pack_rgba(enum pipe_format format, const float *rgba)
 }
 
 /*
- * swap - swap value of @a and @b
- */
-#define swap(a, b)                                                             \
-   do {                                                                        \
-      __typeof(a) __tmp = (a);                                                 \
-      (a) = (b);                                                               \
-      (b) = __tmp;                                                             \
-   } while (0)
-
-#define BIT(bit) (1u << bit)
-
-/*
  * a3xx+ helpers:
  */
 
@@ -441,10 +435,7 @@ fd_msaa_samples(unsigned samples)
 {
    switch (samples) {
    default:
-      debug_assert(0);
-#if defined(NDEBUG) || defined(DEBUG)
-      FALLTHROUGH;
-#endif
+      unreachable("Unsupported samples");
    case 0:
    case 1:
       return MSAA_ONE;
@@ -456,6 +447,31 @@ fd_msaa_samples(unsigned samples)
       return MSAA_EIGHT;
    }
 }
+
+#define A3XX_MAX_TEXEL_BUFFER_ELEMENTS_UINT (1 << 13)
+
+/* Note that the Vulkan blob on a540 and 640 report a
+ * maxTexelBufferElements of just 65536 (the GLES3.2 and Vulkan
+ * minimum).
+ */
+#define A4XX_MAX_TEXEL_BUFFER_ELEMENTS_UINT (1 << 27)
+
+static inline uint32_t
+fd_clamp_buffer_size(enum pipe_format format, uint32_t size,
+                     unsigned max_texel_buffer_elements)
+{
+   /* The spec says:
+    *    The number of texels in the texel array is then clamped to the value of
+    *    the implementation-dependent limit GL_MAX_TEXTURE_BUFFER_SIZE.
+    *
+    * So compute the number of texels, compare to GL_MAX_TEXTURE_BUFFER_SIZE and update it.
+    */
+   unsigned blocksize = util_format_get_blocksize(format);
+   unsigned elements = MIN2(max_texel_buffer_elements, size / blocksize);
+
+   return elements * blocksize;
+}
+
 
 /*
  * a4xx+ helpers:

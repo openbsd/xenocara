@@ -121,6 +121,9 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_DRAW_MESH_TASKS_NV",
    "VK_CMD_DRAW_MESH_TASKS_INDIRECT_NV",
    "VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_NV",
+   "VK_CMD_DRAW_MESH_TASKS_EXT",
+   "VK_CMD_DRAW_MESH_TASKS_INDIRECT_EXT",
+   "VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_EXT",
    "VK_CMD_BIND_INVOCATION_MASK_HUAWEI",
    "VK_CMD_COPY_ACCELERATION_STRUCTURE_NV",
    "VK_CMD_COPY_ACCELERATION_STRUCTURE_KHR",
@@ -132,6 +135,7 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_TRACE_RAYS_KHR",
    "VK_CMD_TRACE_RAYS_NV",
    "VK_CMD_TRACE_RAYS_INDIRECT_KHR",
+   "VK_CMD_TRACE_RAYS_INDIRECT2_KHR",
    "VK_CMD_SET_RAY_TRACING_PIPELINE_STACK_SIZE_KHR",
    "VK_CMD_SET_PERFORMANCE_MARKER_INTEL",
    "VK_CMD_SET_PERFORMANCE_STREAM_MARKER_INTEL",
@@ -156,6 +160,37 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_SET_DEPTH_BIAS_ENABLE",
    "VK_CMD_SET_LOGIC_OP_EXT",
    "VK_CMD_SET_PRIMITIVE_RESTART_ENABLE",
+   "VK_CMD_SET_TESSELLATION_DOMAIN_ORIGIN_EXT",
+   "VK_CMD_SET_DEPTH_CLAMP_ENABLE_EXT",
+   "VK_CMD_SET_POLYGON_MODE_EXT",
+   "VK_CMD_SET_RASTERIZATION_SAMPLES_EXT",
+   "VK_CMD_SET_SAMPLE_MASK_EXT",
+   "VK_CMD_SET_ALPHA_TO_COVERAGE_ENABLE_EXT",
+   "VK_CMD_SET_ALPHA_TO_ONE_ENABLE_EXT",
+   "VK_CMD_SET_LOGIC_OP_ENABLE_EXT",
+   "VK_CMD_SET_COLOR_BLEND_ENABLE_EXT",
+   "VK_CMD_SET_COLOR_BLEND_EQUATION_EXT",
+   "VK_CMD_SET_COLOR_WRITE_MASK_EXT",
+   "VK_CMD_SET_RASTERIZATION_STREAM_EXT",
+   "VK_CMD_SET_CONSERVATIVE_RASTERIZATION_MODE_EXT",
+   "VK_CMD_SET_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT",
+   "VK_CMD_SET_DEPTH_CLIP_ENABLE_EXT",
+   "VK_CMD_SET_SAMPLE_LOCATIONS_ENABLE_EXT",
+   "VK_CMD_SET_COLOR_BLEND_ADVANCED_EXT",
+   "VK_CMD_SET_PROVOKING_VERTEX_MODE_EXT",
+   "VK_CMD_SET_LINE_RASTERIZATION_MODE_EXT",
+   "VK_CMD_SET_LINE_STIPPLE_ENABLE_EXT",
+   "VK_CMD_SET_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT",
+   "VK_CMD_SET_VIEWPORT_WSCALING_ENABLE_NV",
+   "VK_CMD_SET_VIEWPORT_SWIZZLE_NV",
+   "VK_CMD_SET_COVERAGE_TO_COLOR_ENABLE_NV",
+   "VK_CMD_SET_COVERAGE_TO_COLOR_LOCATION_NV",
+   "VK_CMD_SET_COVERAGE_MODULATION_MODE_NV",
+   "VK_CMD_SET_COVERAGE_MODULATION_TABLE_ENABLE_NV",
+   "VK_CMD_SET_COVERAGE_MODULATION_TABLE_NV",
+   "VK_CMD_SET_SHADING_RATE_IMAGE_ENABLE_NV",
+   "VK_CMD_SET_COVERAGE_REDUCTION_MODE_NV",
+   "VK_CMD_SET_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV",
    "VK_CMD_COPY_BUFFER2",
    "VK_CMD_COPY_IMAGE2",
    "VK_CMD_BLIT_IMAGE2",
@@ -190,6 +225,12 @@ const char *vk_cmd_queue_type_names[] = {
    "VK_CMD_CU_LAUNCH_KERNEL_NVX",
    "VK_CMD_BEGIN_RENDERING",
    "VK_CMD_END_RENDERING",
+   "VK_CMD_BUILD_MICROMAPS_EXT",
+   "VK_CMD_COPY_MICROMAP_EXT",
+   "VK_CMD_COPY_MICROMAP_TO_MEMORY_EXT",
+   "VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT",
+   "VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT",
+   "VK_CMD_OPTICAL_FLOW_EXECUTE_NV",
 };
 
 static void
@@ -203,31 +244,24 @@ vk_free_cmd_bind_pipeline(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
 , VkPipelineBindPoint pipelineBindPoint
 , VkPipeline pipeline
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_PIPELINE;
-
+      
    cmd->u.bind_pipeline.pipeline_bind_point = pipelineBindPoint;
    cmd->u.bind_pipeline.pipeline = pipeline;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_bind_pipeline(queue, cmd);
 }
 
 static void
@@ -242,38 +276,35 @@ vk_free_cmd_set_viewport(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
 , uint32_t firstViewport
 , uint32_t viewportCount
 , const VkViewport* pViewports
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_VIEWPORT;
-
+      
    cmd->u.set_viewport.first_viewport = firstViewport;
    cmd->u.set_viewport.viewport_count = viewportCount;
    if (pViewports) {
-      cmd->u.set_viewport.viewports = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport.viewports) * viewportCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_viewport.viewports = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport.viewports) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport.viewports == NULL) goto err;
 
-   memcpy(( VkViewport* )cmd->u.set_viewport.viewports, pViewports, sizeof(*cmd->u.set_viewport.viewports) * viewportCount);
-   }
+   memcpy(( VkViewport* )cmd->u.set_viewport.viewports, pViewports, sizeof(*cmd->u.set_viewport.viewports) * (viewportCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_viewport(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -288,38 +319,35 @@ vk_free_cmd_set_scissor(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_scissor(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_scissor(struct vk_cmd_queue *queue
 , uint32_t firstScissor
 , uint32_t scissorCount
 , const VkRect2D* pScissors
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_SCISSOR;
-
+      
    cmd->u.set_scissor.first_scissor = firstScissor;
    cmd->u.set_scissor.scissor_count = scissorCount;
    if (pScissors) {
-      cmd->u.set_scissor.scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_scissor.scissors) * scissorCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_scissor.scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_scissor.scissors) * (scissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_scissor.scissors == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_scissor.scissors, pScissors, sizeof(*cmd->u.set_scissor.scissors) * scissorCount);
-   }
+   memcpy(( VkRect2D* )cmd->u.set_scissor.scissors, pScissors, sizeof(*cmd->u.set_scissor.scissors) * (scissorCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_scissor(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -333,29 +361,22 @@ vk_free_cmd_set_line_width(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_line_width(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_line_width(struct vk_cmd_queue *queue
 , float lineWidth
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_LINE_WIDTH;
-
+      
    cmd->u.set_line_width.line_width = lineWidth;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_line_width(queue, cmd);
 }
 
 static void
@@ -369,33 +390,26 @@ vk_free_cmd_set_depth_bias(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_bias(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_bias(struct vk_cmd_queue *queue
 , float depthBiasConstantFactor
 , float depthBiasClamp
 , float depthBiasSlopeFactor
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_BIAS;
-
+      
    cmd->u.set_depth_bias.depth_bias_constant_factor = depthBiasConstantFactor;
    cmd->u.set_depth_bias.depth_bias_clamp = depthBiasClamp;
    cmd->u.set_depth_bias.depth_bias_slope_factor = depthBiasSlopeFactor;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_bias(queue, cmd);
 }
 
 static void
@@ -409,30 +423,23 @@ vk_free_cmd_set_blend_constants(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_blend_constants(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_blend_constants(struct vk_cmd_queue *queue
 , const float blendConstants[4]
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_BLEND_CONSTANTS;
-
+      
    memcpy(cmd->u.set_blend_constants.blend_constants, blendConstants,
           sizeof(*blendConstants) * 4);
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_blend_constants(queue, cmd);
 }
 
 static void
@@ -446,31 +453,24 @@ vk_free_cmd_set_depth_bounds(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_bounds(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_bounds(struct vk_cmd_queue *queue
 , float minDepthBounds
 , float maxDepthBounds
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_BOUNDS;
-
+      
    cmd->u.set_depth_bounds.min_depth_bounds = minDepthBounds;
    cmd->u.set_depth_bounds.max_depth_bounds = maxDepthBounds;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_bounds(queue, cmd);
 }
 
 static void
@@ -484,31 +484,24 @@ vk_free_cmd_set_stencil_compare_mask(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_stencil_compare_mask(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_stencil_compare_mask(struct vk_cmd_queue *queue
 , VkStencilFaceFlags faceMask
 , uint32_t compareMask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_STENCIL_COMPARE_MASK;
-
+      
    cmd->u.set_stencil_compare_mask.face_mask = faceMask;
    cmd->u.set_stencil_compare_mask.compare_mask = compareMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_stencil_compare_mask(queue, cmd);
 }
 
 static void
@@ -522,31 +515,24 @@ vk_free_cmd_set_stencil_write_mask(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_stencil_write_mask(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_stencil_write_mask(struct vk_cmd_queue *queue
 , VkStencilFaceFlags faceMask
 , uint32_t writeMask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_STENCIL_WRITE_MASK;
-
+      
    cmd->u.set_stencil_write_mask.face_mask = faceMask;
    cmd->u.set_stencil_write_mask.write_mask = writeMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_stencil_write_mask(queue, cmd);
 }
 
 static void
@@ -560,31 +546,24 @@ vk_free_cmd_set_stencil_reference(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_stencil_reference(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_stencil_reference(struct vk_cmd_queue *queue
 , VkStencilFaceFlags faceMask
 , uint32_t reference
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_STENCIL_REFERENCE;
-
+      
    cmd->u.set_stencil_reference.face_mask = faceMask;
    cmd->u.set_stencil_reference.reference = reference;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_stencil_reference(queue, cmd);
 }
 
 static void
@@ -612,33 +591,26 @@ vk_free_cmd_bind_index_buffer(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_index_buffer(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_index_buffer(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , VkIndexType indexType
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_INDEX_BUFFER;
-
+      
    cmd->u.bind_index_buffer.buffer = buffer;
    cmd->u.bind_index_buffer.offset = offset;
    cmd->u.bind_index_buffer.index_type = indexType;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_bind_index_buffer(queue, cmd);
 }
 
 static void
@@ -654,45 +626,42 @@ vk_free_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue
 , uint32_t firstBinding
 , uint32_t bindingCount
 , const VkBuffer* pBuffers
 , const VkDeviceSize* pOffsets
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_VERTEX_BUFFERS;
-
+      
    cmd->u.bind_vertex_buffers.first_binding = firstBinding;
    cmd->u.bind_vertex_buffers.binding_count = bindingCount;
    if (pBuffers) {
-      cmd->u.bind_vertex_buffers.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers.buffers) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_vertex_buffers.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers.buffers) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers.buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.bind_vertex_buffers.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers.buffers) * bindingCount);
-   }
+   memcpy(( VkBuffer* )cmd->u.bind_vertex_buffers.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers.buffers) * (bindingCount));
+   }   
    if (pOffsets) {
-      cmd->u.bind_vertex_buffers.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers.offsets) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_vertex_buffers.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers.offsets) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers.offsets) * bindingCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers.offsets) * (bindingCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_bind_vertex_buffers(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -706,35 +675,28 @@ vk_free_cmd_draw(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw(struct vk_cmd_queue *queue
 , uint32_t vertexCount
 , uint32_t instanceCount
 , uint32_t firstVertex
 , uint32_t firstInstance
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW;
-
+      
    cmd->u.draw.vertex_count = vertexCount;
    cmd->u.draw.instance_count = instanceCount;
    cmd->u.draw.first_vertex = firstVertex;
    cmd->u.draw.first_instance = firstInstance;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw(queue, cmd);
 }
 
 static void
@@ -748,7 +710,7 @@ vk_free_cmd_draw_indexed(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
 , uint32_t indexCount
 , uint32_t instanceCount
 , uint32_t firstIndex
@@ -756,16 +718,13 @@ void vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
 , uint32_t firstInstance
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_INDEXED;
-
+      
    cmd->u.draw_indexed.index_count = indexCount;
    cmd->u.draw_indexed.instance_count = instanceCount;
    cmd->u.draw_indexed.first_index = firstIndex;
@@ -773,12 +732,8 @@ void vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
    cmd->u.draw_indexed.first_instance = firstInstance;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_indexed(queue, cmd);
 }
 
 static void
@@ -820,35 +775,28 @@ vk_free_cmd_draw_indirect(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_indirect(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_indirect(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , uint32_t drawCount
 , uint32_t stride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_INDIRECT;
-
+      
    cmd->u.draw_indirect.buffer = buffer;
    cmd->u.draw_indirect.offset = offset;
    cmd->u.draw_indirect.draw_count = drawCount;
    cmd->u.draw_indirect.stride = stride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_indirect(queue, cmd);
 }
 
 static void
@@ -862,35 +810,28 @@ vk_free_cmd_draw_indexed_indirect(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_indexed_indirect(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_indexed_indirect(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , uint32_t drawCount
 , uint32_t stride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_INDEXED_INDIRECT;
-
+      
    cmd->u.draw_indexed_indirect.buffer = buffer;
    cmd->u.draw_indexed_indirect.offset = offset;
    cmd->u.draw_indexed_indirect.draw_count = drawCount;
    cmd->u.draw_indexed_indirect.stride = stride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_indexed_indirect(queue, cmd);
 }
 
 static void
@@ -904,33 +845,26 @@ vk_free_cmd_dispatch(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_dispatch(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_dispatch(struct vk_cmd_queue *queue
 , uint32_t groupCountX
 , uint32_t groupCountY
 , uint32_t groupCountZ
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DISPATCH;
-
+      
    cmd->u.dispatch.group_count_x = groupCountX;
    cmd->u.dispatch.group_count_y = groupCountY;
    cmd->u.dispatch.group_count_z = groupCountZ;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_dispatch(queue, cmd);
 }
 
 static void
@@ -944,31 +878,24 @@ vk_free_cmd_dispatch_indirect(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_dispatch_indirect(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_dispatch_indirect(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DISPATCH_INDIRECT;
-
+      
    cmd->u.dispatch_indirect.buffer = buffer;
    cmd->u.dispatch_indirect.offset = offset;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_dispatch_indirect(queue, cmd);
 }
 
 static void
@@ -982,27 +909,20 @@ vk_free_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SUBPASS_SHADING_HUAWEI;
-
+      
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_subpass_shading_huawei(queue, cmd);
 }
 
 static void
@@ -1017,40 +937,37 @@ vk_free_cmd_copy_buffer(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
 , VkBuffer srcBuffer
 , VkBuffer dstBuffer
 , uint32_t regionCount
 , const VkBufferCopy* pRegions
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_BUFFER;
-
+      
    cmd->u.copy_buffer.src_buffer = srcBuffer;
    cmd->u.copy_buffer.dst_buffer = dstBuffer;
    cmd->u.copy_buffer.region_count = regionCount;
    if (pRegions) {
-      cmd->u.copy_buffer.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_buffer.regions) * regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.copy_buffer.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_buffer.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_buffer.regions == NULL) goto err;
 
-   memcpy(( VkBufferCopy* )cmd->u.copy_buffer.regions, pRegions, sizeof(*cmd->u.copy_buffer.regions) * regionCount);
-   }
+   memcpy(( VkBufferCopy* )cmd->u.copy_buffer.regions, pRegions, sizeof(*cmd->u.copy_buffer.regions) * (regionCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_buffer(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1065,7 +982,7 @@ vk_free_cmd_copy_image(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
 , VkImage srcImage
 , VkImageLayout srcImageLayout
 , VkImage dstImage
@@ -1074,35 +991,32 @@ void vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
 , const VkImageCopy* pRegions
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_IMAGE;
-
+      
    cmd->u.copy_image.src_image = srcImage;
    cmd->u.copy_image.src_image_layout = srcImageLayout;
    cmd->u.copy_image.dst_image = dstImage;
    cmd->u.copy_image.dst_image_layout = dstImageLayout;
    cmd->u.copy_image.region_count = regionCount;
    if (pRegions) {
-      cmd->u.copy_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_image.regions) * regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.copy_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_image.regions == NULL) goto err;
 
-   memcpy(( VkImageCopy* )cmd->u.copy_image.regions, pRegions, sizeof(*cmd->u.copy_image.regions) * regionCount);
-   }
+   memcpy(( VkImageCopy* )cmd->u.copy_image.regions, pRegions, sizeof(*cmd->u.copy_image.regions) * (regionCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_image(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1117,7 +1031,7 @@ vk_free_cmd_blit_image(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
 , VkImage srcImage
 , VkImageLayout srcImageLayout
 , VkImage dstImage
@@ -1127,36 +1041,33 @@ void vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
 , VkFilter filter
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BLIT_IMAGE;
-
+      
    cmd->u.blit_image.src_image = srcImage;
    cmd->u.blit_image.src_image_layout = srcImageLayout;
    cmd->u.blit_image.dst_image = dstImage;
    cmd->u.blit_image.dst_image_layout = dstImageLayout;
    cmd->u.blit_image.region_count = regionCount;
    if (pRegions) {
-      cmd->u.blit_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.blit_image.regions) * regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.blit_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.blit_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.blit_image.regions == NULL) goto err;
 
-   memcpy(( VkImageBlit* )cmd->u.blit_image.regions, pRegions, sizeof(*cmd->u.blit_image.regions) * regionCount);
-   }
+   memcpy(( VkImageBlit* )cmd->u.blit_image.regions, pRegions, sizeof(*cmd->u.blit_image.regions) * (regionCount));
+   }   
    cmd->u.blit_image.filter = filter;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_blit_image(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1171,7 +1082,7 @@ vk_free_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
 , VkBuffer srcBuffer
 , VkImage dstImage
 , VkImageLayout dstImageLayout
@@ -1179,34 +1090,31 @@ void vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
 , const VkBufferImageCopy* pRegions
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_BUFFER_TO_IMAGE;
-
+      
    cmd->u.copy_buffer_to_image.src_buffer = srcBuffer;
    cmd->u.copy_buffer_to_image.dst_image = dstImage;
    cmd->u.copy_buffer_to_image.dst_image_layout = dstImageLayout;
    cmd->u.copy_buffer_to_image.region_count = regionCount;
    if (pRegions) {
-      cmd->u.copy_buffer_to_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_buffer_to_image.regions) * regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.copy_buffer_to_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_buffer_to_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_buffer_to_image.regions == NULL) goto err;
 
-   memcpy(( VkBufferImageCopy* )cmd->u.copy_buffer_to_image.regions, pRegions, sizeof(*cmd->u.copy_buffer_to_image.regions) * regionCount);
-   }
+   memcpy(( VkBufferImageCopy* )cmd->u.copy_buffer_to_image.regions, pRegions, sizeof(*cmd->u.copy_buffer_to_image.regions) * (regionCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_buffer_to_image(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1221,7 +1129,7 @@ vk_free_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
 , VkImage srcImage
 , VkImageLayout srcImageLayout
 , VkBuffer dstBuffer
@@ -1229,34 +1137,31 @@ void vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
 , const VkBufferImageCopy* pRegions
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_IMAGE_TO_BUFFER;
-
+      
    cmd->u.copy_image_to_buffer.src_image = srcImage;
    cmd->u.copy_image_to_buffer.src_image_layout = srcImageLayout;
    cmd->u.copy_image_to_buffer.dst_buffer = dstBuffer;
    cmd->u.copy_image_to_buffer.region_count = regionCount;
    if (pRegions) {
-      cmd->u.copy_image_to_buffer.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_image_to_buffer.regions) * regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.copy_image_to_buffer.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.copy_image_to_buffer.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.copy_image_to_buffer.regions == NULL) goto err;
 
-   memcpy(( VkBufferImageCopy* )cmd->u.copy_image_to_buffer.regions, pRegions, sizeof(*cmd->u.copy_image_to_buffer.regions) * regionCount);
-   }
+   memcpy(( VkBufferImageCopy* )cmd->u.copy_image_to_buffer.regions, pRegions, sizeof(*cmd->u.copy_image_to_buffer.regions) * (regionCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_image_to_buffer(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1271,40 +1176,37 @@ vk_free_cmd_update_buffer(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
 , VkBuffer dstBuffer
 , VkDeviceSize dstOffset
 , VkDeviceSize dataSize
 , const void* pData
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_UPDATE_BUFFER;
-
+      
    cmd->u.update_buffer.dst_buffer = dstBuffer;
    cmd->u.update_buffer.dst_offset = dstOffset;
    cmd->u.update_buffer.data_size = dataSize;
    if (pData) {
-      cmd->u.update_buffer.data = vk_zalloc(queue->alloc, 1 * dataSize, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.update_buffer.data = vk_zalloc(queue->alloc, 1 * (dataSize), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.update_buffer.data == NULL) goto err;
 
-   memcpy(( void* )cmd->u.update_buffer.data, pData, 1 * dataSize);
-   }
+   memcpy(( void* )cmd->u.update_buffer.data, pData, 1 * (dataSize));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_update_buffer(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1318,35 +1220,28 @@ vk_free_cmd_fill_buffer(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_fill_buffer(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_fill_buffer(struct vk_cmd_queue *queue
 , VkBuffer dstBuffer
 , VkDeviceSize dstOffset
 , VkDeviceSize size
 , uint32_t data
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_FILL_BUFFER;
-
+      
    cmd->u.fill_buffer.dst_buffer = dstBuffer;
    cmd->u.fill_buffer.dst_offset = dstOffset;
    cmd->u.fill_buffer.size = size;
    cmd->u.fill_buffer.data = data;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_fill_buffer(queue, cmd);
 }
 
 static void
@@ -1363,7 +1258,7 @@ vk_free_cmd_clear_color_image(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
 , VkImage image
 , VkImageLayout imageLayout
 , const VkClearColorValue* pColor
@@ -1371,16 +1266,13 @@ void vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
 , const VkImageSubresourceRange* pRanges
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_CLEAR_COLOR_IMAGE;
-
+      
    cmd->u.clear_color_image.image = image;
    cmd->u.clear_color_image.image_layout = imageLayout;
    if (pColor) {
@@ -1392,22 +1284,22 @@ void vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
    VkClearColorValue *tmp_src1 = (void *) pColor; (void) tmp_src1;   
       } else {
       cmd->u.clear_color_image.color = NULL;
-   }
+   }   
    cmd->u.clear_color_image.range_count = rangeCount;
    if (pRanges) {
-      cmd->u.clear_color_image.ranges = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_color_image.ranges) * rangeCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.clear_color_image.ranges = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_color_image.ranges) * (rangeCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_color_image.ranges == NULL) goto err;
 
-   memcpy(( VkImageSubresourceRange* )cmd->u.clear_color_image.ranges, pRanges, sizeof(*cmd->u.clear_color_image.ranges) * rangeCount);
-   }
+   memcpy(( VkImageSubresourceRange* )cmd->u.clear_color_image.ranges, pRanges, sizeof(*cmd->u.clear_color_image.ranges) * (rangeCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_clear_color_image(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1424,7 +1316,7 @@ vk_free_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
 , VkImage image
 , VkImageLayout imageLayout
 , const VkClearDepthStencilValue* pDepthStencil
@@ -1432,16 +1324,13 @@ void vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
 , const VkImageSubresourceRange* pRanges
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_CLEAR_DEPTH_STENCIL_IMAGE;
-
+      
    cmd->u.clear_depth_stencil_image.image = image;
    cmd->u.clear_depth_stencil_image.image_layout = imageLayout;
    if (pDepthStencil) {
@@ -1453,22 +1342,22 @@ void vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
    VkClearDepthStencilValue *tmp_src1 = (void *) pDepthStencil; (void) tmp_src1;   
       } else {
       cmd->u.clear_depth_stencil_image.depth_stencil = NULL;
-   }
+   }   
    cmd->u.clear_depth_stencil_image.range_count = rangeCount;
    if (pRanges) {
-      cmd->u.clear_depth_stencil_image.ranges = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * rangeCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.clear_depth_stencil_image.ranges = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * (rangeCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_depth_stencil_image.ranges == NULL) goto err;
 
-   memcpy(( VkImageSubresourceRange* )cmd->u.clear_depth_stencil_image.ranges, pRanges, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * rangeCount);
-   }
+   memcpy(( VkImageSubresourceRange* )cmd->u.clear_depth_stencil_image.ranges, pRanges, sizeof(*cmd->u.clear_depth_stencil_image.ranges) * (rangeCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_clear_depth_stencil_image(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1484,45 +1373,42 @@ vk_free_cmd_clear_attachments(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_clear_attachments(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_clear_attachments(struct vk_cmd_queue *queue
 , uint32_t attachmentCount
 , const VkClearAttachment* pAttachments
 , uint32_t rectCount
 , const VkClearRect* pRects
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_CLEAR_ATTACHMENTS;
-
+      
    cmd->u.clear_attachments.attachment_count = attachmentCount;
    if (pAttachments) {
-      cmd->u.clear_attachments.attachments = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_attachments.attachments) * attachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.clear_attachments.attachments = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_attachments.attachments) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_attachments.attachments == NULL) goto err;
 
-   memcpy(( VkClearAttachment* )cmd->u.clear_attachments.attachments, pAttachments, sizeof(*cmd->u.clear_attachments.attachments) * attachmentCount);
-   }
+   memcpy(( VkClearAttachment* )cmd->u.clear_attachments.attachments, pAttachments, sizeof(*cmd->u.clear_attachments.attachments) * (attachmentCount));
+   }   
    cmd->u.clear_attachments.rect_count = rectCount;
    if (pRects) {
-      cmd->u.clear_attachments.rects = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_attachments.rects) * rectCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.clear_attachments.rects = vk_zalloc(queue->alloc, sizeof(*cmd->u.clear_attachments.rects) * (rectCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.clear_attachments.rects == NULL) goto err;
 
-   memcpy(( VkClearRect* )cmd->u.clear_attachments.rects, pRects, sizeof(*cmd->u.clear_attachments.rects) * rectCount);
-   }
+   memcpy(( VkClearRect* )cmd->u.clear_attachments.rects, pRects, sizeof(*cmd->u.clear_attachments.rects) * (rectCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_clear_attachments(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1537,7 +1423,7 @@ vk_free_cmd_resolve_image(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
 , VkImage srcImage
 , VkImageLayout srcImageLayout
 , VkImage dstImage
@@ -1546,35 +1432,32 @@ void vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
 , const VkImageResolve* pRegions
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_RESOLVE_IMAGE;
-
+      
    cmd->u.resolve_image.src_image = srcImage;
    cmd->u.resolve_image.src_image_layout = srcImageLayout;
    cmd->u.resolve_image.dst_image = dstImage;
    cmd->u.resolve_image.dst_image_layout = dstImageLayout;
    cmd->u.resolve_image.region_count = regionCount;
    if (pRegions) {
-      cmd->u.resolve_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.resolve_image.regions) * regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.resolve_image.regions = vk_zalloc(queue->alloc, sizeof(*cmd->u.resolve_image.regions) * (regionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.resolve_image.regions == NULL) goto err;
 
-   memcpy(( VkImageResolve* )cmd->u.resolve_image.regions, pRegions, sizeof(*cmd->u.resolve_image.regions) * regionCount);
-   }
+   memcpy(( VkImageResolve* )cmd->u.resolve_image.regions, pRegions, sizeof(*cmd->u.resolve_image.regions) * (regionCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_resolve_image(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1588,31 +1471,24 @@ vk_free_cmd_set_event(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_event(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_event(struct vk_cmd_queue *queue
 , VkEvent event
 , VkPipelineStageFlags stageMask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_EVENT;
-
+      
    cmd->u.set_event.event = event;
    cmd->u.set_event.stage_mask = stageMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_event(queue, cmd);
 }
 
 static void
@@ -1626,31 +1502,24 @@ vk_free_cmd_reset_event(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_reset_event(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_reset_event(struct vk_cmd_queue *queue
 , VkEvent event
 , VkPipelineStageFlags stageMask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_RESET_EVENT;
-
+      
    cmd->u.reset_event.event = event;
    cmd->u.reset_event.stage_mask = stageMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_reset_event(queue, cmd);
 }
 
 static void
@@ -1668,7 +1537,7 @@ vk_free_cmd_wait_events(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
 , uint32_t eventCount
 , const VkEvent* pEvents
 , VkPipelineStageFlags srcStageMask
@@ -1681,54 +1550,51 @@ void vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
 , const VkImageMemoryBarrier* pImageMemoryBarriers
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WAIT_EVENTS;
-
+      
    cmd->u.wait_events.event_count = eventCount;
    if (pEvents) {
-      cmd->u.wait_events.events = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.events) * eventCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.wait_events.events = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.events) * (eventCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.events == NULL) goto err;
 
-   memcpy(( VkEvent* )cmd->u.wait_events.events, pEvents, sizeof(*cmd->u.wait_events.events) * eventCount);
-   }
+   memcpy(( VkEvent* )cmd->u.wait_events.events, pEvents, sizeof(*cmd->u.wait_events.events) * (eventCount));
+   }   
    cmd->u.wait_events.src_stage_mask = srcStageMask;
    cmd->u.wait_events.dst_stage_mask = dstStageMask;
    cmd->u.wait_events.memory_barrier_count = memoryBarrierCount;
    if (pMemoryBarriers) {
-      cmd->u.wait_events.memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.memory_barriers) * memoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.wait_events.memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.memory_barriers) * (memoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.memory_barriers == NULL) goto err;
 
-   memcpy(( VkMemoryBarrier* )cmd->u.wait_events.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.wait_events.memory_barriers) * memoryBarrierCount);
-   }
+   memcpy(( VkMemoryBarrier* )cmd->u.wait_events.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.wait_events.memory_barriers) * (memoryBarrierCount));
+   }   
    cmd->u.wait_events.buffer_memory_barrier_count = bufferMemoryBarrierCount;
    if (pBufferMemoryBarriers) {
-      cmd->u.wait_events.buffer_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * bufferMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.wait_events.buffer_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * (bufferMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.buffer_memory_barriers == NULL) goto err;
 
-   memcpy(( VkBufferMemoryBarrier* )cmd->u.wait_events.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * bufferMemoryBarrierCount);
-   }
+   memcpy(( VkBufferMemoryBarrier* )cmd->u.wait_events.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.wait_events.buffer_memory_barriers) * (bufferMemoryBarrierCount));
+   }   
    cmd->u.wait_events.image_memory_barrier_count = imageMemoryBarrierCount;
    if (pImageMemoryBarriers) {
-      cmd->u.wait_events.image_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.image_memory_barriers) * imageMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.wait_events.image_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events.image_memory_barriers) * (imageMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events.image_memory_barriers == NULL) goto err;
 
-   memcpy(( VkImageMemoryBarrier* )cmd->u.wait_events.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.wait_events.image_memory_barriers) * imageMemoryBarrierCount);
-   }
+   memcpy(( VkImageMemoryBarrier* )cmd->u.wait_events.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.wait_events.image_memory_barriers) * (imageMemoryBarrierCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_wait_events(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1745,7 +1611,7 @@ vk_free_cmd_pipeline_barrier(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
 , VkPipelineStageFlags srcStageMask
 , VkPipelineStageFlags dstStageMask
 , VkDependencyFlags dependencyFlags
@@ -1757,48 +1623,45 @@ void vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
 , const VkImageMemoryBarrier* pImageMemoryBarriers
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_PIPELINE_BARRIER;
-
+      
    cmd->u.pipeline_barrier.src_stage_mask = srcStageMask;
    cmd->u.pipeline_barrier.dst_stage_mask = dstStageMask;
    cmd->u.pipeline_barrier.dependency_flags = dependencyFlags;
    cmd->u.pipeline_barrier.memory_barrier_count = memoryBarrierCount;
    if (pMemoryBarriers) {
-      cmd->u.pipeline_barrier.memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * memoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.pipeline_barrier.memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * (memoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.pipeline_barrier.memory_barriers == NULL) goto err;
 
-   memcpy(( VkMemoryBarrier* )cmd->u.pipeline_barrier.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * memoryBarrierCount);
-   }
+   memcpy(( VkMemoryBarrier* )cmd->u.pipeline_barrier.memory_barriers, pMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.memory_barriers) * (memoryBarrierCount));
+   }   
    cmd->u.pipeline_barrier.buffer_memory_barrier_count = bufferMemoryBarrierCount;
    if (pBufferMemoryBarriers) {
-      cmd->u.pipeline_barrier.buffer_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * bufferMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.pipeline_barrier.buffer_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * (bufferMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.pipeline_barrier.buffer_memory_barriers == NULL) goto err;
 
-   memcpy(( VkBufferMemoryBarrier* )cmd->u.pipeline_barrier.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * bufferMemoryBarrierCount);
-   }
+   memcpy(( VkBufferMemoryBarrier* )cmd->u.pipeline_barrier.buffer_memory_barriers, pBufferMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.buffer_memory_barriers) * (bufferMemoryBarrierCount));
+   }   
    cmd->u.pipeline_barrier.image_memory_barrier_count = imageMemoryBarrierCount;
    if (pImageMemoryBarriers) {
-      cmd->u.pipeline_barrier.image_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * imageMemoryBarrierCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.pipeline_barrier.image_memory_barriers = vk_zalloc(queue->alloc, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * (imageMemoryBarrierCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.pipeline_barrier.image_memory_barriers == NULL) goto err;
 
-   memcpy(( VkImageMemoryBarrier* )cmd->u.pipeline_barrier.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * imageMemoryBarrierCount);
-   }
+   memcpy(( VkImageMemoryBarrier* )cmd->u.pipeline_barrier.image_memory_barriers, pImageMemoryBarriers, sizeof(*cmd->u.pipeline_barrier.image_memory_barriers) * (imageMemoryBarrierCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_pipeline_barrier(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1812,33 +1675,26 @@ vk_free_cmd_begin_query(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_query(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_query(struct vk_cmd_queue *queue
 , VkQueryPool queryPool
 , uint32_t query
 , VkQueryControlFlags flags
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_QUERY;
-
+      
    cmd->u.begin_query.query_pool = queryPool;
    cmd->u.begin_query.query = query;
    cmd->u.begin_query.flags = flags;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_begin_query(queue, cmd);
 }
 
 static void
@@ -1852,31 +1708,24 @@ vk_free_cmd_end_query(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_query(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_query(struct vk_cmd_queue *queue
 , VkQueryPool queryPool
 , uint32_t query
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_QUERY;
-
+      
    cmd->u.end_query.query_pool = queryPool;
    cmd->u.end_query.query = query;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_end_query(queue, cmd);
 }
 
 static void
@@ -1892,20 +1741,17 @@ vk_free_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *queue
 , const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_CONDITIONAL_RENDERING_EXT;
-
+      
    if (pConditionalRenderingBegin) {
       cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin = vk_zalloc(queue->alloc, sizeof(VkConditionalRenderingBeginInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin == NULL) goto err;
@@ -1915,15 +1761,15 @@ void vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *queue
    VkConditionalRenderingBeginInfoEXT *tmp_src1 = (void *) pConditionalRenderingBegin; (void) tmp_src1;   
       } else {
       cmd->u.begin_conditional_rendering_ext.conditional_rendering_begin = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_conditional_rendering_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -1937,27 +1783,20 @@ vk_free_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_CONDITIONAL_RENDERING_EXT;
-
+      
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_end_conditional_rendering_ext(queue, cmd);
 }
 
 static void
@@ -1971,33 +1810,26 @@ vk_free_cmd_reset_query_pool(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_reset_query_pool(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_reset_query_pool(struct vk_cmd_queue *queue
 , VkQueryPool queryPool
 , uint32_t firstQuery
 , uint32_t queryCount
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_RESET_QUERY_POOL;
-
+      
    cmd->u.reset_query_pool.query_pool = queryPool;
    cmd->u.reset_query_pool.first_query = firstQuery;
    cmd->u.reset_query_pool.query_count = queryCount;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_reset_query_pool(queue, cmd);
 }
 
 static void
@@ -2011,33 +1843,26 @@ vk_free_cmd_write_timestamp(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_write_timestamp(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_write_timestamp(struct vk_cmd_queue *queue
 , VkPipelineStageFlagBits pipelineStage
 , VkQueryPool queryPool
 , uint32_t query
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WRITE_TIMESTAMP;
-
+      
    cmd->u.write_timestamp.pipeline_stage = pipelineStage;
    cmd->u.write_timestamp.query_pool = queryPool;
    cmd->u.write_timestamp.query = query;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_write_timestamp(queue, cmd);
 }
 
 static void
@@ -2051,7 +1876,7 @@ vk_free_cmd_copy_query_pool_results(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
 , VkQueryPool queryPool
 , uint32_t firstQuery
 , uint32_t queryCount
@@ -2061,16 +1886,13 @@ void vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
 , VkQueryResultFlags flags
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_QUERY_POOL_RESULTS;
-
+      
    cmd->u.copy_query_pool_results.query_pool = queryPool;
    cmd->u.copy_query_pool_results.first_query = firstQuery;
    cmd->u.copy_query_pool_results.query_count = queryCount;
@@ -2080,12 +1902,8 @@ void vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
    cmd->u.copy_query_pool_results.flags = flags;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_copy_query_pool_results(queue, cmd);
 }
 
 static void
@@ -2100,7 +1918,7 @@ vk_free_cmd_push_constants(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
 , VkPipelineLayout layout
 , VkShaderStageFlags stageFlags
 , uint32_t offset
@@ -2108,34 +1926,31 @@ void vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
 , const void* pValues
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_PUSH_CONSTANTS;
-
+      
    cmd->u.push_constants.layout = layout;
    cmd->u.push_constants.stage_flags = stageFlags;
    cmd->u.push_constants.offset = offset;
    cmd->u.push_constants.size = size;
    if (pValues) {
-      cmd->u.push_constants.values = vk_zalloc(queue->alloc, 1 * size, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.push_constants.values = vk_zalloc(queue->alloc, 1 * (size), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.push_constants.values == NULL) goto err;
 
-   memcpy(( void* )cmd->u.push_constants.values, pValues, 1 * size);
-   }
+   memcpy(( void* )cmd->u.push_constants.values, pValues, 1 * (size));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_push_constants(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2152,21 +1967,18 @@ vk_free_cmd_begin_render_pass(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_render_pass(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_render_pass(struct vk_cmd_queue *queue
 , const VkRenderPassBeginInfo* pRenderPassBegin
 , VkSubpassContents contents
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_RENDER_PASS;
-
+      
    if (pRenderPassBegin) {
       cmd->u.begin_render_pass.render_pass_begin = vk_zalloc(queue->alloc, sizeof(VkRenderPassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_render_pass.render_pass_begin == NULL) goto err;
@@ -2265,16 +2077,16 @@ if (tmp_src2->pPostSubpassSampleLocations) {
 }
    } else {
       cmd->u.begin_render_pass.render_pass_begin = NULL;
-   }
+   }   
    cmd->u.begin_render_pass.contents = contents;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_render_pass(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2288,29 +2100,22 @@ vk_free_cmd_next_subpass(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_next_subpass(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_next_subpass(struct vk_cmd_queue *queue
 , VkSubpassContents contents
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_NEXT_SUBPASS;
-
+      
    cmd->u.next_subpass.contents = contents;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_next_subpass(queue, cmd);
 }
 
 static void
@@ -2324,27 +2129,20 @@ vk_free_cmd_end_render_pass(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_render_pass(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_render_pass(struct vk_cmd_queue *queue
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_RENDER_PASS;
-
+      
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_end_render_pass(queue, cmd);
 }
 
 static void
@@ -2359,36 +2157,33 @@ vk_free_cmd_execute_commands(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_execute_commands(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_execute_commands(struct vk_cmd_queue *queue
 , uint32_t commandBufferCount
 , const VkCommandBuffer* pCommandBuffers
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_EXECUTE_COMMANDS;
-
+      
    cmd->u.execute_commands.command_buffer_count = commandBufferCount;
    if (pCommandBuffers) {
-      cmd->u.execute_commands.command_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.execute_commands.command_buffers) * commandBufferCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.execute_commands.command_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.execute_commands.command_buffers) * (commandBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.execute_commands.command_buffers == NULL) goto err;
 
-   memcpy(( VkCommandBuffer* )cmd->u.execute_commands.command_buffers, pCommandBuffers, sizeof(*cmd->u.execute_commands.command_buffers) * commandBufferCount);
-   }
+   memcpy(( VkCommandBuffer* )cmd->u.execute_commands.command_buffers, pCommandBuffers, sizeof(*cmd->u.execute_commands.command_buffers) * (commandBufferCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_execute_commands(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2404,20 +2199,17 @@ vk_free_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
 , const VkDebugMarkerMarkerInfoEXT* pMarkerInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DEBUG_MARKER_BEGIN_EXT;
-
+      
    if (pMarkerInfo) {
       cmd->u.debug_marker_begin_ext.marker_info = vk_zalloc(queue->alloc, sizeof(VkDebugMarkerMarkerInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.debug_marker_begin_ext.marker_info == NULL) goto err;
@@ -2427,15 +2219,15 @@ void vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
    VkDebugMarkerMarkerInfoEXT *tmp_src1 = (void *) pMarkerInfo; (void) tmp_src1;   
       } else {
       cmd->u.debug_marker_begin_ext.marker_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_debug_marker_begin_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2449,27 +2241,20 @@ vk_free_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DEBUG_MARKER_END_EXT;
-
+      
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_debug_marker_end_ext(queue, cmd);
 }
 
 static void
@@ -2485,20 +2270,17 @@ vk_free_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
 , const VkDebugMarkerMarkerInfoEXT* pMarkerInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DEBUG_MARKER_INSERT_EXT;
-
+      
    if (pMarkerInfo) {
       cmd->u.debug_marker_insert_ext.marker_info = vk_zalloc(queue->alloc, sizeof(VkDebugMarkerMarkerInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.debug_marker_insert_ext.marker_info == NULL) goto err;
@@ -2508,15 +2290,15 @@ void vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
    VkDebugMarkerMarkerInfoEXT *tmp_src1 = (void *) pMarkerInfo; (void) tmp_src1;   
       } else {
       cmd->u.debug_marker_insert_ext.marker_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_debug_marker_insert_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2533,21 +2315,18 @@ vk_free_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
 , VkBool32 isPreprocessed
 , const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_EXECUTE_GENERATED_COMMANDS_NV;
-
+      
    cmd->u.execute_generated_commands_nv.is_preprocessed = isPreprocessed;
    if (pGeneratedCommandsInfo) {
       cmd->u.execute_generated_commands_nv.generated_commands_info = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsInfoNV), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
@@ -2564,15 +2343,15 @@ void vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.execute_generated_commands_nv.generated_commands_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_execute_generated_commands_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2589,20 +2368,17 @@ vk_free_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *queue
 , const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_PREPROCESS_GENERATED_COMMANDS_NV;
-
+      
    if (pGeneratedCommandsInfo) {
       cmd->u.preprocess_generated_commands_nv.generated_commands_info = vk_zalloc(queue->alloc, sizeof(VkGeneratedCommandsInfoNV), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.preprocess_generated_commands_nv.generated_commands_info == NULL) goto err;
@@ -2618,15 +2394,15 @@ void vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.preprocess_generated_commands_nv.generated_commands_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_preprocess_generated_commands_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2640,33 +2416,26 @@ vk_free_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue
 , VkPipelineBindPoint pipelineBindPoint
 , VkPipeline pipeline
 , uint32_t groupIndex
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_PIPELINE_SHADER_GROUP_NV;
-
+      
    cmd->u.bind_pipeline_shader_group_nv.pipeline_bind_point = pipelineBindPoint;
    cmd->u.bind_pipeline_shader_group_nv.pipeline = pipeline;
    cmd->u.bind_pipeline_shader_group_nv.group_index = groupIndex;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_bind_pipeline_shader_group_nv(queue, cmd);
 }
 
 static void
@@ -2693,29 +2462,22 @@ vk_free_cmd_set_device_mask(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_device_mask(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_device_mask(struct vk_cmd_queue *queue
 , uint32_t deviceMask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEVICE_MASK;
-
+      
    cmd->u.set_device_mask.device_mask = deviceMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_device_mask(queue, cmd);
 }
 
 static void
@@ -2729,7 +2491,7 @@ vk_free_cmd_dispatch_base(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
 , uint32_t baseGroupX
 , uint32_t baseGroupY
 , uint32_t baseGroupZ
@@ -2738,16 +2500,13 @@ void vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
 , uint32_t groupCountZ
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DISPATCH_BASE;
-
+      
    cmd->u.dispatch_base.base_group_x = baseGroupX;
    cmd->u.dispatch_base.base_group_y = baseGroupY;
    cmd->u.dispatch_base.base_group_z = baseGroupZ;
@@ -2756,12 +2515,8 @@ void vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
    cmd->u.dispatch_base.group_count_z = groupCountZ;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_dispatch_base(queue, cmd);
 }
 
 static void
@@ -2790,38 +2545,35 @@ vk_free_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue
 , uint32_t firstViewport
 , uint32_t viewportCount
 , const VkViewportWScalingNV* pViewportWScalings
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_VIEWPORT_WSCALING_NV;
-
+      
    cmd->u.set_viewport_wscaling_nv.first_viewport = firstViewport;
    cmd->u.set_viewport_wscaling_nv.viewport_count = viewportCount;
    if (pViewportWScalings) {
-      cmd->u.set_viewport_wscaling_nv.viewport_wscalings = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * viewportCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_viewport_wscaling_nv.viewport_wscalings = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_wscaling_nv.viewport_wscalings == NULL) goto err;
 
-   memcpy(( VkViewportWScalingNV* )cmd->u.set_viewport_wscaling_nv.viewport_wscalings, pViewportWScalings, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * viewportCount);
-   }
+   memcpy(( VkViewportWScalingNV* )cmd->u.set_viewport_wscaling_nv.viewport_wscalings, pViewportWScalings, sizeof(*cmd->u.set_viewport_wscaling_nv.viewport_wscalings) * (viewportCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_viewport_wscaling_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2836,38 +2588,35 @@ vk_free_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue
 , uint32_t firstDiscardRectangle
 , uint32_t discardRectangleCount
 , const VkRect2D* pDiscardRectangles
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DISCARD_RECTANGLE_EXT;
-
+      
    cmd->u.set_discard_rectangle_ext.first_discard_rectangle = firstDiscardRectangle;
    cmd->u.set_discard_rectangle_ext.discard_rectangle_count = discardRectangleCount;
    if (pDiscardRectangles) {
-      cmd->u.set_discard_rectangle_ext.discard_rectangles = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * discardRectangleCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_discard_rectangle_ext.discard_rectangles = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * (discardRectangleCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_discard_rectangle_ext.discard_rectangles == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_discard_rectangle_ext.discard_rectangles, pDiscardRectangles, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * discardRectangleCount);
-   }
+   memcpy(( VkRect2D* )cmd->u.set_discard_rectangle_ext.discard_rectangles, pDiscardRectangles, sizeof(*cmd->u.set_discard_rectangle_ext.discard_rectangles) * (discardRectangleCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_discard_rectangle_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2884,20 +2633,17 @@ vk_free_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
 , const VkSampleLocationsInfoEXT* pSampleLocationsInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_SAMPLE_LOCATIONS_EXT;
-
+      
    if (pSampleLocationsInfo) {
       cmd->u.set_sample_locations_ext.sample_locations_info = vk_zalloc(queue->alloc, sizeof(VkSampleLocationsInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.set_sample_locations_ext.sample_locations_info == NULL) goto err;
@@ -2913,15 +2659,15 @@ void vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.set_sample_locations_ext.sample_locations_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_sample_locations_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2937,20 +2683,17 @@ vk_free_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
 , const VkDebugUtilsLabelEXT* pLabelInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_DEBUG_UTILS_LABEL_EXT;
-
+      
    if (pLabelInfo) {
       cmd->u.begin_debug_utils_label_ext.label_info = vk_zalloc(queue->alloc, sizeof(VkDebugUtilsLabelEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_debug_utils_label_ext.label_info == NULL) goto err;
@@ -2960,15 +2703,15 @@ void vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
    VkDebugUtilsLabelEXT *tmp_src1 = (void *) pLabelInfo; (void) tmp_src1;   
       } else {
       cmd->u.begin_debug_utils_label_ext.label_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_debug_utils_label_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -2982,27 +2725,20 @@ vk_free_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_DEBUG_UTILS_LABEL_EXT;
-
+      
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_end_debug_utils_label_ext(queue, cmd);
 }
 
 static void
@@ -3018,20 +2754,17 @@ vk_free_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
 , const VkDebugUtilsLabelEXT* pLabelInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_INSERT_DEBUG_UTILS_LABEL_EXT;
-
+      
    if (pLabelInfo) {
       cmd->u.insert_debug_utils_label_ext.label_info = vk_zalloc(queue->alloc, sizeof(VkDebugUtilsLabelEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.insert_debug_utils_label_ext.label_info == NULL) goto err;
@@ -3041,15 +2774,15 @@ void vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
    VkDebugUtilsLabelEXT *tmp_src1 = (void *) pLabelInfo; (void) tmp_src1;   
       } else {
       cmd->u.insert_debug_utils_label_ext.label_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_insert_debug_utils_label_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3063,35 +2796,28 @@ vk_free_cmd_write_buffer_marker_amd(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_write_buffer_marker_amd(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_write_buffer_marker_amd(struct vk_cmd_queue *queue
 , VkPipelineStageFlagBits pipelineStage
 , VkBuffer dstBuffer
 , VkDeviceSize dstOffset
 , uint32_t marker
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WRITE_BUFFER_MARKER_AMD;
-
+      
    cmd->u.write_buffer_marker_amd.pipeline_stage = pipelineStage;
    cmd->u.write_buffer_marker_amd.dst_buffer = dstBuffer;
    cmd->u.write_buffer_marker_amd.dst_offset = dstOffset;
    cmd->u.write_buffer_marker_amd.marker = marker;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_write_buffer_marker_amd(queue, cmd);
 }
 
 static void
@@ -3110,21 +2836,18 @@ vk_free_cmd_begin_render_pass2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_render_pass2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_render_pass2(struct vk_cmd_queue *queue
 , const VkRenderPassBeginInfo*      pRenderPassBegin
 , const VkSubpassBeginInfo*      pSubpassBeginInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_RENDER_PASS2;
-
+      
    if (pRenderPassBegin) {
       cmd->u.begin_render_pass2.render_pass_begin = vk_zalloc(queue->alloc, sizeof(VkRenderPassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_render_pass2.render_pass_begin == NULL) goto err;
@@ -3223,7 +2946,7 @@ if (tmp_src2->pPostSubpassSampleLocations) {
 }
    } else {
       cmd->u.begin_render_pass2.render_pass_begin = NULL;
-   }
+   }   
    if (pSubpassBeginInfo) {
       cmd->u.begin_render_pass2.subpass_begin_info = vk_zalloc(queue->alloc, sizeof(VkSubpassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_render_pass2.subpass_begin_info == NULL) goto err;
@@ -3233,15 +2956,15 @@ if (tmp_src2->pPostSubpassSampleLocations) {
    VkSubpassBeginInfo *tmp_src1 = (void *) pSubpassBeginInfo; (void) tmp_src1;   
       } else {
       cmd->u.begin_render_pass2.subpass_begin_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_render_pass2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3259,21 +2982,18 @@ vk_free_cmd_next_subpass2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
 , const VkSubpassBeginInfo*      pSubpassBeginInfo
 , const VkSubpassEndInfo*        pSubpassEndInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_NEXT_SUBPASS2;
-
+      
    if (pSubpassBeginInfo) {
       cmd->u.next_subpass2.subpass_begin_info = vk_zalloc(queue->alloc, sizeof(VkSubpassBeginInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.next_subpass2.subpass_begin_info == NULL) goto err;
@@ -3283,7 +3003,7 @@ void vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
    VkSubpassBeginInfo *tmp_src1 = (void *) pSubpassBeginInfo; (void) tmp_src1;   
       } else {
       cmd->u.next_subpass2.subpass_begin_info = NULL;
-   }
+   }   
    if (pSubpassEndInfo) {
       cmd->u.next_subpass2.subpass_end_info = vk_zalloc(queue->alloc, sizeof(VkSubpassEndInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.next_subpass2.subpass_end_info == NULL) goto err;
@@ -3319,15 +3039,15 @@ void vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
       }
          } else {
       cmd->u.next_subpass2.subpass_end_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_next_subpass2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3343,20 +3063,17 @@ vk_free_cmd_end_render_pass2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
 , const VkSubpassEndInfo*        pSubpassEndInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_RENDER_PASS2;
-
+      
    if (pSubpassEndInfo) {
       cmd->u.end_render_pass2.subpass_end_info = vk_zalloc(queue->alloc, sizeof(VkSubpassEndInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.end_render_pass2.subpass_end_info == NULL) goto err;
@@ -3392,15 +3109,15 @@ void vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
       }
          } else {
       cmd->u.end_render_pass2.subpass_end_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_end_render_pass2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3414,7 +3131,7 @@ vk_free_cmd_draw_indirect_count(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , VkBuffer countBuffer
@@ -3423,16 +3140,13 @@ void vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_INDIRECT_COUNT;
-
+      
    cmd->u.draw_indirect_count.buffer = buffer;
    cmd->u.draw_indirect_count.offset = offset;
    cmd->u.draw_indirect_count.count_buffer = countBuffer;
@@ -3441,12 +3155,8 @@ void vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
    cmd->u.draw_indirect_count.stride = stride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_indirect_count(queue, cmd);
 }
 
 static void
@@ -3460,7 +3170,7 @@ vk_free_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , VkBuffer countBuffer
@@ -3469,16 +3179,13 @@ void vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_INDEXED_INDIRECT_COUNT;
-
+      
    cmd->u.draw_indexed_indirect_count.buffer = buffer;
    cmd->u.draw_indexed_indirect_count.offset = offset;
    cmd->u.draw_indexed_indirect_count.count_buffer = countBuffer;
@@ -3487,12 +3194,8 @@ void vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
    cmd->u.draw_indexed_indirect_count.stride = stride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_indexed_indirect_count(queue, cmd);
 }
 
 static void
@@ -3508,29 +3211,22 @@ vk_free_cmd_set_checkpoint_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_checkpoint_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_checkpoint_nv(struct vk_cmd_queue *queue
 , const void* pCheckpointMarker
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_CHECKPOINT_NV;
-
+      
    cmd->u.set_checkpoint_nv.checkpoint_marker = ( void* ) pCheckpointMarker;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_checkpoint_nv(queue, cmd);
 }
 
 static void
@@ -3547,7 +3243,7 @@ vk_free_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue *queue
 , uint32_t firstBinding
 , uint32_t bindingCount
 , const VkBuffer* pBuffers
@@ -3555,44 +3251,41 @@ void vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue *que
 , const VkDeviceSize* pSizes
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_TRANSFORM_FEEDBACK_BUFFERS_EXT;
-
+      
    cmd->u.bind_transform_feedback_buffers_ext.first_binding = firstBinding;
    cmd->u.bind_transform_feedback_buffers_ext.binding_count = bindingCount;
    if (pBuffers) {
-      cmd->u.bind_transform_feedback_buffers_ext.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_transform_feedback_buffers_ext.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_transform_feedback_buffers_ext.buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.bind_transform_feedback_buffers_ext.buffers, pBuffers, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * bindingCount);
-   }
+   memcpy(( VkBuffer* )cmd->u.bind_transform_feedback_buffers_ext.buffers, pBuffers, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.buffers) * (bindingCount));
+   }   
    if (pOffsets) {
-      cmd->u.bind_transform_feedback_buffers_ext.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_transform_feedback_buffers_ext.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_transform_feedback_buffers_ext.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_transform_feedback_buffers_ext.offsets, pOffsets, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * bindingCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.bind_transform_feedback_buffers_ext.offsets, pOffsets, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.offsets) * (bindingCount));
+   }   
    if (pSizes) {
-      cmd->u.bind_transform_feedback_buffers_ext.sizes = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_transform_feedback_buffers_ext.sizes = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_transform_feedback_buffers_ext.sizes == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_transform_feedback_buffers_ext.sizes, pSizes, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * bindingCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.bind_transform_feedback_buffers_ext.sizes, pSizes, sizeof(*cmd->u.bind_transform_feedback_buffers_ext.sizes) * (bindingCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_bind_transform_feedback_buffers_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3608,45 +3301,42 @@ vk_free_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue
 , uint32_t firstCounterBuffer
 , uint32_t counterBufferCount
 , const VkBuffer* pCounterBuffers
 , const VkDeviceSize* pCounterBufferOffsets
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_TRANSFORM_FEEDBACK_EXT;
-
+      
    cmd->u.begin_transform_feedback_ext.first_counter_buffer = firstCounterBuffer;
    cmd->u.begin_transform_feedback_ext.counter_buffer_count = counterBufferCount;
    if (pCounterBuffers) {
-      cmd->u.begin_transform_feedback_ext.counter_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * counterBufferCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.begin_transform_feedback_ext.counter_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.begin_transform_feedback_ext.counter_buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.begin_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * counterBufferCount);
-   }
+   memcpy(( VkBuffer* )cmd->u.begin_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffers) * (counterBufferCount));
+   }   
    if (pCounterBufferOffsets) {
-      cmd->u.begin_transform_feedback_ext.counter_buffer_offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * counterBufferCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.begin_transform_feedback_ext.counter_buffer_offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.begin_transform_feedback_ext.counter_buffer_offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.begin_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * counterBufferCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.begin_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.begin_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_transform_feedback_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3662,45 +3352,42 @@ vk_free_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue
 , uint32_t firstCounterBuffer
 , uint32_t counterBufferCount
 , const VkBuffer* pCounterBuffers
 , const VkDeviceSize* pCounterBufferOffsets
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_TRANSFORM_FEEDBACK_EXT;
-
+      
    cmd->u.end_transform_feedback_ext.first_counter_buffer = firstCounterBuffer;
    cmd->u.end_transform_feedback_ext.counter_buffer_count = counterBufferCount;
    if (pCounterBuffers) {
-      cmd->u.end_transform_feedback_ext.counter_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * counterBufferCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.end_transform_feedback_ext.counter_buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.end_transform_feedback_ext.counter_buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.end_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * counterBufferCount);
-   }
+   memcpy(( VkBuffer* )cmd->u.end_transform_feedback_ext.counter_buffers, pCounterBuffers, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffers) * (counterBufferCount));
+   }   
    if (pCounterBufferOffsets) {
-      cmd->u.end_transform_feedback_ext.counter_buffer_offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * counterBufferCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.end_transform_feedback_ext.counter_buffer_offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.end_transform_feedback_ext.counter_buffer_offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.end_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * counterBufferCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.end_transform_feedback_ext.counter_buffer_offsets, pCounterBufferOffsets, sizeof(*cmd->u.end_transform_feedback_ext.counter_buffer_offsets) * (counterBufferCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_end_transform_feedback_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3714,35 +3401,28 @@ vk_free_cmd_begin_query_indexed_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_query_indexed_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_query_indexed_ext(struct vk_cmd_queue *queue
 , VkQueryPool queryPool
 , uint32_t query
 , VkQueryControlFlags flags
 , uint32_t index
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_QUERY_INDEXED_EXT;
-
+      
    cmd->u.begin_query_indexed_ext.query_pool = queryPool;
    cmd->u.begin_query_indexed_ext.query = query;
    cmd->u.begin_query_indexed_ext.flags = flags;
    cmd->u.begin_query_indexed_ext.index = index;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_begin_query_indexed_ext(queue, cmd);
 }
 
 static void
@@ -3756,33 +3436,26 @@ vk_free_cmd_end_query_indexed_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_query_indexed_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_query_indexed_ext(struct vk_cmd_queue *queue
 , VkQueryPool queryPool
 , uint32_t query
 , uint32_t index
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_QUERY_INDEXED_EXT;
-
+      
    cmd->u.end_query_indexed_ext.query_pool = queryPool;
    cmd->u.end_query_indexed_ext.query = query;
    cmd->u.end_query_indexed_ext.index = index;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_end_query_indexed_ext(queue, cmd);
 }
 
 static void
@@ -3796,7 +3469,7 @@ vk_free_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
 , uint32_t instanceCount
 , uint32_t firstInstance
 , VkBuffer counterBuffer
@@ -3805,16 +3478,13 @@ void vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
 , uint32_t vertexStride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_INDIRECT_BYTE_COUNT_EXT;
-
+      
    cmd->u.draw_indirect_byte_count_ext.instance_count = instanceCount;
    cmd->u.draw_indirect_byte_count_ext.first_instance = firstInstance;
    cmd->u.draw_indirect_byte_count_ext.counter_buffer = counterBuffer;
@@ -3823,12 +3493,8 @@ void vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
    cmd->u.draw_indirect_byte_count_ext.vertex_stride = vertexStride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_indirect_byte_count_ext(queue, cmd);
 }
 
 static void
@@ -3843,38 +3509,35 @@ vk_free_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue
 , uint32_t firstExclusiveScissor
 , uint32_t exclusiveScissorCount
 , const VkRect2D* pExclusiveScissors
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_EXCLUSIVE_SCISSOR_NV;
-
+      
    cmd->u.set_exclusive_scissor_nv.first_exclusive_scissor = firstExclusiveScissor;
    cmd->u.set_exclusive_scissor_nv.exclusive_scissor_count = exclusiveScissorCount;
    if (pExclusiveScissors) {
-      cmd->u.set_exclusive_scissor_nv.exclusive_scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * exclusiveScissorCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_exclusive_scissor_nv.exclusive_scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * (exclusiveScissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_exclusive_scissor_nv.exclusive_scissors == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_exclusive_scissor_nv.exclusive_scissors, pExclusiveScissors, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * exclusiveScissorCount);
-   }
+   memcpy(( VkRect2D* )cmd->u.set_exclusive_scissor_nv.exclusive_scissors, pExclusiveScissors, sizeof(*cmd->u.set_exclusive_scissor_nv.exclusive_scissors) * (exclusiveScissorCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_exclusive_scissor_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3888,31 +3551,24 @@ vk_free_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue
 , VkImageView imageView
 , VkImageLayout imageLayout
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_SHADING_RATE_IMAGE_NV;
-
+      
    cmd->u.bind_shading_rate_image_nv.image_view = imageView;
    cmd->u.bind_shading_rate_image_nv.image_layout = imageLayout;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_bind_shading_rate_image_nv(queue, cmd);
 }
 
 static void
@@ -3927,38 +3583,35 @@ vk_free_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue *queue
 , uint32_t firstViewport
 , uint32_t viewportCount
 , const VkShadingRatePaletteNV* pShadingRatePalettes
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_VIEWPORT_SHADING_RATE_PALETTE_NV;
-
+      
    cmd->u.set_viewport_shading_rate_palette_nv.first_viewport = firstViewport;
    cmd->u.set_viewport_shading_rate_palette_nv.viewport_count = viewportCount;
    if (pShadingRatePalettes) {
-      cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * viewportCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes == NULL) goto err;
 
-   memcpy(( VkShadingRatePaletteNV* )cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes, pShadingRatePalettes, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * viewportCount);
-   }
+   memcpy(( VkShadingRatePaletteNV* )cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes, pShadingRatePalettes, sizeof(*cmd->u.set_viewport_shading_rate_palette_nv.shading_rate_palettes) * (viewportCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_viewport_shading_rate_palette_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -3973,38 +3626,35 @@ vk_free_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue
 , VkCoarseSampleOrderTypeNV sampleOrderType
 , uint32_t customSampleOrderCount
 , const VkCoarseSampleOrderCustomNV* pCustomSampleOrders
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_COARSE_SAMPLE_ORDER_NV;
-
+      
    cmd->u.set_coarse_sample_order_nv.sample_order_type = sampleOrderType;
    cmd->u.set_coarse_sample_order_nv.custom_sample_order_count = customSampleOrderCount;
    if (pCustomSampleOrders) {
-      cmd->u.set_coarse_sample_order_nv.custom_sample_orders = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * customSampleOrderCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_coarse_sample_order_nv.custom_sample_orders = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * (customSampleOrderCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_coarse_sample_order_nv.custom_sample_orders == NULL) goto err;
 
-   memcpy(( VkCoarseSampleOrderCustomNV* )cmd->u.set_coarse_sample_order_nv.custom_sample_orders, pCustomSampleOrders, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * customSampleOrderCount);
-   }
+   memcpy(( VkCoarseSampleOrderCustomNV* )cmd->u.set_coarse_sample_order_nv.custom_sample_orders, pCustomSampleOrders, sizeof(*cmd->u.set_coarse_sample_order_nv.custom_sample_orders) * (customSampleOrderCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_coarse_sample_order_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4018,31 +3668,24 @@ vk_free_cmd_draw_mesh_tasks_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_mesh_tasks_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_mesh_tasks_nv(struct vk_cmd_queue *queue
 , uint32_t taskCount
 , uint32_t firstTask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_MESH_TASKS_NV;
-
+      
    cmd->u.draw_mesh_tasks_nv.task_count = taskCount;
    cmd->u.draw_mesh_tasks_nv.first_task = firstTask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_mesh_tasks_nv(queue, cmd);
 }
 
 static void
@@ -4056,35 +3699,28 @@ vk_free_cmd_draw_mesh_tasks_indirect_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , uint32_t drawCount
 , uint32_t stride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_MESH_TASKS_INDIRECT_NV;
-
+      
    cmd->u.draw_mesh_tasks_indirect_nv.buffer = buffer;
    cmd->u.draw_mesh_tasks_indirect_nv.offset = offset;
    cmd->u.draw_mesh_tasks_indirect_nv.draw_count = drawCount;
    cmd->u.draw_mesh_tasks_indirect_nv.stride = stride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_mesh_tasks_indirect_nv(queue, cmd);
 }
 
 static void
@@ -4098,7 +3734,7 @@ vk_free_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue
 , VkBuffer buffer
 , VkDeviceSize offset
 , VkBuffer countBuffer
@@ -4107,16 +3743,13 @@ void vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue
 , uint32_t stride
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_NV;
-
+      
    cmd->u.draw_mesh_tasks_indirect_count_nv.buffer = buffer;
    cmd->u.draw_mesh_tasks_indirect_count_nv.offset = offset;
    cmd->u.draw_mesh_tasks_indirect_count_nv.count_buffer = countBuffer;
@@ -4125,12 +3758,115 @@ void vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue
    cmd->u.draw_mesh_tasks_indirect_count_nv.stride = stride;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_draw_mesh_tasks_indirect_count_nv(queue, cmd);
+}
+
+static void
+vk_free_cmd_draw_mesh_tasks_ext(struct vk_cmd_queue *queue,
+                                struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_draw_mesh_tasks_ext(struct vk_cmd_queue *queue
+, uint32_t groupCountX
+, uint32_t groupCountY
+, uint32_t groupCountZ
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_DRAW_MESH_TASKS_EXT;
+      
+   cmd->u.draw_mesh_tasks_ext.group_count_x = groupCountX;
+   cmd->u.draw_mesh_tasks_ext.group_count_y = groupCountY;
+   cmd->u.draw_mesh_tasks_ext.group_count_z = groupCountZ;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_draw_mesh_tasks_indirect_ext(struct vk_cmd_queue *queue,
+                                         struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_ext(struct vk_cmd_queue *queue
+, VkBuffer buffer
+, VkDeviceSize offset
+, uint32_t drawCount
+, uint32_t stride
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_DRAW_MESH_TASKS_INDIRECT_EXT;
+      
+   cmd->u.draw_mesh_tasks_indirect_ext.buffer = buffer;
+   cmd->u.draw_mesh_tasks_indirect_ext.offset = offset;
+   cmd->u.draw_mesh_tasks_indirect_ext.draw_count = drawCount;
+   cmd->u.draw_mesh_tasks_indirect_ext.stride = stride;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_draw_mesh_tasks_indirect_count_ext(struct vk_cmd_queue *queue,
+                                               struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_count_ext(struct vk_cmd_queue *queue
+, VkBuffer buffer
+, VkDeviceSize offset
+, VkBuffer countBuffer
+, VkDeviceSize countBufferOffset
+, uint32_t maxDrawCount
+, uint32_t stride
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_EXT;
+      
+   cmd->u.draw_mesh_tasks_indirect_count_ext.buffer = buffer;
+   cmd->u.draw_mesh_tasks_indirect_count_ext.offset = offset;
+   cmd->u.draw_mesh_tasks_indirect_count_ext.count_buffer = countBuffer;
+   cmd->u.draw_mesh_tasks_indirect_count_ext.count_buffer_offset = countBufferOffset;
+   cmd->u.draw_mesh_tasks_indirect_count_ext.max_draw_count = maxDrawCount;
+   cmd->u.draw_mesh_tasks_indirect_count_ext.stride = stride;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
 }
 
 static void
@@ -4144,31 +3880,24 @@ vk_free_cmd_bind_invocation_mask_huawei(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_invocation_mask_huawei(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_invocation_mask_huawei(struct vk_cmd_queue *queue
 , VkImageView imageView
 , VkImageLayout imageLayout
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_INVOCATION_MASK_HUAWEI;
-
+      
    cmd->u.bind_invocation_mask_huawei.image_view = imageView;
    cmd->u.bind_invocation_mask_huawei.image_layout = imageLayout;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_bind_invocation_mask_huawei(queue, cmd);
 }
 
 static void
@@ -4182,33 +3911,26 @@ vk_free_cmd_copy_acceleration_structure_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_acceleration_structure_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_acceleration_structure_nv(struct vk_cmd_queue *queue
 , VkAccelerationStructureNV dst
 , VkAccelerationStructureNV src
 , VkCopyAccelerationStructureModeKHR mode
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_ACCELERATION_STRUCTURE_NV;
-
+      
    cmd->u.copy_acceleration_structure_nv.dst = dst;
    cmd->u.copy_acceleration_structure_nv.src = src;
    cmd->u.copy_acceleration_structure_nv.mode = mode;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_copy_acceleration_structure_nv(queue, cmd);
 }
 
 static void
@@ -4224,20 +3946,17 @@ vk_free_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *queue
 , const VkCopyAccelerationStructureInfoKHR* pInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_ACCELERATION_STRUCTURE_KHR;
-
+      
    if (pInfo) {
       cmd->u.copy_acceleration_structure_khr.info = vk_zalloc(queue->alloc, sizeof(VkCopyAccelerationStructureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_acceleration_structure_khr.info == NULL) goto err;
@@ -4247,15 +3966,15 @@ void vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *queue
    VkCopyAccelerationStructureInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
       } else {
       cmd->u.copy_acceleration_structure_khr.info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_acceleration_structure_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4271,20 +3990,17 @@ vk_free_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_queue *queue
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_queue *queue
 , const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_ACCELERATION_STRUCTURE_TO_MEMORY_KHR;
-
+      
    if (pInfo) {
       cmd->u.copy_acceleration_structure_to_memory_khr.info = vk_zalloc(queue->alloc, sizeof(VkCopyAccelerationStructureToMemoryInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_acceleration_structure_to_memory_khr.info == NULL) goto err;
@@ -4294,15 +4010,15 @@ void vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_queu
    VkCopyAccelerationStructureToMemoryInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
       } else {
       cmd->u.copy_acceleration_structure_to_memory_khr.info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_acceleration_structure_to_memory_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4318,20 +4034,17 @@ vk_free_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_queue *queue
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_queue *queue
 , const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_MEMORY_TO_ACCELERATION_STRUCTURE_KHR;
-
+      
    if (pInfo) {
       cmd->u.copy_memory_to_acceleration_structure_khr.info = vk_zalloc(queue->alloc, sizeof(VkCopyMemoryToAccelerationStructureInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_memory_to_acceleration_structure_khr.info == NULL) goto err;
@@ -4341,15 +4054,15 @@ void vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_queu
    VkCopyMemoryToAccelerationStructureInfoKHR *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
       } else {
       cmd->u.copy_memory_to_acceleration_structure_khr.info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_memory_to_acceleration_structure_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4364,7 +4077,7 @@ vk_free_cmd_write_acceleration_structures_properties_khr(struct vk_cmd_queue *qu
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_cmd_queue *queue
 , uint32_t accelerationStructureCount
 , const VkAccelerationStructureKHR* pAccelerationStructures
 , VkQueryType queryType
@@ -4372,34 +4085,31 @@ void vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_cmd_q
 , uint32_t firstQuery
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WRITE_ACCELERATION_STRUCTURES_PROPERTIES_KHR;
-
+      
    cmd->u.write_acceleration_structures_properties_khr.acceleration_structure_count = accelerationStructureCount;
    if (pAccelerationStructures) {
-      cmd->u.write_acceleration_structures_properties_khr.acceleration_structures = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * accelerationStructureCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.write_acceleration_structures_properties_khr.acceleration_structures = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * (accelerationStructureCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.write_acceleration_structures_properties_khr.acceleration_structures == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureKHR* )cmd->u.write_acceleration_structures_properties_khr.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * accelerationStructureCount);
-   }
+   memcpy(( VkAccelerationStructureKHR* )cmd->u.write_acceleration_structures_properties_khr.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_khr.acceleration_structures) * (accelerationStructureCount));
+   }   
    cmd->u.write_acceleration_structures_properties_khr.query_type = queryType;
    cmd->u.write_acceleration_structures_properties_khr.query_pool = queryPool;
    cmd->u.write_acceleration_structures_properties_khr.first_query = firstQuery;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_write_acceleration_structures_properties_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4414,7 +4124,7 @@ vk_free_cmd_write_acceleration_structures_properties_nv(struct vk_cmd_queue *que
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cmd_queue *queue
 , uint32_t accelerationStructureCount
 , const VkAccelerationStructureNV* pAccelerationStructures
 , VkQueryType queryType
@@ -4422,34 +4132,31 @@ void vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cmd_qu
 , uint32_t firstQuery
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WRITE_ACCELERATION_STRUCTURES_PROPERTIES_NV;
-
+      
    cmd->u.write_acceleration_structures_properties_nv.acceleration_structure_count = accelerationStructureCount;
    if (pAccelerationStructures) {
-      cmd->u.write_acceleration_structures_properties_nv.acceleration_structures = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * accelerationStructureCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.write_acceleration_structures_properties_nv.acceleration_structures = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * (accelerationStructureCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.write_acceleration_structures_properties_nv.acceleration_structures == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureNV* )cmd->u.write_acceleration_structures_properties_nv.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * accelerationStructureCount);
-   }
+   memcpy(( VkAccelerationStructureNV* )cmd->u.write_acceleration_structures_properties_nv.acceleration_structures, pAccelerationStructures, sizeof(*cmd->u.write_acceleration_structures_properties_nv.acceleration_structures) * (accelerationStructureCount));
+   }   
    cmd->u.write_acceleration_structures_properties_nv.query_type = queryType;
    cmd->u.write_acceleration_structures_properties_nv.query_pool = queryPool;
    cmd->u.write_acceleration_structures_properties_nv.first_query = firstQuery;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_write_acceleration_structures_properties_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4466,7 +4173,7 @@ vk_free_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
 , const VkAccelerationStructureInfoNV* pInfo
 , VkBuffer instanceData
 , VkDeviceSize instanceOffset
@@ -4477,16 +4184,13 @@ void vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
 , VkDeviceSize scratchOffset
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BUILD_ACCELERATION_STRUCTURE_NV;
-
+      
    if (pInfo) {
       cmd->u.build_acceleration_structure_nv.info = vk_zalloc(queue->alloc, sizeof(VkAccelerationStructureInfoNV), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.build_acceleration_structure_nv.info == NULL) goto err;
@@ -4502,7 +4206,7 @@ void vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.build_acceleration_structure_nv.info = NULL;
-   }
+   }   
    cmd->u.build_acceleration_structure_nv.instance_data = instanceData;
    cmd->u.build_acceleration_structure_nv.instance_offset = instanceOffset;
    cmd->u.build_acceleration_structure_nv.update = update;
@@ -4512,12 +4216,12 @@ void vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
    cmd->u.build_acceleration_structure_nv.scratch_offset = scratchOffset;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_build_acceleration_structure_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4539,7 +4243,7 @@ vk_free_cmd_trace_rays_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
 , const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable
 , const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable
 , const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable
@@ -4549,16 +4253,13 @@ void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
 , uint32_t depth
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_TRACE_RAYS_KHR;
-
+      
    if (pRaygenShaderBindingTable) {
       cmd->u.trace_rays_khr.raygen_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_khr.raygen_shader_binding_table == NULL) goto err;
@@ -4568,7 +4269,7 @@ void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pRaygenShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_khr.raygen_shader_binding_table = NULL;
-   }
+   }   
    if (pMissShaderBindingTable) {
       cmd->u.trace_rays_khr.miss_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_khr.miss_shader_binding_table == NULL) goto err;
@@ -4578,7 +4279,7 @@ void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pMissShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_khr.miss_shader_binding_table = NULL;
-   }
+   }   
    if (pHitShaderBindingTable) {
       cmd->u.trace_rays_khr.hit_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_khr.hit_shader_binding_table == NULL) goto err;
@@ -4588,7 +4289,7 @@ void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pHitShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_khr.hit_shader_binding_table = NULL;
-   }
+   }   
    if (pCallableShaderBindingTable) {
       cmd->u.trace_rays_khr.callable_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_khr.callable_shader_binding_table == NULL) goto err;
@@ -4598,18 +4299,18 @@ void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pCallableShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_khr.callable_shader_binding_table = NULL;
-   }
+   }   
    cmd->u.trace_rays_khr.width = width;
    cmd->u.trace_rays_khr.height = height;
    cmd->u.trace_rays_khr.depth = depth;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_trace_rays_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4623,7 +4324,7 @@ vk_free_cmd_trace_rays_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
 , VkBuffer raygenShaderBindingTableBuffer
 , VkDeviceSize raygenShaderBindingOffset
 , VkBuffer missShaderBindingTableBuffer
@@ -4640,16 +4341,13 @@ void vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
 , uint32_t depth
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_TRACE_RAYS_NV;
-
+      
    cmd->u.trace_rays_nv.raygen_shader_binding_table_buffer = raygenShaderBindingTableBuffer;
    cmd->u.trace_rays_nv.raygen_shader_binding_offset = raygenShaderBindingOffset;
    cmd->u.trace_rays_nv.miss_shader_binding_table_buffer = missShaderBindingTableBuffer;
@@ -4666,12 +4364,8 @@ void vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
    cmd->u.trace_rays_nv.depth = depth;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_trace_rays_nv(queue, cmd);
 }
 
 static void
@@ -4693,7 +4387,7 @@ vk_free_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
 , const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable
 , const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable
 , const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable
@@ -4701,16 +4395,13 @@ void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
 , VkDeviceAddress indirectDeviceAddress
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_TRACE_RAYS_INDIRECT_KHR;
-
+      
    if (pRaygenShaderBindingTable) {
       cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table == NULL) goto err;
@@ -4720,7 +4411,7 @@ void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pRaygenShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table = NULL;
-   }
+   }   
    if (pMissShaderBindingTable) {
       cmd->u.trace_rays_indirect_khr.miss_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_indirect_khr.miss_shader_binding_table == NULL) goto err;
@@ -4730,7 +4421,7 @@ void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pMissShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_indirect_khr.miss_shader_binding_table = NULL;
-   }
+   }   
    if (pHitShaderBindingTable) {
       cmd->u.trace_rays_indirect_khr.hit_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_indirect_khr.hit_shader_binding_table == NULL) goto err;
@@ -4740,7 +4431,7 @@ void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pHitShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_indirect_khr.hit_shader_binding_table = NULL;
-   }
+   }   
    if (pCallableShaderBindingTable) {
       cmd->u.trace_rays_indirect_khr.callable_shader_binding_table = vk_zalloc(queue->alloc, sizeof(VkStridedDeviceAddressRegionKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.trace_rays_indirect_khr.callable_shader_binding_table == NULL) goto err;
@@ -4750,16 +4441,45 @@ void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
    VkStridedDeviceAddressRegionKHR *tmp_src1 = (void *) pCallableShaderBindingTable; (void) tmp_src1;   
       } else {
       cmd->u.trace_rays_indirect_khr.callable_shader_binding_table = NULL;
-   }
+   }   
    cmd->u.trace_rays_indirect_khr.indirect_device_address = indirectDeviceAddress;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_trace_rays_indirect_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_trace_rays_indirect2_khr(struct vk_cmd_queue *queue,
+                                     struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_trace_rays_indirect2_khr(struct vk_cmd_queue *queue
+, VkDeviceAddress indirectDeviceAddress
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_TRACE_RAYS_INDIRECT2_KHR;
+      
+   cmd->u.trace_rays_indirect2_khr.indirect_device_address = indirectDeviceAddress;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
 }
 
 static void
@@ -4773,29 +4493,22 @@ vk_free_cmd_set_ray_tracing_pipeline_stack_size_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(struct vk_cmd_queue *queue
 , uint32_t pipelineStackSize
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_RAY_TRACING_PIPELINE_STACK_SIZE_KHR;
-
+      
    cmd->u.set_ray_tracing_pipeline_stack_size_khr.pipeline_stack_size = pipelineStackSize;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_ray_tracing_pipeline_stack_size_khr(queue, cmd);
 }
 
 static void
@@ -4851,31 +4564,24 @@ vk_free_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
 , uint32_t lineStippleFactor
 , uint16_t lineStipplePattern
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_LINE_STIPPLE_EXT;
-
+      
    cmd->u.set_line_stipple_ext.line_stipple_factor = lineStippleFactor;
    cmd->u.set_line_stipple_ext.line_stipple_pattern = lineStipplePattern;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_line_stipple_ext(queue, cmd);
 }
 
 static void
@@ -4891,43 +4597,40 @@ vk_free_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue
 , uint32_t infoCount
 , const VkAccelerationStructureBuildGeometryInfoKHR* pInfos
 , const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BUILD_ACCELERATION_STRUCTURES_KHR;
-
+      
    cmd->u.build_acceleration_structures_khr.info_count = infoCount;
    if (pInfos) {
-      cmd->u.build_acceleration_structures_khr.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_khr.infos) * infoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.build_acceleration_structures_khr.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_khr.infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_khr.infos == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureBuildGeometryInfoKHR* )cmd->u.build_acceleration_structures_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_khr.infos) * infoCount);
-   }
+   memcpy(( VkAccelerationStructureBuildGeometryInfoKHR* )cmd->u.build_acceleration_structures_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_khr.infos) * (infoCount));
+   }   
    if (ppBuildRangeInfos) {
-      cmd->u.build_acceleration_structures_khr.pp_build_range_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_khr.pp_build_range_infos) * infoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.build_acceleration_structures_khr.pp_build_range_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_khr.pp_build_range_infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_khr.pp_build_range_infos == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureBuildRangeInfoKHR* * )cmd->u.build_acceleration_structures_khr.pp_build_range_infos, ppBuildRangeInfos, sizeof(*cmd->u.build_acceleration_structures_khr.pp_build_range_infos) * infoCount);
-   }
+   memcpy(( VkAccelerationStructureBuildRangeInfoKHR* * )cmd->u.build_acceleration_structures_khr.pp_build_range_infos, ppBuildRangeInfos, sizeof(*cmd->u.build_acceleration_structures_khr.pp_build_range_infos) * (infoCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_build_acceleration_structures_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -4945,7 +4648,7 @@ vk_free_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queu
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queue
 , uint32_t                                           infoCount
 , const VkAccelerationStructureBuildGeometryInfoKHR* pInfos
 , const VkDeviceAddress*             pIndirectDeviceAddresses
@@ -4953,49 +4656,46 @@ void vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_que
 , const uint32_t* const*             ppMaxPrimitiveCounts
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BUILD_ACCELERATION_STRUCTURES_INDIRECT_KHR;
-
+      
    cmd->u.build_acceleration_structures_indirect_khr.info_count = infoCount;
    if (pInfos) {
-      cmd->u.build_acceleration_structures_indirect_khr.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * infoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.build_acceleration_structures_indirect_khr.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.infos == NULL) goto err;
 
-   memcpy(( VkAccelerationStructureBuildGeometryInfoKHR* )cmd->u.build_acceleration_structures_indirect_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * infoCount);
-   }
+   memcpy(( VkAccelerationStructureBuildGeometryInfoKHR* )cmd->u.build_acceleration_structures_indirect_khr.infos, pInfos, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.infos) * (infoCount));
+   }   
    if (pIndirectDeviceAddresses) {
-      cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * infoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses == NULL) goto err;
 
-   memcpy(( VkDeviceAddress*             )cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses, pIndirectDeviceAddresses, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * infoCount);
-   }
+   memcpy(( VkDeviceAddress*             )cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses, pIndirectDeviceAddresses, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_device_addresses) * (infoCount));
+   }   
    if (pIndirectStrides) {
-      cmd->u.build_acceleration_structures_indirect_khr.indirect_strides = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * infoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.build_acceleration_structures_indirect_khr.indirect_strides = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.indirect_strides == NULL) goto err;
 
-   memcpy(( uint32_t*                    )cmd->u.build_acceleration_structures_indirect_khr.indirect_strides, pIndirectStrides, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * infoCount);
-   }
+   memcpy(( uint32_t*                    )cmd->u.build_acceleration_structures_indirect_khr.indirect_strides, pIndirectStrides, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.indirect_strides) * (infoCount));
+   }   
    if (ppMaxPrimitiveCounts) {
-      cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * infoCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts == NULL) goto err;
 
-   memcpy(( uint32_t* *             )cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts, ppMaxPrimitiveCounts, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * infoCount);
-   }
+   memcpy(( uint32_t* *             )cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts, ppMaxPrimitiveCounts, sizeof(*cmd->u.build_acceleration_structures_indirect_khr.pp_max_primitive_counts) * (infoCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_build_acceleration_structures_indirect_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5009,29 +4709,22 @@ vk_free_cmd_set_cull_mode(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_cull_mode(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_cull_mode(struct vk_cmd_queue *queue
 , VkCullModeFlags cullMode
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_CULL_MODE;
-
+      
    cmd->u.set_cull_mode.cull_mode = cullMode;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_cull_mode(queue, cmd);
 }
 
 static void
@@ -5045,29 +4738,22 @@ vk_free_cmd_set_front_face(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_front_face(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_front_face(struct vk_cmd_queue *queue
 , VkFrontFace frontFace
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_FRONT_FACE;
-
+      
    cmd->u.set_front_face.front_face = frontFace;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_front_face(queue, cmd);
 }
 
 static void
@@ -5081,29 +4767,22 @@ vk_free_cmd_set_primitive_topology(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_primitive_topology(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_primitive_topology(struct vk_cmd_queue *queue
 , VkPrimitiveTopology primitiveTopology
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_PRIMITIVE_TOPOLOGY;
-
+      
    cmd->u.set_primitive_topology.primitive_topology = primitiveTopology;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_primitive_topology(queue, cmd);
 }
 
 static void
@@ -5118,36 +4797,33 @@ vk_free_cmd_set_viewport_with_count(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_viewport_with_count(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_viewport_with_count(struct vk_cmd_queue *queue
 , uint32_t viewportCount
 , const VkViewport* pViewports
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_VIEWPORT_WITH_COUNT;
-
+      
    cmd->u.set_viewport_with_count.viewport_count = viewportCount;
    if (pViewports) {
-      cmd->u.set_viewport_with_count.viewports = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_with_count.viewports) * viewportCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_viewport_with_count.viewports = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_with_count.viewports) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_viewport_with_count.viewports == NULL) goto err;
 
-   memcpy(( VkViewport* )cmd->u.set_viewport_with_count.viewports, pViewports, sizeof(*cmd->u.set_viewport_with_count.viewports) * viewportCount);
-   }
+   memcpy(( VkViewport* )cmd->u.set_viewport_with_count.viewports, pViewports, sizeof(*cmd->u.set_viewport_with_count.viewports) * (viewportCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_viewport_with_count(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5162,36 +4838,33 @@ vk_free_cmd_set_scissor_with_count(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_scissor_with_count(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_scissor_with_count(struct vk_cmd_queue *queue
 , uint32_t scissorCount
 , const VkRect2D* pScissors
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_SCISSOR_WITH_COUNT;
-
+      
    cmd->u.set_scissor_with_count.scissor_count = scissorCount;
    if (pScissors) {
-      cmd->u.set_scissor_with_count.scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_scissor_with_count.scissors) * scissorCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_scissor_with_count.scissors = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_scissor_with_count.scissors) * (scissorCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_scissor_with_count.scissors == NULL) goto err;
 
-   memcpy(( VkRect2D* )cmd->u.set_scissor_with_count.scissors, pScissors, sizeof(*cmd->u.set_scissor_with_count.scissors) * scissorCount);
-   }
+   memcpy(( VkRect2D* )cmd->u.set_scissor_with_count.scissors, pScissors, sizeof(*cmd->u.set_scissor_with_count.scissors) * (scissorCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_scissor_with_count(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5209,7 +4882,7 @@ vk_free_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
 , uint32_t firstBinding
 , uint32_t bindingCount
 , const VkBuffer* pBuffers
@@ -5218,50 +4891,47 @@ void vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
 , const VkDeviceSize* pStrides
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BIND_VERTEX_BUFFERS2;
-
+      
    cmd->u.bind_vertex_buffers2.first_binding = firstBinding;
    cmd->u.bind_vertex_buffers2.binding_count = bindingCount;
    if (pBuffers) {
-      cmd->u.bind_vertex_buffers2.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_vertex_buffers2.buffers = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.buffers == NULL) goto err;
 
-   memcpy(( VkBuffer* )cmd->u.bind_vertex_buffers2.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * bindingCount);
-   }
+   memcpy(( VkBuffer* )cmd->u.bind_vertex_buffers2.buffers, pBuffers, sizeof(*cmd->u.bind_vertex_buffers2.buffers) * (bindingCount));
+   }   
    if (pOffsets) {
-      cmd->u.bind_vertex_buffers2.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_vertex_buffers2.offsets = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.offsets == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * bindingCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.offsets, pOffsets, sizeof(*cmd->u.bind_vertex_buffers2.offsets) * (bindingCount));
+   }   
    if (pSizes) {
-      cmd->u.bind_vertex_buffers2.sizes = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_vertex_buffers2.sizes = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.sizes == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.sizes, pSizes, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * bindingCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.sizes, pSizes, sizeof(*cmd->u.bind_vertex_buffers2.sizes) * (bindingCount));
+   }   
    if (pStrides) {
-      cmd->u.bind_vertex_buffers2.strides = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.strides) * bindingCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.bind_vertex_buffers2.strides = vk_zalloc(queue->alloc, sizeof(*cmd->u.bind_vertex_buffers2.strides) * (bindingCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.bind_vertex_buffers2.strides == NULL) goto err;
 
-   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.strides, pStrides, sizeof(*cmd->u.bind_vertex_buffers2.strides) * bindingCount);
-   }
+   memcpy(( VkDeviceSize* )cmd->u.bind_vertex_buffers2.strides, pStrides, sizeof(*cmd->u.bind_vertex_buffers2.strides) * (bindingCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_bind_vertex_buffers2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5275,29 +4945,22 @@ vk_free_cmd_set_depth_test_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_test_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_test_enable(struct vk_cmd_queue *queue
 , VkBool32 depthTestEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_TEST_ENABLE;
-
+      
    cmd->u.set_depth_test_enable.depth_test_enable = depthTestEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_test_enable(queue, cmd);
 }
 
 static void
@@ -5311,29 +4974,22 @@ vk_free_cmd_set_depth_write_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_write_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_write_enable(struct vk_cmd_queue *queue
 , VkBool32 depthWriteEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_WRITE_ENABLE;
-
+      
    cmd->u.set_depth_write_enable.depth_write_enable = depthWriteEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_write_enable(queue, cmd);
 }
 
 static void
@@ -5347,29 +5003,22 @@ vk_free_cmd_set_depth_compare_op(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_compare_op(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_compare_op(struct vk_cmd_queue *queue
 , VkCompareOp depthCompareOp
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_COMPARE_OP;
-
+      
    cmd->u.set_depth_compare_op.depth_compare_op = depthCompareOp;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_compare_op(queue, cmd);
 }
 
 static void
@@ -5383,29 +5032,22 @@ vk_free_cmd_set_depth_bounds_test_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_bounds_test_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_bounds_test_enable(struct vk_cmd_queue *queue
 , VkBool32 depthBoundsTestEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_BOUNDS_TEST_ENABLE;
-
+      
    cmd->u.set_depth_bounds_test_enable.depth_bounds_test_enable = depthBoundsTestEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_bounds_test_enable(queue, cmd);
 }
 
 static void
@@ -5419,29 +5061,22 @@ vk_free_cmd_set_stencil_test_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_stencil_test_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_stencil_test_enable(struct vk_cmd_queue *queue
 , VkBool32 stencilTestEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_STENCIL_TEST_ENABLE;
-
+      
    cmd->u.set_stencil_test_enable.stencil_test_enable = stencilTestEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_stencil_test_enable(queue, cmd);
 }
 
 static void
@@ -5455,7 +5090,7 @@ vk_free_cmd_set_stencil_op(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
 , VkStencilFaceFlags faceMask
 , VkStencilOp failOp
 , VkStencilOp passOp
@@ -5463,16 +5098,13 @@ void vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
 , VkCompareOp compareOp
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_STENCIL_OP;
-
+      
    cmd->u.set_stencil_op.face_mask = faceMask;
    cmd->u.set_stencil_op.fail_op = failOp;
    cmd->u.set_stencil_op.pass_op = passOp;
@@ -5480,12 +5112,8 @@ void vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
    cmd->u.set_stencil_op.compare_op = compareOp;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_stencil_op(queue, cmd);
 }
 
 static void
@@ -5499,29 +5127,22 @@ vk_free_cmd_set_patch_control_points_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_patch_control_points_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_patch_control_points_ext(struct vk_cmd_queue *queue
 , uint32_t patchControlPoints
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_PATCH_CONTROL_POINTS_EXT;
-
+      
    cmd->u.set_patch_control_points_ext.patch_control_points = patchControlPoints;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_patch_control_points_ext(queue, cmd);
 }
 
 static void
@@ -5535,29 +5156,22 @@ vk_free_cmd_set_rasterizer_discard_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_rasterizer_discard_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_rasterizer_discard_enable(struct vk_cmd_queue *queue
 , VkBool32 rasterizerDiscardEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_RASTERIZER_DISCARD_ENABLE;
-
+      
    cmd->u.set_rasterizer_discard_enable.rasterizer_discard_enable = rasterizerDiscardEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_rasterizer_discard_enable(queue, cmd);
 }
 
 static void
@@ -5571,29 +5185,22 @@ vk_free_cmd_set_depth_bias_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_depth_bias_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_depth_bias_enable(struct vk_cmd_queue *queue
 , VkBool32 depthBiasEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_DEPTH_BIAS_ENABLE;
-
+      
    cmd->u.set_depth_bias_enable.depth_bias_enable = depthBiasEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_depth_bias_enable(queue, cmd);
 }
 
 static void
@@ -5607,29 +5214,22 @@ vk_free_cmd_set_logic_op_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_logic_op_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_logic_op_ext(struct vk_cmd_queue *queue
 , VkLogicOp logicOp
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_LOGIC_OP_EXT;
-
+      
    cmd->u.set_logic_op_ext.logic_op = logicOp;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_logic_op_ext(queue, cmd);
 }
 
 static void
@@ -5643,29 +5243,1015 @@ vk_free_cmd_set_primitive_restart_enable(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_primitive_restart_enable(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_primitive_restart_enable(struct vk_cmd_queue *queue
 , VkBool32 primitiveRestartEnable
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_PRIMITIVE_RESTART_ENABLE;
-
+      
    cmd->u.set_primitive_restart_enable.primitive_restart_enable = primitiveRestartEnable;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_tessellation_domain_origin_ext(struct vk_cmd_queue *queue,
+                                               struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_tessellation_domain_origin_ext(struct vk_cmd_queue *queue
+, VkTessellationDomainOrigin domainOrigin
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_TESSELLATION_DOMAIN_ORIGIN_EXT;
+      
+   cmd->u.set_tessellation_domain_origin_ext.domain_origin = domainOrigin;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_depth_clamp_enable_ext(struct vk_cmd_queue *queue,
+                                       struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_depth_clamp_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 depthClampEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_DEPTH_CLAMP_ENABLE_EXT;
+      
+   cmd->u.set_depth_clamp_enable_ext.depth_clamp_enable = depthClampEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_polygon_mode_ext(struct vk_cmd_queue *queue,
+                                 struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_polygon_mode_ext(struct vk_cmd_queue *queue
+, VkPolygonMode polygonMode
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_POLYGON_MODE_EXT;
+      
+   cmd->u.set_polygon_mode_ext.polygon_mode = polygonMode;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_rasterization_samples_ext(struct vk_cmd_queue *queue,
+                                          struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_rasterization_samples_ext(struct vk_cmd_queue *queue
+, VkSampleCountFlagBits  rasterizationSamples
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_RASTERIZATION_SAMPLES_EXT;
+      
+   cmd->u.set_rasterization_samples_ext.rasterization_samples = rasterizationSamples;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_sample_mask_ext(struct vk_cmd_queue *queue,
+                                struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkSampleMask*    )cmd->u.set_sample_mask_ext.sample_mask);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_sample_mask_ext(struct vk_cmd_queue *queue
+, VkSampleCountFlagBits  samples
+, const VkSampleMask*    pSampleMask
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_SAMPLE_MASK_EXT;
+      
+   cmd->u.set_sample_mask_ext.samples = samples;
+   if (pSampleMask) {
+      cmd->u.set_sample_mask_ext.sample_mask = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_sample_mask_ext.sample_mask) * ((samples + 31) / 32), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_sample_mask_ext.sample_mask == NULL) goto err;
+
+   memcpy(( VkSampleMask*    )cmd->u.set_sample_mask_ext.sample_mask, pSampleMask, sizeof(*cmd->u.set_sample_mask_ext.sample_mask) * ((samples + 31) / 32));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
-      vk_free_cmd_set_primitive_restart_enable(queue, cmd);
+      vk_free_cmd_set_sample_mask_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_alpha_to_coverage_enable_ext(struct vk_cmd_queue *queue,
+                                             struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_alpha_to_coverage_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 alphaToCoverageEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_ALPHA_TO_COVERAGE_ENABLE_EXT;
+      
+   cmd->u.set_alpha_to_coverage_enable_ext.alpha_to_coverage_enable = alphaToCoverageEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_alpha_to_one_enable_ext(struct vk_cmd_queue *queue,
+                                        struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_alpha_to_one_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 alphaToOneEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_ALPHA_TO_ONE_ENABLE_EXT;
+      
+   cmd->u.set_alpha_to_one_enable_ext.alpha_to_one_enable = alphaToOneEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_logic_op_enable_ext(struct vk_cmd_queue *queue,
+                                    struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_logic_op_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 logicOpEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_LOGIC_OP_ENABLE_EXT;
+      
+   cmd->u.set_logic_op_enable_ext.logic_op_enable = logicOpEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_color_blend_enable_ext(struct vk_cmd_queue *queue,
+                                       struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkBool32* )cmd->u.set_color_blend_enable_ext.color_blend_enables);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_color_blend_enable_ext(struct vk_cmd_queue *queue
+, uint32_t firstAttachment
+, uint32_t attachmentCount
+, const VkBool32* pColorBlendEnables
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COLOR_BLEND_ENABLE_EXT;
+      
+   cmd->u.set_color_blend_enable_ext.first_attachment = firstAttachment;
+   cmd->u.set_color_blend_enable_ext.attachment_count = attachmentCount;
+   if (pColorBlendEnables) {
+      cmd->u.set_color_blend_enable_ext.color_blend_enables = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_blend_enable_ext.color_blend_enables) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_color_blend_enable_ext.color_blend_enables == NULL) goto err;
+
+   memcpy(( VkBool32* )cmd->u.set_color_blend_enable_ext.color_blend_enables, pColorBlendEnables, sizeof(*cmd->u.set_color_blend_enable_ext.color_blend_enables) * (attachmentCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_color_blend_enable_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_color_blend_equation_ext(struct vk_cmd_queue *queue,
+                                         struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkColorBlendEquationEXT* )cmd->u.set_color_blend_equation_ext.color_blend_equations);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_color_blend_equation_ext(struct vk_cmd_queue *queue
+, uint32_t firstAttachment
+, uint32_t attachmentCount
+, const VkColorBlendEquationEXT* pColorBlendEquations
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COLOR_BLEND_EQUATION_EXT;
+      
+   cmd->u.set_color_blend_equation_ext.first_attachment = firstAttachment;
+   cmd->u.set_color_blend_equation_ext.attachment_count = attachmentCount;
+   if (pColorBlendEquations) {
+      cmd->u.set_color_blend_equation_ext.color_blend_equations = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_blend_equation_ext.color_blend_equations) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_color_blend_equation_ext.color_blend_equations == NULL) goto err;
+
+   memcpy(( VkColorBlendEquationEXT* )cmd->u.set_color_blend_equation_ext.color_blend_equations, pColorBlendEquations, sizeof(*cmd->u.set_color_blend_equation_ext.color_blend_equations) * (attachmentCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_color_blend_equation_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_color_write_mask_ext(struct vk_cmd_queue *queue,
+                                     struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkColorComponentFlags* )cmd->u.set_color_write_mask_ext.color_write_masks);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_color_write_mask_ext(struct vk_cmd_queue *queue
+, uint32_t firstAttachment
+, uint32_t attachmentCount
+, const VkColorComponentFlags* pColorWriteMasks
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COLOR_WRITE_MASK_EXT;
+      
+   cmd->u.set_color_write_mask_ext.first_attachment = firstAttachment;
+   cmd->u.set_color_write_mask_ext.attachment_count = attachmentCount;
+   if (pColorWriteMasks) {
+      cmd->u.set_color_write_mask_ext.color_write_masks = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_write_mask_ext.color_write_masks) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_color_write_mask_ext.color_write_masks == NULL) goto err;
+
+   memcpy(( VkColorComponentFlags* )cmd->u.set_color_write_mask_ext.color_write_masks, pColorWriteMasks, sizeof(*cmd->u.set_color_write_mask_ext.color_write_masks) * (attachmentCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_color_write_mask_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_rasterization_stream_ext(struct vk_cmd_queue *queue,
+                                         struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_rasterization_stream_ext(struct vk_cmd_queue *queue
+, uint32_t rasterizationStream
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_RASTERIZATION_STREAM_EXT;
+      
+   cmd->u.set_rasterization_stream_ext.rasterization_stream = rasterizationStream;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_conservative_rasterization_mode_ext(struct vk_cmd_queue *queue,
+                                                    struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_conservative_rasterization_mode_ext(struct vk_cmd_queue *queue
+, VkConservativeRasterizationModeEXT conservativeRasterizationMode
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_CONSERVATIVE_RASTERIZATION_MODE_EXT;
+      
+   cmd->u.set_conservative_rasterization_mode_ext.conservative_rasterization_mode = conservativeRasterizationMode;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_extra_primitive_overestimation_size_ext(struct vk_cmd_queue *queue,
+                                                        struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_extra_primitive_overestimation_size_ext(struct vk_cmd_queue *queue
+, float extraPrimitiveOverestimationSize
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT;
+      
+   cmd->u.set_extra_primitive_overestimation_size_ext.extra_primitive_overestimation_size = extraPrimitiveOverestimationSize;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_depth_clip_enable_ext(struct vk_cmd_queue *queue,
+                                      struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_depth_clip_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 depthClipEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_DEPTH_CLIP_ENABLE_EXT;
+      
+   cmd->u.set_depth_clip_enable_ext.depth_clip_enable = depthClipEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_sample_locations_enable_ext(struct vk_cmd_queue *queue,
+                                            struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_sample_locations_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 sampleLocationsEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_SAMPLE_LOCATIONS_ENABLE_EXT;
+      
+   cmd->u.set_sample_locations_enable_ext.sample_locations_enable = sampleLocationsEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_color_blend_advanced_ext(struct vk_cmd_queue *queue,
+                                         struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkColorBlendAdvancedEXT* )cmd->u.set_color_blend_advanced_ext.color_blend_advanced);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_color_blend_advanced_ext(struct vk_cmd_queue *queue
+, uint32_t firstAttachment
+, uint32_t attachmentCount
+, const VkColorBlendAdvancedEXT* pColorBlendAdvanced
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COLOR_BLEND_ADVANCED_EXT;
+      
+   cmd->u.set_color_blend_advanced_ext.first_attachment = firstAttachment;
+   cmd->u.set_color_blend_advanced_ext.attachment_count = attachmentCount;
+   if (pColorBlendAdvanced) {
+      cmd->u.set_color_blend_advanced_ext.color_blend_advanced = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_blend_advanced_ext.color_blend_advanced) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_color_blend_advanced_ext.color_blend_advanced == NULL) goto err;
+
+   memcpy(( VkColorBlendAdvancedEXT* )cmd->u.set_color_blend_advanced_ext.color_blend_advanced, pColorBlendAdvanced, sizeof(*cmd->u.set_color_blend_advanced_ext.color_blend_advanced) * (attachmentCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_color_blend_advanced_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_provoking_vertex_mode_ext(struct vk_cmd_queue *queue,
+                                          struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_provoking_vertex_mode_ext(struct vk_cmd_queue *queue
+, VkProvokingVertexModeEXT provokingVertexMode
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_PROVOKING_VERTEX_MODE_EXT;
+      
+   cmd->u.set_provoking_vertex_mode_ext.provoking_vertex_mode = provokingVertexMode;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_line_rasterization_mode_ext(struct vk_cmd_queue *queue,
+                                            struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_line_rasterization_mode_ext(struct vk_cmd_queue *queue
+, VkLineRasterizationModeEXT lineRasterizationMode
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_LINE_RASTERIZATION_MODE_EXT;
+      
+   cmd->u.set_line_rasterization_mode_ext.line_rasterization_mode = lineRasterizationMode;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_line_stipple_enable_ext(struct vk_cmd_queue *queue,
+                                        struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_line_stipple_enable_ext(struct vk_cmd_queue *queue
+, VkBool32 stippledLineEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_LINE_STIPPLE_ENABLE_EXT;
+      
+   cmd->u.set_line_stipple_enable_ext.stippled_line_enable = stippledLineEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_depth_clip_negative_one_to_one_ext(struct vk_cmd_queue *queue,
+                                                   struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_depth_clip_negative_one_to_one_ext(struct vk_cmd_queue *queue
+, VkBool32 negativeOneToOne
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT;
+      
+   cmd->u.set_depth_clip_negative_one_to_one_ext.negative_one_to_one = negativeOneToOne;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_viewport_wscaling_enable_nv(struct vk_cmd_queue *queue,
+                                            struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_viewport_wscaling_enable_nv(struct vk_cmd_queue *queue
+, VkBool32 viewportWScalingEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_VIEWPORT_WSCALING_ENABLE_NV;
+      
+   cmd->u.set_viewport_wscaling_enable_nv.viewport_wscaling_enable = viewportWScalingEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_viewport_swizzle_nv(struct vk_cmd_queue *queue,
+                                    struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkViewportSwizzleNV* )cmd->u.set_viewport_swizzle_nv.viewport_swizzles);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_viewport_swizzle_nv(struct vk_cmd_queue *queue
+, uint32_t firstViewport
+, uint32_t viewportCount
+, const VkViewportSwizzleNV* pViewportSwizzles
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_VIEWPORT_SWIZZLE_NV;
+      
+   cmd->u.set_viewport_swizzle_nv.first_viewport = firstViewport;
+   cmd->u.set_viewport_swizzle_nv.viewport_count = viewportCount;
+   if (pViewportSwizzles) {
+      cmd->u.set_viewport_swizzle_nv.viewport_swizzles = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_viewport_swizzle_nv.viewport_swizzles) * (viewportCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_viewport_swizzle_nv.viewport_swizzles == NULL) goto err;
+
+   memcpy(( VkViewportSwizzleNV* )cmd->u.set_viewport_swizzle_nv.viewport_swizzles, pViewportSwizzles, sizeof(*cmd->u.set_viewport_swizzle_nv.viewport_swizzles) * (viewportCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_viewport_swizzle_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_coverage_to_color_enable_nv(struct vk_cmd_queue *queue,
+                                            struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_coverage_to_color_enable_nv(struct vk_cmd_queue *queue
+, VkBool32 coverageToColorEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COVERAGE_TO_COLOR_ENABLE_NV;
+      
+   cmd->u.set_coverage_to_color_enable_nv.coverage_to_color_enable = coverageToColorEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_coverage_to_color_location_nv(struct vk_cmd_queue *queue,
+                                              struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_coverage_to_color_location_nv(struct vk_cmd_queue *queue
+, uint32_t coverageToColorLocation
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COVERAGE_TO_COLOR_LOCATION_NV;
+      
+   cmd->u.set_coverage_to_color_location_nv.coverage_to_color_location = coverageToColorLocation;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_coverage_modulation_mode_nv(struct vk_cmd_queue *queue,
+                                            struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_coverage_modulation_mode_nv(struct vk_cmd_queue *queue
+, VkCoverageModulationModeNV coverageModulationMode
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COVERAGE_MODULATION_MODE_NV;
+      
+   cmd->u.set_coverage_modulation_mode_nv.coverage_modulation_mode = coverageModulationMode;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_coverage_modulation_table_enable_nv(struct vk_cmd_queue *queue,
+                                                    struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_coverage_modulation_table_enable_nv(struct vk_cmd_queue *queue
+, VkBool32 coverageModulationTableEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COVERAGE_MODULATION_TABLE_ENABLE_NV;
+      
+   cmd->u.set_coverage_modulation_table_enable_nv.coverage_modulation_table_enable = coverageModulationTableEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_coverage_modulation_table_nv(struct vk_cmd_queue *queue,
+                                             struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( float* )cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_coverage_modulation_table_nv(struct vk_cmd_queue *queue
+, uint32_t coverageModulationTableCount
+, const float* pCoverageModulationTable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COVERAGE_MODULATION_TABLE_NV;
+      
+   cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table_count = coverageModulationTableCount;
+   if (pCoverageModulationTable) {
+      cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table) * (coverageModulationTableCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table == NULL) goto err;
+
+   memcpy(( float* )cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table, pCoverageModulationTable, sizeof(*cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table) * (coverageModulationTableCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_set_coverage_modulation_table_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_set_shading_rate_image_enable_nv(struct vk_cmd_queue *queue,
+                                             struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_shading_rate_image_enable_nv(struct vk_cmd_queue *queue
+, VkBool32 shadingRateImageEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_SHADING_RATE_IMAGE_ENABLE_NV;
+      
+   cmd->u.set_shading_rate_image_enable_nv.shading_rate_image_enable = shadingRateImageEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_coverage_reduction_mode_nv(struct vk_cmd_queue *queue,
+                                           struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_coverage_reduction_mode_nv(struct vk_cmd_queue *queue
+, VkCoverageReductionModeNV coverageReductionMode
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_COVERAGE_REDUCTION_MODE_NV;
+      
+   cmd->u.set_coverage_reduction_mode_nv.coverage_reduction_mode = coverageReductionMode;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_set_representative_fragment_test_enable_nv(struct vk_cmd_queue *queue,
+                                                       struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_set_representative_fragment_test_enable_nv(struct vk_cmd_queue *queue
+, VkBool32 representativeFragmentTestEnable
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_SET_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV;
+      
+   cmd->u.set_representative_fragment_test_enable_nv.representative_fragment_test_enable = representativeFragmentTestEnable;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
 }
 
 static void
@@ -5682,20 +6268,17 @@ vk_free_cmd_copy_buffer2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
 , const VkCopyBufferInfo2* pCopyBufferInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_BUFFER2;
-
+      
    if (pCopyBufferInfo) {
       cmd->u.copy_buffer2.copy_buffer_info = vk_zalloc(queue->alloc, sizeof(VkCopyBufferInfo2), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_buffer2.copy_buffer_info == NULL) goto err;
@@ -5711,15 +6294,15 @@ void vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.copy_buffer2.copy_buffer_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_buffer2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5736,20 +6319,17 @@ vk_free_cmd_copy_image2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
 , const VkCopyImageInfo2* pCopyImageInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_IMAGE2;
-
+      
    if (pCopyImageInfo) {
       cmd->u.copy_image2.copy_image_info = vk_zalloc(queue->alloc, sizeof(VkCopyImageInfo2), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_image2.copy_image_info == NULL) goto err;
@@ -5765,15 +6345,15 @@ void vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.copy_image2.copy_image_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_image2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5790,20 +6370,17 @@ vk_free_cmd_blit_image2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
 , const VkBlitImageInfo2* pBlitImageInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BLIT_IMAGE2;
-
+      
    if (pBlitImageInfo) {
       cmd->u.blit_image2.blit_image_info = vk_zalloc(queue->alloc, sizeof(VkBlitImageInfo2), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.blit_image2.blit_image_info == NULL) goto err;
@@ -5819,15 +6396,15 @@ void vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.blit_image2.blit_image_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_blit_image2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5844,20 +6421,17 @@ vk_free_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
 , const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_BUFFER_TO_IMAGE2;
-
+      
    if (pCopyBufferToImageInfo) {
       cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info = vk_zalloc(queue->alloc, sizeof(VkCopyBufferToImageInfo2), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info == NULL) goto err;
@@ -5873,15 +6447,15 @@ void vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.copy_buffer_to_image2.copy_buffer_to_image_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_buffer_to_image2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5898,20 +6472,17 @@ vk_free_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
 , const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_COPY_IMAGE_TO_BUFFER2;
-
+      
    if (pCopyImageToBufferInfo) {
       cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info = vk_zalloc(queue->alloc, sizeof(VkCopyImageToBufferInfo2), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info == NULL) goto err;
@@ -5927,15 +6498,15 @@ void vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.copy_image_to_buffer2.copy_image_to_buffer_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_copy_image_to_buffer2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -5952,20 +6523,17 @@ vk_free_cmd_resolve_image2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
 , const VkResolveImageInfo2* pResolveImageInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_RESOLVE_IMAGE2;
-
+      
    if (pResolveImageInfo) {
       cmd->u.resolve_image2.resolve_image_info = vk_zalloc(queue->alloc, sizeof(VkResolveImageInfo2), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.resolve_image2.resolve_image_info == NULL) goto err;
@@ -5981,15 +6549,15 @@ void vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
 }
    } else {
       cmd->u.resolve_image2.resolve_image_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_resolve_image2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6005,21 +6573,18 @@ vk_free_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
 , const VkExtent2D*                           pFragmentSize
 , const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_FRAGMENT_SHADING_RATE_KHR;
-
+      
    if (pFragmentSize) {
       cmd->u.set_fragment_shading_rate_khr.fragment_size = vk_zalloc(queue->alloc, sizeof(VkExtent2D), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.set_fragment_shading_rate_khr.fragment_size == NULL) goto err;
@@ -6029,17 +6594,17 @@ void vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
    VkExtent2D *tmp_src1 = (void *) pFragmentSize; (void) tmp_src1;   
       } else {
       cmd->u.set_fragment_shading_rate_khr.fragment_size = NULL;
-   }
+   }   
    memcpy(cmd->u.set_fragment_shading_rate_khr.combiner_ops, combinerOps,
           sizeof(*combinerOps) * 2);
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_fragment_shading_rate_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6053,32 +6618,25 @@ vk_free_cmd_set_fragment_shading_rate_enum_nv(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(struct vk_cmd_queue *queue
 , VkFragmentShadingRateNV                     shadingRate
 , const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_FRAGMENT_SHADING_RATE_ENUM_NV;
-
+      
    cmd->u.set_fragment_shading_rate_enum_nv.shading_rate = shadingRate;
    memcpy(cmd->u.set_fragment_shading_rate_enum_nv.combiner_ops, combinerOps,
           sizeof(*combinerOps) * 2);
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_set_fragment_shading_rate_enum_nv(queue, cmd);
 }
 
 static void
@@ -6094,45 +6652,42 @@ vk_free_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue
 , uint32_t vertexBindingDescriptionCount
 , const VkVertexInputBindingDescription2EXT* pVertexBindingDescriptions
 , uint32_t vertexAttributeDescriptionCount
 , const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_VERTEX_INPUT_EXT;
-
+      
    cmd->u.set_vertex_input_ext.vertex_binding_description_count = vertexBindingDescriptionCount;
    if (pVertexBindingDescriptions) {
-      cmd->u.set_vertex_input_ext.vertex_binding_descriptions = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * vertexBindingDescriptionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_vertex_input_ext.vertex_binding_descriptions = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * (vertexBindingDescriptionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_vertex_input_ext.vertex_binding_descriptions == NULL) goto err;
 
-   memcpy(( VkVertexInputBindingDescription2EXT* )cmd->u.set_vertex_input_ext.vertex_binding_descriptions, pVertexBindingDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * vertexBindingDescriptionCount);
-   }
+   memcpy(( VkVertexInputBindingDescription2EXT* )cmd->u.set_vertex_input_ext.vertex_binding_descriptions, pVertexBindingDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_binding_descriptions) * (vertexBindingDescriptionCount));
+   }   
    cmd->u.set_vertex_input_ext.vertex_attribute_description_count = vertexAttributeDescriptionCount;
    if (pVertexAttributeDescriptions) {
-      cmd->u.set_vertex_input_ext.vertex_attribute_descriptions = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * vertexAttributeDescriptionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_vertex_input_ext.vertex_attribute_descriptions = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * (vertexAttributeDescriptionCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_vertex_input_ext.vertex_attribute_descriptions == NULL) goto err;
 
-   memcpy(( VkVertexInputAttributeDescription2EXT* )cmd->u.set_vertex_input_ext.vertex_attribute_descriptions, pVertexAttributeDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * vertexAttributeDescriptionCount);
-   }
+   memcpy(( VkVertexInputAttributeDescription2EXT* )cmd->u.set_vertex_input_ext.vertex_attribute_descriptions, pVertexAttributeDescriptions, sizeof(*cmd->u.set_vertex_input_ext.vertex_attribute_descriptions) * (vertexAttributeDescriptionCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_vertex_input_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6147,36 +6702,33 @@ vk_free_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue
 , uint32_t                                attachmentCount
 , const VkBool32*   pColorWriteEnables
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_COLOR_WRITE_ENABLE_EXT;
-
+      
    cmd->u.set_color_write_enable_ext.attachment_count = attachmentCount;
    if (pColorWriteEnables) {
-      cmd->u.set_color_write_enable_ext.color_write_enables = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * attachmentCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.set_color_write_enable_ext.color_write_enables = vk_zalloc(queue->alloc, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * (attachmentCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.set_color_write_enable_ext.color_write_enables == NULL) goto err;
 
-   memcpy(( VkBool32*   )cmd->u.set_color_write_enable_ext.color_write_enables, pColorWriteEnables, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * attachmentCount);
-   }
+   memcpy(( VkBool32*   )cmd->u.set_color_write_enable_ext.color_write_enables, pColorWriteEnables, sizeof(*cmd->u.set_color_write_enable_ext.color_write_enables) * (attachmentCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_color_write_enable_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6195,21 +6747,18 @@ vk_free(queue->alloc, ( VkImageMemoryBarrier2*   )cmd->u.set_event2.dependency_i
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_set_event2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_set_event2(struct vk_cmd_queue *queue
 , VkEvent                                             event
 , const VkDependencyInfo*                             pDependencyInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_SET_EVENT2;
-
+      
    cmd->u.set_event2.event = event;
    if (pDependencyInfo) {
       cmd->u.set_event2.dependency_info = vk_zalloc(queue->alloc, sizeof(VkDependencyInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
@@ -6238,15 +6787,15 @@ if (tmp_src1->pImageMemoryBarriers) {
 }
    } else {
       cmd->u.set_event2.dependency_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_set_event2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6260,31 +6809,24 @@ vk_free_cmd_reset_event2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_reset_event2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_reset_event2(struct vk_cmd_queue *queue
 , VkEvent                                             event
 , VkPipelineStageFlags2               stageMask
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_RESET_EVENT2;
-
+      
    cmd->u.reset_event2.event = event;
    cmd->u.reset_event2.stage_mask = stageMask;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_reset_event2(queue, cmd);
 }
 
 static void
@@ -6300,43 +6842,40 @@ vk_free_cmd_wait_events2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_wait_events2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_wait_events2(struct vk_cmd_queue *queue
 , uint32_t                                            eventCount
 , const VkEvent*                     pEvents
 , const VkDependencyInfo*            pDependencyInfos
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WAIT_EVENTS2;
-
+      
    cmd->u.wait_events2.event_count = eventCount;
    if (pEvents) {
-      cmd->u.wait_events2.events = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events2.events) * eventCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.wait_events2.events = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events2.events) * (eventCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events2.events == NULL) goto err;
 
-   memcpy(( VkEvent*                     )cmd->u.wait_events2.events, pEvents, sizeof(*cmd->u.wait_events2.events) * eventCount);
-   }
+   memcpy(( VkEvent*                     )cmd->u.wait_events2.events, pEvents, sizeof(*cmd->u.wait_events2.events) * (eventCount));
+   }   
    if (pDependencyInfos) {
-      cmd->u.wait_events2.dependency_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events2.dependency_infos) * eventCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      cmd->u.wait_events2.dependency_infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.wait_events2.dependency_infos) * (eventCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (cmd->u.wait_events2.dependency_infos == NULL) goto err;
 
-   memcpy(( VkDependencyInfo*            )cmd->u.wait_events2.dependency_infos, pDependencyInfos, sizeof(*cmd->u.wait_events2.dependency_infos) * eventCount);
-   }
+   memcpy(( VkDependencyInfo*            )cmd->u.wait_events2.dependency_infos, pDependencyInfos, sizeof(*cmd->u.wait_events2.dependency_infos) * (eventCount));
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_wait_events2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6355,20 +6894,17 @@ vk_free(queue->alloc, ( VkImageMemoryBarrier2*   )cmd->u.pipeline_barrier2.depen
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_pipeline_barrier2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_pipeline_barrier2(struct vk_cmd_queue *queue
 , const VkDependencyInfo*                             pDependencyInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_PIPELINE_BARRIER2;
-
+      
    if (pDependencyInfo) {
       cmd->u.pipeline_barrier2.dependency_info = vk_zalloc(queue->alloc, sizeof(VkDependencyInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.pipeline_barrier2.dependency_info == NULL) goto err;
@@ -6396,15 +6932,15 @@ if (tmp_src1->pImageMemoryBarriers) {
 }
    } else {
       cmd->u.pipeline_barrier2.dependency_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_pipeline_barrier2(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -6418,33 +6954,26 @@ vk_free_cmd_write_timestamp2(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_write_timestamp2(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_write_timestamp2(struct vk_cmd_queue *queue
 , VkPipelineStageFlags2               stage
 , VkQueryPool                                         queryPool
 , uint32_t                                            query
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WRITE_TIMESTAMP2;
-
+      
    cmd->u.write_timestamp2.stage = stage;
    cmd->u.write_timestamp2.query_pool = queryPool;
    cmd->u.write_timestamp2.query = query;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_write_timestamp2(queue, cmd);
 }
 
 static void
@@ -6458,35 +6987,28 @@ vk_free_cmd_write_buffer_marker2_amd(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_write_buffer_marker2_amd(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_write_buffer_marker2_amd(struct vk_cmd_queue *queue
 , VkPipelineStageFlags2               stage
 , VkBuffer                                            dstBuffer
 , VkDeviceSize                                        dstOffset
 , uint32_t                                            marker
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_WRITE_BUFFER_MARKER2_AMD;
-
+      
    cmd->u.write_buffer_marker2_amd.stage = stage;
    cmd->u.write_buffer_marker2_amd.dst_buffer = dstBuffer;
    cmd->u.write_buffer_marker2_amd.dst_offset = dstOffset;
    cmd->u.write_buffer_marker2_amd.marker = marker;
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
-err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
-   if (cmd)
-      vk_free_cmd_write_buffer_marker2_amd(queue, cmd);
 }
 
 #ifdef VK_ENABLE_BETA_EXTENSIONS
@@ -6498,34 +7020,31 @@ vk_free_cmd_decode_video_khr(struct vk_cmd_queue *queue,
       cmd->driver_free_cb(queue, cmd);
    else
       vk_free(queue->alloc, cmd->driver_data);
-   vk_free(queue->alloc, ( VkVideoReferenceSlotKHR*         )cmd->u.decode_video_khr.frame_info->pSetupReferenceSlot);
-vk_free(queue->alloc, ( VkVideoReferenceSlotKHR* )cmd->u.decode_video_khr.frame_info->pReferenceSlots);
-      vk_free(queue->alloc, ( VkVideoDecodeInfoKHR* )cmd->u.decode_video_khr.frame_info);
+   vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.decode_video_khr.decode_info->pSetupReferenceSlot);
+vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.decode_video_khr.decode_info->pReferenceSlots);
+      vk_free(queue->alloc, ( VkVideoDecodeInfoKHR* )cmd->u.decode_video_khr.decode_info);
 
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
-, const VkVideoDecodeInfoKHR* pFrameInfo
+VkResult vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
+, const VkVideoDecodeInfoKHR* pDecodeInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_DECODE_VIDEO_KHR;
+      
+   if (pDecodeInfo) {
+      cmd->u.decode_video_khr.decode_info = vk_zalloc(queue->alloc, sizeof(VkVideoDecodeInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.decode_video_khr.decode_info == NULL) goto err;
 
-   if (pFrameInfo) {
-      cmd->u.decode_video_khr.frame_info = vk_zalloc(queue->alloc, sizeof(VkVideoDecodeInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-      if (cmd->u.decode_video_khr.frame_info == NULL) goto err;
-
-      memcpy((void*)cmd->u.decode_video_khr.frame_info, pFrameInfo, sizeof(VkVideoDecodeInfoKHR));
-   VkVideoDecodeInfoKHR *tmp_dst1 = (void *) cmd->u.decode_video_khr.frame_info; (void) tmp_dst1;
-   VkVideoDecodeInfoKHR *tmp_src1 = (void *) pFrameInfo; (void) tmp_src1;   
+      memcpy((void*)cmd->u.decode_video_khr.decode_info, pDecodeInfo, sizeof(VkVideoDecodeInfoKHR));
+   VkVideoDecodeInfoKHR *tmp_dst1 = (void *) cmd->u.decode_video_khr.decode_info; (void) tmp_dst1;
+   VkVideoDecodeInfoKHR *tmp_src1 = (void *) pDecodeInfo; (void) tmp_src1;   
    
       const VkBaseInStructure *pnext = tmp_dst1->pNext;
       if (pnext) {
@@ -6539,43 +7058,17 @@ void vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoDecodeH264PictureInfoEXT));
    VkVideoDecodeH264PictureInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
    VkVideoDecodeH264PictureInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   
-      const VkBaseInStructure *pnext = tmp_dst2->pNext;
-      if (pnext) {
-         switch ((int32_t)pnext->sType) {
-         
-      case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_MVC_EXT:
-         if (pnext) {
-      tmp_dst2->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoDecodeH264MvcEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-      if (tmp_dst2->pNext == NULL) goto err;
-
-      memcpy((void*)tmp_dst2->pNext, pnext, sizeof(VkVideoDecodeH264MvcEXT));
-   VkVideoDecodeH264MvcEXT *tmp_dst3 = (void *) tmp_dst2->pNext; (void) tmp_dst3;
-   VkVideoDecodeH264MvcEXT *tmp_src3 = (void *) pnext; (void) tmp_src3;   
-   if (tmp_src3->pStdMvc) {
-   tmp_dst3->pStdMvc = vk_zalloc(queue->alloc, sizeof(*tmp_dst3->pStdMvc), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (tmp_dst3->pStdMvc == NULL) goto err;
-
-   memcpy(( StdVideoDecodeH264Mvc*   )tmp_dst3->pStdMvc, tmp_src3->pStdMvc, sizeof(*tmp_dst3->pStdMvc));
-}
-   } else {
-      tmp_dst2->pNext = NULL;
-   }
-         break;
-      
-         }
-      }
-      if (tmp_src2->pStdPictureInfo) {
+   if (tmp_src2->pStdPictureInfo) {
    tmp_dst2->pStdPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pStdPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pStdPictureInfo == NULL) goto err;
 
    memcpy(( StdVideoDecodeH264PictureInfo*  )tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
 }
-if (tmp_src2->pSlicesDataOffsets) {
-   tmp_dst2->pSlicesDataOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSlicesDataOffsets) * tmp_dst2->slicesCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (tmp_dst2->pSlicesDataOffsets == NULL) goto err;
+if (tmp_src2->pSliceOffsets) {
+   tmp_dst2->pSliceOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pSliceOffsets == NULL) goto err;
 
-   memcpy(( uint32_t*     )tmp_dst2->pSlicesDataOffsets, tmp_src2->pSlicesDataOffsets, sizeof(*tmp_dst2->pSlicesDataOffsets) * tmp_dst2->slicesCount);
+   memcpy(( uint32_t*      )tmp_dst2->pSliceOffsets, tmp_src2->pSliceOffsets, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount);
 }
    } else {
       tmp_dst1->pNext = NULL;
@@ -6596,11 +7089,11 @@ if (tmp_src2->pSlicesDataOffsets) {
 
    memcpy((StdVideoDecodeH265PictureInfo*     )tmp_dst2->pStdPictureInfo, tmp_src2->pStdPictureInfo, sizeof(*tmp_dst2->pStdPictureInfo));
 }
-if (tmp_src2->pSlicesDataOffsets) {
-   tmp_dst2->pSlicesDataOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSlicesDataOffsets) * tmp_dst2->slicesCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (tmp_dst2->pSlicesDataOffsets == NULL) goto err;
+if (tmp_src2->pSliceOffsets) {
+   tmp_dst2->pSliceOffsets = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst2->pSliceOffsets == NULL) goto err;
 
-   memcpy(( uint32_t*  )tmp_dst2->pSlicesDataOffsets, tmp_src2->pSlicesDataOffsets, sizeof(*tmp_dst2->pSlicesDataOffsets) * tmp_dst2->slicesCount);
+   memcpy(( uint32_t*   )tmp_dst2->pSliceOffsets, tmp_src2->pSliceOffsets, sizeof(*tmp_dst2->pSliceOffsets) * tmp_dst2->sliceCount);
 }
    } else {
       tmp_dst1->pNext = NULL;
@@ -6613,25 +7106,25 @@ if (tmp_src2->pSlicesDataOffsets) {
    tmp_dst1->pSetupReferenceSlot = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pSetupReferenceSlot), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pSetupReferenceSlot == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotKHR*         )tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
+   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
 }
 if (tmp_src1->pReferenceSlots) {
    tmp_dst1->pReferenceSlots = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pReferenceSlots == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
+   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
 }
    } else {
-      cmd->u.decode_video_khr.frame_info = NULL;
-   }
+      cmd->u.decode_video_khr.decode_info = NULL;
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_decode_video_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
@@ -6644,26 +7137,23 @@ vk_free_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue,
       cmd->driver_free_cb(queue, cmd);
    else
       vk_free(queue->alloc, cmd->driver_data);
-   vk_free(queue->alloc, ( VkVideoReferenceSlotKHR* )cmd->u.begin_video_coding_khr.begin_info->pReferenceSlots);
+   vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.begin_video_coding_khr.begin_info->pReferenceSlots);
       vk_free(queue->alloc, ( VkVideoBeginCodingInfoKHR* )cmd->u.begin_video_coding_khr.begin_info);
 
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
 , const VkVideoBeginCodingInfoKHR* pBeginInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_VIDEO_CODING_KHR;
-
+      
    if (pBeginInfo) {
       cmd->u.begin_video_coding_khr.begin_info = vk_zalloc(queue->alloc, sizeof(VkVideoBeginCodingInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_video_coding_khr.begin_info == NULL) goto err;
@@ -6675,19 +7165,19 @@ void vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
    tmp_dst1->pReferenceSlots = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pReferenceSlots == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
+   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
 }
    } else {
       cmd->u.begin_video_coding_khr.begin_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_video_coding_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
@@ -6705,20 +7195,17 @@ vk_free_cmd_control_video_coding_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
 , const VkVideoCodingControlInfoKHR* pCodingControlInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_CONTROL_VIDEO_CODING_KHR;
-
+      
    if (pCodingControlInfo) {
       cmd->u.control_video_coding_khr.coding_control_info = vk_zalloc(queue->alloc, sizeof(VkVideoCodingControlInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.control_video_coding_khr.coding_control_info == NULL) goto err;
@@ -6739,40 +7226,7 @@ void vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
       memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeRateControlInfoKHR));
    VkVideoEncodeRateControlInfoKHR *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
    VkVideoEncodeRateControlInfoKHR *tmp_src2 = (void *) pnext; (void) tmp_src2;   
-   
-      const VkBaseInStructure *pnext = tmp_dst2->pNext;
-      if (pnext) {
-         switch ((int32_t)pnext->sType) {
-         
-      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_EXT:
-         if (pnext) {
-      tmp_dst2->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264RateControlInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-      if (tmp_dst2->pNext == NULL) goto err;
-
-      memcpy((void*)tmp_dst2->pNext, pnext, sizeof(VkVideoEncodeH264RateControlInfoEXT));
-   VkVideoEncodeH264RateControlInfoEXT *tmp_dst3 = (void *) tmp_dst2->pNext; (void) tmp_dst3;
-   VkVideoEncodeH264RateControlInfoEXT *tmp_src3 = (void *) pnext; (void) tmp_src3;   
-      } else {
-      tmp_dst2->pNext = NULL;
-   }
-         break;
-      
-      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_EXT:
-         if (pnext) {
-      tmp_dst2->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265RateControlInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-      if (tmp_dst2->pNext == NULL) goto err;
-
-      memcpy((void*)tmp_dst2->pNext, pnext, sizeof(VkVideoEncodeH265RateControlInfoEXT));
-   VkVideoEncodeH265RateControlInfoEXT *tmp_dst3 = (void *) tmp_dst2->pNext; (void) tmp_dst3;
-   VkVideoEncodeH265RateControlInfoEXT *tmp_src3 = (void *) pnext; (void) tmp_src3;   
-      } else {
-      tmp_dst2->pNext = NULL;
-   }
-         break;
-      
-         }
-      }
-      if (tmp_src2->pLayerConfigs) {
+   if (tmp_src2->pLayerConfigs) {
    tmp_dst2->pLayerConfigs = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pLayerConfigs) * tmp_dst2->layerCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pLayerConfigs == NULL) goto err;
 
@@ -6829,19 +7283,71 @@ void vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
    }
          break;
       
+      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_EXT:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264RateControlInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264RateControlInfoEXT));
+   VkVideoEncodeH264RateControlInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkVideoEncodeH264RateControlInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+      
+      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_EXT:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264RateControlLayerInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264RateControlLayerInfoEXT));
+   VkVideoEncodeH264RateControlLayerInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkVideoEncodeH264RateControlLayerInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+      
+      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_EXT:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265RateControlInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265RateControlInfoEXT));
+   VkVideoEncodeH265RateControlInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkVideoEncodeH265RateControlInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+      
+      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_LAYER_INFO_EXT:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265RateControlLayerInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265RateControlLayerInfoEXT));
+   VkVideoEncodeH265RateControlLayerInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkVideoEncodeH265RateControlLayerInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+      
          }
       }
          } else {
       cmd->u.control_video_coding_khr.coding_control_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_control_video_coding_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
@@ -6859,20 +7365,17 @@ vk_free_cmd_end_video_coding_khr(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
 , const VkVideoEndCodingInfoKHR* pEndCodingInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_VIDEO_CODING_KHR;
-
+      
    if (pEndCodingInfo) {
       cmd->u.end_video_coding_khr.end_coding_info = vk_zalloc(queue->alloc, sizeof(VkVideoEndCodingInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.end_video_coding_khr.end_coding_info == NULL) goto err;
@@ -6882,15 +7385,15 @@ void vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
    VkVideoEndCodingInfoKHR *tmp_src1 = (void *) pEndCodingInfo; (void) tmp_src1;   
       } else {
       cmd->u.end_video_coding_khr.end_coding_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_end_video_coding_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
@@ -6903,27 +7406,24 @@ vk_free_cmd_encode_video_khr(struct vk_cmd_queue *queue,
       cmd->driver_free_cb(queue, cmd);
    else
       vk_free(queue->alloc, cmd->driver_data);
-   vk_free(queue->alloc, ( VkVideoReferenceSlotKHR*         )cmd->u.encode_video_khr.encode_info->pSetupReferenceSlot);
-vk_free(queue->alloc, ( VkVideoReferenceSlotKHR* )cmd->u.encode_video_khr.encode_info->pReferenceSlots);
+   vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.encode_video_khr.encode_info->pSetupReferenceSlot);
+vk_free(queue->alloc, ( VkVideoReferenceSlotInfoKHR* )cmd->u.encode_video_khr.encode_info->pReferenceSlots);
       vk_free(queue->alloc, ( VkVideoEncodeInfoKHR* )cmd->u.encode_video_khr.encode_info);
 
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
 , const VkVideoEncodeInfoKHR* pEncodeInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_ENCODE_VIDEO_KHR;
-
+      
    if (pEncodeInfo) {
       cmd->u.encode_video_khr.encode_info = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeInfoKHR), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.encode_video_khr.encode_info == NULL) goto err;
@@ -6948,13 +7448,13 @@ void vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
    tmp_dst2->pReferenceFinalLists = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pReferenceFinalLists), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pReferenceFinalLists == NULL) goto err;
 
-   memcpy(( VkVideoEncodeH264ReferenceListsEXT*          )tmp_dst2->pReferenceFinalLists, tmp_src2->pReferenceFinalLists, sizeof(*tmp_dst2->pReferenceFinalLists));
+   memcpy(( VkVideoEncodeH264ReferenceListsInfoEXT*      )tmp_dst2->pReferenceFinalLists, tmp_src2->pReferenceFinalLists, sizeof(*tmp_dst2->pReferenceFinalLists));
 }
 if (tmp_src2->pNaluSliceEntries) {
    tmp_dst2->pNaluSliceEntries = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pNaluSliceEntries) * tmp_dst2->naluSliceEntryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pNaluSliceEntries == NULL) goto err;
 
-   memcpy(( VkVideoEncodeH264NaluSliceEXT*     )tmp_dst2->pNaluSliceEntries, tmp_src2->pNaluSliceEntries, sizeof(*tmp_dst2->pNaluSliceEntries) * tmp_dst2->naluSliceEntryCount);
+   memcpy(( VkVideoEncodeH264NaluSliceInfoEXT* )tmp_dst2->pNaluSliceEntries, tmp_src2->pNaluSliceEntries, sizeof(*tmp_dst2->pNaluSliceEntries) * tmp_dst2->naluSliceEntryCount);
 }
 if (tmp_src2->pCurrentPictureInfo) {
    tmp_dst2->pCurrentPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pCurrentPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
@@ -6967,19 +7467,19 @@ if (tmp_src2->pCurrentPictureInfo) {
    }
          break;
       
-      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_EXT:
+      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_INFO_EXT:
          if (pnext) {
-      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264EmitPictureParametersEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH264EmitPictureParametersInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
-      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264EmitPictureParametersEXT));
-   VkVideoEncodeH264EmitPictureParametersEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkVideoEncodeH264EmitPictureParametersEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH264EmitPictureParametersInfoEXT));
+   VkVideoEncodeH264EmitPictureParametersInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkVideoEncodeH264EmitPictureParametersInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
    if (tmp_src2->ppsIdEntries) {
    tmp_dst2->ppsIdEntries = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->ppsIdEntries) * tmp_dst2->ppsIdEntryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->ppsIdEntries == NULL) goto err;
 
-   memcpy(( uint8_t*  )tmp_dst2->ppsIdEntries, tmp_src2->ppsIdEntries, sizeof(*tmp_dst2->ppsIdEntries) * tmp_dst2->ppsIdEntryCount);
+   memcpy(( uint8_t*    )tmp_dst2->ppsIdEntries, tmp_src2->ppsIdEntries, sizeof(*tmp_dst2->ppsIdEntries) * tmp_dst2->ppsIdEntryCount);
 }
    } else {
       tmp_dst1->pNext = NULL;
@@ -6998,13 +7498,13 @@ if (tmp_src2->pCurrentPictureInfo) {
    tmp_dst2->pReferenceFinalLists = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pReferenceFinalLists), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pReferenceFinalLists == NULL) goto err;
 
-   memcpy(( VkVideoEncodeH265ReferenceListsEXT*         )tmp_dst2->pReferenceFinalLists, tmp_src2->pReferenceFinalLists, sizeof(*tmp_dst2->pReferenceFinalLists));
+   memcpy(( VkVideoEncodeH265ReferenceListsInfoEXT*     )tmp_dst2->pReferenceFinalLists, tmp_src2->pReferenceFinalLists, sizeof(*tmp_dst2->pReferenceFinalLists));
 }
 if (tmp_src2->pNaluSliceSegmentEntries) {
    tmp_dst2->pNaluSliceSegmentEntries = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pNaluSliceSegmentEntries) * tmp_dst2->naluSliceSegmentEntryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->pNaluSliceSegmentEntries == NULL) goto err;
 
-   memcpy(( VkVideoEncodeH265NaluSliceSegmentEXT*    )tmp_dst2->pNaluSliceSegmentEntries, tmp_src2->pNaluSliceSegmentEntries, sizeof(*tmp_dst2->pNaluSliceSegmentEntries) * tmp_dst2->naluSliceSegmentEntryCount);
+   memcpy(( VkVideoEncodeH265NaluSliceSegmentInfoEXT* )tmp_dst2->pNaluSliceSegmentEntries, tmp_src2->pNaluSliceSegmentEntries, sizeof(*tmp_dst2->pNaluSliceSegmentEntries) * tmp_dst2->naluSliceSegmentEntryCount);
 }
 if (tmp_src2->pCurrentPictureInfo) {
    tmp_dst2->pCurrentPictureInfo = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->pCurrentPictureInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
@@ -7017,14 +7517,14 @@ if (tmp_src2->pCurrentPictureInfo) {
    }
          break;
       
-      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_EXT:
+      case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_INFO_EXT:
          if (pnext) {
-      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265EmitPictureParametersEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkVideoEncodeH265EmitPictureParametersInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (tmp_dst1->pNext == NULL) goto err;
 
-      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265EmitPictureParametersEXT));
-   VkVideoEncodeH265EmitPictureParametersEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
-   VkVideoEncodeH265EmitPictureParametersEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkVideoEncodeH265EmitPictureParametersInfoEXT));
+   VkVideoEncodeH265EmitPictureParametersInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkVideoEncodeH265EmitPictureParametersInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
    if (tmp_src2->ppsIdEntries) {
    tmp_dst2->ppsIdEntries = vk_zalloc(queue->alloc, sizeof(*tmp_dst2->ppsIdEntries) * tmp_dst2->ppsIdEntryCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst2->ppsIdEntries == NULL) goto err;
@@ -7042,25 +7542,25 @@ if (tmp_src2->pCurrentPictureInfo) {
    tmp_dst1->pSetupReferenceSlot = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pSetupReferenceSlot), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pSetupReferenceSlot == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotKHR*         )tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
+   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pSetupReferenceSlot, tmp_src1->pSetupReferenceSlot, sizeof(*tmp_dst1->pSetupReferenceSlot));
 }
 if (tmp_src1->pReferenceSlots) {
    tmp_dst1->pReferenceSlots = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (tmp_dst1->pReferenceSlots == NULL) goto err;
 
-   memcpy(( VkVideoReferenceSlotKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
+   memcpy(( VkVideoReferenceSlotInfoKHR* )tmp_dst1->pReferenceSlots, tmp_src1->pReferenceSlots, sizeof(*tmp_dst1->pReferenceSlots) * tmp_dst1->referenceSlotCount);
 }
    } else {
       cmd->u.encode_video_khr.encode_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_encode_video_khr(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
@@ -7079,20 +7579,17 @@ vk_free(queue->alloc, ( void*  *    )cmd->u.cu_launch_kernel_nvx.launch_info->pE
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
 , const VkCuLaunchInfoNVX* pLaunchInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_CU_LAUNCH_KERNEL_NVX;
-
+      
    if (pLaunchInfo) {
       cmd->u.cu_launch_kernel_nvx.launch_info = vk_zalloc(queue->alloc, sizeof(VkCuLaunchInfoNVX), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.cu_launch_kernel_nvx.launch_info == NULL) goto err;
@@ -7114,15 +7611,15 @@ if (tmp_src1->pExtras) {
 }
    } else {
       cmd->u.cu_launch_kernel_nvx.launch_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_cu_launch_kernel_nvx(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -7141,20 +7638,17 @@ vk_free(queue->alloc, ( VkRenderingAttachmentInfo*                           )cm
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
 , const VkRenderingInfo*                              pRenderingInfo
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_BEGIN_RENDERING;
-
+      
    if (pRenderingInfo) {
       cmd->u.begin_rendering.rendering_info = vk_zalloc(queue->alloc, sizeof(VkRenderingInfo), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
       if (cmd->u.begin_rendering.rendering_info == NULL) goto err;
@@ -7182,6 +7676,19 @@ void vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
    memcpy(( VkRect2D*  )tmp_dst2->pDeviceRenderAreas, tmp_src2->pDeviceRenderAreas, sizeof(*tmp_dst2->pDeviceRenderAreas) * tmp_dst2->deviceRenderAreaCount);
 }
    } else {
+      tmp_dst1->pNext = NULL;
+   }
+         break;
+      
+      case VK_STRUCTURE_TYPE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_INFO_EXT:
+         if (pnext) {
+      tmp_dst1->pNext = vk_zalloc(queue->alloc, sizeof(VkMultisampledRenderToSingleSampledInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (tmp_dst1->pNext == NULL) goto err;
+
+      memcpy((void*)tmp_dst1->pNext, pnext, sizeof(VkMultisampledRenderToSingleSampledInfoEXT));
+   VkMultisampledRenderToSingleSampledInfoEXT *tmp_dst2 = (void *) tmp_dst1->pNext; (void) tmp_dst2;
+   VkMultisampledRenderToSingleSampledInfoEXT *tmp_src2 = (void *) pnext; (void) tmp_src2;   
+      } else {
       tmp_dst1->pNext = NULL;
    }
          break;
@@ -7247,15 +7754,15 @@ if (tmp_src1->pStencilAttachment) {
 }
    } else {
       cmd->u.begin_rendering.rendering_info = NULL;
-   }
+   }   
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
       vk_free_cmd_begin_rendering(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 static void
@@ -7269,27 +7776,293 @@ vk_free_cmd_end_rendering(struct vk_cmd_queue *queue,
    vk_free(queue->alloc, cmd);
 }
 
-void vk_enqueue_cmd_end_rendering(struct vk_cmd_queue *queue
+VkResult vk_enqueue_cmd_end_rendering(struct vk_cmd_queue *queue
 )
 {
-   if (queue->error)
-      return;
-
    struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
                                               sizeof(*cmd), 8,
                                               VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
-   if (!cmd) goto err;
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    cmd->type = VK_CMD_END_RENDERING;
-
+      
 
    list_addtail(&cmd->cmd_link, &queue->cmds);
-   return;
+   return VK_SUCCESS;
+
+}
+
+static void
+vk_free_cmd_build_micromaps_ext(struct vk_cmd_queue *queue,
+                                struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkMicromapBuildInfoEXT* )cmd->u.build_micromaps_ext.infos);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_build_micromaps_ext(struct vk_cmd_queue *queue
+, uint32_t infoCount
+, const VkMicromapBuildInfoEXT* pInfos
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_BUILD_MICROMAPS_EXT;
+      
+   cmd->u.build_micromaps_ext.info_count = infoCount;
+   if (pInfos) {
+      cmd->u.build_micromaps_ext.infos = vk_zalloc(queue->alloc, sizeof(*cmd->u.build_micromaps_ext.infos) * (infoCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.build_micromaps_ext.infos == NULL) goto err;
+
+   memcpy(( VkMicromapBuildInfoEXT* )cmd->u.build_micromaps_ext.infos, pInfos, sizeof(*cmd->u.build_micromaps_ext.infos) * (infoCount));
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
 
 err:
-   queue->error = VK_ERROR_OUT_OF_HOST_MEMORY;
    if (cmd)
-      vk_free_cmd_end_rendering(queue, cmd);
+      vk_free_cmd_build_micromaps_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_copy_micromap_ext(struct vk_cmd_queue *queue,
+                              struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkCopyMicromapInfoEXT* )cmd->u.copy_micromap_ext.info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_copy_micromap_ext(struct vk_cmd_queue *queue
+, const VkCopyMicromapInfoEXT* pInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_COPY_MICROMAP_EXT;
+      
+   if (pInfo) {
+      cmd->u.copy_micromap_ext.info = vk_zalloc(queue->alloc, sizeof(VkCopyMicromapInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.copy_micromap_ext.info == NULL) goto err;
+
+      memcpy((void*)cmd->u.copy_micromap_ext.info, pInfo, sizeof(VkCopyMicromapInfoEXT));
+   VkCopyMicromapInfoEXT *tmp_dst1 = (void *) cmd->u.copy_micromap_ext.info; (void) tmp_dst1;
+   VkCopyMicromapInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
+      } else {
+      cmd->u.copy_micromap_ext.info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_copy_micromap_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_copy_micromap_to_memory_ext(struct vk_cmd_queue *queue,
+                                        struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkCopyMicromapToMemoryInfoEXT* )cmd->u.copy_micromap_to_memory_ext.info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_copy_micromap_to_memory_ext(struct vk_cmd_queue *queue
+, const VkCopyMicromapToMemoryInfoEXT* pInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_COPY_MICROMAP_TO_MEMORY_EXT;
+      
+   if (pInfo) {
+      cmd->u.copy_micromap_to_memory_ext.info = vk_zalloc(queue->alloc, sizeof(VkCopyMicromapToMemoryInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.copy_micromap_to_memory_ext.info == NULL) goto err;
+
+      memcpy((void*)cmd->u.copy_micromap_to_memory_ext.info, pInfo, sizeof(VkCopyMicromapToMemoryInfoEXT));
+   VkCopyMicromapToMemoryInfoEXT *tmp_dst1 = (void *) cmd->u.copy_micromap_to_memory_ext.info; (void) tmp_dst1;
+   VkCopyMicromapToMemoryInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
+      } else {
+      cmd->u.copy_micromap_to_memory_ext.info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_copy_micromap_to_memory_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_copy_memory_to_micromap_ext(struct vk_cmd_queue *queue,
+                                        struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+         vk_free(queue->alloc, ( VkCopyMemoryToMicromapInfoEXT* )cmd->u.copy_memory_to_micromap_ext.info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_copy_memory_to_micromap_ext(struct vk_cmd_queue *queue
+, const VkCopyMemoryToMicromapInfoEXT* pInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT;
+      
+   if (pInfo) {
+      cmd->u.copy_memory_to_micromap_ext.info = vk_zalloc(queue->alloc, sizeof(VkCopyMemoryToMicromapInfoEXT), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.copy_memory_to_micromap_ext.info == NULL) goto err;
+
+      memcpy((void*)cmd->u.copy_memory_to_micromap_ext.info, pInfo, sizeof(VkCopyMemoryToMicromapInfoEXT));
+   VkCopyMemoryToMicromapInfoEXT *tmp_dst1 = (void *) cmd->u.copy_memory_to_micromap_ext.info; (void) tmp_dst1;
+   VkCopyMemoryToMicromapInfoEXT *tmp_src1 = (void *) pInfo; (void) tmp_src1;   
+      } else {
+      cmd->u.copy_memory_to_micromap_ext.info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_copy_memory_to_micromap_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_write_micromaps_properties_ext(struct vk_cmd_queue *queue,
+                                           struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkMicromapEXT* )cmd->u.write_micromaps_properties_ext.micromaps);
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_write_micromaps_properties_ext(struct vk_cmd_queue *queue
+, uint32_t micromapCount
+, const VkMicromapEXT* pMicromaps
+, VkQueryType queryType
+, VkQueryPool queryPool
+, uint32_t firstQuery
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT;
+      
+   cmd->u.write_micromaps_properties_ext.micromap_count = micromapCount;
+   if (pMicromaps) {
+      cmd->u.write_micromaps_properties_ext.micromaps = vk_zalloc(queue->alloc, sizeof(*cmd->u.write_micromaps_properties_ext.micromaps) * (micromapCount), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (cmd->u.write_micromaps_properties_ext.micromaps == NULL) goto err;
+
+   memcpy(( VkMicromapEXT* )cmd->u.write_micromaps_properties_ext.micromaps, pMicromaps, sizeof(*cmd->u.write_micromaps_properties_ext.micromaps) * (micromapCount));
+   }   
+   cmd->u.write_micromaps_properties_ext.query_type = queryType;
+   cmd->u.write_micromaps_properties_ext.query_pool = queryPool;
+   cmd->u.write_micromaps_properties_ext.first_query = firstQuery;
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_write_micromaps_properties_ext(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
+}
+
+static void
+vk_free_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue,
+                                    struct vk_cmd_queue_entry *cmd)
+{
+   if (cmd->driver_free_cb)
+      cmd->driver_free_cb(queue, cmd);
+   else
+      vk_free(queue->alloc, cmd->driver_data);
+   vk_free(queue->alloc, ( VkRect2D*                  )cmd->u.optical_flow_execute_nv.execute_info->pRegions);
+      vk_free(queue->alloc, ( VkOpticalFlowExecuteInfoNV* )cmd->u.optical_flow_execute_nv.execute_info);
+
+   vk_free(queue->alloc, cmd);
+}
+
+VkResult vk_enqueue_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue
+, VkOpticalFlowSessionNV session
+, const VkOpticalFlowExecuteInfoNV* pExecuteInfo
+)
+{
+   struct vk_cmd_queue_entry *cmd = vk_zalloc(queue->alloc,
+                                              sizeof(*cmd), 8,
+                                              VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (!cmd) return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   cmd->type = VK_CMD_OPTICAL_FLOW_EXECUTE_NV;
+      
+   cmd->u.optical_flow_execute_nv.session = session;
+   if (pExecuteInfo) {
+      cmd->u.optical_flow_execute_nv.execute_info = vk_zalloc(queue->alloc, sizeof(VkOpticalFlowExecuteInfoNV), 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+      if (cmd->u.optical_flow_execute_nv.execute_info == NULL) goto err;
+
+      memcpy((void*)cmd->u.optical_flow_execute_nv.execute_info, pExecuteInfo, sizeof(VkOpticalFlowExecuteInfoNV));
+   VkOpticalFlowExecuteInfoNV *tmp_dst1 = (void *) cmd->u.optical_flow_execute_nv.execute_info; (void) tmp_dst1;
+   VkOpticalFlowExecuteInfoNV *tmp_src1 = (void *) pExecuteInfo; (void) tmp_src1;   
+   if (tmp_src1->pRegions) {
+   tmp_dst1->pRegions = vk_zalloc(queue->alloc, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount, 8, VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+   if (tmp_dst1->pRegions == NULL) goto err;
+
+   memcpy(( VkRect2D*                  )tmp_dst1->pRegions, tmp_src1->pRegions, sizeof(*tmp_dst1->pRegions) * tmp_dst1->regionCount);
+}
+   } else {
+      cmd->u.optical_flow_execute_nv.execute_info = NULL;
+   }   
+
+   list_addtail(&cmd->cmd_link, &queue->cmds);
+   return VK_SUCCESS;
+
+err:
+   if (cmd)
+      vk_free_cmd_optical_flow_execute_nv(queue, cmd);
+   return VK_ERROR_OUT_OF_HOST_MEMORY;
 }
 
 
@@ -7554,6 +8327,15 @@ vk_free_queue(struct vk_cmd_queue *queue)
       case VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_NV:
          vk_free_cmd_draw_mesh_tasks_indirect_count_nv(queue, cmd);
          break;
+      case VK_CMD_DRAW_MESH_TASKS_EXT:
+         vk_free_cmd_draw_mesh_tasks_ext(queue, cmd);
+         break;
+      case VK_CMD_DRAW_MESH_TASKS_INDIRECT_EXT:
+         vk_free_cmd_draw_mesh_tasks_indirect_ext(queue, cmd);
+         break;
+      case VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_EXT:
+         vk_free_cmd_draw_mesh_tasks_indirect_count_ext(queue, cmd);
+         break;
       case VK_CMD_BIND_INVOCATION_MASK_HUAWEI:
          vk_free_cmd_bind_invocation_mask_huawei(queue, cmd);
          break;
@@ -7586,6 +8368,9 @@ vk_free_queue(struct vk_cmd_queue *queue)
          break;
       case VK_CMD_TRACE_RAYS_INDIRECT_KHR:
          vk_free_cmd_trace_rays_indirect_khr(queue, cmd);
+         break;
+      case VK_CMD_TRACE_RAYS_INDIRECT2_KHR:
+         vk_free_cmd_trace_rays_indirect2_khr(queue, cmd);
          break;
       case VK_CMD_SET_RAY_TRACING_PIPELINE_STACK_SIZE_KHR:
          vk_free_cmd_set_ray_tracing_pipeline_stack_size_khr(queue, cmd);
@@ -7658,6 +8443,99 @@ vk_free_queue(struct vk_cmd_queue *queue)
          break;
       case VK_CMD_SET_PRIMITIVE_RESTART_ENABLE:
          vk_free_cmd_set_primitive_restart_enable(queue, cmd);
+         break;
+      case VK_CMD_SET_TESSELLATION_DOMAIN_ORIGIN_EXT:
+         vk_free_cmd_set_tessellation_domain_origin_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_DEPTH_CLAMP_ENABLE_EXT:
+         vk_free_cmd_set_depth_clamp_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_POLYGON_MODE_EXT:
+         vk_free_cmd_set_polygon_mode_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_RASTERIZATION_SAMPLES_EXT:
+         vk_free_cmd_set_rasterization_samples_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_SAMPLE_MASK_EXT:
+         vk_free_cmd_set_sample_mask_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_ALPHA_TO_COVERAGE_ENABLE_EXT:
+         vk_free_cmd_set_alpha_to_coverage_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_ALPHA_TO_ONE_ENABLE_EXT:
+         vk_free_cmd_set_alpha_to_one_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_LOGIC_OP_ENABLE_EXT:
+         vk_free_cmd_set_logic_op_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_COLOR_BLEND_ENABLE_EXT:
+         vk_free_cmd_set_color_blend_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_COLOR_BLEND_EQUATION_EXT:
+         vk_free_cmd_set_color_blend_equation_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_COLOR_WRITE_MASK_EXT:
+         vk_free_cmd_set_color_write_mask_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_RASTERIZATION_STREAM_EXT:
+         vk_free_cmd_set_rasterization_stream_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_CONSERVATIVE_RASTERIZATION_MODE_EXT:
+         vk_free_cmd_set_conservative_rasterization_mode_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT:
+         vk_free_cmd_set_extra_primitive_overestimation_size_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_DEPTH_CLIP_ENABLE_EXT:
+         vk_free_cmd_set_depth_clip_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_SAMPLE_LOCATIONS_ENABLE_EXT:
+         vk_free_cmd_set_sample_locations_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_COLOR_BLEND_ADVANCED_EXT:
+         vk_free_cmd_set_color_blend_advanced_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_PROVOKING_VERTEX_MODE_EXT:
+         vk_free_cmd_set_provoking_vertex_mode_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_LINE_RASTERIZATION_MODE_EXT:
+         vk_free_cmd_set_line_rasterization_mode_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_LINE_STIPPLE_ENABLE_EXT:
+         vk_free_cmd_set_line_stipple_enable_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT:
+         vk_free_cmd_set_depth_clip_negative_one_to_one_ext(queue, cmd);
+         break;
+      case VK_CMD_SET_VIEWPORT_WSCALING_ENABLE_NV:
+         vk_free_cmd_set_viewport_wscaling_enable_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_VIEWPORT_SWIZZLE_NV:
+         vk_free_cmd_set_viewport_swizzle_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_COVERAGE_TO_COLOR_ENABLE_NV:
+         vk_free_cmd_set_coverage_to_color_enable_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_COVERAGE_TO_COLOR_LOCATION_NV:
+         vk_free_cmd_set_coverage_to_color_location_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_COVERAGE_MODULATION_MODE_NV:
+         vk_free_cmd_set_coverage_modulation_mode_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_COVERAGE_MODULATION_TABLE_ENABLE_NV:
+         vk_free_cmd_set_coverage_modulation_table_enable_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_COVERAGE_MODULATION_TABLE_NV:
+         vk_free_cmd_set_coverage_modulation_table_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_SHADING_RATE_IMAGE_ENABLE_NV:
+         vk_free_cmd_set_shading_rate_image_enable_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_COVERAGE_REDUCTION_MODE_NV:
+         vk_free_cmd_set_coverage_reduction_mode_nv(queue, cmd);
+         break;
+      case VK_CMD_SET_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV:
+         vk_free_cmd_set_representative_fragment_test_enable_nv(queue, cmd);
          break;
       case VK_CMD_COPY_BUFFER2:
          vk_free_cmd_copy_buffer2(queue, cmd);
@@ -7740,6 +8618,24 @@ vk_free_queue(struct vk_cmd_queue *queue)
          break;
       case VK_CMD_END_RENDERING:
          vk_free_cmd_end_rendering(queue, cmd);
+         break;
+      case VK_CMD_BUILD_MICROMAPS_EXT:
+         vk_free_cmd_build_micromaps_ext(queue, cmd);
+         break;
+      case VK_CMD_COPY_MICROMAP_EXT:
+         vk_free_cmd_copy_micromap_ext(queue, cmd);
+         break;
+      case VK_CMD_COPY_MICROMAP_TO_MEMORY_EXT:
+         vk_free_cmd_copy_micromap_to_memory_ext(queue, cmd);
+         break;
+      case VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT:
+         vk_free_cmd_copy_memory_to_micromap_ext(queue, cmd);
+         break;
+      case VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT:
+         vk_free_cmd_write_micromaps_properties_ext(queue, cmd);
+         break;
+      case VK_CMD_OPTICAL_FLOW_EXECUTE_NV:
+         vk_free_cmd_optical_flow_execute_nv(queue, cmd);
          break;
       }
    }
@@ -8092,6 +8988,18 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdDrawMeshTasksIndirectCountNV(commandBuffer
              , cmd->u.draw_mesh_tasks_indirect_count_nv.buffer             , cmd->u.draw_mesh_tasks_indirect_count_nv.offset             , cmd->u.draw_mesh_tasks_indirect_count_nv.count_buffer             , cmd->u.draw_mesh_tasks_indirect_count_nv.count_buffer_offset             , cmd->u.draw_mesh_tasks_indirect_count_nv.max_draw_count             , cmd->u.draw_mesh_tasks_indirect_count_nv.stride          );
           break;
+      case VK_CMD_DRAW_MESH_TASKS_EXT:
+          disp->CmdDrawMeshTasksEXT(commandBuffer
+             , cmd->u.draw_mesh_tasks_ext.group_count_x             , cmd->u.draw_mesh_tasks_ext.group_count_y             , cmd->u.draw_mesh_tasks_ext.group_count_z          );
+          break;
+      case VK_CMD_DRAW_MESH_TASKS_INDIRECT_EXT:
+          disp->CmdDrawMeshTasksIndirectEXT(commandBuffer
+             , cmd->u.draw_mesh_tasks_indirect_ext.buffer             , cmd->u.draw_mesh_tasks_indirect_ext.offset             , cmd->u.draw_mesh_tasks_indirect_ext.draw_count             , cmd->u.draw_mesh_tasks_indirect_ext.stride          );
+          break;
+      case VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_EXT:
+          disp->CmdDrawMeshTasksIndirectCountEXT(commandBuffer
+             , cmd->u.draw_mesh_tasks_indirect_count_ext.buffer             , cmd->u.draw_mesh_tasks_indirect_count_ext.offset             , cmd->u.draw_mesh_tasks_indirect_count_ext.count_buffer             , cmd->u.draw_mesh_tasks_indirect_count_ext.count_buffer_offset             , cmd->u.draw_mesh_tasks_indirect_count_ext.max_draw_count             , cmd->u.draw_mesh_tasks_indirect_count_ext.stride          );
+          break;
       case VK_CMD_BIND_INVOCATION_MASK_HUAWEI:
           disp->CmdBindInvocationMaskHUAWEI(commandBuffer
              , cmd->u.bind_invocation_mask_huawei.image_view             , cmd->u.bind_invocation_mask_huawei.image_layout          );
@@ -8135,6 +9043,10 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
       case VK_CMD_TRACE_RAYS_INDIRECT_KHR:
           disp->CmdTraceRaysIndirectKHR(commandBuffer
              , cmd->u.trace_rays_indirect_khr.raygen_shader_binding_table             , cmd->u.trace_rays_indirect_khr.miss_shader_binding_table             , cmd->u.trace_rays_indirect_khr.hit_shader_binding_table             , cmd->u.trace_rays_indirect_khr.callable_shader_binding_table             , cmd->u.trace_rays_indirect_khr.indirect_device_address          );
+          break;
+      case VK_CMD_TRACE_RAYS_INDIRECT2_KHR:
+          disp->CmdTraceRaysIndirect2KHR(commandBuffer
+             , cmd->u.trace_rays_indirect2_khr.indirect_device_address          );
           break;
       case VK_CMD_SET_RAY_TRACING_PIPELINE_STACK_SIZE_KHR:
           disp->CmdSetRayTracingPipelineStackSizeKHR(commandBuffer
@@ -8232,6 +9144,130 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdSetPrimitiveRestartEnable(commandBuffer
              , cmd->u.set_primitive_restart_enable.primitive_restart_enable          );
           break;
+      case VK_CMD_SET_TESSELLATION_DOMAIN_ORIGIN_EXT:
+          disp->CmdSetTessellationDomainOriginEXT(commandBuffer
+             , cmd->u.set_tessellation_domain_origin_ext.domain_origin          );
+          break;
+      case VK_CMD_SET_DEPTH_CLAMP_ENABLE_EXT:
+          disp->CmdSetDepthClampEnableEXT(commandBuffer
+             , cmd->u.set_depth_clamp_enable_ext.depth_clamp_enable          );
+          break;
+      case VK_CMD_SET_POLYGON_MODE_EXT:
+          disp->CmdSetPolygonModeEXT(commandBuffer
+             , cmd->u.set_polygon_mode_ext.polygon_mode          );
+          break;
+      case VK_CMD_SET_RASTERIZATION_SAMPLES_EXT:
+          disp->CmdSetRasterizationSamplesEXT(commandBuffer
+             , cmd->u.set_rasterization_samples_ext.rasterization_samples          );
+          break;
+      case VK_CMD_SET_SAMPLE_MASK_EXT:
+          disp->CmdSetSampleMaskEXT(commandBuffer
+             , cmd->u.set_sample_mask_ext.samples             , cmd->u.set_sample_mask_ext.sample_mask          );
+          break;
+      case VK_CMD_SET_ALPHA_TO_COVERAGE_ENABLE_EXT:
+          disp->CmdSetAlphaToCoverageEnableEXT(commandBuffer
+             , cmd->u.set_alpha_to_coverage_enable_ext.alpha_to_coverage_enable          );
+          break;
+      case VK_CMD_SET_ALPHA_TO_ONE_ENABLE_EXT:
+          disp->CmdSetAlphaToOneEnableEXT(commandBuffer
+             , cmd->u.set_alpha_to_one_enable_ext.alpha_to_one_enable          );
+          break;
+      case VK_CMD_SET_LOGIC_OP_ENABLE_EXT:
+          disp->CmdSetLogicOpEnableEXT(commandBuffer
+             , cmd->u.set_logic_op_enable_ext.logic_op_enable          );
+          break;
+      case VK_CMD_SET_COLOR_BLEND_ENABLE_EXT:
+          disp->CmdSetColorBlendEnableEXT(commandBuffer
+             , cmd->u.set_color_blend_enable_ext.first_attachment             , cmd->u.set_color_blend_enable_ext.attachment_count             , cmd->u.set_color_blend_enable_ext.color_blend_enables          );
+          break;
+      case VK_CMD_SET_COLOR_BLEND_EQUATION_EXT:
+          disp->CmdSetColorBlendEquationEXT(commandBuffer
+             , cmd->u.set_color_blend_equation_ext.first_attachment             , cmd->u.set_color_blend_equation_ext.attachment_count             , cmd->u.set_color_blend_equation_ext.color_blend_equations          );
+          break;
+      case VK_CMD_SET_COLOR_WRITE_MASK_EXT:
+          disp->CmdSetColorWriteMaskEXT(commandBuffer
+             , cmd->u.set_color_write_mask_ext.first_attachment             , cmd->u.set_color_write_mask_ext.attachment_count             , cmd->u.set_color_write_mask_ext.color_write_masks          );
+          break;
+      case VK_CMD_SET_RASTERIZATION_STREAM_EXT:
+          disp->CmdSetRasterizationStreamEXT(commandBuffer
+             , cmd->u.set_rasterization_stream_ext.rasterization_stream          );
+          break;
+      case VK_CMD_SET_CONSERVATIVE_RASTERIZATION_MODE_EXT:
+          disp->CmdSetConservativeRasterizationModeEXT(commandBuffer
+             , cmd->u.set_conservative_rasterization_mode_ext.conservative_rasterization_mode          );
+          break;
+      case VK_CMD_SET_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT:
+          disp->CmdSetExtraPrimitiveOverestimationSizeEXT(commandBuffer
+             , cmd->u.set_extra_primitive_overestimation_size_ext.extra_primitive_overestimation_size          );
+          break;
+      case VK_CMD_SET_DEPTH_CLIP_ENABLE_EXT:
+          disp->CmdSetDepthClipEnableEXT(commandBuffer
+             , cmd->u.set_depth_clip_enable_ext.depth_clip_enable          );
+          break;
+      case VK_CMD_SET_SAMPLE_LOCATIONS_ENABLE_EXT:
+          disp->CmdSetSampleLocationsEnableEXT(commandBuffer
+             , cmd->u.set_sample_locations_enable_ext.sample_locations_enable          );
+          break;
+      case VK_CMD_SET_COLOR_BLEND_ADVANCED_EXT:
+          disp->CmdSetColorBlendAdvancedEXT(commandBuffer
+             , cmd->u.set_color_blend_advanced_ext.first_attachment             , cmd->u.set_color_blend_advanced_ext.attachment_count             , cmd->u.set_color_blend_advanced_ext.color_blend_advanced          );
+          break;
+      case VK_CMD_SET_PROVOKING_VERTEX_MODE_EXT:
+          disp->CmdSetProvokingVertexModeEXT(commandBuffer
+             , cmd->u.set_provoking_vertex_mode_ext.provoking_vertex_mode          );
+          break;
+      case VK_CMD_SET_LINE_RASTERIZATION_MODE_EXT:
+          disp->CmdSetLineRasterizationModeEXT(commandBuffer
+             , cmd->u.set_line_rasterization_mode_ext.line_rasterization_mode          );
+          break;
+      case VK_CMD_SET_LINE_STIPPLE_ENABLE_EXT:
+          disp->CmdSetLineStippleEnableEXT(commandBuffer
+             , cmd->u.set_line_stipple_enable_ext.stippled_line_enable          );
+          break;
+      case VK_CMD_SET_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT:
+          disp->CmdSetDepthClipNegativeOneToOneEXT(commandBuffer
+             , cmd->u.set_depth_clip_negative_one_to_one_ext.negative_one_to_one          );
+          break;
+      case VK_CMD_SET_VIEWPORT_WSCALING_ENABLE_NV:
+          disp->CmdSetViewportWScalingEnableNV(commandBuffer
+             , cmd->u.set_viewport_wscaling_enable_nv.viewport_wscaling_enable          );
+          break;
+      case VK_CMD_SET_VIEWPORT_SWIZZLE_NV:
+          disp->CmdSetViewportSwizzleNV(commandBuffer
+             , cmd->u.set_viewport_swizzle_nv.first_viewport             , cmd->u.set_viewport_swizzle_nv.viewport_count             , cmd->u.set_viewport_swizzle_nv.viewport_swizzles          );
+          break;
+      case VK_CMD_SET_COVERAGE_TO_COLOR_ENABLE_NV:
+          disp->CmdSetCoverageToColorEnableNV(commandBuffer
+             , cmd->u.set_coverage_to_color_enable_nv.coverage_to_color_enable          );
+          break;
+      case VK_CMD_SET_COVERAGE_TO_COLOR_LOCATION_NV:
+          disp->CmdSetCoverageToColorLocationNV(commandBuffer
+             , cmd->u.set_coverage_to_color_location_nv.coverage_to_color_location          );
+          break;
+      case VK_CMD_SET_COVERAGE_MODULATION_MODE_NV:
+          disp->CmdSetCoverageModulationModeNV(commandBuffer
+             , cmd->u.set_coverage_modulation_mode_nv.coverage_modulation_mode          );
+          break;
+      case VK_CMD_SET_COVERAGE_MODULATION_TABLE_ENABLE_NV:
+          disp->CmdSetCoverageModulationTableEnableNV(commandBuffer
+             , cmd->u.set_coverage_modulation_table_enable_nv.coverage_modulation_table_enable          );
+          break;
+      case VK_CMD_SET_COVERAGE_MODULATION_TABLE_NV:
+          disp->CmdSetCoverageModulationTableNV(commandBuffer
+             , cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table_count             , cmd->u.set_coverage_modulation_table_nv.coverage_modulation_table          );
+          break;
+      case VK_CMD_SET_SHADING_RATE_IMAGE_ENABLE_NV:
+          disp->CmdSetShadingRateImageEnableNV(commandBuffer
+             , cmd->u.set_shading_rate_image_enable_nv.shading_rate_image_enable          );
+          break;
+      case VK_CMD_SET_COVERAGE_REDUCTION_MODE_NV:
+          disp->CmdSetCoverageReductionModeNV(commandBuffer
+             , cmd->u.set_coverage_reduction_mode_nv.coverage_reduction_mode          );
+          break;
+      case VK_CMD_SET_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV:
+          disp->CmdSetRepresentativeFragmentTestEnableNV(commandBuffer
+             , cmd->u.set_representative_fragment_test_enable_nv.representative_fragment_test_enable          );
+          break;
       case VK_CMD_COPY_BUFFER2:
           disp->CmdCopyBuffer2(commandBuffer
              , cmd->u.copy_buffer2.copy_buffer_info          );
@@ -8299,7 +9335,7 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
 #ifdef VK_ENABLE_BETA_EXTENSIONS
       case VK_CMD_DECODE_VIDEO_KHR:
           disp->CmdDecodeVideoKHR(commandBuffer
-             , cmd->u.decode_video_khr.frame_info          );
+             , cmd->u.decode_video_khr.decode_info          );
           break;
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #ifdef VK_ENABLE_BETA_EXTENSIONS
@@ -8338,6 +9374,30 @@ vk_cmd_queue_execute(struct vk_cmd_queue *queue,
           disp->CmdEndRendering(commandBuffer
           );
           break;
+      case VK_CMD_BUILD_MICROMAPS_EXT:
+          disp->CmdBuildMicromapsEXT(commandBuffer
+             , cmd->u.build_micromaps_ext.info_count             , cmd->u.build_micromaps_ext.infos          );
+          break;
+      case VK_CMD_COPY_MICROMAP_EXT:
+          disp->CmdCopyMicromapEXT(commandBuffer
+             , cmd->u.copy_micromap_ext.info          );
+          break;
+      case VK_CMD_COPY_MICROMAP_TO_MEMORY_EXT:
+          disp->CmdCopyMicromapToMemoryEXT(commandBuffer
+             , cmd->u.copy_micromap_to_memory_ext.info          );
+          break;
+      case VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT:
+          disp->CmdCopyMemoryToMicromapEXT(commandBuffer
+             , cmd->u.copy_memory_to_micromap_ext.info          );
+          break;
+      case VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT:
+          disp->CmdWriteMicromapsPropertiesEXT(commandBuffer
+             , cmd->u.write_micromaps_properties_ext.micromap_count             , cmd->u.write_micromaps_properties_ext.micromaps             , cmd->u.write_micromaps_properties_ext.query_type             , cmd->u.write_micromaps_properties_ext.query_pool             , cmd->u.write_micromaps_properties_ext.first_query          );
+          break;
+      case VK_CMD_OPTICAL_FLOW_EXECUTE_NV:
+          disp->CmdOpticalFlowExecuteNV(commandBuffer
+             , cmd->u.optical_flow_execute_nv.session             , cmd->u.optical_flow_execute_nv.execute_info          );
+          break;
       default: unreachable("Unsupported command");
       }
    }
@@ -8351,8 +9411,12 @@ vk_cmd_enqueue_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoin
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_pipeline(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_pipeline(&cmd_buffer->cmd_queue,
                                        pipelineBindPoint, pipeline);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8377,8 +9441,12 @@ vk_cmd_enqueue_CmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewp
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_viewport(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_viewport(&cmd_buffer->cmd_queue,
                                        firstViewport, viewportCount, pViewports);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8403,8 +9471,12 @@ vk_cmd_enqueue_CmdSetScissor(VkCommandBuffer commandBuffer, uint32_t firstScisso
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_scissor(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_scissor(&cmd_buffer->cmd_queue,
                                        firstScissor, scissorCount, pScissors);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8429,8 +9501,12 @@ vk_cmd_enqueue_CmdSetLineWidth(VkCommandBuffer commandBuffer, float lineWidth)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_line_width(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_line_width(&cmd_buffer->cmd_queue,
                                        lineWidth);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8455,8 +9531,12 @@ vk_cmd_enqueue_CmdSetDepthBias(VkCommandBuffer commandBuffer, float depthBiasCon
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_bias(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_bias(&cmd_buffer->cmd_queue,
                                        depthBiasConstantFactor, depthBiasClamp, depthBiasSlopeFactor);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8481,8 +9561,12 @@ vk_cmd_enqueue_CmdSetBlendConstants(VkCommandBuffer commandBuffer, const float b
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_blend_constants(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_blend_constants(&cmd_buffer->cmd_queue,
                                        blendConstants);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8507,8 +9591,12 @@ vk_cmd_enqueue_CmdSetDepthBounds(VkCommandBuffer commandBuffer, float minDepthBo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_bounds(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_bounds(&cmd_buffer->cmd_queue,
                                        minDepthBounds, maxDepthBounds);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8533,8 +9621,12 @@ vk_cmd_enqueue_CmdSetStencilCompareMask(VkCommandBuffer commandBuffer, VkStencil
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_stencil_compare_mask(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_stencil_compare_mask(&cmd_buffer->cmd_queue,
                                        faceMask, compareMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8559,8 +9651,12 @@ vk_cmd_enqueue_CmdSetStencilWriteMask(VkCommandBuffer commandBuffer, VkStencilFa
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_stencil_write_mask(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_stencil_write_mask(&cmd_buffer->cmd_queue,
                                        faceMask, writeMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8585,8 +9681,12 @@ vk_cmd_enqueue_CmdSetStencilReference(VkCommandBuffer commandBuffer, VkStencilFa
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_stencil_reference(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_stencil_reference(&cmd_buffer->cmd_queue,
                                        faceMask, reference);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8630,8 +9730,12 @@ vk_cmd_enqueue_CmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_index_buffer(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_index_buffer(&cmd_buffer->cmd_queue,
                                        buffer, offset, indexType);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8656,8 +9760,12 @@ vk_cmd_enqueue_CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t firs
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_vertex_buffers(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_vertex_buffers(&cmd_buffer->cmd_queue,
                                        firstBinding, bindingCount, pBuffers, pOffsets);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8682,8 +9790,12 @@ vk_cmd_enqueue_CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount, uint
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw(&cmd_buffer->cmd_queue,
                                        vertexCount, instanceCount, firstVertex, firstInstance);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8708,8 +9820,12 @@ vk_cmd_enqueue_CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_indexed(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_indexed(&cmd_buffer->cmd_queue,
                                        indexCount, instanceCount, firstIndex, vertexOffset, firstInstance);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8772,8 +9888,12 @@ vk_cmd_enqueue_CmdDrawIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, V
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_indirect(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_indirect(&cmd_buffer->cmd_queue,
                                        buffer, offset, drawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8798,8 +9918,12 @@ vk_cmd_enqueue_CmdDrawIndexedIndirect(VkCommandBuffer commandBuffer, VkBuffer bu
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_indexed_indirect(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_indexed_indirect(&cmd_buffer->cmd_queue,
                                        buffer, offset, drawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8824,8 +9948,12 @@ vk_cmd_enqueue_CmdDispatch(VkCommandBuffer commandBuffer, uint32_t groupCountX, 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_dispatch(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_dispatch(&cmd_buffer->cmd_queue,
                                        groupCountX, groupCountY, groupCountZ);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8850,8 +9978,12 @@ vk_cmd_enqueue_CmdDispatchIndirect(VkCommandBuffer commandBuffer, VkBuffer buffe
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_dispatch_indirect(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_dispatch_indirect(&cmd_buffer->cmd_queue,
                                        buffer, offset);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8876,7 +10008,11 @@ vk_cmd_enqueue_CmdSubpassShadingHUAWEI(VkCommandBuffer commandBuffer)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_subpass_shading_huawei(&cmd_buffer->cmd_queue);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_subpass_shading_huawei(&cmd_buffer->cmd_queue);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8901,8 +10037,12 @@ vk_cmd_enqueue_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_buffer(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_buffer(&cmd_buffer->cmd_queue,
                                        srcBuffer, dstBuffer, regionCount, pRegions);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8927,8 +10067,12 @@ vk_cmd_enqueue_CmdCopyImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkI
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_image(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_image(&cmd_buffer->cmd_queue,
                                        srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8953,8 +10097,12 @@ vk_cmd_enqueue_CmdBlitImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkI
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_blit_image(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_blit_image(&cmd_buffer->cmd_queue,
                                        srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions, filter);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -8979,8 +10127,12 @@ vk_cmd_enqueue_CmdCopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer srcB
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_buffer_to_image(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_buffer_to_image(&cmd_buffer->cmd_queue,
                                        srcBuffer, dstImage, dstImageLayout, regionCount, pRegions);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9005,8 +10157,12 @@ vk_cmd_enqueue_CmdCopyImageToBuffer(VkCommandBuffer commandBuffer, VkImage srcIm
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_image_to_buffer(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_image_to_buffer(&cmd_buffer->cmd_queue,
                                        srcImage, srcImageLayout, dstBuffer, regionCount, pRegions);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9031,8 +10187,12 @@ vk_cmd_enqueue_CmdUpdateBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_update_buffer(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_update_buffer(&cmd_buffer->cmd_queue,
                                        dstBuffer, dstOffset, dataSize, pData);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9057,8 +10217,12 @@ vk_cmd_enqueue_CmdFillBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_fill_buffer(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_fill_buffer(&cmd_buffer->cmd_queue,
                                        dstBuffer, dstOffset, size, data);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9083,8 +10247,12 @@ vk_cmd_enqueue_CmdClearColorImage(VkCommandBuffer commandBuffer, VkImage image, 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_clear_color_image(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_clear_color_image(&cmd_buffer->cmd_queue,
                                        image, imageLayout, pColor, rangeCount, pRanges);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9109,8 +10277,12 @@ vk_cmd_enqueue_CmdClearDepthStencilImage(VkCommandBuffer commandBuffer, VkImage 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_clear_depth_stencil_image(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_clear_depth_stencil_image(&cmd_buffer->cmd_queue,
                                        image, imageLayout, pDepthStencil, rangeCount, pRanges);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9135,8 +10307,12 @@ vk_cmd_enqueue_CmdClearAttachments(VkCommandBuffer commandBuffer, uint32_t attac
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_clear_attachments(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_clear_attachments(&cmd_buffer->cmd_queue,
                                        attachmentCount, pAttachments, rectCount, pRects);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9161,8 +10337,12 @@ vk_cmd_enqueue_CmdResolveImage(VkCommandBuffer commandBuffer, VkImage srcImage, 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_resolve_image(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_resolve_image(&cmd_buffer->cmd_queue,
                                        srcImage, srcImageLayout, dstImage, dstImageLayout, regionCount, pRegions);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9187,8 +10367,12 @@ vk_cmd_enqueue_CmdSetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipel
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_event(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_event(&cmd_buffer->cmd_queue,
                                        event, stageMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9213,8 +10397,12 @@ vk_cmd_enqueue_CmdResetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPip
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_reset_event(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_reset_event(&cmd_buffer->cmd_queue,
                                        event, stageMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9239,8 +10427,12 @@ vk_cmd_enqueue_CmdWaitEvents(VkCommandBuffer commandBuffer, uint32_t eventCount,
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_wait_events(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_wait_events(&cmd_buffer->cmd_queue,
                                        eventCount, pEvents, srcStageMask, dstStageMask, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9265,8 +10457,12 @@ vk_cmd_enqueue_CmdPipelineBarrier(VkCommandBuffer commandBuffer, VkPipelineStage
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_pipeline_barrier(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_pipeline_barrier(&cmd_buffer->cmd_queue,
                                        srcStageMask, dstStageMask, dependencyFlags, memoryBarrierCount, pMemoryBarriers, bufferMemoryBarrierCount, pBufferMemoryBarriers, imageMemoryBarrierCount, pImageMemoryBarriers);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9291,8 +10487,12 @@ vk_cmd_enqueue_CmdBeginQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPoo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_query(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_query(&cmd_buffer->cmd_queue,
                                        queryPool, query, flags);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9317,8 +10517,12 @@ vk_cmd_enqueue_CmdEndQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool,
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_query(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_query(&cmd_buffer->cmd_queue,
                                        queryPool, query);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9343,8 +10547,12 @@ vk_cmd_enqueue_CmdBeginConditionalRenderingEXT(VkCommandBuffer commandBuffer, co
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_conditional_rendering_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_conditional_rendering_ext(&cmd_buffer->cmd_queue,
                                        pConditionalRenderingBegin);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9369,7 +10577,11 @@ vk_cmd_enqueue_CmdEndConditionalRenderingEXT(VkCommandBuffer commandBuffer)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_conditional_rendering_ext(&cmd_buffer->cmd_queue);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_conditional_rendering_ext(&cmd_buffer->cmd_queue);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9394,8 +10606,12 @@ vk_cmd_enqueue_CmdResetQueryPool(VkCommandBuffer commandBuffer, VkQueryPool quer
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_reset_query_pool(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_reset_query_pool(&cmd_buffer->cmd_queue,
                                        queryPool, firstQuery, queryCount);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9420,8 +10636,12 @@ vk_cmd_enqueue_CmdWriteTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageF
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_write_timestamp(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_timestamp(&cmd_buffer->cmd_queue,
                                        pipelineStage, queryPool, query);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9446,8 +10666,12 @@ vk_cmd_enqueue_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer, VkQueryPoo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_query_pool_results(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_query_pool_results(&cmd_buffer->cmd_queue,
                                        queryPool, firstQuery, queryCount, dstBuffer, dstOffset, stride, flags);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9472,8 +10696,12 @@ vk_cmd_enqueue_CmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_push_constants(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_push_constants(&cmd_buffer->cmd_queue,
                                        layout, stageFlags, offset, size, pValues);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9498,8 +10726,12 @@ vk_cmd_enqueue_CmdBeginRenderPass(VkCommandBuffer commandBuffer, const VkRenderP
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_render_pass(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_render_pass(&cmd_buffer->cmd_queue,
                                        pRenderPassBegin, contents);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9524,8 +10756,12 @@ vk_cmd_enqueue_CmdNextSubpass(VkCommandBuffer commandBuffer, VkSubpassContents c
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_next_subpass(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_next_subpass(&cmd_buffer->cmd_queue,
                                        contents);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9550,7 +10786,11 @@ vk_cmd_enqueue_CmdEndRenderPass(VkCommandBuffer commandBuffer)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_render_pass(&cmd_buffer->cmd_queue);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_render_pass(&cmd_buffer->cmd_queue);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9575,8 +10815,12 @@ vk_cmd_enqueue_CmdExecuteCommands(VkCommandBuffer commandBuffer, uint32_t comman
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_execute_commands(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_execute_commands(&cmd_buffer->cmd_queue,
                                        commandBufferCount, pCommandBuffers);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9601,8 +10845,12 @@ vk_cmd_enqueue_CmdDebugMarkerBeginEXT(VkCommandBuffer commandBuffer, const VkDeb
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_debug_marker_begin_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_debug_marker_begin_ext(&cmd_buffer->cmd_queue,
                                        pMarkerInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9627,7 +10875,11 @@ vk_cmd_enqueue_CmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_debug_marker_end_ext(&cmd_buffer->cmd_queue);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_debug_marker_end_ext(&cmd_buffer->cmd_queue);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9652,8 +10904,12 @@ vk_cmd_enqueue_CmdDebugMarkerInsertEXT(VkCommandBuffer commandBuffer, const VkDe
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_debug_marker_insert_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_debug_marker_insert_ext(&cmd_buffer->cmd_queue,
                                        pMarkerInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9678,8 +10934,12 @@ vk_cmd_enqueue_CmdExecuteGeneratedCommandsNV(VkCommandBuffer commandBuffer, VkBo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_execute_generated_commands_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_execute_generated_commands_nv(&cmd_buffer->cmd_queue,
                                        isPreprocessed, pGeneratedCommandsInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9704,8 +10964,12 @@ vk_cmd_enqueue_CmdPreprocessGeneratedCommandsNV(VkCommandBuffer commandBuffer, c
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_preprocess_generated_commands_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_preprocess_generated_commands_nv(&cmd_buffer->cmd_queue,
                                        pGeneratedCommandsInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9730,8 +10994,12 @@ vk_cmd_enqueue_CmdBindPipelineShaderGroupNV(VkCommandBuffer commandBuffer, VkPip
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_pipeline_shader_group_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_pipeline_shader_group_nv(&cmd_buffer->cmd_queue,
                                        pipelineBindPoint, pipeline, groupIndex);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9775,8 +11043,12 @@ vk_cmd_enqueue_CmdSetDeviceMask(VkCommandBuffer commandBuffer, uint32_t deviceMa
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_device_mask(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_device_mask(&cmd_buffer->cmd_queue,
                                        deviceMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9801,8 +11073,12 @@ vk_cmd_enqueue_CmdDispatchBase(VkCommandBuffer commandBuffer, uint32_t baseGroup
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_dispatch_base(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_dispatch_base(&cmd_buffer->cmd_queue,
                                        baseGroupX, baseGroupY, baseGroupZ, groupCountX, groupCountY, groupCountZ);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9828,8 +11104,12 @@ vk_cmd_enqueue_CmdSetViewportWScalingNV(VkCommandBuffer commandBuffer, uint32_t 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_viewport_wscaling_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_viewport_wscaling_nv(&cmd_buffer->cmd_queue,
                                        firstViewport, viewportCount, pViewportWScalings);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9854,8 +11134,12 @@ vk_cmd_enqueue_CmdSetDiscardRectangleEXT(VkCommandBuffer commandBuffer, uint32_t
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_discard_rectangle_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_discard_rectangle_ext(&cmd_buffer->cmd_queue,
                                        firstDiscardRectangle, discardRectangleCount, pDiscardRectangles);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9880,8 +11164,12 @@ vk_cmd_enqueue_CmdSetSampleLocationsEXT(VkCommandBuffer commandBuffer, const VkS
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_sample_locations_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_sample_locations_ext(&cmd_buffer->cmd_queue,
                                        pSampleLocationsInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9906,8 +11194,12 @@ vk_cmd_enqueue_CmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const V
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_debug_utils_label_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_debug_utils_label_ext(&cmd_buffer->cmd_queue,
                                        pLabelInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9932,7 +11224,11 @@ vk_cmd_enqueue_CmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_debug_utils_label_ext(&cmd_buffer->cmd_queue);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_debug_utils_label_ext(&cmd_buffer->cmd_queue);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9957,8 +11253,12 @@ vk_cmd_enqueue_CmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_insert_debug_utils_label_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_insert_debug_utils_label_ext(&cmd_buffer->cmd_queue,
                                        pLabelInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -9983,8 +11283,12 @@ vk_cmd_enqueue_CmdWriteBufferMarkerAMD(VkCommandBuffer commandBuffer, VkPipeline
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_write_buffer_marker_amd(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_buffer_marker_amd(&cmd_buffer->cmd_queue,
                                        pipelineStage, dstBuffer, dstOffset, marker);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10009,8 +11313,12 @@ vk_cmd_enqueue_CmdBeginRenderPass2(VkCommandBuffer commandBuffer, const VkRender
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_render_pass2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_render_pass2(&cmd_buffer->cmd_queue,
                                        pRenderPassBegin, pSubpassBeginInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10035,8 +11343,12 @@ vk_cmd_enqueue_CmdNextSubpass2(VkCommandBuffer commandBuffer, const VkSubpassBeg
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_next_subpass2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_next_subpass2(&cmd_buffer->cmd_queue,
                                        pSubpassBeginInfo, pSubpassEndInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10061,8 +11373,12 @@ vk_cmd_enqueue_CmdEndRenderPass2(VkCommandBuffer commandBuffer, const VkSubpassE
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_render_pass2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_render_pass2(&cmd_buffer->cmd_queue,
                                        pSubpassEndInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10087,8 +11403,12 @@ vk_cmd_enqueue_CmdDrawIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buff
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_indirect_count(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_indirect_count(&cmd_buffer->cmd_queue,
                                        buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10113,8 +11433,12 @@ vk_cmd_enqueue_CmdDrawIndexedIndirectCount(VkCommandBuffer commandBuffer, VkBuff
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_indexed_indirect_count(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_indexed_indirect_count(&cmd_buffer->cmd_queue,
                                        buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10139,8 +11463,12 @@ vk_cmd_enqueue_CmdSetCheckpointNV(VkCommandBuffer commandBuffer, const void* pCh
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_checkpoint_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_checkpoint_nv(&cmd_buffer->cmd_queue,
                                        pCheckpointMarker);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10165,8 +11493,12 @@ vk_cmd_enqueue_CmdBindTransformFeedbackBuffersEXT(VkCommandBuffer commandBuffer,
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_transform_feedback_buffers_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_transform_feedback_buffers_ext(&cmd_buffer->cmd_queue,
                                        firstBinding, bindingCount, pBuffers, pOffsets, pSizes);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10191,8 +11523,12 @@ vk_cmd_enqueue_CmdBeginTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint3
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_transform_feedback_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_transform_feedback_ext(&cmd_buffer->cmd_queue,
                                        firstCounterBuffer, counterBufferCount, pCounterBuffers, pCounterBufferOffsets);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10217,8 +11553,12 @@ vk_cmd_enqueue_CmdEndTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_transform_feedback_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_transform_feedback_ext(&cmd_buffer->cmd_queue,
                                        firstCounterBuffer, counterBufferCount, pCounterBuffers, pCounterBufferOffsets);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10243,8 +11583,12 @@ vk_cmd_enqueue_CmdBeginQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPoo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_query_indexed_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_query_indexed_ext(&cmd_buffer->cmd_queue,
                                        queryPool, query, flags, index);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10269,8 +11613,12 @@ vk_cmd_enqueue_CmdEndQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_query_indexed_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_query_indexed_ext(&cmd_buffer->cmd_queue,
                                        queryPool, query, index);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10295,8 +11643,12 @@ vk_cmd_enqueue_CmdDrawIndirectByteCountEXT(VkCommandBuffer commandBuffer, uint32
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_indirect_byte_count_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_indirect_byte_count_ext(&cmd_buffer->cmd_queue,
                                        instanceCount, firstInstance, counterBuffer, counterBufferOffset, counterOffset, vertexStride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10321,8 +11673,12 @@ vk_cmd_enqueue_CmdSetExclusiveScissorNV(VkCommandBuffer commandBuffer, uint32_t 
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_exclusive_scissor_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_exclusive_scissor_nv(&cmd_buffer->cmd_queue,
                                        firstExclusiveScissor, exclusiveScissorCount, pExclusiveScissors);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10347,8 +11703,12 @@ vk_cmd_enqueue_CmdBindShadingRateImageNV(VkCommandBuffer commandBuffer, VkImageV
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_shading_rate_image_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_shading_rate_image_nv(&cmd_buffer->cmd_queue,
                                        imageView, imageLayout);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10373,8 +11733,12 @@ vk_cmd_enqueue_CmdSetViewportShadingRatePaletteNV(VkCommandBuffer commandBuffer,
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(&cmd_buffer->cmd_queue,
                                        firstViewport, viewportCount, pShadingRatePalettes);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10399,8 +11763,12 @@ vk_cmd_enqueue_CmdSetCoarseSampleOrderNV(VkCommandBuffer commandBuffer, VkCoarse
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_coarse_sample_order_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coarse_sample_order_nv(&cmd_buffer->cmd_queue,
                                        sampleOrderType, customSampleOrderCount, pCustomSampleOrders);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10425,8 +11793,12 @@ vk_cmd_enqueue_CmdDrawMeshTasksNV(VkCommandBuffer commandBuffer, uint32_t taskCo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_mesh_tasks_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_mesh_tasks_nv(&cmd_buffer->cmd_queue,
                                        taskCount, firstTask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10451,8 +11823,12 @@ vk_cmd_enqueue_CmdDrawMeshTasksIndirectNV(VkCommandBuffer commandBuffer, VkBuffe
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(&cmd_buffer->cmd_queue,
                                        buffer, offset, drawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10477,8 +11853,12 @@ vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountNV(VkCommandBuffer commandBuffer, Vk
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(&cmd_buffer->cmd_queue,
                                        buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10499,12 +11879,106 @@ vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectCountNV(VkCommandBuffer co
 
 
 VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_mesh_tasks_ext(&cmd_buffer->cmd_queue,
+                                       groupCountX, groupCountY, groupCountZ);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdDrawMeshTasksEXT(commandBuffer, groupCountX, groupCountY, groupCountZ);
+   } else {
+      vk_cmd_enqueue_CmdDrawMeshTasksEXT(commandBuffer, groupCountX, groupCountY, groupCountZ);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_mesh_tasks_indirect_ext(&cmd_buffer->cmd_queue,
+                                       buffer, offset, drawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdDrawMeshTasksIndirectEXT(commandBuffer, buffer, offset, drawCount, stride);
+   } else {
+      vk_cmd_enqueue_CmdDrawMeshTasksIndirectEXT(commandBuffer, buffer, offset, drawCount, stride);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_draw_mesh_tasks_indirect_count_ext(&cmd_buffer->cmd_queue,
+                                       buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdDrawMeshTasksIndirectCountEXT(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+   } else {
+      vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountEXT(commandBuffer, buffer, offset, countBuffer, countBufferOffset, maxDrawCount, stride);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_CmdBindInvocationMaskHUAWEI(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_invocation_mask_huawei(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_invocation_mask_huawei(&cmd_buffer->cmd_queue,
                                        imageView, imageLayout);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10529,8 +12003,12 @@ vk_cmd_enqueue_CmdCopyAccelerationStructureNV(VkCommandBuffer commandBuffer, VkA
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_acceleration_structure_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_acceleration_structure_nv(&cmd_buffer->cmd_queue,
                                        dst, src, mode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10555,8 +12033,12 @@ vk_cmd_enqueue_CmdCopyAccelerationStructureKHR(VkCommandBuffer commandBuffer, co
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_acceleration_structure_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_acceleration_structure_khr(&cmd_buffer->cmd_queue,
                                        pInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10581,8 +12063,12 @@ vk_cmd_enqueue_CmdCopyAccelerationStructureToMemoryKHR(VkCommandBuffer commandBu
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(&cmd_buffer->cmd_queue,
                                        pInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10607,8 +12093,12 @@ vk_cmd_enqueue_CmdCopyMemoryToAccelerationStructureKHR(VkCommandBuffer commandBu
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(&cmd_buffer->cmd_queue,
                                        pInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10633,8 +12123,12 @@ vk_cmd_enqueue_CmdWriteAccelerationStructuresPropertiesKHR(VkCommandBuffer comma
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_write_acceleration_structures_properties_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_acceleration_structures_properties_khr(&cmd_buffer->cmd_queue,
                                        accelerationStructureCount, pAccelerationStructures, queryType, queryPool, firstQuery);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10659,8 +12153,12 @@ vk_cmd_enqueue_CmdWriteAccelerationStructuresPropertiesNV(VkCommandBuffer comman
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_write_acceleration_structures_properties_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_acceleration_structures_properties_nv(&cmd_buffer->cmd_queue,
                                        accelerationStructureCount, pAccelerationStructures, queryType, queryPool, firstQuery);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10685,8 +12183,12 @@ vk_cmd_enqueue_CmdBuildAccelerationStructureNV(VkCommandBuffer commandBuffer, co
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_build_acceleration_structure_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_build_acceleration_structure_nv(&cmd_buffer->cmd_queue,
                                        pInfo, instanceData, instanceOffset, update, dst, src, scratch, scratchOffset);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10711,8 +12213,12 @@ vk_cmd_enqueue_CmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDev
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_trace_rays_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_trace_rays_khr(&cmd_buffer->cmd_queue,
                                        pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, width, height, depth);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10737,8 +12243,12 @@ vk_cmd_enqueue_CmdTraceRaysNV(VkCommandBuffer commandBuffer, VkBuffer raygenShad
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_trace_rays_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_trace_rays_nv(&cmd_buffer->cmd_queue,
                                        raygenShaderBindingTableBuffer, raygenShaderBindingOffset, missShaderBindingTableBuffer, missShaderBindingOffset, missShaderBindingStride, hitShaderBindingTableBuffer, hitShaderBindingOffset, hitShaderBindingStride, callableShaderBindingTableBuffer, callableShaderBindingOffset, callableShaderBindingStride, width, height, depth);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10763,8 +12273,12 @@ vk_cmd_enqueue_CmdTraceRaysIndirectKHR(VkCommandBuffer commandBuffer, const VkSt
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_trace_rays_indirect_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_trace_rays_indirect_khr(&cmd_buffer->cmd_queue,
                                        pRaygenShaderBindingTable, pMissShaderBindingTable, pHitShaderBindingTable, pCallableShaderBindingTable, indirectDeviceAddress);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10785,12 +12299,46 @@ vk_cmd_enqueue_unless_primary_CmdTraceRaysIndirectKHR(VkCommandBuffer commandBuf
 
 
 VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdTraceRaysIndirect2KHR(VkCommandBuffer commandBuffer, VkDeviceAddress indirectDeviceAddress)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_trace_rays_indirect2_khr(&cmd_buffer->cmd_queue,
+                                       indirectDeviceAddress);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdTraceRaysIndirect2KHR(VkCommandBuffer commandBuffer, VkDeviceAddress indirectDeviceAddress)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdTraceRaysIndirect2KHR(commandBuffer, indirectDeviceAddress);
+   } else {
+      vk_cmd_enqueue_CmdTraceRaysIndirect2KHR(commandBuffer, indirectDeviceAddress);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_CmdSetRayTracingPipelineStackSizeKHR(VkCommandBuffer commandBuffer, uint32_t pipelineStackSize)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(&cmd_buffer->cmd_queue,
                                        pipelineStackSize);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10818,8 +12366,12 @@ vk_cmd_enqueue_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer, uint32_t line
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_line_stipple_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_line_stipple_ext(&cmd_buffer->cmd_queue,
                                        lineStippleFactor, lineStipplePattern);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10844,8 +12396,12 @@ vk_cmd_enqueue_CmdBuildAccelerationStructuresKHR(VkCommandBuffer                
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_build_acceleration_structures_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_build_acceleration_structures_khr(&cmd_buffer->cmd_queue,
                                        infoCount, pInfos, ppBuildRangeInfos);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10870,8 +12426,12 @@ vk_cmd_enqueue_CmdBuildAccelerationStructuresIndirectKHR(VkCommandBuffer        
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_build_acceleration_structures_indirect_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_build_acceleration_structures_indirect_khr(&cmd_buffer->cmd_queue,
                                        infoCount, pInfos, pIndirectDeviceAddresses, pIndirectStrides, ppMaxPrimitiveCounts);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10896,8 +12456,12 @@ vk_cmd_enqueue_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cul
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_cull_mode(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_cull_mode(&cmd_buffer->cmd_queue,
                                        cullMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10922,8 +12486,12 @@ vk_cmd_enqueue_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontF
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_front_face(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_front_face(&cmd_buffer->cmd_queue,
                                        frontFace);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10948,8 +12516,12 @@ vk_cmd_enqueue_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiv
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_primitive_topology(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_primitive_topology(&cmd_buffer->cmd_queue,
                                        primitiveTopology);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -10974,8 +12546,12 @@ vk_cmd_enqueue_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t v
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_viewport_with_count(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_viewport_with_count(&cmd_buffer->cmd_queue,
                                        viewportCount, pViewports);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11000,8 +12576,12 @@ vk_cmd_enqueue_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t sc
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_scissor_with_count(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_scissor_with_count(&cmd_buffer->cmd_queue,
                                        scissorCount, pScissors);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11026,8 +12606,12 @@ vk_cmd_enqueue_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t fir
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_bind_vertex_buffers2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_bind_vertex_buffers2(&cmd_buffer->cmd_queue,
                                        firstBinding, bindingCount, pBuffers, pOffsets, pSizes, pStrides);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11052,8 +12636,12 @@ vk_cmd_enqueue_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 dep
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_test_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_test_enable(&cmd_buffer->cmd_queue,
                                        depthTestEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11078,8 +12666,12 @@ vk_cmd_enqueue_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 de
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_write_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_write_enable(&cmd_buffer->cmd_queue,
                                        depthWriteEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11104,8 +12696,12 @@ vk_cmd_enqueue_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp d
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_compare_op(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_compare_op(&cmd_buffer->cmd_queue,
                                        depthCompareOp);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11130,8 +12726,12 @@ vk_cmd_enqueue_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_bounds_test_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_bounds_test_enable(&cmd_buffer->cmd_queue,
                                        depthBoundsTestEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11156,8 +12756,12 @@ vk_cmd_enqueue_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 s
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_stencil_test_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_stencil_test_enable(&cmd_buffer->cmd_queue,
                                        stencilTestEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11182,8 +12786,12 @@ vk_cmd_enqueue_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_stencil_op(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_stencil_op(&cmd_buffer->cmd_queue,
                                        faceMask, failOp, passOp, depthFailOp, compareOp);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11208,8 +12816,12 @@ vk_cmd_enqueue_CmdSetPatchControlPointsEXT(VkCommandBuffer commandBuffer, uint32
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_patch_control_points_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_patch_control_points_ext(&cmd_buffer->cmd_queue,
                                        patchControlPoints);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11234,8 +12846,12 @@ vk_cmd_enqueue_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_rasterizer_discard_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_rasterizer_discard_enable(&cmd_buffer->cmd_queue,
                                        rasterizerDiscardEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11260,8 +12876,12 @@ vk_cmd_enqueue_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 dep
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_depth_bias_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_bias_enable(&cmd_buffer->cmd_queue,
                                        depthBiasEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11286,8 +12906,12 @@ vk_cmd_enqueue_CmdSetLogicOpEXT(VkCommandBuffer commandBuffer, VkLogicOp logicOp
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_logic_op_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_logic_op_ext(&cmd_buffer->cmd_queue,
                                        logicOp);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11312,8 +12936,12 @@ vk_cmd_enqueue_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBoo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_primitive_restart_enable(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_primitive_restart_enable(&cmd_buffer->cmd_queue,
                                        primitiveRestartEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11334,12 +12962,946 @@ vk_cmd_enqueue_unless_primary_CmdSetPrimitiveRestartEnable(VkCommandBuffer comma
 
 
 VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetTessellationDomainOriginEXT(VkCommandBuffer commandBuffer, VkTessellationDomainOrigin domainOrigin)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_tessellation_domain_origin_ext(&cmd_buffer->cmd_queue,
+                                       domainOrigin);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetTessellationDomainOriginEXT(VkCommandBuffer commandBuffer, VkTessellationDomainOrigin domainOrigin)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetTessellationDomainOriginEXT(commandBuffer, domainOrigin);
+   } else {
+      vk_cmd_enqueue_CmdSetTessellationDomainOriginEXT(commandBuffer, domainOrigin);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetDepthClampEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClampEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_clamp_enable_ext(&cmd_buffer->cmd_queue,
+                                       depthClampEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetDepthClampEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClampEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetDepthClampEnableEXT(commandBuffer, depthClampEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetDepthClampEnableEXT(commandBuffer, depthClampEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetPolygonModeEXT(VkCommandBuffer commandBuffer, VkPolygonMode polygonMode)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_polygon_mode_ext(&cmd_buffer->cmd_queue,
+                                       polygonMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetPolygonModeEXT(VkCommandBuffer commandBuffer, VkPolygonMode polygonMode)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetPolygonModeEXT(commandBuffer, polygonMode);
+   } else {
+      vk_cmd_enqueue_CmdSetPolygonModeEXT(commandBuffer, polygonMode);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetRasterizationSamplesEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  rasterizationSamples)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_rasterization_samples_ext(&cmd_buffer->cmd_queue,
+                                       rasterizationSamples);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetRasterizationSamplesEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  rasterizationSamples)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetRasterizationSamplesEXT(commandBuffer, rasterizationSamples);
+   } else {
+      vk_cmd_enqueue_CmdSetRasterizationSamplesEXT(commandBuffer, rasterizationSamples);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetSampleMaskEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  samples, const VkSampleMask*    pSampleMask)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_sample_mask_ext(&cmd_buffer->cmd_queue,
+                                       samples, pSampleMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetSampleMaskEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  samples, const VkSampleMask*    pSampleMask)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetSampleMaskEXT(commandBuffer, samples, pSampleMask);
+   } else {
+      vk_cmd_enqueue_CmdSetSampleMaskEXT(commandBuffer, samples, pSampleMask);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetAlphaToCoverageEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToCoverageEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_alpha_to_coverage_enable_ext(&cmd_buffer->cmd_queue,
+                                       alphaToCoverageEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetAlphaToCoverageEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToCoverageEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetAlphaToCoverageEnableEXT(commandBuffer, alphaToCoverageEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetAlphaToCoverageEnableEXT(commandBuffer, alphaToCoverageEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetAlphaToOneEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToOneEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_alpha_to_one_enable_ext(&cmd_buffer->cmd_queue,
+                                       alphaToOneEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetAlphaToOneEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToOneEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetAlphaToOneEnableEXT(commandBuffer, alphaToOneEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetAlphaToOneEnableEXT(commandBuffer, alphaToOneEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetLogicOpEnableEXT(VkCommandBuffer commandBuffer, VkBool32 logicOpEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_logic_op_enable_ext(&cmd_buffer->cmd_queue,
+                                       logicOpEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetLogicOpEnableEXT(VkCommandBuffer commandBuffer, VkBool32 logicOpEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetLogicOpEnableEXT(commandBuffer, logicOpEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetLogicOpEnableEXT(commandBuffer, logicOpEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetColorBlendEnableEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkBool32* pColorBlendEnables)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_color_blend_enable_ext(&cmd_buffer->cmd_queue,
+                                       firstAttachment, attachmentCount, pColorBlendEnables);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetColorBlendEnableEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkBool32* pColorBlendEnables)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetColorBlendEnableEXT(commandBuffer, firstAttachment, attachmentCount, pColorBlendEnables);
+   } else {
+      vk_cmd_enqueue_CmdSetColorBlendEnableEXT(commandBuffer, firstAttachment, attachmentCount, pColorBlendEnables);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetColorBlendEquationEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendEquationEXT* pColorBlendEquations)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_color_blend_equation_ext(&cmd_buffer->cmd_queue,
+                                       firstAttachment, attachmentCount, pColorBlendEquations);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetColorBlendEquationEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendEquationEXT* pColorBlendEquations)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetColorBlendEquationEXT(commandBuffer, firstAttachment, attachmentCount, pColorBlendEquations);
+   } else {
+      vk_cmd_enqueue_CmdSetColorBlendEquationEXT(commandBuffer, firstAttachment, attachmentCount, pColorBlendEquations);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetColorWriteMaskEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorComponentFlags* pColorWriteMasks)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_color_write_mask_ext(&cmd_buffer->cmd_queue,
+                                       firstAttachment, attachmentCount, pColorWriteMasks);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetColorWriteMaskEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorComponentFlags* pColorWriteMasks)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetColorWriteMaskEXT(commandBuffer, firstAttachment, attachmentCount, pColorWriteMasks);
+   } else {
+      vk_cmd_enqueue_CmdSetColorWriteMaskEXT(commandBuffer, firstAttachment, attachmentCount, pColorWriteMasks);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetRasterizationStreamEXT(VkCommandBuffer commandBuffer, uint32_t rasterizationStream)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_rasterization_stream_ext(&cmd_buffer->cmd_queue,
+                                       rasterizationStream);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetRasterizationStreamEXT(VkCommandBuffer commandBuffer, uint32_t rasterizationStream)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetRasterizationStreamEXT(commandBuffer, rasterizationStream);
+   } else {
+      vk_cmd_enqueue_CmdSetRasterizationStreamEXT(commandBuffer, rasterizationStream);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetConservativeRasterizationModeEXT(VkCommandBuffer commandBuffer, VkConservativeRasterizationModeEXT conservativeRasterizationMode)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_conservative_rasterization_mode_ext(&cmd_buffer->cmd_queue,
+                                       conservativeRasterizationMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetConservativeRasterizationModeEXT(VkCommandBuffer commandBuffer, VkConservativeRasterizationModeEXT conservativeRasterizationMode)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetConservativeRasterizationModeEXT(commandBuffer, conservativeRasterizationMode);
+   } else {
+      vk_cmd_enqueue_CmdSetConservativeRasterizationModeEXT(commandBuffer, conservativeRasterizationMode);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetExtraPrimitiveOverestimationSizeEXT(VkCommandBuffer commandBuffer, float extraPrimitiveOverestimationSize)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_extra_primitive_overestimation_size_ext(&cmd_buffer->cmd_queue,
+                                       extraPrimitiveOverestimationSize);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetExtraPrimitiveOverestimationSizeEXT(VkCommandBuffer commandBuffer, float extraPrimitiveOverestimationSize)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetExtraPrimitiveOverestimationSizeEXT(commandBuffer, extraPrimitiveOverestimationSize);
+   } else {
+      vk_cmd_enqueue_CmdSetExtraPrimitiveOverestimationSizeEXT(commandBuffer, extraPrimitiveOverestimationSize);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetDepthClipEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClipEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_clip_enable_ext(&cmd_buffer->cmd_queue,
+                                       depthClipEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetDepthClipEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClipEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetDepthClipEnableEXT(commandBuffer, depthClipEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetDepthClipEnableEXT(commandBuffer, depthClipEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetSampleLocationsEnableEXT(VkCommandBuffer commandBuffer, VkBool32 sampleLocationsEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_sample_locations_enable_ext(&cmd_buffer->cmd_queue,
+                                       sampleLocationsEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetSampleLocationsEnableEXT(VkCommandBuffer commandBuffer, VkBool32 sampleLocationsEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetSampleLocationsEnableEXT(commandBuffer, sampleLocationsEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetSampleLocationsEnableEXT(commandBuffer, sampleLocationsEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetColorBlendAdvancedEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendAdvancedEXT* pColorBlendAdvanced)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_color_blend_advanced_ext(&cmd_buffer->cmd_queue,
+                                       firstAttachment, attachmentCount, pColorBlendAdvanced);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetColorBlendAdvancedEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendAdvancedEXT* pColorBlendAdvanced)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetColorBlendAdvancedEXT(commandBuffer, firstAttachment, attachmentCount, pColorBlendAdvanced);
+   } else {
+      vk_cmd_enqueue_CmdSetColorBlendAdvancedEXT(commandBuffer, firstAttachment, attachmentCount, pColorBlendAdvanced);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetProvokingVertexModeEXT(VkCommandBuffer commandBuffer, VkProvokingVertexModeEXT provokingVertexMode)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_provoking_vertex_mode_ext(&cmd_buffer->cmd_queue,
+                                       provokingVertexMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetProvokingVertexModeEXT(VkCommandBuffer commandBuffer, VkProvokingVertexModeEXT provokingVertexMode)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetProvokingVertexModeEXT(commandBuffer, provokingVertexMode);
+   } else {
+      vk_cmd_enqueue_CmdSetProvokingVertexModeEXT(commandBuffer, provokingVertexMode);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetLineRasterizationModeEXT(VkCommandBuffer commandBuffer, VkLineRasterizationModeEXT lineRasterizationMode)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_line_rasterization_mode_ext(&cmd_buffer->cmd_queue,
+                                       lineRasterizationMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetLineRasterizationModeEXT(VkCommandBuffer commandBuffer, VkLineRasterizationModeEXT lineRasterizationMode)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetLineRasterizationModeEXT(commandBuffer, lineRasterizationMode);
+   } else {
+      vk_cmd_enqueue_CmdSetLineRasterizationModeEXT(commandBuffer, lineRasterizationMode);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetLineStippleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stippledLineEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_line_stipple_enable_ext(&cmd_buffer->cmd_queue,
+                                       stippledLineEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetLineStippleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stippledLineEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetLineStippleEnableEXT(commandBuffer, stippledLineEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetLineStippleEnableEXT(commandBuffer, stippledLineEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetDepthClipNegativeOneToOneEXT(VkCommandBuffer commandBuffer, VkBool32 negativeOneToOne)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_depth_clip_negative_one_to_one_ext(&cmd_buffer->cmd_queue,
+                                       negativeOneToOne);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetDepthClipNegativeOneToOneEXT(VkCommandBuffer commandBuffer, VkBool32 negativeOneToOne)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetDepthClipNegativeOneToOneEXT(commandBuffer, negativeOneToOne);
+   } else {
+      vk_cmd_enqueue_CmdSetDepthClipNegativeOneToOneEXT(commandBuffer, negativeOneToOne);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetViewportWScalingEnableNV(VkCommandBuffer commandBuffer, VkBool32 viewportWScalingEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_viewport_wscaling_enable_nv(&cmd_buffer->cmd_queue,
+                                       viewportWScalingEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetViewportWScalingEnableNV(VkCommandBuffer commandBuffer, VkBool32 viewportWScalingEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetViewportWScalingEnableNV(commandBuffer, viewportWScalingEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetViewportWScalingEnableNV(commandBuffer, viewportWScalingEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetViewportSwizzleNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportSwizzleNV* pViewportSwizzles)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_viewport_swizzle_nv(&cmd_buffer->cmd_queue,
+                                       firstViewport, viewportCount, pViewportSwizzles);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetViewportSwizzleNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportSwizzleNV* pViewportSwizzles)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetViewportSwizzleNV(commandBuffer, firstViewport, viewportCount, pViewportSwizzles);
+   } else {
+      vk_cmd_enqueue_CmdSetViewportSwizzleNV(commandBuffer, firstViewport, viewportCount, pViewportSwizzles);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetCoverageToColorEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageToColorEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coverage_to_color_enable_nv(&cmd_buffer->cmd_queue,
+                                       coverageToColorEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetCoverageToColorEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageToColorEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetCoverageToColorEnableNV(commandBuffer, coverageToColorEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetCoverageToColorEnableNV(commandBuffer, coverageToColorEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetCoverageToColorLocationNV(VkCommandBuffer commandBuffer, uint32_t coverageToColorLocation)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coverage_to_color_location_nv(&cmd_buffer->cmd_queue,
+                                       coverageToColorLocation);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetCoverageToColorLocationNV(VkCommandBuffer commandBuffer, uint32_t coverageToColorLocation)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetCoverageToColorLocationNV(commandBuffer, coverageToColorLocation);
+   } else {
+      vk_cmd_enqueue_CmdSetCoverageToColorLocationNV(commandBuffer, coverageToColorLocation);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetCoverageModulationModeNV(VkCommandBuffer commandBuffer, VkCoverageModulationModeNV coverageModulationMode)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coverage_modulation_mode_nv(&cmd_buffer->cmd_queue,
+                                       coverageModulationMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetCoverageModulationModeNV(VkCommandBuffer commandBuffer, VkCoverageModulationModeNV coverageModulationMode)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetCoverageModulationModeNV(commandBuffer, coverageModulationMode);
+   } else {
+      vk_cmd_enqueue_CmdSetCoverageModulationModeNV(commandBuffer, coverageModulationMode);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetCoverageModulationTableEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageModulationTableEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coverage_modulation_table_enable_nv(&cmd_buffer->cmd_queue,
+                                       coverageModulationTableEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetCoverageModulationTableEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageModulationTableEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetCoverageModulationTableEnableNV(commandBuffer, coverageModulationTableEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetCoverageModulationTableEnableNV(commandBuffer, coverageModulationTableEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetCoverageModulationTableNV(VkCommandBuffer commandBuffer, uint32_t coverageModulationTableCount, const float* pCoverageModulationTable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coverage_modulation_table_nv(&cmd_buffer->cmd_queue,
+                                       coverageModulationTableCount, pCoverageModulationTable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetCoverageModulationTableNV(VkCommandBuffer commandBuffer, uint32_t coverageModulationTableCount, const float* pCoverageModulationTable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetCoverageModulationTableNV(commandBuffer, coverageModulationTableCount, pCoverageModulationTable);
+   } else {
+      vk_cmd_enqueue_CmdSetCoverageModulationTableNV(commandBuffer, coverageModulationTableCount, pCoverageModulationTable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetShadingRateImageEnableNV(VkCommandBuffer commandBuffer, VkBool32 shadingRateImageEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_shading_rate_image_enable_nv(&cmd_buffer->cmd_queue,
+                                       shadingRateImageEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetShadingRateImageEnableNV(VkCommandBuffer commandBuffer, VkBool32 shadingRateImageEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetShadingRateImageEnableNV(commandBuffer, shadingRateImageEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetShadingRateImageEnableNV(commandBuffer, shadingRateImageEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetCoverageReductionModeNV(VkCommandBuffer commandBuffer, VkCoverageReductionModeNV coverageReductionMode)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_coverage_reduction_mode_nv(&cmd_buffer->cmd_queue,
+                                       coverageReductionMode);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetCoverageReductionModeNV(VkCommandBuffer commandBuffer, VkCoverageReductionModeNV coverageReductionMode)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetCoverageReductionModeNV(commandBuffer, coverageReductionMode);
+   } else {
+      vk_cmd_enqueue_CmdSetCoverageReductionModeNV(commandBuffer, coverageReductionMode);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdSetRepresentativeFragmentTestEnableNV(VkCommandBuffer commandBuffer, VkBool32 representativeFragmentTestEnable)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_representative_fragment_test_enable_nv(&cmd_buffer->cmd_queue,
+                                       representativeFragmentTestEnable);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdSetRepresentativeFragmentTestEnableNV(VkCommandBuffer commandBuffer, VkBool32 representativeFragmentTestEnable)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdSetRepresentativeFragmentTestEnableNV(commandBuffer, representativeFragmentTestEnable);
+   } else {
+      vk_cmd_enqueue_CmdSetRepresentativeFragmentTestEnableNV(commandBuffer, representativeFragmentTestEnable);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_buffer2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_buffer2(&cmd_buffer->cmd_queue,
                                        pCopyBufferInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11364,8 +13926,12 @@ vk_cmd_enqueue_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInf
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_image2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_image2(&cmd_buffer->cmd_queue,
                                        pCopyImageInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11390,8 +13956,12 @@ vk_cmd_enqueue_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInf
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_blit_image2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_blit_image2(&cmd_buffer->cmd_queue,
                                        pBlitImageInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11416,8 +13986,12 @@ vk_cmd_enqueue_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopy
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_buffer_to_image2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_buffer_to_image2(&cmd_buffer->cmd_queue,
                                        pCopyBufferToImageInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11442,8 +14016,12 @@ vk_cmd_enqueue_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopy
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_copy_image_to_buffer2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_image_to_buffer2(&cmd_buffer->cmd_queue,
                                        pCopyImageToBufferInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11468,8 +14046,12 @@ vk_cmd_enqueue_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveIm
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_resolve_image2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_resolve_image2(&cmd_buffer->cmd_queue,
                                        pResolveImageInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11494,8 +14076,12 @@ vk_cmd_enqueue_CmdSetFragmentShadingRateKHR(VkCommandBuffer           commandBuf
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_fragment_shading_rate_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_fragment_shading_rate_khr(&cmd_buffer->cmd_queue,
                                        pFragmentSize, combinerOps);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11520,8 +14106,12 @@ vk_cmd_enqueue_CmdSetFragmentShadingRateEnumNV(VkCommandBuffer           command
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(&cmd_buffer->cmd_queue,
                                        shadingRate, combinerOps);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11546,8 +14136,12 @@ vk_cmd_enqueue_CmdSetVertexInputEXT(VkCommandBuffer commandBuffer, uint32_t vert
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_vertex_input_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_vertex_input_ext(&cmd_buffer->cmd_queue,
                                        vertexBindingDescriptionCount, pVertexBindingDescriptions, vertexAttributeDescriptionCount, pVertexAttributeDescriptions);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11572,8 +14166,12 @@ vk_cmd_enqueue_CmdSetColorWriteEnableEXT(VkCommandBuffer       commandBuffer, ui
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_color_write_enable_ext(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_color_write_enable_ext(&cmd_buffer->cmd_queue,
                                        attachmentCount, pColorWriteEnables);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11598,8 +14196,12 @@ vk_cmd_enqueue_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkE
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_set_event2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_set_event2(&cmd_buffer->cmd_queue,
                                        event, pDependencyInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11624,8 +14226,12 @@ vk_cmd_enqueue_CmdResetEvent2(VkCommandBuffer                   commandBuffer, V
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_reset_event2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_reset_event2(&cmd_buffer->cmd_queue,
                                        event, stageMask);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11650,8 +14256,12 @@ vk_cmd_enqueue_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, u
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_wait_events2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_wait_events2(&cmd_buffer->cmd_queue,
                                        eventCount, pEvents, pDependencyInfos);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11676,8 +14286,12 @@ vk_cmd_enqueue_CmdPipelineBarrier2(VkCommandBuffer                   commandBuff
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_pipeline_barrier2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_pipeline_barrier2(&cmd_buffer->cmd_queue,
                                        pDependencyInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11702,8 +14316,12 @@ vk_cmd_enqueue_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffe
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_write_timestamp2(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_timestamp2(&cmd_buffer->cmd_queue,
                                        stage, queryPool, query);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11728,8 +14346,12 @@ vk_cmd_enqueue_CmdWriteBufferMarker2AMD(VkCommandBuffer                   comman
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_write_buffer_marker2_amd(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_buffer_marker2_amd(&cmd_buffer->cmd_queue,
                                        stage, dstBuffer, dstOffset, marker);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11751,16 +14373,20 @@ vk_cmd_enqueue_unless_primary_CmdWriteBufferMarker2AMD(VkCommandBuffer          
 
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pFrameInfo)
+vk_cmd_enqueue_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_decode_video_khr(&cmd_buffer->cmd_queue,
-                                       pFrameInfo);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_decode_video_khr(&cmd_buffer->cmd_queue,
+                                       pDecodeInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
-vk_cmd_enqueue_unless_primary_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pFrameInfo)
+vk_cmd_enqueue_unless_primary_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo)
 {
     VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
@@ -11768,9 +14394,9 @@ vk_cmd_enqueue_unless_primary_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, c
       const struct vk_device_dispatch_table *disp =
          cmd_buffer->base.device->command_dispatch_table;
 
-      disp->CmdDecodeVideoKHR(commandBuffer, pFrameInfo);
+      disp->CmdDecodeVideoKHR(commandBuffer, pDecodeInfo);
    } else {
-      vk_cmd_enqueue_CmdDecodeVideoKHR(commandBuffer, pFrameInfo);
+      vk_cmd_enqueue_CmdDecodeVideoKHR(commandBuffer, pDecodeInfo);
    }
 }
 #endif // VK_ENABLE_BETA_EXTENSIONS
@@ -11783,8 +14409,12 @@ vk_cmd_enqueue_CmdBeginVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVid
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_video_coding_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_video_coding_khr(&cmd_buffer->cmd_queue,
                                        pBeginInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11811,8 +14441,12 @@ vk_cmd_enqueue_CmdControlVideoCodingKHR(VkCommandBuffer commandBuffer, const VkV
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_control_video_coding_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_control_video_coding_khr(&cmd_buffer->cmd_queue,
                                        pCodingControlInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11839,8 +14473,12 @@ vk_cmd_enqueue_CmdEndVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideo
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_video_coding_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_video_coding_khr(&cmd_buffer->cmd_queue,
                                        pEndCodingInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11867,8 +14505,12 @@ vk_cmd_enqueue_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEnc
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_encode_video_khr(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_encode_video_khr(&cmd_buffer->cmd_queue,
                                        pEncodeInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11894,8 +14536,12 @@ vk_cmd_enqueue_CmdCuLaunchKernelNVX(VkCommandBuffer commandBuffer, const VkCuLau
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_cu_launch_kernel_nvx(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_cu_launch_kernel_nvx(&cmd_buffer->cmd_queue,
                                        pLaunchInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11920,8 +14566,12 @@ vk_cmd_enqueue_CmdBeginRendering(VkCommandBuffer                   commandBuffer
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_begin_rendering(&cmd_buffer->cmd_queue,
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_begin_rendering(&cmd_buffer->cmd_queue,
                                        pRenderingInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11946,7 +14596,11 @@ vk_cmd_enqueue_CmdEndRendering(VkCommandBuffer                   commandBuffer)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
 
-   vk_enqueue_cmd_end_rendering(&cmd_buffer->cmd_queue);
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_end_rendering(&cmd_buffer->cmd_queue);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -11961,5 +14615,185 @@ vk_cmd_enqueue_unless_primary_CmdEndRendering(VkCommandBuffer                   
       disp->CmdEndRendering(commandBuffer);
    } else {
       vk_cmd_enqueue_CmdEndRendering(commandBuffer);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdBuildMicromapsEXT(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_build_micromaps_ext(&cmd_buffer->cmd_queue,
+                                       infoCount, pInfos);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdBuildMicromapsEXT(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdBuildMicromapsEXT(commandBuffer, infoCount, pInfos);
+   } else {
+      vk_cmd_enqueue_CmdBuildMicromapsEXT(commandBuffer, infoCount, pInfos);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdCopyMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_micromap_ext(&cmd_buffer->cmd_queue,
+                                       pInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdCopyMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdCopyMicromapEXT(commandBuffer, pInfo);
+   } else {
+      vk_cmd_enqueue_CmdCopyMicromapEXT(commandBuffer, pInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdCopyMicromapToMemoryEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_micromap_to_memory_ext(&cmd_buffer->cmd_queue,
+                                       pInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdCopyMicromapToMemoryEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdCopyMicromapToMemoryEXT(commandBuffer, pInfo);
+   } else {
+      vk_cmd_enqueue_CmdCopyMicromapToMemoryEXT(commandBuffer, pInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdCopyMemoryToMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_copy_memory_to_micromap_ext(&cmd_buffer->cmd_queue,
+                                       pInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdCopyMemoryToMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdCopyMemoryToMicromapEXT(commandBuffer, pInfo);
+   } else {
+      vk_cmd_enqueue_CmdCopyMemoryToMicromapEXT(commandBuffer, pInfo);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdWriteMicromapsPropertiesEXT(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_write_micromaps_properties_ext(&cmd_buffer->cmd_queue,
+                                       micromapCount, pMicromaps, queryType, queryPool, firstQuery);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdWriteMicromapsPropertiesEXT(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdWriteMicromapsPropertiesEXT(commandBuffer, micromapCount, pMicromaps, queryType, queryPool, firstQuery);
+   } else {
+      vk_cmd_enqueue_CmdWriteMicromapsPropertiesEXT(commandBuffer, micromapCount, pMicromaps, queryType, queryPool, firstQuery);
+   }
+}
+
+
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_CmdOpticalFlowExecuteNV(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session, const VkOpticalFlowExecuteInfoNV* pExecuteInfo)
+{
+   VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (vk_command_buffer_has_error(cmd_buffer))
+      return;
+   VkResult result = vk_enqueue_cmd_optical_flow_execute_nv(&cmd_buffer->cmd_queue,
+                                       session, pExecuteInfo);
+   if (unlikely(result != VK_SUCCESS))
+      vk_command_buffer_set_error(cmd_buffer, result);
+}
+
+VKAPI_ATTR void VKAPI_CALL
+vk_cmd_enqueue_unless_primary_CmdOpticalFlowExecuteNV(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session, const VkOpticalFlowExecuteInfoNV* pExecuteInfo)
+{
+    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
+
+   if (cmd_buffer->level == VK_COMMAND_BUFFER_LEVEL_PRIMARY) {
+      const struct vk_device_dispatch_table *disp =
+         cmd_buffer->base.device->command_dispatch_table;
+
+      disp->CmdOpticalFlowExecuteNV(commandBuffer, session, pExecuteInfo);
+   } else {
+      vk_cmd_enqueue_CmdOpticalFlowExecuteNV(commandBuffer, session, pExecuteInfo);
    }
 }

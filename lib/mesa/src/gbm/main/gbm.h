@@ -157,6 +157,11 @@ enum gbm_bo_format {
 #define GBM_FORMAT_RGBA1010102	__gbm_fourcc_code('R', 'A', '3', '0') /* [31:0] R:G:B:A 10:10:10:2 little endian */
 #define GBM_FORMAT_BGRA1010102	__gbm_fourcc_code('B', 'A', '3', '0') /* [31:0] B:G:R:A 10:10:10:2 little endian */
 
+/* 64 bpp RGB */
+#define GBM_FORMAT_XBGR16161616	__gbm_fourcc_code('X', 'B', '4', '8') /* [63:0] x:B:G:R 16:16:16:16 little endian */
+
+#define GBM_FORMAT_ABGR16161616	__gbm_fourcc_code('A', 'B', '4', '8') /* [63:0] A:B:G:R 16:16:16:16 little endian */
+
 /*
  * Floating point 64bpp RGB
  * IEEE 754-2008 binary16 half-precision float
@@ -251,6 +256,14 @@ enum gbm_bo_flags {
     * OpenCL, and Vulkan applications.
     */
    GBM_BO_USE_PROTECTED = (1 << 5),
+
+   /**
+    * The buffer will be used for front buffer rendering.  On some
+    * platforms this may (for example) disable framebuffer compression
+    * to avoid problems with compression flags data being out of sync
+    * with pixel data.
+    */
+   GBM_BO_USE_FRONT_RENDERING = (1 << 6),
 };
 
 int

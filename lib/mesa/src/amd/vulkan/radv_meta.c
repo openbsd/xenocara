@@ -35,32 +35,71 @@
 #include <sys/stat.h>
 
 static void
-radv_suspend_queries(struct radv_cmd_buffer *cmd_buffer)
+radv_suspend_queries(struct radv_meta_saved_state *state, struct radv_cmd_buffer *cmd_buffer)
 {
    /* Pipeline statistics queries. */
    if (cmd_buffer->state.active_pipeline_queries > 0) {
       cmd_buffer->state.flush_bits &= ~RADV_CMD_FLAG_START_PIPELINE_STATS;
       cmd_buffer->state.flush_bits |= RADV_CMD_FLAG_STOP_PIPELINE_STATS;
+
+      state->active_pipeline_gds_queries = cmd_buffer->state.active_pipeline_gds_queries;
+      cmd_buffer->state.active_pipeline_gds_queries = 0;
    }
 
    /* Occlusion queries. */
    if (cmd_buffer->state.active_occlusion_queries > 0) {
       radv_set_db_count_control(cmd_buffer, false);
    }
+
+   /* Primitives generated queries (legacy). */
+   if (cmd_buffer->state.active_prims_gen_queries) {
+      cmd_buffer->state.suspend_streamout = true;
+      radv_emit_streamout_enable(cmd_buffer);
+   }
+
+   /* Primitives generated queries (NGG). */
+   if (cmd_buffer->state.active_prims_gen_gds_queries) {
+      state->active_prims_gen_gds_queries = cmd_buffer->state.active_prims_gen_gds_queries;
+      cmd_buffer->state.active_prims_gen_gds_queries = 0;
+   }
+
+   /* Transform feedback queries (NGG). */
+   if (cmd_buffer->state.active_prims_xfb_gds_queries) {
+      state->active_prims_xfb_gds_queries = cmd_buffer->state.active_prims_xfb_gds_queries;
+      cmd_buffer->state.active_prims_xfb_gds_queries = 0;
+   }
 }
 
 static void
-radv_resume_queries(struct radv_cmd_buffer *cmd_buffer)
+radv_resume_queries(const struct radv_meta_saved_state *state, struct radv_cmd_buffer *cmd_buffer)
 {
    /* Pipeline statistics queries. */
    if (cmd_buffer->state.active_pipeline_queries > 0) {
       cmd_buffer->state.flush_bits &= ~RADV_CMD_FLAG_STOP_PIPELINE_STATS;
       cmd_buffer->state.flush_bits |= RADV_CMD_FLAG_START_PIPELINE_STATS;
+
+      cmd_buffer->state.active_pipeline_gds_queries = state->active_pipeline_gds_queries;
    }
 
    /* Occlusion queries. */
    if (cmd_buffer->state.active_occlusion_queries > 0) {
       radv_set_db_count_control(cmd_buffer, true);
+   }
+
+   /* Primitives generated queries (legacy). */
+   if (cmd_buffer->state.active_prims_gen_queries) {
+      cmd_buffer->state.suspend_streamout = false;
+      radv_emit_streamout_enable(cmd_buffer);
+   }
+
+   /* Primitives generated queries (NGG). */
+   if (state->active_prims_gen_gds_queries) {
+      cmd_buffer->state.active_prims_gen_gds_queries = state->active_prims_gen_gds_queries;
+   }
+
+   /* Transform feedback queries (NGG). */
+   if (state->active_prims_xfb_gds_queries) {
+      cmd_buffer->state.active_prims_xfb_gds_queries = state->active_prims_xfb_gds_queries;
    }
 }
 
@@ -77,101 +116,22 @@ radv_meta_save(struct radv_meta_saved_state *state, struct radv_cmd_buffer *cmd_
    assert(flags & (RADV_META_SAVE_GRAPHICS_PIPELINE | RADV_META_SAVE_COMPUTE_PIPELINE));
 
    state->flags = flags;
+   state->active_prims_gen_gds_queries = 0;
+   state->active_prims_xfb_gds_queries = 0;
 
    if (state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE) {
       assert(!(state->flags & RADV_META_SAVE_COMPUTE_PIPELINE));
 
-      state->old_pipeline = cmd_buffer->state.pipeline;
+      state->old_graphics_pipeline = cmd_buffer->state.graphics_pipeline;
 
-      /* Save all viewports. */
-      state->dynamic.viewport.count = cmd_buffer->state.dynamic.viewport.count;
-      typed_memcpy(state->dynamic.viewport.viewports, cmd_buffer->state.dynamic.viewport.viewports,
-                   MAX_VIEWPORTS);
-      typed_memcpy(state->dynamic.viewport.xform, cmd_buffer->state.dynamic.viewport.xform,
-                   MAX_VIEWPORTS);
-
-      /* Save all scissors. */
-      state->dynamic.scissor.count = cmd_buffer->state.dynamic.scissor.count;
-      typed_memcpy(state->dynamic.scissor.scissors, cmd_buffer->state.dynamic.scissor.scissors,
-                   MAX_SCISSORS);
-
-      state->dynamic.line_stipple.factor = cmd_buffer->state.dynamic.line_stipple.factor;
-      state->dynamic.line_stipple.pattern = cmd_buffer->state.dynamic.line_stipple.pattern;
-
-      state->dynamic.cull_mode = cmd_buffer->state.dynamic.cull_mode;
-      state->dynamic.front_face = cmd_buffer->state.dynamic.front_face;
-
-      state->dynamic.primitive_topology = cmd_buffer->state.dynamic.primitive_topology;
-
-      state->dynamic.depth_test_enable = cmd_buffer->state.dynamic.depth_test_enable;
-      state->dynamic.depth_write_enable = cmd_buffer->state.dynamic.depth_write_enable;
-      state->dynamic.depth_compare_op = cmd_buffer->state.dynamic.depth_compare_op;
-      state->dynamic.depth_bounds_test_enable = cmd_buffer->state.dynamic.depth_bounds_test_enable;
-      state->dynamic.stencil_test_enable = cmd_buffer->state.dynamic.stencil_test_enable;
-
-      state->dynamic.stencil_op.front.compare_op = cmd_buffer->state.dynamic.stencil_op.front.compare_op;
-      state->dynamic.stencil_op.front.fail_op = cmd_buffer->state.dynamic.stencil_op.front.fail_op;
-      state->dynamic.stencil_op.front.pass_op = cmd_buffer->state.dynamic.stencil_op.front.pass_op;
-      state->dynamic.stencil_op.front.depth_fail_op =
-         cmd_buffer->state.dynamic.stencil_op.front.depth_fail_op;
-
-      state->dynamic.stencil_op.back.compare_op = cmd_buffer->state.dynamic.stencil_op.back.compare_op;
-      state->dynamic.stencil_op.back.fail_op = cmd_buffer->state.dynamic.stencil_op.back.fail_op;
-      state->dynamic.stencil_op.back.pass_op = cmd_buffer->state.dynamic.stencil_op.back.pass_op;
-      state->dynamic.stencil_op.back.depth_fail_op =
-         cmd_buffer->state.dynamic.stencil_op.back.depth_fail_op;
-
-      state->dynamic.line_width = cmd_buffer->state.dynamic.line_width;
-
-      state->dynamic.depth_bias.bias = cmd_buffer->state.dynamic.depth_bias.bias;
-      state->dynamic.depth_bias.clamp = cmd_buffer->state.dynamic.depth_bias.clamp;
-      state->dynamic.depth_bias.slope = cmd_buffer->state.dynamic.depth_bias.slope;
-
-      memcpy(state->dynamic.blend_constants, cmd_buffer->state.dynamic.blend_constants,
-             sizeof(state->dynamic.blend_constants));
-
-      state->dynamic.depth_bounds.min = cmd_buffer->state.dynamic.depth_bounds.min;
-      state->dynamic.depth_bounds.max = cmd_buffer->state.dynamic.depth_bounds.max;
-
-      state->dynamic.stencil_compare_mask.front = cmd_buffer->state.dynamic.stencil_compare_mask.front;
-      state->dynamic.stencil_compare_mask.back = cmd_buffer->state.dynamic.stencil_compare_mask.back;
-
-      state->dynamic.stencil_write_mask.front = cmd_buffer->state.dynamic.stencil_write_mask.front;
-      state->dynamic.stencil_write_mask.back = cmd_buffer->state.dynamic.stencil_write_mask.back;
-
-      state->dynamic.stencil_reference.front = cmd_buffer->state.dynamic.stencil_reference.front;
-      state->dynamic.stencil_reference.back = cmd_buffer->state.dynamic.stencil_reference.back;
-
-      state->dynamic.fragment_shading_rate.size = cmd_buffer->state.dynamic.fragment_shading_rate.size;
-      state->dynamic.fragment_shading_rate.combiner_ops[0] =
-         cmd_buffer->state.dynamic.fragment_shading_rate.combiner_ops[0];
-      state->dynamic.fragment_shading_rate.combiner_ops[1] =
-         cmd_buffer->state.dynamic.fragment_shading_rate.combiner_ops[1];
-
-      state->dynamic.depth_bias_enable = cmd_buffer->state.dynamic.depth_bias_enable;
-
-      state->dynamic.primitive_restart_enable = cmd_buffer->state.dynamic.primitive_restart_enable;
-
-      state->dynamic.rasterizer_discard_enable = cmd_buffer->state.dynamic.rasterizer_discard_enable;
-
-      state->dynamic.logic_op = cmd_buffer->state.dynamic.logic_op;
-
-      state->dynamic.color_write_enable = cmd_buffer->state.dynamic.color_write_enable;
-
-      state->dynamic.discard_rectangle.count = cmd_buffer->state.dynamic.discard_rectangle.count;
-      typed_memcpy(state->dynamic.discard_rectangle.rectangles,
-                   cmd_buffer->state.dynamic.discard_rectangle.rectangles,
-                   MAX_DISCARD_RECTANGLES);
-   }
-
-   if (state->flags & RADV_META_SAVE_SAMPLE_LOCATIONS) {
-      typed_memcpy(&state->dynamic.sample_location, &cmd_buffer->state.dynamic.sample_location, 1);
+      /* Save all dynamic states. */
+      state->dynamic = cmd_buffer->state.dynamic;
    }
 
    if (state->flags & RADV_META_SAVE_COMPUTE_PIPELINE) {
       assert(!(state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE));
 
-      state->old_pipeline = cmd_buffer->state.compute_pipeline;
+      state->old_compute_pipeline = cmd_buffer->state.compute_pipeline;
    }
 
    if (state->flags & RADV_META_SAVE_DESCRIPTORS) {
@@ -184,15 +144,17 @@ radv_meta_save(struct radv_meta_saved_state *state, struct radv_cmd_buffer *cmd_
       memcpy(state->push_constants, cmd_buffer->push_constants, MAX_PUSH_CONSTANTS_SIZE);
    }
 
-   if (state->flags & RADV_META_SAVE_PASS) {
-      state->pass = cmd_buffer->state.pass;
-      state->subpass = cmd_buffer->state.subpass;
-      state->framebuffer = cmd_buffer->state.framebuffer;
-      state->attachments = cmd_buffer->state.attachments;
-      state->render_area = cmd_buffer->state.render_area;
+   if (state->flags & RADV_META_SAVE_RENDER) {
+      state->render = cmd_buffer->state.render;
+      radv_cmd_buffer_reset_rendering(cmd_buffer);
    }
 
-   radv_suspend_queries(cmd_buffer);
+   if (state->flags & RADV_META_SUSPEND_PREDICATING) {
+      state->predicating = cmd_buffer->state.predicating;
+      cmd_buffer->state.predicating = false;
+   }
+
+   radv_suspend_queries(state, cmd_buffer);
 }
 
 void
@@ -203,119 +165,27 @@ radv_meta_restore(const struct radv_meta_saved_state *state, struct radv_cmd_buf
                                        : VK_PIPELINE_BIND_POINT_COMPUTE;
 
    if (state->flags & RADV_META_SAVE_GRAPHICS_PIPELINE) {
-      radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_GRAPHICS,
-                           radv_pipeline_to_handle(state->old_pipeline));
+      if (state->old_graphics_pipeline) {
+         radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_GRAPHICS,
+                              radv_pipeline_to_handle(&state->old_graphics_pipeline->base));
+      } else {
+         cmd_buffer->state.graphics_pipeline = NULL;
+      }
 
-      cmd_buffer->state.dirty |= RADV_CMD_DIRTY_PIPELINE;
+      /* Restore all dynamic states. */
+      cmd_buffer->state.dynamic = state->dynamic;
+      cmd_buffer->state.dirty |= RADV_DYNAMIC_ALL;
 
-      /* Restore all viewports. */
-      cmd_buffer->state.dynamic.viewport.count = state->dynamic.viewport.count;
-      typed_memcpy(cmd_buffer->state.dynamic.viewport.viewports, state->dynamic.viewport.viewports,
-                   MAX_VIEWPORTS);
-      typed_memcpy(cmd_buffer->state.dynamic.viewport.xform, state->dynamic.viewport.xform,
-                   MAX_VIEWPORTS);
-
-      /* Restore all scissors. */
-      cmd_buffer->state.dynamic.scissor.count = state->dynamic.scissor.count;
-      typed_memcpy(cmd_buffer->state.dynamic.scissor.scissors, state->dynamic.scissor.scissors,
-                   MAX_SCISSORS);
-
-      cmd_buffer->state.dynamic.line_stipple.factor = state->dynamic.line_stipple.factor;
-      cmd_buffer->state.dynamic.line_stipple.pattern = state->dynamic.line_stipple.pattern;
-
-      cmd_buffer->state.dynamic.cull_mode = state->dynamic.cull_mode;
-      cmd_buffer->state.dynamic.front_face = state->dynamic.front_face;
-
-      cmd_buffer->state.dynamic.primitive_topology = state->dynamic.primitive_topology;
-
-      cmd_buffer->state.dynamic.depth_test_enable = state->dynamic.depth_test_enable;
-      cmd_buffer->state.dynamic.depth_write_enable = state->dynamic.depth_write_enable;
-      cmd_buffer->state.dynamic.depth_compare_op = state->dynamic.depth_compare_op;
-      cmd_buffer->state.dynamic.depth_bounds_test_enable = state->dynamic.depth_bounds_test_enable;
-      cmd_buffer->state.dynamic.stencil_test_enable = state->dynamic.stencil_test_enable;
-
-      cmd_buffer->state.dynamic.stencil_op.front.compare_op = state->dynamic.stencil_op.front.compare_op;
-      cmd_buffer->state.dynamic.stencil_op.front.fail_op = state->dynamic.stencil_op.front.fail_op;
-      cmd_buffer->state.dynamic.stencil_op.front.pass_op = state->dynamic.stencil_op.front.pass_op;
-      cmd_buffer->state.dynamic.stencil_op.front.depth_fail_op =
-         state->dynamic.stencil_op.front.depth_fail_op;
-
-      cmd_buffer->state.dynamic.stencil_op.back.compare_op = state->dynamic.stencil_op.back.compare_op;
-      cmd_buffer->state.dynamic.stencil_op.back.fail_op = state->dynamic.stencil_op.back.fail_op;
-      cmd_buffer->state.dynamic.stencil_op.back.pass_op = state->dynamic.stencil_op.back.pass_op;
-      cmd_buffer->state.dynamic.stencil_op.back.depth_fail_op =
-         state->dynamic.stencil_op.back.depth_fail_op;
-
-      cmd_buffer->state.dynamic.line_width = state->dynamic.line_width;
-
-      cmd_buffer->state.dynamic.depth_bias.bias = state->dynamic.depth_bias.bias;
-      cmd_buffer->state.dynamic.depth_bias.clamp = state->dynamic.depth_bias.clamp;
-      cmd_buffer->state.dynamic.depth_bias.slope = state->dynamic.depth_bias.slope;
-
-      memcpy(cmd_buffer->state.dynamic.blend_constants, state->dynamic.blend_constants,
-             sizeof(state->dynamic.blend_constants));
-
-      cmd_buffer->state.dynamic.depth_bounds.min = state->dynamic.depth_bounds.min;
-      cmd_buffer->state.dynamic.depth_bounds.max = state->dynamic.depth_bounds.max;
-
-      cmd_buffer->state.dynamic.stencil_compare_mask.front = state->dynamic.stencil_compare_mask.front;
-      cmd_buffer->state.dynamic.stencil_compare_mask.back = state->dynamic.stencil_compare_mask.back;
-
-      cmd_buffer->state.dynamic.stencil_write_mask.front = state->dynamic.stencil_write_mask.front;
-      cmd_buffer->state.dynamic.stencil_write_mask.back = state->dynamic.stencil_write_mask.back;
-
-      cmd_buffer->state.dynamic.stencil_reference.front = state->dynamic.stencil_reference.front;
-      cmd_buffer->state.dynamic.stencil_reference.back = state->dynamic.stencil_reference.back;
-
-      cmd_buffer->state.dynamic.fragment_shading_rate.size = state->dynamic.fragment_shading_rate.size;
-      cmd_buffer->state.dynamic.fragment_shading_rate.combiner_ops[0] =
-         state->dynamic.fragment_shading_rate.combiner_ops[0];
-      cmd_buffer->state.dynamic.fragment_shading_rate.combiner_ops[1] =
-         state->dynamic.fragment_shading_rate.combiner_ops[1];
-
-      cmd_buffer->state.dynamic.depth_bias_enable = state->dynamic.depth_bias_enable;
-
-      cmd_buffer->state.dynamic.primitive_restart_enable = state->dynamic.primitive_restart_enable;
-
-      cmd_buffer->state.dynamic.rasterizer_discard_enable = state->dynamic.rasterizer_discard_enable;
-
-      cmd_buffer->state.dynamic.logic_op = state->dynamic.logic_op;
-
-      cmd_buffer->state.dynamic.color_write_enable = state->dynamic.color_write_enable;
-
-      cmd_buffer->state.dynamic.discard_rectangle.count = state->dynamic.discard_rectangle.count;
-      typed_memcpy(cmd_buffer->state.dynamic.discard_rectangle.rectangles,
-                   state->dynamic.discard_rectangle.rectangles,
-                   MAX_DISCARD_RECTANGLES);
-
-      cmd_buffer->state.dirty |=
-         RADV_CMD_DIRTY_DYNAMIC_VIEWPORT | RADV_CMD_DIRTY_DYNAMIC_SCISSOR |
-         RADV_CMD_DIRTY_DYNAMIC_CULL_MODE | RADV_CMD_DIRTY_DYNAMIC_FRONT_FACE |
-         RADV_CMD_DIRTY_DYNAMIC_PRIMITIVE_TOPOLOGY | RADV_CMD_DIRTY_DYNAMIC_DEPTH_TEST_ENABLE |
-         RADV_CMD_DIRTY_DYNAMIC_DEPTH_WRITE_ENABLE | RADV_CMD_DIRTY_DYNAMIC_DEPTH_COMPARE_OP |
-         RADV_CMD_DIRTY_DYNAMIC_DEPTH_BOUNDS_TEST_ENABLE |
-         RADV_CMD_DIRTY_DYNAMIC_STENCIL_TEST_ENABLE | RADV_CMD_DIRTY_DYNAMIC_STENCIL_OP |
-         RADV_CMD_DIRTY_DYNAMIC_STENCIL_WRITE_MASK | RADV_CMD_DIRTY_DYNAMIC_STENCIL_REFERENCE |
-         RADV_CMD_DIRTY_DYNAMIC_FRAGMENT_SHADING_RATE | RADV_CMD_DIRTY_DYNAMIC_DEPTH_BIAS_ENABLE |
-         RADV_CMD_DIRTY_DYNAMIC_PRIMITIVE_RESTART_ENABLE |
-         RADV_CMD_DIRTY_DYNAMIC_RASTERIZER_DISCARD_ENABLE | RADV_CMD_DIRTY_DYNAMIC_LOGIC_OP |
-         RADV_CMD_DIRTY_DYNAMIC_COLOR_WRITE_ENABLE | RADV_CMD_DIRTY_DYNAMIC_LINE_STIPPLE |
-         RADV_CMD_DIRTY_DYNAMIC_STENCIL_COMPARE_MASK | RADV_CMD_DIRTY_DYNAMIC_DEPTH_BOUNDS |
-         RADV_CMD_DIRTY_DYNAMIC_BLEND_CONSTANTS | RADV_CMD_DIRTY_DYNAMIC_LINE_WIDTH |
-         RADV_CMD_DIRTY_DYNAMIC_DEPTH_BIAS | RADV_CMD_DIRTY_DYNAMIC_DISCARD_RECTANGLE;
-   }
-
-   if (state->flags & RADV_META_SAVE_SAMPLE_LOCATIONS) {
-      typed_memcpy(&cmd_buffer->state.dynamic.sample_location.locations,
-                   &state->dynamic.sample_location.locations, 1);
-
-      cmd_buffer->state.dirty |= RADV_CMD_DIRTY_DYNAMIC_SAMPLE_LOCATIONS;
+      /* Re-emit the guardband state because meta operations changed dynamic states. */
+      cmd_buffer->state.dirty |= RADV_CMD_DIRTY_GUARDBAND;
    }
 
    if (state->flags & RADV_META_SAVE_COMPUTE_PIPELINE) {
-      if (state->old_pipeline) {
+      if (state->old_compute_pipeline) {
          radv_CmdBindPipeline(radv_cmd_buffer_to_handle(cmd_buffer), VK_PIPELINE_BIND_POINT_COMPUTE,
-                              radv_pipeline_to_handle(state->old_pipeline));
+                              radv_pipeline_to_handle(&state->old_compute_pipeline->base));
+      } else {
+         cmd_buffer->state.compute_pipeline = NULL;
       }
    }
 
@@ -333,23 +203,21 @@ radv_meta_restore(const struct radv_meta_saved_state *state, struct radv_cmd_buf
                             MAX_PUSH_CONSTANTS_SIZE, state->push_constants);
    }
 
-   if (state->flags & RADV_META_SAVE_PASS) {
-      cmd_buffer->state.pass = state->pass;
-      cmd_buffer->state.subpass = state->subpass;
-      cmd_buffer->state.framebuffer = state->framebuffer;
-      cmd_buffer->state.attachments = state->attachments;
-      cmd_buffer->state.render_area = state->render_area;
-      if (state->subpass)
-         cmd_buffer->state.dirty |= RADV_CMD_DIRTY_FRAMEBUFFER;
+   if (state->flags & RADV_META_SAVE_RENDER) {
+      cmd_buffer->state.render = state->render;
+      cmd_buffer->state.dirty |= RADV_CMD_DIRTY_FRAMEBUFFER;
    }
 
-   radv_resume_queries(cmd_buffer);
+   if (state->flags & RADV_META_SUSPEND_PREDICATING)
+      cmd_buffer->state.predicating = state->predicating;
+
+   radv_resume_queries(state, cmd_buffer);
 }
 
 VkImageViewType
 radv_meta_get_view_type(const struct radv_image *image)
 {
-   switch (image->type) {
+   switch (image->vk.image_type) {
    case VK_IMAGE_TYPE_1D:
       return VK_IMAGE_VIEW_TYPE_1D;
    case VK_IMAGE_TYPE_2D:
@@ -370,7 +238,7 @@ radv_meta_get_iview_layer(const struct radv_image *dest_image,
                           const VkImageSubresourceLayers *dest_subresource,
                           const VkOffset3D *dest_offset)
 {
-   switch (dest_image->type) {
+   switch (dest_image->vk.image_type) {
    case VK_IMAGE_TYPE_1D:
    case VK_IMAGE_TYPE_2D:
       return dest_subresource->baseArrayLayer;
@@ -450,13 +318,19 @@ radv_load_meta_pipeline(struct radv_device *device)
    struct stat st;
    void *data = NULL;
    bool ret = false;
+   int fd = -1;
+   VkResult result = VK_SUCCESS;
+
+   VkPipelineCacheCreateInfo create_info = {
+      .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+   };
 
    if (!radv_builtin_cache_path(path))
-      return false;
+      goto fail;
 
-   int fd = open(path, O_RDONLY);
+   fd = open(path, O_RDONLY);
    if (fd < 0)
-      return false;
+      goto fail;
    if (fstat(fd, &st))
       goto fail;
    data = malloc(st.st_size);
@@ -465,10 +339,19 @@ radv_load_meta_pipeline(struct radv_device *device)
    if (read(fd, data, st.st_size) == -1)
       goto fail;
 
-   ret = radv_pipeline_cache_load(&device->meta_state.cache, data, st.st_size);
+   create_info.initialDataSize = st.st_size;
+   create_info.pInitialData = data;
+
 fail:
+   result = radv_CreatePipelineCache(radv_device_to_handle(device), &create_info, NULL, &device->meta_state.cache);
+   if (result == VK_SUCCESS) {
+      device->meta_state.initial_cache_entries = radv_pipeline_cache_from_handle(device->meta_state.cache)->kernel_count;
+      ret = device->meta_state.initial_cache_entries > 0;
+   }
+
    free(data);
-   close(fd);
+   if (fd >= 0)
+      close(fd);
    return ret;
 #endif
 }
@@ -481,11 +364,15 @@ radv_store_meta_pipeline(struct radv_device *device)
    size_t size;
    void *data = NULL;
 
-   if (!device->meta_state.cache.modified)
+   if (device->meta_state.cache == VK_NULL_HANDLE)
+      return;
+
+   /* Skip serialization if no entries were added. */
+   if (radv_pipeline_cache_from_handle(device->meta_state.cache)->kernel_count <= device->meta_state.initial_cache_entries)
       return;
 
    if (radv_GetPipelineCacheData(radv_device_to_handle(device),
-                                 radv_pipeline_cache_to_handle(&device->meta_state.cache), &size,
+                                 device->meta_state.cache, &size,
                                  NULL))
       return;
 
@@ -502,7 +389,7 @@ radv_store_meta_pipeline(struct radv_device *device)
       goto fail;
 
    if (radv_GetPipelineCacheData(radv_device_to_handle(device),
-                                 radv_pipeline_cache_to_handle(&device->meta_state.cache), &size,
+                                 device->meta_state.cache, &size,
                                  data))
       goto fail;
    if (write(fd, data, size) == -1)
@@ -530,12 +417,12 @@ radv_device_init_meta(struct radv_device *device)
       .pfnFree = meta_free,
    };
 
-   device->meta_state.cache.alloc = device->meta_state.alloc;
-   radv_pipeline_cache_init(&device->meta_state.cache, device);
    bool loaded_cache = radv_load_meta_pipeline(device);
    bool on_demand = !loaded_cache;
 
    mtx_init(&device->meta_state.mtx, mtx_plain);
+
+   device->app_shaders_internal = true;
 
    result = radv_device_init_meta_clear_state(device, on_demand);
    if (result != VK_SUCCESS)
@@ -581,61 +468,78 @@ radv_device_init_meta(struct radv_device *device)
    if (result != VK_SUCCESS)
       goto fail_resolve_fragment;
 
-   result = radv_device_init_meta_fmask_expand_state(device);
-   if (result != VK_SUCCESS)
-      goto fail_fmask_expand;
+   if (device->physical_device->use_fmask) {
+      result = radv_device_init_meta_fmask_expand_state(device);
+      if (result != VK_SUCCESS)
+         goto fail_fmask_expand;
 
-   result = radv_device_init_accel_struct_build_state(device);
-   if (result != VK_SUCCESS)
-      goto fail_accel_struct_build;
+      result = radv_device_init_meta_fmask_copy_state(device);
+      if (result != VK_SUCCESS)
+         goto fail_fmask_copy;
+   }
 
-   result = radv_device_init_meta_fmask_copy_state(device);
-   if (result != VK_SUCCESS)
-      goto fail_fmask_copy;
+   if (radv_enable_rt(device->physical_device, false)) {
+      result = radv_device_init_accel_struct_build_state(device);
+      if (result != VK_SUCCESS)
+         goto fail_accel_struct_build;
+   }
 
    result = radv_device_init_meta_etc_decode_state(device, on_demand);
    if (result != VK_SUCCESS)
       goto fail_etc_decode;
 
+   if (device->uses_device_generated_commands) {
+      result = radv_device_init_dgc_prepare_state(device);
+      if (result != VK_SUCCESS)
+         goto fail_dgc;
+   }
+
+   device->app_shaders_internal = false;
+
    return VK_SUCCESS;
 
+fail_dgc:
+   radv_device_finish_dgc_prepare_state(device);
 fail_etc_decode:
-   radv_device_finish_meta_fmask_copy_state(device);
-fail_fmask_copy:
-   radv_device_finish_accel_struct_build_state(device);
+   radv_device_finish_meta_etc_decode_state(device);
 fail_accel_struct_build:
-   radv_device_finish_meta_fmask_expand_state(device);
+   radv_device_finish_accel_struct_build_state(device);
+fail_fmask_copy:
+   radv_device_finish_meta_fmask_copy_state(device);
 fail_fmask_expand:
-   radv_device_finish_meta_resolve_fragment_state(device);
+   radv_device_finish_meta_fmask_expand_state(device);
 fail_resolve_fragment:
-   radv_device_finish_meta_resolve_compute_state(device);
+   radv_device_finish_meta_resolve_fragment_state(device);
 fail_resolve_compute:
-   radv_device_finish_meta_fast_clear_flush_state(device);
+   radv_device_finish_meta_resolve_compute_state(device);
 fail_fast_clear:
-   radv_device_finish_meta_query_state(device);
+   radv_device_finish_meta_fast_clear_flush_state(device);
 fail_query:
-   radv_device_finish_meta_buffer_state(device);
+   radv_device_finish_meta_query_state(device);
 fail_buffer:
-   radv_device_finish_meta_depth_decomp_state(device);
+   radv_device_finish_meta_buffer_state(device);
 fail_depth_decomp:
-   radv_device_finish_meta_bufimage_state(device);
+   radv_device_finish_meta_depth_decomp_state(device);
 fail_bufimage:
-   radv_device_finish_meta_blit2d_state(device);
+   radv_device_finish_meta_bufimage_state(device);
 fail_blit2d:
-   radv_device_finish_meta_blit_state(device);
+   radv_device_finish_meta_blit2d_state(device);
 fail_blit:
-   radv_device_finish_meta_resolve_state(device);
+   radv_device_finish_meta_blit_state(device);
 fail_resolve:
-   radv_device_finish_meta_clear_state(device);
+   radv_device_finish_meta_resolve_state(device);
 fail_clear:
+   radv_device_finish_meta_clear_state(device);
+
    mtx_destroy(&device->meta_state.mtx);
-   radv_pipeline_cache_finish(&device->meta_state.cache);
+   radv_DestroyPipelineCache(radv_device_to_handle(device), device->meta_state.cache, NULL);
    return result;
 }
 
 void
 radv_device_finish_meta(struct radv_device *device)
 {
+   radv_device_finish_dgc_prepare_state(device);
    radv_device_finish_meta_etc_decode_state(device);
    radv_device_finish_accel_struct_build_state(device);
    radv_device_finish_meta_clear_state(device);
@@ -655,11 +559,12 @@ radv_device_finish_meta(struct radv_device *device)
    radv_device_finish_meta_fmask_copy_state(device);
 
    radv_store_meta_pipeline(device);
-   radv_pipeline_cache_finish(&device->meta_state.cache);
+   radv_DestroyPipelineCache(radv_device_to_handle(device), device->meta_state.cache, NULL);
    mtx_destroy(&device->meta_state.mtx);
 }
 
-nir_builder PRINTFLIKE(2, 3) radv_meta_init_shader(gl_shader_stage stage, const char *name, ...)
+nir_builder PRINTFLIKE(3, 4)
+   radv_meta_init_shader(struct radv_device *dev, gl_shader_stage stage, const char *name, ...)
 {
    nir_builder b = nir_builder_init_simple_shader(stage, NULL, NULL);
    if (name) {
@@ -669,6 +574,7 @@ nir_builder PRINTFLIKE(2, 3) radv_meta_init_shader(gl_shader_stage stage, const 
       va_end(args);
    }
 
+   b.shader->options = &dev->physical_device->nir_options[stage];
    b.shader->info.workgroup_size[0] = 1;
    b.shader->info.workgroup_size[1] = 1;
    b.shader->info.workgroup_size[2] = 1;
@@ -676,49 +582,17 @@ nir_builder PRINTFLIKE(2, 3) radv_meta_init_shader(gl_shader_stage stage, const 
    return b;
 }
 
-nir_ssa_def *
-radv_meta_gen_rect_vertices_comp2(nir_builder *vs_b, nir_ssa_def *comp2)
-{
-
-   nir_ssa_def *vertex_id = nir_load_vertex_id_zero_base(vs_b);
-
-   /* vertex 0 - -1.0, -1.0 */
-   /* vertex 1 - -1.0, 1.0 */
-   /* vertex 2 - 1.0, -1.0 */
-   /* so channel 0 is vertex_id != 2 ? -1.0 : 1.0
-      channel 1 is vertex id != 1 ? -1.0 : 1.0 */
-
-   nir_ssa_def *c0cmp = nir_ine(vs_b, vertex_id, nir_imm_int(vs_b, 2));
-   nir_ssa_def *c1cmp = nir_ine(vs_b, vertex_id, nir_imm_int(vs_b, 1));
-
-   nir_ssa_def *comp[4];
-   comp[0] = nir_bcsel(vs_b, c0cmp, nir_imm_float(vs_b, -1.0), nir_imm_float(vs_b, 1.0));
-
-   comp[1] = nir_bcsel(vs_b, c1cmp, nir_imm_float(vs_b, -1.0), nir_imm_float(vs_b, 1.0));
-   comp[2] = comp2;
-   comp[3] = nir_imm_float(vs_b, 1.0);
-   nir_ssa_def *outvec = nir_vec(vs_b, comp, 4);
-
-   return outvec;
-}
-
-nir_ssa_def *
-radv_meta_gen_rect_vertices(nir_builder *vs_b)
-{
-   return radv_meta_gen_rect_vertices_comp2(vs_b, nir_imm_float(vs_b, 0.0));
-}
-
 /* vertex shader that generates vertices */
 nir_shader *
-radv_meta_build_nir_vs_generate_vertices(void)
+radv_meta_build_nir_vs_generate_vertices(struct radv_device *dev)
 {
    const struct glsl_type *vec4 = glsl_vec4_type();
 
    nir_variable *v_position;
 
-   nir_builder b = radv_meta_init_shader(MESA_SHADER_VERTEX, "meta_vs_gen_verts");
+   nir_builder b = radv_meta_init_shader(dev, MESA_SHADER_VERTEX, "meta_vs_gen_verts");
 
-   nir_ssa_def *outvec = radv_meta_gen_rect_vertices(&b);
+   nir_ssa_def *outvec = nir_gen_rect_vertices(&b, NULL, NULL);
 
    v_position = nir_variable_create(b.shader, nir_var_shader_out, vec4, "gl_Position");
    v_position->data.location = VARYING_SLOT_POS;
@@ -729,19 +603,18 @@ radv_meta_build_nir_vs_generate_vertices(void)
 }
 
 nir_shader *
-radv_meta_build_nir_fs_noop(void)
+radv_meta_build_nir_fs_noop(struct radv_device *dev)
 {
-   return radv_meta_init_shader(MESA_SHADER_FRAGMENT, "meta_noop_fs").shader;
+   return radv_meta_init_shader(dev, MESA_SHADER_FRAGMENT, "meta_noop_fs").shader;
 }
 
 void
-radv_meta_build_resolve_shader_core(nir_builder *b, bool is_integer, int samples,
-                                    nir_variable *input_img, nir_variable *color,
+radv_meta_build_resolve_shader_core(struct radv_device *device, nir_builder *b, bool is_integer,
+                                    int samples, nir_variable *input_img, nir_variable *color,
                                     nir_ssa_def *img_coord)
 {
    /* do a txf_ms on each sample */
    nir_ssa_def *tmp;
-   bool inserted_if = false;
 
    nir_ssa_def *input_img_deref = &nir_build_deref_var(b, input_img)->dest.ssa;
 
@@ -754,7 +627,7 @@ radv_meta_build_resolve_shader_core(nir_builder *b, bool is_integer, int samples
    tex->src[1].src = nir_src_for_ssa(nir_imm_int(b, 0));
    tex->src[2].src_type = nir_tex_src_texture_deref;
    tex->src[2].src = nir_src_for_ssa(input_img_deref);
-   tex->dest_type = nir_type_float32;
+   tex->dest_type = nir_get_nir_type_for_glsl_base_type(glsl_get_sampler_result_type(input_img->type));
    tex->is_array = false;
    tex->coord_components = 2;
 
@@ -763,7 +636,12 @@ radv_meta_build_resolve_shader_core(nir_builder *b, bool is_integer, int samples
 
    tmp = &tex->dest.ssa;
 
-   if (!is_integer && samples > 1) {
+   if (is_integer || samples <= 1) {
+      nir_store_var(b, color, &tex->dest.ssa, 0xf);
+      return;
+   }
+
+   if (device->physical_device->use_fmask) {
       nir_tex_instr *tex_all_same = nir_tex_instr_create(b->shader, 2);
       tex_all_same->sampler_dim = GLSL_SAMPLER_DIM_MS;
       tex_all_same->op = nir_texop_samples_identical;
@@ -778,37 +656,38 @@ radv_meta_build_resolve_shader_core(nir_builder *b, bool is_integer, int samples
       nir_ssa_dest_init(&tex_all_same->instr, &tex_all_same->dest, 1, 1, "tex");
       nir_builder_instr_insert(b, &tex_all_same->instr);
 
-      nir_ssa_def *all_same = nir_ieq(b, &tex_all_same->dest.ssa, nir_imm_bool(b, false));
-      nir_push_if(b, all_same);
-      for (int i = 1; i < samples; i++) {
-         nir_tex_instr *tex_add = nir_tex_instr_create(b->shader, 3);
-         tex_add->sampler_dim = GLSL_SAMPLER_DIM_MS;
-         tex_add->op = nir_texop_txf_ms;
-         tex_add->src[0].src_type = nir_tex_src_coord;
-         tex_add->src[0].src = nir_src_for_ssa(img_coord);
-         tex_add->src[1].src_type = nir_tex_src_ms_index;
-         tex_add->src[1].src = nir_src_for_ssa(nir_imm_int(b, i));
-         tex_add->src[2].src_type = nir_tex_src_texture_deref;
-         tex_add->src[2].src = nir_src_for_ssa(input_img_deref);
-         tex_add->dest_type = nir_type_float32;
-         tex_add->is_array = false;
-         tex_add->coord_components = 2;
-
-         nir_ssa_dest_init(&tex_add->instr, &tex_add->dest, 4, 32, "tex");
-         nir_builder_instr_insert(b, &tex_add->instr);
-
-         tmp = nir_fadd(b, tmp, &tex_add->dest.ssa);
-      }
-
-      tmp = nir_fdiv(b, tmp, nir_imm_float(b, samples));
-      nir_store_var(b, color, tmp, 0xf);
-      nir_push_else(b, NULL);
-      inserted_if = true;
+      nir_ssa_def *not_all_same = nir_inot(b, &tex_all_same->dest.ssa);
+      nir_push_if(b, not_all_same);
    }
-   nir_store_var(b, color, &tex->dest.ssa, 0xf);
 
-   if (inserted_if)
+   for (int i = 1; i < samples; i++) {
+      nir_tex_instr *tex_add = nir_tex_instr_create(b->shader, 3);
+      tex_add->sampler_dim = GLSL_SAMPLER_DIM_MS;
+      tex_add->op = nir_texop_txf_ms;
+      tex_add->src[0].src_type = nir_tex_src_coord;
+      tex_add->src[0].src = nir_src_for_ssa(img_coord);
+      tex_add->src[1].src_type = nir_tex_src_ms_index;
+      tex_add->src[1].src = nir_src_for_ssa(nir_imm_int(b, i));
+      tex_add->src[2].src_type = nir_tex_src_texture_deref;
+      tex_add->src[2].src = nir_src_for_ssa(input_img_deref);
+      tex_add->dest_type = nir_type_float32;
+      tex_add->is_array = false;
+      tex_add->coord_components = 2;
+
+      nir_ssa_dest_init(&tex_add->instr, &tex_add->dest, 4, 32, "tex");
+      nir_builder_instr_insert(b, &tex_add->instr);
+
+      tmp = nir_fadd(b, tmp, &tex_add->dest.ssa);
+   }
+
+   tmp = nir_fdiv(b, tmp, nir_imm_float(b, samples));
+   nir_store_var(b, color, tmp, 0xf);
+
+   if (device->physical_device->use_fmask) {
+      nir_push_else(b, NULL);
+      nir_store_var(b, color, &tex->dest.ssa, 0xf);
       nir_pop_if(b, NULL);
+   }
 }
 
 nir_ssa_def *
@@ -844,6 +723,6 @@ radv_break_on_count(nir_builder *b, nir_variable *var, nir_ssa_def *count)
    nir_jump(b, nir_jump_break);
    nir_pop_if(b, NULL);
 
-   counter = nir_iadd(b, counter, nir_imm_int(b, 1));
+   counter = nir_iadd_imm(b, counter, 1);
    nir_store_var(b, var, counter, 0x1);
 }

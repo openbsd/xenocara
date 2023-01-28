@@ -304,20 +304,20 @@ __glXGetDrawableAttribute(Display * dpy, GLXDrawable drawable,
       if (psc->driScreen->getBufferAge != NULL)
          *value = psc->driScreen->getBufferAge(pdraw);
 
-      return 0;
+      return 1;
    }
 
    if (pdraw) {
       if (attribute == GLX_SWAP_INTERVAL_EXT) {
          *value = pdraw->psc->driScreen->getSwapInterval(pdraw);
-         return 0;
+         return 1;
       } else if (attribute == GLX_MAX_SWAP_INTERVAL_EXT) {
          *value = pdraw->psc->driScreen->maxSwapInterval;
-         return 0;
+         return 1;
       } else if (attribute == GLX_LATE_SWAPS_TEAR_EXT) {
          *value = __glXExtensionBitIsEnabled(pdraw->psc,
                                              EXT_swap_control_tear_bit);
-         return 0;
+         return 1;
       }
    }
 #endif
@@ -393,7 +393,7 @@ __glXGetDrawableAttribute(Display * dpy, GLXDrawable drawable,
    SyncHandle();
 
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
-   if (pdraw && attribute == GLX_FBCONFIG_ID && !found && priv && priv->screens != NULL) {
+   if (pdraw && attribute == GLX_FBCONFIG_ID && !found) {
       /* If we failed to lookup the GLX_FBCONFIG_ID, it may be because the drawable is
        * a bare Window, so try differently by first figure out its visual, then GLX
        * visual like driInferDrawableConfig does.
@@ -408,23 +408,11 @@ __glXGetDrawableAttribute(Display * dpy, GLXDrawable drawable,
          attr = xcb_get_window_attributes_reply(conn, cookie, NULL);
          if (attr) {
             /* Find the Window's GLX Visual */
-            struct glx_config *conf = glx_config_find_visual(pdraw->psc->visuals, attr->visual);
+            struct glx_config *conf = glx_config_find_visual(pdraw->psc->configs, attr->visual);
             free(attr);
 
-            if (conf && conf->screen >= 0 && conf->screen < ScreenCount(dpy)) {
-               /* Then find the GLXFBConfig of the GLX Visual */
-               struct glx_config *c;
-               for (c = priv->screens[conf->screen]->configs; c != NULL;
-                    c = c->next) {
-                  if (!c->visualID)
-                     continue;
-                  if (c->visualID == conf->visualID) {
-                     *value = c->fbconfigID;
-                     found = 1;
-                     break;
-                  }
-               }
-            }
+            if (conf)
+               *value = conf->fbconfigID;
          }
       }
    }
@@ -551,10 +539,6 @@ CreateDrawable(Display *dpy, struct glx_config *config,
 static void
 DestroyDrawable(Display * dpy, GLXDrawable drawable, CARD32 glxCode)
 {
-   if ((dpy == NULL) || (drawable == 0)) {
-      return;
-   }
-
    protocolDestroyDrawable(dpy, drawable, glxCode);
 
    DestroyGLXDrawable(dpy, drawable);

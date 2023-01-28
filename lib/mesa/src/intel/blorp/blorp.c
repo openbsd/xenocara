@@ -30,6 +30,55 @@
 #include "compiler/brw_nir.h"
 #include "dev/intel_debug.h"
 
+enum intel_measure_snapshot_type
+blorp_op_to_intel_measure_snapshot(enum blorp_op op)
+{
+   enum intel_measure_snapshot_type vals[] = {
+#define MAP(name) [BLORP_OP_##name] = INTEL_SNAPSHOT_##name
+      MAP(BLIT),
+      MAP(COPY),
+      MAP(CCS_AMBIGUATE),
+      MAP(CCS_COLOR_CLEAR),
+      MAP(CCS_PARTIAL_RESOLVE),
+      MAP(CCS_RESOLVE),
+      MAP(HIZ_AMBIGUATE),
+      MAP(HIZ_CLEAR),
+      MAP(HIZ_RESOLVE),
+      MAP(MCS_COLOR_CLEAR),
+      MAP(MCS_PARTIAL_RESOLVE),
+      MAP(SLOW_COLOR_CLEAR),
+      MAP(SLOW_DEPTH_CLEAR),
+#undef MAP
+   };
+   assert(op < ARRAY_SIZE(vals));
+
+   return vals[op];
+}
+
+const char *blorp_op_to_name(enum blorp_op op)
+{
+   const char *names[] = {
+#define MAP(name) [BLORP_OP_##name] = #name
+      MAP(BLIT),
+      MAP(COPY),
+      MAP(CCS_AMBIGUATE),
+      MAP(CCS_COLOR_CLEAR),
+      MAP(CCS_PARTIAL_RESOLVE),
+      MAP(CCS_RESOLVE),
+      MAP(HIZ_AMBIGUATE),
+      MAP(HIZ_CLEAR),
+      MAP(HIZ_RESOLVE),
+      MAP(MCS_COLOR_CLEAR),
+      MAP(MCS_PARTIAL_RESOLVE),
+      MAP(SLOW_COLOR_CLEAR),
+      MAP(SLOW_DEPTH_CLEAR),
+#undef MAP
+   };
+   assert(op < ARRAY_SIZE(names));
+
+   return names[op];
+}
+
 const char *
 blorp_shader_type_to_name(enum blorp_shader_type type)
 {
@@ -203,7 +252,7 @@ blorp_params_init(struct blorp_params *params)
 static void
 blorp_init_base_prog_key(struct brw_base_prog_key *key)
 {
-   for (int i = 0; i < MAX_SAMPLERS; i++)
+   for (int i = 0; i < BRW_MAX_SAMPLERS; i++)
       key->tex.swizzles[i] = SWIZZLE_XYZW;
 }
 
@@ -238,7 +287,8 @@ blorp_compile_fs(struct blorp_context *blorp, void *mem_ctx,
    wm_prog_data->base.nr_params = 0;
    wm_prog_data->base.param = NULL;
 
-   brw_preprocess_nir(compiler, nir, NULL);
+   struct brw_nir_compiler_opts opts = {};
+   brw_preprocess_nir(compiler, nir, &opts);
    nir_remove_dead_variables(nir, nir_var_shader_in, NULL);
    nir_shader_gather_info(nir, nir_shader_get_entrypoint(nir));
 
@@ -272,7 +322,8 @@ blorp_compile_vs(struct blorp_context *blorp, void *mem_ctx,
 
    nir->options = compiler->nir_options[MESA_SHADER_VERTEX];
 
-   brw_preprocess_nir(compiler, nir, NULL);
+   struct brw_nir_compiler_opts opts = {};
+   brw_preprocess_nir(compiler, nir, &opts);
    nir_shader_gather_info(nir, nir_shader_get_entrypoint(nir));
 
    vs_prog_data->inputs_read = nir->info.inputs_read;
@@ -309,7 +360,8 @@ blorp_compile_cs(struct blorp_context *blorp, void *mem_ctx,
 
    memset(cs_prog_data, 0, sizeof(*cs_prog_data));
 
-   brw_preprocess_nir(compiler, nir, NULL);
+   struct brw_nir_compiler_opts opts = {};
+   brw_preprocess_nir(compiler, nir, &opts);
    nir_shader_gather_info(nir, nir_shader_get_entrypoint(nir));
 
    NIR_PASS_V(nir, nir_lower_io, nir_var_uniform, type_size_scalar_bytes,
@@ -417,13 +469,13 @@ blorp_hiz_op(struct blorp_batch *batch, struct blorp_surf *surf,
    params.full_surface_hiz_op = true;
    switch (op) {
    case ISL_AUX_OP_FULL_RESOLVE:
-      params.snapshot_type = INTEL_SNAPSHOT_HIZ_RESOLVE;
+      params.op = BLORP_OP_HIZ_RESOLVE;
       break;
    case ISL_AUX_OP_AMBIGUATE:
-      params.snapshot_type = INTEL_SNAPSHOT_HIZ_AMBIGUATE;
+      params.op = BLORP_OP_HIZ_AMBIGUATE;
       break;
    case ISL_AUX_OP_FAST_CLEAR:
-      params.snapshot_type = INTEL_SNAPSHOT_HIZ_CLEAR;
+      params.op = BLORP_OP_HIZ_CLEAR;
       break;
    case ISL_AUX_OP_PARTIAL_RESOLVE:
    case ISL_AUX_OP_NONE:

@@ -37,10 +37,7 @@
 #include "util/u_cpu_detect.h"
 
 /*
- * TGSI translation limits.
- *
- * Some are slightly above SM 3.0 requirements to give some wiggle room to
- * the gallium frontends.
+ * llvmpipe shader limits
  */
 
 #define LP_MAX_TGSI_TEMPS 4096
@@ -55,11 +52,11 @@
 
 #define LP_MAX_TGSI_CONST_BUFFER_SIZE (LP_MAX_TGSI_CONSTS * sizeof(float[4]))
 
-#define LP_MAX_TGSI_SHADER_BUFFERS 16
+#define LP_MAX_TGSI_SHADER_BUFFERS 32
 
 #define LP_MAX_TGSI_SHADER_BUFFER_SIZE (1 << 27)
 
-#define LP_MAX_TGSI_SHADER_IMAGES 32
+#define LP_MAX_TGSI_SHADER_IMAGES 64
 
 /*
  * For quick access we cache registers in statically
@@ -113,13 +110,13 @@ gallivm_get_shader_param(enum pipe_shader_cap param)
       return 32;
    case PIPE_SHADER_CAP_MAX_OUTPUTS:
       return 32;
-   case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
+   case PIPE_SHADER_CAP_MAX_CONST_BUFFER0_SIZE:
       return LP_MAX_TGSI_CONST_BUFFER_SIZE;
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
       return LP_MAX_TGSI_CONST_BUFFERS;
    case PIPE_SHADER_CAP_MAX_TEMPS:
       return LP_MAX_TGSI_TEMPS;
-   case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
+   case PIPE_SHADER_CAP_CONT_SUPPORTED:
       return 1;
    case PIPE_SHADER_CAP_INDIRECT_INPUT_ADDR:
    case PIPE_SHADER_CAP_INDIRECT_OUTPUT_ADDR:
@@ -152,17 +149,12 @@ gallivm_get_shader_param(enum pipe_shader_cap param)
    case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
       return 1;
-   case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_LDEXP_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
-   case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
-   case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
+   case PIPE_SHADER_CAP_DROUND_SUPPORTED:
+   case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
+   case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTER_BUFFERS:
       return 0;
-   case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
-      return 32;
    case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
       return LP_MAX_TGSI_SHADER_BUFFERS;
    case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:

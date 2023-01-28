@@ -119,6 +119,46 @@ st_mesa_format_to_pipe_format(const struct st_context *st,
       }
    }
 
+   if (_mesa_is_format_s3tc(mesaFormat) && !st->has_s3tc) {
+      return _mesa_is_format_srgb(mesaFormat) ? PIPE_FORMAT_R8G8B8A8_SRGB :
+                                                PIPE_FORMAT_R8G8B8A8_UNORM;
+   }
+
+   if ((_mesa_is_format_rgtc(mesaFormat) && !st->has_rgtc) ||
+       (_mesa_is_format_latc(mesaFormat) && !st->has_latc)) {
+      switch (mesaFormat) {
+      case MESA_FORMAT_R_RGTC1_UNORM:
+         return PIPE_FORMAT_R8_UNORM;
+      case MESA_FORMAT_R_RGTC1_SNORM:
+         return PIPE_FORMAT_R8_SNORM;
+      case MESA_FORMAT_RG_RGTC2_UNORM:
+         return PIPE_FORMAT_R8G8_UNORM;
+      case MESA_FORMAT_RG_RGTC2_SNORM:
+         return PIPE_FORMAT_R8G8_SNORM;
+      case MESA_FORMAT_L_LATC1_UNORM:
+         return PIPE_FORMAT_L8_UNORM;
+      case MESA_FORMAT_L_LATC1_SNORM:
+         return PIPE_FORMAT_L8_SNORM;
+      case MESA_FORMAT_LA_LATC2_UNORM:
+         return PIPE_FORMAT_L8A8_UNORM;
+      case MESA_FORMAT_LA_LATC2_SNORM:
+         return PIPE_FORMAT_L8A8_SNORM;
+      default:
+         unreachable("Unknown RGTC format");
+      }
+   }
+
+   if (_mesa_is_format_bptc(mesaFormat) && !st->has_bptc) {
+      switch (mesaFormat) {
+      case MESA_FORMAT_BPTC_RGB_SIGNED_FLOAT:
+      case MESA_FORMAT_BPTC_RGB_UNSIGNED_FLOAT:
+         return PIPE_FORMAT_R16G16B16X16_FLOAT;
+      default:
+         return _mesa_is_format_srgb(mesaFormat) ? PIPE_FORMAT_R8G8B8A8_SRGB :
+                                                   PIPE_FORMAT_R8G8B8A8_UNORM;
+      }
+   }
+
    return mesaFormat;
 }
 
@@ -402,18 +442,25 @@ static const struct format_mapping format_map[] = {
       { PIPE_FORMAT_R8G8B8A8_SRGB, DEFAULT_SRGBA_FORMATS }
    },
    {
-      { GL_COMPRESSED_SRGB_EXT, GL_COMPRESSED_SRGB_S3TC_DXT1_EXT, 0 },
+      { GL_COMPRESSED_SRGB_EXT, 0 },
       { PIPE_FORMAT_DXT1_SRGB, PIPE_FORMAT_R8G8B8X8_SRGB,
         PIPE_FORMAT_B8G8R8X8_SRGB, DEFAULT_SRGBA_FORMATS }
+   },
+   {
+      { GL_COMPRESSED_SRGB_S3TC_DXT1_EXT, 0 },
+      { PIPE_FORMAT_DXT1_SRGB }
    },
    {
       { GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT, 0 },
       { PIPE_FORMAT_DXT1_SRGBA, 0 }
    },
    {
-      { GL_COMPRESSED_SRGB_ALPHA_EXT,
-        GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT, 0 },
+      { GL_COMPRESSED_SRGB_ALPHA_EXT },
       { PIPE_FORMAT_DXT3_SRGBA, DEFAULT_SRGBA_FORMATS }
+   },
+   {
+      { GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT, 0 },
+      { PIPE_FORMAT_DXT3_SRGBA, 0 }
    },
    {
       { GL_COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT, 0 },
@@ -544,37 +591,52 @@ static const struct format_mapping format_map[] = {
 
    /* compressed R, RG formats */
    {
-      { GL_COMPRESSED_RED, GL_COMPRESSED_RED_RGTC1, 0 },
+      { GL_COMPRESSED_RED, 0 },
       { PIPE_FORMAT_RGTC1_UNORM, PIPE_FORMAT_R8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
-      { GL_COMPRESSED_SIGNED_RED_RGTC1, 0 },
-      { PIPE_FORMAT_RGTC1_SNORM, DEFAULT_SNORM8_RGBA_FORMATS }
+      { GL_COMPRESSED_RED_RGTC1, 0 },
+      { PIPE_FORMAT_RGTC1_UNORM, 0 }
    },
    {
-      { GL_COMPRESSED_RG, GL_COMPRESSED_RG_RGTC2, 0 },
+      { GL_COMPRESSED_SIGNED_RED_RGTC1, 0 },
+      { PIPE_FORMAT_RGTC1_SNORM, 0 }
+   },
+   {
+      { GL_COMPRESSED_RG, 0 },
       { PIPE_FORMAT_RGTC2_UNORM, PIPE_FORMAT_R8G8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
-      { GL_COMPRESSED_SIGNED_RG_RGTC2, 0 },
-      { PIPE_FORMAT_RGTC2_SNORM, DEFAULT_SNORM8_RGBA_FORMATS }
+      { GL_COMPRESSED_RG_RGTC2, 0 },
+      { PIPE_FORMAT_RGTC2_UNORM, 0 }
    },
    {
-      { GL_COMPRESSED_LUMINANCE, GL_COMPRESSED_LUMINANCE_LATC1_EXT, 0 },
+      { GL_COMPRESSED_SIGNED_RG_RGTC2, 0 },
+      { PIPE_FORMAT_RGTC2_SNORM, 0 }
+   },
+   {
+      { GL_COMPRESSED_LUMINANCE, 0 },
       { PIPE_FORMAT_LATC1_UNORM, PIPE_FORMAT_L8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
-      { GL_COMPRESSED_SIGNED_LUMINANCE_LATC1_EXT, 0 },
-      { PIPE_FORMAT_LATC1_SNORM, DEFAULT_SNORM8_RGBA_FORMATS }
+      { GL_COMPRESSED_LUMINANCE_LATC1_EXT, 0 },
+      { PIPE_FORMAT_LATC1_UNORM, 0 }
    },
    {
-      { GL_COMPRESSED_LUMINANCE_ALPHA, GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT,
-        GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI, 0 },
+      { GL_COMPRESSED_SIGNED_LUMINANCE_LATC1_EXT, 0 },
+      { PIPE_FORMAT_LATC1_SNORM, 0 }
+   },
+   {
+      { GL_COMPRESSED_LUMINANCE_ALPHA, GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI, 0 },
       { PIPE_FORMAT_LATC2_UNORM, PIPE_FORMAT_L8A8_UNORM, DEFAULT_RGBA_FORMATS }
    },
    {
+      { GL_COMPRESSED_LUMINANCE_ALPHA_LATC2_EXT, 0 },
+      { PIPE_FORMAT_LATC2_UNORM, 0 }
+   },
+   {
       { GL_COMPRESSED_SIGNED_LUMINANCE_ALPHA_LATC2_EXT, 0 },
-      { PIPE_FORMAT_LATC2_SNORM, DEFAULT_SNORM8_RGBA_FORMATS }
+      { PIPE_FORMAT_LATC2_SNORM, 0 }
    },
 
    /* ETC1 */
@@ -1294,6 +1356,22 @@ st_ChooseTextureFormat(struct gl_context *ctx, GLenum target,
             internalFormat == GL_R8UI)
       bindings |= PIPE_BIND_RENDER_TARGET;
 
+   if ((_mesa_is_desktop_gl(ctx) && ctx->Version >= 30) &&
+       (internalFormat == GL_ALPHA4 ||
+        internalFormat == GL_ALPHA8 ||
+        internalFormat == GL_ALPHA12 ||
+        internalFormat == GL_ALPHA16 ||
+        /* ARB_texture_float */
+        internalFormat == GL_ALPHA32F_ARB ||
+        internalFormat == GL_INTENSITY32F_ARB ||
+        internalFormat == GL_LUMINANCE32F_ARB ||
+        internalFormat == GL_LUMINANCE_ALPHA32F_ARB ||
+        internalFormat == GL_ALPHA16F_ARB ||
+        internalFormat == GL_INTENSITY16F_ARB ||
+        internalFormat == GL_LUMINANCE16F_ARB ||
+        internalFormat == GL_LUMINANCE_ALPHA16F_ARB))
+      bindings |= PIPE_BIND_RENDER_TARGET;
+
    /* GLES allows the driver to choose any format which matches
     * the format+type combo, because GLES only supports unsized internal
     * formats and expects the driver to choose whatever suits it.
@@ -1557,6 +1635,8 @@ st_translate_color(union pipe_color_union *color,
       case GL_LUMINANCE_ALPHA:
          ci[1] = ci[2] = ci[0];
          break;
+      /* Stencil border is tricky on some hw. Help drivers a little here. */
+      case GL_STENCIL_INDEX:
       case GL_INTENSITY:
          ci[1] = ci[2] = ci[3] = ci[0];
          break;
@@ -1588,8 +1668,6 @@ st_translate_color(union pipe_color_union *color,
       case GL_LUMINANCE_ALPHA:
          cf[1] = cf[2] = cf[0];
          break;
-      /* Stencil border is tricky on some hw. Help drivers a little here. */
-      case GL_STENCIL_INDEX:
       case GL_INTENSITY:
          cf[1] = cf[2] = cf[3] = cf[0];
          break;

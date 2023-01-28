@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -19,14 +19,18 @@ SRCS=	ast_array_index.cpp \
 	gl_nir_lower_atomics.c \
 	gl_nir_lower_images.c \
 	gl_nir_lower_buffers.c \
+	gl_nir_lower_packed_varyings.c \
 	gl_nir_lower_samplers.c \
 	gl_nir_lower_samplers_as_deref.c \
+	gl_nir_lower_xfb_varying.c \
 	gl_nir_link_atomics.c \
 	gl_nir_link_uniform_blocks.c \
 	gl_nir_link_uniform_initializers.c \
 	gl_nir_link_uniforms.c \
+	gl_nir_link_varyings.c \
 	gl_nir_link_xfb.c \
 	gl_nir_linker.c \
+	gl_nir_opt_dead_builtin_varyings.c \
 	glsl_parser_extras.cpp \
 	glsl_symbol_table.cpp \
 	glsl_to_nir.cpp \
@@ -47,61 +51,39 @@ SRCS=	ast_array_index.cpp \
 	ir_print_visitor.cpp \
 	ir_reader.cpp \
 	ir_rvalue_visitor.cpp \
-	ir_set_program_inouts.cpp \
 	ir_validate.cpp \
 	ir_variable_refcount.cpp \
 	linker.cpp \
 	linker_util.cpp \
-	link_atomics.cpp \
 	link_functions.cpp \
 	link_interface_blocks.cpp \
 	link_uniforms.cpp \
-	link_uniform_initializers.cpp \
 	link_uniform_block_active_visitor.cpp \
 	link_uniform_blocks.cpp \
 	link_varyings.cpp \
-	loop_analysis.cpp \
-	loop_unroll.cpp \
 	lower_blend_equation_advanced.cpp \
-	lower_buffer_access.cpp \
 	lower_builtins.cpp \
-	lower_const_arrays_to_uniforms.cpp \
-	lower_cs_derived.cpp \
 	lower_discard.cpp \
 	lower_discard_flow.cpp \
 	lower_distance.cpp \
-	lower_if_to_cond_assign.cpp \
 	lower_instructions.cpp \
 	lower_int64.cpp \
 	lower_jumps.cpp \
 	lower_mat_op_to_vec.cpp \
-	lower_offset_array.cpp \
-	lower_packed_varyings.cpp \
 	lower_named_interface_blocks.cpp \
 	lower_packing_builtins.cpp \
 	lower_precision.cpp \
 	lower_subroutine.cpp \
 	lower_tess_level.cpp \
-	lower_variable_index_to_cond_assign.cpp \
 	lower_vec_index_to_cond_assign.cpp \
-	lower_vec_index_to_swizzle.cpp \
-	lower_vector.cpp \
 	lower_vector_derefs.cpp \
 	lower_vector_insert.cpp \
-	lower_vertex_id.cpp \
-	lower_output_reads.cpp \
-	lower_shared_reference.cpp \
-	lower_ubo_reference.cpp \
-	lower_xfb_varying.cpp \
 	opt_algebraic.cpp \
-	opt_array_splitting.cpp \
-	opt_conditional_discard.cpp \
 	opt_constant_folding.cpp \
 	opt_constant_propagation.cpp \
 	opt_constant_variable.cpp \
 	opt_copy_propagation_elements.cpp \
 	opt_dead_builtin_variables.cpp \
-	opt_dead_builtin_varyings.cpp \
 	opt_dead_code.cpp \
 	opt_dead_code_local.cpp \
 	opt_dead_functions.cpp \
@@ -111,8 +93,6 @@ SRCS=	ast_array_index.cpp \
 	opt_if_simplification.cpp \
 	opt_minmax.cpp \
 	opt_rebalance_tree.cpp \
-	opt_structure_splitting.cpp \
-	opt_swizzle.cpp \
 	opt_tree_grafting.cpp \
 	propagate_invariance.cpp \
 	s_expression.cpp \

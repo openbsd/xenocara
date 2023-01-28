@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:39 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -18,7 +18,7 @@ SRCS=	brw_cfg.cpp \
 	brw_debug_recompile.c \
 	brw_disasm.c \
 	brw_disasm_info.c \
-	brw_eu.cpp \
+	brw_eu.c \
 	brw_eu_compact.c \
 	brw_eu_emit.c \
 	brw_eu_util.c \
@@ -40,11 +40,13 @@ SRCS=	brw_cfg.cpp \
 	brw_fs_saturate_propagation.cpp \
 	brw_fs_scoreboard.cpp \
 	brw_fs_sel_peephole.cpp \
+	brw_fs_thread_payload.cpp \
 	brw_fs_validate.cpp \
 	brw_fs_visitor.cpp \
 	brw_interpolation_map.c \
 	brw_ir_performance.cpp \
 	brw_kernel.c \
+	brw_lower_logical_sends.cpp \
 	brw_mesh.cpp \
 	brw_nir.c \
 	brw_nir_analyze_boolean_resolves.c \
@@ -88,7 +90,6 @@ SRCS=	brw_cfg.cpp \
 	brw_vec4_visitor.cpp \
 	brw_vec4_vs_visitor.cpp \
 	brw_vue_map.c \
-	brw_wm_iz.cpp \
 	gfx6_gs_visitor.cpp
 
 SRCS+=	brw_nir_trig_workarounds.c

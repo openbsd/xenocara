@@ -39,7 +39,6 @@ struct vk_device_dispatch_table;
 struct vk_cmd_queue {
    const VkAllocationCallbacks *alloc;
    struct list_head cmds;
-   VkResult error;
 };
 
 enum vk_cmd_type {
@@ -128,6 +127,9 @@ enum vk_cmd_type {
    VK_CMD_DRAW_MESH_TASKS_NV,
    VK_CMD_DRAW_MESH_TASKS_INDIRECT_NV,
    VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_NV,
+   VK_CMD_DRAW_MESH_TASKS_EXT,
+   VK_CMD_DRAW_MESH_TASKS_INDIRECT_EXT,
+   VK_CMD_DRAW_MESH_TASKS_INDIRECT_COUNT_EXT,
    VK_CMD_BIND_INVOCATION_MASK_HUAWEI,
    VK_CMD_COPY_ACCELERATION_STRUCTURE_NV,
    VK_CMD_COPY_ACCELERATION_STRUCTURE_KHR,
@@ -139,6 +141,7 @@ enum vk_cmd_type {
    VK_CMD_TRACE_RAYS_KHR,
    VK_CMD_TRACE_RAYS_NV,
    VK_CMD_TRACE_RAYS_INDIRECT_KHR,
+   VK_CMD_TRACE_RAYS_INDIRECT2_KHR,
    VK_CMD_SET_RAY_TRACING_PIPELINE_STACK_SIZE_KHR,
    VK_CMD_SET_PERFORMANCE_MARKER_INTEL,
    VK_CMD_SET_PERFORMANCE_STREAM_MARKER_INTEL,
@@ -163,6 +166,37 @@ enum vk_cmd_type {
    VK_CMD_SET_DEPTH_BIAS_ENABLE,
    VK_CMD_SET_LOGIC_OP_EXT,
    VK_CMD_SET_PRIMITIVE_RESTART_ENABLE,
+   VK_CMD_SET_TESSELLATION_DOMAIN_ORIGIN_EXT,
+   VK_CMD_SET_DEPTH_CLAMP_ENABLE_EXT,
+   VK_CMD_SET_POLYGON_MODE_EXT,
+   VK_CMD_SET_RASTERIZATION_SAMPLES_EXT,
+   VK_CMD_SET_SAMPLE_MASK_EXT,
+   VK_CMD_SET_ALPHA_TO_COVERAGE_ENABLE_EXT,
+   VK_CMD_SET_ALPHA_TO_ONE_ENABLE_EXT,
+   VK_CMD_SET_LOGIC_OP_ENABLE_EXT,
+   VK_CMD_SET_COLOR_BLEND_ENABLE_EXT,
+   VK_CMD_SET_COLOR_BLEND_EQUATION_EXT,
+   VK_CMD_SET_COLOR_WRITE_MASK_EXT,
+   VK_CMD_SET_RASTERIZATION_STREAM_EXT,
+   VK_CMD_SET_CONSERVATIVE_RASTERIZATION_MODE_EXT,
+   VK_CMD_SET_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT,
+   VK_CMD_SET_DEPTH_CLIP_ENABLE_EXT,
+   VK_CMD_SET_SAMPLE_LOCATIONS_ENABLE_EXT,
+   VK_CMD_SET_COLOR_BLEND_ADVANCED_EXT,
+   VK_CMD_SET_PROVOKING_VERTEX_MODE_EXT,
+   VK_CMD_SET_LINE_RASTERIZATION_MODE_EXT,
+   VK_CMD_SET_LINE_STIPPLE_ENABLE_EXT,
+   VK_CMD_SET_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT,
+   VK_CMD_SET_VIEWPORT_WSCALING_ENABLE_NV,
+   VK_CMD_SET_VIEWPORT_SWIZZLE_NV,
+   VK_CMD_SET_COVERAGE_TO_COLOR_ENABLE_NV,
+   VK_CMD_SET_COVERAGE_TO_COLOR_LOCATION_NV,
+   VK_CMD_SET_COVERAGE_MODULATION_MODE_NV,
+   VK_CMD_SET_COVERAGE_MODULATION_TABLE_ENABLE_NV,
+   VK_CMD_SET_COVERAGE_MODULATION_TABLE_NV,
+   VK_CMD_SET_SHADING_RATE_IMAGE_ENABLE_NV,
+   VK_CMD_SET_COVERAGE_REDUCTION_MODE_NV,
+   VK_CMD_SET_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV,
    VK_CMD_COPY_BUFFER2,
    VK_CMD_COPY_IMAGE2,
    VK_CMD_BLIT_IMAGE2,
@@ -197,6 +231,12 @@ enum vk_cmd_type {
    VK_CMD_CU_LAUNCH_KERNEL_NVX,
    VK_CMD_BEGIN_RENDERING,
    VK_CMD_END_RENDERING,
+   VK_CMD_BUILD_MICROMAPS_EXT,
+   VK_CMD_COPY_MICROMAP_EXT,
+   VK_CMD_COPY_MICROMAP_TO_MEMORY_EXT,
+   VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT,
+   VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT,
+   VK_CMD_OPTICAL_FLOW_EXECUTE_NV,
 };
 
 extern const char *vk_cmd_queue_type_names[];
@@ -640,6 +680,25 @@ struct vk_cmd_draw_mesh_tasks_indirect_count_nv {
    uint32_t max_draw_count;
    uint32_t stride;
 };
+struct vk_cmd_draw_mesh_tasks_ext {
+   uint32_t group_count_x;
+   uint32_t group_count_y;
+   uint32_t group_count_z;
+};
+struct vk_cmd_draw_mesh_tasks_indirect_ext {
+   VkBuffer buffer;
+   VkDeviceSize offset;
+   uint32_t draw_count;
+   uint32_t stride;
+};
+struct vk_cmd_draw_mesh_tasks_indirect_count_ext {
+   VkBuffer buffer;
+   VkDeviceSize offset;
+   VkBuffer count_buffer;
+   VkDeviceSize count_buffer_offset;
+   uint32_t max_draw_count;
+   uint32_t stride;
+};
 struct vk_cmd_bind_invocation_mask_huawei {
    VkImageView image_view;
    VkImageLayout image_layout;
@@ -712,6 +771,9 @@ struct vk_cmd_trace_rays_indirect_khr {
    VkStridedDeviceAddressRegionKHR* miss_shader_binding_table;
    VkStridedDeviceAddressRegionKHR* hit_shader_binding_table;
    VkStridedDeviceAddressRegionKHR* callable_shader_binding_table;
+   VkDeviceAddress indirect_device_address;
+};
+struct vk_cmd_trace_rays_indirect2_khr {
    VkDeviceAddress indirect_device_address;
 };
 struct vk_cmd_set_ray_tracing_pipeline_stack_size_khr {
@@ -804,6 +866,111 @@ struct vk_cmd_set_logic_op_ext {
 struct vk_cmd_set_primitive_restart_enable {
    VkBool32 primitive_restart_enable;
 };
+struct vk_cmd_set_tessellation_domain_origin_ext {
+   VkTessellationDomainOrigin domain_origin;
+};
+struct vk_cmd_set_depth_clamp_enable_ext {
+   VkBool32 depth_clamp_enable;
+};
+struct vk_cmd_set_polygon_mode_ext {
+   VkPolygonMode polygon_mode;
+};
+struct vk_cmd_set_rasterization_samples_ext {
+   VkSampleCountFlagBits  rasterization_samples;
+};
+struct vk_cmd_set_sample_mask_ext {
+   VkSampleCountFlagBits  samples;
+   VkSampleMask*    sample_mask;
+};
+struct vk_cmd_set_alpha_to_coverage_enable_ext {
+   VkBool32 alpha_to_coverage_enable;
+};
+struct vk_cmd_set_alpha_to_one_enable_ext {
+   VkBool32 alpha_to_one_enable;
+};
+struct vk_cmd_set_logic_op_enable_ext {
+   VkBool32 logic_op_enable;
+};
+struct vk_cmd_set_color_blend_enable_ext {
+   uint32_t first_attachment;
+   uint32_t attachment_count;
+   VkBool32* color_blend_enables;
+};
+struct vk_cmd_set_color_blend_equation_ext {
+   uint32_t first_attachment;
+   uint32_t attachment_count;
+   VkColorBlendEquationEXT* color_blend_equations;
+};
+struct vk_cmd_set_color_write_mask_ext {
+   uint32_t first_attachment;
+   uint32_t attachment_count;
+   VkColorComponentFlags* color_write_masks;
+};
+struct vk_cmd_set_rasterization_stream_ext {
+   uint32_t rasterization_stream;
+};
+struct vk_cmd_set_conservative_rasterization_mode_ext {
+   VkConservativeRasterizationModeEXT conservative_rasterization_mode;
+};
+struct vk_cmd_set_extra_primitive_overestimation_size_ext {
+   float extra_primitive_overestimation_size;
+};
+struct vk_cmd_set_depth_clip_enable_ext {
+   VkBool32 depth_clip_enable;
+};
+struct vk_cmd_set_sample_locations_enable_ext {
+   VkBool32 sample_locations_enable;
+};
+struct vk_cmd_set_color_blend_advanced_ext {
+   uint32_t first_attachment;
+   uint32_t attachment_count;
+   VkColorBlendAdvancedEXT* color_blend_advanced;
+};
+struct vk_cmd_set_provoking_vertex_mode_ext {
+   VkProvokingVertexModeEXT provoking_vertex_mode;
+};
+struct vk_cmd_set_line_rasterization_mode_ext {
+   VkLineRasterizationModeEXT line_rasterization_mode;
+};
+struct vk_cmd_set_line_stipple_enable_ext {
+   VkBool32 stippled_line_enable;
+};
+struct vk_cmd_set_depth_clip_negative_one_to_one_ext {
+   VkBool32 negative_one_to_one;
+};
+struct vk_cmd_set_viewport_wscaling_enable_nv {
+   VkBool32 viewport_wscaling_enable;
+};
+struct vk_cmd_set_viewport_swizzle_nv {
+   uint32_t first_viewport;
+   uint32_t viewport_count;
+   VkViewportSwizzleNV* viewport_swizzles;
+};
+struct vk_cmd_set_coverage_to_color_enable_nv {
+   VkBool32 coverage_to_color_enable;
+};
+struct vk_cmd_set_coverage_to_color_location_nv {
+   uint32_t coverage_to_color_location;
+};
+struct vk_cmd_set_coverage_modulation_mode_nv {
+   VkCoverageModulationModeNV coverage_modulation_mode;
+};
+struct vk_cmd_set_coverage_modulation_table_enable_nv {
+   VkBool32 coverage_modulation_table_enable;
+};
+struct vk_cmd_set_coverage_modulation_table_nv {
+   uint32_t coverage_modulation_table_count;
+   float* coverage_modulation_table;
+};
+struct vk_cmd_set_shading_rate_image_enable_nv {
+   VkBool32 shading_rate_image_enable;
+};
+struct vk_cmd_set_coverage_reduction_mode_nv {
+   VkCoverageReductionModeNV coverage_reduction_mode;
+};
+struct vk_cmd_set_representative_fragment_test_enable_nv {
+   VkBool32 representative_fragment_test_enable;
+};
 struct vk_cmd_copy_buffer2 {
    VkCopyBufferInfo2* copy_buffer_info;
 };
@@ -869,7 +1036,7 @@ struct vk_cmd_write_buffer_marker2_amd {
 };
 #ifdef VK_ENABLE_BETA_EXTENSIONS
 struct vk_cmd_decode_video_khr {
-   VkVideoDecodeInfoKHR* frame_info;
+   VkVideoDecodeInfoKHR* decode_info;
 };
 #endif // VK_ENABLE_BETA_EXTENSIONS
 #ifdef VK_ENABLE_BETA_EXTENSIONS
@@ -897,6 +1064,30 @@ struct vk_cmd_cu_launch_kernel_nvx {
 };
 struct vk_cmd_begin_rendering {
    VkRenderingInfo*                              rendering_info;
+};
+struct vk_cmd_build_micromaps_ext {
+   uint32_t info_count;
+   VkMicromapBuildInfoEXT* infos;
+};
+struct vk_cmd_copy_micromap_ext {
+   VkCopyMicromapInfoEXT* info;
+};
+struct vk_cmd_copy_micromap_to_memory_ext {
+   VkCopyMicromapToMemoryInfoEXT* info;
+};
+struct vk_cmd_copy_memory_to_micromap_ext {
+   VkCopyMemoryToMicromapInfoEXT* info;
+};
+struct vk_cmd_write_micromaps_properties_ext {
+   uint32_t micromap_count;
+   VkMicromapEXT* micromaps;
+   VkQueryType query_type;
+   VkQueryPool query_pool;
+   uint32_t first_query;
+};
+struct vk_cmd_optical_flow_execute_nv {
+   VkOpticalFlowSessionNV session;
+   VkOpticalFlowExecuteInfoNV* execute_info;
 };
 
 struct vk_cmd_queue_entry {
@@ -983,6 +1174,9 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_draw_mesh_tasks_nv draw_mesh_tasks_nv;
       struct vk_cmd_draw_mesh_tasks_indirect_nv draw_mesh_tasks_indirect_nv;
       struct vk_cmd_draw_mesh_tasks_indirect_count_nv draw_mesh_tasks_indirect_count_nv;
+      struct vk_cmd_draw_mesh_tasks_ext draw_mesh_tasks_ext;
+      struct vk_cmd_draw_mesh_tasks_indirect_ext draw_mesh_tasks_indirect_ext;
+      struct vk_cmd_draw_mesh_tasks_indirect_count_ext draw_mesh_tasks_indirect_count_ext;
       struct vk_cmd_bind_invocation_mask_huawei bind_invocation_mask_huawei;
       struct vk_cmd_copy_acceleration_structure_nv copy_acceleration_structure_nv;
       struct vk_cmd_copy_acceleration_structure_khr copy_acceleration_structure_khr;
@@ -994,6 +1188,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_trace_rays_khr trace_rays_khr;
       struct vk_cmd_trace_rays_nv trace_rays_nv;
       struct vk_cmd_trace_rays_indirect_khr trace_rays_indirect_khr;
+      struct vk_cmd_trace_rays_indirect2_khr trace_rays_indirect2_khr;
       struct vk_cmd_set_ray_tracing_pipeline_stack_size_khr set_ray_tracing_pipeline_stack_size_khr;
       struct vk_cmd_set_performance_marker_intel set_performance_marker_intel;
       struct vk_cmd_set_performance_stream_marker_intel set_performance_stream_marker_intel;
@@ -1018,6 +1213,37 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_set_depth_bias_enable set_depth_bias_enable;
       struct vk_cmd_set_logic_op_ext set_logic_op_ext;
       struct vk_cmd_set_primitive_restart_enable set_primitive_restart_enable;
+      struct vk_cmd_set_tessellation_domain_origin_ext set_tessellation_domain_origin_ext;
+      struct vk_cmd_set_depth_clamp_enable_ext set_depth_clamp_enable_ext;
+      struct vk_cmd_set_polygon_mode_ext set_polygon_mode_ext;
+      struct vk_cmd_set_rasterization_samples_ext set_rasterization_samples_ext;
+      struct vk_cmd_set_sample_mask_ext set_sample_mask_ext;
+      struct vk_cmd_set_alpha_to_coverage_enable_ext set_alpha_to_coverage_enable_ext;
+      struct vk_cmd_set_alpha_to_one_enable_ext set_alpha_to_one_enable_ext;
+      struct vk_cmd_set_logic_op_enable_ext set_logic_op_enable_ext;
+      struct vk_cmd_set_color_blend_enable_ext set_color_blend_enable_ext;
+      struct vk_cmd_set_color_blend_equation_ext set_color_blend_equation_ext;
+      struct vk_cmd_set_color_write_mask_ext set_color_write_mask_ext;
+      struct vk_cmd_set_rasterization_stream_ext set_rasterization_stream_ext;
+      struct vk_cmd_set_conservative_rasterization_mode_ext set_conservative_rasterization_mode_ext;
+      struct vk_cmd_set_extra_primitive_overestimation_size_ext set_extra_primitive_overestimation_size_ext;
+      struct vk_cmd_set_depth_clip_enable_ext set_depth_clip_enable_ext;
+      struct vk_cmd_set_sample_locations_enable_ext set_sample_locations_enable_ext;
+      struct vk_cmd_set_color_blend_advanced_ext set_color_blend_advanced_ext;
+      struct vk_cmd_set_provoking_vertex_mode_ext set_provoking_vertex_mode_ext;
+      struct vk_cmd_set_line_rasterization_mode_ext set_line_rasterization_mode_ext;
+      struct vk_cmd_set_line_stipple_enable_ext set_line_stipple_enable_ext;
+      struct vk_cmd_set_depth_clip_negative_one_to_one_ext set_depth_clip_negative_one_to_one_ext;
+      struct vk_cmd_set_viewport_wscaling_enable_nv set_viewport_wscaling_enable_nv;
+      struct vk_cmd_set_viewport_swizzle_nv set_viewport_swizzle_nv;
+      struct vk_cmd_set_coverage_to_color_enable_nv set_coverage_to_color_enable_nv;
+      struct vk_cmd_set_coverage_to_color_location_nv set_coverage_to_color_location_nv;
+      struct vk_cmd_set_coverage_modulation_mode_nv set_coverage_modulation_mode_nv;
+      struct vk_cmd_set_coverage_modulation_table_enable_nv set_coverage_modulation_table_enable_nv;
+      struct vk_cmd_set_coverage_modulation_table_nv set_coverage_modulation_table_nv;
+      struct vk_cmd_set_shading_rate_image_enable_nv set_shading_rate_image_enable_nv;
+      struct vk_cmd_set_coverage_reduction_mode_nv set_coverage_reduction_mode_nv;
+      struct vk_cmd_set_representative_fragment_test_enable_nv set_representative_fragment_test_enable_nv;
       struct vk_cmd_copy_buffer2 copy_buffer2;
       struct vk_cmd_copy_image2 copy_image2;
       struct vk_cmd_blit_image2 blit_image2;
@@ -1051,84 +1277,90 @@ struct vk_cmd_queue_entry {
 #endif // VK_ENABLE_BETA_EXTENSIONS
       struct vk_cmd_cu_launch_kernel_nvx cu_launch_kernel_nvx;
       struct vk_cmd_begin_rendering begin_rendering;
+      struct vk_cmd_build_micromaps_ext build_micromaps_ext;
+      struct vk_cmd_copy_micromap_ext copy_micromap_ext;
+      struct vk_cmd_copy_micromap_to_memory_ext copy_micromap_to_memory_ext;
+      struct vk_cmd_copy_memory_to_micromap_ext copy_memory_to_micromap_ext;
+      struct vk_cmd_write_micromaps_properties_ext write_micromaps_properties_ext;
+      struct vk_cmd_optical_flow_execute_nv optical_flow_execute_nv;
    } u;
    void *driver_data;
    void (*driver_free_cb)(struct vk_cmd_queue *queue,
                           struct vk_cmd_queue_entry *cmd);
 };
 
-  void vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_pipeline(struct vk_cmd_queue *queue
    , VkPipelineBindPoint pipelineBindPoint
    , VkPipeline pipeline
   );
 
-  void vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_viewport(struct vk_cmd_queue *queue
    , uint32_t firstViewport
    , uint32_t viewportCount
    , const VkViewport* pViewports
   );
 
-  void vk_enqueue_cmd_set_scissor(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_scissor(struct vk_cmd_queue *queue
    , uint32_t firstScissor
    , uint32_t scissorCount
    , const VkRect2D* pScissors
   );
 
-  void vk_enqueue_cmd_set_line_width(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_line_width(struct vk_cmd_queue *queue
    , float lineWidth
   );
 
-  void vk_enqueue_cmd_set_depth_bias(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_bias(struct vk_cmd_queue *queue
    , float depthBiasConstantFactor
    , float depthBiasClamp
    , float depthBiasSlopeFactor
   );
 
-  void vk_enqueue_cmd_set_blend_constants(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_blend_constants(struct vk_cmd_queue *queue
    , const float blendConstants[4]
   );
 
-  void vk_enqueue_cmd_set_depth_bounds(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_bounds(struct vk_cmd_queue *queue
    , float minDepthBounds
    , float maxDepthBounds
   );
 
-  void vk_enqueue_cmd_set_stencil_compare_mask(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_stencil_compare_mask(struct vk_cmd_queue *queue
    , VkStencilFaceFlags faceMask
    , uint32_t compareMask
   );
 
-  void vk_enqueue_cmd_set_stencil_write_mask(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_stencil_write_mask(struct vk_cmd_queue *queue
    , VkStencilFaceFlags faceMask
    , uint32_t writeMask
   );
 
-  void vk_enqueue_cmd_set_stencil_reference(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_stencil_reference(struct vk_cmd_queue *queue
    , VkStencilFaceFlags faceMask
    , uint32_t reference
   );
 
-  void vk_enqueue_cmd_bind_index_buffer(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_index_buffer(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , VkIndexType indexType
   );
 
-  void vk_enqueue_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_vertex_buffers(struct vk_cmd_queue *queue
    , uint32_t firstBinding
    , uint32_t bindingCount
    , const VkBuffer* pBuffers
    , const VkDeviceSize* pOffsets
   );
 
-  void vk_enqueue_cmd_draw(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw(struct vk_cmd_queue *queue
    , uint32_t vertexCount
    , uint32_t instanceCount
    , uint32_t firstVertex
    , uint32_t firstInstance
   );
 
-  void vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_indexed(struct vk_cmd_queue *queue
    , uint32_t indexCount
    , uint32_t instanceCount
    , uint32_t firstIndex
@@ -1136,42 +1368,42 @@ struct vk_cmd_queue_entry {
    , uint32_t firstInstance
   );
 
-  void vk_enqueue_cmd_draw_indirect(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_indirect(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , uint32_t drawCount
    , uint32_t stride
   );
 
-  void vk_enqueue_cmd_draw_indexed_indirect(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_indexed_indirect(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , uint32_t drawCount
    , uint32_t stride
   );
 
-  void vk_enqueue_cmd_dispatch(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_dispatch(struct vk_cmd_queue *queue
    , uint32_t groupCountX
    , uint32_t groupCountY
    , uint32_t groupCountZ
   );
 
-  void vk_enqueue_cmd_dispatch_indirect(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_dispatch_indirect(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
   );
 
-  void vk_enqueue_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue
   );
 
-  void vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
    , VkBuffer srcBuffer
    , VkBuffer dstBuffer
    , uint32_t regionCount
    , const VkBufferCopy* pRegions
   );
 
-  void vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_image(struct vk_cmd_queue *queue
    , VkImage srcImage
    , VkImageLayout srcImageLayout
    , VkImage dstImage
@@ -1180,7 +1412,7 @@ struct vk_cmd_queue_entry {
    , const VkImageCopy* pRegions
   );
 
-  void vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_blit_image(struct vk_cmd_queue *queue
    , VkImage srcImage
    , VkImageLayout srcImageLayout
    , VkImage dstImage
@@ -1190,7 +1422,7 @@ struct vk_cmd_queue_entry {
    , VkFilter filter
   );
 
-  void vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_buffer_to_image(struct vk_cmd_queue *queue
    , VkBuffer srcBuffer
    , VkImage dstImage
    , VkImageLayout dstImageLayout
@@ -1198,7 +1430,7 @@ struct vk_cmd_queue_entry {
    , const VkBufferImageCopy* pRegions
   );
 
-  void vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_image_to_buffer(struct vk_cmd_queue *queue
    , VkImage srcImage
    , VkImageLayout srcImageLayout
    , VkBuffer dstBuffer
@@ -1206,21 +1438,21 @@ struct vk_cmd_queue_entry {
    , const VkBufferImageCopy* pRegions
   );
 
-  void vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
    , VkBuffer dstBuffer
    , VkDeviceSize dstOffset
    , VkDeviceSize dataSize
    , const void* pData
   );
 
-  void vk_enqueue_cmd_fill_buffer(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_fill_buffer(struct vk_cmd_queue *queue
    , VkBuffer dstBuffer
    , VkDeviceSize dstOffset
    , VkDeviceSize size
    , uint32_t data
   );
 
-  void vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_clear_color_image(struct vk_cmd_queue *queue
    , VkImage image
    , VkImageLayout imageLayout
    , const VkClearColorValue* pColor
@@ -1228,7 +1460,7 @@ struct vk_cmd_queue_entry {
    , const VkImageSubresourceRange* pRanges
   );
 
-  void vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_clear_depth_stencil_image(struct vk_cmd_queue *queue
    , VkImage image
    , VkImageLayout imageLayout
    , const VkClearDepthStencilValue* pDepthStencil
@@ -1236,14 +1468,14 @@ struct vk_cmd_queue_entry {
    , const VkImageSubresourceRange* pRanges
   );
 
-  void vk_enqueue_cmd_clear_attachments(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_clear_attachments(struct vk_cmd_queue *queue
    , uint32_t attachmentCount
    , const VkClearAttachment* pAttachments
    , uint32_t rectCount
    , const VkClearRect* pRects
   );
 
-  void vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_resolve_image(struct vk_cmd_queue *queue
    , VkImage srcImage
    , VkImageLayout srcImageLayout
    , VkImage dstImage
@@ -1252,17 +1484,17 @@ struct vk_cmd_queue_entry {
    , const VkImageResolve* pRegions
   );
 
-  void vk_enqueue_cmd_set_event(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_event(struct vk_cmd_queue *queue
    , VkEvent event
    , VkPipelineStageFlags stageMask
   );
 
-  void vk_enqueue_cmd_reset_event(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_reset_event(struct vk_cmd_queue *queue
    , VkEvent event
    , VkPipelineStageFlags stageMask
   );
 
-  void vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_wait_events(struct vk_cmd_queue *queue
    , uint32_t eventCount
    , const VkEvent* pEvents
    , VkPipelineStageFlags srcStageMask
@@ -1275,7 +1507,7 @@ struct vk_cmd_queue_entry {
    , const VkImageMemoryBarrier* pImageMemoryBarriers
   );
 
-  void vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_pipeline_barrier(struct vk_cmd_queue *queue
    , VkPipelineStageFlags srcStageMask
    , VkPipelineStageFlags dstStageMask
    , VkDependencyFlags dependencyFlags
@@ -1287,37 +1519,37 @@ struct vk_cmd_queue_entry {
    , const VkImageMemoryBarrier* pImageMemoryBarriers
   );
 
-  void vk_enqueue_cmd_begin_query(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_query(struct vk_cmd_queue *queue
    , VkQueryPool queryPool
    , uint32_t query
    , VkQueryControlFlags flags
   );
 
-  void vk_enqueue_cmd_end_query(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_query(struct vk_cmd_queue *queue
    , VkQueryPool queryPool
    , uint32_t query
   );
 
-  void vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_conditional_rendering_ext(struct vk_cmd_queue *queue
    , const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin
   );
 
-  void vk_enqueue_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_conditional_rendering_ext(struct vk_cmd_queue *queue
   );
 
-  void vk_enqueue_cmd_reset_query_pool(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_reset_query_pool(struct vk_cmd_queue *queue
    , VkQueryPool queryPool
    , uint32_t firstQuery
    , uint32_t queryCount
   );
 
-  void vk_enqueue_cmd_write_timestamp(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_write_timestamp(struct vk_cmd_queue *queue
    , VkPipelineStageFlagBits pipelineStage
    , VkQueryPool queryPool
    , uint32_t query
   );
 
-  void vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_query_pool_results(struct vk_cmd_queue *queue
    , VkQueryPool queryPool
    , uint32_t firstQuery
    , uint32_t queryCount
@@ -1327,7 +1559,7 @@ struct vk_cmd_queue_entry {
    , VkQueryResultFlags flags
   );
 
-  void vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_push_constants(struct vk_cmd_queue *queue
    , VkPipelineLayout layout
    , VkShaderStageFlags stageFlags
    , uint32_t offset
@@ -1335,54 +1567,54 @@ struct vk_cmd_queue_entry {
    , const void* pValues
   );
 
-  void vk_enqueue_cmd_begin_render_pass(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_render_pass(struct vk_cmd_queue *queue
    , const VkRenderPassBeginInfo* pRenderPassBegin
    , VkSubpassContents contents
   );
 
-  void vk_enqueue_cmd_next_subpass(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_next_subpass(struct vk_cmd_queue *queue
    , VkSubpassContents contents
   );
 
-  void vk_enqueue_cmd_end_render_pass(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_render_pass(struct vk_cmd_queue *queue
   );
 
-  void vk_enqueue_cmd_execute_commands(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_execute_commands(struct vk_cmd_queue *queue
    , uint32_t commandBufferCount
    , const VkCommandBuffer* pCommandBuffers
   );
 
-  void vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_debug_marker_begin_ext(struct vk_cmd_queue *queue
    , const VkDebugMarkerMarkerInfoEXT* pMarkerInfo
   );
 
-  void vk_enqueue_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_debug_marker_end_ext(struct vk_cmd_queue *queue
   );
 
-  void vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_debug_marker_insert_ext(struct vk_cmd_queue *queue
    , const VkDebugMarkerMarkerInfoEXT* pMarkerInfo
   );
 
-  void vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_execute_generated_commands_nv(struct vk_cmd_queue *queue
    , VkBool32 isPreprocessed
    , const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo
   );
 
-  void vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_preprocess_generated_commands_nv(struct vk_cmd_queue *queue
    , const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo
   );
 
-  void vk_enqueue_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_pipeline_shader_group_nv(struct vk_cmd_queue *queue
    , VkPipelineBindPoint pipelineBindPoint
    , VkPipeline pipeline
    , uint32_t groupIndex
   );
 
-  void vk_enqueue_cmd_set_device_mask(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_device_mask(struct vk_cmd_queue *queue
    , uint32_t deviceMask
   );
 
-  void vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_dispatch_base(struct vk_cmd_queue *queue
    , uint32_t baseGroupX
    , uint32_t baseGroupY
    , uint32_t baseGroupZ
@@ -1391,55 +1623,55 @@ struct vk_cmd_queue_entry {
    , uint32_t groupCountZ
   );
 
-  void vk_enqueue_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_viewport_wscaling_nv(struct vk_cmd_queue *queue
    , uint32_t firstViewport
    , uint32_t viewportCount
    , const VkViewportWScalingNV* pViewportWScalings
   );
 
-  void vk_enqueue_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_discard_rectangle_ext(struct vk_cmd_queue *queue
    , uint32_t firstDiscardRectangle
    , uint32_t discardRectangleCount
    , const VkRect2D* pDiscardRectangles
   );
 
-  void vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
    , const VkSampleLocationsInfoEXT* pSampleLocationsInfo
   );
 
-  void vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_debug_utils_label_ext(struct vk_cmd_queue *queue
    , const VkDebugUtilsLabelEXT* pLabelInfo
   );
 
-  void vk_enqueue_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_debug_utils_label_ext(struct vk_cmd_queue *queue
   );
 
-  void vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_insert_debug_utils_label_ext(struct vk_cmd_queue *queue
    , const VkDebugUtilsLabelEXT* pLabelInfo
   );
 
-  void vk_enqueue_cmd_write_buffer_marker_amd(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_write_buffer_marker_amd(struct vk_cmd_queue *queue
    , VkPipelineStageFlagBits pipelineStage
    , VkBuffer dstBuffer
    , VkDeviceSize dstOffset
    , uint32_t marker
   );
 
-  void vk_enqueue_cmd_begin_render_pass2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_render_pass2(struct vk_cmd_queue *queue
    , const VkRenderPassBeginInfo*      pRenderPassBegin
    , const VkSubpassBeginInfo*      pSubpassBeginInfo
   );
 
-  void vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_next_subpass2(struct vk_cmd_queue *queue
    , const VkSubpassBeginInfo*      pSubpassBeginInfo
    , const VkSubpassEndInfo*        pSubpassEndInfo
   );
 
-  void vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_render_pass2(struct vk_cmd_queue *queue
    , const VkSubpassEndInfo*        pSubpassEndInfo
   );
 
-  void vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_indirect_count(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , VkBuffer countBuffer
@@ -1448,7 +1680,7 @@ struct vk_cmd_queue_entry {
    , uint32_t stride
   );
 
-  void vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_indexed_indirect_count(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , VkBuffer countBuffer
@@ -1457,11 +1689,11 @@ struct vk_cmd_queue_entry {
    , uint32_t stride
   );
 
-  void vk_enqueue_cmd_set_checkpoint_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_checkpoint_nv(struct vk_cmd_queue *queue
    , const void* pCheckpointMarker
   );
 
-  void vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_transform_feedback_buffers_ext(struct vk_cmd_queue *queue
    , uint32_t firstBinding
    , uint32_t bindingCount
    , const VkBuffer* pBuffers
@@ -1469,34 +1701,34 @@ struct vk_cmd_queue_entry {
    , const VkDeviceSize* pSizes
   );
 
-  void vk_enqueue_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_transform_feedback_ext(struct vk_cmd_queue *queue
    , uint32_t firstCounterBuffer
    , uint32_t counterBufferCount
    , const VkBuffer* pCounterBuffers
    , const VkDeviceSize* pCounterBufferOffsets
   );
 
-  void vk_enqueue_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_transform_feedback_ext(struct vk_cmd_queue *queue
    , uint32_t firstCounterBuffer
    , uint32_t counterBufferCount
    , const VkBuffer* pCounterBuffers
    , const VkDeviceSize* pCounterBufferOffsets
   );
 
-  void vk_enqueue_cmd_begin_query_indexed_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_query_indexed_ext(struct vk_cmd_queue *queue
    , VkQueryPool queryPool
    , uint32_t query
    , VkQueryControlFlags flags
    , uint32_t index
   );
 
-  void vk_enqueue_cmd_end_query_indexed_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_query_indexed_ext(struct vk_cmd_queue *queue
    , VkQueryPool queryPool
    , uint32_t query
    , uint32_t index
   );
 
-  void vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_indirect_byte_count_ext(struct vk_cmd_queue *queue
    , uint32_t instanceCount
    , uint32_t firstInstance
    , VkBuffer counterBuffer
@@ -1505,42 +1737,42 @@ struct vk_cmd_queue_entry {
    , uint32_t vertexStride
   );
 
-  void vk_enqueue_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_exclusive_scissor_nv(struct vk_cmd_queue *queue
    , uint32_t firstExclusiveScissor
    , uint32_t exclusiveScissorCount
    , const VkRect2D* pExclusiveScissors
   );
 
-  void vk_enqueue_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue
    , VkImageView imageView
    , VkImageLayout imageLayout
   );
 
-  void vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_viewport_shading_rate_palette_nv(struct vk_cmd_queue *queue
    , uint32_t firstViewport
    , uint32_t viewportCount
    , const VkShadingRatePaletteNV* pShadingRatePalettes
   );
 
-  void vk_enqueue_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_coarse_sample_order_nv(struct vk_cmd_queue *queue
    , VkCoarseSampleOrderTypeNV sampleOrderType
    , uint32_t customSampleOrderCount
    , const VkCoarseSampleOrderCustomNV* pCustomSampleOrders
   );
 
-  void vk_enqueue_cmd_draw_mesh_tasks_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_mesh_tasks_nv(struct vk_cmd_queue *queue
    , uint32_t taskCount
    , uint32_t firstTask
   );
 
-  void vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_nv(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , uint32_t drawCount
    , uint32_t stride
   );
 
-  void vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_count_nv(struct vk_cmd_queue *queue
    , VkBuffer buffer
    , VkDeviceSize offset
    , VkBuffer countBuffer
@@ -1549,30 +1781,52 @@ struct vk_cmd_queue_entry {
    , uint32_t stride
   );
 
-  void vk_enqueue_cmd_bind_invocation_mask_huawei(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_draw_mesh_tasks_ext(struct vk_cmd_queue *queue
+   , uint32_t groupCountX
+   , uint32_t groupCountY
+   , uint32_t groupCountZ
+  );
+
+  VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_ext(struct vk_cmd_queue *queue
+   , VkBuffer buffer
+   , VkDeviceSize offset
+   , uint32_t drawCount
+   , uint32_t stride
+  );
+
+  VkResult vk_enqueue_cmd_draw_mesh_tasks_indirect_count_ext(struct vk_cmd_queue *queue
+   , VkBuffer buffer
+   , VkDeviceSize offset
+   , VkBuffer countBuffer
+   , VkDeviceSize countBufferOffset
+   , uint32_t maxDrawCount
+   , uint32_t stride
+  );
+
+  VkResult vk_enqueue_cmd_bind_invocation_mask_huawei(struct vk_cmd_queue *queue
    , VkImageView imageView
    , VkImageLayout imageLayout
   );
 
-  void vk_enqueue_cmd_copy_acceleration_structure_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_acceleration_structure_nv(struct vk_cmd_queue *queue
    , VkAccelerationStructureNV dst
    , VkAccelerationStructureNV src
    , VkCopyAccelerationStructureModeKHR mode
   );
 
-  void vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_acceleration_structure_khr(struct vk_cmd_queue *queue
    , const VkCopyAccelerationStructureInfoKHR* pInfo
   );
 
-  void vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_acceleration_structure_to_memory_khr(struct vk_cmd_queue *queue
    , const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo
   );
 
-  void vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_memory_to_acceleration_structure_khr(struct vk_cmd_queue *queue
    , const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo
   );
 
-  void vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_write_acceleration_structures_properties_khr(struct vk_cmd_queue *queue
    , uint32_t accelerationStructureCount
    , const VkAccelerationStructureKHR* pAccelerationStructures
    , VkQueryType queryType
@@ -1580,7 +1834,7 @@ struct vk_cmd_queue_entry {
    , uint32_t firstQuery
   );
 
-  void vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_write_acceleration_structures_properties_nv(struct vk_cmd_queue *queue
    , uint32_t accelerationStructureCount
    , const VkAccelerationStructureNV* pAccelerationStructures
    , VkQueryType queryType
@@ -1588,7 +1842,7 @@ struct vk_cmd_queue_entry {
    , uint32_t firstQuery
   );
 
-  void vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_build_acceleration_structure_nv(struct vk_cmd_queue *queue
    , const VkAccelerationStructureInfoNV* pInfo
    , VkBuffer instanceData
    , VkDeviceSize instanceOffset
@@ -1599,7 +1853,7 @@ struct vk_cmd_queue_entry {
    , VkDeviceSize scratchOffset
   );
 
-  void vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_trace_rays_khr(struct vk_cmd_queue *queue
    , const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable
    , const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable
    , const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable
@@ -1609,7 +1863,7 @@ struct vk_cmd_queue_entry {
    , uint32_t depth
   );
 
-  void vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_trace_rays_nv(struct vk_cmd_queue *queue
    , VkBuffer raygenShaderBindingTableBuffer
    , VkDeviceSize raygenShaderBindingOffset
    , VkBuffer missShaderBindingTableBuffer
@@ -1626,7 +1880,7 @@ struct vk_cmd_queue_entry {
    , uint32_t depth
   );
 
-  void vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_trace_rays_indirect_khr(struct vk_cmd_queue *queue
    , const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable
    , const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable
    , const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable
@@ -1634,22 +1888,26 @@ struct vk_cmd_queue_entry {
    , VkDeviceAddress indirectDeviceAddress
   );
 
-  void vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_trace_rays_indirect2_khr(struct vk_cmd_queue *queue
+   , VkDeviceAddress indirectDeviceAddress
+  );
+
+  VkResult vk_enqueue_cmd_set_ray_tracing_pipeline_stack_size_khr(struct vk_cmd_queue *queue
    , uint32_t pipelineStackSize
   );
 
-  void vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_line_stipple_ext(struct vk_cmd_queue *queue
    , uint32_t lineStippleFactor
    , uint16_t lineStipplePattern
   );
 
-  void vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_build_acceleration_structures_khr(struct vk_cmd_queue *queue
    , uint32_t infoCount
    , const VkAccelerationStructureBuildGeometryInfoKHR* pInfos
    , const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos
   );
 
-  void vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_build_acceleration_structures_indirect_khr(struct vk_cmd_queue *queue
    , uint32_t                                           infoCount
    , const VkAccelerationStructureBuildGeometryInfoKHR* pInfos
    , const VkDeviceAddress*             pIndirectDeviceAddresses
@@ -1657,29 +1915,29 @@ struct vk_cmd_queue_entry {
    , const uint32_t* const*             ppMaxPrimitiveCounts
   );
 
-  void vk_enqueue_cmd_set_cull_mode(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_cull_mode(struct vk_cmd_queue *queue
    , VkCullModeFlags cullMode
   );
 
-  void vk_enqueue_cmd_set_front_face(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_front_face(struct vk_cmd_queue *queue
    , VkFrontFace frontFace
   );
 
-  void vk_enqueue_cmd_set_primitive_topology(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_primitive_topology(struct vk_cmd_queue *queue
    , VkPrimitiveTopology primitiveTopology
   );
 
-  void vk_enqueue_cmd_set_viewport_with_count(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_viewport_with_count(struct vk_cmd_queue *queue
    , uint32_t viewportCount
    , const VkViewport* pViewports
   );
 
-  void vk_enqueue_cmd_set_scissor_with_count(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_scissor_with_count(struct vk_cmd_queue *queue
    , uint32_t scissorCount
    , const VkRect2D* pScissors
   );
 
-  void vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_bind_vertex_buffers2(struct vk_cmd_queue *queue
    , uint32_t firstBinding
    , uint32_t bindingCount
    , const VkBuffer* pBuffers
@@ -1688,27 +1946,27 @@ struct vk_cmd_queue_entry {
    , const VkDeviceSize* pStrides
   );
 
-  void vk_enqueue_cmd_set_depth_test_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_test_enable(struct vk_cmd_queue *queue
    , VkBool32 depthTestEnable
   );
 
-  void vk_enqueue_cmd_set_depth_write_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_write_enable(struct vk_cmd_queue *queue
    , VkBool32 depthWriteEnable
   );
 
-  void vk_enqueue_cmd_set_depth_compare_op(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_compare_op(struct vk_cmd_queue *queue
    , VkCompareOp depthCompareOp
   );
 
-  void vk_enqueue_cmd_set_depth_bounds_test_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_bounds_test_enable(struct vk_cmd_queue *queue
    , VkBool32 depthBoundsTestEnable
   );
 
-  void vk_enqueue_cmd_set_stencil_test_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_stencil_test_enable(struct vk_cmd_queue *queue
    , VkBool32 stencilTestEnable
   );
 
-  void vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_stencil_op(struct vk_cmd_queue *queue
    , VkStencilFaceFlags faceMask
    , VkStencilOp failOp
    , VkStencilOp passOp
@@ -1716,99 +1974,235 @@ struct vk_cmd_queue_entry {
    , VkCompareOp compareOp
   );
 
-  void vk_enqueue_cmd_set_patch_control_points_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_patch_control_points_ext(struct vk_cmd_queue *queue
    , uint32_t patchControlPoints
   );
 
-  void vk_enqueue_cmd_set_rasterizer_discard_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_rasterizer_discard_enable(struct vk_cmd_queue *queue
    , VkBool32 rasterizerDiscardEnable
   );
 
-  void vk_enqueue_cmd_set_depth_bias_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_depth_bias_enable(struct vk_cmd_queue *queue
    , VkBool32 depthBiasEnable
   );
 
-  void vk_enqueue_cmd_set_logic_op_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_logic_op_ext(struct vk_cmd_queue *queue
    , VkLogicOp logicOp
   );
 
-  void vk_enqueue_cmd_set_primitive_restart_enable(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_primitive_restart_enable(struct vk_cmd_queue *queue
    , VkBool32 primitiveRestartEnable
   );
 
-  void vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_tessellation_domain_origin_ext(struct vk_cmd_queue *queue
+   , VkTessellationDomainOrigin domainOrigin
+  );
+
+  VkResult vk_enqueue_cmd_set_depth_clamp_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 depthClampEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_polygon_mode_ext(struct vk_cmd_queue *queue
+   , VkPolygonMode polygonMode
+  );
+
+  VkResult vk_enqueue_cmd_set_rasterization_samples_ext(struct vk_cmd_queue *queue
+   , VkSampleCountFlagBits  rasterizationSamples
+  );
+
+  VkResult vk_enqueue_cmd_set_sample_mask_ext(struct vk_cmd_queue *queue
+   , VkSampleCountFlagBits  samples
+   , const VkSampleMask*    pSampleMask
+  );
+
+  VkResult vk_enqueue_cmd_set_alpha_to_coverage_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 alphaToCoverageEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_alpha_to_one_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 alphaToOneEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_logic_op_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 logicOpEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_color_blend_enable_ext(struct vk_cmd_queue *queue
+   , uint32_t firstAttachment
+   , uint32_t attachmentCount
+   , const VkBool32* pColorBlendEnables
+  );
+
+  VkResult vk_enqueue_cmd_set_color_blend_equation_ext(struct vk_cmd_queue *queue
+   , uint32_t firstAttachment
+   , uint32_t attachmentCount
+   , const VkColorBlendEquationEXT* pColorBlendEquations
+  );
+
+  VkResult vk_enqueue_cmd_set_color_write_mask_ext(struct vk_cmd_queue *queue
+   , uint32_t firstAttachment
+   , uint32_t attachmentCount
+   , const VkColorComponentFlags* pColorWriteMasks
+  );
+
+  VkResult vk_enqueue_cmd_set_rasterization_stream_ext(struct vk_cmd_queue *queue
+   , uint32_t rasterizationStream
+  );
+
+  VkResult vk_enqueue_cmd_set_conservative_rasterization_mode_ext(struct vk_cmd_queue *queue
+   , VkConservativeRasterizationModeEXT conservativeRasterizationMode
+  );
+
+  VkResult vk_enqueue_cmd_set_extra_primitive_overestimation_size_ext(struct vk_cmd_queue *queue
+   , float extraPrimitiveOverestimationSize
+  );
+
+  VkResult vk_enqueue_cmd_set_depth_clip_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 depthClipEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_sample_locations_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 sampleLocationsEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_color_blend_advanced_ext(struct vk_cmd_queue *queue
+   , uint32_t firstAttachment
+   , uint32_t attachmentCount
+   , const VkColorBlendAdvancedEXT* pColorBlendAdvanced
+  );
+
+  VkResult vk_enqueue_cmd_set_provoking_vertex_mode_ext(struct vk_cmd_queue *queue
+   , VkProvokingVertexModeEXT provokingVertexMode
+  );
+
+  VkResult vk_enqueue_cmd_set_line_rasterization_mode_ext(struct vk_cmd_queue *queue
+   , VkLineRasterizationModeEXT lineRasterizationMode
+  );
+
+  VkResult vk_enqueue_cmd_set_line_stipple_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 stippledLineEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_depth_clip_negative_one_to_one_ext(struct vk_cmd_queue *queue
+   , VkBool32 negativeOneToOne
+  );
+
+  VkResult vk_enqueue_cmd_set_viewport_wscaling_enable_nv(struct vk_cmd_queue *queue
+   , VkBool32 viewportWScalingEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_viewport_swizzle_nv(struct vk_cmd_queue *queue
+   , uint32_t firstViewport
+   , uint32_t viewportCount
+   , const VkViewportSwizzleNV* pViewportSwizzles
+  );
+
+  VkResult vk_enqueue_cmd_set_coverage_to_color_enable_nv(struct vk_cmd_queue *queue
+   , VkBool32 coverageToColorEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_coverage_to_color_location_nv(struct vk_cmd_queue *queue
+   , uint32_t coverageToColorLocation
+  );
+
+  VkResult vk_enqueue_cmd_set_coverage_modulation_mode_nv(struct vk_cmd_queue *queue
+   , VkCoverageModulationModeNV coverageModulationMode
+  );
+
+  VkResult vk_enqueue_cmd_set_coverage_modulation_table_enable_nv(struct vk_cmd_queue *queue
+   , VkBool32 coverageModulationTableEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_coverage_modulation_table_nv(struct vk_cmd_queue *queue
+   , uint32_t coverageModulationTableCount
+   , const float* pCoverageModulationTable
+  );
+
+  VkResult vk_enqueue_cmd_set_shading_rate_image_enable_nv(struct vk_cmd_queue *queue
+   , VkBool32 shadingRateImageEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_coverage_reduction_mode_nv(struct vk_cmd_queue *queue
+   , VkCoverageReductionModeNV coverageReductionMode
+  );
+
+  VkResult vk_enqueue_cmd_set_representative_fragment_test_enable_nv(struct vk_cmd_queue *queue
+   , VkBool32 representativeFragmentTestEnable
+  );
+
+  VkResult vk_enqueue_cmd_copy_buffer2(struct vk_cmd_queue *queue
    , const VkCopyBufferInfo2* pCopyBufferInfo
   );
 
-  void vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_image2(struct vk_cmd_queue *queue
    , const VkCopyImageInfo2* pCopyImageInfo
   );
 
-  void vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_blit_image2(struct vk_cmd_queue *queue
    , const VkBlitImageInfo2* pBlitImageInfo
   );
 
-  void vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_buffer_to_image2(struct vk_cmd_queue *queue
    , const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo
   );
 
-  void vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_copy_image_to_buffer2(struct vk_cmd_queue *queue
    , const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo
   );
 
-  void vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_resolve_image2(struct vk_cmd_queue *queue
    , const VkResolveImageInfo2* pResolveImageInfo
   );
 
-  void vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_fragment_shading_rate_khr(struct vk_cmd_queue *queue
    , const VkExtent2D*                           pFragmentSize
    , const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]
   );
 
-  void vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_fragment_shading_rate_enum_nv(struct vk_cmd_queue *queue
    , VkFragmentShadingRateNV                     shadingRate
    , const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]
   );
 
-  void vk_enqueue_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_vertex_input_ext(struct vk_cmd_queue *queue
    , uint32_t vertexBindingDescriptionCount
    , const VkVertexInputBindingDescription2EXT* pVertexBindingDescriptions
    , uint32_t vertexAttributeDescriptionCount
    , const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions
   );
 
-  void vk_enqueue_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_color_write_enable_ext(struct vk_cmd_queue *queue
    , uint32_t                                attachmentCount
    , const VkBool32*   pColorWriteEnables
   );
 
-  void vk_enqueue_cmd_set_event2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_set_event2(struct vk_cmd_queue *queue
    , VkEvent                                             event
    , const VkDependencyInfo*                             pDependencyInfo
   );
 
-  void vk_enqueue_cmd_reset_event2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_reset_event2(struct vk_cmd_queue *queue
    , VkEvent                                             event
    , VkPipelineStageFlags2               stageMask
   );
 
-  void vk_enqueue_cmd_wait_events2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_wait_events2(struct vk_cmd_queue *queue
    , uint32_t                                            eventCount
    , const VkEvent*                     pEvents
    , const VkDependencyInfo*            pDependencyInfos
   );
 
-  void vk_enqueue_cmd_pipeline_barrier2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_pipeline_barrier2(struct vk_cmd_queue *queue
    , const VkDependencyInfo*                             pDependencyInfo
   );
 
-  void vk_enqueue_cmd_write_timestamp2(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_write_timestamp2(struct vk_cmd_queue *queue
    , VkPipelineStageFlags2               stage
    , VkQueryPool                                         queryPool
    , uint32_t                                            query
   );
 
-  void vk_enqueue_cmd_write_buffer_marker2_amd(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_write_buffer_marker2_amd(struct vk_cmd_queue *queue
    , VkPipelineStageFlags2               stage
    , VkBuffer                                            dstBuffer
    , VkDeviceSize                                        dstOffset
@@ -1816,44 +2210,74 @@ struct vk_cmd_queue_entry {
   );
 
 #ifdef VK_ENABLE_BETA_EXTENSIONS
-  void vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
-   , const VkVideoDecodeInfoKHR* pFrameInfo
+  VkResult vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
+   , const VkVideoDecodeInfoKHR* pDecodeInfo
   );
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
 #ifdef VK_ENABLE_BETA_EXTENSIONS
-  void vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
    , const VkVideoBeginCodingInfoKHR* pBeginInfo
   );
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
 #ifdef VK_ENABLE_BETA_EXTENSIONS
-  void vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
    , const VkVideoCodingControlInfoKHR* pCodingControlInfo
   );
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
 #ifdef VK_ENABLE_BETA_EXTENSIONS
-  void vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
    , const VkVideoEndCodingInfoKHR* pEndCodingInfo
   );
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
 #ifdef VK_ENABLE_BETA_EXTENSIONS
-  void vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
    , const VkVideoEncodeInfoKHR* pEncodeInfo
   );
 #endif // VK_ENABLE_BETA_EXTENSIONS
 
-  void vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
    , const VkCuLaunchInfoNVX* pLaunchInfo
   );
 
-  void vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
    , const VkRenderingInfo*                              pRenderingInfo
   );
 
-  void vk_enqueue_cmd_end_rendering(struct vk_cmd_queue *queue
+  VkResult vk_enqueue_cmd_end_rendering(struct vk_cmd_queue *queue
+  );
+
+  VkResult vk_enqueue_cmd_build_micromaps_ext(struct vk_cmd_queue *queue
+   , uint32_t infoCount
+   , const VkMicromapBuildInfoEXT* pInfos
+  );
+
+  VkResult vk_enqueue_cmd_copy_micromap_ext(struct vk_cmd_queue *queue
+   , const VkCopyMicromapInfoEXT* pInfo
+  );
+
+  VkResult vk_enqueue_cmd_copy_micromap_to_memory_ext(struct vk_cmd_queue *queue
+   , const VkCopyMicromapToMemoryInfoEXT* pInfo
+  );
+
+  VkResult vk_enqueue_cmd_copy_memory_to_micromap_ext(struct vk_cmd_queue *queue
+   , const VkCopyMemoryToMicromapInfoEXT* pInfo
+  );
+
+  VkResult vk_enqueue_cmd_write_micromaps_properties_ext(struct vk_cmd_queue *queue
+   , uint32_t micromapCount
+   , const VkMicromapEXT* pMicromaps
+   , VkQueryType queryType
+   , VkQueryPool queryPool
+   , uint32_t firstQuery
+  );
+
+  VkResult vk_enqueue_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue
+   , VkOpticalFlowSessionNV session
+   , const VkOpticalFlowExecuteInfoNV* pExecuteInfo
   );
 
 
@@ -1864,7 +2288,6 @@ vk_cmd_queue_init(struct vk_cmd_queue *queue, VkAllocationCallbacks *alloc)
 {
    queue->alloc = alloc;
    list_inithead(&queue->cmds);
-   queue->error = VK_SUCCESS;
 }
 
 static inline void
@@ -1872,7 +2295,6 @@ vk_cmd_queue_reset(struct vk_cmd_queue *queue)
 {
    vk_free_queue(queue);
    list_inithead(&queue->cmds);
-   queue->error = VK_SUCCESS;
 }
 
 static inline void

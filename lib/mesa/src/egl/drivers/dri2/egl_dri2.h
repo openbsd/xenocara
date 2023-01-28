@@ -34,6 +34,7 @@
 #ifdef HAVE_X11_PLATFORM
 #include <xcb/xcb.h>
 #include <xcb/dri2.h>
+#include <xcb/randr.h>
 #include <xcb/xfixes.h>
 #include <X11/Xlib-xcb.h>
 
@@ -160,6 +161,10 @@ struct dri2_egl_display_vtbl {
                                  EGLuint64KHR *ust, EGLuint64KHR *msc,
                                  EGLuint64KHR *sbc);
 
+   /* optional */
+   EGLBoolean (*get_msc_rate)(_EGLDisplay *display, _EGLSurface *surface,
+                              EGLint *numerator, EGLint *denominator);
+
    /* mandatory */
    __DRIdrawable *(*get_dri_drawable)(_EGLSurface *surf);
 
@@ -211,6 +216,8 @@ struct dmabuf_feedback {
 struct dri2_egl_display
 {
    const struct dri2_egl_display_vtbl *vtbl;
+
+   mtx_t lock;
 
    int dri2_major;
    int dri2_minor;
@@ -284,6 +291,7 @@ struct dri2_egl_display
    struct zwp_linux_dmabuf_feedback_v1 *wl_dmabuf_feedback;
    struct dmabuf_feedback_format_table format_table;
    bool authenticated;
+   uint32_t capabilities;
    char *device_name;
 #endif
 
@@ -416,16 +424,28 @@ struct dri2_egl_sync {
    void *fence;
 };
 
-/* From driconf.h, user exposed so should be stable */
-#define DRI_CONF_VBLANK_NEVER 0
-#define DRI_CONF_VBLANK_DEF_INTERVAL_0 1
-#define DRI_CONF_VBLANK_DEF_INTERVAL_1 2
-#define DRI_CONF_VBLANK_ALWAYS_SYNC 3
-
 /* standard typecasts */
 _EGL_DRIVER_STANDARD_TYPECASTS(dri2_egl)
 _EGL_DRIVER_TYPECAST(dri2_egl_image, _EGLImage, obj)
 _EGL_DRIVER_TYPECAST(dri2_egl_sync, _EGLSync, obj)
+
+static inline struct dri2_egl_display *
+dri2_egl_display_lock(_EGLDisplay *disp)
+{
+   struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
+
+   if (dri2_dpy)
+      mtx_lock(&dri2_dpy->lock);
+
+   return dri2_dpy;
+}
+
+static inline EGLBoolean
+dri2_egl_error_unlock(struct dri2_egl_display *dri2_dpy, EGLint err, const char *msg)
+{
+   mtx_unlock(&dri2_dpy->lock);
+   return _eglError(err, msg);
+}
 
 extern const __DRIimageLookupExtension image_lookup_extension;
 extern const __DRIuseInvalidateExtension use_invalidate;

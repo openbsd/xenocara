@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:34 jsg Exp $
 
 LIB=	galliumvl
 
 NOPROFILE=
 
 SRCS=	vl_bicubic_filter.c \
+	vl_codec.c \
 	vl_compositor.c \
 	vl_compositor_cs.c \
 	vl_compositor_gfx.c \
@@ -20,6 +21,8 @@ SRCS=	vl_bicubic_filter.c \
 	vl_vertex_buffers.c \
 	vl_video_buffer.c \
 	vl_zscan.c
+
+SRCS+=	vl_winsys_dri_vgem.c
 
 .include "../Makefile.inc"
 

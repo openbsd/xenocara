@@ -194,7 +194,7 @@ fs_visitor::emit_interpolation_setup_gfx4()
       abld.ADD(offset(delta_xy, abld, 1), this->pixel_y, ystart);
    }
 
-   this->pixel_z = fetch_payload_reg(bld, payload.source_depth_reg);
+   this->pixel_z = fetch_payload_reg(bld, fs_payload().source_depth_reg);
 
    /* The SF program automatically handles doing the perspective correction or
     * not based on wm_prog_data::interp_mode[] so we can use the same pixel
@@ -269,7 +269,8 @@ fs_visitor::emit_shader_float_controls_execution_mode()
    if (execution_mode == FLOAT_CONTROLS_DEFAULT_FLOAT_CONTROL_MODE)
       return;
 
-   fs_builder abld = bld.annotate("shader floats control execution mode");
+   fs_builder ubld = bld.exec_all().group(1, 0);
+   fs_builder abld = ubld.annotate("shader floats control execution mode");
    unsigned mask, mode = brw_rnd_mode_from_nir(execution_mode, &mask);
 
    if (mask == 0)
@@ -469,7 +470,7 @@ fs_visitor::emit_interpolation_setup_gfx6()
        * pixels locations, here we recompute the Z value with 2 coefficients
        * in X & Y axis.
        */
-      fs_reg coef_payload = fetch_payload_reg(abld, payload.depth_w_coef_reg, BRW_REGISTER_TYPE_F);
+      fs_reg coef_payload = fetch_payload_reg(abld, fs_payload().depth_w_coef_reg, BRW_REGISTER_TYPE_F);
       const fs_reg x_start = brw_vec1_grf(coef_payload.nr, 2);
       const fs_reg y_start = brw_vec1_grf(coef_payload.nr, 6);
       const fs_reg z_cx    = brw_vec1_grf(coef_payload.nr, 1);
@@ -507,19 +508,19 @@ fs_visitor::emit_interpolation_setup_gfx6()
 
    if (wm_prog_data->uses_src_depth) {
       assert(!wm_prog_data->uses_depth_w_coefficients);
-      this->pixel_z = fetch_payload_reg(bld, payload.source_depth_reg);
+      this->pixel_z = fetch_payload_reg(bld, fs_payload().source_depth_reg);
    }
 
    if (wm_prog_data->uses_src_w) {
       abld = bld.annotate("compute pos.w");
-      this->pixel_w = fetch_payload_reg(abld, payload.source_w_reg);
+      this->pixel_w = fetch_payload_reg(abld, fs_payload().source_w_reg);
       this->wpos_w = vgrf(glsl_type::float_type);
       abld.emit(SHADER_OPCODE_RCP, this->wpos_w, this->pixel_w);
    }
 
    for (int i = 0; i < BRW_BARYCENTRIC_MODE_COUNT; ++i) {
       this->delta_xy[i] = fetch_barycentric_reg(
-         bld, payload.barycentric_coord_reg[i]);
+         bld, fs_payload().barycentric_coord_reg[i]);
    }
 
    uint32_t centroid_modes = wm_prog_data->barycentric_interp_modes &
@@ -622,7 +623,7 @@ fs_visitor::emit_single_fb_write(const fs_builder &bld,
    struct brw_wm_prog_data *prog_data = brw_wm_prog_data(this->prog_data);
 
    /* Hand over gl_FragDepth or the payload depth. */
-   const fs_reg dst_depth = fetch_payload_reg(bld, payload.dest_depth_reg);
+   const fs_reg dst_depth = fetch_payload_reg(bld, fs_payload().dest_depth_reg);
    fs_reg src_depth, src_stencil;
 
    if (nir->info.outputs_written & BITFIELD64_BIT(FRAG_RESULT_DEPTH)) {
@@ -636,7 +637,7 @@ fs_visitor::emit_single_fb_write(const fs_builder &bld,
        * explicitly the pass-through case.
        */
       assert(devinfo->ver <= 5);
-      src_depth = fetch_payload_reg(bld, payload.source_depth_reg);
+      src_depth = fetch_payload_reg(bld, fs_payload().source_depth_reg);
    }
 
    if (nir->info.outputs_written & BITFIELD64_BIT(FRAG_RESULT_STENCIL))
@@ -770,12 +771,20 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
    fs_reg sources[8];
    fs_reg urb_handle;
 
-   if (stage == MESA_SHADER_TESS_EVAL)
-      urb_handle = fs_reg(retype(brw_vec8_grf(4, 0), BRW_REGISTER_TYPE_UD));
-   else
-      urb_handle = fs_reg(retype(brw_vec8_grf(1, 0), BRW_REGISTER_TYPE_UD));
+   switch (stage) {
+   case MESA_SHADER_VERTEX:
+      urb_handle = vs_payload().urb_handles;
+      break;
+   case MESA_SHADER_TESS_EVAL:
+      urb_handle = tes_payload().urb_output;
+      break;
+   case MESA_SHADER_GEOMETRY:
+      urb_handle = gs_payload().urb_handles;
+      break;
+   default:
+      unreachable("invalid stage");
+   }
 
-   opcode opcode = SHADER_OPCODE_URB_WRITE_SIMD8;
    int header_size = 1;
    fs_reg per_slot_offsets;
 
@@ -795,7 +804,6 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
        * Vertex Count.  SIMD8 mode processes 8 different primitives at a
        * time; each may output a different number of vertices.
        */
-      opcode = SHADER_OPCODE_URB_WRITE_SIMD8_PER_SLOT;
       header_size++;
 
       /* The URB offset is in 128-bit units, so we need to multiply by 2 */
@@ -936,24 +944,18 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
       if (length == 8 || (length > 0 && slot == last_slot))
          flush = true;
       if (flush) {
-         fs_reg *payload_sources =
-            ralloc_array(mem_ctx, fs_reg, length + header_size);
-         fs_reg payload = fs_reg(VGRF, alloc.allocate(length + header_size),
-                                 BRW_REGISTER_TYPE_F);
-         payload_sources[0] = urb_handle;
+         fs_reg srcs[URB_LOGICAL_NUM_SRCS];
 
-         if (opcode == SHADER_OPCODE_URB_WRITE_SIMD8_PER_SLOT)
-            payload_sources[1] = per_slot_offsets;
+         srcs[URB_LOGICAL_SRC_HANDLE] = urb_handle;
+         srcs[URB_LOGICAL_SRC_PER_SLOT_OFFSETS] = per_slot_offsets;
+         srcs[URB_LOGICAL_SRC_DATA] = fs_reg(VGRF, alloc.allocate(length),
+                                             BRW_REGISTER_TYPE_F);
+         abld.LOAD_PAYLOAD(srcs[URB_LOGICAL_SRC_DATA], sources, length, 0);
 
-         memcpy(&payload_sources[header_size], sources,
-                length * sizeof sources[0]);
+         fs_inst *inst = abld.emit(SHADER_OPCODE_URB_WRITE_LOGICAL, reg_undef,
+                                   srcs, ARRAY_SIZE(srcs));
 
-         abld.LOAD_PAYLOAD(payload, payload_sources, length + header_size,
-                           header_size);
-
-         fs_inst *inst = abld.emit(opcode, reg_undef, payload);
-
-         /* For ICL WA 1805992985 one needs additional write in the end. */
+         /* For ICL Wa_1805992985 one needs additional write in the end. */
          if (devinfo->ver == 11 && stage == MESA_SHADER_TESS_EVAL)
             inst->eot = false;
          else
@@ -986,31 +988,40 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
       if (stage == MESA_SHADER_GEOMETRY)
          return;
 
-      fs_reg payload = fs_reg(VGRF, alloc.allocate(2), BRW_REGISTER_TYPE_UD);
-      bld.exec_all().MOV(payload, urb_handle);
+      fs_reg uniform_urb_handle = fs_reg(VGRF, alloc.allocate(1), BRW_REGISTER_TYPE_UD);
+      fs_reg payload = fs_reg(VGRF, alloc.allocate(1), BRW_REGISTER_TYPE_UD);
 
-      fs_inst *inst = bld.emit(SHADER_OPCODE_URB_WRITE_SIMD8, reg_undef, payload);
+      bld.exec_all().MOV(uniform_urb_handle, urb_handle);
+
+      fs_reg srcs[URB_LOGICAL_NUM_SRCS];
+      srcs[URB_LOGICAL_SRC_HANDLE] = uniform_urb_handle;
+      srcs[URB_LOGICAL_SRC_DATA] = payload;
+
+      fs_inst *inst = bld.emit(SHADER_OPCODE_URB_WRITE_LOGICAL, reg_undef,
+                               srcs, ARRAY_SIZE(srcs));
       inst->eot = true;
       inst->mlen = 2;
       inst->offset = 1;
       return;
-   } 
- 
-   /* ICL WA 1805992985:
+   }
+
+   /* ICL Wa_1805992985:
     *
     * ICLLP GPU hangs on one of tessellation vkcts tests with DS not done. The
     * send cycle, which is a urb write with an eot must be 4 phases long and
     * all 8 lanes must valid.
     */
    if (devinfo->ver == 11 && stage == MESA_SHADER_TESS_EVAL) {
-      fs_reg payload = fs_reg(VGRF, alloc.allocate(6), BRW_REGISTER_TYPE_UD);
+      fs_reg uniform_urb_handle = fs_reg(VGRF, alloc.allocate(1), BRW_REGISTER_TYPE_UD);
+      fs_reg uniform_mask = fs_reg(VGRF, alloc.allocate(1), BRW_REGISTER_TYPE_UD);
+      fs_reg payload = fs_reg(VGRF, alloc.allocate(4), BRW_REGISTER_TYPE_UD);
 
       /* Workaround requires all 8 channels (lanes) to be valid. This is
        * understood to mean they all need to be alive. First trick is to find
        * a live channel and copy its urb handle for all the other channels to
        * make sure all handles are valid.
        */
-      bld.exec_all().MOV(payload, bld.emit_uniformize(urb_handle));
+      bld.exec_all().MOV(uniform_urb_handle, bld.emit_uniformize(urb_handle));
 
       /* Second trick is to use masked URB write where one can tell the HW to
        * actually write data only for selected channels even though all are
@@ -1026,14 +1037,19 @@ fs_visitor::emit_urb_writes(const fs_reg &gs_vertex_count)
        * 4 slots data. All are explicitly zeros in order to to keep the MBZ
        * area written as zeros.
        */
-      bld.exec_all().MOV(offset(payload, bld, 1), brw_imm_ud(0x10000u));
+      bld.exec_all().MOV(uniform_mask, brw_imm_ud(0x10000u));
+      bld.exec_all().MOV(offset(payload, bld, 0), brw_imm_ud(0u));
+      bld.exec_all().MOV(offset(payload, bld, 1), brw_imm_ud(0u));
       bld.exec_all().MOV(offset(payload, bld, 2), brw_imm_ud(0u));
       bld.exec_all().MOV(offset(payload, bld, 3), brw_imm_ud(0u));
-      bld.exec_all().MOV(offset(payload, bld, 4), brw_imm_ud(0u));
-      bld.exec_all().MOV(offset(payload, bld, 5), brw_imm_ud(0u));
 
-      fs_inst *inst = bld.exec_all().emit(SHADER_OPCODE_URB_WRITE_SIMD8_MASKED,
-                                          reg_undef, payload);
+      fs_reg srcs[URB_LOGICAL_NUM_SRCS];
+      srcs[URB_LOGICAL_SRC_HANDLE] = uniform_urb_handle;
+      srcs[URB_LOGICAL_SRC_CHANNEL_MASK] = uniform_mask;
+      srcs[URB_LOGICAL_SRC_DATA] = payload;
+
+      fs_inst *inst = bld.exec_all().emit(SHADER_OPCODE_URB_WRITE_LOGICAL,
+                                          reg_undef, srcs, ARRAY_SIZE(srcs));
       inst->eot = true;
       inst->mlen = 6;
       inst->offset = 0;
@@ -1077,6 +1093,20 @@ fs_visitor::emit_cs_terminate()
    inst->eot = true;
 }
 
+static void
+setup_barrier_message_payload_gfx125(const fs_builder &bld,
+                                     const fs_reg &msg_payload)
+{
+   assert(bld.shader->devinfo->verx10 >= 125);
+
+   /* From BSpec: 54006, mov r0.2[31:24] into m0.2[31:24] and m0.2[23:16] */
+   fs_reg m0_10ub = component(retype(msg_payload, BRW_REGISTER_TYPE_UB), 10);
+   fs_reg r0_11ub =
+      stride(suboffset(retype(brw_vec1_grf(0, 0), BRW_REGISTER_TYPE_UB), 11),
+             0, 1, 0);
+   bld.exec_all().group(2, 0).MOV(m0_10ub, r0_11ub);
+}
+
 void
 fs_visitor::emit_barrier()
 {
@@ -1089,12 +1119,7 @@ fs_visitor::emit_barrier()
    bld.exec_all().group(8, 0).MOV(payload, brw_imm_ud(0u));
 
    if (devinfo->verx10 >= 125) {
-      /* mov r0.2[31:24] into m0.2[31:24] and m0.2[23:16] */
-      fs_reg m0_10ub = component(retype(payload, BRW_REGISTER_TYPE_UB), 10);
-      fs_reg r0_11ub =
-         stride(suboffset(retype(brw_vec1_grf(0, 0), BRW_REGISTER_TYPE_UB), 11),
-                0, 1, 0);
-      bld.exec_all().group(2, 0).MOV(m0_10ub, r0_11ub);
+      setup_barrier_message_payload_gfx125(bld, payload);
    } else {
       assert(gl_shader_stage_is_compute(stage));
 
@@ -1122,6 +1147,45 @@ fs_visitor::emit_barrier()
     * by a wait instruction.
     */
    bld.exec_all().emit(SHADER_OPCODE_BARRIER, reg_undef, payload);
+}
+
+void
+fs_visitor::emit_tcs_barrier()
+{
+   assert(stage == MESA_SHADER_TESS_CTRL);
+   struct brw_tcs_prog_data *tcs_prog_data = brw_tcs_prog_data(prog_data);
+
+   fs_reg m0 = bld.vgrf(BRW_REGISTER_TYPE_UD, 1);
+   fs_reg m0_2 = component(m0, 2);
+
+   const fs_builder chanbld = bld.exec_all().group(1, 0);
+
+   /* Zero the message header */
+   bld.exec_all().MOV(m0, brw_imm_ud(0u));
+
+   if (devinfo->verx10 >= 125) {
+      setup_barrier_message_payload_gfx125(bld, m0);
+   } else if (devinfo->ver >= 11) {
+      chanbld.AND(m0_2, retype(brw_vec1_grf(0, 2), BRW_REGISTER_TYPE_UD),
+                  brw_imm_ud(INTEL_MASK(30, 24)));
+
+      /* Set the Barrier Count and the enable bit */
+      chanbld.OR(m0_2, m0_2,
+                 brw_imm_ud(tcs_prog_data->instances << 8 | (1 << 15)));
+   } else {
+      /* Copy "Barrier ID" from r0.2, bits 16:13 */
+      chanbld.AND(m0_2, retype(brw_vec1_grf(0, 2), BRW_REGISTER_TYPE_UD),
+                  brw_imm_ud(INTEL_MASK(16, 13)));
+
+      /* Shift it up to bits 27:24. */
+      chanbld.SHL(m0_2, m0_2, brw_imm_ud(11));
+
+      /* Set the Barrier Count and the enable bit */
+      chanbld.OR(m0_2, m0_2,
+                 brw_imm_ud(tcs_prog_data->instances << 9 | (1 << 15)));
+   }
+
+   bld.emit(SHADER_OPCODE_BARRIER, bld.null_reg_ud(), m0);
 }
 
 fs_visitor::fs_visitor(const struct brw_compiler *compiler, void *log_data,
@@ -1160,7 +1224,6 @@ fs_visitor::fs_visitor(const struct brw_compiler *compiler, void *log_data,
    init();
 }
 
-
 void
 fs_visitor::init()
 {
@@ -1179,7 +1242,7 @@ fs_visitor::init()
    this->nir_ssa_values = NULL;
    this->nir_system_values = NULL;
 
-   memset(&this->payload, 0, sizeof(this->payload));
+   this->payload_ = NULL;
    this->source_depth_to_render_target = false;
    this->runtime_check_aads_emit = false;
    this->first_non_payload_grf = 0;
@@ -1191,6 +1254,8 @@ fs_visitor::init()
 
    this->shader_stats.scheduler_mode = NULL;
    this->shader_stats.promoted_constants = 0,
+   this->shader_stats.spill_count = 0,
+   this->shader_stats.fill_count = 0,
 
    this->grf_used = 0;
    this->spilled_any_registers = false;
@@ -1198,4 +1263,5 @@ fs_visitor::init()
 
 fs_visitor::~fs_visitor()
 {
+   delete this->payload_;
 }

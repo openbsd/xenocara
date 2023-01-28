@@ -107,6 +107,8 @@ enum {
         PAN_SYSVAL_VERTEX_INSTANCE_OFFSETS = 14,
         PAN_SYSVAL_DRAWID = 15,
         PAN_SYSVAL_BLEND_CONSTANTS = 16,
+        PAN_SYSVAL_XFB = 17,
+        PAN_SYSVAL_NUM_VERTICES = 18,
 };
 
 #define PAN_TXS_SYSVAL_ID(texidx, dim, is_array)          \
@@ -163,7 +165,9 @@ unsigned
 pan_lookup_pushed_ubo(struct panfrost_ubo_push *push, unsigned ubo, unsigned offs);
 
 struct hash_table_u64 *
-panfrost_init_sysvals(struct panfrost_sysvals *sysvals, void *memctx);
+panfrost_init_sysvals(struct panfrost_sysvals *sysvals,
+                      struct panfrost_sysvals *fixed_sysvals,
+                      void *memctx);
 
 unsigned
 pan_lookup_sysval(struct hash_table_u64 *sysval_to_id,
@@ -174,6 +178,8 @@ int
 panfrost_sysval_for_instr(nir_instr *instr, nir_dest *dest);
 
 struct panfrost_compile_inputs {
+        struct util_debug_callback *debug;
+
         unsigned gpu_id;
         bool is_blend, is_blit;
         struct {
@@ -181,14 +187,24 @@ struct panfrost_compile_inputs {
                 unsigned nr_samples;
                 uint64_t bifrost_blend_desc;
         } blend;
-        unsigned sysval_ubo;
-        bool shaderdb;
+        int fixed_sysval_ubo;
+        struct panfrost_sysvals *fixed_sysval_layout;
         bool no_idvs;
         bool no_ubo_to_push;
 
         enum pipe_format rt_formats[8];
         uint8_t raw_fmt_mask;
         unsigned nr_cbufs;
+
+        /* Used on Valhall.
+         *
+         * Bit mask of special desktop-only varyings (e.g VARYING_SLOT_TEX0)
+         * written by the previous stage (fragment shader) or written by this
+         * stage (vertex shader). Bits are slots from gl_varying_slot.
+         *
+         * For modern APIs (GLES or VK), this should be 0.
+         */
+        uint32_t fixed_varying_mask;
 
         union {
                 struct {
@@ -243,6 +259,12 @@ struct bifrost_shader_info {
         nir_alu_type blend_src1_type;
         bool wait_6, wait_7;
         struct bifrost_message_preload messages[2];
+
+        /* Whether any flat varyings are loaded. This may disable optimizations
+         * that change the provoking vertex, since that would load incorrect
+         * values for flat varyings.
+         */
+        bool uses_flat_shading;
 };
 
 struct midgard_shader_info {
@@ -271,6 +293,7 @@ struct pan_shader_info {
                         bool sample_shading;
                         bool early_fragment_tests;
                         bool can_early_z, can_fpk;
+                        bool untyped_color_outputs;
                         BITSET_WORD outputs_read;
                         BITSET_WORD outputs_written;
                 } fs;
@@ -330,10 +353,15 @@ struct pan_shader_info {
         bool writes_global;
         uint64_t outputs_written;
 
+        /* Floating point controls that the driver should try to honour */
+        bool ftz_fp16, ftz_fp32;
+
         unsigned sampler_count;
         unsigned texture_count;
         unsigned ubo_count;
+        unsigned attributes_read_count;
         unsigned attribute_count;
+        unsigned attributes_read;
 
         struct {
                 unsigned input_count;
@@ -474,10 +502,32 @@ bool pan_has_dest_mod(nir_dest **dest, nir_op op);
 #define PAN_WRITEOUT_2 8
 
 bool pan_nir_lower_zs_store(nir_shader *nir);
+bool pan_nir_lower_store_component(nir_shader *shader);
 
 bool pan_nir_lower_64bit_intrin(nir_shader *shader);
 
 bool pan_lower_helper_invocation(nir_shader *shader);
 bool pan_lower_sample_pos(nir_shader *shader);
+bool pan_lower_xfb(nir_shader *nir);
+
+void pan_nir_collect_varyings(nir_shader *s, struct pan_shader_info *info);
+
+/*
+ * Helper returning the subgroup size. Generally, this is equal to the number of
+ * threads in a warp. For Midgard (including warping models), this returns 1, as
+ * subgroups are not supported.
+ */
+static inline unsigned
+pan_subgroup_size(unsigned arch)
+{
+        if (arch >= 9)
+                return 16;
+        else if (arch >= 7)
+                return 8;
+        else if (arch >= 6)
+                return 4;
+        else
+                return 1;
+}
 
 #endif

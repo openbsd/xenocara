@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/09/02 05:46:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/01/28 08:56:34 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -11,8 +11,7 @@ SRCS=	dri_context.c \
 	dri_helpers.c \
 	dri_query_renderer.c \
 	dri_screen.c \
-	dri_util.c \
-	utils.c
+	dri_util.c
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 SRCS+=	drisw.c \

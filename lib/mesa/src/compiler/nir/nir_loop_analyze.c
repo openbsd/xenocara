@@ -77,6 +77,7 @@ typedef struct {
 
    nir_variable_mode indirect_mask;
 
+   bool force_unroll_sampler_indirect;
 } loop_info_state;
 
 static nir_loop_variable *
@@ -140,7 +141,8 @@ init_loop_def(nir_ssa_def *def, void *void_init_loop_state)
  * unrolling doesn't cause things to blow up too much.
  */
 static unsigned
-instr_cost(nir_instr *instr, const nir_shader_compiler_options *options)
+instr_cost(loop_info_state *state, nir_instr *instr,
+           const nir_shader_compiler_options *options)
 {
    if (instr->type == nir_instr_type_intrinsic ||
        instr->type == nir_instr_type_tex)
@@ -152,6 +154,36 @@ instr_cost(nir_instr *instr, const nir_shader_compiler_options *options)
    nir_alu_instr *alu = nir_instr_as_alu(instr);
    const nir_op_info *info = &nir_op_infos[alu->op];
    unsigned cost = 1;
+
+   if (nir_op_is_selection(alu->op)) {
+      nir_ssa_scalar cond_scalar = {alu->src[0].src.ssa, 0};
+      if (nir_is_terminator_condition_with_two_inputs(cond_scalar)) {
+         nir_instr *sel_cond = alu->src[0].src.ssa->parent_instr;
+         nir_alu_instr *sel_alu = nir_instr_as_alu(sel_cond);
+
+         nir_ssa_scalar rhs, lhs;
+         lhs = nir_ssa_scalar_chase_alu_src(cond_scalar, 0);
+         rhs = nir_ssa_scalar_chase_alu_src(cond_scalar, 1);
+
+         /* If the selects condition is a comparision between a constant and
+          * a basic induction variable we know that it will be eliminated once
+          * the loop is unrolled so here we assign it a cost of 0.
+          */
+         if ((nir_src_is_const(sel_alu->src[0].src) &&
+              get_loop_var(rhs.def, state)->type == basic_induction) ||
+             (nir_src_is_const(sel_alu->src[1].src) &&
+              get_loop_var(lhs.def, state)->type == basic_induction) ) {
+            /* Also if the selects condition is only used by the select then
+             * remove that alu instructons cost from the cost total also.
+             */
+            if (!list_is_empty(&sel_alu->dest.dest.ssa.if_uses) ||
+                !list_is_singular(&sel_alu->dest.dest.ssa.uses))
+               return 0;
+            else
+               return -1;
+         }
+      }
+   }
 
    if (alu->op == nir_op_flrp) {
       if ((options->lower_flrp16 && nir_dest_bit_size(alu->dest.dest) == 16) ||
@@ -184,8 +216,10 @@ instr_cost(nir_instr *instr, const nir_shader_compiler_options *options)
          cost *= 20;
 
       /* If it's full software, it's even more expensive */
-      if (options->lower_doubles_options & nir_lower_fp64_full_software)
+      if (options->lower_doubles_options & nir_lower_fp64_full_software) {
          cost *= 100;
+         state->loop->info->has_soft_fp64 = true;
+      }
 
       return cost;
    } else {
@@ -207,15 +241,13 @@ instr_cost(nir_instr *instr, const nir_shader_compiler_options *options)
 
 static bool
 init_loop_block(nir_block *block, loop_info_state *state,
-                bool in_if_branch, bool in_nested_loop,
-                const nir_shader_compiler_options *options)
+                bool in_if_branch, bool in_nested_loop)
 {
    init_loop_state init_state = {.in_if_branch = in_if_branch,
                                  .in_nested_loop = in_nested_loop,
                                  .state = state };
 
    nir_foreach_instr(instr, block) {
-      state->loop->info->instr_cost += instr_cost(instr, options);
       nir_foreach_ssa_def(instr, init_loop_def, &init_state);
    }
 
@@ -601,6 +633,7 @@ find_array_access_via_induction(loop_info_state *state,
          *array_index_out = array_index;
 
       nir_deref_instr *parent = nir_deref_instr_parent(d);
+
       if (glsl_type_is_array_or_matrix(parent->type)) {
          return glsl_get_length(parent->type);
       } else {
@@ -721,10 +754,17 @@ get_iteration(nir_op cond_op, nir_const_value initial, nir_const_value step,
    nir_const_value span, iter;
 
    switch (cond_op) {
+   case nir_op_ine:
+      /* In order for execution to be here, limit must be the same as initial.
+       * Otherwise will_break_on_first_iteration would have returned false.
+       * If step is zero, the loop is infinite.  Otherwise the loop will
+       * execute once.
+       */
+      return step.u64 == 0 ? -1 : 1;
+
    case nir_op_ige:
    case nir_op_ilt:
    case nir_op_ieq:
-   case nir_op_ine:
       span = eval_const_binop(nir_op_isub, bit_size, limit, initial,
                               execution_mode);
       iter = eval_const_binop(nir_op_idiv, bit_size, span, step,
@@ -739,10 +779,27 @@ get_iteration(nir_op cond_op, nir_const_value initial, nir_const_value step,
                               execution_mode);
       break;
 
+   case nir_op_fneu:
+      /* In order for execution to be here, limit must be the same as initial.
+       * Otherwise will_break_on_first_iteration would have returned false.
+       * If step is zero, the loop is infinite.  Otherwise the loop will
+       * execute once.
+       *
+       * This is a little more tricky for floating point since X-Y might still
+       * be X even if Y is not zero.  Instead check that (initial + step) !=
+       * initial.
+       */
+      span = eval_const_binop(nir_op_fadd, bit_size, initial, step,
+                              execution_mode);
+      iter = eval_const_binop(nir_op_feq, bit_size, initial,
+                              span, execution_mode);
+
+      /* return (initial + step) == initial ? -1 : 1 */
+      return iter.b ? -1 : 1;
+
    case nir_op_fge:
    case nir_op_flt:
    case nir_op_feq:
-   case nir_op_fneu:
       span = eval_const_binop(nir_op_fsub, bit_size, limit, initial,
                               execution_mode);
       iter = eval_const_binop(nir_op_fdiv, bit_size, span,
@@ -913,6 +970,9 @@ calculate_iterations(nir_const_value initial, nir_const_value step,
    if (iter_int < 0)
       return -1;
 
+   if (alu_op == nir_op_ine || alu_op == nir_op_fneu)
+      return iter_int;
+
    /* An explanation from the GLSL unrolling pass:
     *
     * Make sure that the calculated number of iterations satisfies the exit
@@ -1033,7 +1093,7 @@ try_find_trip_count_vars_in_iand(nir_ssa_scalar *cond,
    bool found_induction_var = false;
    for (unsigned i = 0; i < 2; i++) {
       nir_ssa_scalar src = nir_ssa_scalar_chase_alu_src(iand, i);
-      if (nir_is_supported_terminator_condition(src) &&
+      if (nir_is_terminator_condition_with_two_inputs(src) &&
           get_induction_and_limit_vars(src, ind, limit, limit_rhs, state)) {
          *cond = src;
          found_induction_var = true;
@@ -1072,6 +1132,7 @@ find_trip_count(loop_info_state *state, unsigned execution_mode)
           * nir_opt_dead_cf pass.
           */
          trip_count_known = false;
+         terminator->exact_trip_count_unknown = true;
          continue;
       }
 
@@ -1095,6 +1156,13 @@ find_trip_count(loop_info_state *state, unsigned execution_mode)
 
       if (!basic_ind.def) {
          if (nir_is_supported_terminator_condition(cond)) {
+            /* Extract and inverse the comparision if it is wrapped in an inot
+             */
+            if (alu_op == nir_op_inot) {
+               cond = nir_ssa_scalar_chase_alu_src(cond, 0);
+               alu_op = inverse_comparison(nir_ssa_scalar_alu_op(cond));
+            }
+
             get_induction_and_limit_vars(cond, &basic_ind,
                                          &limit, &limit_rhs, state);
          }
@@ -1105,6 +1173,7 @@ find_trip_count(loop_info_state *state, unsigned execution_mode)
        */
       if (!basic_ind.def) {
          trip_count_known = false;
+         terminator->exact_trip_count_unknown = true;
          continue;
       }
 
@@ -1120,6 +1189,7 @@ find_trip_count(loop_info_state *state, unsigned execution_mode)
          if (!try_find_limit_of_alu(limit, &limit_val, terminator, state)) {
             /* Guess loop limit based on array access */
             if (!guess_loop_limit(state, &limit_val, basic_ind)) {
+               terminator->exact_trip_count_unknown = true;
                continue;
             }
 
@@ -1174,11 +1244,13 @@ find_trip_count(loop_info_state *state, unsigned execution_mode)
       if (iterations == -1) {
          trip_count_known = false;
          guessed_trip_count = false;
+         terminator->exact_trip_count_unknown = true;
          continue;
       }
 
       if (guessed_trip_count) {
          guessed_trip_count = false;
+         terminator->exact_trip_count_unknown = true;
          if (state->loop->info->guessed_trip_count == 0 ||
              state->loop->info->guessed_trip_count > iterations)
             state->loop->info->guessed_trip_count = iterations;
@@ -1203,7 +1275,8 @@ find_trip_count(loop_info_state *state, unsigned execution_mode)
 }
 
 static bool
-force_unroll_array_access(loop_info_state *state, nir_deref_instr *deref)
+force_unroll_array_access(loop_info_state *state, nir_deref_instr *deref,
+                          bool contains_sampler)
 {
    unsigned array_size = find_array_access_via_induction(state, deref, NULL);
    if (array_size) {
@@ -1216,6 +1289,9 @@ force_unroll_array_access(loop_info_state *state, nir_deref_instr *deref)
 
       if (nir_deref_mode_must_be(deref, state->indirect_mask))
          return true;
+
+      if (contains_sampler && state->force_unroll_sampler_indirect)
+         return true;
    }
 
    return false;
@@ -1225,6 +1301,22 @@ static bool
 force_unroll_heuristics(loop_info_state *state, nir_block *block)
 {
    nir_foreach_instr(instr, block) {
+      if (instr->type == nir_instr_type_tex) {
+         nir_tex_instr *tex_instr = nir_instr_as_tex(instr);
+         int sampler_idx =
+            nir_tex_instr_src_index(tex_instr,
+                                    nir_tex_src_sampler_deref);
+
+
+         if (sampler_idx >= 0) {
+            nir_deref_instr *deref =
+               nir_instr_as_deref(tex_instr->src[sampler_idx].src.ssa->parent_instr);
+            if (force_unroll_array_access(state, deref, true))
+               return true;
+         }
+      }
+
+
       if (instr->type != nir_instr_type_intrinsic)
          continue;
 
@@ -1237,12 +1329,14 @@ force_unroll_heuristics(loop_info_state *state, nir_block *block)
           intrin->intrinsic == nir_intrinsic_store_deref ||
           intrin->intrinsic == nir_intrinsic_copy_deref) {
          if (force_unroll_array_access(state,
-                                       nir_src_as_deref(intrin->src[0])))
+                                       nir_src_as_deref(intrin->src[0]),
+                                       false))
             return true;
 
          if (intrin->intrinsic == nir_intrinsic_copy_deref &&
              force_unroll_array_access(state,
-                                       nir_src_as_deref(intrin->src[1])))
+                                       nir_src_as_deref(intrin->src[1]),
+                                       false))
             return true;
       }
    }
@@ -1263,18 +1357,17 @@ get_loop_info(loop_info_state *state, nir_function_impl *impl)
       switch (node->type) {
 
       case nir_cf_node_block:
-         init_loop_block(nir_cf_node_as_block(node), state,
-                         false, false, options);
+         init_loop_block(nir_cf_node_as_block(node), state, false, false);
          break;
 
       case nir_cf_node_if:
          nir_foreach_block_in_cf_node(block, node)
-            init_loop_block(block, state, true, false, options);
+            init_loop_block(block, state, true, false);
          break;
 
       case nir_cf_node_loop:
          nir_foreach_block_in_cf_node(block, node) {
-            init_loop_block(block, state, false, true, options);
+            init_loop_block(block, state, false, true);
          }
          break;
 
@@ -1307,9 +1400,15 @@ get_loop_info(loop_info_state *state, nir_function_impl *impl)
    find_trip_count(state, impl->function->shader->info.float_controls_execution_mode);
 
    nir_foreach_block_in_cf_node(block, &state->loop->cf_node) {
+      nir_foreach_instr(instr, block) {
+         state->loop->info->instr_cost += instr_cost(state, instr, options);
+      }
+
+      if (state->loop->info->force_unroll)
+         continue;
+
       if (force_unroll_heuristics(state, block)) {
          state->loop->info->force_unroll = true;
-         break;
       }
    }
 }
@@ -1338,7 +1437,8 @@ initialize_loop_info_state(nir_loop *loop, void *mem_ctx,
 }
 
 static void
-process_loops(nir_cf_node *cf_node, nir_variable_mode indirect_mask)
+process_loops(nir_cf_node *cf_node, nir_variable_mode indirect_mask,
+              bool force_unroll_sampler_indirect)
 {
    switch (cf_node->type) {
    case nir_cf_node_block:
@@ -1346,15 +1446,15 @@ process_loops(nir_cf_node *cf_node, nir_variable_mode indirect_mask)
    case nir_cf_node_if: {
       nir_if *if_stmt = nir_cf_node_as_if(cf_node);
       foreach_list_typed(nir_cf_node, nested_node, node, &if_stmt->then_list)
-         process_loops(nested_node, indirect_mask);
+         process_loops(nested_node, indirect_mask, force_unroll_sampler_indirect);
       foreach_list_typed(nir_cf_node, nested_node, node, &if_stmt->else_list)
-         process_loops(nested_node, indirect_mask);
+         process_loops(nested_node, indirect_mask, force_unroll_sampler_indirect);
       return;
    }
    case nir_cf_node_loop: {
       nir_loop *loop = nir_cf_node_as_loop(cf_node);
       foreach_list_typed(nir_cf_node, nested_node, node, &loop->body)
-         process_loops(nested_node, indirect_mask);
+         process_loops(nested_node, indirect_mask, force_unroll_sampler_indirect);
       break;
    }
    default:
@@ -1367,6 +1467,7 @@ process_loops(nir_cf_node *cf_node, nir_variable_mode indirect_mask)
 
    loop_info_state *state = initialize_loop_info_state(loop, mem_ctx, impl);
    state->indirect_mask = indirect_mask;
+   state->force_unroll_sampler_indirect = force_unroll_sampler_indirect;
 
    get_loop_info(state, impl);
 
@@ -1375,9 +1476,10 @@ process_loops(nir_cf_node *cf_node, nir_variable_mode indirect_mask)
 
 void
 nir_loop_analyze_impl(nir_function_impl *impl,
-                      nir_variable_mode indirect_mask)
+                      nir_variable_mode indirect_mask,
+                      bool force_unroll_sampler_indirect)
 {
    nir_index_ssa_defs(impl);
    foreach_list_typed(nir_cf_node, node, node, &impl->body)
-      process_loops(node, indirect_mask);
+      process_loops(node, indirect_mask, force_unroll_sampler_indirect);
 }

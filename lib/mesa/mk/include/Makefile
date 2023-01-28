@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2021/07/22 11:10:08 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:33 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -26,7 +26,7 @@ EGL_FILES=	egl.h \
 		eglext.h \
 		eglplatform.h \
 		eglmesaext.h \
-		eglextchromium.h
+		eglext_angle.h
 VULKAN_FILES=
 GBM_FILES=	gbm.h
 

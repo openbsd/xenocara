@@ -275,7 +275,7 @@ update_draw_stats(struct fd_context *ctx, const struct pipe_draw_info *info,
 
 static void
 fd_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
-		unsigned drawid_offset,
+            unsigned drawid_offset,
             const struct pipe_draw_indirect_info *indirect,
             const struct pipe_draw_start_count_bias *draws, unsigned num_draws) in_dt
 {
@@ -371,7 +371,7 @@ fd_draw_vbo(struct pipe_context *pctx, const struct pipe_draw_info *info,
    if (FD_DBG(DDRAW))
       fd_context_all_dirty(ctx);
 
-   debug_assert(!batch->flushed);
+   assert(!batch->flushed);
 
    fd_batch_unlock_submit(batch);
    fd_batch_check_size(batch);
@@ -393,8 +393,8 @@ batch_clear_tracking(struct fd_batch *batch, unsigned buffers) assert_dt
     */
    batch->max_scissor.minx = 0;
    batch->max_scissor.miny = 0;
-   batch->max_scissor.maxx = pfb->width;
-   batch->max_scissor.maxy = pfb->height;
+   batch->max_scissor.maxx = pfb->width - 1;
+   batch->max_scissor.maxy = pfb->height - 1;
 
    /* for bookkeeping about which buffers have been cleared (and thus
     * can fully or partially skip mem2gmem) we need to ignore buffers
@@ -484,7 +484,7 @@ fd_clear(struct pipe_context *pctx, unsigned buffers,
       }
    }
 
-   debug_assert(!batch->flushed);
+   assert(!batch->flushed);
 
    fd_batch_unlock_submit(batch);
 

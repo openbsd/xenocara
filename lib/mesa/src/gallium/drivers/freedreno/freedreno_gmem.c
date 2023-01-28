@@ -25,7 +25,7 @@
  */
 
 #include "pipe/p_state.h"
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/format/u_format.h"
 #include "util/hash_table.h"
 #include "util/u_dump.h"
@@ -300,6 +300,8 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
    gmem->width = key->width;
    gmem->height = key->height;
 
+   gmem->tile = rzalloc_array(gmem, struct fd_tile, gmem->nbins_x * gmem->nbins_y);
+
    if (BIN_DEBUG) {
       dump_gmem_state(gmem);
       dump_gmem_key(key);
@@ -332,8 +334,8 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
    }
 
 #ifdef DEBUG
-   tpp_x = env_var_as_unsigned("TPP_X", tpp_x);
-   tpp_y = env_var_as_unsigned("TPP_Y", tpp_x);
+   tpp_x = debug_get_num_option("TPP_X", tpp_x);
+   tpp_y = debug_get_num_option("TPP_Y", tpp_x);
 #endif
 
    gmem->maxpw = tpp_x;
@@ -396,8 +398,6 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
          struct fd_tile *tile = &gmem->tile[t];
          uint32_t p;
 
-         assert(t < ARRAY_SIZE(gmem->tile));
-
          /* pipe number: */
          p = ((i / tpp_y) * div_round_up(gmem->nbins_x, tpp_x)) + (j / tpp_x);
          assert(p < gmem->num_vsc_pipes);
@@ -425,6 +425,19 @@ gmem_stateobj_init(struct fd_screen *screen, struct gmem_key *key)
       }
 
       yoff += bh;
+   }
+
+   /* Swap the order of alternating rows to form an 'S' pattern, to improve
+    * cache access patterns (ie. adjacent bins are likely to access adjacent
+    * portions of textures)
+    */
+   if (!FD_DBG(NOSBIN)) {
+      for (i = 0; i < gmem->nbins_y; i+=2) {
+         unsigned col0 = gmem->nbins_x * i;
+         for (j = 0; j < gmem->nbins_x/2; j++) {
+            swap(gmem->tile[col0 + j], gmem->tile[col0 + gmem->nbins_x - j - 1]);
+         }
+      }
    }
 
    if (BIN_DEBUG) {
@@ -500,15 +513,15 @@ gmem_key_init(struct fd_batch *batch, bool assume_zs, bool no_scis_opt)
       if (FD_DBG(NOSCIS)) {
          scissor->minx = 0;
          scissor->miny = 0;
-         scissor->maxx = pfb->width;
-         scissor->maxy = pfb->height;
+         scissor->maxx = pfb->width - 1;
+         scissor->maxy = pfb->height - 1;
       }
 
       /* round down to multiple of alignment: */
       key->minx = scissor->minx & ~(screen->info->gmem_align_w - 1);
       key->miny = scissor->miny & ~(screen->info->gmem_align_h - 1);
-      key->width = scissor->maxx - key->minx;
-      key->height = scissor->maxy - key->miny;
+      key->width = scissor->maxx + 1 - key->minx;
+      key->height = scissor->maxy + 1 - key->miny;
    }
 
    if (is_a20x(screen) && batch->cleared) {
@@ -716,7 +729,7 @@ fd_gmem_render_tiles(struct fd_batch *batch)
     * bypass.
     */
    if (batch->tessellation) {
-      debug_assert(ctx->emit_sysmem_prep);
+      assert(ctx->emit_sysmem_prep);
       sysmem = true;
    }
 

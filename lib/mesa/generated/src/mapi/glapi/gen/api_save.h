@@ -200,7 +200,7 @@ void GLAPIENTRY save_CompressedTexSubImage2D(GLenum target, GLint level, GLint x
 void GLAPIENTRY save_CompressedTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLsizei imageSize, const GLvoid * data);
 void GLAPIENTRY save_BlendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha);
 void GLAPIENTRY save_MultiDrawArrays(GLenum mode, const GLint * first, const GLsizei * count, GLsizei primcount);
-void GLAPIENTRY save_MultiDrawElementsEXT(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount);
+void GLAPIENTRY save_MultiDrawElements(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount);
 void GLAPIENTRY save_PointParameterf(GLenum pname, GLfloat param);
 void GLAPIENTRY save_PointParameterfv(GLenum pname, const GLfloat * params);
 void GLAPIENTRY save_PointParameteri(GLenum pname, GLint param);
@@ -265,12 +265,13 @@ void GLAPIENTRY save_ProgramLocalParameter4dvARB(GLenum target, GLuint index, co
 void GLAPIENTRY save_ProgramLocalParameter4fARB(GLenum target, GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
 void GLAPIENTRY save_ProgramLocalParameter4fvARB(GLenum target, GLuint index, const GLfloat * params);
 void GLAPIENTRY save_ClampColor(GLenum target, GLenum clamp);
-void GLAPIENTRY save_DrawArraysInstancedARB(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
-void GLAPIENTRY save_DrawElementsInstancedARB(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount);
+void GLAPIENTRY save_DrawArraysInstanced(GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+void GLAPIENTRY save_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount);
 void GLAPIENTRY save_BlitFramebuffer(GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1, GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1, GLbitfield mask, GLenum filter);
 void GLAPIENTRY save_VertexAttribDivisor(GLuint index, GLuint divisor);
 void GLAPIENTRY save_UniformBlockBinding(GLuint program, GLuint uniformBlockIndex, GLuint uniformBlockBinding);
 void GLAPIENTRY save_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLint basevertex);
+void GLAPIENTRY save_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid * indices, GLint basevertex);
 void GLAPIENTRY save_MultiDrawElementsBaseVertex(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount, const GLint * basevertex);
 void GLAPIENTRY save_DrawElementsInstancedBaseVertex(GLenum mode, GLsizei count, GLenum type, const GLvoid * indices, GLsizei primcount, GLint basevertex);
 void GLAPIENTRY save_WaitSync(GLsync sync, GLbitfield flags, GLuint64 timeout);

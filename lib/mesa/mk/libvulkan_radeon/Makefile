@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.7 2022/09/02 05:46:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	vulkan_radeon
 
 NOPROFILE=
 
 SRCS=	radv_metro_exodus.c \
+	radv_rra_layer.c \
 	radv_sqtt_layer.c \
 	radv_null_bo.c \
 	radv_null_cs.c \
@@ -15,6 +16,7 @@ SRCS=	radv_metro_exodus.c \
 	radv_debug.c \
 	radv_device.c \
 	radv_descriptor_set.c \
+	radv_device_generated_commands.c \
 	radv_formats.c \
 	radv_image.c \
 	radv_meta.c \
@@ -35,13 +37,14 @@ SRCS=	radv_metro_exodus.c \
 	radv_meta_resolve_cs.c \
 	radv_meta_resolve_fs.c \
 	radv_nir_apply_pipeline_layout.c \
+	radv_nir_lower_abi.c \
 	radv_nir_lower_ray_queries.c \
 	radv_nir_lower_ycbcr_textures.c \
-	radv_pass.c \
 	radv_perfcounter.c \
 	radv_pipeline.c \
 	radv_pipeline_cache.c \
 	radv_pipeline_rt.c \
+	radv_rra.c \
 	radv_rt_common.c \
 	radv_sdma_copy_image.c \
 	radv_shader.c \
@@ -61,6 +64,12 @@ SRCS+=	radv_amdgpu_bo.c \
 # with_llvm
 SRCS+=	radv_llvm_helper.cpp \
 	radv_nir_to_llvm.c
+
+# from src/amd/vulkan/radix_sort/meson.build
+SRCS+=	barrier.c \
+	util.c \
+	radix_sort_vk.c \
+	radv_radix_sort.c \
 
 SRCS+=	radv_entrypoints.c
 
@@ -91,6 +100,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/amd/vulkan \
 		-I${MESA_SRC}/generated/src/amd/vulkan \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
+		-I${MESA_SRC}/generated/src/vulkan/wsi \
 		-DVK_USE_PLATFORM_XCB_KHR \
 		-DVK_USE_PLATFORM_XLIB_KHR \
 		-DVK_USE_PLATFORM_DISPLAY_KHR \
@@ -125,6 +135,8 @@ SLIBS=	libamd_common \
 	libxmlconfig \
 	libmesa_util \
 	libmesa_format \
+	libmesa_util_sse41 \
+	libmesa_util_c11 \
 	libaco \
 	libnir \
 	libcompiler
@@ -143,8 +155,8 @@ LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 LDADD+=		-lelf -lLLVM -lpthread -lexpat -lz -lm
 LDADD+=		-L${X11BASE}/lib -ldrm -ldrm_amdgpu \
 		-lxcb-dri3 -lxcb-xfixes -lxcb-randr -lXrandr -lxcb -lX11-xcb \
-		-lX11 -lxcb-dri2 -lxcb-present -lxcb-sync \
-		-lxshmfence
+		-lX11 -lxcb-dri2 -lxcb-present -lxcb-xfixes -lxcb-sync \
+		-lxcb-randr -lxcb-shm -lxshmfence
 
 LDADD+=		-Wl,--gc-sections \
 		-Wl,--version-script ${MESA_SRC}/src/amd/vulkan/vulkan.sym \
@@ -162,4 +174,7 @@ CLEANFILES+= lib${LIB}.so
 .PATH: ${MESA_SRC}/src/amd/vulkan/layers
 .PATH: ${MESA_SRC}/src/amd/vulkan/winsys/amdgpu
 .PATH: ${MESA_SRC}/src/amd/vulkan/winsys/null
+.PATH: ${MESA_SRC}/src/amd/vulkan/radix_sort
+.PATH: ${MESA_SRC}/src/amd/vulkan/radix_sort/common
+.PATH: ${MESA_SRC}/src/amd/vulkan/radix_sort/common/vk
 .PATH: ${MESA_SRC}/generated/src/amd/vulkan

@@ -370,8 +370,10 @@ is_logic_op(enum opcode opcode)
 static bool
 can_take_stride(fs_inst *inst, brw_reg_type dst_type,
                 unsigned arg, unsigned stride,
-                const intel_device_info *devinfo)
+                const struct brw_compiler *compiler)
 {
+   const struct intel_device_info *devinfo = compiler->devinfo;
+
    if (stride > 4)
       return false;
 
@@ -395,7 +397,7 @@ can_take_stride(fs_inst *inst, brw_reg_type dst_type,
     *    This is applicable to 32b datatypes and 16b datatype. 64b datatypes
     *    cannot use the replicate control.
     */
-   if (inst->is_3src(devinfo)) {
+   if (inst->is_3src(compiler)) {
       if (type_sz(inst->src[arg].type) > 4)
          return stride == 1;
       else
@@ -486,11 +488,30 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
                             entry->dst, entry->size_written))
       return false;
 
-   /* Avoid propagating a FIXED_GRF register into an EOT instruction in order
-    * for any register allocation restrictions to be applied.
+   /* Send messages with EOT set are restricted to use g112-g127 (and we
+    * sometimes need g127 for other purposes), so avoid copy propagating
+    * anything that would make it impossible to satisfy that restriction.
     */
-   if (entry->src.file == FIXED_GRF && inst->eot)
-      return false;
+   if (inst->eot) {
+      /* Avoid propagating a FIXED_GRF register, as that's already pinned. */
+      if (entry->src.file == FIXED_GRF)
+         return false;
+
+      /* We might be propagating from a large register, while the SEND only
+       * is reading a portion of it (say the .A channel in an RGBA value).
+       * We need to pin both split SEND sources in g112-g126/127, so only
+       * allow this if the registers aren't too large.
+       */
+      if (inst->opcode == SHADER_OPCODE_SEND && entry->src.file == VGRF) {
+         int other_src = arg == 2 ? 3 : 2;
+         unsigned other_size = inst->src[other_src].file == VGRF ?
+                               alloc.sizes[inst->src[other_src].nr] :
+                               inst->size_read(other_src);
+         unsigned prop_src_size = alloc.sizes[entry->src.nr];
+         if (other_size + prop_src_size > 15)
+            return false;
+      }
+   }
 
    /* Avoid propagating odd-numbered FIXED_GRF registers into the first source
     * of a LINTERP instruction on platforms where the PLN instruction has
@@ -545,7 +566,7 @@ fs_visitor::try_copy_propagate(fs_inst *inst, int arg, acp_entry *entry)
     */
    if (!can_take_stride(inst, dst_type, arg,
                         entry_stride * inst->src[arg].stride,
-                        devinfo))
+                        compiler))
       return false;
 
    /* From the Cherry Trail/Braswell PRMs, Volume 7: 3D Media GPGPU:
@@ -815,6 +836,33 @@ fs_visitor::try_constant_propagate(fs_inst *inst, acp_entry *entry)
             inst->src[i] = val;
             progress = true;
          } else if (i == 0 && inst->src[1].file != IMM) {
+            /* Don't copy propagate the constant in situations like
+             *
+             *    mov(8)          g8<1>D          0x7fffffffD
+             *    mul(8)          g16<1>D         g8<8,8,1>D      g15<16,8,2>W
+             *
+             * On platforms that only have a 32x16 multiplier, this will
+             * result in lowering the multiply to
+             *
+             *    mul(8)          g15<1>D         g14<8,8,1>D     0xffffUW
+             *    mul(8)          g16<1>D         g14<8,8,1>D     0x7fffUW
+             *    add(8)          g15.1<2>UW      g15.1<16,8,2>UW g16<16,8,2>UW
+             *
+             * On Gfx8 and Gfx9, which have the full 32x32 multiplier, it
+             * results in
+             *
+             *    mul(8)          g16<1>D         g15<16,8,2>W    0x7fffffffD
+             *
+             * Volume 2a of the Skylake PRM says:
+             *
+             *    When multiplying a DW and any lower precision integer, the
+             *    DW operand must on src0.
+             */
+            if (inst->opcode == BRW_OPCODE_MUL &&
+                type_sz(inst->src[1].type) < 4 &&
+                type_sz(val.type) == 4)
+               break;
+
             /* Fit this constant in by commuting the operands.
              * Exception: we can't do this for 32-bit integer MUL/MACH
              * because it's asymmetric.
@@ -1037,9 +1085,11 @@ fs_visitor::opt_copy_propagation_local(void *copy_prop_ctx, bblock_t *block,
             if (inst->src[i].file == VGRF ||
                 (inst->src[i].file == FIXED_GRF &&
                  inst->src[i].is_contiguous())) {
+               const brw_reg_type t = i < inst->header_size ?
+                  BRW_REGISTER_TYPE_UD : inst->src[i].type;
                acp_entry *entry = rzalloc(copy_prop_ctx, acp_entry);
-               entry->dst = byte_offset(inst->dst, offset);
-               entry->src = inst->src[i];
+               entry->dst = byte_offset(retype(inst->dst, t), offset);
+               entry->src = retype(inst->src[i], t);
                entry->size_written = size_written;
                entry->size_read = inst->size_read(i);
                entry->opcode = inst->opcode;

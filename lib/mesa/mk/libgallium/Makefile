@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:38 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -49,10 +49,6 @@ SRCS=	cso_cache.c \
 	dd_screen.c \
 	noop_pipe.c \
 	noop_state.c \
-	driver_rbug_context.c \
-	driver_rbug_core.c \
-	rbug_objects.c \
-	rbug_screen.c \
 	tr_context.c \
 	tr_dump.c \
 	tr_dump_state.c \
@@ -67,6 +63,7 @@ SRCS=	cso_cache.c \
 	hud_sensors_temp.c \
 	hud_driver_query.c \
 	hud_fps.c \
+	u_primconvert.c \
 	os_process.c \
 	pb_buffer_fenced.c \
 	pb_bufmgr_cache.c \
@@ -82,13 +79,6 @@ SRCS=	cso_cache.c \
 	pp_mlaa.c \
 	pp_program.c \
 	pp_run.c \
-	rbug_connection.c \
-	rbug_context.c \
-	rbug_core.c \
-	rbug_demarshal.c \
-	rbug_shader.c \
-	rbug_texture.c \
-	rtasm_cpu.c \
 	rtasm_execmem.c \
 	rtasm_x86sse.c \
 	tgsi_aa_point.c \
@@ -96,7 +86,6 @@ SRCS=	cso_cache.c \
 	tgsi_dump.c \
 	tgsi_dynamic_indexing.c \
 	tgsi_exec.c \
-	tgsi_emulate.c \
 	tgsi_from_mesa.c \
 	tgsi_info.c \
 	tgsi_iterate.c \
@@ -123,7 +112,6 @@ SRCS=	cso_cache.c \
 	u_compute.c \
 	u_debug_flush.c \
 	u_debug_image.c \
-	u_dl.c \
 	u_draw.c \
 	u_draw_quad.c \
 	u_driconf.c \
@@ -137,7 +125,6 @@ SRCS=	cso_cache.c \
 	u_linear.c \
 	u_live_shader_cache.c \
 	u_log.c \
-	u_network.c \
 	u_prim.c \
 	u_prim_restart.c \
 	u_pstipple.c \
@@ -165,7 +152,9 @@ SRCS=	cso_cache.c \
 
 SRCS+=	renderonly.c \
 	tr_util.c \
-	u_tracepoints.c
+	u_tracepoints.c \
+	u_indices_gen.c \
+	u_unfilled_gen.c
 
 .if ${WITH_LLVM} == "yes"
 SRCS+=	lp_bld_arit.c \
@@ -189,6 +178,7 @@ SRCS+=	lp_bld_arit.c \
 	lp_bld_init.c \
 	lp_bld_intr.c \
 	lp_bld_ir_common.c \
+	lp_bld_jit_types.c \
 	lp_bld_logic.c \
 	lp_bld_misc.cpp \
 	lp_bld_nir.c \
@@ -221,14 +211,6 @@ CXXFLAGS+= ${LLVM_CXXFLAGS}
 
 .endif
 
-driver_rbug_context.c:
-	ln -s ${MESA_SRC}/src/gallium/auxiliary/driver_rbug/rbug_context.c $@
-
-driver_rbug_core.c:
-	ln -s ${MESA_SRC}/src/gallium/auxiliary/driver_rbug/rbug_core.c $@
-
-CLEANFILES+= driver_rbug_context.c driver_rbug_core.c
-
 CFLAGS+=	${C_VIS_ARGS}
 CXXFLAGS+=	${CXX_VIS_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
@@ -237,14 +219,12 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/gallium/auxiliary/draw \
 		-I${MESA_SRC}/src/gallium/auxiliary/driver_ddebug \
 		-I${MESA_SRC}/src/gallium/auxiliary/driver_noop \
-		-I${MESA_SRC}/src/gallium/auxiliary/driver_rbug \
 		-I${MESA_SRC}/src/gallium/auxiliary/driver_trace \
 		-I${MESA_SRC}/src/gallium/auxiliary/hud \
 		-I${MESA_SRC}/src/gallium/auxiliary/indices \
 		-I${MESA_SRC}/src/gallium/auxiliary/os \
 		-I${MESA_SRC}/src/gallium/auxiliary/pipebuffer \
 		-I${MESA_SRC}/src/gallium/auxiliary/postprocess \
-		-I${MESA_SRC}/src/gallium/auxiliary/rbug \
 		-I${MESA_SRC}/src/gallium/auxiliary/renderonly \
 		-I${MESA_SRC}/src/gallium/auxiliary/rtasm \
 		-I${MESA_SRC}/src/gallium/auxiliary/tgsi \
@@ -268,10 +248,8 @@ obj: _xenocara_obj
 
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/cso_cache
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/draw
-.PATH:	${MESA_SRC}/src/gallium/auxiliary/rbug
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/driver_ddebug
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/driver_noop
-.PATH:	${MESA_SRC}/src/gallium/auxiliary/driver_rbug
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/driver_trace
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/hud
 .PATH:	${MESA_SRC}/src/gallium/auxiliary/indices

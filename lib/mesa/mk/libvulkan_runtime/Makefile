@@ -1,30 +1,39 @@
-#	$OpenBSD: Makefile,v 1.1 2022/09/02 05:46:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	vulkan_runtime
 
 NOPROFILE=
 
-SRCS=	vk_cmd_copy.c \
+SRCS=	vk_buffer.c \
+	vk_cmd_copy.c \
 	vk_cmd_enqueue.c \
 	vk_command_buffer.c \
 	vk_command_pool.c \
 	vk_debug_report.c \
 	vk_debug_utils.c \
 	vk_deferred_operation.c \
+	vk_descriptor_set_layout.c \
 	vk_descriptors.c \
+	vk_descriptor_update_template.c \
 	vk_device.c \
 	vk_fence.c \
 	vk_framebuffer.c \
+	vk_graphics_state.c \
 	vk_image.c \
 	vk_instance.c \
 	vk_log.c \
 	vk_nir.c \
 	vk_object.c \
+	vk_pipeline.c \
+	vk_pipeline_cache.c \
 	vk_physical_device.c \
+	vk_pipeline_layout.c \
 	vk_queue.c \
 	vk_render_pass.c \
+	vk_sampler.c \
 	vk_semaphore.c \
 	vk_shader_module.c \
+	vk_standard_sample_locations.c \
 	vk_sync.c \
 	vk_sync_binary.c \
 	vk_sync_dummy.c \

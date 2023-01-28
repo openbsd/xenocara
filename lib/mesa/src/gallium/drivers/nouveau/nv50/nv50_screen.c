@@ -28,7 +28,7 @@
 #include "util/u_screen.h"
 #include "pipe/p_screen.h"
 
-#include "codegen/nv50_ir_driver.h"
+#include "nv50_ir_driver.h"
 
 #include "nv50/nv50_context.h"
 #include "nv50/nv50_screen.h"
@@ -104,8 +104,9 @@ nv50_screen_is_format_supported(struct pipe_screen *pscreen,
 static int
 nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
 {
-   const uint16_t class_3d = nouveau_screen(pscreen)->class_3d;
-   struct nouveau_device *dev = nouveau_screen(pscreen)->device;
+   struct nouveau_screen *screen = nouveau_screen(pscreen);
+   const uint16_t class_3d = screen->class_3d;
+   struct nouveau_device *dev = screen->device;
    static bool debug_cap_printed[PIPE_CAP_LAST] = {};
 
    switch (param) {
@@ -124,7 +125,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_MAX_TEXTURE_GATHER_OFFSET:
    case PIPE_CAP_MAX_TEXEL_OFFSET:
       return 7;
-   case PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE:
+   case PIPE_CAP_MAX_TEXEL_BUFFER_ELEMENTS_UINT:
       return 128 * 1024 * 1024;
    case PIPE_CAP_GLSL_FEATURE_LEVEL:
       return 330;
@@ -154,7 +155,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
       return 1;
    case PIPE_CAP_MAX_GS_INVOCATIONS:
       return 0;
-   case PIPE_CAP_MAX_SHADER_BUFFER_SIZE:
+   case PIPE_CAP_MAX_SHADER_BUFFER_SIZE_UINT:
       return 1 << 27;
    case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
       return 2048;
@@ -205,10 +206,8 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TEXTURE_BUFFER_OBJECTS:
    case PIPE_CAP_BUFFER_MAP_PERSISTENT_COHERENT:
    case PIPE_CAP_DEPTH_CLIP_DISABLE:
-   case PIPE_CAP_POINT_SPRITE:
    case PIPE_CAP_FRAGMENT_SHADER_TEXTURE_LOD:
    case PIPE_CAP_FRAGMENT_SHADER_DERIVATIVES:
-   case PIPE_CAP_VERTEX_SHADER_SATURATE:
    case PIPE_CAP_FRAGMENT_COLOR_CLAMPED:
    case PIPE_CAP_VERTEX_COLOR_UNCLAMPED:
    case PIPE_CAP_VERTEX_COLOR_CLAMPED:
@@ -247,7 +246,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_STRING_MARKER:
    case PIPE_CAP_CULL_DISTANCE:
    case PIPE_CAP_SHADER_ARRAY_COMPONENTS:
-   case PIPE_CAP_TGSI_MUL_ZERO_WINS:
+   case PIPE_CAP_LEGACY_MATH_RULES:
    case PIPE_CAP_TGSI_TEX_TXF_LZ:
    case PIPE_CAP_SHADER_CLOCK:
    case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
@@ -256,7 +255,6 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_TGSI_DIV:
    case PIPE_CAP_PREFER_IMM_ARRAYS_AS_CONSTBUF:
    case PIPE_CAP_FLATSHADE:
-   case PIPE_CAP_ALPHA_TEST:
    case PIPE_CAP_POINT_SIZE_FIXED:
    case PIPE_CAP_TWO_SIDED_COLOR:
    case PIPE_CAP_CLIP_PLANES:
@@ -269,7 +267,16 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_ALLOW_DYNAMIC_VAO_FASTPATH:
    case PIPE_CAP_SHAREABLE_SHADERS:
    case PIPE_CAP_PREFER_BACK_BUFFER_REUSE:
+   case PIPE_CAP_QUERY_MEMORY_INFO:
       return 1;
+
+   case PIPE_CAP_ALPHA_TEST:
+      /* nvc0 has fixed function alpha test support, but nv50 doesn't.  The TGSI
+       * backend emits the conditional discard code against a driver-uploaded
+       * uniform, but with NIR we can have the st emit it for us.
+       */
+      return class_3d >= NVC0_3D_CLASS || !screen->prefer_nir;
+
    case PIPE_CAP_TEXTURE_TRANSFER_MODES:
       return PIPE_TEXTURE_TRANSFER_BLIT;
    case PIPE_CAP_SEAMLESS_CUBE_MAP:
@@ -306,9 +313,9 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_DRAW_INDIRECT:
    case PIPE_CAP_MULTI_DRAW_INDIRECT:
    case PIPE_CAP_MULTI_DRAW_INDIRECT_PARAMS:
-   case PIPE_CAP_VERTEXID_NOBASE:
    case PIPE_CAP_MULTISAMPLE_Z_RESOLVE: /* potentially supported on some hw */
    case PIPE_CAP_RESOURCE_FROM_USER_MEMORY:
+   case PIPE_CAP_RESOURCE_FROM_USER_MEMORY_COMPUTE_ONLY:
    case PIPE_CAP_DEVICE_RESET_STATUS_QUERY:
    case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
    case PIPE_CAP_DRAW_PARAMETERS:
@@ -319,7 +326,6 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_BUFFER_SAMPLER_VIEW_RGBA_ONLY:
    case PIPE_CAP_SURFACE_REINTERPRET_BLOCKS:
    case PIPE_CAP_QUERY_BUFFER_OBJECT:
-   case PIPE_CAP_QUERY_MEMORY_INFO:
    case PIPE_CAP_PCI_GROUP:
    case PIPE_CAP_PCI_BUS:
    case PIPE_CAP_PCI_DEVICE:
@@ -330,7 +336,6 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_STREAM_OUTPUT_INTERLEAVE_BUFFERS:
    case PIPE_CAP_SHADER_CAN_READ_OUTPUTS:
    case PIPE_CAP_NATIVE_FENCE_FD:
-   case PIPE_CAP_GLSL_OPTIMIZE_CONSERVATIVELY:
    case PIPE_CAP_FBFETCH:
    case PIPE_CAP_DOUBLES:
    case PIPE_CAP_INT64:
@@ -374,9 +379,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_ATOMIC_FLOAT_MINMAX:
    case PIPE_CAP_CONSERVATIVE_RASTER_INNER_COVERAGE:
    case PIPE_CAP_FRAGMENT_SHADER_INTERLOCK:
-   case PIPE_CAP_CS_DERIVED_SYSTEM_VALUES_SUPPORTED:
    case PIPE_CAP_FBFETCH_COHERENT:
-   case PIPE_CAP_TGSI_SKIP_SHRINK_IO_ARRAYS:
    case PIPE_CAP_IMAGE_ATOMIC_INC_WRAP:
    case PIPE_CAP_DEMOTE_TO_HELPER_INVOCATION:
    case PIPE_CAP_TGSI_TG4_COMPONENT_IN_SWIZZLE:
@@ -398,7 +401,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_GLSL_ZERO_INIT:
    case PIPE_CAP_BLEND_EQUATION_ADVANCED:
    case PIPE_CAP_NO_CLIP_ON_COPY_TEX:
-   case PIPE_CAP_DEVICE_PROTECTED_CONTENT:
+   case PIPE_CAP_DEVICE_PROTECTED_SURFACE:
    case PIPE_CAP_NIR_IMAGES_AS_DEREF:
    case PIPE_CAP_SAMPLER_REDUCTION_MINMAX:
    case PIPE_CAP_SAMPLER_REDUCTION_MINMAX_ARB:
@@ -410,6 +413,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_SPARSE_TEXTURE_FULL_ARRAY_CUBE_MIPMAPS:
    case PIPE_CAP_QUERY_SPARSE_TEXTURE_RESIDENCY:
    case PIPE_CAP_CLAMP_SPARSE_TEXTURE_LOD:
+   case PIPE_CAP_HARDWARE_GL_SELECT:
       return 0;
 
    case PIPE_CAP_VENDOR_ID:
@@ -427,7 +431,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
    case PIPE_CAP_VIDEO_MEMORY:
       return dev->vram_size >> 20;
    case PIPE_CAP_UMA:
-      return 0;
+      return nouveau_screen(pscreen)->is_uma;
 
    default:
       if (!debug_cap_printed[param]) {
@@ -473,7 +477,7 @@ nv50_screen_get_shader_param(struct pipe_screen *pscreen,
       return 15;
    case PIPE_SHADER_CAP_MAX_OUTPUTS:
       return 16;
-   case PIPE_SHADER_CAP_MAX_CONST_BUFFER_SIZE:
+   case PIPE_SHADER_CAP_MAX_CONST_BUFFER0_SIZE:
       return 65536;
    case PIPE_SHADER_CAP_MAX_CONST_BUFFERS:
       return NV50_MAX_PIPE_CONSTBUFS;
@@ -485,7 +489,7 @@ nv50_screen_get_shader_param(struct pipe_screen *pscreen,
       return 1;
    case PIPE_SHADER_CAP_MAX_TEMPS:
       return nv50_screen(pscreen)->max_tls_space / ONE_TEMP_SIZE;
-   case PIPE_SHADER_CAP_TGSI_CONT_SUPPORTED:
+   case PIPE_SHADER_CAP_CONT_SUPPORTED:
       return 1;
    case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
       return 1;
@@ -499,8 +503,6 @@ nv50_screen_get_shader_param(struct pipe_screen *pscreen,
       return 0; /* please inline, or provide function declarations */
    case PIPE_SHADER_CAP_INTEGERS:
       return 1;
-   case PIPE_SHADER_CAP_TGSI_SKIP_MERGE_REGISTERS:
-      return 1;
    case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
       /* The chip could handle more sampler views than samplers */
    case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
@@ -511,16 +513,12 @@ nv50_screen_get_shader_param(struct pipe_screen *pscreen,
       return shader == PIPE_SHADER_COMPUTE ? NV50_MAX_GLOBALS - 1 : 0;
    case PIPE_SHADER_CAP_PREFERRED_IR:
       return screen->prefer_nir ? PIPE_SHADER_IR_NIR : PIPE_SHADER_IR_TGSI;
-   case PIPE_SHADER_CAP_MAX_UNROLL_ITERATIONS_HINT:
-      return 32;
    case PIPE_SHADER_CAP_SUPPORTED_IRS:
       return (1 << PIPE_SHADER_IR_TGSI) | (1 << PIPE_SHADER_IR_NIR);
-   case PIPE_SHADER_CAP_TGSI_DROUND_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_DFRACEXP_DLDEXP_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_LDEXP_SUPPORTED:
-   case PIPE_SHADER_CAP_TGSI_FMA_SUPPORTED:
+   case PIPE_SHADER_CAP_DROUND_SUPPORTED:
+   case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
+   case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
    case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
-   case PIPE_SHADER_CAP_LOWER_IF_THRESHOLD:
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
    case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTER_BUFFERS:
       return 0;
@@ -568,6 +566,7 @@ nv50_screen_get_compute_param(struct pipe_screen *pscreen,
                               enum pipe_compute_cap param, void *data)
 {
    struct nv50_screen *screen = nv50_screen(pscreen);
+   struct nouveau_device *dev = screen->base.device;
 
 #define RET(x) do {                  \
    if (data)                         \
@@ -585,7 +584,7 @@ nv50_screen_get_compute_param(struct pipe_screen *pscreen,
    case PIPE_COMPUTE_CAP_MAX_THREADS_PER_BLOCK:
       RET((uint64_t []) { 512 });
    case PIPE_COMPUTE_CAP_MAX_GLOBAL_SIZE: /* g0-15[] */
-      RET((uint64_t []) { 1ULL << 32 });
+      RET((uint64_t []) { nouveau_device_get_global_mem_size(dev) });
    case PIPE_COMPUTE_CAP_MAX_LOCAL_SIZE: /* s[] */
       RET((uint64_t []) { 16 << 10 });
    case PIPE_COMPUTE_CAP_MAX_PRIVATE_SIZE: /* l[] */
@@ -595,7 +594,7 @@ nv50_screen_get_compute_param(struct pipe_screen *pscreen,
    case PIPE_COMPUTE_CAP_SUBGROUP_SIZE:
       RET((uint32_t []) { 32 });
    case PIPE_COMPUTE_CAP_MAX_MEM_ALLOC_SIZE:
-      RET((uint64_t []) { 1ULL << 40 });
+      RET((uint64_t []) { nouveau_device_get_global_mem_size(dev) });
    case PIPE_COMPUTE_CAP_IMAGES_SUPPORTED:
       RET((uint32_t []) { 0 });
    case PIPE_COMPUTE_CAP_MAX_COMPUTE_UNITS:
@@ -620,11 +619,6 @@ nv50_screen_destroy(struct pipe_screen *pscreen)
 
    if (!nouveau_drm_screen_unref(&screen->base))
       return;
-
-   nouveau_fence_cleanup(&screen->base);
-
-   if (screen->base.pushbuf)
-      screen->base.pushbuf->user_priv = NULL;
 
    if (screen->blitter)
       nv50_blitter_destroy(screen);
@@ -654,15 +648,17 @@ nv50_screen_destroy(struct pipe_screen *pscreen)
    nouveau_object_del(&screen->sync);
 
    nouveau_screen_fini(&screen->base);
+   simple_mtx_destroy(&screen->state_lock);
 
    FREE(screen);
 }
 
 static void
-nv50_screen_fence_emit(struct pipe_screen *pscreen, u32 *sequence)
+nv50_screen_fence_emit(struct pipe_context *pcontext, u32 *sequence)
 {
-   struct nv50_screen *screen = nv50_screen(pscreen);
-   struct nouveau_pushbuf *push = screen->base.pushbuf;
+   struct nv50_context *nv50 = nv50_context(pcontext);
+   struct nv50_screen *screen = nv50->screen;
+   struct nouveau_pushbuf *push = nv50->base.pushbuf;
 
    /* we need to do it after possible flush in MARK_RING */
    *sequence = ++screen->base.fence.sequence;
@@ -782,16 +778,16 @@ nv50_screen_init_hwctx(struct nv50_screen *screen)
    PUSH_DATA (push, 0x3f);
 
    BEGIN_NV04(push, NV50_3D(VP_ADDRESS_HIGH), 2);
-   PUSH_DATAh(push, screen->code->offset + (0 << NV50_CODE_BO_SIZE_LOG2));
-   PUSH_DATA (push, screen->code->offset + (0 << NV50_CODE_BO_SIZE_LOG2));
+   PUSH_DATAh(push, screen->code->offset + (NV50_SHADER_STAGE_VERTEX << NV50_CODE_BO_SIZE_LOG2));
+   PUSH_DATA (push, screen->code->offset + (NV50_SHADER_STAGE_VERTEX << NV50_CODE_BO_SIZE_LOG2));
 
    BEGIN_NV04(push, NV50_3D(FP_ADDRESS_HIGH), 2);
-   PUSH_DATAh(push, screen->code->offset + (1 << NV50_CODE_BO_SIZE_LOG2));
-   PUSH_DATA (push, screen->code->offset + (1 << NV50_CODE_BO_SIZE_LOG2));
+   PUSH_DATAh(push, screen->code->offset + (NV50_SHADER_STAGE_FRAGMENT << NV50_CODE_BO_SIZE_LOG2));
+   PUSH_DATA (push, screen->code->offset + (NV50_SHADER_STAGE_FRAGMENT << NV50_CODE_BO_SIZE_LOG2));
 
    BEGIN_NV04(push, NV50_3D(GP_ADDRESS_HIGH), 2);
-   PUSH_DATAh(push, screen->code->offset + (2 << NV50_CODE_BO_SIZE_LOG2));
-   PUSH_DATA (push, screen->code->offset + (2 << NV50_CODE_BO_SIZE_LOG2));
+   PUSH_DATAh(push, screen->code->offset + (NV50_SHADER_STAGE_GEOMETRY << NV50_CODE_BO_SIZE_LOG2));
+   PUSH_DATA (push, screen->code->offset + (NV50_SHADER_STAGE_GEOMETRY << NV50_CODE_BO_SIZE_LOG2));
 
    BEGIN_NV04(push, NV50_3D(LOCAL_ADDRESS_HIGH), 3);
    PUSH_DATAh(push, screen->tls_bo->offset);
@@ -938,6 +934,7 @@ static int nv50_tls_alloc(struct nv50_screen *screen, unsigned tls_space,
    struct nouveau_device *dev = screen->base.device;
    int ret;
 
+   assert(tls_space % ONE_TEMP_SIZE == 0);
    screen->cur_tls_space = util_next_power_of_two(tls_space / ONE_TEMP_SIZE) *
          ONE_TEMP_SIZE;
    if (nouveau_mesa_debug)
@@ -992,7 +989,7 @@ nv50_screen_get_compiler_options(struct pipe_screen *pscreen,
                                  enum pipe_shader_type shader)
 {
    if (ir == PIPE_SHADER_IR_NIR)
-      return nv50_ir_nir_shader_compiler_options(NVISA_G80_CHIPSET);
+      return nv50_ir_nir_shader_compiler_options(NVISA_G80_CHIPSET, shader);
    return NULL;
 }
 
@@ -1013,6 +1010,7 @@ nv50_screen_create(struct nouveau_device *dev)
    pscreen = &screen->base.base;
    pscreen->destroy = nv50_screen_destroy;
 
+   simple_mtx_init(&screen->state_lock, mtx_plain);
    ret = nouveau_screen_init(&screen->base, dev);
    if (ret) {
       NOUVEAU_ERR("nouveau_screen_init failed: %d\n", ret);
@@ -1027,7 +1025,6 @@ nv50_screen_create(struct nouveau_device *dev)
    screen->base.sysmem_bindings |=
       PIPE_BIND_VERTEX_BUFFER | PIPE_BIND_INDEX_BUFFER;
 
-   screen->base.pushbuf->user_priv = screen;
    screen->base.pushbuf->rsvd_kick = 5;
 
    chan = screen->base.channel;
@@ -1068,7 +1065,7 @@ nv50_screen_create(struct nouveau_device *dev)
       goto fail;
    }
 
-   nouveau_bo_map(screen->fence.bo, 0, NULL);
+   BO_MAP(&screen->base, screen->fence.bo, 0, NULL);
    screen->fence.map = screen->fence.bo->map;
    screen->base.fence.emit = nv50_screen_fence_emit;
    screen->base.fence.update = nv50_screen_fence_update;
@@ -1210,8 +1207,6 @@ nv50_screen_create(struct nouveau_device *dev)
       NOUVEAU_ERR("Failed to init compute context: %d\n", ret);
       goto fail;
    }
-
-   nouveau_fence_new(&screen->base, &screen->base.fence.current);
 
    return &screen->base;
 

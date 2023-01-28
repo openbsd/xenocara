@@ -3,12 +3,14 @@
 PYTHON=		python3
 FLEX=		flex
 BISON=		bison
+GLSLV=		glslangValidator
 MESA_SRC=	..
 
 all:
 	mkdir -p src/amd/common
 	mkdir -p src/amd/compiler
-	mkdir -p src/amd/vulkan
+	mkdir -p src/amd/vulkan/bvh
+	mkdir -p src/amd/vulkan/radix_sort/shaders
 	mkdir -p src/compiler/glsl/glcpp
 	mkdir -p src/compiler/nir
 	mkdir -p src/compiler/spirv
@@ -21,6 +23,7 @@ all:
 	mkdir -p src/intel/isl
 	mkdir -p src/intel/perf
 	mkdir -p src/intel/vulkan
+	mkdir -p src/intel/vulkan_hasvk
 	mkdir -p src/mapi/es1api
 	mkdir -p src/mapi/es2api
 	mkdir -p src/mapi/glapi/gen
@@ -49,9 +52,12 @@ all:
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_save_init_h.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mapi/glapi/gen/api_save_init.h
-	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_vtxfmt_init_h.py \
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_beginend_init_h.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
-	    > src/mapi/glapi/gen/api_vtxfmt_init.h
+	    > src/mapi/glapi/gen/api_beginend_init.h
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/gl_unmarshal_table.py \
+	    ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
+	    > src/mapi/glapi/gen/unmarshal_table.c
 	${PYTHON} ${MESA_SRC}/src/mapi/mapi_abi.py --printer shared-glapi \
 	    ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mapi/shared-glapi/glapi_mapi_tmp.h
@@ -72,6 +78,9 @@ all:
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_API.xml \
 	    --only-set -m size_h --header-tag _INDIRECT_SIZE_H_ \
 	    > src/mapi/glapi/gen/indirect_size.h
+	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_hw_select_init_h.py \
+	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_API.xml \
+	    > src/mapi/glapi/gen/api_hw_select_init.h
 	${PYTHON} ${MESA_SRC}/src/util/format_srgb.py \
 	    > src/util/format_srgb.c
 	${PYTHON} ${MESA_SRC}/src/compiler/nir/nir_opcodes_h.py \
@@ -122,8 +131,10 @@ all:
 	    ${MESA_SRC}/src/amd/registers/gfx9.json \
 	    ${MESA_SRC}/src/amd/registers/gfx10.json \
 	    ${MESA_SRC}/src/amd/registers/gfx103.json \
+	    ${MESA_SRC}/src/amd/registers/gfx11.json \
 	    ${MESA_SRC}/src/amd/registers/pkt3.json \
 	    ${MESA_SRC}/src/amd/registers/gfx10-rsrc.json \
+	    ${MESA_SRC}/src/amd/registers/gfx11-rsrc.json \
 	    ${MESA_SRC}/src/amd/registers/registers-manually-defined.json \
 	    --sort address --guard AMDGFXREGS_H \
 	    > src/amd/common/amdgfxregs.h
@@ -136,13 +147,16 @@ all:
 	    ${MESA_SRC}/src/amd/registers/gfx9.json \
 	    ${MESA_SRC}/src/amd/registers/gfx10.json \
 	    ${MESA_SRC}/src/amd/registers/gfx103.json \
+	    ${MESA_SRC}/src/amd/registers/gfx11.json \
 	    ${MESA_SRC}/src/amd/registers/pkt3.json \
 	    ${MESA_SRC}/src/amd/registers/gfx10-rsrc.json \
+	    ${MESA_SRC}/src/amd/registers/gfx11-rsrc.json \
 	    ${MESA_SRC}/src/amd/registers/registers-manually-defined.json \
 	    > src/amd/common/sid_tables.h
 	${PYTHON} ${MESA_SRC}/src/amd/common/gfx10_format_table.py \
 	    ${MESA_SRC}/src/util/format/u_format.csv \
 	    ${MESA_SRC}/src/amd/registers/gfx10-rsrc.json \
+	    ${MESA_SRC}/src/amd/registers/gfx11-rsrc.json \
 	    > src/amd/common/gfx10_format_table.c
 	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
 	    ${MESA_SRC}/src/compiler/glsl/float64.glsl \
@@ -178,8 +192,8 @@ all:
 	${PYTHON} ${MESA_SRC}/src/compiler/spirv/vtn_generator_ids_h.py \
 	    ${MESA_SRC}/src/compiler/spirv/spir-v.xml \
 	    src/compiler/spirv/vtn_generator_ids.h
-	${PYTHON} ${MESA_SRC}/src/util/indices/u_indices_gen.py \
-	    > src/util/u_indices_gen.c
+	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/indices/u_indices_gen.py \
+	    src/gallium/auxiliary/u_indices_gen.c
 	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/util/u_tracepoints.py \
 	    -p ${MESA_SRC}/src/util/perf/ \
 	    -C src/gallium/auxiliary/u_tracepoints.c
@@ -191,8 +205,8 @@ all:
 	    -C src/gallium/auxiliary/tr_util.c \
 	    -H src/gallium/auxiliary/tr_util.h \
 	    -I tr_util.h
-	${PYTHON} ${MESA_SRC}/src/util/indices/u_unfilled_gen.py \
-	    > src/util/u_unfilled_gen.c
+	${PYTHON} ${MESA_SRC}/src/gallium/auxiliary/indices/u_unfilled_gen.py \
+	    src/gallium/auxiliary/u_unfilled_gen.c
 	echo '#define MESA_GIT_SHA1 ""' > src/git_sha1.h
 	${PYTHON} ${MESA_SRC}/src/intel/compiler/brw_nir_trig_workarounds.py \
 	    -p ${MESA_SRC}/src/compiler/nir \
@@ -246,13 +260,27 @@ all:
 	    --out-h src/intel/vulkan/anv_entrypoints.h \
 	    --out-c src/intel/vulkan/anv_entrypoints.c \
 	    --prefix anv \
-	    --device-prefix gfx7 \
-	    --device-prefix gfx75 \
-	    --device-prefix gfx8 \
 	    --device-prefix gfx9 \
 	    --device-prefix gfx11 \
 	    --device-prefix gfx12 \
-	    --device-prefix gfx125
+	    --device-prefix gfx125 \
+	    --device-prefix hitman3
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --proto --weak \
+	    --out-h src/intel/vulkan_hasvk/anv_entrypoints.h \
+	    --out-c src/intel/vulkan_hasvk/anv_entrypoints.c \
+	    --prefix anv \
+	    --device-prefix gfx7 \
+	    --device-prefix gfx75 \
+	    --device-prefix gfx8
+	${PYTHON} ${MESA_SRC}/src/util/glsl2spirv.py \
+	    ${MESA_SRC}/src/compiler/glsl/float64.glsl \
+	    src/intel/vulkan/float64_spv.h \
+	    --create-entry main \
+	    --vn float64_spv_source \
+	    --glsl-version 450 \
+	    -Olib
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_exec_init.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mapi/glapi/gen/api_exec_init.c
@@ -261,8 +289,8 @@ all:
 	    > src/mapi/glapi/gen/enums.c
 .for INDEX in 0 1 2 3 4 5 6 7
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/gl_marshal.py \
-	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
-	    -i ${INDEX} -n 8 \
+	    ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
+	    ${INDEX} 8 \
 	    > src/mapi/glapi/gen/marshal_generated${INDEX}.c
 .endfor
 	${PYTHON} ${MESA_SRC}/src/mesa/main/format_fallback.py \
@@ -316,7 +344,21 @@ all:
 	    --out-c src/amd/vulkan/radv_entrypoints.c \
 	    --prefix radv \
 	    --device-prefix sqtt \
-	    --device-prefix metro_exodus
+	    --device-prefix metro_exodus \
+	    --device-prefix rra
+.for SHADER in copy lbvh_internal leaf morton ploc_internal converter_internal converter_leaf
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/${SHADER}.comp.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/${SHADER}.comp --quiet
+.endfor
+.for SHADER in init fill histogram prefix scatter_0_even scatter_0_odd scatter_1_even scatter_1_odd
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/radix_sort/targets/u64 \
+	    --target-env spirv1.3 -x \
+	    -o src/amd/vulkan/radix_sort/shaders/${SHADER}.comp.spv.h  \
+	    ${MESA_SRC}/src/amd/vulkan/radix_sort/shaders/${SHADER}.comp --quiet
+.endfor
+
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
 	    --api-version 1.3 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
@@ -327,6 +369,11 @@ all:
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --lib-path ${X11BASE}/lib/libvulkan_intel.so \
 	    --out src/intel/vulkan/intel_icd.json
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
+	    --api-version 1.3 \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --lib-path ${X11BASE}/lib/libvulkan_intel_hasvk.so \
+	    --out src/intel/vulkan_hasvk/intel_hasvk_icd.json
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --proto --weak \
@@ -379,6 +426,21 @@ clean:
 	rm -f src/amd/vulkan/radeon_icd.json
 	rm -f src/amd/vulkan/radv_entrypoints.c
 	rm -f src/amd/vulkan/radv_entrypoints.h
+	rm -f src/amd/vulkan/bvh/converter_internal.comp.spv.h
+	rm -f src/amd/vulkan/bvh/converter_leaf.comp.spv.h
+	rm -f src/amd/vulkan/bvh/copy.comp.spv.h
+	rm -f src/amd/vulkan/bvh/lbvh_internal.comp.spv.h
+	rm -f src/amd/vulkan/bvh/leaf.comp.spv.h
+	rm -f src/amd/vulkan/bvh/morton.comp.spv.h
+	rm -f src/amd/vulkan/bvh/ploc_internal.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/fill.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/histogram.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/init.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/prefix.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/scatter_0_even.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/scatter_0_odd.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/scatter_1_even.comp.spv.h
+	rm -f src/amd/vulkan/radix_sort/shaders/scatter_1_odd.comp.spv.h
 	rm -f src/compiler/glsl/float64_glsl.h
 	rm -f src/compiler/glsl/glcpp/glcpp-lex.c
 	rm -f src/compiler/glsl/glcpp/glcpp-parse.c
@@ -402,6 +464,8 @@ clean:
 	rm -f src/compiler/spirv/vtn_generator_ids.h
 	rm -f src/gallium/auxiliary/tr_util.c
 	rm -f src/gallium/auxiliary/tr_util.h
+	rm -f src/gallium/auxiliary/u_indices_gen.c
+	rm -f src/gallium/auxiliary/u_unfilled_gen.c
 	rm -f src/gallium/auxiliary/u_tracepoints.c
 	rm -f src/gallium/auxiliary/u_tracepoints.h
 	rm -f src/gallium/drivers/r300/r300_nir_algebraic.c
@@ -422,7 +486,11 @@ clean:
 	rm -f src/intel/perf/intel_perf_metrics.h
 	rm -f src/intel/vulkan/anv_entrypoints.c
 	rm -f src/intel/vulkan/anv_entrypoints.h
+	rm -f src/intel/vulkan/float64_spv.h
 	rm -f src/intel/vulkan/intel_icd.json
+	rm -f src/intel/vulkan_hasvk/anv_entrypoints.c
+	rm -f src/intel/vulkan_hasvk/anv_entrypoints.h
+	rm -f src/intel/vulkan_hasvk/intel_hasvk_icd.json
 	rm -f src/mapi/es1api/glapi_mapi_tmp.h
 	rm -f src/mapi/es2api/glapi_mapi_tmp.h
 	rm -f src/mapi/glapi/gen/api_exec_init.c
@@ -437,9 +505,11 @@ clean:
 	rm -f src/mapi/glapi/gen/marshal_generated${INDEX}.c
 .endfor
 	rm -f src/mapi/glapi/gen/api_exec_decl.h
+	rm -f src/mapi/glapi/gen/api_hw_select_init.h
 	rm -f src/mapi/glapi/gen/api_save.h
 	rm -f src/mapi/glapi/gen/api_save_init.h
-	rm -f src/mapi/glapi/gen/api_vtxfmt_init.h
+	rm -f src/mapi/glapi/gen/api_beginend_init.h
+	rm -f src/mapi/glapi/gen/unmarshal_table.c
 	rm -f src/mapi/glapi/glapitable.h
 	rm -f src/mapi/glapi/glapitemp.h
 	rm -f src/mapi/shared-glapi/glapi_mapi_tmp.h
@@ -456,8 +526,6 @@ clean:
 	rm -f src/util/format/u_format_pack.h
 	rm -f src/util/format/u_format_table.c
 	rm -f src/util/format_srgb.c
-	rm -f src/util/u_indices_gen.c
-	rm -f src/util/u_unfilled_gen.c
 	rm -f src/vulkan/runtime/vk_cmd_queue.c
 	rm -f src/vulkan/runtime/vk_cmd_queue.h
 	rm -f src/vulkan/runtime/vk_cmd_enqueue_entrypoints.h

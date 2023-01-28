@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/01/28 08:56:34 jsg Exp $
 
 GEN=	120
 LIB=	anv_gen${GEN}
@@ -39,7 +39,8 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-DVK_USE_PLATFORM_XLIB_KHR \
 		-DVK_USE_PLATFORM_DISPLAY_KHR \
 		-DVK_USE_PLATFORM_XLIB_XRANDR_EXT \
-		-DGFX_VERx10=${GEN}
+		-DGFX_VERx10=${GEN} \
+		-DANV_SUPPORT_RT=0
 
 install:
 

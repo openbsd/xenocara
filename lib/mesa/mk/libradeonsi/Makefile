@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	radeonsi
 
@@ -43,24 +43,26 @@ SRCS=	gfx10_query.c \
 	si_state_shaders.cpp \
 	si_state_streamout.c \
 	si_state_viewport.c \
-	si_test_blit.c \
+	si_test_image_copy_region.c \
 	si_test_dma_perf.c \
 	si_texture.c \
 	si_uvd.c \
 	radeon_uvd.c \
-	radeon_vcn_enc_1_2.c \
-	radeon_vcn_enc_2_0.c \
-	radeon_vcn_enc_3_0.c \
-	radeon_vcn_enc.c \
-	radeon_vcn_dec_jpeg.c \
-	radeon_vcn_dec.c \
-	radeon_uvd_enc_1_1.c \
 	radeon_uvd_enc.c \
+	radeon_uvd_enc_1_1.c \
+	radeon_vce.c \
 	radeon_vce_40_2_2.c \
 	radeon_vce_50.c \
 	radeon_vce_52.c \
-	radeon_vce.c \
-	radeon_video.c
+	radeon_vcn.c \
+	radeon_vcn_dec.c \
+	radeon_vcn_dec_jpeg.c \
+	radeon_vcn_enc.c \
+	radeon_vcn_enc_1_2.c \
+	radeon_vcn_enc_2_0.c \
+	radeon_vcn_enc_3_0.c \
+	radeon_vcn_enc_4_0.c \
+	radeon_video.c \
 
 .include "../Makefile.inc"
 

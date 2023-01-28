@@ -161,7 +161,7 @@ vec4_tcs_visitor::emit_input_urb_read(const dst_reg &dst,
 
    /* Set up the message header to reference the proper parts of the URB */
    dst_reg header = dst_reg(this, glsl_type::uvec4_type);
-   inst = emit(TCS_OPCODE_SET_INPUT_URB_OFFSETS, header, vertex_index,
+   inst = emit(VEC4_TCS_OPCODE_SET_INPUT_URB_OFFSETS, header, vertex_index,
                indirect_offset);
    inst->force_writemask_all = true;
 
@@ -194,7 +194,7 @@ vec4_tcs_visitor::emit_output_urb_read(const dst_reg &dst,
 
    /* Set up the message header to reference the proper parts of the URB */
    dst_reg header = dst_reg(this, glsl_type::uvec4_type);
-   inst = emit(TCS_OPCODE_SET_OUTPUT_URB_OFFSETS, header,
+   inst = emit(VEC4_TCS_OPCODE_SET_OUTPUT_URB_OFFSETS, header,
                brw_imm_ud(dst.writemask << first_component), indirect_offset);
    inst->force_writemask_all = true;
 
@@ -223,14 +223,14 @@ vec4_tcs_visitor::emit_urb_write(const src_reg &value,
    src_reg message(this, glsl_type::uvec4_type, 2);
    vec4_instruction *inst;
 
-   inst = emit(TCS_OPCODE_SET_OUTPUT_URB_OFFSETS, dst_reg(message),
+   inst = emit(VEC4_TCS_OPCODE_SET_OUTPUT_URB_OFFSETS, dst_reg(message),
                brw_imm_ud(writemask), indirect_offset);
    inst->force_writemask_all = true;
    inst = emit(MOV(byte_offset(dst_reg(retype(message, value.type)), REG_SIZE),
                    value));
    inst->force_writemask_all = true;
 
-   inst = emit(TCS_OPCODE_URB_WRITE, dst_null_f(), message);
+   inst = emit(VEC4_TCS_OPCODE_URB_WRITE, dst_null_f(), message);
    inst->offset = base_offset;
    inst->mlen = 2;
    inst->base_mrf = -1;
@@ -255,7 +255,7 @@ vec4_tcs_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
    case nir_intrinsic_load_per_vertex_input: {
       assert(nir_dest_bit_size(instr->dest) == 32);
       src_reg indirect_offset = get_indirect_offset(instr);
-      unsigned imm_offset = instr->const_index[0];
+      unsigned imm_offset = nir_intrinsic_base(instr);
 
       src_reg vertex_index = retype(get_nir_src_imm(instr->src[0]),
                                     BRW_REGISTER_TYPE_UD);
@@ -273,7 +273,7 @@ vec4_tcs_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
    case nir_intrinsic_load_output:
    case nir_intrinsic_load_per_vertex_output: {
       src_reg indirect_offset = get_indirect_offset(instr);
-      unsigned imm_offset = instr->const_index[0];
+      unsigned imm_offset = nir_intrinsic_base(instr);
 
       dst_reg dst = get_nir_dest(instr->dest, BRW_REGISTER_TYPE_D);
       dst.writemask = brw_writemask_for_size(instr->num_components);
@@ -286,11 +286,11 @@ vec4_tcs_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
    case nir_intrinsic_store_per_vertex_output: {
       assert(nir_src_bit_size(instr->src[0]) == 32);
       src_reg value = get_nir_src(instr->src[0]);
-      unsigned mask = instr->const_index[1];
+      unsigned mask = nir_intrinsic_write_mask(instr);
       unsigned swiz = BRW_SWIZZLE_XYZW;
 
       src_reg indirect_offset = get_indirect_offset(instr);
-      unsigned imm_offset = instr->const_index[0];
+      unsigned imm_offset = nir_intrinsic_base(instr);
 
       unsigned first_component = nir_intrinsic_component(instr);
       if (first_component) {
@@ -320,7 +320,7 @@ vec4_tcs_visitor::nir_emit_intrinsic(nir_intrinsic_instr *instr)
 }
 
 /**
- * Return the number of patches to accumulate before an 8_PATCH mode thread is
+ * Return the number of patches to accumulate before a MULTI_PATCH mode thread is
  * launched.  In cases with a large number of input control points and a large
  * amount of VS outputs, the VS URB space needed to store an entire 8 patches
  * worth of data can be prohibitive, so it can be beneficial to launch threads
@@ -394,16 +394,8 @@ brw_compile_tcs(const struct brw_compiler *compiler,
 
    prog_data->patch_count_threshold = brw::get_patch_count_threshold(key->input_vertices);
 
-   if (compiler->use_tcs_8_patch &&
-       nir->info.tess.tcs_vertices_out <= (devinfo->ver >= 12 ? 32 : 16) &&
-       2 + has_primitive_id + key->input_vertices <= (devinfo->ver >= 12 ? 63 : 31)) {
-      /* 3DSTATE_HS imposes two constraints on using 8_PATCH mode. First, the
-       * "Instance" field limits the number of output vertices to [1, 16] on
-       * gfx11 and below, or [1, 32] on gfx12 and above. Secondly, the
-       * "Dispatch GRF Start Register for URB Data" field is limited to [0,
-       * 31] - which imposes a limit on the input vertices.
-       */
-      vue_prog_data->dispatch_mode = DISPATCH_MODE_TCS_8_PATCH;
+   if (compiler->use_tcs_multi_patch) {
+      vue_prog_data->dispatch_mode = DISPATCH_MODE_TCS_MULTI_PATCH;
       prog_data->instances = nir->info.tess.tcs_vertices_out;
       prog_data->include_primitive_id = has_primitive_id;
    } else {
@@ -461,7 +453,7 @@ brw_compile_tcs(const struct brw_compiler *compiler,
          return NULL;
       }
 
-      prog_data->base.base.dispatch_grf_start_reg = v.payload.num_regs;
+      prog_data->base.base.dispatch_grf_start_reg = v.payload().num_regs;
 
       fs_generator g(compiler, params->log_data, mem_ctx,
                      &prog_data->base.base, false, MESA_SHADER_TESS_CTRL);

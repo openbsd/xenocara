@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2022/09/02 05:46:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	r600
 
@@ -61,44 +61,44 @@ SRCS=	compute_memory_pool.c \
 	sb_ssa_builder.cpp \
 	sb_valtable.cpp \
 	sfn_alu_defines.cpp \
+	sfn_alu_readport_validation.cpp \
+	sfn_assembler.cpp \
 	sfn_callstack.cpp \
 	sfn_conditionaljumptracker.cpp \
 	sfn_debug.cpp \
-	sfn_emitaluinstruction.cpp \
-	sfn_emitinstruction.cpp \
-	sfn_emitssboinstruction.cpp \
-	sfn_emittexinstruction.cpp \
-	sfn_instruction_alu.cpp \
-	sfn_instruction_base.cpp \
-	sfn_instruction_block.cpp \
-	sfn_instruction_cf.cpp \
-	sfn_instruction_export.cpp \
-	sfn_instruction_fetch.cpp \
-	sfn_instruction_gds.cpp \
-	sfn_instruction_lds.cpp \
-	sfn_instruction_misc.cpp \
-	sfn_instruction_tex.cpp \
-	sfn_ir_to_assembly.cpp \
-	sfn_liverange.cpp \
+	sfn_instr.cpp \
+	sfn_instr_alu.cpp \
+	sfn_instr_alugroup.cpp \
+	sfn_instr_controlflow.cpp \
+	sfn_instr_export.cpp \
+	sfn_instr_fetch.cpp \
+	sfn_instr_mem.cpp \
+	sfn_instr_lds.cpp \
+	sfn_instr_tex.cpp \
+	sfn_instrfactory.cpp \
+	sfn_liverangeevaluator.cpp \
+	sfn_liverangeevaluator_helpers.cpp \
+	sfn_memorypool.cpp \
 	sfn_nir.cpp \
 	sfn_nir_legalize_image_load_store.cpp \
 	sfn_nir_lower_64bit.cpp \
 	sfn_nir_lower_alu.cpp \
+	sfn_nir_lower_tex.cpp \
 	sfn_nir_lower_fs_out_to_vector.cpp \
 	sfn_nir_lower_tess_io.cpp \
 	sfn_nir_vectorize_vs_inputs.c \
-	sfn_shader_base.cpp \
-	sfn_shader_compute.cpp \
-	sfn_shader_fragment.cpp \
-	sfn_shader_geometry.cpp \
-	sfn_shader_tcs.cpp \
-	sfn_shader_tess_eval.cpp \
-	sfn_shader_vertex.cpp \
-	sfn_shaderio.cpp \
-	sfn_value.cpp \
-	sfn_value_gpr.cpp \
-	sfn_valuepool.cpp \
-	sfn_vertexstageexport.cpp
+	sfn_optimizer.cpp \
+	sfn_peephole.cpp \
+	sfn_ra.cpp \
+	sfn_scheduler.cpp \
+	sfn_shader.cpp \
+	sfn_shader_cs.cpp \
+	sfn_shader_fs.cpp \
+	sfn_shader_gs.cpp \
+	sfn_shader_tess.cpp \
+	sfn_shader_vs.cpp \
+	sfn_valuefactory.cpp \
+	sfn_virtualvalues.cpp
 
 .include "../Makefile.inc"
 

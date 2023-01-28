@@ -35,6 +35,7 @@ extern "C" {
 
 
 
+
 /*
  * surface
  */
@@ -45,17 +46,21 @@ struct trace_surface {
    const char * format;
 };
 void __trace_surface(
-       struct u_trace *ut, void *cs
+       struct u_trace *ut
+     , void *cs
      , const struct pipe_surface * psurf
 );
-static inline void trace_surface(
-     struct u_trace *ut, void *cs
+static ALWAYS_INLINE void trace_surface(
+     struct u_trace *ut
+   , void *cs
    , const struct pipe_surface * psurf
 ) {
-   if (!unlikely(ut->enabled || ut_trace_instrument))
+   if (!unlikely(u_trace_instrument() &&
+                 true))
       return;
    __trace_surface(
-        ut, cs
+        ut
+      , cs
       , psurf
    );
 }
@@ -71,17 +76,21 @@ struct trace_framebuffer {
    uint8_t nr_cbufs;
 };
 void __trace_framebuffer(
-       struct u_trace *ut, void *cs
+       struct u_trace *ut
+     , void *cs
      , const struct pipe_framebuffer_state * pfb
 );
-static inline void trace_framebuffer(
-     struct u_trace *ut, void *cs
+static ALWAYS_INLINE void trace_framebuffer(
+     struct u_trace *ut
+   , void *cs
    , const struct pipe_framebuffer_state * pfb
 ) {
-   if (!unlikely(ut->enabled || ut_trace_instrument))
+   if (!unlikely(u_trace_instrument() &&
+                 true))
       return;
    __trace_framebuffer(
-        ut, cs
+        ut
+      , cs
       , pfb
    );
 }
@@ -99,17 +108,21 @@ struct trace_grid_info {
    uint16_t grid_z;
 };
 void __trace_grid_info(
-       struct u_trace *ut, void *cs
+       struct u_trace *ut
+     , void *cs
      , const struct pipe_grid_info * pgrid
 );
-static inline void trace_grid_info(
-     struct u_trace *ut, void *cs
+static ALWAYS_INLINE void trace_grid_info(
+     struct u_trace *ut
+   , void *cs
    , const struct pipe_grid_info * pgrid
 ) {
-   if (!unlikely(ut->enabled || ut_trace_instrument))
+   if (!unlikely(u_trace_instrument() &&
+                 true))
       return;
    __trace_grid_info(
-        ut, cs
+        ut
+      , cs
       , pgrid
    );
 }

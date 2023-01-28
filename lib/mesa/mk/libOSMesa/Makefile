@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:33 jsg Exp $
 
 LIB=	OSMesa
 
@@ -26,6 +26,8 @@ obj: _xenocara_obj
 SLIBS=	libmesa \
 	libmesa_util \
 	libmesa_format \
+	libmesa_util_sse41 \
+	libmesa_util_c11 \
 	libglsl \
 	libglcpp \
 	libnir \

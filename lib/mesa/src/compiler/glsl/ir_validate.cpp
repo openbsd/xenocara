@@ -35,7 +35,7 @@
 
 #include "ir.h"
 #include "ir_hierarchical_visitor.h"
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/hash_table.h"
 #include "util/macros.h"
 #include "util/set.h"
@@ -942,8 +942,14 @@ ir_validate::visit_leave(ir_expression *ir)
        *  - Number of operands must matche the size of the resulting vector.
        *  - Base type of the operands must match the base type of the result.
        */
-      assert(ir->type->is_vector());
       switch (ir->type->vector_elements) {
+      case 1:
+         assert(ir->operands[0]->type->is_scalar());
+         assert(ir->operands[0]->type->base_type == ir->type->base_type);
+         assert(ir->operands[1] == NULL);
+         assert(ir->operands[2] == NULL);
+         assert(ir->operands[3] == NULL);
+         break;
       case 2:
 	 assert(ir->operands[0]->type->is_scalar());
 	 assert(ir->operands[0]->type->base_type == ir->type->base_type);
@@ -1208,7 +1214,7 @@ validate_ir_tree(exec_list *instructions)
     * anything.
     */
 #ifndef DEBUG
-   if (!env_var_as_boolean("GLSL_VALIDATE", false))
+   if (!debug_get_bool_option("GLSL_VALIDATE", false))
       return;
 #endif
    ir_validate v;

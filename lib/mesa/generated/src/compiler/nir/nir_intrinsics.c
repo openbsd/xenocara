@@ -66,6 +66,57 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "atomic_add_gen_prim_count_amd",
+   .num_srcs = 1,
+   .src_components = {
+      1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_STREAM_ID,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_STREAM_ID] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "atomic_add_gs_emit_prim_count_amd",
+   .num_srcs = 1,
+   .src_components = {
+      1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "atomic_add_xfb_prim_count_amd",
+   .num_srcs = 1,
+   .src_components = {
+      1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_STREAM_ID,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_STREAM_ID] = 1,
+    },
+   .flags = 0,
+},
+{
    .name = "atomic_counter_add",
    .num_srcs = 2,
    .src_components = {
@@ -926,6 +977,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "bindless_image_descriptor_amd",
+   .num_srcs = 1,
+   .src_components = {
+      -1
+   },
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_IMAGE_DIM,
+      NIR_INTRINSIC_IMAGE_ARRAY,
+      NIR_INTRINSIC_FORMAT,
+      NIR_INTRINSIC_ACCESS,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_IMAGE_DIM] = 1,
+      [NIR_INTRINSIC_IMAGE_ARRAY] = 2,
+      [NIR_INTRINSIC_FORMAT] = 3,
+      [NIR_INTRINSIC_ACCESS] = 4,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "bindless_image_format",
    .num_srcs = 1,
    .src_components = {
@@ -1051,6 +1127,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
       [NIR_INTRINSIC_ACCESS] = 4,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "bindless_image_samples_identical",
+   .num_srcs = 2,
+   .src_components = {
+      -1, 4
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_IMAGE_DIM,
+      NIR_INTRINSIC_IMAGE_ARRAY,
+      NIR_INTRINSIC_FORMAT,
+      NIR_INTRINSIC_ACCESS,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_IMAGE_DIM] = 1,
+      [NIR_INTRINSIC_IMAGE_ARRAY] = 2,
+      [NIR_INTRINSIC_FORMAT] = 3,
+      [NIR_INTRINSIC_ACCESS] = 4,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
    .name = "bindless_image_size",
@@ -1813,6 +1914,32 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "execute_closest_hit_amd",
+   .num_srcs = 6,
+   .src_components = {
+      1, 1, 1, 1, 1, 1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "execute_miss_amd",
+   .num_srcs = 1,
+   .src_components = {
+      1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "export_primitive_amd",
    .num_srcs = 1,
    .src_components = {
@@ -1910,6 +2037,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_add_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_add_amd",
    .num_srcs = 3,
    .src_components = {
@@ -1952,6 +2092,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 2,
    .src_components = {
       1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "global_atomic_and_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
    },
    .has_dest = true,
    .dest_components = 1,
@@ -2012,6 +2165,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_comp_swap_2x32",
+   .num_srcs = 3,
+   .src_components = {
+      2, 1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_comp_swap_amd",
    .num_srcs = 4,
    .src_components = {
@@ -2054,6 +2220,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 2,
    .src_components = {
       1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "global_atomic_exchange_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
    },
    .has_dest = true,
    .dest_components = 1,
@@ -2114,6 +2293,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_fadd_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_fadd_amd",
    .num_srcs = 3,
    .src_components = {
@@ -2137,6 +2329,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 3,
    .src_components = {
       1, 1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "global_atomic_fcomp_swap_2x32",
+   .num_srcs = 3,
+   .src_components = {
+      2, 1, 1
    },
    .has_dest = true,
    .dest_components = 1,
@@ -2178,6 +2383,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_fmax_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_fmax_amd",
    .num_srcs = 3,
    .src_components = {
@@ -2210,6 +2428,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_fmin_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_fmin_amd",
    .num_srcs = 3,
    .src_components = {
@@ -2233,6 +2464,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 2,
    .src_components = {
       1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "global_atomic_imax_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
    },
    .has_dest = true,
    .dest_components = 1,
@@ -2293,6 +2537,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_imin_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_imin_amd",
    .num_srcs = 3,
    .src_components = {
@@ -2335,6 +2592,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 2,
    .src_components = {
       1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "global_atomic_or_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
    },
    .has_dest = true,
    .dest_components = 1,
@@ -2395,6 +2665,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_umax_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_umax_amd",
    .num_srcs = 3,
    .src_components = {
@@ -2437,6 +2720,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 2,
    .src_components = {
       1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
+   .name = "global_atomic_umin_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
    },
    .has_dest = true,
    .dest_components = 1,
@@ -2497,6 +2793,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "global_atomic_xor_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      2, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "global_atomic_xor_amd",
    .num_srcs = 3,
    .src_components = {
@@ -2540,26 +2849,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .has_dest = false,
    .dest_components = 0,
    .dest_bit_sizes = 0x0,
-   .bit_size_src = -1,
-   .num_indices = 0,
-   .flags = 0,
-},
-{
-   .name = "has_input_primitive_amd",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x1,
-   .bit_size_src = -1,
-   .num_indices = 0,
-   .flags = 0,
-},
-{
-   .name = "has_input_vertex_amd",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x1,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = 0,
@@ -3325,6 +3614,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "image_deref_descriptor_amd",
+   .num_srcs = 1,
+   .src_components = {
+      -1
+   },
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_IMAGE_DIM,
+      NIR_INTRINSIC_IMAGE_ARRAY,
+      NIR_INTRINSIC_FORMAT,
+      NIR_INTRINSIC_ACCESS,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_IMAGE_DIM] = 1,
+      [NIR_INTRINSIC_IMAGE_ARRAY] = 2,
+      [NIR_INTRINSIC_FORMAT] = 3,
+      [NIR_INTRINSIC_ACCESS] = 4,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "image_deref_format",
    .num_srcs = 1,
    .src_components = {
@@ -3471,6 +3785,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "image_deref_samples_identical",
+   .num_srcs = 2,
+   .src_components = {
+      -1, 4
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_IMAGE_DIM,
+      NIR_INTRINSIC_IMAGE_ARRAY,
+      NIR_INTRINSIC_FORMAT,
+      NIR_INTRINSIC_ACCESS,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_IMAGE_DIM] = 1,
+      [NIR_INTRINSIC_IMAGE_ARRAY] = 2,
+      [NIR_INTRINSIC_FORMAT] = 3,
+      [NIR_INTRINSIC_ACCESS] = 4,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
    .name = "image_deref_size",
    .num_srcs = 2,
    .src_components = {
@@ -3573,6 +3912,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
       [NIR_INTRINSIC_ACCESS] = 4,
     },
    .flags = 0,
+},
+{
+   .name = "image_descriptor_amd",
+   .num_srcs = 1,
+   .src_components = {
+      1
+   },
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_IMAGE_DIM,
+      NIR_INTRINSIC_IMAGE_ARRAY,
+      NIR_INTRINSIC_FORMAT,
+      NIR_INTRINSIC_ACCESS,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_IMAGE_DIM] = 1,
+      [NIR_INTRINSIC_IMAGE_ARRAY] = 2,
+      [NIR_INTRINSIC_FORMAT] = 3,
+      [NIR_INTRINSIC_ACCESS] = 4,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
    .name = "image_format",
@@ -3700,6 +4064,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
       [NIR_INTRINSIC_ACCESS] = 4,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "image_samples_identical",
+   .num_srcs = 2,
+   .src_components = {
+      1, 4
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_IMAGE_DIM,
+      NIR_INTRINSIC_IMAGE_ARRAY,
+      NIR_INTRINSIC_FORMAT,
+      NIR_INTRINSIC_ACCESS,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_IMAGE_DIM] = 1,
+      [NIR_INTRINSIC_IMAGE_ARRAY] = 2,
+      [NIR_INTRINSIC_FORMAT] = 3,
+      [NIR_INTRINSIC_ACCESS] = 4,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
    .name = "image_size",
@@ -3894,10 +4283,23 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    },
    .has_dest = true,
    .dest_components = 1,
-   .dest_bit_sizes = 0x1,
+   .dest_bit_sizes = 0x21,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "is_subgroup_invocation_lt_amd",
+   .num_srcs = 1,
+   .src_components = {
+      1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x1,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
    .name = "lane_permute_16_amd",
@@ -3923,11 +4325,55 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
+   .name = "launch_mesh_workgroups",
+   .num_srcs = 1,
+   .src_components = {
+      3
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 2,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_RANGE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_RANGE] = 2,
+    },
+   .flags = 0,
+},
+{
+   .name = "launch_mesh_workgroups_with_payload_deref",
+   .num_srcs = 2,
+   .src_components = {
+      3, -1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
+},
+{
    .name = "load_aa_line_width",
    .num_srcs = 0,
    .has_dest = true,
    .dest_components = 1,
    .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_accel_struct_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x40,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
@@ -4206,26 +4652,28 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
 },
 {
    .name = "load_buffer_amd",
-   .num_srcs = 3,
+   .num_srcs = 4,
    .src_components = {
-      4, 1, 1
+      4, 1, 1, 1
    },
    .has_dest = true,
    .dest_components = 0,
    .dest_bit_sizes = 0x0,
    .bit_size_src = -1,
-   .num_indices = 4,
+   .num_indices = 5,
    .indices = {
       NIR_INTRINSIC_BASE,
       NIR_INTRINSIC_IS_SWIZZLED,
       NIR_INTRINSIC_SLC_AMD,
       NIR_INTRINSIC_MEMORY_MODES,
+      NIR_INTRINSIC_ACCESS,
    },
    .index_map = {
       [NIR_INTRINSIC_BASE] = 1,
       [NIR_INTRINSIC_IS_SWIZZLED] = 2,
       [NIR_INTRINSIC_SLC_AMD] = 3,
       [NIR_INTRINSIC_MEMORY_MODES] = 4,
+      [NIR_INTRINSIC_ACCESS] = 5,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
@@ -4245,6 +4693,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .has_dest = true,
    .dest_components = 1,
    .dest_bit_sizes = 0x10,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_clip_half_line_width_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 2,
+   .dest_bit_sizes = 0x20,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
@@ -4343,6 +4801,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
+   .name = "load_cull_mask",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
    .name = "load_cull_small_prim_precision_amd",
@@ -4513,6 +4981,29 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 1,
    .src_components = {
       1
+   },
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 3,
+   .indices = {
+      NIR_INTRINSIC_ACCESS,
+      NIR_INTRINSIC_ALIGN_MUL,
+      NIR_INTRINSIC_ALIGN_OFFSET,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_ACCESS] = 1,
+      [NIR_INTRINSIC_ALIGN_MUL] = 2,
+      [NIR_INTRINSIC_ALIGN_OFFSET] = 3,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
+   .name = "load_global_2x32",
+   .num_srcs = 1,
+   .src_components = {
+      2
    },
    .has_dest = true,
    .dest_components = 0,
@@ -4767,6 +5258,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_hs_out_patch_data_offset_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_hs_patch_stride_ir3",
    .num_srcs = 0,
    .has_dest = true,
@@ -4937,6 +5438,26 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_lds_ngg_gs_out_vertex_base_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_lds_ngg_scratch_base_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_leaf_opaque_intel",
    .num_srcs = 0,
    .has_dest = true,
@@ -5010,6 +5531,26 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
+   .name = "load_lshs_vertex_stride_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_merged_wave_info_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_mesh_inline_data_intel",
    .num_srcs = 0,
    .has_dest = true,
@@ -5067,11 +5608,41 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_num_vertices",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_num_vertices_per_primitive_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_num_workgroups",
    .num_srcs = 0,
    .has_dest = true,
    .dest_components = 3,
    .dest_bit_sizes = 0x60,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ordered_id_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
@@ -5213,6 +5784,26 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
+   .name = "load_persp_center_rhw_ir3",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_pipeline_stat_query_enabled_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x1,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_point_coord",
    .num_srcs = 0,
    .has_dest = true,
@@ -5221,6 +5812,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_point_coord_maybe_flipped",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 2,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = 0,
 },
 {
    .name = "load_preamble",
@@ -5236,6 +5837,26 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .index_map = {
       [NIR_INTRINSIC_BASE] = 1,
     },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_prim_gen_query_enabled_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x1,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_prim_xfb_query_enabled_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x1,
+   .bit_size_src = -1,
+   .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
@@ -5275,6 +5896,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_provoking_vtx_in_prim_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_ptr_dxil",
    .num_srcs = 2,
    .src_components = {
@@ -5309,6 +5940,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_rasterization_samples_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_raw_output_pan",
    .num_srcs = 1,
    .src_components = {
@@ -5320,10 +5961,10 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .bit_size_src = -1,
    .num_indices = 1,
    .indices = {
-      NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_IO_SEMANTICS,
    },
    .index_map = {
-      [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_IO_SEMANTICS] = 1,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
@@ -5423,6 +6064,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .has_dest = true,
    .dest_components = 3,
    .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ray_launch_size_addr_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x40,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
@@ -5596,6 +6247,26 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_ring_attr_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ring_attr_offset_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_ring_es2gs_offset_amd",
    .num_srcs = 0,
    .has_dest = true,
@@ -5607,6 +6278,56 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
 },
 {
    .name = "load_ring_esgs_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ring_gsvs_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ring_mesh_scratch_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ring_mesh_scratch_offset_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ring_task_draw_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_ring_task_payload_amd",
    .num_srcs = 0,
    .has_dest = true,
    .dest_components = 4,
@@ -5657,6 +6378,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
 },
 {
    .name = "load_rt_arg_scratch_offset_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_rt_dynamic_callable_stack_base_amd",
    .num_srcs = 0,
    .has_dest = true,
    .dest_components = 1,
@@ -5729,6 +6460,19 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_sample_positions_amd",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 2,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_sample_positions_pan",
    .num_srcs = 0,
    .has_dest = true,
@@ -5752,19 +6496,33 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
-   .name = "load_sbt_amd",
+   .name = "load_sbt_base_amd",
    .num_srcs = 0,
    .has_dest = true,
-   .dest_components = 4,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x40,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_sbt_offset_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
    .dest_bit_sizes = 0x20,
    .bit_size_src = -1,
-   .num_indices = 1,
-   .indices = {
-      NIR_INTRINSIC_BINDING,
-   },
-   .index_map = {
-      [NIR_INTRINSIC_BINDING] = 1,
-    },
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_sbt_stride_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
@@ -5774,12 +6532,14 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .dest_components = 0,
    .dest_bit_sizes = 0x20,
    .bit_size_src = -1,
-   .num_indices = 1,
+   .num_indices = 2,
    .indices = {
       NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD,
    },
    .index_map = {
       [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] = 2,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
@@ -5832,16 +6592,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
-},
-{
-   .name = "load_shader_query_enabled_amd",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x1,
-   .bit_size_src = -1,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
    .name = "load_shader_record_ptr",
@@ -5979,16 +6729,6 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
-   .name = "load_size_ir3",
-   .num_srcs = 0,
-   .has_dest = true,
-   .dest_components = 1,
-   .dest_bit_sizes = 0x0,
-   .bit_size_src = -1,
-   .num_indices = 0,
-   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
-},
-{
    .name = "load_smem_amd",
    .num_srcs = 2,
    .src_components = {
@@ -6092,6 +6832,82 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
 },
 {
+   .name = "load_stack",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 5,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_ALIGN_MUL,
+      NIR_INTRINSIC_ALIGN_OFFSET,
+      NIR_INTRINSIC_CALL_IDX,
+      NIR_INTRINSIC_VALUE_ID,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_ALIGN_MUL] = 2,
+      [NIR_INTRINSIC_ALIGN_OFFSET] = 3,
+      [NIR_INTRINSIC_CALL_IDX] = 4,
+      [NIR_INTRINSIC_VALUE_ID] = 5,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
+   .name = "load_streamout_buffer_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_streamout_config_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_streamout_offset_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_streamout_write_index_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_subgroup_eq_mask",
    .num_srcs = 0,
    .has_dest = true,
@@ -6182,6 +6998,26 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_task_ib_addr",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 2,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_task_ib_stride",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "load_task_payload",
    .num_srcs = 1,
    .src_components = {
@@ -6203,6 +7039,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
       [NIR_INTRINSIC_ALIGN_OFFSET] = 3,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
+   .name = "load_task_ring_entry_amd",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
    .name = "load_tcs_header_ir3",
@@ -6350,6 +7196,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .has_dest = true,
    .dest_components = 1,
    .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_texture_base_agx",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x40,
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
@@ -6523,12 +7379,14 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .dest_components = 0,
    .dest_bit_sizes = 0x20,
    .bit_size_src = -1,
-   .num_indices = 1,
+   .num_indices = 2,
    .indices = {
       NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD,
    },
    .index_map = {
       [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_ARG_UPPER_BOUND_U32_AMD] = 2,
     },
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
@@ -6597,6 +7455,16 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 0,
    .has_dest = true,
    .dest_components = 1,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
+   .name = "load_viewport_xy_scale_and_offset",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 4,
    .dest_bit_sizes = 0x20,
    .bit_size_src = -1,
    .num_indices = 0,
@@ -6752,6 +7620,22 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
 },
 {
+   .name = "load_xfb_address",
+   .num_srcs = 0,
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x60,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE | NIR_INTRINSIC_CAN_REORDER,
+},
+{
    .name = "masked_swizzle_amd",
    .num_srcs = 1,
    .src_components = {
@@ -6873,6 +7757,38 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .bit_size_src = -1,
    .num_indices = 0,
    .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
+   .name = "optimization_barrier_vgpr_amd",
+   .num_srcs = 1,
+   .src_components = {
+      0
+   },
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 0,
+   .flags = NIR_INTRINSIC_CAN_ELIMINATE,
+},
+{
+   .name = "ordered_xfb_counter_add_amd",
+   .num_srcs = 2,
+   .src_components = {
+      1, 0
+   },
+   .has_dest = true,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x20,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_WRITE_MASK,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_WRITE_MASK] = 1,
+    },
+   .flags = 0,
 },
 {
    .name = "overwrite_tes_arguments_amd",
@@ -8209,21 +9125,22 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
 },
 {
    .name = "store_buffer_amd",
-   .num_srcs = 4,
+   .num_srcs = 5,
    .src_components = {
-      0, 4, 1, 1
+      0, 4, 1, 1, 1
    },
    .has_dest = false,
    .dest_components = 0,
    .dest_bit_sizes = 0x0,
    .bit_size_src = -1,
-   .num_indices = 5,
+   .num_indices = 6,
    .indices = {
       NIR_INTRINSIC_BASE,
       NIR_INTRINSIC_WRITE_MASK,
       NIR_INTRINSIC_IS_SWIZZLED,
       NIR_INTRINSIC_SLC_AMD,
       NIR_INTRINSIC_MEMORY_MODES,
+      NIR_INTRINSIC_ACCESS,
    },
    .index_map = {
       [NIR_INTRINSIC_BASE] = 1,
@@ -8231,6 +9148,7 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
       [NIR_INTRINSIC_IS_SWIZZLED] = 3,
       [NIR_INTRINSIC_SLC_AMD] = 4,
       [NIR_INTRINSIC_MEMORY_MODES] = 5,
+      [NIR_INTRINSIC_ACCESS] = 6,
     },
    .flags = 0,
 },
@@ -8246,13 +9164,13 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .bit_size_src = -1,
    .num_indices = 4,
    .indices = {
-      NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_IO_SEMANTICS,
       NIR_INTRINSIC_COMPONENT,
       NIR_INTRINSIC_SRC_TYPE,
       NIR_INTRINSIC_DEST_TYPE,
    },
    .index_map = {
-      [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_IO_SEMANTICS] = 1,
       [NIR_INTRINSIC_COMPONENT] = 2,
       [NIR_INTRINSIC_SRC_TYPE] = 3,
       [NIR_INTRINSIC_DEST_TYPE] = 4,
@@ -8306,6 +9224,31 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .num_srcs = 2,
    .src_components = {
       0, 1
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 4,
+   .indices = {
+      NIR_INTRINSIC_WRITE_MASK,
+      NIR_INTRINSIC_ACCESS,
+      NIR_INTRINSIC_ALIGN_MUL,
+      NIR_INTRINSIC_ALIGN_OFFSET,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_WRITE_MASK] = 1,
+      [NIR_INTRINSIC_ACCESS] = 2,
+      [NIR_INTRINSIC_ALIGN_MUL] = 3,
+      [NIR_INTRINSIC_ALIGN_OFFSET] = 4,
+    },
+   .flags = 0,
+},
+{
+   .name = "store_global_2x32",
+   .num_srcs = 2,
+   .src_components = {
+      0, 2
    },
    .has_dest = false,
    .dest_components = 0,
@@ -8784,6 +9727,35 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    .flags = 0,
 },
 {
+   .name = "store_stack",
+   .num_srcs = 1,
+   .src_components = {
+      0
+   },
+   .has_dest = false,
+   .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 6,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+      NIR_INTRINSIC_ALIGN_MUL,
+      NIR_INTRINSIC_ALIGN_OFFSET,
+      NIR_INTRINSIC_WRITE_MASK,
+      NIR_INTRINSIC_CALL_IDX,
+      NIR_INTRINSIC_VALUE_ID,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+      [NIR_INTRINSIC_ALIGN_MUL] = 2,
+      [NIR_INTRINSIC_ALIGN_OFFSET] = 3,
+      [NIR_INTRINSIC_WRITE_MASK] = 4,
+      [NIR_INTRINSIC_CALL_IDX] = 5,
+      [NIR_INTRINSIC_VALUE_ID] = 6,
+    },
+   .flags = 0,
+},
+{
    .name = "store_task_payload",
    .num_srcs = 2,
    .src_components = {
@@ -8852,6 +9824,272 @@ const nir_intrinsic_info nir_intrinsic_infos[nir_num_intrinsics] = {
    },
    .has_dest = false,
    .dest_components = 0,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_add",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_and",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_comp_swap",
+   .num_srcs = 3,
+   .src_components = {
+      1, 1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_exchange",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_fadd",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_fcomp_swap",
+   .num_srcs = 3,
+   .src_components = {
+      1, 1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_fmax",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_fmin",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_imax",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_imin",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_or",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_umax",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_umin",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
+   .dest_bit_sizes = 0x0,
+   .bit_size_src = -1,
+   .num_indices = 1,
+   .indices = {
+      NIR_INTRINSIC_BASE,
+   },
+   .index_map = {
+      [NIR_INTRINSIC_BASE] = 1,
+    },
+   .flags = 0,
+},
+{
+   .name = "task_payload_atomic_xor",
+   .num_srcs = 2,
+   .src_components = {
+      1, 1
+   },
+   .has_dest = true,
+   .dest_components = 1,
    .dest_bit_sizes = 0x0,
    .bit_size_src = -1,
    .num_indices = 1,
@@ -9069,6 +10307,7 @@ const char *nir_intrinsic_index_names[NIR_INTRINSIC_NUM_INDEX_FLAGS] = {
    "offset0",
    "offset1",
    "st64",
+   "arg_upper_bound_u32_amd",
    "dst_access",
    "src_access",
    "driver_location",
@@ -9082,4 +10321,5 @@ const char *nir_intrinsic_index_names[NIR_INTRINSIC_NUM_INDEX_FLAGS] = {
    "rounding_mode",
    "saturate",
    "synchronous",
+   "value_id",
 };

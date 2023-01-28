@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:41 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -69,6 +69,8 @@ SLIBS=	libintel_compiler \
 	libxmlconfig \
 	libmesa_util \
 	libmesa_format \
+	libmesa_util_sse41 \
+	libmesa_util_c11 \
 	libintel_perf \
 	libintel_common \
 	libnir \
@@ -93,7 +95,8 @@ LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 LDADD+=		-pthread -lm -lz -lexpat
 LDADD+=		-L${X11BASE}/lib -ldrm \
 		-lxcb-dri3 -lxcb-randr -lXrandr -lxcb -lX11-xcb \
-		-lX11 -lxcb-dri2 -lxcb-present -lxcb-sync -lxshmfence
+		-lX11 -lxcb-dri2 -lxcb-present -lxcb-xfixes -lxcb-sync \
+		-lxcb-randr -lxcb-shm -lxshmfence
 
 LDADD+=		${BUILD_ID_SHA1} -Wl,-Bsymbolic -Wl,--gc-sections \
 		-Wl,--end-group

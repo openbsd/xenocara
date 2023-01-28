@@ -222,32 +222,25 @@ CHIPSET(0x4907, sg1, "SG1", "Intel(R) Graphics")
 CHIPSET(0x4908, dg1, "DG1", "Intel(R) Graphics")
 CHIPSET(0x4909, dg1, "DG1", "Intel(R) Graphics")
 
-/* Commented devices are waiting on i915 upstream support */
-/* CHIPSET(0x4f80, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x4f81, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x4f82, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x4f83, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x4f84, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x4f87, dg2_g11, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x4f88, dg2_g11, "DG2", "Intel(R) Graphics") */
-CHIPSET(0x5690, dg2_g10, "DG2", "Intel(R) Graphics")
-CHIPSET(0x5691, dg2_g10, "DG2", "Intel(R) Graphics")
-CHIPSET(0x5692, dg2_g10, "DG2", "Intel(R) Graphics")
-CHIPSET(0x5693, dg2_g11, "DG2", "Intel(R) Graphics")
-CHIPSET(0x5694, dg2_g11, "DG2", "Intel(R) Graphics")
+CHIPSET(0x5690, dg2_g10, "DG2", "Intel(R) Arc(tm) A770M Graphics")
+CHIPSET(0x5691, dg2_g10, "DG2", "Intel(R) Arc(tm) A730M Graphics")
+CHIPSET(0x5692, dg2_g10, "DG2", "Intel(R) Arc(tm) A550M Graphics")
+CHIPSET(0x5693, dg2_g11, "DG2", "Intel(R) Arc(tm) A370M Graphics")
+CHIPSET(0x5694, dg2_g11, "DG2", "Intel(R) Arc(tm) A350M Graphics")
 CHIPSET(0x5695, dg2_g11, "DG2", "Intel(R) Graphics")
 CHIPSET(0x5696, dg2_g12, "DG2", "Intel(R) Graphics")
 CHIPSET(0x5697, dg2_g12, "DG2", "Intel(R) Graphics")
-/* CHIPSET(0x56a0, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56a1, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56a2, dg2_g10, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56a3, dg2_g12, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56a4, dg2_g12, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56a5, dg2_g11, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56a6, dg2_g11, "DG2", "Intel(R) Graphics") */
-CHIPSET(0x56b0, dg2_g11, "DG2", "Intel(R) Graphics")
-/* CHIPSET(0x56b1, dg2_g11, "DG2", "Intel(R) Graphics") */
+CHIPSET(0x5698, dg2_g11, "DG2", "Intel(R) Graphics")
+CHIPSET(0x56a0, dg2_g10, "DG2", "Intel(R) Arc(tm) A770 Graphics")
+CHIPSET(0x56a1, dg2_g10, "DG2", "Intel(R) Arc(tm) A750 Graphics")
+CHIPSET(0x56a2, dg2_g10, "DG2", "Intel(R) Arc(tm) A580 Graphics")
+CHIPSET(0x56a3, dg2_g12, "DG2", "Intel(R) Graphics")
+CHIPSET(0x56a4, dg2_g12, "DG2", "Intel(R) Graphics")
+CHIPSET(0x56a5, dg2_g11, "DG2", "Intel(R) Arc(tm) A380 Graphics")
+CHIPSET(0x56a6, dg2_g11, "DG2", "Intel(R) Arc(tm) A310 Graphics")
+CHIPSET(0x56b0, dg2_g11, "DG2", "Intel(R) Arc(tm) Pro A30M Graphics")
+CHIPSET(0x56b1, dg2_g11, "DG2", "Intel(R) Arc(tm) Pro A40/A50 Graphics")
 CHIPSET(0x56b2, dg2_g12, "DG2", "Intel(R) Graphics")
-/* CHIPSET(0x56b3, dg2_g12, "DG2", "Intel(R) Graphics") */
-/* CHIPSET(0x56c0, dg2_g10, "ATS-M", "Intel(R) Graphics") */
-/* CHIPSET(0x56c1, dg2_g11, "ATS-M", "Intel(R) Graphics") */
+CHIPSET(0x56b3, dg2_g12, "DG2", "Intel(R) Graphics")
+CHIPSET(0x56c0, dg2_g10, "ATS-M", "Intel(R) Data Center GPU Flex Series 170 Graphics")
+CHIPSET(0x56c1, dg2_g11, "ATS-M", "Intel(R) Data Center GPU Flex Series 140 Graphics")

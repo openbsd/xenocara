@@ -155,10 +155,6 @@ _vbo_CreateContext(struct gl_context *ctx)
 
    memset(vbo, 0, sizeof(*vbo));
 
-   vbo->binding.Offset = 0;
-   vbo->binding.Stride = 0;
-   vbo->binding.InstanceDivisor = 0;
-
    init_legacy_currval(ctx);
    init_generic_currval(ctx);
    init_mat_currval(ctx);
@@ -166,10 +162,6 @@ _vbo_CreateContext(struct gl_context *ctx)
    /* make sure all VBO_ATTRIB_ values can fit in an unsigned byte */
    STATIC_ASSERT(VBO_ATTRIB_MAX <= 255);
 
-   /* Hook our functions into exec and compile dispatch tables.  These
-    * will pretty much be permanently installed, which means that the
-    * vtxfmt mechanism can be removed now.
-    */
    vbo_exec_init(ctx);
    if (ctx->API == API_OPENGL_COMPAT)
       vbo_save_init(ctx);
@@ -191,8 +183,6 @@ _vbo_DestroyContext(struct gl_context *ctx)
    struct vbo_context *vbo = vbo_context(ctx);
 
    if (vbo) {
-      _mesa_reference_buffer_object(ctx, &vbo->binding.BufferObj, NULL);
-
       vbo_exec_destroy(ctx);
       if (ctx->API == API_OPENGL_COMPAT)
          vbo_save_destroy(ctx);

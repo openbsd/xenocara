@@ -143,6 +143,10 @@ descriptor=[
   [ "NUM_DEVICE_UUIDS_EXT", "LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA" ],
   [ "DRIVER_UUID_EXT", "LOC_CUSTOM, TYPE_INT_4, NO_OFFSET, NO_EXTRA" ],
   [ "DEVICE_UUID_EXT", "LOC_CUSTOM, TYPE_INT_4, NO_OFFSET, NO_EXTRA" ],
+
+# GL_EXT_memory_object_win32
+  [ "DEVICE_LUID_EXT", "LOC_CUSTOM, TYPE_INT_2, NO_OFFSET, NO_EXTRA" ],
+  [ "DEVICE_NODE_MASK_EXT", "LOC_CUSTOM, TYPE_INT_4, NO_OFFSET, NO_EXTRA" ],
 ]},
 
 # Enums in OpenGL and GLES1
@@ -247,7 +251,7 @@ descriptor=[
   [ "TEXTURE_COORD_ARRAY_BUFFER_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, NO_OFFSET, NO_EXTRA" ],
 
 # GL_OES_point_sprite
-  [ "POINT_SPRITE", "CONTEXT_BOOL(Point.PointSprite), extra_ARB_point_sprite" ],
+  [ "POINT_SPRITE", "CONTEXT_BOOL(Point.PointSprite), NO_EXTRA" ],
 ]},
 
 
@@ -442,7 +446,7 @@ descriptor=[
   [ "MAX_VERTEX_UNIFORM_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_VERTEX].MaxUniformBlocks), extra_ARB_uniform_buffer_object" ],
   [ "MAX_FRAGMENT_UNIFORM_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_FRAGMENT].MaxUniformBlocks), extra_ARB_uniform_buffer_object" ],
   [ "MAX_COMBINED_UNIFORM_BLOCKS", "CONTEXT_INT(Const.MaxCombinedUniformBlocks), extra_ARB_uniform_buffer_object" ],
-  [ "MAX_UNIFORM_BLOCK_SIZE", "CONTEXT_INT(Const.MaxUniformBlockSize), extra_ARB_uniform_buffer_object" ],
+  [ "MAX_UNIFORM_BLOCK_SIZE", "CONTEXT_UINT(Const.MaxUniformBlockSize), extra_ARB_uniform_buffer_object" ],
   [ "MAX_UNIFORM_BUFFER_BINDINGS", "CONTEXT_INT(Const.MaxUniformBufferBindings), extra_ARB_uniform_buffer_object" ],
   [ "MAX_COMBINED_VERTEX_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_VERTEX].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object" ],
   [ "MAX_COMBINED_FRAGMENT_UNIFORM_COMPONENTS", "CONTEXT_INT64(Const.Program[MESA_SHADER_FRAGMENT].MaxCombinedUniformComponents), extra_ARB_uniform_buffer_object" ],
@@ -498,7 +502,7 @@ descriptor=[
 # Enums in OpenGL and ES 3.1
 { "apis": ["GL", "GL_CORE", "GLES31"], "params": [
 # GL_ARB_texture_buffer_object / GL_OES_texture_buffer
-  [ "MAX_TEXTURE_BUFFER_SIZE_ARB", "CONTEXT_INT(Const.MaxTextureBufferSize), extra_texture_buffer_object" ],
+  [ "MAX_TEXTURE_BUFFER_SIZE_ARB", "CONTEXT_UINT(Const.MaxTextureBufferSize), extra_texture_buffer_object" ],
   [ "TEXTURE_BINDING_BUFFER_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
   [ "TEXTURE_BUFFER_DATA_STORE_BINDING_ARB", "LOC_CUSTOM, TYPE_INT, TEXTURE_BUFFER_INDEX, extra_texture_buffer_object" ],
   [ "TEXTURE_BUFFER_FORMAT_ARB", "LOC_CUSTOM, TYPE_INT, 0, extra_texture_buffer_object" ],
@@ -577,7 +581,7 @@ descriptor=[
   [ "MAX_FRAGMENT_SHADER_STORAGE_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_FRAGMENT].MaxShaderStorageBlocks), extra_ARB_shader_storage_buffer_object_es31" ],
   [ "MAX_COMPUTE_SHADER_STORAGE_BLOCKS", "CONTEXT_INT(Const.Program[MESA_SHADER_COMPUTE].MaxShaderStorageBlocks), extra_ARB_shader_storage_buffer_object_es31" ],
   [ "MAX_COMBINED_SHADER_STORAGE_BLOCKS", "CONTEXT_INT(Const.MaxCombinedShaderStorageBlocks), extra_ARB_shader_storage_buffer_object_es31" ],
-  [ "MAX_SHADER_STORAGE_BLOCK_SIZE", "CONTEXT_INT(Const.MaxShaderStorageBlockSize), extra_ARB_shader_storage_buffer_object_es31" ],
+  [ "MAX_SHADER_STORAGE_BLOCK_SIZE", "CONTEXT_UINT(Const.MaxShaderStorageBlockSize), extra_ARB_shader_storage_buffer_object_es31" ],
   [ "MAX_SHADER_STORAGE_BUFFER_BINDINGS", "CONTEXT_INT(Const.MaxShaderStorageBufferBindings), extra_ARB_shader_storage_buffer_object_es31" ],
   [ "SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT", "CONTEXT_INT(Const.ShaderStorageBufferOffsetAlignment), extra_ARB_shader_storage_buffer_object_es31" ],
   [ "SHADER_STORAGE_BUFFER_BINDING", "LOC_CUSTOM, TYPE_INT, 0, extra_ARB_shader_storage_buffer_object_es31" ],
@@ -871,7 +875,7 @@ descriptor=[
   [ "RASTER_POSITION_UNCLIPPED_IBM", "CONTEXT_BOOL(Transform.RasterPositionUnclipped), NO_EXTRA" ],
 
 # GL_ARB_point_sprite
-  [ "POINT_SPRITE_COORD_ORIGIN", "CONTEXT_ENUM16(Point.SpriteOrigin), extra_ARB_point_sprite" ],
+  [ "POINT_SPRITE_COORD_ORIGIN", "CONTEXT_ENUM16(Point.SpriteOrigin), NO_EXTRA" ],
 
 # GL_NV_texture_rectangle
   [ "TEXTURE_RECTANGLE_NV", "LOC_CUSTOM, TYPE_BOOLEAN, 0, extra_NV_texture_rectangle" ],

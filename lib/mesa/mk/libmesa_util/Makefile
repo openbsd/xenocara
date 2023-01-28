@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2022/09/02 05:46:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	mesa_util
 
@@ -11,12 +11,12 @@ SRCS=	anon_file.c \
 	compress.c \
 	crc32.c \
 	dag.c \
-	debug.c \
 	disk_cache.c \
 	disk_cache_os.c \
 	double.c \
 	fast_idiv_by_const.c \
 	fossilize_db.c \
+	futex.c \
 	half_float.c \
 	hash_table.c \
 	u_idalloc.c \
@@ -35,6 +35,7 @@ SRCS=	anon_file.c \
 	register_allocate.c \
 	rgtc.c \
 	set.c \
+	simple_mtx.c \
 	sha1.c \
 	slab.c \
 	softfloat.c \
@@ -42,27 +43,30 @@ SRCS=	anon_file.c \
 	string_buffer.c \
 	strtod.c \
 	u_atomic.c \
+	u_call_once.c \
 	u_debug_describe.c \
 	u_debug_refcnt.c \
+	u_dl.c \
 	u_cpu_detect.c \
 	u_printf.c \
+	u_worklist.c \
 	u_debug.c \
 	u_debug_memory.c \
 	u_math.c \
 	u_mm.c \
 	u_process.c \
 	u_qsort.cpp \
+	rwlock.c \
 	u_hash_table.c \
 	u_queue.c \
+	u_thread.c \
 	u_vector.c \
 	vma.c \
-	u_primconvert.c
+	mesa_cache_db.c
 
 SRCS+=	u_debug_stack.c \
 	u_debug_symbol.c \
-	format_srgb.c \
-	u_indices_gen.c \
-	u_unfilled_gen.c
+	format_srgb.c
 
 .include "../Makefile.inc"
 

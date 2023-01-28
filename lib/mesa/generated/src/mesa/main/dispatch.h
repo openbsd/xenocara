@@ -60,7 +60,7 @@
     } while(0)
 
 /* total number of offsets below */
-#define _gloffset_COUNT 1658
+#define _gloffset_COUNT 1668
 
 #define _gloffset_NewList 0
 #define _gloffset_EndList 1
@@ -470,7 +470,7 @@
 #define _gloffset_MultiTexCoord4iv 405
 #define _gloffset_MultiTexCoord4s 406
 #define _gloffset_MultiTexCoord4sv 407
-#define driDispatchRemapTable_size 1250
+#define driDispatchRemapTable_size 1260
 extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 
 #define CompressedTexImage1D_remap_index 0
@@ -724,8 +724,8 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define GetInfoLogARB_remap_index 248
 #define GetObjectParameterfvARB_remap_index 249
 #define GetObjectParameterivARB_remap_index 250
-#define DrawArraysInstancedARB_remap_index 251
-#define DrawElementsInstancedARB_remap_index 252
+#define DrawArraysInstanced_remap_index 251
+#define DrawElementsInstanced_remap_index 252
 #define BindFramebuffer_remap_index 253
 #define BindRenderbuffer_remap_index 254
 #define BlitFramebuffer_remap_index 255
@@ -1238,7 +1238,7 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define PushDebugGroup_remap_index 762
 #define SecondaryColor3fEXT_remap_index 763
 #define SecondaryColor3fvEXT_remap_index 764
-#define MultiDrawElementsEXT_remap_index 765
+#define MultiDrawElements_remap_index 765
 #define FogCoordfEXT_remap_index 766
 #define FogCoordfvEXT_remap_index 767
 #define ResizeBuffersMESA_remap_index 768
@@ -1723,6 +1723,16 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define VertexAttribs4hvNV_remap_index 1247
 #define TexPageCommitmentARB_remap_index 1248
 #define TexturePageCommitmentEXT_remap_index 1249
+#define ImportMemoryWin32HandleEXT_remap_index 1250
+#define ImportSemaphoreWin32HandleEXT_remap_index 1251
+#define ImportMemoryWin32NameEXT_remap_index 1252
+#define ImportSemaphoreWin32NameEXT_remap_index 1253
+#define GetObjectLabelEXT_remap_index 1254
+#define LabelObjectEXT_remap_index 1255
+#define DrawArraysUserBuf_remap_index 1256
+#define DrawElementsUserBuf_remap_index 1257
+#define MultiDrawArraysUserBuf_remap_index 1258
+#define MultiDrawElementsUserBuf_remap_index 1259
 
 #define _gloffset_CompressedTexImage1D driDispatchRemapTable[CompressedTexImage1D_remap_index]
 #define _gloffset_CompressedTexImage2D driDispatchRemapTable[CompressedTexImage2D_remap_index]
@@ -1975,8 +1985,8 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_GetInfoLogARB driDispatchRemapTable[GetInfoLogARB_remap_index]
 #define _gloffset_GetObjectParameterfvARB driDispatchRemapTable[GetObjectParameterfvARB_remap_index]
 #define _gloffset_GetObjectParameterivARB driDispatchRemapTable[GetObjectParameterivARB_remap_index]
-#define _gloffset_DrawArraysInstancedARB driDispatchRemapTable[DrawArraysInstancedARB_remap_index]
-#define _gloffset_DrawElementsInstancedARB driDispatchRemapTable[DrawElementsInstancedARB_remap_index]
+#define _gloffset_DrawArraysInstanced driDispatchRemapTable[DrawArraysInstanced_remap_index]
+#define _gloffset_DrawElementsInstanced driDispatchRemapTable[DrawElementsInstanced_remap_index]
 #define _gloffset_BindFramebuffer driDispatchRemapTable[BindFramebuffer_remap_index]
 #define _gloffset_BindRenderbuffer driDispatchRemapTable[BindRenderbuffer_remap_index]
 #define _gloffset_BlitFramebuffer driDispatchRemapTable[BlitFramebuffer_remap_index]
@@ -2489,7 +2499,7 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_PushDebugGroup driDispatchRemapTable[PushDebugGroup_remap_index]
 #define _gloffset_SecondaryColor3fEXT driDispatchRemapTable[SecondaryColor3fEXT_remap_index]
 #define _gloffset_SecondaryColor3fvEXT driDispatchRemapTable[SecondaryColor3fvEXT_remap_index]
-#define _gloffset_MultiDrawElementsEXT driDispatchRemapTable[MultiDrawElementsEXT_remap_index]
+#define _gloffset_MultiDrawElements driDispatchRemapTable[MultiDrawElements_remap_index]
 #define _gloffset_FogCoordfEXT driDispatchRemapTable[FogCoordfEXT_remap_index]
 #define _gloffset_FogCoordfvEXT driDispatchRemapTable[FogCoordfvEXT_remap_index]
 #define _gloffset_ResizeBuffersMESA driDispatchRemapTable[ResizeBuffersMESA_remap_index]
@@ -2974,6 +2984,16 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_VertexAttribs4hvNV driDispatchRemapTable[VertexAttribs4hvNV_remap_index]
 #define _gloffset_TexPageCommitmentARB driDispatchRemapTable[TexPageCommitmentARB_remap_index]
 #define _gloffset_TexturePageCommitmentEXT driDispatchRemapTable[TexturePageCommitmentEXT_remap_index]
+#define _gloffset_ImportMemoryWin32HandleEXT driDispatchRemapTable[ImportMemoryWin32HandleEXT_remap_index]
+#define _gloffset_ImportSemaphoreWin32HandleEXT driDispatchRemapTable[ImportSemaphoreWin32HandleEXT_remap_index]
+#define _gloffset_ImportMemoryWin32NameEXT driDispatchRemapTable[ImportMemoryWin32NameEXT_remap_index]
+#define _gloffset_ImportSemaphoreWin32NameEXT driDispatchRemapTable[ImportSemaphoreWin32NameEXT_remap_index]
+#define _gloffset_GetObjectLabelEXT driDispatchRemapTable[GetObjectLabelEXT_remap_index]
+#define _gloffset_LabelObjectEXT driDispatchRemapTable[LabelObjectEXT_remap_index]
+#define _gloffset_DrawArraysUserBuf driDispatchRemapTable[DrawArraysUserBuf_remap_index]
+#define _gloffset_DrawElementsUserBuf driDispatchRemapTable[DrawElementsUserBuf_remap_index]
+#define _gloffset_MultiDrawArraysUserBuf driDispatchRemapTable[MultiDrawArraysUserBuf_remap_index]
+#define _gloffset_MultiDrawElementsUserBuf driDispatchRemapTable[MultiDrawElementsUserBuf_remap_index]
 
 typedef void (GLAPIENTRYP _glptr_NewList)(GLuint, GLenum);
 #define CALL_NewList(disp, parameters) (* GET_NewList(disp)) parameters
@@ -8247,20 +8267,20 @@ typedef void (GLAPIENTRYP _glptr_GetObjectParameterivARB)(GLhandleARB, GLenum, G
    SET_by_offset(disp, _gloffset_GetObjectParameterivARB, fn); \
 } while (0)
 
-typedef void (GLAPIENTRYP _glptr_DrawArraysInstancedARB)(GLenum, GLint, GLsizei, GLsizei);
-#define CALL_DrawArraysInstancedARB(disp, parameters) (* GET_DrawArraysInstancedARB(disp)) parameters
-#define GET_DrawArraysInstancedARB(disp) ((_glptr_DrawArraysInstancedARB)(GET_by_offset((disp), _gloffset_DrawArraysInstancedARB)))
-#define SET_DrawArraysInstancedARB(disp, func) do { \
+typedef void (GLAPIENTRYP _glptr_DrawArraysInstanced)(GLenum, GLint, GLsizei, GLsizei);
+#define CALL_DrawArraysInstanced(disp, parameters) (* GET_DrawArraysInstanced(disp)) parameters
+#define GET_DrawArraysInstanced(disp) ((_glptr_DrawArraysInstanced)(GET_by_offset((disp), _gloffset_DrawArraysInstanced)))
+#define SET_DrawArraysInstanced(disp, func) do { \
    void (GLAPIENTRYP fn)(GLenum, GLint, GLsizei, GLsizei) = func; \
-   SET_by_offset(disp, _gloffset_DrawArraysInstancedARB, fn); \
+   SET_by_offset(disp, _gloffset_DrawArraysInstanced, fn); \
 } while (0)
 
-typedef void (GLAPIENTRYP _glptr_DrawElementsInstancedARB)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei);
-#define CALL_DrawElementsInstancedARB(disp, parameters) (* GET_DrawElementsInstancedARB(disp)) parameters
-#define GET_DrawElementsInstancedARB(disp) ((_glptr_DrawElementsInstancedARB)(GET_by_offset((disp), _gloffset_DrawElementsInstancedARB)))
-#define SET_DrawElementsInstancedARB(disp, func) do { \
+typedef void (GLAPIENTRYP _glptr_DrawElementsInstanced)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei);
+#define CALL_DrawElementsInstanced(disp, parameters) (* GET_DrawElementsInstanced(disp)) parameters
+#define GET_DrawElementsInstanced(disp) ((_glptr_DrawElementsInstanced)(GET_by_offset((disp), _gloffset_DrawElementsInstanced)))
+#define SET_DrawElementsInstanced(disp, func) do { \
    void (GLAPIENTRYP fn)(GLenum, GLsizei, GLenum, const GLvoid *, GLsizei) = func; \
-   SET_by_offset(disp, _gloffset_DrawElementsInstancedARB, fn); \
+   SET_by_offset(disp, _gloffset_DrawElementsInstanced, fn); \
 } while (0)
 
 typedef void (GLAPIENTRYP _glptr_BindFramebuffer)(GLenum, GLuint);
@@ -12359,12 +12379,12 @@ typedef void (GLAPIENTRYP _glptr_SecondaryColor3fvEXT)(const GLfloat *);
    SET_by_offset(disp, _gloffset_SecondaryColor3fvEXT, fn); \
 } while (0)
 
-typedef void (GLAPIENTRYP _glptr_MultiDrawElementsEXT)(GLenum, const GLsizei *, GLenum, const GLvoid * const *, GLsizei);
-#define CALL_MultiDrawElementsEXT(disp, parameters) (* GET_MultiDrawElementsEXT(disp)) parameters
-#define GET_MultiDrawElementsEXT(disp) ((_glptr_MultiDrawElementsEXT)(GET_by_offset((disp), _gloffset_MultiDrawElementsEXT)))
-#define SET_MultiDrawElementsEXT(disp, func) do { \
+typedef void (GLAPIENTRYP _glptr_MultiDrawElements)(GLenum, const GLsizei *, GLenum, const GLvoid * const *, GLsizei);
+#define CALL_MultiDrawElements(disp, parameters) (* GET_MultiDrawElements(disp)) parameters
+#define GET_MultiDrawElements(disp) ((_glptr_MultiDrawElements)(GET_by_offset((disp), _gloffset_MultiDrawElements)))
+#define SET_MultiDrawElements(disp, func) do { \
    void (GLAPIENTRYP fn)(GLenum, const GLsizei *, GLenum, const GLvoid * const *, GLsizei) = func; \
-   SET_by_offset(disp, _gloffset_MultiDrawElementsEXT, fn); \
+   SET_by_offset(disp, _gloffset_MultiDrawElements, fn); \
 } while (0)
 
 typedef void (GLAPIENTRYP _glptr_FogCoordfEXT)(GLfloat);
@@ -16237,6 +16257,86 @@ typedef void (GLAPIENTRYP _glptr_TexturePageCommitmentEXT)(GLuint, GLint, GLint,
 #define SET_TexturePageCommitmentEXT(disp, func) do { \
    void (GLAPIENTRYP fn)(GLuint, GLint, GLint, GLint, GLint, GLsizei, GLsizei, GLsizei, GLboolean) = func; \
    SET_by_offset(disp, _gloffset_TexturePageCommitmentEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_ImportMemoryWin32HandleEXT)(GLuint, GLuint64, GLenum, GLvoid *);
+#define CALL_ImportMemoryWin32HandleEXT(disp, parameters) (* GET_ImportMemoryWin32HandleEXT(disp)) parameters
+#define GET_ImportMemoryWin32HandleEXT(disp) ((_glptr_ImportMemoryWin32HandleEXT)(GET_by_offset((disp), _gloffset_ImportMemoryWin32HandleEXT)))
+#define SET_ImportMemoryWin32HandleEXT(disp, func) do { \
+   void (GLAPIENTRYP fn)(GLuint, GLuint64, GLenum, GLvoid *) = func; \
+   SET_by_offset(disp, _gloffset_ImportMemoryWin32HandleEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_ImportSemaphoreWin32HandleEXT)(GLuint, GLenum, GLvoid *);
+#define CALL_ImportSemaphoreWin32HandleEXT(disp, parameters) (* GET_ImportSemaphoreWin32HandleEXT(disp)) parameters
+#define GET_ImportSemaphoreWin32HandleEXT(disp) ((_glptr_ImportSemaphoreWin32HandleEXT)(GET_by_offset((disp), _gloffset_ImportSemaphoreWin32HandleEXT)))
+#define SET_ImportSemaphoreWin32HandleEXT(disp, func) do { \
+   void (GLAPIENTRYP fn)(GLuint, GLenum, GLvoid *) = func; \
+   SET_by_offset(disp, _gloffset_ImportSemaphoreWin32HandleEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_ImportMemoryWin32NameEXT)(GLuint, GLuint64, GLenum, const GLvoid *);
+#define CALL_ImportMemoryWin32NameEXT(disp, parameters) (* GET_ImportMemoryWin32NameEXT(disp)) parameters
+#define GET_ImportMemoryWin32NameEXT(disp) ((_glptr_ImportMemoryWin32NameEXT)(GET_by_offset((disp), _gloffset_ImportMemoryWin32NameEXT)))
+#define SET_ImportMemoryWin32NameEXT(disp, func) do { \
+   void (GLAPIENTRYP fn)(GLuint, GLuint64, GLenum, const GLvoid *) = func; \
+   SET_by_offset(disp, _gloffset_ImportMemoryWin32NameEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_ImportSemaphoreWin32NameEXT)(GLuint, GLenum, const GLvoid *);
+#define CALL_ImportSemaphoreWin32NameEXT(disp, parameters) (* GET_ImportSemaphoreWin32NameEXT(disp)) parameters
+#define GET_ImportSemaphoreWin32NameEXT(disp) ((_glptr_ImportSemaphoreWin32NameEXT)(GET_by_offset((disp), _gloffset_ImportSemaphoreWin32NameEXT)))
+#define SET_ImportSemaphoreWin32NameEXT(disp, func) do { \
+   void (GLAPIENTRYP fn)(GLuint, GLenum, const GLvoid *) = func; \
+   SET_by_offset(disp, _gloffset_ImportSemaphoreWin32NameEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_GetObjectLabelEXT)(GLenum, GLuint, GLsizei, GLsizei *, GLchar *);
+#define CALL_GetObjectLabelEXT(disp, parameters) (* GET_GetObjectLabelEXT(disp)) parameters
+#define GET_GetObjectLabelEXT(disp) ((_glptr_GetObjectLabelEXT)(GET_by_offset((disp), _gloffset_GetObjectLabelEXT)))
+#define SET_GetObjectLabelEXT(disp, func) do { \
+   void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, GLsizei *, GLchar *) = func; \
+   SET_by_offset(disp, _gloffset_GetObjectLabelEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_LabelObjectEXT)(GLenum, GLuint, GLsizei, const GLchar *);
+#define CALL_LabelObjectEXT(disp, parameters) (* GET_LabelObjectEXT(disp)) parameters
+#define GET_LabelObjectEXT(disp) ((_glptr_LabelObjectEXT)(GET_by_offset((disp), _gloffset_LabelObjectEXT)))
+#define SET_LabelObjectEXT(disp, func) do { \
+   void (GLAPIENTRYP fn)(GLenum, GLuint, GLsizei, const GLchar *) = func; \
+   SET_by_offset(disp, _gloffset_LabelObjectEXT, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_DrawArraysUserBuf)(void);
+#define CALL_DrawArraysUserBuf(disp, parameters) (* GET_DrawArraysUserBuf(disp)) parameters
+#define GET_DrawArraysUserBuf(disp) ((_glptr_DrawArraysUserBuf)(GET_by_offset((disp), _gloffset_DrawArraysUserBuf)))
+#define SET_DrawArraysUserBuf(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_DrawArraysUserBuf, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_DrawElementsUserBuf)(void);
+#define CALL_DrawElementsUserBuf(disp, parameters) (* GET_DrawElementsUserBuf(disp)) parameters
+#define GET_DrawElementsUserBuf(disp) ((_glptr_DrawElementsUserBuf)(GET_by_offset((disp), _gloffset_DrawElementsUserBuf)))
+#define SET_DrawElementsUserBuf(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_DrawElementsUserBuf, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_MultiDrawArraysUserBuf)(void);
+#define CALL_MultiDrawArraysUserBuf(disp, parameters) (* GET_MultiDrawArraysUserBuf(disp)) parameters
+#define GET_MultiDrawArraysUserBuf(disp) ((_glptr_MultiDrawArraysUserBuf)(GET_by_offset((disp), _gloffset_MultiDrawArraysUserBuf)))
+#define SET_MultiDrawArraysUserBuf(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_MultiDrawArraysUserBuf, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_MultiDrawElementsUserBuf)(void);
+#define CALL_MultiDrawElementsUserBuf(disp, parameters) (* GET_MultiDrawElementsUserBuf(disp)) parameters
+#define GET_MultiDrawElementsUserBuf(disp) ((_glptr_MultiDrawElementsUserBuf)(GET_by_offset((disp), _gloffset_MultiDrawElementsUserBuf)))
+#define SET_MultiDrawElementsUserBuf(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_MultiDrawElementsUserBuf, fn); \
 } while (0)
 
 

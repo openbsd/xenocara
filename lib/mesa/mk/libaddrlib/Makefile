@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/01/28 08:56:33 jsg Exp $
 
 LIB=	addrlib
 
@@ -13,6 +13,7 @@ SRCS=	addrinterface.cpp \
 	coord.cpp \
 	gfx9addrlib.cpp \
 	gfx10addrlib.cpp \
+	gfx11addrlib.cpp \
 	ciaddrlib.cpp \
 	egbaddrlib.cpp \
 	siaddrlib.cpp
@@ -29,9 +30,11 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/amd/addrlib/src/core \
 		-I${MESA_SRC}/src/amd/addrlib/src/gfx9 \
 		-I${MESA_SRC}/src/amd/addrlib/src/gfx10 \
+		-I${MESA_SRC}/src/amd/addrlib/src/gfx11 \
 		-I${MESA_SRC}/src/amd/addrlib/src/r800 \
 		-I${MESA_SRC}/src/amd/addrlib/src/chip/gfx9 \
 		-I${MESA_SRC}/src/amd/addrlib/src/chip/gfx10 \
+		-I${MESA_SRC}/src/amd/addrlib/src/chip/gfx11 \
 		-I${MESA_SRC}/src/amd/addrlib/src/chip/r800
 
 install:
@@ -45,4 +48,5 @@ obj: _xenocara_obj
 .PATH: ${MESA_SRC}/src/amd/addrlib/src/core
 .PATH: ${MESA_SRC}/src/amd/addrlib/src/gfx9
 .PATH: ${MESA_SRC}/src/amd/addrlib/src/gfx10
+.PATH: ${MESA_SRC}/src/amd/addrlib/src/gfx11
 .PATH: ${MESA_SRC}/src/amd/addrlib/src/r800

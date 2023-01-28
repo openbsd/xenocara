@@ -83,15 +83,18 @@ delete_query(struct gl_context *ctx, struct gl_query_object *q)
 }
 
 static int
-target_to_index(const struct st_context *st, const struct gl_query_object *q)
+target_to_index(const struct gl_query_object *q)
 {
    if (q->Target == GL_PRIMITIVES_GENERATED ||
        q->Target == GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN ||
        q->Target == GL_TRANSFORM_FEEDBACK_STREAM_OVERFLOW_ARB)
       return q->Stream;
 
-   if (st->has_single_pipe_stat) {
-      switch (q->Target) {
+   /* Drivers with PIPE_CAP_QUERY_PIPELINE_STATISTICS_SINGLE = 0 ignore the
+    * index param so it should be useless; but radeonsi needs it in some cases,
+    * so pass the correct value.
+    */
+   switch (q->Target) {
       case GL_VERTICES_SUBMITTED_ARB:
          return PIPE_STAT_QUERY_IA_VERTICES;
       case GL_PRIMITIVES_SUBMITTED_ARB:
@@ -116,10 +119,24 @@ target_to_index(const struct st_context *st, const struct gl_query_object *q)
          return PIPE_STAT_QUERY_CS_INVOCATIONS;
       default:
          break;
-      }
    }
 
    return 0;
+}
+
+static bool
+query_type_is_dummy(struct gl_context *ctx, unsigned type)
+{
+   struct st_context *st = st_context(ctx);
+   switch (type) {
+   case PIPE_QUERY_OCCLUSION_COUNTER:
+   case PIPE_QUERY_OCCLUSION_PREDICATE:
+   case PIPE_QUERY_OCCLUSION_PREDICATE_CONSERVATIVE:
+      return !st->has_occlusion_query;
+   default:
+      break;
+   }
+   return false;
 }
 
 static void
@@ -196,8 +213,13 @@ begin_query(struct gl_context *ctx, struct gl_query_object *q)
       if (q->pq_begin)
          ret = pipe->end_query(pipe, q->pq_begin);
    } else {
-      if (!q->pq) {
-         q->pq = pipe->create_query(pipe, type, target_to_index(st, q));
+      if (query_type_is_dummy(ctx, type)) {
+         /* starting a dummy-query; ignore */
+         assert(!q->pq);
+         q->type = type;
+         ret = true;
+      } else if (!q->pq) {
+         q->pq = pipe->create_query(pipe, type, target_to_index(q));
          q->type = type;
       }
       if (q->pq)
@@ -235,7 +257,10 @@ end_query(struct gl_context *ctx, struct gl_query_object *q)
       q->type = PIPE_QUERY_TIMESTAMP;
    }
 
-   if (q->pq)
+   if (query_type_is_dummy(ctx, q->type)) {
+      /* ending a dummy-query; ignore */
+      ret = true;
+   } else if (q->pq)
       ret = pipe->end_query(pipe, q->pq);
 
    if (!ret) {
@@ -256,8 +281,10 @@ get_query_result(struct pipe_context *pipe,
    union pipe_query_result data;
 
    if (!q->pq) {
-      /* Only needed in case we failed to allocate the gallium query earlier.
-       * Return TRUE so we don't spin on this forever.
+      /* Needed in case we failed to allocate the gallium query earlier, or
+       * in the case of a dummy query.
+       *
+       * Return TRUE in either case so we don't spin on this forever.
        */
       return TRUE;
    }
@@ -319,10 +346,9 @@ get_query_result(struct pipe_context *pipe,
    if (q->Target == GL_TIME_ELAPSED &&
        q->type == PIPE_QUERY_TIMESTAMP) {
       /* Calculate the elapsed time from the two timestamp queries */
-      GLuint64EXT Result0 = 0;
       assert(q->pq_begin);
-      pipe->get_query_result(pipe, q->pq_begin, TRUE, (void *)&Result0);
-      q->Result -= Result0;
+      pipe->get_query_result(pipe, q->pq_begin, TRUE, &data);
+      q->Result -= data.u64;
    } else {
       assert(!q->pq_begin);
    }
@@ -424,49 +450,14 @@ store_query_result(struct gl_context *ctx, struct gl_query_object *q,
    if (pname == GL_QUERY_RESULT_AVAILABLE) {
       index = -1;
    } else if (q->type == PIPE_QUERY_PIPELINE_STATISTICS) {
-      switch (q->Target) {
-      case GL_VERTICES_SUBMITTED_ARB:
-         index = PIPE_STAT_QUERY_IA_VERTICES;
-         break;
-      case GL_PRIMITIVES_SUBMITTED_ARB:
-         index = PIPE_STAT_QUERY_IA_PRIMITIVES;
-         break;
-      case GL_VERTEX_SHADER_INVOCATIONS_ARB:
-         index = PIPE_STAT_QUERY_VS_INVOCATIONS;
-         break;
-      case GL_GEOMETRY_SHADER_INVOCATIONS:
-         index = PIPE_STAT_QUERY_GS_INVOCATIONS;
-         break;
-      case GL_GEOMETRY_SHADER_PRIMITIVES_EMITTED_ARB:
-         index = PIPE_STAT_QUERY_GS_PRIMITIVES;
-         break;
-      case GL_CLIPPING_INPUT_PRIMITIVES_ARB:
-         index = PIPE_STAT_QUERY_C_INVOCATIONS;
-         break;
-      case GL_CLIPPING_OUTPUT_PRIMITIVES_ARB:
-         index = PIPE_STAT_QUERY_C_PRIMITIVES;
-         break;
-      case GL_FRAGMENT_SHADER_INVOCATIONS_ARB:
-         index = PIPE_STAT_QUERY_PS_INVOCATIONS;
-         break;
-      case GL_TESS_CONTROL_SHADER_PATCHES_ARB:
-         index = PIPE_STAT_QUERY_HS_INVOCATIONS;
-         break;
-      case GL_TESS_EVALUATION_SHADER_INVOCATIONS_ARB:
-         index = PIPE_STAT_QUERY_DS_INVOCATIONS;
-         break;
-      case GL_COMPUTE_SHADER_INVOCATIONS_ARB:
-         index = PIPE_STAT_QUERY_CS_INVOCATIONS;
-         break;
-      default:
-         unreachable("Unexpected target");
-      }
+      index = target_to_index(q);
    } else {
       index = 0;
    }
 
-   pipe->get_query_result_resource(pipe, q->pq, flags, result_type, index,
-                                   buf->buffer, offset);
+   if (q->pq)
+      pipe->get_query_result_resource(pipe, q->pq, flags, result_type, index,
+                                      buf->buffer, offset);
 }
 
 static struct gl_query_object **

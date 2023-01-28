@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2022/09/02 05:46:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:35 jsg Exp $
 
 LIB=	mesa
 
@@ -69,7 +69,6 @@ SRCS=	accum.c \
 	mipmap.c \
 	multisample.c \
 	objectlabel.c \
-	objectpurge.c \
 	pack.c \
 	pbo.c \
 	performance_monitor.c \
@@ -137,8 +136,6 @@ SRCS=	accum.c \
 	link_program.cpp \
 	prog_cache.c \
 	prog_instruction.c \
-	prog_opt_constant_fold.c \
-	prog_optimize.c \
 	prog_parameter.c \
 	prog_parameter_layout.c \
 	prog_print.c \
@@ -170,11 +167,9 @@ SRCS=	accum.c \
 	st_atom_texture.c \
 	st_atom_viewport.c \
 	st_cb_bitmap.c \
-	st_cb_bitmap_shader.c \
 	st_cb_clear.c \
 	st_cb_copyimage.c \
 	st_cb_drawpixels.c \
-	st_cb_drawpixels_shader.c \
 	st_cb_drawtex.c \
 	st_cb_eglimage.c \
 	st_cb_feedback.c \
@@ -187,15 +182,13 @@ SRCS=	accum.c \
 	st_debug.c \
 	st_draw.c \
 	st_draw_feedback.c \
+	st_draw_hw_select.c \
 	st_extensions.c \
 	st_format.c \
 	st_gen_mipmap.c \
 	st_glsl_to_ir.cpp \
 	st_glsl_to_nir.cpp \
-	st_glsl_to_tgsi.cpp \
-	st_glsl_to_tgsi_array_merge.cpp \
-	st_glsl_to_tgsi_private.cpp \
-	st_glsl_to_tgsi_temprename.cpp \
+	st_interop.c \
 	st_manager.c \
 	st_nir_builtins.c \
 	st_nir_lower_builtin.c \
@@ -207,7 +200,6 @@ SRCS=	accum.c \
 	st_scissor.c \
 	st_shader_cache.c \
 	st_texture.c \
-	st_tgsi_lower_yuv.c \
 	st_vdpau.c \
 	vbo_context.c \
 	vbo_exec.c \
@@ -231,7 +223,8 @@ SRCS+=	lex.yy.c \
 	program_parse.tab.c \
 	api_exec_init.c \
 	enums.c \
-	format_fallback.c
+	format_fallback.c \
+	unmarshal_table.c
 
 .for INDEX in 0 1 2 3 4 5 6 7
 SRCS+=	marshal_generated${INDEX}.c

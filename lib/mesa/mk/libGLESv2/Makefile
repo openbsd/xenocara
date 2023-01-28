@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2020/08/28 16:07:19 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:33 jsg Exp $
 
 LIB=	GLESv2
 
@@ -11,6 +11,7 @@ CPPFLAGS+=	-DMAPI_MODE_BRIDGE \
 		-DMAPI_ABI_HEADER=\"${MESA_SRC}/generated/src/mapi/es2api/glapi_mapi_tmp.h\"
 
 LDADD+= -L${.CURDIR}/../libglapi/${__objdir} -lglapi \
+	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
 	-L${X11BASE}/lib -ldrm -lm
 
 obj: _xenocara_obj

@@ -371,6 +371,19 @@
 
 
     const char *
+    vk_BuildMicromapModeEXT_to_str(VkBuildMicromapModeEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_BUILD_MICROMAP_MODE_BUILD_EXT";
+        case VK_BUILD_MICROMAP_MODE_MAX_ENUM_EXT: return "VK_BUILD_MICROMAP_MODE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkBuildMicromapModeEXT value.";
+        }
+    }
+
+
+    const char *
     vk_ChromaLocation_to_str(VkChromaLocation input)
     {
         switch((int64_t)input) {
@@ -584,6 +597,25 @@
 
 
     const char *
+    vk_CopyMicromapModeEXT_to_str(VkCopyMicromapModeEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_COPY_MICROMAP_MODE_CLONE_EXT";
+        case 1:
+            return "VK_COPY_MICROMAP_MODE_SERIALIZE_EXT";
+        case 2:
+            return "VK_COPY_MICROMAP_MODE_DESERIALIZE_EXT";
+        case 3:
+            return "VK_COPY_MICROMAP_MODE_COMPACT_EXT";
+        case VK_COPY_MICROMAP_MODE_MAX_ENUM_EXT: return "VK_COPY_MICROMAP_MODE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkCopyMicromapModeEXT value.";
+        }
+    }
+
+
+    const char *
     vk_CoverageModulationModeNV_to_str(VkCoverageModulationModeNV input)
     {
         switch((int64_t)input) {
@@ -739,7 +771,11 @@
         case 1000165000:
             return "VK_DESCRIPTOR_TYPE_ACCELERATION_STRUCTURE_NV";
         case 1000351000:
-            return "VK_DESCRIPTOR_TYPE_MUTABLE_VALVE";
+            return "VK_DESCRIPTOR_TYPE_MUTABLE_EXT";
+        case 1000440000:
+            return "VK_DESCRIPTOR_TYPE_SAMPLE_WEIGHT_IMAGE_QCOM";
+        case 1000440001:
+            return "VK_DESCRIPTOR_TYPE_BLOCK_MATCH_IMAGE_QCOM";
         case VK_DESCRIPTOR_TYPE_MAX_ENUM: return "VK_DESCRIPTOR_TYPE_MAX_ENUM";
         default:
             return "Unknown VkDescriptorType value.";
@@ -763,6 +799,21 @@
 
 
     const char *
+    vk_DeviceAddressBindingTypeEXT_to_str(VkDeviceAddressBindingTypeEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_DEVICE_ADDRESS_BINDING_TYPE_BIND_EXT";
+        case 1:
+            return "VK_DEVICE_ADDRESS_BINDING_TYPE_UNBIND_EXT";
+        case VK_DEVICE_ADDRESS_BINDING_TYPE_MAX_ENUM_EXT: return "VK_DEVICE_ADDRESS_BINDING_TYPE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkDeviceAddressBindingTypeEXT value.";
+        }
+    }
+
+
+    const char *
     vk_DeviceEventTypeEXT_to_str(VkDeviceEventTypeEXT input)
     {
         switch((int64_t)input) {
@@ -771,6 +822,44 @@
         case VK_DEVICE_EVENT_TYPE_MAX_ENUM_EXT: return "VK_DEVICE_EVENT_TYPE_MAX_ENUM_EXT";
         default:
             return "Unknown VkDeviceEventTypeEXT value.";
+        }
+    }
+
+
+    const char *
+    vk_DeviceFaultAddressTypeEXT_to_str(VkDeviceFaultAddressTypeEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_NONE_EXT";
+        case 1:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_READ_INVALID_EXT";
+        case 2:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_WRITE_INVALID_EXT";
+        case 3:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_EXECUTE_INVALID_EXT";
+        case 4:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_INSTRUCTION_POINTER_UNKNOWN_EXT";
+        case 5:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_INSTRUCTION_POINTER_INVALID_EXT";
+        case 6:
+            return "VK_DEVICE_FAULT_ADDRESS_TYPE_INSTRUCTION_POINTER_FAULT_EXT";
+        case VK_DEVICE_FAULT_ADDRESS_TYPE_MAX_ENUM_EXT: return "VK_DEVICE_FAULT_ADDRESS_TYPE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkDeviceFaultAddressTypeEXT value.";
+        }
+    }
+
+
+    const char *
+    vk_DeviceFaultVendorBinaryHeaderVersionEXT_to_str(VkDeviceFaultVendorBinaryHeaderVersionEXT input)
+    {
+        switch((int64_t)input) {
+        case 1:
+            return "VK_DEVICE_FAULT_VENDOR_BINARY_HEADER_VERSION_ONE_EXT";
+        case VK_DEVICE_FAULT_VENDOR_BINARY_HEADER_VERSION_MAX_ENUM_EXT: return "VK_DEVICE_FAULT_VENDOR_BINARY_HEADER_VERSION_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkDeviceFaultVendorBinaryHeaderVersionEXT value.";
         }
     }
 
@@ -889,6 +978,8 @@
             return "VK_DRIVER_ID_SAMSUNG_PROPRIETARY";
         case 22:
             return "VK_DRIVER_ID_MESA_VENUS";
+        case 23:
+            return "VK_DRIVER_ID_MESA_DOZEN";
         case VK_DRIVER_ID_MAX_ENUM: return "VK_DRIVER_ID_MAX_ENUM";
         default:
             return "Unknown VkDriverId value.";
@@ -974,6 +1065,68 @@
             return "VK_DYNAMIC_STATE_PRIMITIVE_RESTART_ENABLE";
         case 1000381000:
             return "VK_DYNAMIC_STATE_COLOR_WRITE_ENABLE_EXT";
+        case 1000455002:
+            return "VK_DYNAMIC_STATE_TESSELLATION_DOMAIN_ORIGIN_EXT";
+        case 1000455003:
+            return "VK_DYNAMIC_STATE_DEPTH_CLAMP_ENABLE_EXT";
+        case 1000455004:
+            return "VK_DYNAMIC_STATE_POLYGON_MODE_EXT";
+        case 1000455005:
+            return "VK_DYNAMIC_STATE_RASTERIZATION_SAMPLES_EXT";
+        case 1000455006:
+            return "VK_DYNAMIC_STATE_SAMPLE_MASK_EXT";
+        case 1000455007:
+            return "VK_DYNAMIC_STATE_ALPHA_TO_COVERAGE_ENABLE_EXT";
+        case 1000455008:
+            return "VK_DYNAMIC_STATE_ALPHA_TO_ONE_ENABLE_EXT";
+        case 1000455009:
+            return "VK_DYNAMIC_STATE_LOGIC_OP_ENABLE_EXT";
+        case 1000455010:
+            return "VK_DYNAMIC_STATE_COLOR_BLEND_ENABLE_EXT";
+        case 1000455011:
+            return "VK_DYNAMIC_STATE_COLOR_BLEND_EQUATION_EXT";
+        case 1000455012:
+            return "VK_DYNAMIC_STATE_COLOR_WRITE_MASK_EXT";
+        case 1000455013:
+            return "VK_DYNAMIC_STATE_RASTERIZATION_STREAM_EXT";
+        case 1000455014:
+            return "VK_DYNAMIC_STATE_CONSERVATIVE_RASTERIZATION_MODE_EXT";
+        case 1000455015:
+            return "VK_DYNAMIC_STATE_EXTRA_PRIMITIVE_OVERESTIMATION_SIZE_EXT";
+        case 1000455016:
+            return "VK_DYNAMIC_STATE_DEPTH_CLIP_ENABLE_EXT";
+        case 1000455017:
+            return "VK_DYNAMIC_STATE_SAMPLE_LOCATIONS_ENABLE_EXT";
+        case 1000455018:
+            return "VK_DYNAMIC_STATE_COLOR_BLEND_ADVANCED_EXT";
+        case 1000455019:
+            return "VK_DYNAMIC_STATE_PROVOKING_VERTEX_MODE_EXT";
+        case 1000455020:
+            return "VK_DYNAMIC_STATE_LINE_RASTERIZATION_MODE_EXT";
+        case 1000455021:
+            return "VK_DYNAMIC_STATE_LINE_STIPPLE_ENABLE_EXT";
+        case 1000455022:
+            return "VK_DYNAMIC_STATE_DEPTH_CLIP_NEGATIVE_ONE_TO_ONE_EXT";
+        case 1000455023:
+            return "VK_DYNAMIC_STATE_VIEWPORT_W_SCALING_ENABLE_NV";
+        case 1000455024:
+            return "VK_DYNAMIC_STATE_VIEWPORT_SWIZZLE_NV";
+        case 1000455025:
+            return "VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_ENABLE_NV";
+        case 1000455026:
+            return "VK_DYNAMIC_STATE_COVERAGE_TO_COLOR_LOCATION_NV";
+        case 1000455027:
+            return "VK_DYNAMIC_STATE_COVERAGE_MODULATION_MODE_NV";
+        case 1000455028:
+            return "VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_ENABLE_NV";
+        case 1000455029:
+            return "VK_DYNAMIC_STATE_COVERAGE_MODULATION_TABLE_NV";
+        case 1000455030:
+            return "VK_DYNAMIC_STATE_SHADING_RATE_IMAGE_ENABLE_NV";
+        case 1000455031:
+            return "VK_DYNAMIC_STATE_REPRESENTATIVE_FRAGMENT_TEST_ENABLE_NV";
+        case 1000455032:
+            return "VK_DYNAMIC_STATE_COVERAGE_REDUCTION_MODE_NV";
         case VK_DYNAMIC_STATE_MAX_ENUM: return "VK_DYNAMIC_STATE_MAX_ENUM";
         default:
             return "Unknown VkDynamicState value.";
@@ -990,7 +1143,7 @@
         case 1:
             return "VK_FILTER_LINEAR";
         case 1000015000:
-            return "VK_FILTER_CUBIC_IMG";
+            return "VK_FILTER_CUBIC_EXT";
         case VK_FILTER_MAX_ENUM: return "VK_FILTER_MAX_ENUM";
         default:
             return "Unknown VkFilter value.";
@@ -1496,6 +1649,8 @@
             return "VK_FORMAT_A4R4G4B4_UNORM_PACK16";
         case 1000340001:
             return "VK_FORMAT_A4B4G4R4_UNORM_PACK16";
+        case 1000464000:
+            return "VK_FORMAT_R16G16_S10_5_NV";
         case VK_FORMAT_MAX_ENUM: return "VK_FORMAT_MAX_ENUM";
         default:
             return "Unknown VkFormat value.";
@@ -1685,6 +1840,8 @@
             return "VK_IMAGE_LAYOUT_READ_ONLY_OPTIMAL";
         case 1000314001:
             return "VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL";
+        case 1000339000:
+            return "VK_IMAGE_LAYOUT_ATTACHMENT_FEEDBACK_LOOP_OPTIMAL_EXT";
         case VK_IMAGE_LAYOUT_MAX_ENUM: return "VK_IMAGE_LAYOUT_MAX_ENUM";
         default:
             return "Unknown VkImageLayout value.";
@@ -1790,6 +1947,8 @@
             return "VK_INDIRECT_COMMANDS_TOKEN_TYPE_DRAW_NV";
         case 7:
             return "VK_INDIRECT_COMMANDS_TOKEN_TYPE_DRAW_TASKS_NV";
+        case 1000328000:
+            return "VK_INDIRECT_COMMANDS_TOKEN_TYPE_DRAW_MESH_TASKS_NV";
         case VK_INDIRECT_COMMANDS_TOKEN_TYPE_MAX_ENUM_NV: return "VK_INDIRECT_COMMANDS_TOKEN_TYPE_MAX_ENUM_NV";
         default:
             return "Unknown VkIndirectCommandsTokenTypeNV value.";
@@ -1890,6 +2049,19 @@
 
 
     const char *
+    vk_MicromapTypeEXT_to_str(VkMicromapTypeEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_MICROMAP_TYPE_OPACITY_MICROMAP_EXT";
+        case VK_MICROMAP_TYPE_MAX_ENUM_EXT: return "VK_MICROMAP_TYPE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkMicromapTypeEXT value.";
+        }
+    }
+
+
+    const char *
     vk_ObjectType_to_str(VkObjectType input)
     {
         switch((int64_t)input) {
@@ -1985,9 +2157,95 @@
             return "VK_OBJECT_TYPE_PRIVATE_DATA_SLOT";
         case 1000366000:
             return "VK_OBJECT_TYPE_BUFFER_COLLECTION_FUCHSIA";
+        case 1000396000:
+            return "VK_OBJECT_TYPE_MICROMAP_EXT";
+        case 1000464000:
+            return "VK_OBJECT_TYPE_OPTICAL_FLOW_SESSION_NV";
         case VK_OBJECT_TYPE_MAX_ENUM: return "VK_OBJECT_TYPE_MAX_ENUM";
         default:
             return "Unknown VkObjectType value.";
+        }
+    }
+
+
+    const char *
+    vk_OpacityMicromapFormatEXT_to_str(VkOpacityMicromapFormatEXT input)
+    {
+        switch((int64_t)input) {
+        case 1:
+            return "VK_OPACITY_MICROMAP_FORMAT_2_STATE_EXT";
+        case 2:
+            return "VK_OPACITY_MICROMAP_FORMAT_4_STATE_EXT";
+        case VK_OPACITY_MICROMAP_FORMAT_MAX_ENUM_EXT: return "VK_OPACITY_MICROMAP_FORMAT_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkOpacityMicromapFormatEXT value.";
+        }
+    }
+
+
+    const char *
+    vk_OpacityMicromapSpecialIndexEXT_to_str(VkOpacityMicromapSpecialIndexEXT input)
+    {
+        switch((int64_t)input) {
+        case -4:
+            return "VK_OPACITY_MICROMAP_SPECIAL_INDEX_FULLY_UNKNOWN_OPAQUE_EXT";
+        case -3:
+            return "VK_OPACITY_MICROMAP_SPECIAL_INDEX_FULLY_UNKNOWN_TRANSPARENT_EXT";
+        case -2:
+            return "VK_OPACITY_MICROMAP_SPECIAL_INDEX_FULLY_OPAQUE_EXT";
+        case -1:
+            return "VK_OPACITY_MICROMAP_SPECIAL_INDEX_FULLY_TRANSPARENT_EXT";
+        case VK_OPACITY_MICROMAP_SPECIAL_INDEX_MAX_ENUM_EXT: return "VK_OPACITY_MICROMAP_SPECIAL_INDEX_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkOpacityMicromapSpecialIndexEXT value.";
+        }
+    }
+
+
+    const char *
+    vk_OpticalFlowPerformanceLevelNV_to_str(VkOpticalFlowPerformanceLevelNV input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_OPTICAL_FLOW_PERFORMANCE_LEVEL_UNKNOWN_NV";
+        case 1:
+            return "VK_OPTICAL_FLOW_PERFORMANCE_LEVEL_SLOW_NV";
+        case 2:
+            return "VK_OPTICAL_FLOW_PERFORMANCE_LEVEL_MEDIUM_NV";
+        case 3:
+            return "VK_OPTICAL_FLOW_PERFORMANCE_LEVEL_FAST_NV";
+        case VK_OPTICAL_FLOW_PERFORMANCE_LEVEL_MAX_ENUM_NV: return "VK_OPTICAL_FLOW_PERFORMANCE_LEVEL_MAX_ENUM_NV";
+        default:
+            return "Unknown VkOpticalFlowPerformanceLevelNV value.";
+        }
+    }
+
+
+    const char *
+    vk_OpticalFlowSessionBindingPointNV_to_str(VkOpticalFlowSessionBindingPointNV input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_UNKNOWN_NV";
+        case 1:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_INPUT_NV";
+        case 2:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_REFERENCE_NV";
+        case 3:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_HINT_NV";
+        case 4:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_FLOW_VECTOR_NV";
+        case 5:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_BACKWARD_FLOW_VECTOR_NV";
+        case 6:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_COST_NV";
+        case 7:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_BACKWARD_COST_NV";
+        case 8:
+            return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_GLOBAL_FLOW_NV";
+        case VK_OPTICAL_FLOW_SESSION_BINDING_POINT_MAX_ENUM_NV: return "VK_OPTICAL_FLOW_SESSION_BINDING_POINT_MAX_ENUM_NV";
+        default:
+            return "Unknown VkOpticalFlowSessionBindingPointNV value.";
         }
     }
 
@@ -2202,6 +2460,44 @@
 
 
     const char *
+    vk_PipelineRobustnessBufferBehaviorEXT_to_str(VkPipelineRobustnessBufferBehaviorEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DEVICE_DEFAULT_EXT";
+        case 1:
+            return "VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DISABLED_EXT";
+        case 2:
+            return "VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_ROBUST_BUFFER_ACCESS_EXT";
+        case 3:
+            return "VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_ROBUST_BUFFER_ACCESS_2_EXT";
+        case VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_MAX_ENUM_EXT: return "VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkPipelineRobustnessBufferBehaviorEXT value.";
+        }
+    }
+
+
+    const char *
+    vk_PipelineRobustnessImageBehaviorEXT_to_str(VkPipelineRobustnessImageBehaviorEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_DEVICE_DEFAULT_EXT";
+        case 1:
+            return "VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_DISABLED_EXT";
+        case 2:
+            return "VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_ROBUST_IMAGE_ACCESS_EXT";
+        case 3:
+            return "VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_ROBUST_IMAGE_ACCESS_2_EXT";
+        case VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_MAX_ENUM_EXT: return "VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkPipelineRobustnessImageBehaviorEXT value.";
+        }
+    }
+
+
+    const char *
     vk_PointClippingBehavior_to_str(VkPointClippingBehavior input)
     {
         switch((int64_t)input) {
@@ -2364,8 +2660,18 @@
             return "VK_QUERY_TYPE_PERFORMANCE_QUERY_INTEL";
         case 1000299000:
             return "VK_QUERY_TYPE_VIDEO_ENCODE_BITSTREAM_BUFFER_RANGE_KHR";
+        case 1000328000:
+            return "VK_QUERY_TYPE_MESH_PRIMITIVES_GENERATED_EXT";
         case 1000382000:
             return "VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT";
+        case 1000386000:
+            return "VK_QUERY_TYPE_ACCELERATION_STRUCTURE_SERIALIZATION_BOTTOM_LEVEL_POINTERS_KHR";
+        case 1000386001:
+            return "VK_QUERY_TYPE_ACCELERATION_STRUCTURE_SIZE_KHR";
+        case 1000396000:
+            return "VK_QUERY_TYPE_MICROMAP_SERIALIZATION_SIZE_EXT";
+        case 1000396001:
+            return "VK_QUERY_TYPE_MICROMAP_COMPACTED_SIZE_EXT";
         case VK_QUERY_TYPE_MAX_ENUM: return "VK_QUERY_TYPE_MAX_ENUM";
         default:
             return "Unknown VkQueryType value.";
@@ -2428,6 +2734,8 @@
     vk_Result_to_str(VkResult input)
     {
         switch((int64_t)input) {
+        case -1000338000:
+            return "VK_ERROR_COMPRESSION_EXHAUSTED_EXT";
         case -1000257000:
             return "VK_ERROR_INVALID_DEVICE_ADDRESS_EXT";
         case -1000255000:
@@ -2442,6 +2750,18 @@
             return "VK_ERROR_INVALID_EXTERNAL_HANDLE";
         case -1000069000:
             return "VK_ERROR_OUT_OF_POOL_MEMORY";
+        case -1000023005:
+            return "VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR";
+        case -1000023004:
+            return "VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR";
+        case -1000023003:
+            return "VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR";
+        case -1000023002:
+            return "VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR";
+        case -1000023001:
+            return "VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR";
+        case -1000023000:
+            return "VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR";
         case -1000012000:
             return "VK_ERROR_INVALID_SHADER_NV";
         case -1000011001:
@@ -2909,15 +3229,15 @@
         case 1000022002:
             return "VK_STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT";
         case 1000023000:
-            return "VK_STRUCTURE_TYPE_VIDEO_PROFILE_KHR";
+            return "VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR";
         case 1000023001:
             return "VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR";
         case 1000023002:
-            return "VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_KHR";
+            return "VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR";
         case 1000023003:
-            return "VK_STRUCTURE_TYPE_VIDEO_GET_MEMORY_PROPERTIES_KHR";
+            return "VK_STRUCTURE_TYPE_VIDEO_SESSION_MEMORY_REQUIREMENTS_KHR";
         case 1000023004:
-            return "VK_STRUCTURE_TYPE_VIDEO_BIND_MEMORY_KHR";
+            return "VK_STRUCTURE_TYPE_BIND_VIDEO_SESSION_MEMORY_INFO_KHR";
         case 1000023005:
             return "VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR";
         case 1000023006:
@@ -2931,21 +3251,23 @@
         case 1000023010:
             return "VK_STRUCTURE_TYPE_VIDEO_CODING_CONTROL_INFO_KHR";
         case 1000023011:
-            return "VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_KHR";
+            return "VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR";
         case 1000023012:
-            return "VK_STRUCTURE_TYPE_VIDEO_QUEUE_FAMILY_PROPERTIES_2_KHR";
+            return "VK_STRUCTURE_TYPE_QUEUE_FAMILY_VIDEO_PROPERTIES_KHR";
         case 1000023013:
-            return "VK_STRUCTURE_TYPE_VIDEO_PROFILES_KHR";
+            return "VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR";
         case 1000023014:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VIDEO_FORMAT_INFO_KHR";
         case 1000023015:
             return "VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR";
         case 1000023016:
-            return "VK_STRUCTURE_TYPE_QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_2_KHR";
+            return "VK_STRUCTURE_TYPE_QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_KHR";
         case 1000024000:
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR";
         case 1000024001:
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_CAPABILITIES_KHR";
+        case 1000024002:
+            return "VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR";
         case 1000026000:
             return "VK_STRUCTURE_TYPE_DEDICATED_ALLOCATION_IMAGE_CREATE_INFO_NV";
         case 1000026001:
@@ -2979,17 +3301,17 @@
         case 1000038004:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_DPB_SLOT_INFO_EXT";
         case 1000038005:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_NALU_SLICE_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_NALU_SLICE_INFO_EXT";
         case 1000038006:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_INFO_EXT";
         case 1000038007:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_EXT";
         case 1000038008:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_EXT";
         case 1000038009:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_EXT";
         case 1000038010:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_REFERENCE_LISTS_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_REFERENCE_LISTS_INFO_EXT";
         case 1000039000:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_CAPABILITIES_EXT";
         case 1000039001:
@@ -3001,13 +3323,13 @@
         case 1000039004:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_DPB_SLOT_INFO_EXT";
         case 1000039005:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_NALU_SLICE_SEGMENT_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_NALU_SLICE_SEGMENT_INFO_EXT";
         case 1000039006:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_INFO_EXT";
         case 1000039007:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_EXT";
         case 1000039008:
-            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_REFERENCE_LISTS_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_REFERENCE_LISTS_INFO_EXT";
         case 1000039009:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_EXT";
         case 1000039010:
@@ -3016,10 +3338,8 @@
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_CAPABILITIES_EXT";
         case 1000040001:
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PICTURE_INFO_EXT";
-        case 1000040002:
-            return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_MVC_EXT";
         case 1000040003:
-            return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_EXT";
         case 1000040004:
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_EXT";
         case 1000040005:
@@ -3122,6 +3442,12 @@
             return "VK_STRUCTURE_TYPE_IMAGE_VIEW_ASTC_DECODE_MODE_EXT";
         case 1000067001:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT";
+        case 1000068000:
+            return "VK_STRUCTURE_TYPE_PIPELINE_ROBUSTNESS_CREATE_INFO_EXT";
+        case 1000068001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT";
+        case 1000068002:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_PROPERTIES_EXT";
         case 1000070000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES";
         case 1000070001:
@@ -3547,7 +3873,7 @@
         case 1000187002:
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT";
         case 1000187003:
-            return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_EXT";
+            return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_EXT";
         case 1000187004:
             return "VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PICTURE_INFO_EXT";
         case 1000187005:
@@ -3810,6 +4136,12 @@
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT";
         case 1000290000:
             return "VK_STRUCTURE_TYPE_PIPELINE_LIBRARY_CREATE_INFO_KHR";
+        case 1000292000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_BARRIER_FEATURES_NV";
+        case 1000292001:
+            return "VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_PRESENT_BARRIER_NV";
+        case 1000292002:
+            return "VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_BARRIER_CREATE_INFO_NV";
         case 1000294000:
             return "VK_STRUCTURE_TYPE_PRESENT_ID_KHR";
         case 1000294001:
@@ -3830,10 +4162,36 @@
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_LAYER_INFO_KHR";
         case 1000299003:
             return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR";
+        case 1000299004:
+            return "VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR";
         case 1000300000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DIAGNOSTICS_CONFIG_FEATURES_NV";
         case 1000300001:
             return "VK_STRUCTURE_TYPE_DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV";
+        case 1000311000:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_OBJECT_CREATE_INFO_EXT";
+        case 1000311001:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_OBJECTS_INFO_EXT";
+        case 1000311002:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_DEVICE_INFO_EXT";
+        case 1000311003:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_COMMAND_QUEUE_INFO_EXT";
+        case 1000311004:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_BUFFER_INFO_EXT";
+        case 1000311005:
+            return "VK_STRUCTURE_TYPE_IMPORT_METAL_BUFFER_INFO_EXT";
+        case 1000311006:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_TEXTURE_INFO_EXT";
+        case 1000311007:
+            return "VK_STRUCTURE_TYPE_IMPORT_METAL_TEXTURE_INFO_EXT";
+        case 1000311008:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_IO_SURFACE_INFO_EXT";
+        case 1000311009:
+            return "VK_STRUCTURE_TYPE_IMPORT_METAL_IO_SURFACE_INFO_EXT";
+        case 1000311010:
+            return "VK_STRUCTURE_TYPE_EXPORT_METAL_SHARED_EVENT_INFO_EXT";
+        case 1000311011:
+            return "VK_STRUCTURE_TYPE_IMPORT_METAL_SHARED_EVENT_INFO_EXT";
         case 1000314000:
             return "VK_STRUCTURE_TYPE_MEMORY_BARRIER_2";
         case 1000314001:
@@ -3860,6 +4218,10 @@
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_PROPERTIES_EXT";
         case 1000320002:
             return "VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_LIBRARY_CREATE_INFO_EXT";
+        case 1000321000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_EARLY_AND_LATE_FRAGMENT_TESTS_FEATURES_AMD";
+        case 1000322000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_PROPERTIES_KHR";
         case 1000323000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_UNIFORM_CONTROL_FLOW_FEATURES_KHR";
         case 1000325000:
@@ -3876,6 +4238,10 @@
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV";
         case 1000327002:
             return "VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MOTION_INFO_NV";
+        case 1000328000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT";
+        case 1000328001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT";
         case 1000330000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT";
         case 1000332000:
@@ -3910,10 +4276,28 @@
             return "VK_STRUCTURE_TYPE_BUFFER_IMAGE_COPY_2";
         case 1000337010:
             return "VK_STRUCTURE_TYPE_IMAGE_RESOLVE_2";
+        case 1000338000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_FEATURES_EXT";
+        case 1000338001:
+            return "VK_STRUCTURE_TYPE_IMAGE_COMPRESSION_CONTROL_EXT";
+        case 1000338002:
+            return "VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2_EXT";
+        case 1000338003:
+            return "VK_STRUCTURE_TYPE_IMAGE_SUBRESOURCE_2_EXT";
+        case 1000338004:
+            return "VK_STRUCTURE_TYPE_IMAGE_COMPRESSION_PROPERTIES_EXT";
+        case 1000339000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT";
         case 1000340000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT";
+        case 1000341000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT";
+        case 1000341001:
+            return "VK_STRUCTURE_TYPE_DEVICE_FAULT_COUNTS_EXT";
+        case 1000341002:
+            return "VK_STRUCTURE_TYPE_DEVICE_FAULT_INFO_EXT";
         case 1000342000:
-            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_ARM";
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT";
         case 1000344000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT";
         case 1000346000:
@@ -3925,9 +4309,9 @@
         case 1000348013:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR";
         case 1000351000:
-            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE";
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT";
         case 1000351002:
-            return "VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE";
+            return "VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_EXT";
         case 1000352000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT";
         case 1000352001:
@@ -3936,6 +4320,10 @@
             return "VK_STRUCTURE_TYPE_VERTEX_INPUT_ATTRIBUTE_DESCRIPTION_2_EXT";
         case 1000353000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DRM_PROPERTIES_EXT";
+        case 1000354000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ADDRESS_BINDING_REPORT_FEATURES_EXT";
+        case 1000354001:
+            return "VK_STRUCTURE_TYPE_DEVICE_ADDRESS_BINDING_CALLBACK_DATA_EXT";
         case 1000355000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_CONTROL_FEATURES_EXT";
         case 1000355001:
@@ -3986,6 +4374,16 @@
             return "VK_STRUCTURE_TYPE_MEMORY_GET_REMOTE_ADDRESS_INFO_NV";
         case 1000371001:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV";
+        case 1000372000:
+            return "VK_STRUCTURE_TYPE_PIPELINE_PROPERTIES_IDENTIFIER_EXT";
+        case 1000372001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROPERTIES_FEATURES_EXT";
+        case 1000376000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_FEATURES_EXT";
+        case 1000376001:
+            return "VK_STRUCTURE_TYPE_SUBPASS_RESOLVE_PERFORMANCE_QUERY_EXT";
+        case 1000376002:
+            return "VK_STRUCTURE_TYPE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_INFO_EXT";
         case 1000377000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT";
         case 1000378000:
@@ -3996,6 +4394,8 @@
             return "VK_STRUCTURE_TYPE_PIPELINE_COLOR_WRITE_CREATE_INFO_EXT";
         case 1000382000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVES_GENERATED_QUERY_FEATURES_EXT";
+        case 1000386000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR";
         case 1000388000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR";
         case 1000388001:
@@ -4010,6 +4410,26 @@
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT";
         case 1000393000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT";
+        case 1000396000:
+            return "VK_STRUCTURE_TYPE_MICROMAP_BUILD_INFO_EXT";
+        case 1000396001:
+            return "VK_STRUCTURE_TYPE_MICROMAP_VERSION_INFO_EXT";
+        case 1000396002:
+            return "VK_STRUCTURE_TYPE_COPY_MICROMAP_INFO_EXT";
+        case 1000396003:
+            return "VK_STRUCTURE_TYPE_COPY_MICROMAP_TO_MEMORY_INFO_EXT";
+        case 1000396004:
+            return "VK_STRUCTURE_TYPE_COPY_MEMORY_TO_MICROMAP_INFO_EXT";
+        case 1000396005:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT";
+        case 1000396006:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_PROPERTIES_EXT";
+        case 1000396007:
+            return "VK_STRUCTURE_TYPE_MICROMAP_CREATE_INFO_EXT";
+        case 1000396008:
+            return "VK_STRUCTURE_TYPE_MICROMAP_BUILD_SIZES_INFO_EXT";
+        case 1000396009:
+            return "VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_TRIANGLES_OPACITY_MICROMAP_EXT";
         case 1000411000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BORDER_COLOR_SWIZZLE_FEATURES_EXT";
         case 1000411001:
@@ -4030,6 +4450,10 @@
             return "VK_STRUCTURE_TYPE_DESCRIPTOR_SET_BINDING_REFERENCE_VALVE";
         case 1000420002:
             return "VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_HOST_MAPPING_INFO_VALVE";
+        case 1000421000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_EXT";
+        case 1000422000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NON_SEAMLESS_CUBE_MAP_FEATURES_EXT";
         case 1000425000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM";
         case 1000425001:
@@ -4038,6 +4462,60 @@
             return "VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM";
         case 1000430000:
             return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV";
+        case 1000437000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT";
+        case 1000440000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_FEATURES_QCOM";
+        case 1000440001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_PROPERTIES_QCOM";
+        case 1000440002:
+            return "VK_STRUCTURE_TYPE_IMAGE_VIEW_SAMPLE_WEIGHT_CREATE_INFO_QCOM";
+        case 1000455000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT";
+        case 1000455001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT";
+        case 1000458000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_MERGE_FEEDBACK_FEATURES_EXT";
+        case 1000458001:
+            return "VK_STRUCTURE_TYPE_RENDER_PASS_CREATION_CONTROL_EXT";
+        case 1000458002:
+            return "VK_STRUCTURE_TYPE_RENDER_PASS_CREATION_FEEDBACK_CREATE_INFO_EXT";
+        case 1000458003:
+            return "VK_STRUCTURE_TYPE_RENDER_PASS_SUBPASS_FEEDBACK_CREATE_INFO_EXT";
+        case 1000462000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT";
+        case 1000462001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_PROPERTIES_EXT";
+        case 1000462002:
+            return "VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_MODULE_IDENTIFIER_CREATE_INFO_EXT";
+        case 1000462003:
+            return "VK_STRUCTURE_TYPE_SHADER_MODULE_IDENTIFIER_EXT";
+        case 1000464000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_FEATURES_NV";
+        case 1000464001:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_PROPERTIES_NV";
+        case 1000464002:
+            return "VK_STRUCTURE_TYPE_OPTICAL_FLOW_IMAGE_FORMAT_INFO_NV";
+        case 1000464003:
+            return "VK_STRUCTURE_TYPE_OPTICAL_FLOW_IMAGE_FORMAT_PROPERTIES_NV";
+        case 1000464004:
+            return "VK_STRUCTURE_TYPE_OPTICAL_FLOW_SESSION_CREATE_INFO_NV";
+        case 1000464005:
+            return "VK_STRUCTURE_TYPE_OPTICAL_FLOW_EXECUTE_INFO_NV";
+        case 1000464010:
+            return "VK_STRUCTURE_TYPE_OPTICAL_FLOW_SESSION_CREATE_PRIVATE_DATA_INFO_NV";
+        case 1000465000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_DITHERING_FEATURES_EXT";
+        case 1000466000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROTECTED_ACCESS_FEATURES_EXT";
+        case 1000484000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TILE_PROPERTIES_FEATURES_QCOM";
+        case 1000484001:
+            return "VK_STRUCTURE_TYPE_TILE_PROPERTIES_QCOM";
+        case 1000485000:
+            return "VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC";
+        case 1000485001:
+            return "VK_STRUCTURE_TYPE_AMIGO_PROFILING_SUBMIT_INFO_SEC";
         case VK_STRUCTURE_TYPE_MAX_ENUM: return "VK_STRUCTURE_TYPE_MAX_ENUM";
         default:
             return "Unknown VkStructureType value.";
@@ -4056,6 +4534,45 @@
         case VK_SUBPASS_CONTENTS_MAX_ENUM: return "VK_SUBPASS_CONTENTS_MAX_ENUM";
         default:
             return "Unknown VkSubpassContents value.";
+        }
+    }
+
+
+    const char *
+    vk_SubpassMergeStatusEXT_to_str(VkSubpassMergeStatusEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_SUBPASS_MERGE_STATUS_MERGED_EXT";
+        case 1:
+            return "VK_SUBPASS_MERGE_STATUS_DISALLOWED_EXT";
+        case 2:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_SIDE_EFFECTS_EXT";
+        case 3:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_SAMPLES_MISMATCH_EXT";
+        case 4:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_VIEWS_MISMATCH_EXT";
+        case 5:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_ALIASING_EXT";
+        case 6:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_DEPENDENCIES_EXT";
+        case 7:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_INCOMPATIBLE_INPUT_ATTACHMENT_EXT";
+        case 8:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_TOO_MANY_ATTACHMENTS_EXT";
+        case 9:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_INSUFFICIENT_STORAGE_EXT";
+        case 10:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_DEPTH_STENCIL_COUNT_EXT";
+        case 11:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_RESOLVE_ATTACHMENT_REUSE_EXT";
+        case 12:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_SINGLE_SUBPASS_EXT";
+        case 13:
+            return "VK_SUBPASS_MERGE_STATUS_NOT_MERGED_UNSPECIFIED_EXT";
+        case VK_SUBPASS_MERGE_STATUS_MAX_ENUM_EXT: return "VK_SUBPASS_MERGE_STATUS_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkSubpassMergeStatusEXT value.";
         }
     }
 
@@ -4229,6 +4746,67 @@
     }
 
 
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    const char *
+    vk_VideoEncodeH264RateControlStructureEXT_to_str(VkVideoEncodeH264RateControlStructureEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_VIDEO_ENCODE_H264_RATE_CONTROL_STRUCTURE_UNKNOWN_EXT";
+        case 1:
+            return "VK_VIDEO_ENCODE_H264_RATE_CONTROL_STRUCTURE_FLAT_EXT";
+        case 2:
+            return "VK_VIDEO_ENCODE_H264_RATE_CONTROL_STRUCTURE_DYADIC_EXT";
+        case VK_VIDEO_ENCODE_H264_RATE_CONTROL_STRUCTURE_MAX_ENUM_EXT: return "VK_VIDEO_ENCODE_H264_RATE_CONTROL_STRUCTURE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkVideoEncodeH264RateControlStructureEXT value.";
+        }
+    }
+
+#endif
+
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    const char *
+    vk_VideoEncodeH265RateControlStructureEXT_to_str(VkVideoEncodeH265RateControlStructureEXT input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_VIDEO_ENCODE_H265_RATE_CONTROL_STRUCTURE_UNKNOWN_EXT";
+        case 1:
+            return "VK_VIDEO_ENCODE_H265_RATE_CONTROL_STRUCTURE_FLAT_EXT";
+        case 2:
+            return "VK_VIDEO_ENCODE_H265_RATE_CONTROL_STRUCTURE_DYADIC_EXT";
+        case VK_VIDEO_ENCODE_H265_RATE_CONTROL_STRUCTURE_MAX_ENUM_EXT: return "VK_VIDEO_ENCODE_H265_RATE_CONTROL_STRUCTURE_MAX_ENUM_EXT";
+        default:
+            return "Unknown VkVideoEncodeH265RateControlStructureEXT value.";
+        }
+    }
+
+#endif
+
+#ifdef VK_ENABLE_BETA_EXTENSIONS
+    const char *
+    vk_VideoEncodeTuningModeKHR_to_str(VkVideoEncodeTuningModeKHR input)
+    {
+        switch((int64_t)input) {
+        case 0:
+            return "VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR";
+        case 1:
+            return "VK_VIDEO_ENCODE_TUNING_MODE_HIGH_QUALITY_KHR";
+        case 2:
+            return "VK_VIDEO_ENCODE_TUNING_MODE_LOW_LATENCY_KHR";
+        case 3:
+            return "VK_VIDEO_ENCODE_TUNING_MODE_ULTRA_LOW_LATENCY_KHR";
+        case 4:
+            return "VK_VIDEO_ENCODE_TUNING_MODE_LOSSLESS_KHR";
+        case VK_VIDEO_ENCODE_TUNING_MODE_MAX_ENUM_KHR: return "VK_VIDEO_ENCODE_TUNING_MODE_MAX_ENUM_KHR";
+        default:
+            return "Unknown VkVideoEncodeTuningModeKHR value.";
+        }
+    }
+
+#endif
+
     const char *
     vk_ViewportCoordinateSwizzleNV_to_str(VkViewportCoordinateSwizzleNV input)
     {
@@ -4272,9 +4850,11 @@
         case VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_INFO_NV: return sizeof(VkAccelerationStructureInfoNV);
         case VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MEMORY_REQUIREMENTS_INFO_NV: return sizeof(VkAccelerationStructureMemoryRequirementsInfoNV);
         case VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_MOTION_INFO_NV: return sizeof(VkAccelerationStructureMotionInfoNV);
+        case VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_TRIANGLES_OPACITY_MICROMAP_EXT: return sizeof(VkAccelerationStructureTrianglesOpacityMicromapEXT);
         case VK_STRUCTURE_TYPE_ACCELERATION_STRUCTURE_VERSION_INFO_KHR: return sizeof(VkAccelerationStructureVersionInfoKHR);
         case VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHR: return sizeof(VkAcquireNextImageInfoKHR);
         case VK_STRUCTURE_TYPE_ACQUIRE_PROFILING_LOCK_INFO_KHR: return sizeof(VkAcquireProfilingLockInfoKHR);
+        case VK_STRUCTURE_TYPE_AMIGO_PROFILING_SUBMIT_INFO_SEC: return sizeof(VkAmigoProfilingSubmitInfoSEC);
     #ifdef VK_USE_PLATFORM_ANDROID_KHR
         case VK_STRUCTURE_TYPE_ANDROID_HARDWARE_BUFFER_FORMAT_PROPERTIES_2_ANDROID: return sizeof(VkAndroidHardwareBufferFormatProperties2ANDROID);
     #endif
@@ -4304,6 +4884,9 @@
         case VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHR: return sizeof(VkBindImageMemorySwapchainInfoKHR);
         case VK_STRUCTURE_TYPE_BIND_IMAGE_PLANE_MEMORY_INFO: return sizeof(VkBindImagePlaneMemoryInfo);
         case VK_STRUCTURE_TYPE_BIND_SPARSE_INFO: return sizeof(VkBindSparseInfo);
+    #ifdef VK_ENABLE_BETA_EXTENSIONS
+        case VK_STRUCTURE_TYPE_BIND_VIDEO_SESSION_MEMORY_INFO_KHR: return sizeof(VkBindVideoSessionMemoryInfoKHR);
+    #endif
         case VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2: return sizeof(VkBlitImageInfo2);
     #ifdef VK_USE_PLATFORM_FUCHSIA
         case VK_STRUCTURE_TYPE_BUFFER_COLLECTION_BUFFER_CREATE_INFO_FUCHSIA: return sizeof(VkBufferCollectionBufferCreateInfoFUCHSIA);
@@ -4357,6 +4940,9 @@
         case VK_STRUCTURE_TYPE_COPY_IMAGE_INFO_2: return sizeof(VkCopyImageInfo2);
         case VK_STRUCTURE_TYPE_COPY_IMAGE_TO_BUFFER_INFO_2: return sizeof(VkCopyImageToBufferInfo2);
         case VK_STRUCTURE_TYPE_COPY_MEMORY_TO_ACCELERATION_STRUCTURE_INFO_KHR: return sizeof(VkCopyMemoryToAccelerationStructureInfoKHR);
+        case VK_STRUCTURE_TYPE_COPY_MEMORY_TO_MICROMAP_INFO_EXT: return sizeof(VkCopyMemoryToMicromapInfoEXT);
+        case VK_STRUCTURE_TYPE_COPY_MICROMAP_INFO_EXT: return sizeof(VkCopyMicromapInfoEXT);
+        case VK_STRUCTURE_TYPE_COPY_MICROMAP_TO_MEMORY_INFO_EXT: return sizeof(VkCopyMicromapToMemoryInfoEXT);
         case VK_STRUCTURE_TYPE_CU_FUNCTION_CREATE_INFO_NVX: return sizeof(VkCuFunctionCreateInfoNVX);
         case VK_STRUCTURE_TYPE_CU_LAUNCH_INFO_NVX: return sizeof(VkCuLaunchInfoNVX);
         case VK_STRUCTURE_TYPE_CU_MODULE_CREATE_INFO_NVX: return sizeof(VkCuModuleCreateInfoNVX);
@@ -4387,11 +4973,14 @@
         case VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_ALLOCATE_INFO: return sizeof(VkDescriptorSetVariableDescriptorCountAllocateInfo);
         case VK_STRUCTURE_TYPE_DESCRIPTOR_SET_VARIABLE_DESCRIPTOR_COUNT_LAYOUT_SUPPORT: return sizeof(VkDescriptorSetVariableDescriptorCountLayoutSupport);
         case VK_STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO: return sizeof(VkDescriptorUpdateTemplateCreateInfo);
+        case VK_STRUCTURE_TYPE_DEVICE_ADDRESS_BINDING_CALLBACK_DATA_EXT: return sizeof(VkDeviceAddressBindingCallbackDataEXT);
         case VK_STRUCTURE_TYPE_DEVICE_BUFFER_MEMORY_REQUIREMENTS: return sizeof(VkDeviceBufferMemoryRequirements);
         case VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO: return sizeof(VkDeviceCreateInfo);
         case VK_STRUCTURE_TYPE_DEVICE_DEVICE_MEMORY_REPORT_CREATE_INFO_EXT: return sizeof(VkDeviceDeviceMemoryReportCreateInfoEXT);
         case VK_STRUCTURE_TYPE_DEVICE_DIAGNOSTICS_CONFIG_CREATE_INFO_NV: return sizeof(VkDeviceDiagnosticsConfigCreateInfoNV);
         case VK_STRUCTURE_TYPE_DEVICE_EVENT_INFO_EXT: return sizeof(VkDeviceEventInfoEXT);
+        case VK_STRUCTURE_TYPE_DEVICE_FAULT_COUNTS_EXT: return sizeof(VkDeviceFaultCountsEXT);
+        case VK_STRUCTURE_TYPE_DEVICE_FAULT_INFO_EXT: return sizeof(VkDeviceFaultInfoEXT);
         case VK_STRUCTURE_TYPE_DEVICE_GROUP_BIND_SPARSE_INFO: return sizeof(VkDeviceGroupBindSparseInfo);
         case VK_STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO: return sizeof(VkDeviceGroupCommandBufferBeginInfo);
         case VK_STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO: return sizeof(VkDeviceGroupDeviceCreateInfo);
@@ -4437,6 +5026,30 @@
     #ifdef VK_USE_PLATFORM_WIN32_KHR
         case VK_STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_NV: return sizeof(VkExportMemoryWin32HandleInfoNV);
     #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_BUFFER_INFO_EXT: return sizeof(VkExportMetalBufferInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_COMMAND_QUEUE_INFO_EXT: return sizeof(VkExportMetalCommandQueueInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_DEVICE_INFO_EXT: return sizeof(VkExportMetalDeviceInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_IO_SURFACE_INFO_EXT: return sizeof(VkExportMetalIOSurfaceInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_OBJECT_CREATE_INFO_EXT: return sizeof(VkExportMetalObjectCreateInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_OBJECTS_INFO_EXT: return sizeof(VkExportMetalObjectsInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_SHARED_EVENT_INFO_EXT: return sizeof(VkExportMetalSharedEventInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_EXPORT_METAL_TEXTURE_INFO_EXT: return sizeof(VkExportMetalTextureInfoEXT);
+    #endif
         case VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO: return sizeof(VkExportSemaphoreCreateInfo);
     #ifdef VK_USE_PLATFORM_WIN32_KHR
         case VK_STRUCTURE_TYPE_EXPORT_SEMAPHORE_WIN32_HANDLE_INFO_KHR: return sizeof(VkExportSemaphoreWin32HandleInfoKHR);
@@ -4479,6 +5092,8 @@
         case VK_STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK: return sizeof(VkIOSSurfaceCreateInfoMVK);
     #endif
         case VK_STRUCTURE_TYPE_IMAGE_BLIT_2: return sizeof(VkImageBlit2);
+        case VK_STRUCTURE_TYPE_IMAGE_COMPRESSION_CONTROL_EXT: return sizeof(VkImageCompressionControlEXT);
+        case VK_STRUCTURE_TYPE_IMAGE_COMPRESSION_PROPERTIES_EXT: return sizeof(VkImageCompressionPropertiesEXT);
     #ifdef VK_USE_PLATFORM_FUCHSIA
         case VK_STRUCTURE_TYPE_IMAGE_CONSTRAINTS_INFO_FUCHSIA: return sizeof(VkImageConstraintsInfoFUCHSIA);
     #endif
@@ -4502,12 +5117,14 @@
         case VK_STRUCTURE_TYPE_IMAGE_RESOLVE_2: return sizeof(VkImageResolve2);
         case VK_STRUCTURE_TYPE_IMAGE_SPARSE_MEMORY_REQUIREMENTS_INFO_2: return sizeof(VkImageSparseMemoryRequirementsInfo2);
         case VK_STRUCTURE_TYPE_IMAGE_STENCIL_USAGE_CREATE_INFO: return sizeof(VkImageStencilUsageCreateInfo);
+        case VK_STRUCTURE_TYPE_IMAGE_SUBRESOURCE_2_EXT: return sizeof(VkImageSubresource2EXT);
         case VK_STRUCTURE_TYPE_IMAGE_SWAPCHAIN_CREATE_INFO_KHR: return sizeof(VkImageSwapchainCreateInfoKHR);
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_ASTC_DECODE_MODE_EXT: return sizeof(VkImageViewASTCDecodeModeEXT);
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_ADDRESS_PROPERTIES_NVX: return sizeof(VkImageViewAddressPropertiesNVX);
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO: return sizeof(VkImageViewCreateInfo);
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_HANDLE_INFO_NVX: return sizeof(VkImageViewHandleInfoNVX);
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_MIN_LOD_CREATE_INFO_EXT: return sizeof(VkImageViewMinLodCreateInfoEXT);
+        case VK_STRUCTURE_TYPE_IMAGE_VIEW_SAMPLE_WEIGHT_CREATE_INFO_QCOM: return sizeof(VkImageViewSampleWeightCreateInfoQCOM);
         case VK_STRUCTURE_TYPE_IMAGE_VIEW_USAGE_CREATE_INFO: return sizeof(VkImageViewUsageCreateInfo);
     #ifdef VK_USE_PLATFORM_ANDROID_KHR
         case VK_STRUCTURE_TYPE_IMPORT_ANDROID_HARDWARE_BUFFER_INFO_ANDROID: return sizeof(VkImportAndroidHardwareBufferInfoANDROID);
@@ -4529,6 +5146,18 @@
     #endif
     #ifdef VK_USE_PLATFORM_FUCHSIA
         case VK_STRUCTURE_TYPE_IMPORT_MEMORY_ZIRCON_HANDLE_INFO_FUCHSIA: return sizeof(VkImportMemoryZirconHandleInfoFUCHSIA);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_IMPORT_METAL_BUFFER_INFO_EXT: return sizeof(VkImportMetalBufferInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_IMPORT_METAL_IO_SURFACE_INFO_EXT: return sizeof(VkImportMetalIOSurfaceInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_IMPORT_METAL_SHARED_EVENT_INFO_EXT: return sizeof(VkImportMetalSharedEventInfoEXT);
+    #endif
+    #ifdef VK_USE_PLATFORM_METAL_EXT
+        case VK_STRUCTURE_TYPE_IMPORT_METAL_TEXTURE_INFO_EXT: return sizeof(VkImportMetalTextureInfoEXT);
     #endif
         case VK_STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHR: return sizeof(VkImportSemaphoreFdInfoKHR);
     #ifdef VK_USE_PLATFORM_WIN32_KHR
@@ -4576,10 +5205,20 @@
     #ifdef VK_USE_PLATFORM_METAL_EXT
         case VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT: return sizeof(VkMetalSurfaceCreateInfoEXT);
     #endif
+        case VK_STRUCTURE_TYPE_MICROMAP_BUILD_INFO_EXT: return sizeof(VkMicromapBuildInfoEXT);
+        case VK_STRUCTURE_TYPE_MICROMAP_BUILD_SIZES_INFO_EXT: return sizeof(VkMicromapBuildSizesInfoEXT);
+        case VK_STRUCTURE_TYPE_MICROMAP_CREATE_INFO_EXT: return sizeof(VkMicromapCreateInfoEXT);
+        case VK_STRUCTURE_TYPE_MICROMAP_VERSION_INFO_EXT: return sizeof(VkMicromapVersionInfoEXT);
         case VK_STRUCTURE_TYPE_MULTISAMPLE_PROPERTIES_EXT: return sizeof(VkMultisamplePropertiesEXT);
+        case VK_STRUCTURE_TYPE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_INFO_EXT: return sizeof(VkMultisampledRenderToSingleSampledInfoEXT);
         case VK_STRUCTURE_TYPE_MULTIVIEW_PER_VIEW_ATTRIBUTES_INFO_NVX: return sizeof(VkMultiviewPerViewAttributesInfoNVX);
-        case VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_VALVE: return sizeof(VkMutableDescriptorTypeCreateInfoVALVE);
+        case VK_STRUCTURE_TYPE_MUTABLE_DESCRIPTOR_TYPE_CREATE_INFO_EXT: return sizeof(VkMutableDescriptorTypeCreateInfoEXT);
         case VK_STRUCTURE_TYPE_NATIVE_BUFFER_ANDROID: return sizeof(VkNativeBufferANDROID);
+        case VK_STRUCTURE_TYPE_OPTICAL_FLOW_EXECUTE_INFO_NV: return sizeof(VkOpticalFlowExecuteInfoNV);
+        case VK_STRUCTURE_TYPE_OPTICAL_FLOW_IMAGE_FORMAT_INFO_NV: return sizeof(VkOpticalFlowImageFormatInfoNV);
+        case VK_STRUCTURE_TYPE_OPTICAL_FLOW_IMAGE_FORMAT_PROPERTIES_NV: return sizeof(VkOpticalFlowImageFormatPropertiesNV);
+        case VK_STRUCTURE_TYPE_OPTICAL_FLOW_SESSION_CREATE_INFO_NV: return sizeof(VkOpticalFlowSessionCreateInfoNV);
+        case VK_STRUCTURE_TYPE_OPTICAL_FLOW_SESSION_CREATE_PRIVATE_DATA_INFO_NV: return sizeof(VkOpticalFlowSessionCreatePrivateDataInfoNV);
         case VK_STRUCTURE_TYPE_PERFORMANCE_CONFIGURATION_ACQUIRE_INFO_INTEL: return sizeof(VkPerformanceConfigurationAcquireInfoINTEL);
         case VK_STRUCTURE_TYPE_PERFORMANCE_COUNTER_DESCRIPTION_KHR: return sizeof(VkPerformanceCounterDescriptionKHR);
         case VK_STRUCTURE_TYPE_PERFORMANCE_COUNTER_KHR: return sizeof(VkPerformanceCounterKHR);
@@ -4593,6 +5232,9 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT: return sizeof(VkPhysicalDeviceASTCDecodeFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR: return sizeof(VkPhysicalDeviceAccelerationStructureFeaturesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_PROPERTIES_KHR: return sizeof(VkPhysicalDeviceAccelerationStructurePropertiesKHR);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ADDRESS_BINDING_REPORT_FEATURES_EXT: return sizeof(VkPhysicalDeviceAddressBindingReportFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC: return sizeof(VkPhysicalDeviceAmigoProfilingFeaturesSEC);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT: return sizeof(VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_FEATURES_EXT: return sizeof(VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceBlendOperationAdvancedPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BORDER_COLOR_SWIZZLE_FEATURES_EXT: return sizeof(VkPhysicalDeviceBorderColorSwizzleFeaturesEXT);
@@ -4610,6 +5252,7 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT: return sizeof(VkPhysicalDeviceCustomBorderColorFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceCustomBorderColorPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEDICATED_ALLOCATION_IMAGE_ALIASING_FEATURES_NV: return sizeof(VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_EXT: return sizeof(VkPhysicalDeviceDepthClampZeroOneFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_CONTROL_FEATURES_EXT: return sizeof(VkPhysicalDeviceDepthClipControlFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT: return sizeof(VkPhysicalDeviceDepthClipEnableFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_STENCIL_RESOLVE_PROPERTIES: return sizeof(VkPhysicalDeviceDepthStencilResolveProperties);
@@ -4626,6 +5269,8 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES: return sizeof(VkPhysicalDeviceDynamicRenderingFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV: return sizeof(VkPhysicalDeviceExclusiveScissorFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT: return sizeof(VkPhysicalDeviceExtendedDynamicState2FeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT: return sizeof(VkPhysicalDeviceExtendedDynamicState3FeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceExtendedDynamicState3PropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT: return sizeof(VkPhysicalDeviceExtendedDynamicStateFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO: return sizeof(VkPhysicalDeviceExternalBufferInfo);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_FENCE_INFO: return sizeof(VkPhysicalDeviceExternalFenceInfo);
@@ -4633,6 +5278,7 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_HOST_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceExternalMemoryHostPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV: return sizeof(VkPhysicalDeviceExternalMemoryRDMAFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO: return sizeof(VkPhysicalDeviceExternalSemaphoreInfo);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT: return sizeof(VkPhysicalDeviceFaultFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2: return sizeof(VkPhysicalDeviceFeatures2);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FLOAT_CONTROLS_PROPERTIES: return sizeof(VkPhysicalDeviceFloatControlsProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT: return sizeof(VkPhysicalDeviceFragmentDensityMap2FeaturesEXT);
@@ -4641,7 +5287,8 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM: return sizeof(VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_PROPERTIES_QCOM: return sizeof(VkPhysicalDeviceFragmentDensityMapOffsetPropertiesQCOM);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceFragmentDensityMapPropertiesEXT);
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_NV: return sizeof(VkPhysicalDeviceFragmentShaderBarycentricFeaturesNV);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR: return sizeof(VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_PROPERTIES_KHR: return sizeof(VkPhysicalDeviceFragmentShaderBarycentricPropertiesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT: return sizeof(VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV: return sizeof(VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_PROPERTIES_NV: return sizeof(VkPhysicalDeviceFragmentShadingRateEnumsPropertiesNV);
@@ -4655,8 +5302,12 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES: return sizeof(VkPhysicalDeviceHostQueryResetFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES: return sizeof(VkPhysicalDeviceIDProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT: return sizeof(VkPhysicalDeviceImage2DViewOf3DFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_FEATURES_EXT: return sizeof(VkPhysicalDeviceImageCompressionControlFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT: return sizeof(VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_DRM_FORMAT_MODIFIER_INFO_EXT: return sizeof(VkPhysicalDeviceImageDrmFormatModifierInfoEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2: return sizeof(VkPhysicalDeviceImageFormatInfo2);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_FEATURES_QCOM: return sizeof(VkPhysicalDeviceImageProcessingFeaturesQCOM);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_PROPERTIES_QCOM: return sizeof(VkPhysicalDeviceImageProcessingPropertiesQCOM);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES: return sizeof(VkPhysicalDeviceImageRobustnessFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_VIEW_IMAGE_FORMAT_INFO_EXT: return sizeof(VkPhysicalDeviceImageViewImageFormatInfoEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_VIEW_MIN_LOD_FEATURES_EXT: return sizeof(VkPhysicalDeviceImageViewMinLodFeaturesEXT);
@@ -4666,6 +5317,7 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES: return sizeof(VkPhysicalDeviceInlineUniformBlockFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_PROPERTIES: return sizeof(VkPhysicalDeviceInlineUniformBlockProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI: return sizeof(VkPhysicalDeviceInvocationMaskFeaturesHUAWEI);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_DITHERING_FEATURES_EXT: return sizeof(VkPhysicalDeviceLegacyDitheringFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_FEATURES_EXT: return sizeof(VkPhysicalDeviceLineRasterizationFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceLineRasterizationPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV: return sizeof(VkPhysicalDeviceLinearColorAttachmentFeaturesNV);
@@ -4675,20 +5327,32 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceMemoryBudgetPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT: return sizeof(VkPhysicalDeviceMemoryPriorityFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2: return sizeof(VkPhysicalDeviceMemoryProperties2);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT: return sizeof(VkPhysicalDeviceMeshShaderFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_NV: return sizeof(VkPhysicalDeviceMeshShaderFeaturesNV);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceMeshShaderPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_PROPERTIES_NV: return sizeof(VkPhysicalDeviceMeshShaderPropertiesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_FEATURES_EXT: return sizeof(VkPhysicalDeviceMultiDrawFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceMultiDrawPropertiesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_FEATURES_EXT: return sizeof(VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES: return sizeof(VkPhysicalDeviceMultiviewFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_ATTRIBUTES_PROPERTIES_NVX: return sizeof(VkPhysicalDeviceMultiviewPerViewAttributesPropertiesNVX);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES: return sizeof(VkPhysicalDeviceMultiviewProperties);
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_VALVE: return sizeof(VkPhysicalDeviceMutableDescriptorTypeFeaturesVALVE);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT: return sizeof(VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NON_SEAMLESS_CUBE_MAP_FEATURES_EXT: return sizeof(VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT: return sizeof(VkPhysicalDeviceOpacityMicromapFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceOpacityMicromapPropertiesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_FEATURES_NV: return sizeof(VkPhysicalDeviceOpticalFlowFeaturesNV);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_PROPERTIES_NV: return sizeof(VkPhysicalDeviceOpticalFlowPropertiesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PCI_BUS_INFO_PROPERTIES_EXT: return sizeof(VkPhysicalDevicePCIBusInfoPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT: return sizeof(VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR: return sizeof(VkPhysicalDevicePerformanceQueryFeaturesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_PROPERTIES_KHR: return sizeof(VkPhysicalDevicePerformanceQueryPropertiesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES: return sizeof(VkPhysicalDevicePipelineCreationCacheControlFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR: return sizeof(VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROPERTIES_FEATURES_EXT: return sizeof(VkPhysicalDevicePipelinePropertiesFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROTECTED_ACCESS_FEATURES_EXT: return sizeof(VkPhysicalDevicePipelineProtectedAccessFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT: return sizeof(VkPhysicalDevicePipelineRobustnessFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_PROPERTIES_EXT: return sizeof(VkPhysicalDevicePipelineRobustnessPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_POINT_CLIPPING_PROPERTIES: return sizeof(VkPhysicalDevicePointClippingProperties);
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PORTABILITY_SUBSET_FEATURES_KHR: return sizeof(VkPhysicalDevicePortabilitySubsetFeaturesKHR);
@@ -4696,6 +5360,7 @@
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PORTABILITY_SUBSET_PROPERTIES_KHR: return sizeof(VkPhysicalDevicePortabilitySubsetPropertiesKHR);
     #endif
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_BARRIER_FEATURES_NV: return sizeof(VkPhysicalDevicePresentBarrierFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR: return sizeof(VkPhysicalDevicePresentIdFeaturesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR: return sizeof(VkPhysicalDevicePresentWaitFeaturesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENTATION_PROPERTIES_ANDROID: return sizeof(VkPhysicalDevicePresentationPropertiesANDROID);
@@ -4709,8 +5374,9 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceProvokingVertexPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR: return sizeof(VkPhysicalDevicePushDescriptorPropertiesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT: return sizeof(VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT);
-        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_ARM: return sizeof(VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesARM);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT: return sizeof(VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR: return sizeof(VkPhysicalDeviceRayQueryFeaturesKHR);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR: return sizeof(VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV: return sizeof(VkPhysicalDeviceRayTracingMotionBlurFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR: return sizeof(VkPhysicalDeviceRayTracingPipelineFeaturesKHR);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_PROPERTIES_KHR: return sizeof(VkPhysicalDeviceRayTracingPipelinePropertiesKHR);
@@ -4731,12 +5397,15 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_PROPERTIES_AMD: return sizeof(VkPhysicalDeviceShaderCorePropertiesAMD);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES: return sizeof(VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES: return sizeof(VkPhysicalDeviceShaderDrawParametersFeatures);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_EARLY_AND_LATE_FRAGMENT_TESTS_FEATURES_AMD: return sizeof(VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES: return sizeof(VkPhysicalDeviceShaderFloat16Int8Features);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT: return sizeof(VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_FOOTPRINT_FEATURES_NV: return sizeof(VkPhysicalDeviceShaderImageFootprintFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES: return sizeof(VkPhysicalDeviceShaderIntegerDotProductFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_PROPERTIES: return sizeof(VkPhysicalDeviceShaderIntegerDotProductProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL: return sizeof(VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT: return sizeof(VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_PROPERTIES_EXT: return sizeof(VkPhysicalDeviceShaderModuleIdentifierPropertiesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_FEATURES_NV: return sizeof(VkPhysicalDeviceShaderSMBuiltinsFeaturesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_PROPERTIES_NV: return sizeof(VkPhysicalDeviceShaderSMBuiltinsPropertiesNV);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES: return sizeof(VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures);
@@ -4748,6 +5417,7 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES: return sizeof(VkPhysicalDeviceSubgroupProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES: return sizeof(VkPhysicalDeviceSubgroupSizeControlFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_PROPERTIES: return sizeof(VkPhysicalDeviceSubgroupSizeControlProperties);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_MERGE_FEEDBACK_FEATURES_EXT: return sizeof(VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI: return sizeof(VkPhysicalDeviceSubpassShadingFeaturesHUAWEI);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_PROPERTIES_HUAWEI: return sizeof(VkPhysicalDeviceSubpassShadingPropertiesHUAWEI);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SURFACE_INFO_2_KHR: return sizeof(VkPhysicalDeviceSurfaceInfo2KHR);
@@ -4755,6 +5425,7 @@
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT: return sizeof(VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_PROPERTIES: return sizeof(VkPhysicalDeviceTexelBufferAlignmentProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES: return sizeof(VkPhysicalDeviceTextureCompressionASTCHDRFeatures);
+        case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TILE_PROPERTIES_FEATURES_QCOM: return sizeof(VkPhysicalDeviceTilePropertiesFeaturesQCOM);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES: return sizeof(VkPhysicalDeviceTimelineSemaphoreFeatures);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_PROPERTIES: return sizeof(VkPhysicalDeviceTimelineSemaphoreProperties);
         case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TOOL_PROPERTIES: return sizeof(VkPhysicalDeviceToolProperties);
@@ -4802,6 +5473,7 @@
         case VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO: return sizeof(VkPipelineLayoutCreateInfo);
         case VK_STRUCTURE_TYPE_PIPELINE_LIBRARY_CREATE_INFO_KHR: return sizeof(VkPipelineLibraryCreateInfoKHR);
         case VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO: return sizeof(VkPipelineMultisampleStateCreateInfo);
+        case VK_STRUCTURE_TYPE_PIPELINE_PROPERTIES_IDENTIFIER_EXT: return sizeof(VkPipelinePropertiesIdentifierEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_CONSERVATIVE_STATE_CREATE_INFO_EXT: return sizeof(VkPipelineRasterizationConservativeStateCreateInfoEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_DEPTH_CLIP_STATE_CREATE_INFO_EXT: return sizeof(VkPipelineRasterizationDepthClipStateCreateInfoEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_LINE_STATE_CREATE_INFO_EXT: return sizeof(VkPipelineRasterizationLineStateCreateInfoEXT);
@@ -4811,8 +5483,10 @@
         case VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_STREAM_CREATE_INFO_EXT: return sizeof(VkPipelineRasterizationStateStreamCreateInfoEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO: return sizeof(VkPipelineRenderingCreateInfo);
         case VK_STRUCTURE_TYPE_PIPELINE_REPRESENTATIVE_FRAGMENT_TEST_STATE_CREATE_INFO_NV: return sizeof(VkPipelineRepresentativeFragmentTestStateCreateInfoNV);
+        case VK_STRUCTURE_TYPE_PIPELINE_ROBUSTNESS_CREATE_INFO_EXT: return sizeof(VkPipelineRobustnessCreateInfoEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_SAMPLE_LOCATIONS_STATE_CREATE_INFO_EXT: return sizeof(VkPipelineSampleLocationsStateCreateInfoEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO: return sizeof(VkPipelineShaderStageCreateInfo);
+        case VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_MODULE_IDENTIFIER_CREATE_INFO_EXT: return sizeof(VkPipelineShaderStageModuleIdentifierCreateInfoEXT);
         case VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_REQUIRED_SUBGROUP_SIZE_CREATE_INFO: return sizeof(VkPipelineShaderStageRequiredSubgroupSizeCreateInfo);
         case VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_DOMAIN_ORIGIN_STATE_CREATE_INFO: return sizeof(VkPipelineTessellationDomainOriginStateCreateInfo);
         case VK_STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO: return sizeof(VkPipelineTessellationStateCreateInfo);
@@ -4842,7 +5516,10 @@
         case VK_STRUCTURE_TYPE_QUEUE_FAMILY_GLOBAL_PRIORITY_PROPERTIES_KHR: return sizeof(VkQueueFamilyGlobalPriorityPropertiesKHR);
         case VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2: return sizeof(VkQueueFamilyProperties2);
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_2_KHR: return sizeof(VkQueueFamilyQueryResultStatusProperties2KHR);
+        case VK_STRUCTURE_TYPE_QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_KHR: return sizeof(VkQueueFamilyQueryResultStatusPropertiesKHR);
+    #endif
+    #ifdef VK_ENABLE_BETA_EXTENSIONS
+        case VK_STRUCTURE_TYPE_QUEUE_FAMILY_VIDEO_PROPERTIES_KHR: return sizeof(VkQueueFamilyVideoPropertiesKHR);
     #endif
         case VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_KHR: return sizeof(VkRayTracingPipelineCreateInfoKHR);
         case VK_STRUCTURE_TYPE_RAY_TRACING_PIPELINE_CREATE_INFO_NV: return sizeof(VkRayTracingPipelineCreateInfoNV);
@@ -4853,10 +5530,13 @@
         case VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO: return sizeof(VkRenderPassBeginInfo);
         case VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO: return sizeof(VkRenderPassCreateInfo);
         case VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO_2: return sizeof(VkRenderPassCreateInfo2);
+        case VK_STRUCTURE_TYPE_RENDER_PASS_CREATION_CONTROL_EXT: return sizeof(VkRenderPassCreationControlEXT);
+        case VK_STRUCTURE_TYPE_RENDER_PASS_CREATION_FEEDBACK_CREATE_INFO_EXT: return sizeof(VkRenderPassCreationFeedbackCreateInfoEXT);
         case VK_STRUCTURE_TYPE_RENDER_PASS_FRAGMENT_DENSITY_MAP_CREATE_INFO_EXT: return sizeof(VkRenderPassFragmentDensityMapCreateInfoEXT);
         case VK_STRUCTURE_TYPE_RENDER_PASS_INPUT_ATTACHMENT_ASPECT_CREATE_INFO: return sizeof(VkRenderPassInputAttachmentAspectCreateInfo);
         case VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO: return sizeof(VkRenderPassMultiviewCreateInfo);
         case VK_STRUCTURE_TYPE_RENDER_PASS_SAMPLE_LOCATIONS_BEGIN_INFO_EXT: return sizeof(VkRenderPassSampleLocationsBeginInfoEXT);
+        case VK_STRUCTURE_TYPE_RENDER_PASS_SUBPASS_FEEDBACK_CREATE_INFO_EXT: return sizeof(VkRenderPassSubpassFeedbackCreateInfoEXT);
         case VK_STRUCTURE_TYPE_RENDER_PASS_TRANSFORM_BEGIN_INFO_QCOM: return sizeof(VkRenderPassTransformBeginInfoQCOM);
         case VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO: return sizeof(VkRenderingAttachmentInfo);
         case VK_STRUCTURE_TYPE_RENDERING_FRAGMENT_DENSITY_MAP_ATTACHMENT_INFO_EXT: return sizeof(VkRenderingFragmentDensityMapAttachmentInfoEXT);
@@ -4887,6 +5567,7 @@
         case VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO: return sizeof(VkSemaphoreTypeCreateInfo);
         case VK_STRUCTURE_TYPE_SEMAPHORE_WAIT_INFO: return sizeof(VkSemaphoreWaitInfo);
         case VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO: return sizeof(VkShaderModuleCreateInfo);
+        case VK_STRUCTURE_TYPE_SHADER_MODULE_IDENTIFIER_EXT: return sizeof(VkShaderModuleIdentifierEXT);
         case VK_STRUCTURE_TYPE_SHADER_MODULE_VALIDATION_CACHE_CREATE_INFO_EXT: return sizeof(VkShaderModuleValidationCacheCreateInfoEXT);
         case VK_STRUCTURE_TYPE_SHARED_PRESENT_SURFACE_CAPABILITIES_KHR: return sizeof(VkSharedPresentSurfaceCapabilitiesKHR);
         case VK_STRUCTURE_TYPE_SPARSE_IMAGE_FORMAT_PROPERTIES_2: return sizeof(VkSparseImageFormatProperties2);
@@ -4902,12 +5583,15 @@
         case VK_STRUCTURE_TYPE_SUBPASS_DESCRIPTION_DEPTH_STENCIL_RESOLVE: return sizeof(VkSubpassDescriptionDepthStencilResolve);
         case VK_STRUCTURE_TYPE_SUBPASS_END_INFO: return sizeof(VkSubpassEndInfo);
         case VK_STRUCTURE_TYPE_SUBPASS_FRAGMENT_DENSITY_MAP_OFFSET_END_INFO_QCOM: return sizeof(VkSubpassFragmentDensityMapOffsetEndInfoQCOM);
+        case VK_STRUCTURE_TYPE_SUBPASS_RESOLVE_PERFORMANCE_QUERY_EXT: return sizeof(VkSubpassResolvePerformanceQueryEXT);
         case VK_STRUCTURE_TYPE_SUBPASS_SHADING_PIPELINE_CREATE_INFO_HUAWEI: return sizeof(VkSubpassShadingPipelineCreateInfoHUAWEI);
+        case VK_STRUCTURE_TYPE_SUBRESOURCE_LAYOUT_2_EXT: return sizeof(VkSubresourceLayout2EXT);
         case VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_EXT: return sizeof(VkSurfaceCapabilities2EXT);
         case VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR: return sizeof(VkSurfaceCapabilities2KHR);
     #ifdef VK_USE_PLATFORM_WIN32_KHR
         case VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_FULL_SCREEN_EXCLUSIVE_EXT: return sizeof(VkSurfaceCapabilitiesFullScreenExclusiveEXT);
     #endif
+        case VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_PRESENT_BARRIER_NV: return sizeof(VkSurfaceCapabilitiesPresentBarrierNV);
         case VK_STRUCTURE_TYPE_SURFACE_FORMAT_2_KHR: return sizeof(VkSurfaceFormat2KHR);
     #ifdef VK_USE_PLATFORM_WIN32_KHR
         case VK_STRUCTURE_TYPE_SURFACE_FULL_SCREEN_EXCLUSIVE_INFO_EXT: return sizeof(VkSurfaceFullScreenExclusiveInfoEXT);
@@ -4920,10 +5604,12 @@
         case VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR: return sizeof(VkSwapchainCreateInfoKHR);
         case VK_STRUCTURE_TYPE_SWAPCHAIN_DISPLAY_NATIVE_HDR_CREATE_INFO_AMD: return sizeof(VkSwapchainDisplayNativeHdrCreateInfoAMD);
         case VK_STRUCTURE_TYPE_SWAPCHAIN_IMAGE_CREATE_INFO_ANDROID: return sizeof(VkSwapchainImageCreateInfoANDROID);
+        case VK_STRUCTURE_TYPE_SWAPCHAIN_PRESENT_BARRIER_CREATE_INFO_NV: return sizeof(VkSwapchainPresentBarrierCreateInfoNV);
     #ifdef VK_USE_PLATFORM_FUCHSIA
         case VK_STRUCTURE_TYPE_SYSMEM_COLOR_SPACE_FUCHSIA: return sizeof(VkSysmemColorSpaceFUCHSIA);
     #endif
         case VK_STRUCTURE_TYPE_TEXTURE_LOD_GATHER_FORMAT_PROPERTIES_AMD: return sizeof(VkTextureLODGatherFormatPropertiesAMD);
+        case VK_STRUCTURE_TYPE_TILE_PROPERTIES_QCOM: return sizeof(VkTilePropertiesQCOM);
         case VK_STRUCTURE_TYPE_TIMELINE_SEMAPHORE_SUBMIT_INFO: return sizeof(VkTimelineSemaphoreSubmitInfo);
         case VK_STRUCTURE_TYPE_VALIDATION_CACHE_CREATE_INFO_EXT: return sizeof(VkValidationCacheCreateInfoEXT);
         case VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT: return sizeof(VkValidationFeaturesEXT);
@@ -4935,9 +5621,6 @@
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_BEGIN_CODING_INFO_KHR: return sizeof(VkVideoBeginCodingInfoKHR);
-    #endif
-    #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_BIND_MEMORY_KHR: return sizeof(VkVideoBindMemoryKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_CAPABILITIES_KHR: return sizeof(VkVideoCapabilitiesKHR);
@@ -4955,13 +5638,10 @@
         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_DPB_SLOT_INFO_EXT: return sizeof(VkVideoDecodeH264DpbSlotInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_MVC_EXT: return sizeof(VkVideoDecodeH264MvcEXT);
-    #endif
-    #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PICTURE_INFO_EXT: return sizeof(VkVideoDecodeH264PictureInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_EXT: return sizeof(VkVideoDecodeH264ProfileEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_EXT: return sizeof(VkVideoDecodeH264ProfileInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: return sizeof(VkVideoDecodeH264SessionParametersAddInfoEXT);
@@ -4979,7 +5659,7 @@
         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PICTURE_INFO_EXT: return sizeof(VkVideoDecodeH265PictureInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_EXT: return sizeof(VkVideoDecodeH265ProfileEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_EXT: return sizeof(VkVideoDecodeH265ProfileInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: return sizeof(VkVideoDecodeH265SessionParametersAddInfoEXT);
@@ -4991,6 +5671,9 @@
         case VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR: return sizeof(VkVideoDecodeInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
+        case VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR: return sizeof(VkVideoDecodeUsageInfoKHR);
+    #endif
+    #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR: return sizeof(VkVideoEncodeCapabilitiesKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
@@ -5000,13 +5683,13 @@
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_DPB_SLOT_INFO_EXT: return sizeof(VkVideoEncodeH264DpbSlotInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_EXT: return sizeof(VkVideoEncodeH264EmitPictureParametersEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_EMIT_PICTURE_PARAMETERS_INFO_EXT: return sizeof(VkVideoEncodeH264EmitPictureParametersInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_NALU_SLICE_EXT: return sizeof(VkVideoEncodeH264NaluSliceEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_NALU_SLICE_INFO_EXT: return sizeof(VkVideoEncodeH264NaluSliceInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_EXT: return sizeof(VkVideoEncodeH264ProfileEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_EXT: return sizeof(VkVideoEncodeH264ProfileInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_INFO_EXT: return sizeof(VkVideoEncodeH264RateControlInfoEXT);
@@ -5015,7 +5698,7 @@
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_RATE_CONTROL_LAYER_INFO_EXT: return sizeof(VkVideoEncodeH264RateControlLayerInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_REFERENCE_LISTS_EXT: return sizeof(VkVideoEncodeH264ReferenceListsEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_REFERENCE_LISTS_INFO_EXT: return sizeof(VkVideoEncodeH264ReferenceListsInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_SESSION_PARAMETERS_ADD_INFO_EXT: return sizeof(VkVideoEncodeH264SessionParametersAddInfoEXT);
@@ -5033,13 +5716,13 @@
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_DPB_SLOT_INFO_EXT: return sizeof(VkVideoEncodeH265DpbSlotInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_EXT: return sizeof(VkVideoEncodeH265EmitPictureParametersEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_EMIT_PICTURE_PARAMETERS_INFO_EXT: return sizeof(VkVideoEncodeH265EmitPictureParametersInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_NALU_SLICE_SEGMENT_EXT: return sizeof(VkVideoEncodeH265NaluSliceSegmentEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_NALU_SLICE_SEGMENT_INFO_EXT: return sizeof(VkVideoEncodeH265NaluSliceSegmentInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_EXT: return sizeof(VkVideoEncodeH265ProfileEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_EXT: return sizeof(VkVideoEncodeH265ProfileInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_INFO_EXT: return sizeof(VkVideoEncodeH265RateControlInfoEXT);
@@ -5048,7 +5731,7 @@
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_RATE_CONTROL_LAYER_INFO_EXT: return sizeof(VkVideoEncodeH265RateControlLayerInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_REFERENCE_LISTS_EXT: return sizeof(VkVideoEncodeH265ReferenceListsEXT);
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_REFERENCE_LISTS_INFO_EXT: return sizeof(VkVideoEncodeH265ReferenceListsInfoEXT);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_SESSION_PARAMETERS_ADD_INFO_EXT: return sizeof(VkVideoEncodeH265SessionParametersAddInfoEXT);
@@ -5069,31 +5752,31 @@
         case VK_STRUCTURE_TYPE_VIDEO_ENCODE_RATE_CONTROL_LAYER_INFO_KHR: return sizeof(VkVideoEncodeRateControlLayerInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
+        case VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR: return sizeof(VkVideoEncodeUsageInfoKHR);
+    #endif
+    #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_END_CODING_INFO_KHR: return sizeof(VkVideoEndCodingInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_FORMAT_PROPERTIES_KHR: return sizeof(VkVideoFormatPropertiesKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_GET_MEMORY_PROPERTIES_KHR: return sizeof(VkVideoGetMemoryPropertiesKHR);
+        case VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR: return sizeof(VkVideoPictureResourceInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_KHR: return sizeof(VkVideoPictureResourceKHR);
+        case VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR: return sizeof(VkVideoProfileInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_PROFILE_KHR: return sizeof(VkVideoProfileKHR);
+        case VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR: return sizeof(VkVideoProfileListInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_PROFILES_KHR: return sizeof(VkVideoProfilesKHR);
-    #endif
-    #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_QUEUE_FAMILY_PROPERTIES_2_KHR: return sizeof(VkVideoQueueFamilyProperties2KHR);
-    #endif
-    #ifdef VK_ENABLE_BETA_EXTENSIONS
-        case VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_KHR: return sizeof(VkVideoReferenceSlotKHR);
+        case VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR: return sizeof(VkVideoReferenceSlotInfoKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_SESSION_CREATE_INFO_KHR: return sizeof(VkVideoSessionCreateInfoKHR);
+    #endif
+    #ifdef VK_ENABLE_BETA_EXTENSIONS
+        case VK_STRUCTURE_TYPE_VIDEO_SESSION_MEMORY_REQUIREMENTS_KHR: return sizeof(VkVideoSessionMemoryRequirementsKHR);
     #endif
     #ifdef VK_ENABLE_BETA_EXTENSIONS
         case VK_STRUCTURE_TYPE_VIDEO_SESSION_PARAMETERS_CREATE_INFO_KHR: return sizeof(VkVideoSessionParametersCreateInfoKHR);
@@ -5224,6 +5907,10 @@
             return "VkPrivateDataSlot";
         case 1000366000:
             return "VkBufferCollectionFUCHSIA";
+        case 1000396000:
+            return "VkMicromapEXT";
+        case 1000464000:
+            return "VkOpticalFlowSessionNV";
         default:
             return "Unknown VkObjectType value.";
         }

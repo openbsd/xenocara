@@ -32,8 +32,15 @@
 #include "drm-uapi/drm_fourcc.h"
 
 #include <errno.h>
+
+#ifdef __linux__
 #include <linux/dma-buf.h>
 #include <linux/sync_file.h>
+#else
+#define DMA_BUF_SYNC_RW		1
+#define DMA_BUF_BASE		'b'
+#endif
+
 #include <time.h>
 #include <unistd.h>
 #include <stdlib.h>

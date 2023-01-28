@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:34 jsg Exp $
 
 LIB=	crocus
 
@@ -14,6 +14,8 @@ SRCS=	crocus_batch.c \
 	crocus_fine_fence.c \
 	crocus_formats.c \
 	crocus_monitor.c \
+	crocus_perf.c \
+	crocus_performance_query.c \
 	crocus_pipe_control.c \
 	crocus_program.c \
 	crocus_program_cache.c \

@@ -31,6 +31,7 @@
 #include "nir.h"
 #include "pipe/p_state.h"
 #include "util/disk_cache.h"
+#include "util/u_queue.h"
 
 struct etna_context;
 struct etna_shader_variant;
@@ -58,12 +59,13 @@ struct etna_shader_key
    };
 
    int num_texture_states;
-   nir_lower_tex_shadow_swizzle tex_swizzle[PIPE_MAX_SHADER_SAMPLER_VIEWS];
-   enum compare_func tex_compare_func[PIPE_MAX_SHADER_SAMPLER_VIEWS];
+   nir_lower_tex_shadow_swizzle tex_swizzle[16];
+   enum compare_func tex_compare_func[16];
 };
 
 static inline bool
-etna_shader_key_equal(struct etna_shader_key *a, struct etna_shader_key *b)
+etna_shader_key_equal(const struct etna_shader_key* const a,
+                      const struct etna_shader_key* const b)
 {
    /* slow-path if we need to check tex_{swizzle,compare_func} */
    if (unlikely(a->has_sample_tex_compare || b->has_sample_tex_compare))
@@ -85,6 +87,9 @@ struct etna_shader {
    struct etna_shader_variant *variants;
 
    cache_key cache_key;     /* shader disk-cache key */
+
+   /* parallel shader compiles */
+   struct util_queue_fence ready;
 };
 
 bool
@@ -94,10 +99,17 @@ bool
 etna_shader_update_vertex(struct etna_context *ctx);
 
 struct etna_shader_variant *
-etna_shader_variant(struct etna_shader *shader, struct etna_shader_key key,
-                   struct util_debug_callback *debug);
+etna_shader_variant(struct etna_shader *shader,
+                    const struct etna_shader_key* const key,
+                    struct util_debug_callback *debug);
 
 void
 etna_shader_init(struct pipe_context *pctx);
+
+bool
+etna_shader_screen_init(struct pipe_screen *pscreen);
+
+void
+etna_shader_screen_fini(struct pipe_screen *pscreen);
 
 #endif

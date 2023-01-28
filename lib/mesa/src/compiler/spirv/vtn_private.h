@@ -142,6 +142,7 @@ enum vtn_branch_type {
    vtn_branch_type_terminate_invocation,
    vtn_branch_type_ignore_intersection,
    vtn_branch_type_terminate_ray,
+   vtn_branch_type_emit_mesh_tasks,
    vtn_branch_type_return,
 };
 
@@ -481,6 +482,8 @@ struct vtn_access_chain {
    /* Access qualifiers */
    enum gl_access_qualifier access;
 
+   bool in_bounds;
+
    /** Struct elements and array offsets.
     *
     * This is an array of 1 so that it can conveniently be created on the
@@ -715,6 +718,9 @@ struct vtn_builder {
 
    /* True if we need to ignore undef initializers */
    bool wa_llvm_spirv_ignore_workgroup_initializer;
+
+   /* True if we need to ignore OpReturn after OpEmitMeshTasksEXT. */
+   bool wa_ignore_return_after_emit_mesh_tasks;
 
    /* Workaround discard bugs in HLSL -> SPIR-V compilers */
    bool uses_demote_to_helper_invocation;
@@ -1047,6 +1053,13 @@ SpvMemorySemanticsMask vtn_mode_to_memory_semantics(enum vtn_variable_mode mode)
 
 void vtn_emit_memory_barrier(struct vtn_builder *b, SpvScope scope,
                              SpvMemorySemanticsMask semantics);
+
+bool vtn_value_is_relaxed_precision(struct vtn_builder *b, struct vtn_value *val);
+nir_ssa_def *
+vtn_mediump_downconvert(struct vtn_builder *b, enum glsl_base_type base_type, nir_ssa_def *def);
+struct vtn_ssa_value *
+vtn_mediump_downconvert_value(struct vtn_builder *b, struct vtn_ssa_value *src);
+void vtn_mediump_upconvert_value(struct vtn_builder *b, struct vtn_ssa_value *value);
 
 static inline int
 cmp_uint32_t(const void *pa, const void *pb)

@@ -36,7 +36,7 @@
 
 #include "state_tracker/st_context.h"
 
-static simple_mtx_t override_lock = _SIMPLE_MTX_INITIALIZER_NP;
+static simple_mtx_t override_lock = SIMPLE_MTX_INITIALIZER;
 
 /**
  * Scans 'string' to see if it ends with 'ending'.
@@ -255,7 +255,6 @@ compute_version(const struct gl_extensions *extensions,
    const bool ver_1_5 = (ver_1_4 &&
                          extensions->ARB_occlusion_query);
    const bool ver_2_0 = (ver_1_5 &&
-                         extensions->ARB_point_sprite &&
                          extensions->ARB_vertex_shader &&
                          extensions->ARB_fragment_shader &&
                          extensions->ARB_texture_non_power_of_two &&
@@ -702,6 +701,15 @@ _mesa_get_device_uuid(struct gl_context *ctx, GLint *uuid)
    assert(GL_UUID_SIZE_EXT >= PIPE_UUID_SIZE);
    memset(uuid, 0, GL_UUID_SIZE_EXT);
    screen->get_device_uuid(screen, (char *)uuid);
+}
+
+void
+_mesa_get_device_luid(struct gl_context *ctx, GLint *luid)
+{
+   struct pipe_screen *screen = ctx->pipe->screen;
+   assert(GL_LUID_SIZE_EXT >= PIPE_LUID_SIZE);
+   memset(luid, 0, GL_UUID_SIZE_EXT);
+   screen->get_device_luid(screen, (char *)luid);
 }
 
 /**

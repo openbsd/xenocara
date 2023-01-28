@@ -632,7 +632,7 @@ extern _X_HIDDEN void __indirect_glTexCoordPointerEXT(GLint size, GLenum type, G
 extern _X_HIDDEN void __indirect_glVertexPointerEXT(GLint size, GLenum type, GLsizei stride, GLsizei count, const GLvoid * pointer);
 extern _X_HIDDEN void __indirect_glSecondaryColor3fEXT(GLfloat red, GLfloat green, GLfloat blue);
 extern _X_HIDDEN void __indirect_glSecondaryColor3fvEXT(const GLfloat * v);
-extern _X_HIDDEN void __indirect_glMultiDrawElementsEXT(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount);
+extern _X_HIDDEN void __indirect_glMultiDrawElements(GLenum mode, const GLsizei * count, GLenum type, const GLvoid * const * indices, GLsizei primcount);
 extern _X_HIDDEN void __indirect_glFogCoordfEXT(GLfloat coord);
 extern _X_HIDDEN void __indirect_glFogCoordfvEXT(const GLfloat * coord);
 extern _X_HIDDEN GLboolean __indirect_glAreProgramsResidentNV(GLsizei n, const GLuint * ids, GLboolean * residences);
