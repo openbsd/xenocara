@@ -85,7 +85,8 @@ struct pipe_video_codec *
 nv98_create_decoder(struct pipe_context *context,
                     const struct pipe_video_codec *templ)
 {
-   struct nouveau_screen *screen = &((struct nv50_context *)context)->screen->base;
+   struct nv50_context *nv50 = nv50_context(context);
+   struct nouveau_screen *screen = &nv50->screen->base;
    struct nouveau_vp3_decoder *dec;
    struct nouveau_pushbuf **push;
    struct nv04_fifo nv04_data = {.vram = 0xbeef0201, .gart = 0xbeef0202};
@@ -95,9 +96,6 @@ nv98_create_decoder(struct pipe_context *context,
    uint32_t timeout;
    u32 tmp_size = 0;
 
-   if (getenv("XVMC_VL"))
-       return vl_create_decoder(context, templ);
-
    if (templ->entrypoint != PIPE_VIDEO_ENTRYPOINT_BITSTREAM) {
       debug_printf("%x\n", templ->entrypoint);
       return NULL;
@@ -106,7 +104,7 @@ nv98_create_decoder(struct pipe_context *context,
    dec = CALLOC_STRUCT(nouveau_vp3_decoder);
    if (!dec)
       return NULL;
-   dec->client = screen->client;
+   dec->client = nv50->base.client;
    dec->base = *templ;
    nouveau_vp3_decoder_init_common(&dec->base);
 
@@ -119,8 +117,8 @@ nv98_create_decoder(struct pipe_context *context,
                             &nv04_data, sizeof(nv04_data), &dec->channel[0]);
 
    if (!ret)
-      ret = nouveau_pushbuf_new(screen->client, dec->channel[0], 4,
-                                32 * 1024, true, &dec->pushbuf[0]);
+      ret = nouveau_pushbuf_create(screen, &nv50->base, nv50->base.client, dec->channel[0],
+                                   4, 32 * 1024, true, &dec->pushbuf[0]);
 
    for (i = 1; i < 3; ++i) {
       dec->channel[i] = dec->channel[0];
@@ -268,14 +266,14 @@ nv98_create_decoder(struct pipe_context *context,
    if (ret)
       goto fail;
 
-   nouveau_bo_map(dec->fence_bo, NOUVEAU_BO_RDWR, screen->client);
+   BO_MAP(screen, dec->fence_bo, NOUVEAU_BO_RDWR, screen->client);
    dec->fence_map = dec->fence_bo->map;
    dec->fence_map[0] = dec->fence_map[4] = dec->fence_map[8] = 0;
    dec->comm = (struct comm *)(dec->fence_map + (COMM_OFFSET/sizeof(*dec->fence_map)));
 
    /* So lets test if the fence is working? */
-   nouveau_pushbuf_space(push[0], 16, 1, 0);
-   PUSH_REFN (push[0], dec->fence_bo, NOUVEAU_BO_GART|NOUVEAU_BO_RDWR);
+   PUSH_SPACE_EX(push[0], 16, 1, 0);
+   PUSH_REF1 (push[0], dec->fence_bo, NOUVEAU_BO_GART|NOUVEAU_BO_RDWR);
    BEGIN_NV04(push[0], SUBC_BSP(0x240), 3);
    PUSH_DATAh(push[0], dec->fence_bo->offset);
    PUSH_DATA (push[0], dec->fence_bo->offset);
@@ -285,8 +283,8 @@ nv98_create_decoder(struct pipe_context *context,
    PUSH_DATA (push[0], 0);
    PUSH_KICK (push[0]);
 
-   nouveau_pushbuf_space(push[1], 16, 1, 0);
-   PUSH_REFN (push[1], dec->fence_bo, NOUVEAU_BO_GART|NOUVEAU_BO_RDWR);
+   PUSH_SPACE_EX(push[1], 16, 1, 0);
+   PUSH_REF1 (push[1], dec->fence_bo, NOUVEAU_BO_GART|NOUVEAU_BO_RDWR);
    BEGIN_NV04(push[1], SUBC_VP(0x240), 3);
    PUSH_DATAh(push[1], (dec->fence_bo->offset + 0x10));
    PUSH_DATA (push[1], (dec->fence_bo->offset + 0x10));
@@ -296,8 +294,8 @@ nv98_create_decoder(struct pipe_context *context,
    PUSH_DATA (push[1], 0);
    PUSH_KICK (push[1]);
 
-   nouveau_pushbuf_space(push[2], 16, 1, 0);
-   PUSH_REFN (push[2], dec->fence_bo, NOUVEAU_BO_GART|NOUVEAU_BO_RDWR);
+   PUSH_SPACE_EX(push[2], 16, 1, 0);
+   PUSH_REF1 (push[2], dec->fence_bo, NOUVEAU_BO_GART|NOUVEAU_BO_RDWR);
    BEGIN_NV04(push[2], SUBC_PPP(0x240), 3);
    PUSH_DATAh(push[2], (dec->fence_bo->offset + 0x20));
    PUSH_DATA (push[2], (dec->fence_bo->offset + 0x20));

@@ -121,16 +121,16 @@ debug_print_blob(const char *name, const void *blob, unsigned size)
 static bool
 debug_get_option_should_print(void)
 {
-   static bool first = true;
+   static bool initialized = false;
    static bool value = false;
 
-   if (!first)
+   if (initialized)
       return value;
 
    /* Oh hey this will call into this function,
     * but its cool since we set first to false
     */
-   first = false;
+   initialized = true;
    value = debug_get_bool_option("GALLIUM_PRINT_OPTIONS", false);
    /* XXX should we print this option? Currently it wont */
    return value;
@@ -154,6 +154,12 @@ debug_get_option(const char *name, const char *dfault)
 }
 
 
+/**
+ * Reads an environment variable and interprets its value as a boolean.
+ * Recognizes 0/n/no/f/false case insensitive as false.
+ * Recognizes 1/y/yes/t/true case insensitive as true.
+ * Other values result in the default value.
+ */
 bool
 debug_get_bool_option(const char *name, bool dfault)
 {
@@ -162,22 +168,28 @@ debug_get_bool_option(const char *name, bool dfault)
 
    if (str == NULL)
       result = dfault;
-   else if (!strcmp(str, "n"))
-      result = false;
-   else if (!strcmp(str, "no"))
-      result = false;
    else if (!strcmp(str, "0"))
       result = false;
-   else if (!strcmp(str, "f"))
+   else if (!strcasecmp(str, "n"))
       result = false;
-   else if (!strcmp(str, "F"))
+   else if (!strcasecmp(str, "no"))
       result = false;
-   else if (!strcmp(str, "false"))
+   else if (!strcasecmp(str, "f"))
       result = false;
-   else if (!strcmp(str, "FALSE"))
+   else if (!strcasecmp(str, "false"))
       result = false;
-   else
+   else if (!strcmp(str, "1"))
       result = true;
+   else if (!strcasecmp(str, "y"))
+      result = true;
+   else if (!strcasecmp(str, "yes"))
+      result = true;
+   else if (!strcasecmp(str, "t"))
+      result = true;
+   else if (!strcasecmp(str, "true"))
+      result = true;
+   else
+      result = dfault;
 
    if (debug_get_option_should_print())
       debug_printf("%s: %s = %s\n", __FUNCTION__, name,
@@ -327,16 +339,6 @@ debug_get_flags_option(const char *name,
 }
 
 
-void
-_debug_assert_fail(const char *expr, const char *file, unsigned line,
-                   const char *function)
-{
-   _debug_printf("%s:%u:%s: Assertion `%s' failed.\n",
-                 file, line, function, expr);
-   os_abort();
-}
-
-
 const char *
 debug_dump_enum(const struct debug_named_value *names,
                 unsigned long value)
@@ -417,6 +419,91 @@ debug_dump_flags(const struct debug_named_value *names, unsigned long value)
    return output;
 }
 
+
+uint64_t
+parse_debug_string(const char *debug,
+                   const struct debug_control *control)
+{
+   uint64_t flag = 0;
+
+   if (debug != NULL) {
+      for (; control->string != NULL; control++) {
+         if (!strcmp(debug, "all")) {
+            flag |= control->flag;
+
+         } else {
+            const char *s = debug;
+            unsigned n;
+
+            for (; n = strcspn(s, ", "), *s; s += MAX2(1, n)) {
+               if (strlen(control->string) == n &&
+                   !strncmp(control->string, s, n))
+                  flag |= control->flag;
+            }
+         }
+      }
+   }
+
+   return flag;
+}
+
+
+uint64_t
+parse_enable_string(const char *debug,
+                    uint64_t default_value,
+                    const struct debug_control *control)
+{
+   uint64_t flag = default_value;
+
+   if (debug != NULL) {
+      for (; control->string != NULL; control++) {
+         if (!strcmp(debug, "all")) {
+            flag |= control->flag;
+
+         } else {
+            const char *s = debug;
+            unsigned n;
+
+            for (; n = strcspn(s, ", "), *s; s += MAX2(1, n)) {
+               bool enable;
+               if (s[0] == '+') {
+                  enable = true;
+                  s++; n--;
+               } else if (s[0] == '-') {
+                  enable = false;
+                  s++; n--;
+               } else {
+                  enable = true;
+               }
+               if (strlen(control->string) == n &&
+                   !strncmp(control->string, s, n)) {
+                  if (enable)
+                     flag |= control->flag;
+                  else
+                     flag &= ~control->flag;
+               }
+            }
+         }
+      }
+   }
+
+   return flag;
+}
+
+
+bool
+comma_separated_list_contains(const char *list, const char *s)
+{
+   assert(list);
+   const size_t len = strlen(s);
+
+   for (unsigned n; n = strcspn(list, ","), *list; list += MAX2(1, n)) {
+      if (n == len && !strncmp(list, s, n))
+         return true;
+   }
+
+   return false;
+}
 
 
 #ifdef DEBUG

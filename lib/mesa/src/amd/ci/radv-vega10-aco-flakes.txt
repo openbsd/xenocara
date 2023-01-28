@@ -1,3 +1,5 @@
-dEQP-VK.api.object_management.multithreaded_per_thread_device.image_2d
-dEQP-VK.api.object_management.multithreaded_per_thread_resources.image_2d
-dEQP-VK.api.object_management.multithreaded_shared_resources.image_2d
+dEQP-VK.dynamic_rendering.basic.*
+dEQP-VK.image.sample_texture.64_bit_compressed_format_two_samplers
+dEQP-VK.image.sample_texture.64_bit_compressed_format_two_samplers_cubemap
+dEQP-VK.image.sample_texture.128_bit_compressed_format_two_samplers
+dEQP-VK.image.sample_texture.128_bit_compressed_format_two_samplers_cubemap

@@ -246,11 +246,12 @@ nine_convert_sampler_state(struct cso_context *ctx, int idx, const DWORD *ss)
         samp.max_anisotropy = 0;
     samp.compare_mode = ss[NINED3DSAMP_SHADOW] ? PIPE_TEX_COMPARE_R_TO_TEXTURE : PIPE_TEX_COMPARE_NONE;
     samp.compare_func = PIPE_FUNC_LEQUAL;
-    samp.normalized_coords = 1;
+    samp.unnormalized_coords = 0;
     samp.seamless_cube_map = 0;
     samp.border_color_is_integer = 0;
     samp.reduction_mode = 0;
     samp.pad = 0;
+    samp.border_color_format = PIPE_FORMAT_NONE;
     d3dcolor_to_pipe_color_union(&samp.border_color, ss[D3DSAMP_BORDERCOLOR]);
 
     /* see nine_state.h */

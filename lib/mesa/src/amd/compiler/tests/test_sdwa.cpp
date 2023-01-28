@@ -29,7 +29,7 @@ using namespace aco;
 BEGIN_TEST(validate.sdwa.allow)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %a, v1: %b, s1: %c, s1: %d = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
       //>> Validation results:
       //! Validation passed
@@ -48,14 +48,14 @@ BEGIN_TEST(validate.sdwa.allow)
 END_TEST
 
 BEGIN_TEST(validate.sdwa.support)
-   for (unsigned i = GFX7; i <= GFX10; i++) {
+   for (unsigned i = GFX7; i <= GFX11; i++) {
       //>> v1: %a, v1: %b, s1: %c, s1: %d = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
       //>> Validation results:
 
-      //~gfx7! SDWA is GFX8+ only: v1: %t0 = v_mul_f32 %a, %b dst_sel:dword src0_sel:dword src1_sel:dword
-      //~gfx7! Validation failed
+      //~gfx(7|11)! SDWA is GFX8 to GFX10.3 only: v1: %t0 = v_mul_f32 %a, %b dst_sel:dword src0_sel:dword src1_sel:dword
+      //~gfx(7|11)! Validation failed
       //~gfx([89]|10)! Validation passed
       bld.vop2_sdwa(aco_opcode::v_mul_f32, bld.def(v1), inputs[0], inputs[1]);
 
@@ -66,7 +66,7 @@ END_TEST
 BEGIN_TEST(validate.sdwa.operands)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %vgpr0, v1: %vgp1, s1: %sgpr0, s1: %sgpr1 = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
       //>> Validation results:
 
@@ -95,7 +95,7 @@ END_TEST
 BEGIN_TEST(validate.sdwa.vopc)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %vgpr0, v1: %vgp1, s1: %sgpr0, s1: %sgpr1 = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
       //>> Validation results:
 
@@ -116,7 +116,7 @@ END_TEST
 BEGIN_TEST(validate.sdwa.omod)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %vgpr0, v1: %vgp1, s1: %sgpr0, s1: %sgpr1 = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
       //>> Validation results:
 
@@ -132,7 +132,7 @@ END_TEST
 BEGIN_TEST(validate.sdwa.vcc)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %vgpr0, v1: %vgpr1, s2: %sgpr0 = p_startpgm
-      if (!setup_cs("v1 v1 s2", (chip_class)i))
+      if (!setup_cs("v1 v1 s2", (amd_gfx_level)i))
          continue;
       //>> Validation results:
 
@@ -154,7 +154,7 @@ BEGIN_TEST(optimize.sdwa.extract)
    for (unsigned i = GFX7; i <= GFX10; i++) {
    for (unsigned is_signed = 0; is_signed <= 1; is_signed++) {
       //>> v1: %a, v1: %b, s1: %c, s1: %d = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i, CHIP_UNKNOWN, is_signed ? "_signed" : "_unsigned"))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i, CHIP_UNKNOWN, is_signed ? "_signed" : "_unsigned"))
          continue;
 
       //; def standard_test(index, sel):
@@ -277,7 +277,7 @@ END_TEST
 BEGIN_TEST(optimize.sdwa.extract_modifiers)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %a, v1: %b, s1: %c, s1: %d = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
 
       aco_opcode ext = aco_opcode::p_extract;
@@ -334,7 +334,7 @@ END_TEST
 BEGIN_TEST(optimize.sdwa.extract.sgpr)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %a, v1: %b, s1: %c, s1: %d = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
 
       aco_opcode ext = aco_opcode::p_extract;
@@ -378,7 +378,7 @@ END_TEST
 BEGIN_TEST(optimize.sdwa.from_vop3)
    for (unsigned i = GFX8; i <= GFX10; i++) {
       //>> v1: %a, v1: %b, s1: %c, s1: %d = p_startpgm
-      if (!setup_cs("v1 v1 s1 s1", (chip_class)i))
+      if (!setup_cs("v1 v1 s1 s1", (amd_gfx_level)i))
          continue;
 
       //! v1: %res0 = v_mul_f32 -|%a|, %b dst_sel:dword src0_sel:dword src1_sel:ubyte0
@@ -425,7 +425,7 @@ END_TEST
 BEGIN_TEST(optimize.sdwa.insert)
    for (unsigned i = GFX7; i <= GFX10; i++) {
       //>> v1: %a, v1: %b = p_startpgm
-      if (!setup_cs("v1 v1", (chip_class)i))
+      if (!setup_cs("v1 v1", (amd_gfx_level)i))
          continue;
 
       aco_opcode ext = aco_opcode::p_extract;
@@ -496,17 +496,15 @@ BEGIN_TEST(optimize.sdwa.insert)
       bld.pseudo(ins, bld.def(v1), val, Operand::c32(1u), Operand::c32(16u));
       writeout(10, val);
 
-      //~gfx8! v1: %tmp11 = v_sub_i16 %a, %b
-      //~gfx8! v1: %res11 = p_insert %tmp11, 0, 16
-      //~gfx(9|10)! v1: %res11 = v_sub_i16 %a, %b
-      //~gfx(8|9|10)! p_unit_test 11, %res11
+      //~gfx[^7]! v1: %tmp11 = v_sub_i16 %a, %b
+      //~gfx[^7]! v1: %res11 = p_insert %tmp11, 0, 16
+      //~gfx[^7]! p_unit_test 11, %res11
       val = bld.vop3(aco_opcode::v_sub_i16, bld.def(v1), inputs[0], inputs[1]);
       writeout(11, bld.pseudo(ins, bld.def(v1), val, Operand::zero(), Operand::c32(16u)));
 
-      //~gfx8! v1: %tmp12 = v_sub_i16 %a, %b
-      //~gfx8! v1: %res12 = p_insert %tmp12, 1, 16
-      //~gfx(9|10)! v1: %res12 = v_sub_i16 %a, %b opsel_hi
-      //~gfx(8|9|10)! p_unit_test 12, %res12
+      //~gfx[^7]! v1: %tmp12 = v_sub_i16 %a, %b
+      //~gfx[^7]! v1: %res12 = p_insert %tmp12, 1, 16
+      //~gfx[^7]! p_unit_test 12, %res12
       val = bld.vop3(aco_opcode::v_sub_i16, bld.def(v1), inputs[0], inputs[1]);
       writeout(12, bld.pseudo(ins, bld.def(v1), val, Operand::c32(1u), Operand::c32(16u)));
 
@@ -523,7 +521,7 @@ END_TEST
 BEGIN_TEST(optimize.sdwa.insert_modifiers)
    for (unsigned i = GFX8; i <= GFX9; i++) {
       //>> v1: %a = p_startpgm
-      if (!setup_cs("v1", (chip_class)i))
+      if (!setup_cs("v1", (amd_gfx_level)i))
          continue;
 
       aco_opcode ins = aco_opcode::p_insert;

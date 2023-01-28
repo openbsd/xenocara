@@ -98,7 +98,7 @@ ir3_cache_lookup(struct ir3_cache *cache, const struct ir3_cache_key *key,
    }
 
    if (key->hs)
-      debug_assert(key->ds);
+      assert(key->ds);
 
    struct ir3_shader *shaders[MESA_SHADER_STAGES] = {
       [MESA_SHADER_VERTEX] = ir3_get_shader(key->vs),
@@ -107,6 +107,13 @@ ir3_cache_lookup(struct ir3_cache *cache, const struct ir3_cache_key *key,
       [MESA_SHADER_GEOMETRY] = ir3_get_shader(key->gs),
       [MESA_SHADER_FRAGMENT] = ir3_get_shader(key->fs),
    };
+
+   if (shaders[MESA_SHADER_TESS_EVAL] && !shaders[MESA_SHADER_TESS_CTRL]) {
+      struct ir3_shader *vs = shaders[MESA_SHADER_VERTEX];
+      struct ir3_shader *hs =
+            ir3_shader_passthrough_tcs(vs, key->patch_vertices);
+      shaders[MESA_SHADER_TESS_CTRL] = hs;
+   }
 
    struct ir3_shader_variant *variants[MESA_SHADER_STAGES];
    struct ir3_shader_key shader_key = key->key;

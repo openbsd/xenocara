@@ -39,17 +39,25 @@
 #include <xf86drm.h>
 
 #include "hwdef/rogue_hw_utils.h"
+#include "pipe/p_defines.h"
 #include "pvr_bo.h"
 #include "pvr_csb.h"
+#include "pvr_csb_enum_helpers.h"
+#include "pvr_debug.h"
 #include "pvr_device_info.h"
+#include "pvr_hardcode.h"
 #include "pvr_job_render.h"
 #include "pvr_limits.h"
+#include "pvr_nop_usc.h"
 #include "pvr_pds.h"
 #include "pvr_private.h"
+#include "pvr_tex_state.h"
+#include "pvr_types.h"
 #include "pvr_winsys.h"
 #include "rogue/rogue_compiler.h"
 #include "util/build_id.h"
 #include "util/log.h"
+#include "util/macros.h"
 #include "util/mesa-sha1.h"
 #include "util/os_misc.h"
 #include "util/u_math.h"
@@ -72,6 +80,30 @@
 #endif
 
 #define PVR_API_VERSION VK_MAKE_VERSION(1, 0, VK_HEADER_VERSION)
+
+#define DEF_DRIVER(str_name)                        \
+   {                                                \
+      .name = str_name, .len = sizeof(str_name) - 1 \
+   }
+
+struct pvr_drm_device_info {
+   const char *name;
+   size_t len;
+};
+
+/* This is the list of supported DRM display drivers. */
+static const struct pvr_drm_device_info pvr_display_devices[] = {
+   DEF_DRIVER("mediatek-drm"),
+   DEF_DRIVER("ti,am65x-dss"),
+};
+
+/* This is the list of supported DRM render drivers. */
+static const struct pvr_drm_device_info pvr_render_devices[] = {
+   DEF_DRIVER("mediatek,mt8173-gpu"),
+   DEF_DRIVER("ti,am62-gpu"),
+};
+
+#undef DEF_DRIVER
 
 static const struct vk_instance_extension_table pvr_instance_extensions = {
 #if defined(VK_USE_PLATFORM_DISPLAY_KHR)
@@ -157,8 +189,10 @@ VkResult pvr_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
                              pAllocator);
    if (result != VK_SUCCESS) {
       vk_free(pAllocator, instance);
-      return vk_error(NULL, result);
+      return result;
    }
+
+   pvr_process_debug_variable();
 
    instance->physical_devices_count = -1;
 
@@ -207,7 +241,8 @@ void pvr_DestroyInstance(VkInstance _instance,
    if (!instance)
       return;
 
-   pvr_physical_device_finish(&instance->physical_device);
+   if (instance->physical_devices_count > 0)
+      pvr_physical_device_finish(&instance->physical_device);
 
    VG(VALGRIND_DESTROY_MEMPOOL(instance));
 
@@ -355,6 +390,8 @@ static VkResult pvr_physical_device_init(struct pvr_physical_device *pdevice,
       goto err_vk_free_master_path;
    }
 
+   pdevice->vk.supported_sync_types = pdevice->ws->sync_types;
+
    ret = pdevice->ws->ops->device_info_init(pdevice->ws,
                                             &pdevice->dev_info,
                                             &pdevice->dev_runtime_info);
@@ -432,6 +469,48 @@ err_vk_physical_device_finish:
    return result;
 }
 
+static bool pvr_drm_device_is_supported(drmDevicePtr drm_dev, int node_type)
+{
+   char **compat = drm_dev->deviceinfo.platform->compatible;
+
+   if (!(drm_dev->available_nodes & BITFIELD_BIT(node_type))) {
+      assert(node_type == DRM_NODE_RENDER || node_type == DRM_NODE_PRIMARY);
+      return false;
+   }
+
+   if (node_type == DRM_NODE_RENDER) {
+      while (*compat) {
+         for (size_t i = 0U; i < ARRAY_SIZE(pvr_render_devices); i++) {
+            const char *const name = pvr_render_devices[i].name;
+            const size_t len = pvr_render_devices[i].len;
+
+            if (strncmp(*compat, name, len) == 0)
+               return true;
+         }
+
+         compat++;
+      }
+
+      return false;
+   } else if (node_type == DRM_NODE_PRIMARY) {
+      while (*compat) {
+         for (size_t i = 0U; i < ARRAY_SIZE(pvr_display_devices); i++) {
+            const char *const name = pvr_display_devices[i].name;
+            const size_t len = pvr_display_devices[i].len;
+
+            if (strncmp(*compat, name, len) == 0)
+               return true;
+         }
+
+         compat++;
+      }
+
+      return false;
+   }
+
+   unreachable("Incorrect node_type.");
+}
+
 static VkResult pvr_enumerate_devices(struct pvr_instance *instance)
 {
    /* FIXME: It should be possible to query the number of devices via
@@ -456,34 +535,17 @@ static VkResult pvr_enumerate_devices(struct pvr_instance *instance)
       if (drm_devices[i]->bustype != DRM_BUS_PLATFORM)
          continue;
 
-      if (drm_devices[i]->available_nodes & (1 << DRM_NODE_RENDER)) {
-         char **compat;
+      if (pvr_drm_device_is_supported(drm_devices[i], DRM_NODE_RENDER)) {
+         drm_render_device = drm_devices[i];
 
-         compat = drm_devices[i]->deviceinfo.platform->compatible;
-         while (*compat) {
-            if (strncmp(*compat, "mediatek,mt8173-gpu", 19) == 0) {
-               drm_render_device = drm_devices[i];
+         mesa_logd("Found compatible render device '%s'.",
+                   drm_render_device->nodes[DRM_NODE_RENDER]);
+      } else if (pvr_drm_device_is_supported(drm_devices[i],
+                                             DRM_NODE_PRIMARY)) {
+         drm_primary_device = drm_devices[i];
 
-               mesa_logd("Found compatible render device '%s'.",
-                         drm_render_device->nodes[DRM_NODE_RENDER]);
-               break;
-            }
-            compat++;
-         }
-      } else if (drm_devices[i]->available_nodes & 1 << DRM_NODE_PRIMARY) {
-         char **compat;
-
-         compat = drm_devices[i]->deviceinfo.platform->compatible;
-         while (*compat) {
-            if (strncmp(*compat, "mediatek-drm", 12) == 0) {
-               drm_primary_device = drm_devices[i];
-
-               mesa_logd("Found compatible primary device '%s'.",
-                         drm_primary_device->nodes[DRM_NODE_PRIMARY]);
-               break;
-            }
-            compat++;
-         }
+         mesa_logd("Found compatible primary device '%s'.",
+                   drm_primary_device->nodes[DRM_NODE_PRIMARY]);
       }
    }
 
@@ -509,9 +571,11 @@ VkResult pvr_EnumeratePhysicalDevices(VkInstance _instance,
                                       uint32_t *pPhysicalDeviceCount,
                                       VkPhysicalDevice *pPhysicalDevices)
 {
+   VK_OUTARRAY_MAKE_TYPED(VkPhysicalDevice,
+                          out,
+                          pPhysicalDevices,
+                          pPhysicalDeviceCount);
    PVR_FROM_HANDLE(pvr_instance, instance, _instance);
-   VK_OUTARRAY_MAKE_TYPED(VkPhysicalDevice, out,
-                          pPhysicalDevices, pPhysicalDeviceCount);
    VkResult result;
 
    if (instance->physical_devices_count < 0) {
@@ -524,7 +588,7 @@ VkResult pvr_EnumeratePhysicalDevices(VkInstance _instance,
       return VK_SUCCESS;
 
    assert(instance->physical_devices_count == 1);
-   vk_outarray_append_typed(VkPhysicalDevice, &out, p) {
+   vk_outarray_append_typed (VkPhysicalDevice, &out, p) {
       *p = pvr_physical_device_to_handle(&instance->physical_device);
    }
 
@@ -557,7 +621,7 @@ void pvr_GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice,
       .largePoints = true,
       .alphaToOne = true,
       .multiViewport = false,
-      .samplerAnisotropy = true,
+      .samplerAnisotropy = false,
       .textureCompressionETC2 = true,
       .textureCompressionASTC_LDR = PVR_HAS_FEATURE(&pdevice->dev_info, astc),
       .textureCompressionBC = false,
@@ -600,39 +664,144 @@ void pvr_GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice,
    }
 }
 
-/* clang-format off */
-/* FIXME: Clang-format places multiple initializers on the same line, fix this
- * and remove clang-format on/off comments.
- */
-static const struct pvr_descriptor_limits bvnc_4_V_2_51_descriptor_limits = {
-   .max_per_stage_resources = 456U,
-   .max_per_stage_samplers = 64U,
-   .max_per_stage_uniform_buffers = 96U,
-   .max_per_stage_storage_buffers = 96U,
-   .max_per_stage_sampled_images = 128U,
-   .max_per_stage_storage_images = 64U,
-   .max_per_stage_input_attachments = 8U,
+static uint32_t
+pvr_get_simultanous_num_allocs(const struct pvr_physical_device *pdevice)
+{
+   const struct pvr_device_runtime_info *dev_runtime_info =
+      &pdevice->dev_runtime_info;
+   const struct pvr_device_info *dev_info = &pdevice->dev_info;
+   uint32_t min_cluster_per_phantom;
+
+   if (PVR_HAS_FEATURE(dev_info, s8xe))
+      return PVR_GET_FEATURE_VALUE(dev_info, num_raster_pipes, 0U);
+
+   assert(dev_runtime_info->num_phantoms == 1);
+   min_cluster_per_phantom = PVR_GET_FEATURE_VALUE(dev_info, num_clusters, 1U);
+
+   if (min_cluster_per_phantom >= 4)
+      return 1;
+   else if (min_cluster_per_phantom == 2)
+      return 2;
+   else
+      return 4;
+}
+
+uint32_t pvr_calc_fscommon_size_and_tiles_in_flight(
+   const struct pvr_physical_device *pdevice,
+   uint32_t fs_common_size,
+   uint32_t min_tiles_in_flight)
+{
+   const struct pvr_device_runtime_info *dev_runtime_info =
+      &pdevice->dev_runtime_info;
+   const uint32_t available_shareds =
+      dev_runtime_info->reserved_shared_size - dev_runtime_info->max_coeffs;
+   const struct pvr_device_info *dev_info = &pdevice->dev_info;
+   const uint32_t max_tiles_in_flight =
+      PVR_GET_FEATURE_VALUE(dev_info, isp_max_tiles_in_flight, 1U);
+   uint32_t num_tile_in_flight;
+   uint32_t num_allocs;
+
+   if (fs_common_size == 0)
+      return max_tiles_in_flight;
+
+   num_allocs = pvr_get_simultanous_num_allocs(pdevice);
+
+   if (fs_common_size == UINT32_MAX) {
+      uint32_t max_common_size = available_shareds;
+
+      num_allocs *= MIN2(min_tiles_in_flight, max_tiles_in_flight);
+
+      if (!PVR_HAS_ERN(dev_info, 38748)) {
+         /* Hardware needs space for one extra shared allocation. */
+         num_allocs += 1;
+      }
+
+      /* Double resource requirements to deal with fragmentation. */
+      max_common_size /= num_allocs * 2;
+      max_common_size = MIN2(max_common_size, ROGUE_MAX_PIXEL_SHARED_REGISTERS);
+      max_common_size =
+         ROUND_DOWN_TO(max_common_size,
+                       PVRX(TA_STATE_PDS_SIZEINFO2_USC_SHAREDSIZE_UNIT_SIZE));
+
+      return max_common_size;
+   }
+
+   num_tile_in_flight = available_shareds / (fs_common_size * 2);
+
+   if (!PVR_HAS_ERN(dev_info, 38748))
+      num_tile_in_flight -= 1;
+
+   num_tile_in_flight /= num_allocs;
+
+#if defined(DEBUG)
+   /* Validate the above result. */
+
+   assert(num_tile_in_flight >= MIN2(num_tile_in_flight, max_tiles_in_flight));
+   num_allocs *= num_tile_in_flight;
+
+   if (!PVR_HAS_ERN(dev_info, 38748)) {
+      /* Hardware needs space for one extra shared allocation. */
+      num_allocs += 1;
+   }
+
+   assert(fs_common_size <= available_shareds / (num_allocs * 2));
+#endif
+
+   return MIN2(num_tile_in_flight, max_tiles_in_flight);
+}
+
+struct pvr_descriptor_limits {
+   uint32_t max_per_stage_resources;
+   uint32_t max_per_stage_samplers;
+   uint32_t max_per_stage_uniform_buffers;
+   uint32_t max_per_stage_storage_buffers;
+   uint32_t max_per_stage_sampled_images;
+   uint32_t max_per_stage_storage_images;
+   uint32_t max_per_stage_input_attachments;
 };
-/* clang-format on */
 
 static const struct pvr_descriptor_limits *
 pvr_get_physical_device_descriptor_limits(struct pvr_physical_device *pdevice)
 {
-   /* Series 6XT - GX6x50 - Clyde */
-   if (pdevice->dev_info.ident.b == 4 && pdevice->dev_info.ident.n == 2)
-      return &bvnc_4_V_2_51_descriptor_limits;
+   enum pvr_descriptor_cs_level {
+      /* clang-format off */
+      CS4096, /* 6XT and some XE cores with large CS. */
+      CS2560, /* Mid range Rogue XE cores. */
+      CS2048, /* Low end Rogue XE cores. */
+      CS1536, /* Ultra-low-end 9XEP. */
+      CS680,  /* lower limits for older devices. */
+      CS408,  /* 7XE. */
+      /* clang-format on */
+   };
 
-   vk_errorf(pdevice,
-             VK_ERROR_INCOMPATIBLE_DRIVER,
-             "No device ID found for BVNC %d.%d.%d.%d",
-             pdevice->dev_info.ident.b,
-             pdevice->dev_info.ident.v,
-             pdevice->dev_info.ident.n,
-             pdevice->dev_info.ident.c);
+   static const struct pvr_descriptor_limits descriptor_limits[] = {
+      [CS4096] = { 1160U, 256U, 192U, 144U, 256U, 256U, 8U, },
+      [CS2560] = {  648U, 128U, 128U, 128U, 128U, 128U, 8U, },
+      [CS2048] = {  584U, 128U,  96U,  64U, 128U, 128U, 8U, },
+      [CS1536] = {  456U,  64U,  96U,  64U, 128U,  64U, 8U, },
+      [CS680]  = {  224U,  32U,  64U,  36U,  48U,   8U, 8U, },
+      [CS408]  = {  128U,  16U,  40U,  28U,  16U,   8U, 8U, },
+   };
 
-   assert(false);
+   const uint32_t common_size =
+      pvr_calc_fscommon_size_and_tiles_in_flight(pdevice, UINT32_MAX, 1);
+   enum pvr_descriptor_cs_level cs_level;
 
-   return NULL;
+   if (common_size >= 2048) {
+      cs_level = CS2048;
+   } else if (common_size >= 1526) {
+      cs_level = CS1536;
+   } else if (common_size >= 680) {
+      cs_level = CS680;
+   } else if (common_size >= 408) {
+      cs_level = CS408;
+   } else {
+      mesa_loge("This core appears to have a very limited amount of shared "
+                "register space and may not meet the Vulkan spec limits.");
+      abort();
+   }
+
+   return &descriptor_limits[cs_level];
 }
 
 void pvr_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
@@ -671,12 +840,39 @@ void pvr_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
    const uint32_t max_user_vertex_components =
       ((uvs_banks <= 8U) && (uvs_pba_entries == 160U)) ? 64U : 128U;
 
+   /* The workgroup invocations are limited by the case where we have a compute
+    * barrier - each slot has a fixed number of invocations, the whole workgroup
+    * may need to span multiple slots. As each slot will WAIT at the barrier
+    * until the last invocation completes, all have to be schedulable at the
+    * same time.
+    *
+    * Typically all Rogue cores have 16 slots. Some of the smallest cores are
+    * reduced to 14.
+    *
+    * The compute barrier slot exhaustion scenario can be tested with:
+    * dEQP-VK.memory_model.message_passing*u32.coherent.fence_fence
+    *    .atomicwrite*guard*comp
+    */
+
+   /* Default value based on the minimum value found in all existing cores. */
+   const uint32_t usc_slots =
+      PVR_GET_FEATURE_VALUE(&pdevice->dev_info, usc_slots, 14);
+
+   /* Default value based on the minimum value found in all existing cores. */
+   const uint32_t max_instances_per_pds_task =
+      PVR_GET_FEATURE_VALUE(&pdevice->dev_info,
+                            max_instances_per_pds_task,
+                            32U);
+
+   const uint32_t max_compute_work_group_invocations =
+      (usc_slots * max_instances_per_pds_task >= 512U) ? 512U : 384U;
+
    VkPhysicalDeviceLimits limits = {
       .maxImageDimension1D = max_render_size,
       .maxImageDimension2D = max_render_size,
-      .maxImageDimension3D = 2U * 1024U,
+      .maxImageDimension3D = PVR_MAX_TEXTURE_EXTENT_Z,
       .maxImageDimensionCube = max_render_size,
-      .maxImageArrayLayers = 2U * 1024U,
+      .maxImageArrayLayers = PVR_MAX_ARRAY_LAYERS,
       .maxTexelBufferElements = 64U * 1024U,
       .maxUniformBufferRange = 128U * 1024U * 1024U,
       .maxStorageBufferRange = 128U * 1024U * 1024U,
@@ -731,28 +927,33 @@ void pvr_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
       .maxTessellationEvaluationOutputComponents = 0,
 
       /* Geometry Shader Limits */
-      .maxGeometryShaderInvocations = 32U,
-      .maxGeometryInputComponents = max_user_vertex_components,
-      .maxGeometryOutputComponents = max_user_vertex_components,
-      .maxGeometryOutputVertices = 256U,
-      .maxGeometryTotalOutputComponents = 1024U,
+      .maxGeometryShaderInvocations = 0,
+      .maxGeometryInputComponents = 0,
+      .maxGeometryOutputComponents = 0,
+      .maxGeometryOutputVertices = 0,
+      .maxGeometryTotalOutputComponents = 0,
 
       /* Fragment Shader Limits */
       .maxFragmentInputComponents = max_user_vertex_components,
       .maxFragmentOutputAttachments = PVR_MAX_COLOR_ATTACHMENTS,
       .maxFragmentDualSrcAttachments = 0,
-      .maxFragmentCombinedOutputResources = 8U,
+      .maxFragmentCombinedOutputResources =
+         descriptor_limits->max_per_stage_storage_buffers +
+         descriptor_limits->max_per_stage_storage_images +
+         PVR_MAX_COLOR_ATTACHMENTS,
 
       /* Compute Shader Limits */
       .maxComputeSharedMemorySize = 16U * 1024U,
       .maxComputeWorkGroupCount = { 64U * 1024U, 64U * 1024U, 64U * 1024U },
-      .maxComputeWorkGroupInvocations = 512U,
-      .maxComputeWorkGroupSize = { 512U, 512U, 64U },
+      .maxComputeWorkGroupInvocations = max_compute_work_group_invocations,
+      .maxComputeWorkGroupSize = { max_compute_work_group_invocations,
+                                   max_compute_work_group_invocations,
+                                   64U },
 
       /* Rasterization Limits */
       .subPixelPrecisionBits = sub_pixel_precision,
       .subTexelPrecisionBits = 8U,
-      .mipmapPrecisionBits = 4U,
+      .mipmapPrecisionBits = 8U,
 
       .maxDrawIndexedIndexValue = UINT32_MAX,
       .maxDrawIndirectCount = 2U * 1024U * 1024U * 1024U,
@@ -773,8 +974,8 @@ void pvr_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice,
 
       .minTexelOffset = -8,
       .maxTexelOffset = 7U,
-      .minTexelGatherOffset = 0,
-      .maxTexelGatherOffset = 0,
+      .minTexelGatherOffset = -8,
+      .maxTexelGatherOffset = 7,
       .minInterpolationOffset = -0.5,
       .maxInterpolationOffset = 0.5,
       .subPixelInterpolationOffsetBits = 4U,
@@ -850,9 +1051,12 @@ void pvr_GetPhysicalDeviceQueueFamilyProperties(
    uint32_t *pCount,
    VkQueueFamilyProperties *pQueueFamilyProperties)
 {
-   VK_OUTARRAY_MAKE_TYPED(VkQueueFamilyProperties, out, pQueueFamilyProperties, pCount);
+   VK_OUTARRAY_MAKE_TYPED(VkQueueFamilyProperties,
+                          out,
+                          pQueueFamilyProperties,
+                          pCount);
 
-   vk_outarray_append_typed(VkQueueFamilyProperties, &out, p) {
+   vk_outarray_append_typed (VkQueueFamilyProperties, &out, p) {
       *p = pvr_queue_family_properties;
    }
 }
@@ -862,9 +1066,12 @@ void pvr_GetPhysicalDeviceQueueFamilyProperties2(
    uint32_t *pQueueFamilyPropertyCount,
    VkQueueFamilyProperties2 *pQueueFamilyProperties)
 {
-   VK_OUTARRAY_MAKE_TYPED(VkQueueFamilyProperties2, out, pQueueFamilyProperties, pQueueFamilyPropertyCount);
+   VK_OUTARRAY_MAKE_TYPED(VkQueueFamilyProperties2,
+                          out,
+                          pQueueFamilyProperties,
+                          pQueueFamilyPropertyCount);
 
-   vk_outarray_append_typed(VkQueueFamilyProperties2, &out, p) {
+   vk_outarray_append_typed (VkQueueFamilyProperties2, &out, p) {
       p->queueFamilyProperties = pvr_queue_family_properties;
 
       vk_foreach_struct (ext, p->pNext) {
@@ -917,16 +1124,66 @@ vk_icdGetPhysicalDeviceProcAddr(VkInstance _instance, const char *pName)
    return vk_instance_get_physical_device_proc_addr(&instance->vk, pName);
 }
 
-static VkResult pvr_device_init_compute_pds_program(struct pvr_device *device)
+static VkResult pvr_pds_compute_shader_create_and_upload(
+   struct pvr_device *device,
+   struct pvr_pds_compute_shader_program *program,
+   struct pvr_pds_upload *const pds_upload_out)
 {
    const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
    const uint32_t cache_line_size = rogue_get_slc_cache_line_size(dev_info);
-   struct pvr_pds_compute_shader_program program = { 0U };
    size_t staging_buffer_size;
    uint32_t *staging_buffer;
    uint32_t *data_buffer;
    uint32_t *code_buffer;
    VkResult result;
+
+   /* Calculate how much space we'll need for the compute shader PDS program.
+    */
+   pvr_pds_compute_shader(program, NULL, PDS_GENERATE_SIZES, dev_info);
+
+   /* FIXME: Fix the below inconsistency of code size being in bytes whereas
+    * data size being in dwords.
+    */
+   /* Code size is in bytes, data size in dwords. */
+   staging_buffer_size =
+      program->data_size * sizeof(uint32_t) + program->code_size;
+
+   staging_buffer = vk_alloc(&device->vk.alloc,
+                             staging_buffer_size,
+                             8U,
+                             VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
+   if (!staging_buffer)
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+
+   data_buffer = staging_buffer;
+   code_buffer = pvr_pds_compute_shader(program,
+                                        data_buffer,
+                                        PDS_GENERATE_DATA_SEGMENT,
+                                        dev_info);
+
+   pvr_pds_compute_shader(program,
+                          code_buffer,
+                          PDS_GENERATE_CODE_SEGMENT,
+                          dev_info);
+
+   result = pvr_gpu_upload_pds(device,
+                               data_buffer,
+                               program->data_size,
+                               PVRX(CDMCTRL_KERNEL1_DATA_ADDR_ALIGNMENT),
+                               code_buffer,
+                               program->code_size / sizeof(uint32_t),
+                               PVRX(CDMCTRL_KERNEL2_CODE_ADDR_ALIGNMENT),
+                               cache_line_size,
+                               pds_upload_out);
+
+   vk_free(&device->vk.alloc, staging_buffer);
+
+   return result;
+}
+
+static VkResult pvr_device_init_compute_fence_program(struct pvr_device *device)
+{
+   struct pvr_pds_compute_shader_program program = { 0U };
 
    STATIC_ASSERT(ARRAY_SIZE(program.local_input_regs) ==
                  ARRAY_SIZE(program.work_group_input_regs));
@@ -946,50 +1203,715 @@ static VkResult pvr_device_init_compute_pds_program(struct pvr_device *device)
    program.fence = true;
    program.clear_pds_barrier = true;
 
-   /* Calculate how much space we'll need for the compute shader PDS program.
-    */
-   pvr_pds_set_sizes_compute_shader(&program, dev_info);
+   return pvr_pds_compute_shader_create_and_upload(
+      device,
+      &program,
+      &device->pds_compute_fence_program);
+}
 
-   /* FIXME: Fix the below inconsistency of code size being in bytes whereas
-    * data size being in dwords.
-    */
-   /* Code size is in bytes, data size in dwords. */
+static VkResult pvr_pds_idfwdf_programs_create_and_upload(
+   struct pvr_device *device,
+   pvr_dev_addr_t usc_addr,
+   uint32_t shareds,
+   uint32_t temps,
+   pvr_dev_addr_t shareds_buffer_addr,
+   struct pvr_pds_upload *const upload_out,
+   struct pvr_pds_upload *const sw_compute_barrier_upload_out)
+{
+   const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
+   struct pvr_pds_vertex_shader_sa_program program = {
+      .kick_usc = true,
+      .clear_pds_barrier = PVR_NEED_SW_COMPUTE_PDS_BARRIER(dev_info),
+   };
+   size_t staging_buffer_size;
+   uint32_t *staging_buffer;
+   VkResult result;
+
+   /* We'll need to DMA the shareds into the USC's Common Store. */
+   program.num_dma_kicks = pvr_pds_encode_dma_burst(program.dma_control,
+                                                    program.dma_address,
+                                                    0,
+                                                    shareds,
+                                                    shareds_buffer_addr.addr,
+                                                    dev_info);
+
+   /* DMA temp regs. */
+   pvr_pds_setup_doutu(&program.usc_task_control,
+                       usc_addr.addr,
+                       temps,
+                       PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                       false);
+
+   pvr_pds_vertex_shader_sa(&program, NULL, PDS_GENERATE_SIZES, dev_info);
+
    staging_buffer_size =
-      program.data_size * sizeof(uint32_t) + program.code_size;
+      (program.code_size + program.data_size) * sizeof(*staging_buffer);
 
    staging_buffer = vk_alloc(&device->vk.alloc,
                              staging_buffer_size,
-                             8U,
-                             VK_SYSTEM_ALLOCATION_SCOPE_DEVICE);
+                             8,
+                             VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
    if (!staging_buffer)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   data_buffer = staging_buffer;
-   code_buffer = pvr_pds_generate_compute_shader_data_segment(&program,
-                                                              data_buffer,
-                                                              dev_info);
-   pvr_pds_generate_compute_shader_code_segment(&program,
-                                                code_buffer,
-                                                dev_info);
+   /* FIXME: Add support for PDS_GENERATE_CODEDATA_SEGMENTS? */
+   pvr_pds_vertex_shader_sa(&program,
+                            staging_buffer,
+                            PDS_GENERATE_DATA_SEGMENT,
+                            dev_info);
+   pvr_pds_vertex_shader_sa(&program,
+                            &staging_buffer[program.data_size],
+                            PDS_GENERATE_CODE_SEGMENT,
+                            dev_info);
+
+   /* At the time of writing, the SW_COMPUTE_PDS_BARRIER variant of the program
+    * is bigger so we handle it first (if needed) and realloc() for a smaller
+    * size.
+    */
+   if (PVR_NEED_SW_COMPUTE_PDS_BARRIER(dev_info)) {
+      /* FIXME: Figure out the define for alignment of 16. */
+      result = pvr_gpu_upload_pds(device,
+                                  &staging_buffer[0],
+                                  program.data_size,
+                                  16,
+                                  &staging_buffer[program.data_size],
+                                  program.code_size,
+                                  16,
+                                  16,
+                                  sw_compute_barrier_upload_out);
+      if (result != VK_SUCCESS) {
+         vk_free(&device->vk.alloc, staging_buffer);
+         return result;
+      }
+
+      program.clear_pds_barrier = false;
+
+      pvr_pds_vertex_shader_sa(&program, NULL, PDS_GENERATE_SIZES, dev_info);
+
+      staging_buffer_size =
+         (program.code_size + program.data_size) * sizeof(*staging_buffer);
+
+      staging_buffer = vk_realloc(&device->vk.alloc,
+                                  staging_buffer,
+                                  staging_buffer_size,
+                                  8,
+                                  VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
+      if (!staging_buffer) {
+         pvr_bo_free(device, sw_compute_barrier_upload_out->pvr_bo);
+
+         return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+      }
+
+      /* FIXME: Add support for PDS_GENERATE_CODEDATA_SEGMENTS? */
+      pvr_pds_vertex_shader_sa(&program,
+                               staging_buffer,
+                               PDS_GENERATE_DATA_SEGMENT,
+                               dev_info);
+      pvr_pds_vertex_shader_sa(&program,
+                               &staging_buffer[program.data_size],
+                               PDS_GENERATE_CODE_SEGMENT,
+                               dev_info);
+   } else {
+      *sw_compute_barrier_upload_out = (struct pvr_pds_upload){
+         .pvr_bo = NULL,
+      };
+   }
+
+   /* FIXME: Figure out the define for alignment of 16. */
    result = pvr_gpu_upload_pds(device,
-                               data_buffer,
+                               &staging_buffer[0],
                                program.data_size,
-                               PVRX(CDMCTRL_KERNEL1_DATA_ADDR_ALIGNMENT),
-                               code_buffer,
-                               program.code_size / sizeof(uint32_t),
-                               PVRX(CDMCTRL_KERNEL2_CODE_ADDR_ALIGNMENT),
-                               cache_line_size,
-                               &device->pds_compute_fence_program);
+                               16,
+                               &staging_buffer[program.data_size],
+                               program.code_size,
+                               16,
+                               16,
+                               upload_out);
+   if (result != VK_SUCCESS) {
+      vk_free(&device->vk.alloc, staging_buffer);
+      pvr_bo_free(device, sw_compute_barrier_upload_out->pvr_bo);
+
+      return result;
+   }
 
    vk_free(&device->vk.alloc, staging_buffer);
 
+   return VK_SUCCESS;
+}
+
+static VkResult pvr_device_init_compute_idfwdf_state(struct pvr_device *device)
+{
+   uint64_t sampler_state[ROGUE_NUM_TEXSTATE_SAMPLER_WORDS];
+   uint64_t image_state[ROGUE_NUM_TEXSTATE_IMAGE_WORDS];
+   const struct rogue_shader_binary *usc_program;
+   struct pvr_texture_state_info tex_info;
+   uint32_t *dword_ptr;
+   uint32_t usc_shareds;
+   uint32_t usc_temps;
+   VkResult result;
+
+   pvr_hard_code_get_idfwdf_program(&device->pdevice->dev_info,
+                                    &usc_program,
+                                    &usc_shareds,
+                                    &usc_temps);
+
+   device->idfwdf_state.usc_shareds = usc_shareds;
+
+   /* FIXME: Figure out the define for alignment of 16. */
+   result = pvr_gpu_upload_usc(device,
+                               usc_program->data,
+                               usc_program->size,
+                               16,
+                               &device->idfwdf_state.usc);
+   if (result != VK_SUCCESS)
+      return result;
+
+   /* TODO: Get the store buffer size from the compiler? */
+   /* TODO: How was the size derived here? */
+   result = pvr_bo_alloc(device,
+                         device->heaps.general_heap,
+                         4 * sizeof(float) * 4 * 2,
+                         4,
+                         0,
+                         &device->idfwdf_state.store_bo);
+   if (result != VK_SUCCESS)
+      goto err_free_usc_program;
+
+   result = pvr_bo_alloc(device,
+                         device->heaps.general_heap,
+                         usc_shareds * ROGUE_REG_SIZE_BYTES,
+                         ROGUE_REG_SIZE_BYTES,
+                         PVR_BO_ALLOC_FLAG_CPU_MAPPED,
+                         &device->idfwdf_state.shareds_bo);
+   if (result != VK_SUCCESS)
+      goto err_free_store_buffer;
+
+   /* Pack state words. */
+
+   pvr_csb_pack (&sampler_state[0], TEXSTATE_SAMPLER, sampler) {
+      sampler.dadjust = PVRX(TEXSTATE_DADJUST_ZERO_UINT);
+      sampler.magfilter = PVRX(TEXSTATE_FILTER_POINT);
+      sampler.addrmode_u = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+      sampler.addrmode_v = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+   }
+
+   /* clang-format off */
+   pvr_csb_pack (&sampler_state[1], TEXSTATE_SAMPLER_WORD1, sampler_word1) {}
+   /* clang-format on */
+
+   STATIC_ASSERT(1 + 1 == ROGUE_NUM_TEXSTATE_SAMPLER_WORDS);
+
+   tex_info = (struct pvr_texture_state_info){
+      .format = VK_FORMAT_R32G32B32A32_SFLOAT,
+      .mem_layout = PVR_MEMLAYOUT_LINEAR,
+      .flags = PVR_TEXFLAGS_INDEX_LOOKUP,
+      .type = VK_IMAGE_VIEW_TYPE_2D,
+      .extent = { .width = 4, .height = 2, .depth = 0 },
+      .mip_levels = 1,
+      .sample_count = 1,
+      .stride = 4,
+      .swizzle = { PIPE_SWIZZLE_X,
+                   PIPE_SWIZZLE_Y,
+                   PIPE_SWIZZLE_Z,
+                   PIPE_SWIZZLE_W },
+      .addr = device->idfwdf_state.store_bo->vma->dev_addr,
+   };
+
+   result = pvr_pack_tex_state(device, &tex_info, image_state);
+   if (result != VK_SUCCESS)
+      goto err_free_shareds_buffer;
+
+   /* Fill the shareds buffer. */
+
+   dword_ptr = (uint32_t *)device->idfwdf_state.shareds_bo->bo->map;
+
+#define HIGH_32(val) ((uint32_t)((val) >> 32U))
+#define LOW_32(val) ((uint32_t)(val))
+
+   /* TODO: Should we use compiler info to setup the shareds data instead of
+    * assuming there's always 12 and this is how they should be setup?
+    */
+
+   dword_ptr[0] = HIGH_32(device->idfwdf_state.store_bo->vma->dev_addr.addr);
+   dword_ptr[1] = LOW_32(device->idfwdf_state.store_bo->vma->dev_addr.addr);
+
+   /* Pad the shareds as the texture/sample state words are 128 bit aligned. */
+   dword_ptr[2] = 0U;
+   dword_ptr[3] = 0U;
+
+   dword_ptr[4] = LOW_32(image_state[0]);
+   dword_ptr[5] = HIGH_32(image_state[0]);
+   dword_ptr[6] = LOW_32(image_state[1]);
+   dword_ptr[7] = HIGH_32(image_state[1]);
+
+   dword_ptr[8] = LOW_32(sampler_state[0]);
+   dword_ptr[9] = HIGH_32(sampler_state[0]);
+   dword_ptr[10] = LOW_32(sampler_state[1]);
+   dword_ptr[11] = HIGH_32(sampler_state[1]);
+   assert(11 + 1 == usc_shareds);
+
+#undef HIGH_32
+#undef LOW_32
+
+   pvr_bo_cpu_unmap(device, device->idfwdf_state.shareds_bo);
+   dword_ptr = NULL;
+
+   /* Generate and upload PDS programs. */
+   result = pvr_pds_idfwdf_programs_create_and_upload(
+      device,
+      device->idfwdf_state.usc->vma->dev_addr,
+      usc_shareds,
+      usc_temps,
+      device->idfwdf_state.shareds_bo->vma->dev_addr,
+      &device->idfwdf_state.pds,
+      &device->idfwdf_state.sw_compute_barrier_pds);
+   if (result != VK_SUCCESS)
+      goto err_free_shareds_buffer;
+
+   return VK_SUCCESS;
+
+err_free_shareds_buffer:
+   pvr_bo_free(device, device->idfwdf_state.shareds_bo);
+
+err_free_store_buffer:
+   pvr_bo_free(device, device->idfwdf_state.store_bo);
+
+err_free_usc_program:
+   pvr_bo_free(device, device->idfwdf_state.usc);
+
    return result;
+}
+
+static void pvr_device_finish_compute_idfwdf_state(struct pvr_device *device)
+{
+   pvr_bo_free(device, device->idfwdf_state.pds.pvr_bo);
+   pvr_bo_free(device, device->idfwdf_state.sw_compute_barrier_pds.pvr_bo);
+   pvr_bo_free(device, device->idfwdf_state.shareds_bo);
+   pvr_bo_free(device, device->idfwdf_state.store_bo);
+   pvr_bo_free(device, device->idfwdf_state.usc);
+}
+
+static void pvr_device_setup_graphics_static_clear_ppp_base(
+   struct pvr_static_clear_ppp_base *const base)
+{
+   pvr_csb_pack (&base->wclamp, TA_WCLAMP, wclamp) {
+      wclamp.val = fui(0.00001f);
+   }
+
+   /* clang-format off */
+   pvr_csb_pack (&base->varying_word[0], TA_STATE_VARYING0, varying0);
+   pvr_csb_pack (&base->varying_word[1], TA_STATE_VARYING1, varying1);
+   pvr_csb_pack (&base->varying_word[2], TA_STATE_VARYING2, varying2);
+   /* clang-format on */
+
+   pvr_csb_pack (&base->ppp_ctrl, TA_STATE_PPP_CTRL, ppp_ctrl) {
+      ppp_ctrl.pretransform = true;
+      ppp_ctrl.cullmode = PVRX(TA_CULLMODE_NO_CULLING);
+   }
+
+   /* clang-format off */
+   pvr_csb_pack (&base->stream_out0, TA_STATE_STREAM_OUT0, stream_out0);
+   /* clang-format on */
+}
+
+static void pvr_device_setup_graphics_static_clear_ppp_templates(
+   struct pvr_static_clear_ppp_template
+      templates[static PVR_STATIC_CLEAR_VARIANT_COUNT])
+{
+   for (uint32_t i = 0; i < PVR_STATIC_CLEAR_VARIANT_COUNT; i++) {
+      const bool has_depth = !!(i & PVR_STATIC_CLEAR_DEPTH_BIT);
+      const bool has_stencil = !!(i & PVR_STATIC_CLEAR_STENCIL_BIT);
+      const bool has_color = !!(i & PVR_STATIC_CLEAR_COLOR_BIT);
+
+      struct pvr_static_clear_ppp_template *const template = &templates[i];
+
+      template->requires_pds_state = has_color;
+
+      pvr_csb_pack (&template->header, TA_STATE_HEADER, header) {
+         header.pres_stream_out_size = true;
+         header.pres_ppp_ctrl = true;
+         header.pres_varying_word2 = true;
+         header.pres_varying_word1 = true;
+         header.pres_varying_word0 = true;
+         header.pres_outselects = true;
+         header.pres_wclamp = true;
+         header.pres_region_clip = true;
+         header.pres_pds_state_ptr2 = template->requires_pds_state;
+         header.pres_pds_state_ptr1 = template->requires_pds_state;
+         header.pres_pds_state_ptr0 = template->requires_pds_state;
+         header.pres_ispctl_fb = true;
+         header.pres_ispctl_fa = true;
+         header.pres_ispctl = true;
+      }
+
+#define CS_HEADER(cs)    \
+   (struct PVRX(cs))     \
+   {                     \
+      pvr_cmd_header(cs) \
+   }
+
+      template->config.ispctl = CS_HEADER(TA_STATE_ISPCTL);
+      template->config.ispctl.tagwritedisable = !has_color;
+      template->config.ispctl.bpres = true;
+
+      template->config.ispa = CS_HEADER(TA_STATE_ISPA);
+      template->config.ispa.objtype = PVRX(TA_OBJTYPE_TRIANGLE);
+      template->config.ispa.passtype = PVRX(TA_PASSTYPE_TRANSLUCENT);
+      template->config.ispa.dwritedisable = !has_depth;
+      template->config.ispa.dcmpmode = (i == 0) ? PVRX(TA_CMPMODE_NEVER)
+                                                : PVRX(TA_CMPMODE_ALWAYS);
+      template->config.ispa.sref =
+         has_stencil ? PVRX(TA_STATE_ISPA_SREF_SIZE_MAX) : 0;
+
+      pvr_csb_pack (&template->ispb, TA_STATE_ISPB, ispb) {
+         ispb.scmpmode = PVRX(TA_CMPMODE_ALWAYS);
+         ispb.sop1 = PVRX(TA_ISPB_STENCILOP_KEEP);
+         ispb.sop2 = PVRX(TA_ISPB_STENCILOP_KEEP);
+
+         ispb.sop3 = has_stencil ? PVRX(TA_ISPB_STENCILOP_REPLACE)
+                                 : PVRX(TA_ISPB_STENCILOP_KEEP);
+
+         ispb.swmask = has_stencil ? 0xFF : 0;
+      }
+
+      template->config.pds_state = NULL;
+
+      template->config.region_clip0 = CS_HEADER(TA_REGION_CLIP0);
+      template->config.region_clip0.mode = PVRX(TA_REGION_CLIP_MODE_NONE);
+
+      template->config.region_clip1 = CS_HEADER(TA_REGION_CLIP1);
+
+      template->config.output_sel = CS_HEADER(TA_OUTPUT_SEL);
+      template->config.output_sel.vtxsize = 4;
+      template->config.output_sel.rhw_pres = true;
+
+#undef CS_HEADER
+   }
+}
+
+/**
+ * \brief Emit geom state from a configurable template.
+ *
+ * Note that the state is emitted by joining the template with a base so the
+ * base must have been setup before calling this.
+ *
+ * \param[in] csb          Control stream to emit to.
+ * \param[in] template     The configured template.
+ * \param[out] pvr_bo_out  Uploaded state's pvr_bo object.
+ *
+ * \return   VK_SUCCESS if the state was successfully uploaded.
+ */
+VkResult pvr_emit_ppp_from_template(
+   struct pvr_csb *const csb,
+   const struct pvr_static_clear_ppp_template *const template,
+   struct pvr_bo **const pvr_bo_out)
+{
+   const uint32_t dword_count =
+      pvr_cmd_length(TA_STATE_HEADER) + pvr_cmd_length(TA_STATE_ISPCTL) +
+      pvr_cmd_length(TA_STATE_ISPA) + pvr_cmd_length(TA_STATE_ISPB) +
+      (template->requires_pds_state ? PVR_STATIC_CLEAR_PDS_STATE_COUNT : 0) +
+      pvr_cmd_length(TA_REGION_CLIP0) + pvr_cmd_length(TA_REGION_CLIP1) +
+      pvr_cmd_length(TA_WCLAMP) + pvr_cmd_length(TA_OUTPUT_SEL) +
+      pvr_cmd_length(TA_STATE_VARYING0) + pvr_cmd_length(TA_STATE_VARYING1) +
+      pvr_cmd_length(TA_STATE_VARYING2) + pvr_cmd_length(TA_STATE_PPP_CTRL) +
+      pvr_cmd_length(TA_STATE_STREAM_OUT0);
+
+   struct pvr_device *const device = csb->device;
+   const uint32_t cache_line_size =
+      rogue_get_slc_cache_line_size(&device->pdevice->dev_info);
+   const struct pvr_static_clear_ppp_base *const base =
+      &device->static_clear_state.ppp_base;
+   struct pvr_bo *pvr_bo;
+   uint32_t *stream;
+   VkResult result;
+
+   result = pvr_bo_alloc(device,
+                         device->heaps.general_heap,
+                         dword_count * sizeof(uint32_t),
+                         cache_line_size,
+                         PVR_BO_ALLOC_FLAG_CPU_MAPPED,
+                         &pvr_bo);
+   if (result != VK_SUCCESS) {
+      *pvr_bo_out = NULL;
+      return result;
+   }
+
+   stream = (uint32_t *)pvr_bo->bo->map;
+
+   pvr_csb_write_value(stream, TA_STATE_HEADER, template->header);
+   pvr_csb_write_struct(stream, TA_STATE_ISPCTL, &template->config.ispctl);
+   pvr_csb_write_struct(stream, TA_STATE_ISPA, &template->config.ispa);
+   pvr_csb_write_value(stream, TA_STATE_ISPB, template->ispb);
+
+   if (template->requires_pds_state) {
+      static_assert(sizeof(*stream) == sizeof((*template->config.pds_state)[0]),
+                    "Size mismatch");
+      for (uint32_t i = 0; i < PVR_STATIC_CLEAR_PDS_STATE_COUNT; i++)
+         *stream++ = (*template->config.pds_state)[i];
+   }
+
+   pvr_csb_write_struct(stream,
+                        TA_REGION_CLIP0,
+                        &template->config.region_clip0);
+   pvr_csb_write_struct(stream,
+                        TA_REGION_CLIP1,
+                        &template->config.region_clip1);
+   pvr_csb_write_value(stream, TA_WCLAMP, base->wclamp);
+   pvr_csb_write_struct(stream, TA_OUTPUT_SEL, &template->config.output_sel);
+   pvr_csb_write_value(stream, TA_STATE_VARYING0, base->varying_word[0]);
+   pvr_csb_write_value(stream, TA_STATE_VARYING1, base->varying_word[1]);
+   pvr_csb_write_value(stream, TA_STATE_VARYING2, base->varying_word[2]);
+   pvr_csb_write_value(stream, TA_STATE_PPP_CTRL, base->ppp_ctrl);
+   pvr_csb_write_value(stream, TA_STATE_STREAM_OUT0, base->stream_out0);
+
+   assert((uint64_t)(stream - (uint32_t *)pvr_bo->bo->map) == dword_count);
+
+   pvr_bo_cpu_unmap(device, pvr_bo);
+   stream = NULL;
+
+   pvr_csb_emit (csb, VDMCTRL_PPP_STATE0, state) {
+      state.word_count = dword_count;
+      state.addrmsb = pvr_bo->vma->dev_addr;
+   }
+
+   pvr_csb_emit (csb, VDMCTRL_PPP_STATE1, state) {
+      state.addrlsb = pvr_bo->vma->dev_addr;
+   }
+
+   *pvr_bo_out = pvr_bo;
+
+   return VK_SUCCESS;
+}
+
+static void pvr_device_setup_graphics_static_clear_vdm_state(
+   const struct pvr_device_info *const dev_info,
+   const struct pvr_pds_upload *const program,
+   uint32_t temps,
+   uint32_t index_count,
+   uint32_t vs_output_size_in_bytes,
+   uint32_t state_buffer[const static PVR_CLEAR_VDM_STATE_DWORD_COUNT])
+{
+   const uint32_t vs_output_size =
+      DIV_ROUND_UP(vs_output_size_in_bytes,
+                   PVRX(VDMCTRL_VDM_STATE4_VS_OUTPUT_SIZE_UNIT_SIZE));
+   uint32_t *stream = state_buffer;
+   uint32_t max_instances;
+   uint32_t cam_size;
+
+   pvr_calculate_vertex_cam_size(dev_info,
+                                 vs_output_size,
+                                 true,
+                                 &cam_size,
+                                 &max_instances);
+
+   pvr_csb_pack (stream, VDMCTRL_VDM_STATE0, state0) {
+      state0.vs_data_addr_present = true;
+      state0.vs_other_present = true;
+      state0.cam_size = cam_size;
+      state0.uvs_scratch_size_select =
+         PVRX(VDMCTRL_UVS_SCRATCH_SIZE_SELECT_FIVE);
+      state0.flatshade_control = PVRX(VDMCTRL_FLATSHADE_CONTROL_VERTEX_0);
+   }
+   stream += pvr_cmd_length(VDMCTRL_VDM_STATE0);
+
+   pvr_csb_pack (stream, VDMCTRL_VDM_STATE2, state2) {
+      state2.vs_pds_data_base_addr = PVR_DEV_ADDR(program->data_offset);
+   }
+   stream += pvr_cmd_length(VDMCTRL_VDM_STATE2);
+
+   pvr_csb_pack (stream, VDMCTRL_VDM_STATE3, state3) {
+      state3.vs_pds_code_base_addr = PVR_DEV_ADDR(program->code_offset);
+   }
+   stream += pvr_cmd_length(VDMCTRL_VDM_STATE3);
+
+   pvr_csb_pack (stream, VDMCTRL_VDM_STATE4, state4) {
+      state4.vs_output_size = vs_output_size;
+   }
+   stream += pvr_cmd_length(VDMCTRL_VDM_STATE4);
+
+   pvr_csb_pack (stream, VDMCTRL_VDM_STATE5, state5) {
+      state5.vs_max_instances = max_instances;
+      /* TODO: Where does the 3 * sizeof(uint32_t) come from? */
+      state5.vs_usc_unified_size =
+         DIV_ROUND_UP(3 * sizeof(uint32_t),
+                      PVRX(VDMCTRL_VDM_STATE5_VS_USC_UNIFIED_SIZE_UNIT_SIZE));
+      state5.vs_pds_temp_size =
+         DIV_ROUND_UP(temps,
+                      PVRX(VDMCTRL_VDM_STATE5_VS_PDS_TEMP_SIZE_UNIT_SIZE));
+      state5.vs_pds_data_size =
+         DIV_ROUND_UP(program->data_size << 2,
+                      PVRX(VDMCTRL_VDM_STATE5_VS_PDS_DATA_SIZE_UNIT_SIZE));
+   }
+   stream += pvr_cmd_length(VDMCTRL_VDM_STATE5);
+
+   pvr_csb_pack (stream, VDMCTRL_INDEX_LIST0, index_list0) {
+      index_list0.index_count_present = true;
+      index_list0.primitive_topology =
+         PVRX(VDMCTRL_PRIMITIVE_TOPOLOGY_TRI_STRIP);
+   }
+   stream += pvr_cmd_length(VDMCTRL_INDEX_LIST0);
+
+   pvr_csb_pack (stream, VDMCTRL_INDEX_LIST2, index_list3) {
+      index_list3.index_count = index_count;
+   }
+   stream += pvr_cmd_length(VDMCTRL_INDEX_LIST2);
+
+   assert((uint64_t)(stream - state_buffer) == PVR_CLEAR_VDM_STATE_DWORD_COUNT);
+}
+
+static VkResult
+pvr_device_init_graphics_static_clear_state(struct pvr_device *device)
+{
+   struct pvr_device_static_clear_state *state = &device->static_clear_state;
+   const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
+   const uint32_t cache_line_size = rogue_get_slc_cache_line_size(dev_info);
+   const float vf_x_max = (float)rogue_get_param_vf_max_x(dev_info);
+   const float vf_y_max = (float)rogue_get_param_vf_max_y(dev_info);
+   const struct rogue_shader_binary *passthrough_vert_shader;
+   struct pvr_pds_vertex_shader_program pds_program;
+   size_t staging_buffer_size;
+   uint32_t *staging_buffer;
+   VkResult result;
+
+   const float vertices[4][3] = { { 0.0f, 0.0f, 0.0f },
+                                  { vf_x_max, 0.0f, 0.0f },
+                                  { 0.0f, vf_y_max, 0.0f },
+                                  { vf_x_max, vf_y_max, 0.0f } };
+
+   pvr_hard_code_get_passthrough_vertex_shader(dev_info,
+                                               &passthrough_vert_shader);
+
+   result = pvr_gpu_upload_usc(device,
+                               passthrough_vert_shader->data,
+                               passthrough_vert_shader->size,
+                               cache_line_size,
+                               &state->usc_vertex_shader_bo);
+   if (result != VK_SUCCESS)
+      return result;
+
+   result = pvr_gpu_upload(device,
+                           device->heaps.general_heap,
+                           vertices,
+                           sizeof(vertices),
+                           sizeof(vertices[0][0]),
+                           &state->vertices_bo);
+   if (result != VK_SUCCESS)
+      goto err_free_usc_shader;
+
+   pds_program = (struct pvr_pds_vertex_shader_program) {
+      .num_streams = 1,
+      .streams = {
+         [0] = {
+            .address = state->vertices_bo->vma->dev_addr.addr,
+            .stride = sizeof(vertices[0]),
+            .num_elements = 1,
+            .elements = {
+               [0] = {
+                  .size = sizeof(vertices[0]),
+               },
+            },
+         },
+      },
+   };
+
+   pvr_pds_setup_doutu(&pds_program.usc_task_control,
+                       state->usc_vertex_shader_bo->vma->dev_addr.addr,
+                       0,
+                       PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                       false);
+
+   pvr_pds_vertex_shader(&pds_program, NULL, PDS_GENERATE_SIZES, dev_info);
+
+   staging_buffer_size =
+      (pds_program.code_size + pds_program.data_size) * sizeof(*staging_buffer);
+
+   staging_buffer = vk_alloc(&device->vk.alloc,
+                             staging_buffer_size,
+                             8,
+                             VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
+   if (!staging_buffer)
+      goto err_free_verices_buffer;
+
+   pvr_pds_vertex_shader(&pds_program,
+                         staging_buffer,
+                         PDS_GENERATE_DATA_SEGMENT,
+                         dev_info);
+   pvr_pds_vertex_shader(&pds_program,
+                         &staging_buffer[pds_program.data_size],
+                         PDS_GENERATE_CODE_SEGMENT,
+                         dev_info);
+
+   /* FIXME: Figure out the define for alignment of 16. */
+   result = pvr_gpu_upload_pds(device,
+                               &staging_buffer[0],
+                               pds_program.data_size,
+                               16,
+                               &staging_buffer[pds_program.data_size],
+                               pds_program.code_size,
+                               16,
+                               16,
+                               &state->pds);
+   if (result != VK_SUCCESS)
+      goto err_free_staging_buffer;
+
+   vk_free(&device->vk.alloc, staging_buffer);
+
+   pvr_device_setup_graphics_static_clear_ppp_base(&state->ppp_base);
+   pvr_device_setup_graphics_static_clear_ppp_templates(state->ppp_templates);
+
+   assert(pds_program.code_size <= state->pds.code_size);
+
+   /* TODO: The difference between the large and normal words is only the last
+    * word. The value is 3 or 4 depending on the amount of indices. Should we
+    * dedup this?
+    */
+
+   /* TODO: Figure out where the 4 * sizeof(uint32_t) comes from. */
+   pvr_device_setup_graphics_static_clear_vdm_state(&device->pdevice->dev_info,
+                                                    &state->pds,
+                                                    pds_program.temps_used,
+                                                    3,
+                                                    4 * sizeof(uint32_t),
+                                                    state->vdm_words);
+
+   /* TODO: Figure out where the 4 * sizeof(uint32_t) comes from. */
+   pvr_device_setup_graphics_static_clear_vdm_state(
+      &device->pdevice->dev_info,
+      &state->pds,
+      pds_program.temps_used,
+      4,
+      4 * sizeof(uint32_t),
+      state->large_clear_vdm_words);
+
+   return VK_SUCCESS;
+
+err_free_staging_buffer:
+   vk_free(&device->vk.alloc, staging_buffer);
+
+err_free_verices_buffer:
+   pvr_bo_free(device, state->vertices_bo);
+
+err_free_usc_shader:
+   pvr_bo_free(device, state->usc_vertex_shader_bo);
+
+   return result;
+}
+
+static void
+pvr_device_finish_graphics_static_clear_state(struct pvr_device *device)
+{
+   struct pvr_device_static_clear_state *state = &device->static_clear_state;
+
+   pvr_bo_free(device, state->pds.pvr_bo);
+   pvr_bo_free(device, state->vertices_bo);
+   pvr_bo_free(device, state->usc_vertex_shader_bo);
 }
 
 /* FIXME: We should be calculating the size when we upload the code in
  * pvr_srv_setup_static_pixel_event_program().
  */
 static void pvr_device_get_pixel_event_pds_program_data_size(
+   const struct pvr_device_info *dev_info,
    uint32_t *const data_size_in_dwords_out)
 {
    struct pvr_pds_event_program program = {
@@ -997,9 +1919,89 @@ static void pvr_device_get_pixel_event_pds_program_data_size(
       .num_emit_word_pairs = 0,
    };
 
-   pvr_pds_set_sizes_pixel_event(&program);
+   pvr_pds_set_sizes_pixel_event(&program, dev_info);
 
    *data_size_in_dwords_out = program.data_size;
+}
+
+static VkResult pvr_device_init_nop_program(struct pvr_device *device)
+{
+   const uint32_t cache_line_size =
+      rogue_get_slc_cache_line_size(&device->pdevice->dev_info);
+   struct pvr_pds_kickusc_program program = { 0 };
+   uint32_t staging_buffer_size;
+   uint32_t *staging_buffer;
+   VkResult result;
+
+   result = pvr_gpu_upload_usc(device,
+                               pvr_nop_usc_code,
+                               sizeof(pvr_nop_usc_code),
+                               cache_line_size,
+                               &device->nop_program.usc);
+   if (result != VK_SUCCESS)
+      return result;
+
+   /* Setup a PDS program that kicks the static USC program. */
+   pvr_pds_setup_doutu(&program.usc_task_control,
+                       device->nop_program.usc->vma->dev_addr.addr,
+                       0U,
+                       PVRX(PDSINST_DOUTU_SAMPLE_RATE_INSTANCE),
+                       false);
+
+   pvr_pds_set_sizes_pixel_shader(&program);
+
+   staging_buffer_size =
+      (program.code_size + program.data_size) * sizeof(*staging_buffer);
+
+   staging_buffer = vk_alloc(&device->vk.alloc,
+                             staging_buffer_size,
+                             8U,
+                             VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
+   if (!staging_buffer) {
+      result = vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+      goto err_free_nop_usc_bo;
+   }
+
+   pvr_pds_generate_pixel_shader_program(&program, staging_buffer);
+
+   /* FIXME: Figure out the define for alignment of 16. */
+   result = pvr_gpu_upload_pds(device,
+                               staging_buffer,
+                               program.data_size,
+                               16U,
+                               &staging_buffer[program.data_size],
+                               program.code_size,
+                               16U,
+                               16U,
+                               &device->nop_program.pds);
+   if (result != VK_SUCCESS)
+      goto err_free_staging_buffer;
+
+   vk_free(&device->vk.alloc, staging_buffer);
+
+   return VK_SUCCESS;
+
+err_free_staging_buffer:
+   vk_free(&device->vk.alloc, staging_buffer);
+
+err_free_nop_usc_bo:
+   pvr_bo_free(device, device->nop_program.usc);
+
+   return result;
+}
+
+static void pvr_device_init_default_sampler_state(struct pvr_device *device)
+{
+   pvr_csb_pack (&device->input_attachment_sampler, TEXSTATE_SAMPLER, sampler) {
+      sampler.addrmode_u = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+      sampler.addrmode_v = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+      sampler.addrmode_w = PVRX(TEXSTATE_ADDRMODE_CLAMP_TO_EDGE);
+      sampler.dadjust = PVRX(TEXSTATE_DADJUST_ZERO_UINT);
+      sampler.magfilter = PVRX(TEXSTATE_FILTER_POINT);
+      sampler.minfilter = PVRX(TEXSTATE_FILTER_POINT);
+      sampler.anisoctl = PVRX(TEXSTATE_ANISOCTL_DISABLED);
+      sampler.non_normalized_coords = true;
+   }
 }
 
 VkResult pvr_CreateDevice(VkPhysicalDevice physicalDevice,
@@ -1053,6 +2055,8 @@ VkResult pvr_CreateDevice(VkPhysicalDevice physicalDevice,
    else
       device->master_fd = -1;
 
+   vk_device_set_drm_fd(&device->vk, device->render_fd);
+
    device->instance = instance;
    device->pdevice = pdevice;
 
@@ -1076,13 +2080,27 @@ VkResult pvr_CreateDevice(VkPhysicalDevice physicalDevice,
    if (result != VK_SUCCESS)
       goto err_pvr_winsys_destroy;
 
-   result = pvr_queues_create(device, pCreateInfo);
+   result = pvr_device_init_nop_program(device);
    if (result != VK_SUCCESS)
       goto err_pvr_free_list_destroy;
 
-   result = pvr_device_init_compute_pds_program(device);
+   result = pvr_device_init_compute_fence_program(device);
    if (result != VK_SUCCESS)
-      goto err_pvr_queues_destroy;
+      goto err_pvr_free_nop_program;
+
+   result = pvr_device_init_compute_idfwdf_state(device);
+   if (result != VK_SUCCESS)
+      goto err_pvr_free_compute_fence;
+
+   result = pvr_device_init_graphics_static_clear_state(device);
+   if (result != VK_SUCCESS)
+      goto err_pvr_finish_compute_idfwdf;
+
+   result = pvr_queues_create(device, pCreateInfo);
+   if (result != VK_SUCCESS)
+      goto err_pvr_finish_graphics_static_clear;
+
+   pvr_device_init_default_sampler_state(device);
 
    if (pCreateInfo->pEnabledFeatures)
       memcpy(&device->features,
@@ -1094,6 +2112,7 @@ VkResult pvr_CreateDevice(VkPhysicalDevice physicalDevice,
     * on each kick.
     */
    pvr_device_get_pixel_event_pds_program_data_size(
+      &pdevice->dev_info,
       &device->pixel_event_data_size_in_dwords);
 
    device->global_queue_job_count = 0;
@@ -1103,8 +2122,18 @@ VkResult pvr_CreateDevice(VkPhysicalDevice physicalDevice,
 
    return VK_SUCCESS;
 
-err_pvr_queues_destroy:
-   pvr_queues_destroy(device);
+err_pvr_finish_graphics_static_clear:
+   pvr_device_finish_graphics_static_clear_state(device);
+
+err_pvr_finish_compute_idfwdf:
+   pvr_device_finish_compute_idfwdf_state(device);
+
+err_pvr_free_compute_fence:
+   pvr_bo_free(device, device->pds_compute_fence_program.pvr_bo);
+
+err_pvr_free_nop_program:
+   pvr_bo_free(device, device->nop_program.pds.pvr_bo);
+   pvr_bo_free(device, device->nop_program.usc);
 
 err_pvr_free_list_destroy:
    pvr_free_list_destroy(device->global_free_list);
@@ -1132,10 +2161,18 @@ void pvr_DestroyDevice(VkDevice _device,
 {
    PVR_FROM_HANDLE(pvr_device, device, _device);
 
-   pvr_bo_free(device, device->pds_compute_fence_program.pvr_bo);
    pvr_queues_destroy(device);
+   pvr_device_finish_graphics_static_clear_state(device);
+   pvr_device_finish_compute_idfwdf_state(device);
+   pvr_bo_free(device, device->pds_compute_fence_program.pvr_bo);
+   pvr_bo_free(device, device->nop_program.pds.pvr_bo);
+   pvr_bo_free(device, device->nop_program.usc);
    pvr_free_list_destroy(device->global_free_list);
    pvr_winsys_destroy(device->ws);
+
+   if (device->master_fd >= 0)
+      close(device->master_fd);
+
    close(device->render_fd);
    vk_device_finish(&device->vk);
    vk_free(&device->vk.alloc, device);
@@ -1472,7 +2509,7 @@ VkResult pvr_BindBufferMemory2(VkDevice _device,
       VkResult result = pvr_bind_memory(device,
                                         mem,
                                         pBindInfos[i].memoryOffset,
-                                        buffer->size,
+                                        buffer->vk.size,
                                         buffer->alignment,
                                         &buffer->vma,
                                         &buffer->dev_addr);
@@ -1504,7 +2541,20 @@ VkResult pvr_CreateEvent(VkDevice _device,
                          const VkAllocationCallbacks *pAllocator,
                          VkEvent *pEvent)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_device, device, _device);
+
+   struct pvr_event *event = vk_object_alloc(&device->vk,
+                                             pAllocator,
+                                             sizeof(*event),
+                                             VK_OBJECT_TYPE_EVENT);
+   if (!event)
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+
+   event->sync = NULL;
+   event->state = PVR_EVENT_STATE_RESET_BY_HOST;
+
+   *pEvent = pvr_event_to_handle(event);
+
    return VK_SUCCESS;
 }
 
@@ -1512,24 +2562,89 @@ void pvr_DestroyEvent(VkDevice _device,
                       VkEvent _event,
                       const VkAllocationCallbacks *pAllocator)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_device, device, _device);
+   PVR_FROM_HANDLE(pvr_event, event, _event);
+
+   if (!event)
+      return;
+
+   if (event->sync)
+      vk_sync_destroy(&device->vk, event->sync);
+
+   vk_object_free(&device->vk, pAllocator, event);
 }
 
 VkResult pvr_GetEventStatus(VkDevice _device, VkEvent _event)
 {
-   assert(!"Unimplemented");
-   return VK_SUCCESS;
+   PVR_FROM_HANDLE(pvr_device, device, _device);
+   PVR_FROM_HANDLE(pvr_event, event, _event);
+   VkResult result;
+
+   switch (event->state) {
+   case PVR_EVENT_STATE_SET_BY_DEVICE:
+      if (!event->sync)
+         return VK_EVENT_RESET;
+
+      result =
+         vk_sync_wait(&device->vk, event->sync, 0U, VK_SYNC_WAIT_COMPLETE, 0);
+      result = (result == VK_SUCCESS) ? VK_EVENT_SET : VK_EVENT_RESET;
+      break;
+
+   case PVR_EVENT_STATE_RESET_BY_DEVICE:
+      if (!event->sync)
+         return VK_EVENT_RESET;
+
+      result =
+         vk_sync_wait(&device->vk, event->sync, 0U, VK_SYNC_WAIT_COMPLETE, 0);
+      result = (result == VK_SUCCESS) ? VK_EVENT_RESET : VK_EVENT_SET;
+      break;
+
+   case PVR_EVENT_STATE_SET_BY_HOST:
+      result = VK_EVENT_SET;
+      break;
+
+   case PVR_EVENT_STATE_RESET_BY_HOST:
+      result = VK_EVENT_RESET;
+      break;
+
+   default:
+      unreachable("Event object in unknown state");
+   }
+
+   return result;
 }
 
 VkResult pvr_SetEvent(VkDevice _device, VkEvent _event)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_event, event, _event);
+
+   if (event->sync) {
+      PVR_FROM_HANDLE(pvr_device, device, _device);
+
+      const VkResult result = vk_sync_signal(&device->vk, event->sync, 0);
+      if (result != VK_SUCCESS)
+         return result;
+   }
+
+   event->state = PVR_EVENT_STATE_SET_BY_HOST;
+
    return VK_SUCCESS;
 }
 
 VkResult pvr_ResetEvent(VkDevice _device, VkEvent _event)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_event, event, _event);
+
+   if (event->sync) {
+      PVR_FROM_HANDLE(pvr_device, device, _device);
+
+      const VkResult result = vk_sync_reset(&device->vk, event->sync);
+      if (result != VK_SUCCESS)
+         return result;
+   }
+
+   event->state = PVR_EVENT_STATE_RESET_BY_HOST;
+
    return VK_SUCCESS;
 }
 
@@ -1551,14 +2666,11 @@ VkResult pvr_CreateBuffer(VkDevice _device,
    if (pCreateInfo->size >= ULONG_MAX - alignment)
       return VK_ERROR_OUT_OF_DEVICE_MEMORY;
 
-   buffer = vk_object_zalloc(&device->vk,
-                             pAllocator,
-                             sizeof(*buffer),
-                             VK_OBJECT_TYPE_BUFFER);
+   buffer =
+      vk_buffer_create(&device->vk, pCreateInfo, pAllocator, sizeof(*buffer));
    if (!buffer)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   buffer->size = pCreateInfo->size;
    buffer->alignment = alignment;
 
    *pBuffer = pvr_buffer_to_handle(buffer);
@@ -1579,7 +2691,7 @@ void pvr_DestroyBuffer(VkDevice _device,
    if (buffer->vma)
       pvr_unbind_memory(device, buffer->vma);
 
-   vk_object_free(&device->vk, pAllocator, buffer);
+   vk_buffer_destroy(&device->vk, pAllocator, &buffer->vk);
 }
 
 VkResult pvr_gpu_upload(struct pvr_device *device,
@@ -1991,6 +3103,9 @@ VkResult pvr_CreateSampler(VkDevice _device,
    float min_lod;
    float max_lod;
 
+   STATIC_ASSERT(sizeof(((union pvr_sampler_descriptor *)NULL)->data) ==
+                 sizeof(((union pvr_sampler_descriptor *)NULL)->words));
+
    sampler = vk_object_alloc(&device->vk,
                              pAllocator,
                              sizeof(*sampler),
@@ -2024,7 +3139,18 @@ VkResult pvr_CreateSampler(VkDevice _device,
       }
    }
 
-   pvr_csb_pack (&sampler->sampler_word, TEXSTATE_SAMPLER, word) {
+   if (pCreateInfo->compareEnable) {
+      sampler->descriptor.data.compare_op =
+         (uint32_t)pvr_texstate_cmpmode(pCreateInfo->compareOp);
+   } else {
+      sampler->descriptor.data.compare_op =
+         (uint32_t)pvr_texstate_cmpmode(VK_COMPARE_OP_NEVER);
+   }
+
+   sampler->descriptor.data.word3 = 0;
+   pvr_csb_pack (&sampler->descriptor.data.sampler_word,
+                 TEXSTATE_SAMPLER,
+                 word) {
       const struct pvr_device_info *dev_info = &device->pdevice->dev_info;
       const float lod_clamp_max = (float)PVRX(TEXSTATE_CLAMP_MAX) /
                                   (1 << PVRX(TEXSTATE_CLAMP_FRACTIONAL_BITS));
@@ -2047,6 +3173,13 @@ VkResult pvr_CreateSampler(VkDevice _device,
          pvr_sampler_get_hw_addr_mode_from_vk(pCreateInfo->addressModeV);
       word.addrmode_w =
          pvr_sampler_get_hw_addr_mode_from_vk(pCreateInfo->addressModeW);
+
+      /* TODO: Figure out defines for these. */
+      if (word.addrmode_u == PVRX(TEXSTATE_ADDRMODE_FLIP))
+         sampler->descriptor.data.word3 |= 0x40000000;
+
+      if (word.addrmode_v == PVRX(TEXSTATE_ADDRMODE_FLIP))
+         sampler->descriptor.data.word3 |= 0x20000000;
 
       /* The Vulkan 1.0.205 spec says:
        *
@@ -2130,7 +3263,7 @@ void pvr_GetBufferMemoryRequirements2(
 
    pMemoryRequirements->memoryRequirements.alignment = buffer->alignment;
    pMemoryRequirements->memoryRequirements.size =
-      ALIGN_POT(buffer->size, buffer->alignment);
+      ALIGN_POT(buffer->vk.size, buffer->alignment);
 }
 
 void pvr_GetImageMemoryRequirements2(VkDevice _device,

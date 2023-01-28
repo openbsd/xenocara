@@ -688,6 +688,7 @@ static void get_readers_for_single_write(
 	unsigned int branch_depth = 0;
 	struct rc_instruction * endloop = NULL;
 	unsigned int abort_on_read_at_endloop = 0;
+	unsigned int abort_on_read_at_break = 0;
 	struct get_readers_callback_data * d = userdata;
 
 	d->ReaderData->Writer = writer;
@@ -741,6 +742,27 @@ static void get_readers_for_single_write(
 				continue;
 			}
 			break;
+		case RC_OPCODE_BRK:
+			if (branch_depth == 0 && d->ReaderData->LoopDepth == 0) {
+				tmp = rc_match_bgnloop(tmp);
+				d->ReaderData->AbortOnRead = d->AliveWriteMask;
+			} else {
+				struct branch_write_mask * masks = &d->BranchMasks[branch_depth];
+				if (masks->HasElse) {
+					/* Abort on read for components that were written in the IF
+					 * block. */
+					abort_on_read_at_break |=
+						masks->IfWriteMask & ~masks->ElseWriteMask;
+					/* Abort on read for components that were written in the ELSE
+					 * block. */
+					abort_on_read_at_break |=
+						masks->ElseWriteMask & ~d->AliveWriteMask;
+				} else {
+					abort_on_read_at_break |=
+						masks->IfWriteMask & ~d->AliveWriteMask;
+				}
+			}
+			break;
 		case RC_OPCODE_IF:
 			push_branch_mask(d, &branch_depth);
 			break;
@@ -784,7 +806,8 @@ static void get_readers_for_single_write(
 		if (tmp == writer) {
 			tmp = endloop;
 			endloop = NULL;
-			d->ReaderData->AbortOnRead = abort_on_read_at_endloop;
+			d->ReaderData->AbortOnRead = abort_on_read_at_endloop
+							| abort_on_read_at_break;
 			continue;
 		}
 		rc_for_all_writes_mask(tmp, get_readers_write_callback, d);
@@ -805,6 +828,7 @@ static void init_get_readers_callback_data(
 	rc_pair_read_arg_fn read_pair_cb,
 	rc_read_write_mask_fn write_cb)
 {
+	reader_data->C = c;
 	reader_data->Abort = 0;
 	reader_data->ReaderCount = 0;
 	reader_data->ReadersReserved = 0;

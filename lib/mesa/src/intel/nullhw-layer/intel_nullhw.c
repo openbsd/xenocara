@@ -29,7 +29,7 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_layer.h>
 
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/hash_table.h"
 #include "util/macros.h"
 #include "util/simple_mtx.h"
@@ -54,7 +54,7 @@ struct device_data {
 };
 
 static struct hash_table_u64 *vk_object_to_data = NULL;
-static simple_mtx_t vk_object_to_data_mutex = _SIMPLE_MTX_INITIALIZER_NP;
+static simple_mtx_t vk_object_to_data_mutex = SIMPLE_MTX_INITIALIZER;
 
 static inline void ensure_vk_object_map(void)
 {
@@ -176,7 +176,7 @@ static void device_override_queues(struct device_data *device_data,
 static VkLayerDeviceCreateInfo *get_device_chain_info(const VkDeviceCreateInfo *pCreateInfo,
                                                       VkLayerFunction func)
 {
-   vk_foreach_struct(item, pCreateInfo->pNext) {
+   vk_foreach_struct_const(item, pCreateInfo->pNext) {
       if (item->sType == VK_STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO &&
           ((VkLayerDeviceCreateInfo *) item)->function == func)
          return (VkLayerDeviceCreateInfo *)item;
@@ -280,7 +280,7 @@ static void destroy_instance_data(struct instance_data *data)
 static VkLayerInstanceCreateInfo *get_instance_chain_info(const VkInstanceCreateInfo *pCreateInfo,
                                                           VkLayerFunction func)
 {
-   vk_foreach_struct(item, pCreateInfo->pNext) {
+   vk_foreach_struct_const(item, pCreateInfo->pNext) {
       if (item->sType == VK_STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO &&
           ((VkLayerInstanceCreateInfo *) item)->function == func)
          return (VkLayerInstanceCreateInfo *) item;

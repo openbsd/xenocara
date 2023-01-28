@@ -50,7 +50,13 @@ struct fd6_program_state {
    struct fd_ringbuffer *streamout_stateobj;
    struct fd_ringbuffer *stateobj;
 
-   struct ir3_stream_output_info *stream_output;
+   const struct ir3_stream_output_info *stream_output;
+
+   /**
+    * Whether multiple viewports are used is determined by whether
+    * the last shader stage writes viewport id
+    */
+   uint16_t num_viewports;
 
    /**
     * Output components from frag shader.  It is possible to have
@@ -58,6 +64,12 @@ struct fd6_program_state {
     * render targets.
     */
    uint32_t mrt_components;
+
+   /**
+    * Rather than calculating user consts state size each draw,
+    * calculate it up-front.
+    */
+   uint32_t user_consts_cmdstream_size;
 };
 
 static inline struct fd6_program_state *

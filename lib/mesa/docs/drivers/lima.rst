@@ -68,10 +68,14 @@ accepts the following comma-separated list of flags:
 
   ``bocache``
     print debug info for BO cache
+  ``diskcache``
+    print debug info for shader disk cache
   ``dump``
     dump GPU command stream to ``$PWD/lima.dump``
   ``gp``
     print GP shader compiler result of each stage
+  ``noblit``
+    use generic u_blitter instead of Lima-specific
   ``nobocache``
     disable BO cache
   ``nogrowheap``
@@ -87,6 +91,7 @@ accepts the following comma-separated list of flags:
   ``singlejob``
     disable multi job optimization
 
+
 .. envvar:: LIMA_CTX_NUM_PLB <int> (None)
 
 set number of PLB per context (used for development purposes)
@@ -97,7 +102,7 @@ set PLB max block (used for development purposes)
 
 .. envvar:: LIMA_PPIR_FORCE_SPILLING <int> (None)
 
-force spilling of variables in ppir (used for development purposes)
+force spilling of variables in PPIR (used for development purposes)
 
 .. envvar:: LIMA_PLB_PP_STREAM_CACHE_SIZE <int> (None)
 
@@ -161,7 +166,7 @@ How complete is Lima? Is reverse engineering complete?
 
 At the time of writing, with local runs of the
 `OpenGL ES Conformance Tests <https://github.com/KhronosGroup/VK-GL-CTS/>`__
-(deqp) for OpenGL ES 2.0, Lima reports **97%** pass rate.
+(dEQP) for OpenGL ES 2.0, Lima reports **97%** pass rate.
 This coverage is on par with coverage provided by the ARM Mali driver.
 Some tests that pass with Lima fail on Mali and vice versa. Some of
 these issues are related to precision limitations which likely don’t

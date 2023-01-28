@@ -25,14 +25,16 @@
  *    Rob Clark <robclark@freedesktop.org>
  */
 
+#define FD_BO_NO_HARDPIN 1
+
 #include "pipe/p_state.h"
 
 #include "freedreno_resource.h"
 #include "freedreno_state.h"
 
-#include "fd6_format.h"
 #include "fd6_image.h"
 #include "fd6_resource.h"
+#include "fd6_screen.h"
 #include "fd6_texture.h"
 
 static const uint8_t swiz_identity[4] = {PIPE_SWIZZLE_X, PIPE_SWIZZLE_Y,
@@ -87,11 +89,15 @@ fd6_emit_image_descriptor(struct fd_context *ctx, struct fd_ringbuffer *ring, co
    }
 
    if (buf->resource->target == PIPE_BUFFER) {
-   uint32_t descriptor[FDL6_TEX_CONST_DWORDS];
+      uint32_t descriptor[FDL6_TEX_CONST_DWORDS];
+
+      uint32_t size = fd_clamp_buffer_size(buf->format, buf->u.buf.size,
+                                           A4XX_MAX_TEXEL_BUFFER_ELEMENTS_UINT);
+
       fdl6_buffer_view_init(descriptor, buf->format, swiz_identity,
                            buf->u.buf.offset, /* Using relocs for addresses */
-                           buf->u.buf.size);
-   fd6_emit_single_plane_descriptor(ring, buf->resource, descriptor);
+                           size);
+      fd6_emit_single_plane_descriptor(ring, buf->resource, descriptor);
    } else {
       struct fdl_view_args args = {
          /* Using relocs for addresses */
@@ -156,20 +162,19 @@ fd6_build_ibo_state(struct fd_context *ctx, const struct ir3_shader_variant *v,
 
    struct fd_ringbuffer *state = fd_submit_new_ringbuffer(
       ctx->batch->submit,
-      (v->shader->nir->info.num_ssbos + v->shader->nir->info.num_images) * 16 *
-         4,
+      ir3_shader_nibo(v) * 16 * 4,
       FD_RINGBUFFER_STREAMING);
 
    assert(shader == PIPE_SHADER_COMPUTE || shader == PIPE_SHADER_FRAGMENT);
 
    uint32_t descriptor[FDL6_TEX_CONST_DWORDS];
-   for (unsigned i = 0; i < v->shader->nir->info.num_ssbos; i++) {
+   for (unsigned i = 0; i < v->num_ssbos; i++) {
       fd6_ssbo_descriptor(ctx, &bufso->sb[i], descriptor);
       fd6_emit_single_plane_descriptor(state, bufso->sb[i].buffer, descriptor);
    }
 
-   for (unsigned i = 0; i < v->shader->nir->info.num_images; i++) {
-      fd6_emit_image_descriptor(ctx, state, &imgso->si[i], true);
+   for (unsigned i = v->num_ssbos; i < v->num_ibos; i++) {
+      fd6_emit_image_descriptor(ctx, state, &imgso->si[i - v->num_ssbos], true);
    }
 
    return state;

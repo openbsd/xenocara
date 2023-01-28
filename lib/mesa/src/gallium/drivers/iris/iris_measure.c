@@ -25,12 +25,25 @@
  */
 
 #include <stdio.h>
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/list.h"
 #include "util/crc32.h"
 #include "iris_context.h"
 #include "iris_defines.h"
 #include "compiler/shader_info.h"
+
+/**
+ * This callback is registered with intel_measure.  It will be called when
+ * snapshot data has been fully collected, so iris can release the associated
+ * resources.
+ */
+static void
+measure_batch_free(struct intel_measure_batch *base)
+{
+   struct iris_measure_batch *batch =
+      container_of(base, struct iris_measure_batch, base);
+   iris_destroy_batch_measure(batch);
+}
 
 void
 iris_init_screen_measure(struct iris_screen *screen)
@@ -39,6 +52,7 @@ iris_init_screen_measure(struct iris_screen *screen)
 
    memset(measure_device, 0, sizeof(*measure_device));
    intel_measure_init(measure_device);
+   measure_device->release_batch = &measure_batch_free;
    struct intel_measure_config *config = measure_device->config;
    if (config == NULL)
       return;
@@ -104,7 +118,7 @@ iris_init_batch_measure(struct iris_context *ice, struct iris_batch *batch)
    struct iris_measure_batch *measure = batch->measure;
 
    measure->bo = iris_bo_alloc(bufmgr, "measure",
-                               config->batch_size * sizeof(uint64_t), 1,
+                               config->batch_size * sizeof(uint64_t), 8,
                                IRIS_MEMZONE_OTHER, BO_ALLOC_ZEROED);
    measure->base.timestamps = iris_bo_map(NULL, measure->bo, MAP_READ);
    measure->base.framebuffer =
@@ -227,7 +241,7 @@ state_changed(const struct iris_context *ice,
    /* else blorp, all programs NULL */
 
    return intel_measure_state_changed(&batch->measure->base,
-                                      vs, tcs, tes, gs, fs, cs);
+                                      vs, tcs, tes, gs, fs, cs, 0, 0);
 }
 
 static void

@@ -33,8 +33,6 @@ files_libdri = files(
   'dri_screen.h',
   'dri_util.c',
   'dri_util.h',
-  'utils.c',
-  'utils.h',
 )
 
 if with_dri
@@ -46,7 +44,7 @@ if with_dri2
 endif
 
 libdri_c_args = []
-if with_gallium_zink
+if with_gallium_zink and not with_platform_android
   if get_option('glvnd')
     libdri_c_args += '-DKOPPER_LIB_NAMES="libEGL_@0@ and libGLX_@0@"'.format(get_option('glvnd-vendor-name'))
   else

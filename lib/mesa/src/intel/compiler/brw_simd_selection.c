@@ -28,25 +28,17 @@
 #include "util/ralloc.h"
 
 unsigned
-brw_required_dispatch_width(const struct shader_info *info,
-                            enum brw_subgroup_size_type subgroup_size_type)
+brw_required_dispatch_width(const struct shader_info *info)
 {
-   unsigned required = 0;
-
-   if ((int)subgroup_size_type >= (int)BRW_SUBGROUP_SIZE_REQUIRE_8) {
+   if ((int)info->subgroup_size >= (int)SUBGROUP_SIZE_REQUIRE_8) {
       assert(gl_shader_stage_uses_workgroup(info->stage));
       /* These enum values are expressly chosen to be equal to the subgroup
        * size that they require.
        */
-      required = (unsigned)subgroup_size_type;
+      return (unsigned)info->subgroup_size;
+   } else {
+      return 0;
    }
-
-   if (gl_shader_stage_is_compute(info->stage) && info->cs.subgroup_size > 0) {
-      assert(required == 0 || required == info->cs.subgroup_size);
-      required = info->cs.subgroup_size;
-   }
-
-   return required;
 }
 
 static inline bool
@@ -68,8 +60,9 @@ brw_simd_should_compile(void *mem_ctx,
 
    const unsigned width = 8u << simd;
 
-   /* For shaders with variable size workgroup, we will always compile all the
-    * variants, since the choice will happen only at dispatch time.
+   /* For shaders with variable size workgroup, in most cases we can compile
+    * all the variants (exceptions are bindless dispatch & ray queries), since
+    * the choice will happen only at dispatch time.
     */
    const bool workgroup_size_variable = prog_data->local_size[0] == 0;
 
@@ -119,6 +112,20 @@ brw_simd_should_compile(void *mem_ctx,
             return false;
          }
       }
+   }
+
+   if (width == 32 && prog_data->base.ray_queries > 0) {
+      *error = ralloc_asprintf(
+         mem_ctx, "SIMD%u skipped because of ray queries",
+         width);
+      return false;
+   }
+
+   if (width == 32 && prog_data->uses_btd_stack_ids) {
+      *error = ralloc_asprintf(
+         mem_ctx, "SIMD%u skipped because of bindless shader calls",
+         width);
+      return false;
    }
 
    const bool env_skip[3] = {

@@ -7,7 +7,7 @@ Haiku. We're actively developing and maintaining several hardware and
 software drivers.
 
 The primary API is OpenGL but there's also support for OpenGL ES, Vulkan,
-EGL, OpenMAX, OpenCL, VDPAU, VA-API and XvMC.
+EGL, OpenMAX, OpenCL, VDPAU and VA-API.
 
 Hardware drivers include:
 
@@ -15,9 +15,9 @@ Hardware drivers include:
    Website <https://01.org/linuxgraphics>`__
 -  AMD Radeon series. See
    `RadeonFeature <https://www.x.org/wiki/RadeonFeature>`__
--  NVIDIA GPUs (Riva TNT and later). See `Nouveau
+-  NVIDIA GPUs (GeForce 5 / FX and later). See `Nouveau
    Wiki <https://nouveau.freedesktop.org>`__
--  Qualcomm Adreno A2xx-A6xx. See :doc:`Freedreno
+-  Qualcomm Adreno 2xx-6xx. See :doc:`Freedreno
    <drivers/freedreno>`
 -  Broadcom VideoCore 4 and 5. See :doc:`VC4 <drivers/vc4>` and
    :doc:`V3D <drivers/v3d>`
@@ -35,11 +35,11 @@ Layered driver include:
 -  :doc:`VirGL <drivers/virgl>` - project for accelerated graphics for
    QEMU guests
 -  :doc:`Zink <drivers/zink>` - driver providing OpenGL on top of
-   Khoronos' Vulkan API.
+   Khronos' Vulkan API.
 
 Software drivers include:
 
--  :doc:`LLVMpipe <drivers/llvmpipe>` - uses LLVM for x86 JIT code generation
+-  :doc:`LLVMpipe <drivers/llvmpipe>` - uses LLVM for JIT code generation
    and is multi-threaded
 -  Softpipe - a reference Gallium driver
 
@@ -47,7 +47,7 @@ Additional driver information:
 
 -  `DRI hardware drivers <https://dri.freedesktop.org/>`__ for the X
    Window System
--  :doc:`Xlib / swrast driver <xlibdriver>` for the X Window System
+-  :doc:`Xlib driver <xlibdriver>` for the X Window System
    and Unix-like operating systems
 
 Deprecated Systems and Drivers
@@ -62,11 +62,14 @@ the Git repo. The list includes:
 -  3DLABS Gamma
 -  ATI Mach 64
 -  ATI Rage 128
+-  ATI Radeon 7000 - 9250
 -  DEC OpenVMS
 -  Intel i810
--  Linux fbdev
+-  Intel i830 - i865
+-  Linux Framebuffer
 -  Matrox
 -  MS-DOS
+-  NVIDIA Riva TNT - GeForce 4
 -  S3 Savage
 -  Silicon Integrated Systems
 -  swrast

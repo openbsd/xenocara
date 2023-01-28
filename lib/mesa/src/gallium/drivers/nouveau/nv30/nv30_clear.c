@@ -30,6 +30,7 @@
 #include "nv_object.xml.h"
 #include "nv30/nv30-40_3d.xml.h"
 #include "nv30/nv30_context.h"
+#include "nv30/nv30_winsys.h"
 #include "nv30/nv30_format.h"
 
 static inline uint32_t
@@ -58,8 +59,24 @@ nv30_clear(struct pipe_context *pipe, unsigned buffers, const struct pipe_scisso
    struct pipe_framebuffer_state *fb = &nv30->framebuffer;
    uint32_t colr = 0, zeta = 0, mode = 0;
 
-   if (!nv30_state_validate(nv30, NV30_NEW_FRAMEBUFFER | NV30_NEW_SCISSOR, true))
+   if (!nv30_state_validate(nv30, NV30_NEW_FRAMEBUFFER, true))
       return;
+
+   if (scissor_state) {
+      uint32_t minx = scissor_state->minx;
+      uint32_t maxx = MIN2(fb->width, scissor_state->maxx);
+      uint32_t miny = scissor_state->miny;
+      uint32_t maxy = MIN2(fb->height, scissor_state->maxy);
+
+      BEGIN_NV04(push, NV30_3D(SCISSOR_HORIZ), 2);
+      PUSH_DATA (push, minx | (maxx - minx) << 16);
+      PUSH_DATA (push, miny | (maxy - miny) << 16);
+   }
+   else {
+      BEGIN_NV04(push, NV30_3D(SCISSOR_HORIZ), 2);
+      PUSH_DATA (push, 0x10000000);
+      PUSH_DATA (push, 0x10000000);
+   }
 
    if (buffers & PIPE_CLEAR_COLOR && fb->nr_cbufs) {
       colr  = pack_rgba(fb->cbufs[0]->format, color->f);
@@ -96,6 +113,10 @@ nv30_clear(struct pipe_context *pipe, unsigned buffers, const struct pipe_scisso
    PUSH_DATA (push, mode);
 
    nv30_state_release(nv30);
+
+   /* Make sure regular draw commands will get their scissor state set */
+   nv30->dirty |= NV30_NEW_SCISSOR;
+   nv30->state.scissor_off = 0;
 }
 
 static void
@@ -109,7 +130,6 @@ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
    struct nv30_miptree *mt = nv30_miptree(ps->texture);
    struct nouveau_pushbuf *push = nv30->base.pushbuf;
    struct nouveau_object *eng3d = nv30->screen->eng3d;
-   struct nouveau_pushbuf_refn refn;
    uint32_t rt_format;
 
    rt_format = nv30_format(pipe->screen, ps->format)->hw;
@@ -126,10 +146,8 @@ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
       rt_format |= NV30_3D_RT_FORMAT_TYPE_LINEAR;
    }
 
-   refn.bo = mt->base.bo;
-   refn.flags = NOUVEAU_BO_VRAM | NOUVEAU_BO_WR;
-   if (nouveau_pushbuf_space(push, 32, 1, 0) ||
-       nouveau_pushbuf_refn (push, &refn, 1))
+   if (!PUSH_SPACE_EX(push, 32, 1, 0) ||
+       PUSH_REF1(push, mt->base.bo, NOUVEAU_BO_VRAM | NOUVEAU_BO_WR))
       return;
 
    BEGIN_NV04(push, NV30_3D(RT_ENABLE), 1);
@@ -156,6 +174,7 @@ nv30_clear_render_target(struct pipe_context *pipe, struct pipe_surface *ps,
                     NV30_3D_CLEAR_BUFFERS_COLOR_A);
 
    nv30->dirty |= NV30_NEW_FRAMEBUFFER | NV30_NEW_SCISSOR;
+   nv30->state.scissor_off = 0;
 }
 
 static void
@@ -169,7 +188,6 @@ nv30_clear_depth_stencil(struct pipe_context *pipe, struct pipe_surface *ps,
    struct nv30_miptree *mt = nv30_miptree(ps->texture);
    struct nouveau_pushbuf *push = nv30->base.pushbuf;
    struct nouveau_object *eng3d = nv30->screen->eng3d;
-   struct nouveau_pushbuf_refn refn;
    uint32_t rt_format, mode = 0;
 
    rt_format = nv30_format(pipe->screen, ps->format)->hw;
@@ -191,10 +209,8 @@ nv30_clear_depth_stencil(struct pipe_context *pipe, struct pipe_surface *ps,
    if (buffers & PIPE_CLEAR_STENCIL)
       mode |= NV30_3D_CLEAR_BUFFERS_STENCIL;
 
-   refn.bo = mt->base.bo;
-   refn.flags = NOUVEAU_BO_VRAM | NOUVEAU_BO_WR;
-   if (nouveau_pushbuf_space(push, 32, 1, 0) ||
-       nouveau_pushbuf_refn (push, &refn, 1))
+   if (!PUSH_SPACE_EX(push, 32, 1, 0) ||
+       PUSH_REF1(push, mt->base.bo, NOUVEAU_BO_VRAM | NOUVEAU_BO_WR))
       return;
 
    BEGIN_NV04(push, NV30_3D(RT_ENABLE), 1);
@@ -222,6 +238,7 @@ nv30_clear_depth_stencil(struct pipe_context *pipe, struct pipe_surface *ps,
    PUSH_DATA (push, mode);
 
    nv30->dirty |= NV30_NEW_FRAMEBUFFER | NV30_NEW_SCISSOR;
+   nv30->state.scissor_off = 0;
 }
 
 void

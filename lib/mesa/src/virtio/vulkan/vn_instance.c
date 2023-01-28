@@ -63,6 +63,8 @@ static const driOptionDescription vn_dri_options[] = {
       DRI_CONF_VK_X11_ENSURE_MIN_IMAGE_COUNT(false)
       DRI_CONF_VK_X11_OVERRIDE_MIN_IMAGE_COUNT(0)
       DRI_CONF_VK_X11_STRICT_IMAGE_COUNT(false)
+      DRI_CONF_VK_XWAYLAND_WAIT_READY(true)
+      DRI_CONF_VENUS_IMPLICIT_FENCING(false)
    DRI_CONF_SECTION_END
    DRI_CONF_SECTION_DEBUG
       DRI_CONF_VK_WSI_FORCE_BGRA8_UNORM_FIRST(false)
@@ -222,10 +224,12 @@ vn_instance_init_experimental_features(struct vn_instance *instance)
              "VkVenusExperimentalFeatures100000MESA is as below:"
              "\n\tmemoryResourceAllocationSize = %u"
              "\n\tglobalFencing = %u"
-             "\n\tlargeRing = %u",
+             "\n\tlargeRing = %u"
+             "\n\tsyncFdFencing = %u",
              instance->experimental.memoryResourceAllocationSize,
              instance->experimental.globalFencing,
-             instance->experimental.largeRing);
+             instance->experimental.largeRing,
+             instance->experimental.syncFdFencing);
    }
 
    return VK_SUCCESS;
@@ -291,6 +295,8 @@ vn_instance_init_renderer(struct vn_instance *instance)
              renderer_info->vk_mesa_venus_protocol_spec_version);
       vn_log(instance, "supports blob id 0: %d",
              renderer_info->supports_blob_id_0);
+      vn_log(instance, "allow_vk_wait_syncs: %d",
+             renderer_info->allow_vk_wait_syncs);
    }
 
    return VK_SUCCESS;
@@ -687,12 +693,13 @@ vn_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
                   const VkAllocationCallbacks *pAllocator,
                   VkInstance *pInstance)
 {
+   VN_TRACE_FUNC();
    const VkAllocationCallbacks *alloc =
       pAllocator ? pAllocator : vk_default_allocator();
    struct vn_instance *instance;
    VkResult result;
 
-   vn_debug_init();
+   vn_env_init();
    vn_trace_init();
 
    instance = vk_zalloc(alloc, sizeof(*instance), VN_DEFAULT_ALIGN,
@@ -786,6 +793,9 @@ vn_CreateInstance(const VkInstanceCreateInfo *pCreateInfo,
                        instance->base.base.app_info.engine_name,
                        instance->base.base.app_info.engine_version);
 
+   instance->renderer->info.has_implicit_fencing =
+      driQueryOptionb(&instance->dri_options, "venus_implicit_fencing");
+
    *pInstance = instance_handle;
 
    return VK_SUCCESS;
@@ -825,6 +835,7 @@ void
 vn_DestroyInstance(VkInstance _instance,
                    const VkAllocationCallbacks *pAllocator)
 {
+   VN_TRACE_FUNC();
    struct vn_instance *instance = vn_instance_from_handle(_instance);
    const VkAllocationCallbacks *alloc =
       pAllocator ? pAllocator : &instance->base.base.alloc;

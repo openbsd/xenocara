@@ -1,27 +1,11 @@
 /*
  * Copyright © 2019 Google LLC
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
 #include "tu_cs.h"
+
+#include "tu_suballoc.h"
 
 /**
  * Initialize a command stream.
@@ -30,7 +14,7 @@ void
 tu_cs_init(struct tu_cs *cs,
            struct tu_device *device,
            enum tu_cs_mode mode,
-           uint32_t initial_size)
+           uint32_t initial_size, const char *name)
 {
    assert(mode != TU_CS_MODE_EXTERNAL);
 
@@ -39,6 +23,7 @@ tu_cs_init(struct tu_cs *cs,
    cs->device = device;
    cs->mode = mode;
    cs->next_bo_size = initial_size;
+   cs->name = name;
 }
 
 /**
@@ -144,9 +129,8 @@ tu_cs_add_bo(struct tu_cs *cs, uint32_t size)
 
    VkResult result =
       tu_bo_init_new(cs->device, &new_bo, size * sizeof(uint32_t),
-                     TU_BO_ALLOC_GPU_READ_ONLY | TU_BO_ALLOC_ALLOW_DUMP);
+                     TU_BO_ALLOC_GPU_READ_ONLY | TU_BO_ALLOC_ALLOW_DUMP, cs->name);
    if (result != VK_SUCCESS) {
-      free(new_bo);
       return result;
    }
 
@@ -376,9 +360,9 @@ tu_cs_reserve_space(struct tu_cs *cs, uint32_t reserved_size)
          tu_cs_add_entry(cs);
       }
 
-      if (cs->cond_flags) {
+      for (uint32_t i = 0; i < cs->cond_stack_depth; i++) {
          /* Subtract one here to account for the DWORD field itself. */
-         *cs->cond_dwords = cs->cur - cs->cond_dwords - 1;
+         *cs->cond_dwords[i] = cs->cur - cs->cond_dwords[i] - 1;
 
          /* space for CP_COND_REG_EXEC in next bo */
          reserved_size += 3;
@@ -390,14 +374,16 @@ tu_cs_reserve_space(struct tu_cs *cs, uint32_t reserved_size)
       if (result != VK_SUCCESS)
          return result;
 
-      /* if inside a condition, emit a new CP_COND_REG_EXEC */
-      if (cs->cond_flags) {
+      if (cs->cond_stack_depth) {
          cs->reserved_end = cs->cur + reserved_size;
+      }
 
+      /* Re-emit CP_COND_REG_EXECs */
+      for (uint32_t i = 0; i < cs->cond_stack_depth; i++) {
          tu_cs_emit_pkt7(cs, CP_COND_REG_EXEC, 2);
-         tu_cs_emit(cs, cs->cond_flags);
+         tu_cs_emit(cs, cs->cond_flags[i]);
 
-         cs->cond_dwords = cs->cur;
+         cs->cond_dwords[i] = cs->cur;
 
          /* Emit dummy DWORD field here */
          tu_cs_emit(cs, CP_COND_REG_EXEC_1_DWORDS(0));

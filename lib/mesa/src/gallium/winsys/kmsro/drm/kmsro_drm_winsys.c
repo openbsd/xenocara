@@ -32,6 +32,7 @@
 #include "freedreno/drm/freedreno_drm_public.h"
 #include "panfrost/drm/panfrost_drm_public.h"
 #include "lima/drm/lima_drm_public.h"
+#include "asahi/drm/asahi_drm_public.h"
 #include "xf86drm.h"
 
 #include "pipe/p_screen.h"
@@ -42,6 +43,8 @@ static void kmsro_ro_destroy(struct renderonly *ro)
 {
    if (ro->gpu_fd >= 0)
       close(ro->gpu_fd);
+
+   util_sparse_array_finish(&ro->bo_map);
 
    FREE(ro);
 }
@@ -58,6 +61,8 @@ struct pipe_screen *kmsro_drm_screen_create(int fd,
    ro->kms_fd = fd;
    ro->gpu_fd = -1;
    ro->destroy = kmsro_ro_destroy;
+   util_sparse_array_init(&ro->bo_map, sizeof(struct renderonly_scanout), 64);
+   simple_mtx_init(&ro->bo_map_lock, mtx_plain);
 
 #if defined(GALLIUM_VC4)
    ro->gpu_fd = drmOpenWithType("vc4", NULL, DRM_NODE_RENDER);
@@ -129,6 +134,19 @@ struct pipe_screen *kmsro_drm_screen_create(int fd,
    if (ro->gpu_fd >= 0) {
       ro->create_for_resource = renderonly_create_kms_dumb_buffer_for_resource;
       screen = v3d_drm_screen_create_renderonly(ro, config);
+      if (!screen)
+         goto out_free;
+
+      return screen;
+   }
+#endif
+
+#if defined(GALLIUM_ASAHI)
+   ro->gpu_fd = drmOpenWithType("asahi", NULL, DRM_NODE_RENDER);
+
+   if (ro->gpu_fd >= 0) {
+      ro->create_for_resource = renderonly_create_kms_dumb_buffer_for_resource;
+      screen = asahi_drm_screen_create_renderonly(ro);
       if (!screen)
          goto out_free;
 

@@ -1,16 +1,24 @@
 #!/bin/bash
+# shellcheck disable=SC2086 # we want word splitting
 
 set -ex
 
 git clone https://gitlab.freedesktop.org/mesa/piglit.git --single-branch --no-checkout /piglit
 pushd /piglit
-git checkout 445711587d461539a4d8f9d35a7fe996a86d3c8d
+git checkout 591c91865012de4224bea551eac5d2274acf06ad
+
+# TODO: Remove the following patch when piglit commit got past
+# 1cd716180cfb6ef0c1fc54702460ef49e5115791
+git apply $OLDPWD/.gitlab-ci/piglit/build-piglit_backport-s3-migration.diff
+
 patch -p1 <$OLDPWD/.gitlab-ci/piglit/disable-vs_in.diff
 cmake -S . -B . -G Ninja -DCMAKE_BUILD_TYPE=Release $PIGLIT_OPTS $EXTRA_CMAKE_ARGS
 ninja $PIGLIT_BUILD_TARGETS
+# shellcheck disable=SC2038,SC2185 # TODO: rewrite find
 find -name .git -o -name '*ninja*' -o -iname '*cmake*' -o -name '*.[chao]' | xargs rm -rf
 rm -rf target_api
-if [ "x$PIGLIT_BUILD_TARGETS" = "xpiglit_replayer" ]; then
+if [ "$PIGLIT_BUILD_TARGETS" = "piglit_replayer" ]; then
+    # shellcheck disable=SC2038,SC2185 # TODO: rewrite find
     find ! -regex "^\.$" \
          ! -regex "^\.\/piglit.*" \
          ! -regex "^\.\/framework.*" \

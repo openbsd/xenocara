@@ -34,6 +34,7 @@
 
 #include "pipe/p_compiler.h"
 #include "os/os_thread.h"
+#include "util/simple_mtx.h"
 #include "util/u_string.h"
 
 #include "util/u_debug.h"
@@ -142,6 +143,8 @@ DBGHELP_DISPATCH(SymGetLineFromAddr64,
                  (HANDLE hProcess, DWORD64 dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE64 Line),
                  (hProcess, dwAddr, pdwDisplacement, Line))
 
+DBGHELP_DISPATCH(SymCleanup, BOOL, FALSE, (HANDLE hProcess), (hProcess))
+
 
 #undef DBGHELP_DISPATCH
 
@@ -163,10 +166,18 @@ debug_symbol_name_dbghelp(const void *addr, char* buf, unsigned size)
    IMAGEHLP_LINE64 Line;
 
    memset(pSymbol, 0, sizeof *pSymbol);
-   pSymbol->SizeOfStruct = sizeof buffer;
+   pSymbol->SizeOfStruct = sizeof *pSymbol;
    pSymbol->MaxNameLen = sizeof buffer - offsetof(SYMBOL_INFO, Name);
 
    if (!g_bSymInitialized) {
+      /* Some components (e.g. Java) will init dbghelp before we're loaded, causing the "invade process"
+       * option to be invalid when attempting to re-init. But without it, we'd have to manually
+       * load symbols for all modules in the stack. For simplicity, we can just uninit and then
+       * re-"invade".
+       */
+      if (debug_get_bool_option("GALLIUM_SYMBOL_FORCE_REINIT", false))
+         j_SymCleanup(hProcess);
+
       j_SymSetOptions(/* SYMOPT_UNDNAME | */ SYMOPT_LOAD_LINES);
       if (j_SymInitialize(hProcess, NULL, TRUE)) {
          g_bSymInitialized = TRUE;
@@ -240,26 +251,13 @@ debug_symbol_print(const void *addr)
 }
 
 static struct hash_table* symbols_hash;
-#ifdef PIPE_OS_WINDOWS
-static mtx_t symbols_mutex;
-#else
-static mtx_t symbols_mutex = _MTX_INITIALIZER_NP;
-#endif
+static simple_mtx_t symbols_mutex = SIMPLE_MTX_INITIALIZER;
 
 const char*
 debug_symbol_name_cached(const void *addr)
 {
    const char* name;
-#ifdef PIPE_OS_WINDOWS
-   static boolean first = TRUE;
-
-   if (first) {
-      (void) mtx_init(&symbols_mutex, mtx_plain);
-      first = FALSE;
-   }
-#endif
-
-   mtx_lock(&symbols_mutex);
+   simple_mtx_lock(&symbols_mutex);
    if(!symbols_hash)
       symbols_hash = _mesa_pointer_hash_table_create(NULL);
    struct hash_entry *entry = _mesa_hash_table_search(symbols_hash, addr);
@@ -270,6 +268,6 @@ debug_symbol_name_cached(const void *addr)
 
       entry = _mesa_hash_table_insert(symbols_hash, addr, (void*)name);
    }
-   mtx_unlock(&symbols_mutex);
+   simple_mtx_unlock(&symbols_mutex);
    return entry->data;
 }

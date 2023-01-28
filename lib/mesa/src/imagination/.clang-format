@@ -226,13 +226,15 @@ ForEachMacros: [
   'nir_foreach_use',
   'nir_foreach_use_safe',
   'nir_foreach_variable_with_modes',
+  'u_foreach_bit',
   'u_vector_foreach',
   'util_dynarray_foreach',
   'vk_foreach_struct',
   'vk_foreach_struct_const',
 # FIXME: vk_outarray_append doesn't fit here, remove
 # it when a better solution exists for it.
-  'vk_outarray_append'
+  'vk_outarray_append',
+  'vk_outarray_append_typed'
 ]
 
 NamespaceMacros: [

@@ -41,14 +41,14 @@ libbroadcom_compiler_files = files(
   'v3d_nir_lower_line_smooth.c',
   'v3d_nir_lower_load_store_bitsize.c',
   'v3d_nir_lower_logic_ops.c',
-  'v3d_nir_lower_robust_buffer_access.c',
+  'v3d_nir_lower_robust_access.c',
   'v3d_nir_lower_scratch.c',
   'v3d_nir_lower_txf_ms.c',
 )
 
 libbroadcom_compiler = static_library(
-  ['broadcom_compiler', v3d_xml_pack],
-  libbroadcom_compiler_files,
+  'broadcom_compiler',
+  [libbroadcom_compiler_files, v3d_xml_pack],
   include_directories : [inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_broadcom],
   c_args : [no_override_init_args],
   gnu_symbol_visibility : 'hidden',

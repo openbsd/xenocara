@@ -29,9 +29,9 @@
 #define sizeof_field(type, field) sizeof(((type *)0)->field)
 
 void
-anv_nir_compute_push_layout(const struct anv_physical_device *pdevice,
+anv_nir_compute_push_layout(nir_shader *nir,
+                            const struct anv_physical_device *pdevice,
                             bool robust_buffer_access,
-                            nir_shader *nir,
                             struct brw_stage_prog_data *prog_data,
                             struct anv_pipeline_bind_map *map,
                             void *mem_ctx)
@@ -84,7 +84,6 @@ anv_nir_compute_push_layout(const struct anv_physical_device *pdevice,
    const bool has_push_intrinsic = push_start <= push_end;
 
    const bool push_ubo_ranges =
-      pdevice->info.verx10 >= 75 &&
       has_const_ubo && nir->info.stage != MESA_SHADER_COMPUTE &&
       !brw_shader_stage_requires_bindless_resources(nir->info.stage);
 

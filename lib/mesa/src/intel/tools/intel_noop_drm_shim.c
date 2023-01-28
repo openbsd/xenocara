@@ -110,6 +110,22 @@ i915_ioctl_gem_create(int fd, unsigned long request, void *arg)
 }
 
 static int
+i915_ioctl_gem_create_ext(int fd, unsigned long request, void *arg)
+{
+   struct shim_fd *shim_fd = drm_shim_fd_lookup(fd);
+   struct drm_i915_gem_create_ext *create = arg;
+   struct i915_bo *bo = calloc(1, sizeof(*bo));
+
+   drm_shim_bo_init(&bo->base, create->size);
+
+   create->handle = drm_shim_bo_get_handle(shim_fd, &bo->base);
+
+   drm_shim_bo_put(&bo->base);
+
+   return 0;
+}
+
+static int
 i915_ioctl_gem_mmap(int fd, unsigned long request, void *arg)
 {
    struct shim_fd *shim_fd = drm_shim_fd_lookup(fd);
@@ -120,9 +136,29 @@ i915_ioctl_gem_mmap(int fd, unsigned long request, void *arg)
       return -1;
 
    if (!bo->map)
-      bo->map = drm_shim_mmap(shim_fd, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED, -1, (uintptr_t)bo);
+      bo->map = drm_shim_mmap(shim_fd, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED, -1,
+                              drm_shim_bo_get_mmap_offset(shim_fd, bo));
 
    mmap_arg->addr_ptr = (uint64_t) (bo->map + mmap_arg->offset);
+
+   return 0;
+}
+
+static int
+i915_ioctl_gem_mmap_offset(int fd, unsigned long request, void *arg)
+{
+   struct shim_fd *shim_fd = drm_shim_fd_lookup(fd);
+   struct drm_i915_gem_mmap_offset *mmap_arg = arg;
+   struct shim_bo *bo = drm_shim_bo_lookup(shim_fd, mmap_arg->handle);
+
+   if (!bo)
+      return -1;
+
+   if (!bo->map)
+      bo->map = drm_shim_mmap(shim_fd, bo->size, PROT_READ | PROT_WRITE, MAP_SHARED, -1,
+                              drm_shim_bo_get_mmap_offset(shim_fd, bo));
+
+   mmap_arg->offset = drm_shim_bo_get_mmap_offset(shim_fd, bo);
 
    return 0;
 }
@@ -232,7 +268,7 @@ i915_ioctl_get_param(int fd, unsigned long request, void *arg)
       return 0;
    case I915_PARAM_MMAP_VERSION:
    case I915_PARAM_MMAP_GTT_VERSION:
-      *gp->value = 1;
+      *gp->value = 4 /* MMAP_OFFSET support */;
       return 0;
    case I915_PARAM_SUBSLICE_TOTAL:
       *gp->value = 0;
@@ -292,6 +328,7 @@ query_write_topology(struct drm_i915_query_item *item)
    info->subslice_offset = DIV_ROUND_UP(i915.devinfo.num_slices, 8);
    info->subslice_stride = DIV_ROUND_UP(i915.devinfo.num_subslices[0], 8);
    info->eu_offset = info->subslice_offset + info->max_slices * info->subslice_stride;
+   info->eu_stride = DIV_ROUND_UP(info->max_eus_per_subslice, 8);
 
    uint32_t slice_mask = (1u << i915.devinfo.num_slices) - 1;
    for (uint32_t i = 0; i < info->subslice_offset; i++)
@@ -334,7 +371,8 @@ i915_ioctl_query(int fd, unsigned long request, void *arg)
       struct drm_i915_query_item *item = &items[i];
 
       switch (item->query_id) {
-      case DRM_I915_QUERY_TOPOLOGY_INFO: {
+      case DRM_I915_QUERY_TOPOLOGY_INFO:
+      case DRM_I915_QUERY_GEOMETRY_SUBSLICES: {
          int ret = query_write_topology(item);
          if (ret)
             item->length = ret;
@@ -364,13 +402,13 @@ i915_ioctl_query(int fd, unsigned long request, void *arg)
 
             for (uint32_t e = 0; e < num_render; e++, info->num_engines++) {
                info->engines[info->num_engines].engine.engine_class =
-                  I915_ENGINE_CLASS_RENDER;
+                  INTEL_ENGINE_CLASS_RENDER;
                info->engines[info->num_engines].engine.engine_instance = e;
             }
 
             for (uint32_t e = 0; e < num_copy; e++, info->num_engines++) {
                info->engines[info->num_engines].engine.engine_class =
-                  I915_ENGINE_CLASS_COPY;
+                  INTEL_ENGINE_CLASS_COPY;
                info->engines[info->num_engines].engine.engine_instance = e;
             }
 
@@ -458,7 +496,9 @@ static ioctl_fn_t driver_ioctls[] = {
    [DRM_I915_GET_RESET_STATS] = i915_ioctl_noop,
 
    [DRM_I915_GEM_CREATE] = i915_ioctl_gem_create,
+   [DRM_I915_GEM_CREATE_EXT] = i915_ioctl_gem_create_ext,
    [DRM_I915_GEM_MMAP] = i915_ioctl_gem_mmap,
+   [DRM_I915_GEM_MMAP_GTT] = i915_ioctl_gem_mmap_offset,
    [DRM_I915_GEM_SET_TILING] = i915_ioctl_gem_set_tiling,
    [DRM_I915_GEM_CONTEXT_CREATE] = i915_ioctl_gem_context_create,
    [DRM_I915_GEM_CONTEXT_DESTROY] = i915_ioctl_noop,

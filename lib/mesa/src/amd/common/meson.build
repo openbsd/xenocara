@@ -27,10 +27,12 @@ amd_json_files = [
   '../registers/gfx9.json',
   '../registers/gfx10.json',
   '../registers/gfx103.json',
+  '../registers/gfx11.json',
 
   # Manually written:
   '../registers/pkt3.json',
   '../registers/gfx10-rsrc.json',
+  '../registers/gfx11-rsrc.json',
   '../registers/registers-manually-defined.json',
 ]
 
@@ -54,7 +56,7 @@ gfx10_format_table_c = custom_target(
   'gfx10_format_table.c',
   input : files(
     'gfx10_format_table.py',
-    '../../util/format/u_format.csv', '../registers/gfx10-rsrc.json'
+    '../../util/format/u_format.csv', '../registers/gfx10-rsrc.json', '../registers/gfx11-rsrc.json'
   ),
   output : 'gfx10_format_table.c',
   command : [prog_python, '@INPUT@'],
@@ -71,8 +73,6 @@ amd_common_files = files(
   'ac_shader_util.h',
   'ac_gpu_info.c',
   'ac_gpu_info.h',
-  'ac_rtld.c',
-  'ac_rtld.h',
   'ac_surface.c',
   'ac_surface.h',
   'ac_debug.c',
@@ -87,18 +87,28 @@ amd_common_files = files(
   'ac_rgp.h',
   'ac_msgpack.c',
   'ac_msgpack.h',
-  'ac_rgp_elf_object_pack.c',
   'ac_nir.c',
   'ac_nir.h',
+  'ac_nir_opt_outputs.c',
   'ac_nir_cull.c',
   'ac_nir_lower_esgs_io_to_mem.c',
   'ac_nir_lower_global_access.c',
+  'ac_nir_lower_resinfo.c',
+  'ac_nir_lower_taskmesh_io_to_mem.c',
   'ac_nir_lower_tess_io_to_mem.c',
   'ac_nir_lower_ngg.c',
   'amd_family.c',
   'ac_perfcounter.c',
   'ac_perfcounter.h',
 )
+
+if dep_elf.found()
+  amd_common_files += files(
+    'ac_rtld.c',
+    'ac_rtld.h',
+    'ac_rgp_elf_object_pack.c',
+  )
+endif
 
 libamd_common = static_library(
   'amd_common',

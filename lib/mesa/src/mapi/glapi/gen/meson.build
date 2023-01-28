@@ -115,6 +115,7 @@ api_xml_files = files(
   'EXT_draw_buffers2.xml',
   'EXT_external_objects.xml',
   'EXT_external_objects_fd.xml',
+  'EXT_external_objects_win32.xml',
   'EXT_framebuffer_object.xml',
   'EXT_gpu_shader4.xml',
   'EXT_multisampled_render_to_texture.xml',
@@ -252,12 +253,30 @@ main_api_save_h = custom_target(
   capture : true,
 )
 
-main_api_vtxfmt_init_h = custom_target(
-  'api_vtxfmt_init.h',
-  input : ['api_vtxfmt_init_h.py', 'gl_and_es_API.xml'],
-  output : 'api_vtxfmt_init.h',
+main_api_beginend_init_h = custom_target(
+  'api_beginend_init.h',
+  input : ['api_beginend_init_h.py', 'gl_and_es_API.xml'],
+  output : 'api_beginend_init.h',
   command : [prog_python, '@INPUT0@', '-f', '@INPUT1@'],
   depend_files : files('apiexec.py') + glapi_gen_depends,
+  capture : true,
+)
+
+main_api_hw_select_init_h = custom_target(
+  'api_hw_select_init.h',
+  input : ['api_hw_select_init_h.py', 'gl_API.xml'],
+  output : 'api_hw_select_init.h',
+  command : [prog_python, '@INPUT0@', '-f', '@INPUT1@'],
+  depend_files : files('apiexec.py') + glapi_gen_depends,
+  capture : true,
+)
+
+main_unmarshal_table_c = custom_target(
+  'unmarshal_table.c',
+  input : ['gl_unmarshal_table.py', 'gl_and_es_API.xml'],
+  output : 'unmarshal_table.c',
+  command : [prog_python, '@INPUT0@', '@INPUT1@'],
+  depend_files : files('marshal_XML.py') + glapi_gen_depends,
   capture : true,
 )
 
@@ -267,7 +286,7 @@ foreach x : ['0', '1', '2', '3', '4', '5', '6', '7']
     'marshal_generated' + x + '.c',
     input : ['gl_marshal.py', 'gl_and_es_API.xml'],
     output : 'marshal_generated' + x + '.c',
-    command : [prog_python, '@INPUT0@', '-f', '@INPUT1@', '-i', x, '-n', '8'],
+    command : [prog_python, '@INPUT0@', '@INPUT1@', x, '8'],
     depend_files : files('marshal_XML.py') + glapi_gen_depends,
     capture : true,
   )

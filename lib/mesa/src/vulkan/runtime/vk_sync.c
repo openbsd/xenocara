@@ -26,7 +26,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/macros.h"
 #include "util/os_time.h"
 
@@ -202,7 +202,7 @@ get_max_abs_timeout_ns(void)
 {
    static int max_timeout_ms = -1;
    if (max_timeout_ms < 0)
-      max_timeout_ms = env_var_as_unsigned("MESA_VK_MAX_TIMEOUT", 0);
+      max_timeout_ms = debug_get_num_option("MESA_VK_MAX_TIMEOUT", 0);
 
    if (max_timeout_ms == 0)
       return UINT64_MAX;
@@ -228,7 +228,7 @@ __vk_sync_wait(struct vk_device *device,
    } else {
       struct vk_sync_wait wait = {
          .sync = sync,
-         .stage_mask = ~(VkPipelineStageFlags2KHR)0,
+         .stage_mask = ~(VkPipelineStageFlags2)0,
          .wait_value = wait_value,
       };
       return sync->type->wait_many(device, 1, &wait, wait_flags,

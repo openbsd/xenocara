@@ -42,115 +42,6 @@ GENX(pan_shader_get_compiler_options)(void)
 #endif
 }
 
-static enum pipe_format
-varying_format(nir_alu_type t, unsigned ncomps)
-{
-#define VARYING_FORMAT(ntype, nsz, ptype, psz) \
-        { \
-                .type = nir_type_ ## ntype ## nsz, \
-                .formats = { \
-                        PIPE_FORMAT_R ## psz ## _ ## ptype, \
-                        PIPE_FORMAT_R ## psz ## G ## psz ## _ ## ptype, \
-                        PIPE_FORMAT_R ## psz ## G ## psz ## B ## psz ## _ ## ptype, \
-                        PIPE_FORMAT_R ## psz ## G ## psz ## B ## psz  ## A ## psz ## _ ## ptype, \
-                } \
-        }
-
-        static const struct {
-                nir_alu_type type;
-                enum pipe_format formats[4];
-        } conv[] = {
-                VARYING_FORMAT(float, 32, FLOAT, 32),
-                VARYING_FORMAT(int, 32, SINT, 32),
-                VARYING_FORMAT(uint, 32, UINT, 32),
-                VARYING_FORMAT(float, 16, FLOAT, 16),
-                VARYING_FORMAT(int, 16, SINT, 16),
-                VARYING_FORMAT(uint, 16, UINT, 16),
-                VARYING_FORMAT(int, 8, SINT, 8),
-                VARYING_FORMAT(uint, 8, UINT, 8),
-                VARYING_FORMAT(bool, 32, UINT, 32),
-                VARYING_FORMAT(bool, 16, UINT, 16),
-                VARYING_FORMAT(bool, 8, UINT, 8),
-                VARYING_FORMAT(bool, 1, UINT, 8),
-        };
-#undef VARYING_FORMAT
-
-        assert(ncomps > 0 && ncomps <= ARRAY_SIZE(conv[0].formats));
-
-        for (unsigned i = 0; i < ARRAY_SIZE(conv); i++) {
-                if (conv[i].type == t)
-                        return conv[i].formats[ncomps - 1];
-        }
-
-        return PIPE_FORMAT_NONE;
-}
-
-static void
-collect_varyings(nir_shader *s, nir_variable_mode varying_mode,
-                 struct pan_shader_varying *varyings,
-                 unsigned *varying_count)
-{
-        *varying_count = 0;
-
-        unsigned comps[PAN_MAX_VARYINGS] = { 0 };
-
-        nir_foreach_variable_with_modes(var, s, varying_mode) {
-                unsigned loc = var->data.driver_location;
-                const struct glsl_type *column =
-                        glsl_without_array_or_matrix(var->type);
-                unsigned chan = glsl_get_components(column);
-
-                /* If we have a fractional location added, we need to increase the size
-                 * so it will fit, i.e. a vec3 in YZW requires us to allocate a vec4.
-                 * We could do better but this is an edge case as it is, normally
-                 * packed varyings will be aligned.
-                 */
-                chan += var->data.location_frac;
-                comps[loc] = MAX2(comps[loc], chan);
-        }
-
-        nir_foreach_variable_with_modes(var, s, varying_mode) {
-                unsigned loc = var->data.driver_location;
-                unsigned sz = glsl_count_attribute_slots(var->type, FALSE);
-                const struct glsl_type *column =
-                        glsl_without_array_or_matrix(var->type);
-                enum glsl_base_type base_type = glsl_get_base_type(column);
-                unsigned chan = comps[loc];
-
-                nir_alu_type type = nir_get_nir_type_for_glsl_base_type(base_type);
-                type = nir_alu_type_get_base_type(type);
-
-                /* Can't do type conversion since GLSL IR packs in funny ways */
-                if (PAN_ARCH >= 6 && var->data.interpolation == INTERP_MODE_FLAT)
-                        type = nir_type_uint;
-
-                /* Demote to fp16 where possible. int16 varyings are TODO as the hw
-                 * will saturate instead of wrap which is not conformant, so we need to
-                 * insert i2i16/u2u16 instructions before the st_vary_32i/32u to get
-                 * the intended behaviour.
-                 */
-                if (type == nir_type_float &&
-                    (var->data.precision == GLSL_PRECISION_MEDIUM ||
-                     var->data.precision == GLSL_PRECISION_LOW) &&
-                    !s->info.has_transform_feedback_varyings) {
-                        type |= 16;
-                } else {
-                        type |= 32;
-                }
-
-                enum pipe_format format = varying_format(type, chan);
-                assert(format != PIPE_FORMAT_NONE);
-
-                for (int c = 0; c < sz; ++c) {
-                        assert(loc + c < PAN_MAX_VARYINGS);
-                        varyings[loc + c].location = var->data.location + c;
-                        varyings[loc + c].format = format;
-                }
-
-                *varying_count = MAX2(*varying_count, loc + sz);
-        }
-}
-
 #if PAN_ARCH >= 6
 static enum mali_register_file_format
 bifrost_blend_type_from_nir(nir_alu_type nir_type)
@@ -175,6 +66,19 @@ bifrost_blend_type_from_nir(nir_alu_type nir_type)
                 return 0;
         }
 }
+
+#if PAN_ARCH <= 7
+enum mali_register_file_format
+GENX(pan_fixup_blend_type)(nir_alu_type T_size, enum pipe_format format)
+{
+        const struct util_format_description *desc = util_format_description(format);
+        unsigned size = nir_alu_type_get_type_size(T_size);
+        nir_alu_type T_format = pan_unpacked_type_for_format(desc);
+        nir_alu_type T = nir_alu_type_get_base_type(T_format) | size;
+
+        return bifrost_blend_type_from_nir(T);
+}
+#endif
 #endif
 
 void
@@ -206,7 +110,9 @@ GENX(pan_shader_compile)(nir_shader *s,
 
         switch (info->stage) {
         case MESA_SHADER_VERTEX:
-                info->attribute_count = util_bitcount64(s->info.inputs_read);
+                info->attributes_read = s->info.inputs_read;
+                info->attributes_read_count = util_bitcount64(info->attributes_read);
+                info->attribute_count = info->attributes_read_count;
 
 #if PAN_ARCH <= 5
                 bool vertex_id = BITSET_TEST(s->info.system_values_read,
@@ -222,8 +128,11 @@ GENX(pan_shader_compile)(nir_shader *s,
 
                 info->vs.writes_point_size =
                         s->info.outputs_written & (1 << VARYING_SLOT_PSIZ);
-                collect_varyings(s, nir_var_shader_out, info->varyings.output,
-                                 &info->varyings.output_count);
+
+#if PAN_ARCH >= 9
+                info->varyings.output_count =
+                        util_last_bit(s->info.outputs_written >> VARYING_SLOT_VAR0);
+#endif
                 break;
         case MESA_SHADER_FRAGMENT:
                 if (s->info.outputs_written & BITFIELD64_BIT(FRAG_RESULT_DEPTH))
@@ -235,10 +144,8 @@ GENX(pan_shader_compile)(nir_shader *s,
 
                 info->fs.outputs_read = s->info.outputs_read >> FRAG_RESULT_DATA0;
                 info->fs.outputs_written = s->info.outputs_written >> FRAG_RESULT_DATA0;
-
-                /* EXT_shader_framebuffer_fetch requires per-sample */
-                info->fs.sample_shading = s->info.fs.uses_sample_shading ||
-                                          info->fs.outputs_read;
+                info->fs.sample_shading = s->info.fs.uses_sample_shading;
+                info->fs.untyped_color_outputs = s->info.fs.untyped_color_outputs;
 
                 info->fs.can_discard = s->info.fs.uses_discard;
                 info->fs.early_fragment_tests = s->info.fs.early_fragment_tests;
@@ -278,28 +185,32 @@ GENX(pan_shader_compile)(nir_shader *s,
                 info->fs.reads_face =
                         (s->info.inputs_read & (1 << VARYING_SLOT_FACE)) ||
                         BITSET_TEST(s->info.system_values_read, SYSTEM_VALUE_FRONT_FACE);
-                collect_varyings(s, nir_var_shader_in, info->varyings.input,
-                                 &info->varyings.input_count);
-                break;
-        case MESA_SHADER_COMPUTE:
-                info->wls_size = s->info.shared_size;
+#if PAN_ARCH >= 9
+                info->varyings.output_count =
+                        util_last_bit(s->info.outputs_read >> VARYING_SLOT_VAR0);
+#endif
                 break;
         default:
-                unreachable("Unknown shader state");
+                /* Everything else treated as compute */
+                info->wls_size = s->info.shared_size;
+                break;
         }
 
         info->outputs_written = s->info.outputs_written;
 
         /* Sysvals have dedicated UBO */
-        if (info->sysvals.sysval_count)
-                info->ubo_count = MAX2(s->info.num_ubos + 1, inputs->sysval_ubo + 1);
-        else
-                info->ubo_count = s->info.num_ubos;
+        info->ubo_count = s->info.num_ubos;
+        if (info->sysvals.sysval_count && inputs->fixed_sysval_ubo < 0)
+                info->ubo_count++;
 
-        info->attribute_count += util_last_bit(s->info.images_used);
+        info->attribute_count += BITSET_LAST_BIT(s->info.images_used);
         info->writes_global = s->info.writes_memory;
 
         info->sampler_count = info->texture_count = BITSET_LAST_BIT(s->info.textures_used);
+
+        unsigned execution_mode = s->info.float_controls_execution_mode;
+        info->ftz_fp16 = nir_is_denorm_flush_to_zero(execution_mode, 16);
+        info->ftz_fp32 = nir_is_denorm_flush_to_zero(execution_mode, 32);
 
 #if PAN_ARCH >= 6
         /* This is "redundant" information, but is needed in a draw-time hot path */

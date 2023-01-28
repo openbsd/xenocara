@@ -81,7 +81,7 @@ dx_get_texture_lod(nir_builder *b, nir_tex_instr *tex)
    nir_ssa_def *ssa_src = nir_channels(b, tex->src[coord_index].src.ssa,
                                        (1 << coord_components) - 1);
    nir_src src = nir_src_for_ssa(ssa_src);
-   nir_src_copy(&tql->src[0].src, &src);
+   nir_src_copy(&tql->src[0].src, &src, &tql->instr);
    tql->src[0].src_type = nir_tex_src_coord;
 
    unsigned idx = 1;
@@ -92,7 +92,7 @@ dx_get_texture_lod(nir_builder *b, nir_tex_instr *tex)
           tex->src[i].src_type == nir_tex_src_sampler_offset ||
           tex->src[i].src_type == nir_tex_src_texture_handle ||
           tex->src[i].src_type == nir_tex_src_sampler_handle) {
-         nir_src_copy(&tql->src[idx].src, &tex->src[i].src);
+         nir_src_copy(&tql->src[idx].src, &tex->src[i].src, &tql->instr);
          tql->src[idx].src_type = tex->src[i].src_type;
          idx++;
       }
@@ -217,7 +217,6 @@ static nir_ssa_def *
 load_bordercolor(nir_builder *b, nir_tex_instr *tex, dxil_wrap_sampler_state *active_state,
                  const dxil_texture_swizzle_state *tex_swizzle)
 {
-   nir_const_value const_value[4] = {{0}};
    int ndest_comp = nir_dest_num_components(tex->dest);
 
    unsigned swizzle[4] = {
@@ -227,19 +226,25 @@ load_bordercolor(nir_builder *b, nir_tex_instr *tex, dxil_wrap_sampler_state *ac
       tex_swizzle->swizzle_a
    };
 
+   /* Avoid any possible float conversion issues */
+   uint32_t border_color[4];
+   memcpy(border_color, active_state->border_color, sizeof(border_color));
+   STATIC_ASSERT(sizeof(border_color) == sizeof(active_state->border_color));
+
+   nir_const_value const_value[4];
    for (int i = 0; i < ndest_comp; ++i) {
       switch (swizzle[i]) {
       case PIPE_SWIZZLE_0:
-         const_value[i].f32 = 0;
+         const_value[i] = nir_const_value_for_uint(0, 32);
          break;
       case PIPE_SWIZZLE_1:
-         const_value[i].i32 = 1;
+         const_value[i] = nir_const_value_for_uint(1, 32);
          break;
       case PIPE_SWIZZLE_X:
       case PIPE_SWIZZLE_Y:
       case PIPE_SWIZZLE_Z:
       case PIPE_SWIZZLE_W:
-         const_value[i].f32 = active_state->border_color[swizzle[i]];
+         const_value[i] = nir_const_value_for_uint(border_color[swizzle[i]], 32);
          break;
       default:
          unreachable("Unexpected swizzle value");
@@ -278,7 +283,7 @@ create_txf_from_tex(nir_builder *b, nir_tex_instr *tex)
       if (tex->src[i].src_type == nir_tex_src_texture_deref ||
           tex->src[i].src_type == nir_tex_src_texture_offset ||
           tex->src[i].src_type == nir_tex_src_texture_handle) {
-         nir_src_copy(&txf->src[idx].src, &tex->src[i].src);
+         nir_src_copy(&txf->src[idx].src, &tex->src[i].src, &txf->instr);
          txf->src[idx].src_type = tex->src[i].src_type;
          idx++;
       }

@@ -26,6 +26,7 @@
 #include "vk_cmd_enqueue_entrypoints.h"
 #include "vk_command_buffer.h"
 #include "vk_device.h"
+#include "vk_pipeline_layout.h"
 #include "vk_util.h"
 
 VKAPI_ATTR void VKAPI_CALL
@@ -117,6 +118,36 @@ vk_cmd_enqueue_CmdDrawMultiIndexedEXT(VkCommandBuffer commandBuffer,
    }
 }
 
+static void
+push_descriptors_set_free(struct vk_cmd_queue *queue,
+                          struct vk_cmd_queue_entry *cmd)
+{
+  struct vk_cmd_push_descriptor_set_khr *pds = &cmd->u.push_descriptor_set_khr;
+  for (unsigned i = 0; i < pds->descriptor_write_count; i++) {
+    VkWriteDescriptorSet *entry = &pds->descriptor_writes[i];
+    switch (entry->descriptorType) {
+    case VK_DESCRIPTOR_TYPE_SAMPLER:
+    case VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER:
+    case VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE:
+    case VK_DESCRIPTOR_TYPE_STORAGE_IMAGE:
+    case VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT:
+       vk_free(queue->alloc, (void *)entry->pImageInfo);
+       break;
+    case VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER:
+    case VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER:
+       vk_free(queue->alloc, (void *)entry->pTexelBufferView);
+       break;
+    case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER:
+    case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER:
+    case VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC:
+    case VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC:
+    default:
+       vk_free(queue->alloc, (void *)entry->pBufferInfo);
+       break;
+    }
+  }
+}
+
 VKAPI_ATTR void VKAPI_CALL
 vk_cmd_enqueue_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer,
                                        VkPipelineBindPoint pipelineBindPoint,
@@ -137,6 +168,7 @@ vk_cmd_enqueue_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer,
    pds = &cmd->u.push_descriptor_set_khr;
 
    cmd->type = VK_CMD_PUSH_DESCRIPTOR_SET_KHR;
+   cmd->driver_free_cb = push_descriptors_set_free;
    list_addtail(&cmd->cmd_link, &cmd_buffer->cmd_queue.cmds);
 
    pds->pipeline_bind_point = pipelineBindPoint;
@@ -202,11 +234,12 @@ unref_pipeline_layout(struct vk_cmd_queue *queue,
 {
    struct vk_command_buffer *cmd_buffer =
       container_of(queue, struct vk_command_buffer, cmd_queue);
-   struct vk_device *device = cmd_buffer->base.device;
+   VK_FROM_HANDLE(vk_pipeline_layout, layout,
+                  cmd->u.bind_descriptor_sets.layout);
 
    assert(cmd->type == VK_CMD_BIND_DESCRIPTOR_SETS);
 
-   device->unref_pipeline_layout(device, cmd->u.bind_descriptor_sets.layout);
+   vk_pipeline_layout_unref(cmd_buffer->base.device, layout);
 }
 
 VKAPI_ATTR void VKAPI_CALL
@@ -220,7 +253,6 @@ vk_cmd_enqueue_CmdBindDescriptorSets(VkCommandBuffer commandBuffer,
                                      const uint32_t *pDynamicOffsets)
 {
    VK_FROM_HANDLE(vk_command_buffer, cmd_buffer, commandBuffer);
-   struct vk_device *device = cmd_buffer->base.device;
 
    struct vk_cmd_queue_entry *cmd =
       vk_zalloc(cmd_buffer->cmd_queue.alloc, sizeof(*cmd), 8,
@@ -235,7 +267,7 @@ vk_cmd_enqueue_CmdBindDescriptorSets(VkCommandBuffer commandBuffer,
     * command is in the queue.  Otherwise, it may get deleted out from under
     * us before the command is replayed.
     */
-   device->ref_pipeline_layout(device, layout);
+   vk_pipeline_layout_ref(vk_pipeline_layout_from_handle(layout));
    cmd->u.bind_descriptor_sets.layout = layout;
    cmd->driver_free_cb = unref_pipeline_layout;
 

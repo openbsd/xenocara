@@ -79,7 +79,9 @@ v3d_render_blit(struct pipe_context *ctx, struct pipe_blit_info *info)
         if (!info->mask)
                 return;
 
-        if (!src->tiled) {
+        if (!src->tiled &&
+            info->src.resource->target != PIPE_TEXTURE_1D &&
+            info->src.resource->target != PIPE_TEXTURE_1D_ARRAY) {
                 struct pipe_box box = {
                         .x = 0,
                         .y = 0,
@@ -113,8 +115,8 @@ v3d_render_blit(struct pipe_context *ctx, struct pipe_blit_info *info)
 
         if (!util_blitter_is_blit_supported(v3d->blitter, info)) {
                 fprintf(stderr, "blit unsupported %s -> %s\n",
-                    util_format_short_name(info->src.resource->format),
-                    util_format_short_name(info->dst.resource->format));
+                    util_format_short_name(info->src.format),
+                    util_format_short_name(info->dst.format));
                 return;
         }
 
@@ -193,7 +195,7 @@ v3d_stencil_blit(struct pipe_context *ctx, struct pipe_blit_info *info)
                                   PIPE_MASK_R,
                                   PIPE_TEX_FILTER_NEAREST,
                                   info->scissor_enable ? &info->scissor : NULL,
-                                  info->alpha_blend, false);
+                                  info->alpha_blend, false, 0);
 
         pipe_surface_reference(&dst_surf, NULL);
         pipe_sampler_view_reference(&src_view, NULL);
@@ -226,9 +228,6 @@ v3d_tfu(struct pipe_context *pctx,
         if (psrc->format != pdst->format)
                 return false;
         if (psrc->nr_samples != pdst->nr_samples)
-                return false;
-
-        if (pdst->target != PIPE_TEXTURE_2D || psrc->target != PIPE_TEXTURE_2D)
                 return false;
 
         /* Can't write to raster. */
@@ -377,10 +376,12 @@ v3d_tfu_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
             info->dst.box.y != 0 ||
             info->dst.box.width != dst_width ||
             info->dst.box.height != dst_height ||
+            info->dst.box.depth != 1 ||
             info->src.box.x != 0 ||
             info->src.box.y != 0 ||
             info->src.box.width != info->dst.box.width ||
-            info->src.box.height != info->dst.box.height) {
+            info->src.box.height != info->dst.box.height ||
+            info->src.box.depth != 1) {
                 return;
         }
 
@@ -399,12 +400,13 @@ v3d_tfu_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
 static struct pipe_surface *
 v3d_get_blit_surface(struct pipe_context *pctx,
                      struct pipe_resource *prsc,
+                     enum pipe_format format,
                      unsigned level,
                      int16_t layer)
 {
         struct pipe_surface tmpl;
 
-        tmpl.format = prsc->format;
+        tmpl.format = format;
         tmpl.u.tex.level = level;
         tmpl.u.tex.first_layer = layer;
         tmpl.u.tex.last_layer = layer;
@@ -447,14 +449,14 @@ v3d_tlb_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
                 return;
 
         if (is_color_blit &&
-            util_format_is_depth_or_stencil(info->dst.resource->format))
+            util_format_is_depth_or_stencil(info->dst.format))
                 return;
 
-        if (!v3d_rt_format_supported(&screen->devinfo, info->src.resource->format))
+        if (!v3d_rt_format_supported(&screen->devinfo, info->src.format))
                 return;
 
-        if (v3d_get_rt_format(&screen->devinfo, info->src.resource->format) !=
-            v3d_get_rt_format(&screen->devinfo, info->dst.resource->format))
+        if (v3d_get_rt_format(&screen->devinfo, info->src.format) !=
+            v3d_get_rt_format(&screen->devinfo, info->dst.format))
                 return;
 
         bool msaa = (info->src.resource->nr_samples > 1 ||
@@ -463,22 +465,21 @@ v3d_tlb_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
                                 info->dst.resource->nr_samples < 2);
 
         if (is_msaa_resolve &&
-            !v3d_format_supports_tlb_msaa_resolve(&screen->devinfo, info->src.resource->format))
+            !v3d_format_supports_tlb_msaa_resolve(&screen->devinfo, info->src.format))
                 return;
 
         v3d_flush_jobs_writing_resource(v3d, info->src.resource, V3D_FLUSH_DEFAULT, false);
 
         struct pipe_surface *dst_surf =
-           v3d_get_blit_surface(pctx, info->dst.resource, info->dst.level, info->dst.box.z);
+           v3d_get_blit_surface(pctx, info->dst.resource, info->dst.format, info->dst.level, info->dst.box.z);
         struct pipe_surface *src_surf =
-           v3d_get_blit_surface(pctx, info->src.resource, info->src.level, info->src.box.z);
+           v3d_get_blit_surface(pctx, info->src.resource, info->src.format, info->src.level, info->src.box.z);
 
         struct pipe_surface *surfaces[V3D_MAX_DRAW_BUFFERS] = { 0 };
         if (is_color_blit)
                 surfaces[0] = dst_surf;
 
-        bool double_buffer =
-                 unlikely(V3D_DEBUG & V3D_DEBUG_DOUBLE_BUFFER) && !msaa;
+        bool double_buffer = V3D_DBG(DOUBLE_BUFFER) && !msaa;
 
         uint32_t tile_width, tile_height, max_bpp;
         v3d_get_tile_buffer_size(msaa, double_buffer,
@@ -629,9 +630,14 @@ v3d_get_sand8_fs(struct pipe_context *pctx, int cpp)
 
         nir_builder b = nir_builder_init_simple_shader(MESA_SHADER_FRAGMENT,
                                                        options, "%s", name);
+        b.shader->info.num_ubos = 1;
+        b.shader->num_outputs = 1;
+        b.shader->num_inputs = 1;
+        b.shader->num_uniforms = 1;
+
         const struct glsl_type *vec4 = glsl_vec4_type();
 
-        const struct glsl_type *glsl_int = glsl_int_type();
+        const struct glsl_type *glsl_uint = glsl_uint_type();
 
         nir_variable *color_out =
                 nir_variable_create(b.shader, nir_var_shader_out,
@@ -654,13 +660,13 @@ v3d_get_sand8_fs(struct pipe_context *pctx, int cpp)
         nir_ssa_def *y = nir_f2i32(&b, nir_channel(&b, pos, 1));
 
         nir_variable *stride_in =
-                nir_variable_create(b.shader, nir_var_uniform, glsl_int,
+                nir_variable_create(b.shader, nir_var_uniform, glsl_uint,
                                     "sand8_stride");
         nir_ssa_def *stride =
                 nir_load_uniform(&b, 1, 32, zero,
                                  .base = stride_in->data.driver_location,
-                                 .range = 1,
-                                 .dest_type = nir_type_int32);
+                                 .range = 4,
+                                 .dest_type = nir_type_uint32);
 
         nir_ssa_def *x_offset;
         nir_ssa_def *y_offset;
@@ -675,7 +681,7 @@ v3d_get_sand8_fs(struct pipe_context *pctx, int cpp)
          *  32bpp microtile dimensions are 4x4
          *
          * As we are reading and writing with 32bpp to optimize
-         * the number of texture operations during the blit. We need
+         * the number of texture operations during the blit, we need
          * to adjust the offsets were we read and write as data will
          * be later read using 8bpp (luma) and 16bpp (chroma).
          *
@@ -686,7 +692,7 @@ v3d_get_sand8_fs(struct pipe_context *pctx, int cpp)
          * 16 bytes per line. So if we read a 8bpp texture that was
          * written as 32bpp texture. Bytes would be misplaced.
          *
-         * inter/intra_utile_x_offests takes care of mapping the offsets
+         * inter/intra_utile_x_offsets takes care of mapping the offsets
          * between microtiles to deal with this issue for luma planes.
          */
         if (cpp == 1) {
@@ -716,7 +722,7 @@ v3d_get_sand8_fs(struct pipe_context *pctx, int cpp)
         }
         nir_ssa_def *ubo_offset = nir_iadd(&b, x_offset, y_offset);
         nir_ssa_def *load =
-        nir_load_ubo(&b, 1, 32, one, ubo_offset,
+        nir_load_ubo(&b, 1, 32, zero, ubo_offset,
                     .align_mul = 4,
                     .align_offset = 0,
                     .range_base = 0,
@@ -805,13 +811,18 @@ v3d_sand8_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
 
         pctx->set_constant_buffer(pctx, PIPE_SHADER_FRAGMENT, 0, false,
                                   &cb_uniforms);
+        struct pipe_constant_buffer saved_fs_cb1 = { 0 };
+        pipe_resource_reference(&saved_fs_cb1.buffer,
+                                v3d->constbuf[PIPE_SHADER_FRAGMENT].cb[1].buffer);
+        memcpy(&saved_fs_cb1, &v3d->constbuf[PIPE_SHADER_FRAGMENT].cb[1],
+               sizeof(struct pipe_constant_buffer));
         struct pipe_constant_buffer cb_src = {
                 .buffer = info->src.resource,
                 .buffer_offset = src->slices[info->src.level].offset,
                 .buffer_size = (src->bo->size -
                                 src->slices[info->src.level].offset),
         };
-        pctx->set_constant_buffer(pctx, PIPE_SHADER_FRAGMENT, 2, false,
+        pctx->set_constant_buffer(pctx, PIPE_SHADER_FRAGMENT, 1, false,
                                   &cb_src);
         /* Unbind the textures, to make sure we don't try to recurse into the
          * shadow blit.
@@ -827,14 +838,12 @@ v3d_sand8_blit(struct pipe_context *pctx, struct pipe_blit_info *info)
         util_blitter_restore_constant_buffer_state(v3d->blitter);
 
         /* Restore cb1 (util_blitter doesn't handle this one). */
-        struct pipe_constant_buffer cb_disabled = { 0 };
-        pctx->set_constant_buffer(pctx, PIPE_SHADER_FRAGMENT, 1, false,
-                                  &cb_disabled);
+        pctx->set_constant_buffer(pctx, PIPE_SHADER_FRAGMENT, 1, true,
+                                  &saved_fs_cb1);
 
         pipe_surface_reference(&dst_surf, NULL);
 
         info->mask &= ~PIPE_MASK_RGBA;
-        return;
 }
 
 

@@ -32,6 +32,7 @@
 
 #include <util/macros.h>
 #include <util/ralloc.h>
+#include <util/u_math.h>
 
 #include "intel_decoder.h"
 
@@ -165,9 +166,9 @@ create_group(struct parser_context *ctx,
    group->fixed_length = fixed_length;
    group->dword_length_field = NULL;
    group->dw_length = 0;
-   group->engine_mask = I915_ENGINE_CLASS_TO_MASK(I915_ENGINE_CLASS_RENDER) |
-                        I915_ENGINE_CLASS_TO_MASK(I915_ENGINE_CLASS_VIDEO) |
-                        I915_ENGINE_CLASS_TO_MASK(I915_ENGINE_CLASS_COPY);
+   group->engine_mask = INTEL_ENGINE_CLASS_TO_MASK(INTEL_ENGINE_CLASS_RENDER) |
+                        INTEL_ENGINE_CLASS_TO_MASK(INTEL_ENGINE_CLASS_VIDEO) |
+                        INTEL_ENGINE_CLASS_TO_MASK(INTEL_ENGINE_CLASS_COPY);
    group->bias = 1;
 
    for (int i = 0; atts[i]; i += 2) {
@@ -185,11 +186,11 @@ create_group(struct parser_context *ctx,
          group->engine_mask = 0;
          while (tok != NULL) {
             if (strcmp(tok, "render") == 0) {
-               group->engine_mask |= I915_ENGINE_CLASS_TO_MASK(I915_ENGINE_CLASS_RENDER);
+               group->engine_mask |= INTEL_ENGINE_CLASS_TO_MASK(INTEL_ENGINE_CLASS_RENDER);
             } else if (strcmp(tok, "video") == 0) {
-               group->engine_mask |= I915_ENGINE_CLASS_TO_MASK(I915_ENGINE_CLASS_VIDEO);
+               group->engine_mask |= INTEL_ENGINE_CLASS_TO_MASK(INTEL_ENGINE_CLASS_VIDEO);
             } else if (strcmp(tok, "blitter") == 0) {
-               group->engine_mask |= I915_ENGINE_CLASS_TO_MASK(I915_ENGINE_CLASS_COPY);
+               group->engine_mask |= INTEL_ENGINE_CLASS_TO_MASK(INTEL_ENGINE_CLASS_COPY);
             } else {
                fprintf(stderr, "unknown engine class defined for instruction \"%s\": %s\n", name, atts[i + 1]);
             }
@@ -243,7 +244,7 @@ get_start_end_pos(int *start, int *end)
    /* start value has to be mod with 32 as we need the relative
     * start position in the first DWord. For the end position, add
     * the length of the field to the start position to get the
-    * relative postion in the 64 bit address.
+    * relative position in the 64 bit address.
     */
    if (*end - *start > 32) {
       int len = *end - *start;
@@ -750,13 +751,13 @@ void intel_spec_destroy(struct intel_spec *spec)
 
 struct intel_group *
 intel_spec_find_instruction(struct intel_spec *spec,
-                            enum drm_i915_gem_engine_class engine,
+                            enum intel_engine_class engine,
                             const uint32_t *p)
 {
    hash_table_foreach(spec->commands, entry) {
       struct intel_group *command = entry->data;
       uint32_t opcode = *p & command->opcode_mask;
-      if ((command->engine_mask & I915_ENGINE_CLASS_TO_MASK(engine)) &&
+      if ((command->engine_mask & INTEL_ENGINE_CLASS_TO_MASK(engine)) &&
            opcode == command->opcode)
          return command;
    }
@@ -1094,7 +1095,7 @@ iter_decode_field(struct intel_field_iterator *iter)
    case INTEL_TYPE_SFIXED: {
       /* Sign extend before converting */
       int bits = iter->field->type.i + iter->field->type.f + 1;
-      int64_t v_sign_extend = ((int64_t)(v.qw << (64 - bits))) >> (64 - bits);
+      int64_t v_sign_extend = util_mask_sign_extend(v.qw, bits);
       snprintf(iter->value, sizeof(iter->value), "%f",
                (float) v_sign_extend / (1 << iter->field->type.f));
       break;

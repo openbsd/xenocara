@@ -32,11 +32,12 @@ if with_ld_version_script
   osmesa_link_deps += files('osmesa.sym')
 endif
 
-if cc.get_id() == 'gcc' and host_machine.cpu_family() != 'x86_64'
-  osmesa_def = 'osmesa.mingw.def'
-else
-  osmesa_def = 'osmesa.def'
-endif
+osmesa_def = custom_target(
+  'osmesa.def',
+  input: 'osmesa.def.in',
+  output : 'osmesa.def',
+  command : gen_vs_module_defs_normal_command,
+)
 
 libosmesa = shared_library(
   osmesa_lib_name,

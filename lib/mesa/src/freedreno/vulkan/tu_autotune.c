@@ -1,31 +1,15 @@
 /*
  * Copyright © 2021 Igalia S.L.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
-#include <vulkan/vulkan_core.h>
-
 #include "tu_autotune.h"
-#include "tu_private.h"
+
+#include "tu_cmd_buffer.h"
 #include "tu_cs.h"
+#include "tu_device.h"
+#include "tu_image.h"
+#include "tu_pass.h"
 
 /* How does it work?
  *
@@ -96,30 +80,59 @@ struct tu_submission_data {
    uint32_t fence;
 
    struct tu_cs fence_cs;
-   uint32_t buffers_count;
 };
 
-static struct tu_submission_data *
-create_submission_data(struct tu_device *dev, struct tu_autotune *at)
+static bool
+fence_before(uint32_t a, uint32_t b)
 {
-   struct tu_submission_data *submission_data =
-      calloc(1, sizeof(struct tu_submission_data));
-   submission_data->fence = at->fence_counter;
+   /* essentially a < b, but handle wrapped values */
+   return (int32_t)(a - b) < 0;
+}
+
+static uint32_t
+get_autotune_fence(struct tu_autotune *at)
+{
+   const struct tu6_global *global = at->device->global_bo->map;
+   return global->autotune_fence;
+}
+
+static struct tu_submission_data *
+create_submission_data(struct tu_device *dev, struct tu_autotune *at,
+                       uint32_t fence)
+{
+   struct tu_submission_data *submission_data = NULL;
+   if (!list_is_empty(&at->submission_data_pool)) {
+      submission_data = list_first_entry(&at->submission_data_pool,
+                                         struct tu_submission_data, node);
+      list_del(&submission_data->node);
+   } else {
+      submission_data = calloc(1, sizeof(struct tu_submission_data));
+      tu_cs_init(&submission_data->fence_cs, dev, TU_CS_MODE_GROW, 5, "autotune fence cs");
+   }
+   submission_data->fence = fence;
 
    struct tu_cs* fence_cs = &submission_data->fence_cs;
-   tu_cs_init(fence_cs, dev, TU_CS_MODE_GROW, 5);
    tu_cs_begin(fence_cs);
 
    tu_cs_emit_pkt7(fence_cs, CP_EVENT_WRITE, 4);
    tu_cs_emit(fence_cs, CP_EVENT_WRITE_0_EVENT(CACHE_FLUSH_TS));
    tu_cs_emit_qw(fence_cs, dev->global_bo->iova + gb_offset(autotune_fence));
-   tu_cs_emit(fence_cs, at->fence_counter);
+   tu_cs_emit(fence_cs, fence);
 
    tu_cs_end(fence_cs);
 
    list_addtail(&submission_data->node, &at->pending_submission_data);
 
    return submission_data;
+}
+
+static void
+finish_submission_data(struct tu_autotune *at,
+                       struct tu_submission_data *data)
+{
+   list_del(&data->node);
+   list_addtail(&data->node, &at->submission_data_pool);
+   tu_cs_reset(&data->fence_cs);
 }
 
 static void
@@ -131,40 +144,26 @@ free_submission_data(struct tu_submission_data *data)
    free(data);
 }
 
-#define APPEND_TO_HASH(state, field) \
-   XXH64_update(state, &field, sizeof(field));
-
 static uint64_t
 hash_renderpass_instance(const struct tu_render_pass *pass,
                          const struct tu_framebuffer *framebuffer,
                          const struct tu_cmd_buffer *cmd) {
-   XXH64_state_t hash_state;
-   XXH64_reset(&hash_state, 0);
+   uint32_t data[3 + pass->attachment_count * 5];
+   uint32_t* ptr = data;
 
-   APPEND_TO_HASH(&hash_state, framebuffer->width);
-   APPEND_TO_HASH(&hash_state, framebuffer->height);
-   APPEND_TO_HASH(&hash_state, framebuffer->layers);
-
-   APPEND_TO_HASH(&hash_state, pass->attachment_count);
-   XXH64_update(&hash_state, pass->attachments, pass->attachment_count * sizeof(pass->attachments[0]));
+   *ptr++ = framebuffer->width;
+   *ptr++ = framebuffer->height;
+   *ptr++ = framebuffer->layers;
 
    for (unsigned i = 0; i < pass->attachment_count; i++) {
-      APPEND_TO_HASH(&hash_state, cmd->state.attachments[i]->view.width);
-      APPEND_TO_HASH(&hash_state, cmd->state.attachments[i]->view.height);
-      APPEND_TO_HASH(&hash_state, cmd->state.attachments[i]->image->vk_format);
-      APPEND_TO_HASH(&hash_state, cmd->state.attachments[i]->image->layer_count);
-      APPEND_TO_HASH(&hash_state, cmd->state.attachments[i]->image->level_count);
+      *ptr++ = cmd->state.attachments[i]->view.width;
+      *ptr++ = cmd->state.attachments[i]->view.height;
+      *ptr++ = cmd->state.attachments[i]->image->vk.format;
+      *ptr++ = cmd->state.attachments[i]->image->vk.array_layers;
+      *ptr++ = cmd->state.attachments[i]->image->vk.mip_levels;
    }
 
-   APPEND_TO_HASH(&hash_state, pass->subpass_count);
-   for (unsigned i = 0; i < pass->subpass_count; i++) {
-      APPEND_TO_HASH(&hash_state, pass->subpasses[i].samples);
-      APPEND_TO_HASH(&hash_state, pass->subpasses[i].input_count);
-      APPEND_TO_HASH(&hash_state, pass->subpasses[i].color_count);
-      APPEND_TO_HASH(&hash_state, pass->subpasses[i].resolve_count);
-   }
-
-   return XXH64_digest(&hash_state);
+   return XXH64(data, sizeof(data), pass->autotune_hash);
 }
 
 static void
@@ -246,15 +245,13 @@ history_add_result(struct tu_device *dev, struct tu_renderpass_history *history,
 }
 
 static void
-process_results(struct tu_autotune *at)
+process_results(struct tu_autotune *at, uint32_t current_fence)
 {
    struct tu_device *dev = at->device;
-   struct tu6_global *global = dev->global_bo->map;
-   uint32_t current_fence = global->autotune_fence;
 
    list_for_each_entry_safe(struct tu_renderpass_result, result,
                             &at->pending_results, node) {
-      if (result->fence > current_fence)
+      if (fence_before(current_fence, result->fence))
          break;
 
       struct tu_renderpass_history *history = result->history;
@@ -266,10 +263,10 @@ process_results(struct tu_autotune *at)
 
    list_for_each_entry_safe(struct tu_submission_data, submission_data,
                             &at->pending_submission_data, node) {
-      if (submission_data->fence > current_fence)
+      if (fence_before(current_fence, submission_data->fence))
          break;
 
-      free_submission_data(submission_data);
+      finish_submission_data(at, submission_data);
    }
 }
 
@@ -304,11 +301,10 @@ tu_autotune_on_submit(struct tu_device *dev,
 {
    /* We are single-threaded here */
 
-   process_results(at);
+   const uint32_t gpu_fence = get_autotune_fence(at);
+   const uint32_t new_fence = at->fence_counter++;
 
-   /* pre-increment so zero isn't valid fence */
-   uint32_t new_fence = ++at->fence_counter;
-   uint32_t result_buffers = 0;
+   process_results(at, gpu_fence);
 
    /* Create history entries here to minimize work and locking being
     * done on renderpass end.
@@ -337,15 +333,10 @@ tu_autotune_on_submit(struct tu_device *dev,
          result->fence = new_fence;
          result->history = history;
       }
-
-      if (!list_is_empty(&cmdbuf->renderpass_autotune_results)) {
-         result_buffers++;
-      }
    }
 
    struct tu_submission_data *submission_data =
-      create_submission_data(dev, at);
-   submission_data->buffers_count = result_buffers;
+      create_submission_data(dev, at, new_fence);
 
    for (uint32_t i = 0; i < cmd_buffer_count; i++) {
       struct tu_cmd_buffer *cmdbuf = cmd_buffers[i];
@@ -355,9 +346,8 @@ tu_autotune_on_submit(struct tu_device *dev,
       queue_pending_results(at, cmdbuf);
    }
 
-#if TU_AUTOTUNE_DEBUG_LOG != 0
-   mesa_logi("Total history entries: %u", at->ht->entries);
-#endif
+   if (TU_AUTOTUNE_DEBUG_LOG)
+      mesa_logi("Total history entries: %u", at->ht->entries);
 
    /* Cleanup old entries from history table. The assumption
     * here is that application doesn't hold many old unsubmitted
@@ -365,13 +355,11 @@ tu_autotune_on_submit(struct tu_device *dev,
     */
    hash_table_foreach(at->ht, entry) {
       struct tu_renderpass_history *history = entry->data;
-      if (history->last_fence == 0 ||
-          (new_fence - history->last_fence) <= MAX_HISTORY_LIFETIME)
+      if (fence_before(gpu_fence, history->last_fence + MAX_HISTORY_LIFETIME))
          continue;
 
-#if TU_AUTOTUNE_DEBUG_LOG != 0
-      mesa_logi("Removed old history entry %016"PRIx64"", history->key);
-#endif
+      if (TU_AUTOTUNE_DEBUG_LOG)
+         mesa_logi("Removed old history entry %016"PRIx64"", history->key);
 
       u_rwlock_wrlock(&at->ht_lock);
       _mesa_hash_table_remove_key(at->ht, &history->key);
@@ -409,6 +397,10 @@ tu_autotune_init(struct tu_autotune *at, struct tu_device *dev)
 
    list_inithead(&at->pending_results);
    list_inithead(&at->pending_submission_data);
+   list_inithead(&at->submission_data_pool);
+
+   /* start from 1 because tu6_global::autotune_fence is initialized to 0 */
+   at->fence_counter = 1;
 
    return VK_SUCCESS;
 }
@@ -416,18 +408,19 @@ tu_autotune_init(struct tu_autotune *at, struct tu_device *dev)
 void
 tu_autotune_fini(struct tu_autotune *at, struct tu_device *dev)
 {
-#if TU_AUTOTUNE_LOG_AT_FINISH != 0
-   while (!list_is_empty(&at->pending_results)) {
-      process_results(at);
-   }
+   if (TU_AUTOTUNE_LOG_AT_FINISH) {
+      while (!list_is_empty(&at->pending_results)) {
+         const uint32_t gpu_fence = get_autotune_fence(at);
+         process_results(at, gpu_fence);
+      }
 
-   hash_table_foreach(at->ht, entry) {
-      struct tu_renderpass_history *history = entry->data;
+      hash_table_foreach(at->ht, entry) {
+         struct tu_renderpass_history *history = entry->data;
 
-      mesa_logi("%016"PRIx64" \tavg_passed=%u results=%u",
-                history->key, history->avg_samples, history->num_results);
+         mesa_logi("%016"PRIx64" \tavg_passed=%u results=%u",
+                   history->key, history->avg_samples, history->num_results);
+      }
    }
-#endif
 
    tu_autotune_free_results(dev, &at->pending_results);
 
@@ -440,6 +433,11 @@ tu_autotune_fini(struct tu_autotune *at, struct tu_device *dev)
 
    list_for_each_entry_safe(struct tu_submission_data, submission_data,
                             &at->pending_submission_data, node) {
+      free_submission_data(submission_data);
+   }
+
+   list_for_each_entry_safe(struct tu_submission_data, submission_data,
+                            &at->submission_data_pool, node) {
       free_submission_data(submission_data);
    }
 
@@ -482,7 +480,7 @@ fallback_use_bypass(const struct tu_render_pass *pass,
                     const struct tu_framebuffer *framebuffer,
                     const struct tu_cmd_buffer *cmd_buffer)
 {
-   if (cmd_buffer->state.drawcall_count > 5)
+   if (cmd_buffer->state.rp.drawcall_count > 5)
       return false;
 
    for (unsigned i = 0; i < pass->subpass_count; i++) {
@@ -493,6 +491,27 @@ fallback_use_bypass(const struct tu_render_pass *pass,
    return true;
 }
 
+static uint32_t
+get_render_pass_pixel_count(const struct tu_cmd_buffer *cmd)
+{
+   const VkExtent2D *extent = &cmd->state.render_area.extent;
+   return extent->width * extent->height;
+}
+
+static uint64_t
+estimate_drawcall_bandwidth(const struct tu_cmd_buffer *cmd,
+                            uint32_t avg_renderpass_sample_count)
+{
+   const struct tu_cmd_state *state = &cmd->state;
+
+   if (!state->rp.drawcall_count)
+      return 0;
+
+   /* sample count times drawcall_bandwidth_per_sample */
+   return (uint64_t)avg_renderpass_sample_count *
+      state->rp.drawcall_bandwidth_per_sample_sum / state->rp.drawcall_count;
+}
+
 bool
 tu_autotune_use_bypass(struct tu_autotune *at,
                        struct tu_cmd_buffer *cmd_buffer,
@@ -501,18 +520,13 @@ tu_autotune_use_bypass(struct tu_autotune *at,
    const struct tu_render_pass *pass = cmd_buffer->state.pass;
    const struct tu_framebuffer *framebuffer = cmd_buffer->state.framebuffer;
 
-   for (unsigned i = 0; i < pass->subpass_count; i++) {
-      const struct tu_subpass *subpass = &pass->subpasses[i];
-      /* GMEM works much faster in this case */
-      if (subpass->raster_order_attachment_access)
-         return false;
-
-      /* Would be very slow in sysmem mode because we have to enable
-       * SINGLE_PRIM_MODE(FLUSH_PER_OVERLAP_AND_OVERWRITE)
-       */
-      if (subpass->feedback_loop_color || subpass->feedback_loop_ds)
-         return false;
-   }
+   /* If a feedback loop in the subpass caused one of the pipelines used to set
+    * SINGLE_PRIM_MODE(FLUSH_PER_OVERLAP_AND_OVERWRITE) or even
+    * SINGLE_PRIM_MODE(FLUSH), then that should cause significantly increased
+    * sysmem bandwidth (though we haven't quantified it).
+    */
+   if (cmd_buffer->state.rp.sysmem_single_prim_mode)
+      return false;
 
    /* For VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT buffers
     * we would have to allocate GPU memory at the submit time and copy
@@ -541,41 +555,47 @@ tu_autotune_use_bypass(struct tu_autotune *at,
 
    uint32_t avg_samples = 0;
    if (get_history(at, renderpass_key, &avg_samples)) {
-      /* TODO we should account for load/stores/clears/resolves especially
-       * with low drawcall count and ~fb_size samples passed, in D3D11 games
-       * we are seeing many renderpasses like:
-       *  - color attachment load
-       *  - single fullscreen draw
-       *  - color attachment store
-       */
+      const uint32_t pass_pixel_count =
+         get_render_pass_pixel_count(cmd_buffer);
+      uint64_t sysmem_bandwidth =
+         (uint64_t)pass->sysmem_bandwidth_per_pixel * pass_pixel_count;
+      uint64_t gmem_bandwidth =
+         (uint64_t)pass->gmem_bandwidth_per_pixel * pass_pixel_count;
 
-      /* Low sample count could mean there was only a clear.. or there was
-       * a clear plus draws that touch no or few samples
+      const uint64_t total_draw_call_bandwidth =
+         estimate_drawcall_bandwidth(cmd_buffer, avg_samples);
+
+      /* drawcalls access the memory in sysmem rendering (ignoring CCU) */
+      sysmem_bandwidth += total_draw_call_bandwidth;
+
+      /* drawcalls access gmem in gmem rendering, but we do not want to ignore
+       * them completely.  The state changes between tiles also have an
+       * overhead.  The magic numbers of 11 and 10 are randomly chosen.
        */
-      if (avg_samples < 500) {
-#if TU_AUTOTUNE_DEBUG_LOG != 0
-         mesa_logi("%016"PRIx64":%u\t avg_samples=%u selecting sysmem",
-            renderpass_key, cmd_buffer->state.drawcall_count, avg_samples);
-#endif
-         return true;
+      gmem_bandwidth = (gmem_bandwidth * 11 + total_draw_call_bandwidth) / 10;
+
+      const bool select_sysmem = sysmem_bandwidth <= gmem_bandwidth;
+      if (TU_AUTOTUNE_DEBUG_LOG) {
+         const VkExtent2D *extent = &cmd_buffer->state.render_area.extent;
+         const float drawcall_bandwidth_per_sample =
+            (float)cmd_buffer->state.rp.drawcall_bandwidth_per_sample_sum /
+            cmd_buffer->state.rp.drawcall_count;
+
+         mesa_logi("autotune %016" PRIx64 ":%u selecting %s",
+               renderpass_key,
+               cmd_buffer->state.rp.drawcall_count,
+               select_sysmem ? "sysmem" : "gmem");
+         mesa_logi("   avg_samples=%u, draw_bandwidth_per_sample=%.2f, total_draw_call_bandwidth=%" PRIu64,
+               avg_samples,
+               drawcall_bandwidth_per_sample,
+               total_draw_call_bandwidth);
+         mesa_logi("   render_area=%ux%u, sysmem_bandwidth_per_pixel=%u, gmem_bandwidth_per_pixel=%u",
+               extent->width, extent->height,
+               pass->sysmem_bandwidth_per_pixel,
+               pass->gmem_bandwidth_per_pixel);
+         mesa_logi("   sysmem_bandwidth=%" PRIu64 ", gmem_bandwidth=%" PRIu64,
+               sysmem_bandwidth, gmem_bandwidth);
       }
-
-      /* Cost-per-sample is an estimate for the average number of reads+
-       * writes for a given passed sample.
-       */
-      float sample_cost = cmd_buffer->state.total_drawcalls_cost;
-      sample_cost /= cmd_buffer->state.drawcall_count;
-
-      float single_draw_cost = (avg_samples * sample_cost) / cmd_buffer->state.drawcall_count;
-
-      bool select_sysmem = single_draw_cost < 6000.0;
-
-#if TU_AUTOTUNE_DEBUG_LOG != 0
-      mesa_logi("%016"PRIx64":%u\t avg_samples=%u, "
-          "sample_cost=%f, single_draw_cost=%f selecting %s",
-          renderpass_key, cmd_buffer->state.drawcall_count, avg_samples,
-          sample_cost, single_draw_cost, select_sysmem ? "sysmem" : "gmem");
-#endif
 
       return select_sysmem;
    }

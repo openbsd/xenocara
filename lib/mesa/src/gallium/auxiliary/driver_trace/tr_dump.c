@@ -51,11 +51,13 @@
 #include "pipe/p_compiler.h"
 #include "os/os_thread.h"
 #include "util/os_time.h"
+#include "util/simple_mtx.h"
 #include "util/u_debug.h"
 #include "util/u_memory.h"
 #include "util/u_string.h"
 #include "util/u_math.h"
 #include "util/format/u_format.h"
+#include "compiler/nir/nir.h"
 
 #include "tr_dump.h"
 #include "tr_screen.h"
@@ -64,9 +66,10 @@
 
 static bool close_stream = false;
 static FILE *stream = NULL;
-static mtx_t call_mutex = _MTX_INITIALIZER_NP;
+static simple_mtx_t call_mutex = SIMPLE_MTX_INITIALIZER;
 static long unsigned call_no = 0;
 static bool dumping = false;
+static long nir_count = 0;
 
 static bool trigger_active = true;
 static char *trigger_filename = NULL;
@@ -83,7 +86,7 @@ trace_dump_check_trigger(void)
    if (!trigger_filename)
       return;
 
-   mtx_lock(&call_mutex);
+   simple_mtx_lock(&call_mutex);
    if (trigger_active) {
       trigger_active = false;
    } else {
@@ -96,7 +99,7 @@ trace_dump_check_trigger(void)
          }
       }
    }
-   mtx_unlock(&call_mutex);
+   simple_mtx_unlock(&call_mutex);
 }
 
 bool
@@ -251,6 +254,8 @@ trace_dump_trace_begin(void)
    if (!filename)
       return false;
 
+   nir_count = debug_get_num_option("GALLIUM_TRACE_NIR", 32);
+
    if (!stream) {
 
       if (strcmp(filename, "stderr") == 0) {
@@ -300,12 +305,12 @@ bool trace_dump_trace_enabled(void)
 
 void trace_dump_call_lock(void)
 {
-   mtx_lock(&call_mutex);
+   simple_mtx_lock(&call_mutex);
 }
 
 void trace_dump_call_unlock(void)
 {
-   mtx_unlock(&call_mutex);
+   simple_mtx_unlock(&call_mutex);
 }
 
 /*
@@ -329,24 +334,24 @@ bool trace_dumping_enabled_locked(void)
 
 void trace_dumping_start(void)
 {
-   mtx_lock(&call_mutex);
+   simple_mtx_lock(&call_mutex);
    trace_dumping_start_locked();
-   mtx_unlock(&call_mutex);
+   simple_mtx_unlock(&call_mutex);
 }
 
 void trace_dumping_stop(void)
 {
-   mtx_lock(&call_mutex);
+   simple_mtx_lock(&call_mutex);
    trace_dumping_stop_locked();
-   mtx_unlock(&call_mutex);
+   simple_mtx_unlock(&call_mutex);
 }
 
 bool trace_dumping_enabled(void)
 {
    bool ret;
-   mtx_lock(&call_mutex);
+   simple_mtx_lock(&call_mutex);
    ret = trace_dumping_enabled_locked();
-   mtx_unlock(&call_mutex);
+   simple_mtx_unlock(&call_mutex);
    return ret;
 }
 
@@ -393,14 +398,14 @@ void trace_dump_call_end_locked(void)
 
 void trace_dump_call_begin(const char *klass, const char *method)
 {
-   mtx_lock(&call_mutex);
+   simple_mtx_lock(&call_mutex);
    trace_dump_call_begin_locked(klass, method);
 }
 
 void trace_dump_call_end(void)
 {
    trace_dump_call_end_locked();
-   mtx_unlock(&call_mutex);
+   simple_mtx_unlock(&call_mutex);
 }
 
 void trace_dump_arg_begin(const char *name)
@@ -645,5 +650,30 @@ void trace_dump_transfer_ptr(struct pipe_transfer *_transfer)
       trace_dump_ptr(tr_tran->transfer);
    } else {
       trace_dump_null();
+   }
+}
+
+void trace_dump_nir(void *nir)
+{
+   if (!dumping)
+      return;
+
+   if (nir_count < 0) {
+      fputs("<string>...</string>", stream);
+      return;
+   }
+
+   if ((nir_count--) == 0) {
+      fputs("<string>Set GALLIUM_TRACE_NIR to a sufficiently big number "
+            "to enable NIR shader dumping.</string>", stream);
+      return;
+   }
+
+   // NIR doesn't have a print to string function.  Use CDATA and hope for the
+   // best.
+   if (stream) {
+      fputs("<string><![CDATA[", stream);
+      nir_print_shader(nir, stream);
+      fputs("]]></string>", stream);
    }
 }

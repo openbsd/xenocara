@@ -51,10 +51,6 @@ struct dri_screen
 {
    /* st_api */
    struct st_manager base;
-   struct st_api *st_api;
-
-   /* on old libGL's invalidate doesn't get called as it should */
-   boolean broken_invalidate;
 
    /* dri */
    __DRIscreen *sPriv;
@@ -76,6 +72,7 @@ struct dri_screen
    boolean sd_depth_bits_last;
    boolean auto_fake_front;
    boolean has_reset_status_query;
+   boolean has_protected_context;
    enum pipe_texture_target target;
 
    boolean swrast_no_present;
@@ -120,6 +117,10 @@ struct __DRIimageRec {
    uint32_t dri_format;
    uint32_t dri_fourcc;
    uint32_t dri_components;
+   /* Provided by eglCreateImageKHR if creating from a
+    * texture or a renderbuffer. 0 otherwise.
+    */
+   uint32_t internal_format;
    unsigned use;
    unsigned plane;
 
@@ -168,8 +169,8 @@ dri_destroy_screen_helper(struct dri_screen * screen);
 void
 dri_destroy_screen(__DRIscreen * sPriv);
 
-extern const struct __DriverAPIRec dri_kms_driver_api;
-extern const __DRIextension *dri_kms_driver_extensions[];
+extern const struct __DriverAPIRec dri_swrast_kms_driver_api;
+extern const __DRIextension *dri_swrast_kms_driver_extensions[];
 extern const struct __DriverAPIRec galliumdrm_driver_api;
 extern const __DRIextension *galliumdrm_driver_extensions[];
 extern const struct __DriverAPIRec galliumsw_driver_api;

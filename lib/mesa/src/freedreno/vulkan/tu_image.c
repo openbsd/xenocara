@@ -1,43 +1,28 @@
 /*
  * Copyright © 2016 Red Hat.
  * Copyright © 2016 Bas Nieuwenhuizen
+ * SPDX-License-Identifier: MIT
  *
  * based in part on anv driver which is:
  * Copyright © 2015 Intel Corporation
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
  */
 
-#include "tu_private.h"
+#include "tu_image.h"
+
 #include "fdl/fd6_format_table.h"
 
-#include "util/debug.h"
-#include "util/u_atomic.h"
+#include "util/u_debug.h"
 #include "util/format/u_format.h"
-#include "vk_format.h"
 #include "vk_util.h"
 #include "drm-uapi/drm_fourcc.h"
 
+#include "tu_android.h"
 #include "tu_cs.h"
+#include "tu_descriptor_set.h"
+#include "tu_device.h"
+#include "tu_formats.h"
 
-static uint32_t
+uint32_t
 tu6_plane_count(VkFormat format)
 {
    switch (format) {
@@ -71,10 +56,13 @@ tu6_plane_index(VkFormat format, VkImageAspectFlags aspect_mask)
 {
    switch (aspect_mask) {
    default:
+      assert(aspect_mask != VK_IMAGE_ASPECT_MEMORY_PLANE_3_BIT_EXT);
       return 0;
    case VK_IMAGE_ASPECT_PLANE_1_BIT:
+   case VK_IMAGE_ASPECT_MEMORY_PLANE_1_BIT_EXT:
       return 1;
    case VK_IMAGE_ASPECT_PLANE_2_BIT:
+   case VK_IMAGE_ASPECT_MEMORY_PLANE_2_BIT_EXT:
       return 2;
    case VK_IMAGE_ASPECT_STENCIL_BIT:
       return format == VK_FORMAT_D32_SFLOAT_S8_UINT;
@@ -158,8 +146,9 @@ tu_cs_image_flag_ref(struct tu_cs *cs, const struct fdl6_view *iview, uint32_t l
    tu_cs_emit(cs, iview->FLAG_BUFFER_PITCH);
 }
 
-void
-tu_image_view_init(struct tu_image_view *iview,
+static void
+tu_image_view_init(struct tu_device *device,
+                   struct tu_image_view *iview,
                    const VkImageViewCreateInfo *pCreateInfo,
                    bool has_z24uint_s8uint)
 {
@@ -173,11 +162,13 @@ tu_image_view_init(struct tu_image_view *iview,
    const struct tu_sampler_ycbcr_conversion *conversion = ycbcr_conversion ?
       tu_sampler_ycbcr_conversion_from_handle(ycbcr_conversion->conversion) : NULL;
 
+   vk_image_view_init(&device->vk, &iview->vk, false, pCreateInfo);
+
    iview->image = image;
 
    const struct fdl_layout *layouts[3];
 
-   layouts[0] = &image->layout[tu6_plane_index(image->vk_format, aspect_mask)];
+   layouts[0] = &image->layout[tu6_plane_index(image->vk.format, aspect_mask)];
 
    enum pipe_format format;
    if (aspect_mask != VK_IMAGE_ASPECT_COLOR_BIT)
@@ -185,7 +176,7 @@ tu_image_view_init(struct tu_image_view *iview,
    else
       format = tu_vk_format_to_pipe_format(vk_format);
 
-   if (image->vk_format == VK_FORMAT_G8_B8R8_2PLANE_420_UNORM &&
+   if (image->vk.format == VK_FORMAT_G8_B8R8_2PLANE_420_UNORM &&
        aspect_mask == VK_IMAGE_ASPECT_PLANE_0_BIT) {
       if (vk_format == VK_FORMAT_R8_UNORM) {
          /* The 0'th plane of this format has a different UBWC compression. */
@@ -209,8 +200,9 @@ tu_image_view_init(struct tu_image_view *iview,
    args.iova = image->iova;
    args.base_array_layer = range->baseArrayLayer;
    args.base_miplevel = range->baseMipLevel;
-   args.layer_count = tu_get_layerCount(image, range);
-   args.level_count = tu_get_levelCount(image, range);
+   args.layer_count = vk_image_subresource_layer_count(&image->vk, range);
+   args.level_count = vk_image_subresource_level_count(&image->vk, range);
+   args.min_lod_clamp = iview->vk.min_lod;
    args.format = tu_format_for_aspect(format, aspect_mask);
    vk_component_mapping_to_pipe_swizzle(pCreateInfo->components, args.swiz);
    if (conversion) {
@@ -250,7 +242,7 @@ tu_image_view_init(struct tu_image_view *iview,
 
    fdl6_view_init(&iview->view, layouts, &args, has_z24uint_s8uint);
 
-   if (image->vk_format == VK_FORMAT_D32_SFLOAT_S8_UINT) {
+   if (image->vk.format == VK_FORMAT_D32_SFLOAT_S8_UINT) {
       struct fdl_layout *layout = &image->layout[0];
       iview->depth_base_addr = image->iova +
          fdl_surface_offset(layout, range->baseMipLevel, range->baseArrayLayer);
@@ -276,10 +268,20 @@ tiling_possible(VkFormat format)
    return true;
 }
 
+/* Checks if we should advertise UBWC support for the given usage.
+ *
+ * Used by both vkCreateImage and vkGetPhysicalDeviceFormatProperties2, so the
+ * logical tu_device may be NULL.
+ */
 bool
-ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage,
-              VkImageUsageFlags stencil_usage, const struct fd_dev_info *info,
-              VkSampleCountFlagBits samples)
+ubwc_possible(struct tu_device *device,
+              VkFormat format,
+              VkImageType type,
+              VkImageUsageFlags usage,
+              VkImageUsageFlags stencil_usage,
+              const struct fd_dev_info *info,
+              VkSampleCountFlagBits samples,
+              bool use_z24uint_s8uint)
 {
    /* no UBWC with compressed formats, E5B9G9R9, S8_UINT
     * (S8_UINT because separate stencil doesn't have UBWC-enable bit)
@@ -287,6 +289,13 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage,
    if (vk_format_is_compressed(format) ||
        format == VK_FORMAT_E5B9G9R9_UFLOAT_PACK32 ||
        format == VK_FORMAT_S8_UINT)
+      return false;
+
+   /* In copy_format, we treat snorm as unorm to avoid clamping.  But snorm
+    * and unorm are UBWC incompatible for special values such as all 0's or
+    * all 1's.  Disable UBWC for snorm.
+    */
+   if (vk_format_is_snorm(format))
       return false;
 
    if (!info->a6xx.has_8bpp_ubwc &&
@@ -298,7 +307,12 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage,
       return false;
 
    if (type == VK_IMAGE_TYPE_3D) {
-      tu_finishme("UBWC with 3D textures");
+      if (device) {
+         perf_debug(device,
+                    "Disabling UBWC for %s 3D image, but it should be "
+                    "possible to support.",
+                    util_format_name(vk_format_to_pipe_format(format)));
+      }
       return false;
    }
 
@@ -311,8 +325,15 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage,
     * UBWC-enabled mipmaps in freedreno currently.  Just match the closed GL
     * behavior of no UBWC.
    */
-   if ((usage | stencil_usage) & VK_IMAGE_USAGE_STORAGE_BIT)
+   if ((usage | stencil_usage) & VK_IMAGE_USAGE_STORAGE_BIT) {
+      if (device) {
+         perf_debug(device,
+                    "Disabling UBWC for %s storage image, but should be "
+                    "possible to support",
+                    util_format_name(vk_format_to_pipe_format(format)));
+      }
       return false;
+   }
 
    /* Disable UBWC for D24S8 on A630 in some cases
     *
@@ -322,18 +343,81 @@ ubwc_possible(VkFormat format, VkImageType type, VkImageUsageFlags usage,
     *
     * It must be sampled as FMT6_8_8_8_8_UINT, which is not UBWC-compatible
     *
+    * If we wish to get the border colors correct without knowing the format
+    * when creating the sampler, we also have to use the A630 workaround.
+    *
     * Additionally, the special AS_R8G8B8A8 format is broken without UBWC,
     * so we have to fallback to 8_8_8_8_UNORM when UBWC is disabled
     */
-   if (!info->a6xx.has_z24uint_s8uint &&
+   if (!use_z24uint_s8uint &&
        format == VK_FORMAT_D24_UNORM_S8_UINT &&
        (stencil_usage & (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT)))
       return false;
 
-   if (!info->a6xx.has_z24uint_s8uint && samples > VK_SAMPLE_COUNT_1_BIT)
+   /* This meant to disable UBWC for MSAA z24s8, but accidentally disables it
+    * for all MSAA.  https://gitlab.freedesktop.org/mesa/mesa/-/issues/7438
+    */
+   if (!info->a6xx.has_z24uint_s8uint && samples > VK_SAMPLE_COUNT_1_BIT) {
+      if (device) {
+         perf_debug(device,
+                    "Disabling UBWC for %d-sample %s image, but it should be "
+                    "possible to support",
+                    samples,
+                    util_format_name(vk_format_to_pipe_format(format)));
+      }
       return false;
+   }
 
    return true;
+}
+
+/* R8G8 have a different block width/height and height alignment from other
+ * formats that would normally be compatible (like R16), and so if we are
+ * trying to, for example, sample R16 as R8G8 we need to demote to linear.
+ */
+static bool
+format_list_reinterprets_r8g8_r16(enum pipe_format format, const VkImageFormatListCreateInfo *fmt_list)
+{
+   /* Check if it's actually a 2-cpp color format. */
+   if (!tu_is_r8g8_compatible(format))
+      return false;
+
+   /* If there's no format list, then the app may reinterpret to any compatible
+    * format.
+    */
+   if (!fmt_list || !fmt_list->viewFormatCount)
+      return true;
+
+   bool has_r8g8 = false;
+   bool has_non_r8g8 = false;
+   for (uint32_t i = 0; i < fmt_list->viewFormatCount; i++) {
+      enum pipe_format format =
+         tu_vk_format_to_pipe_format(fmt_list->pViewFormats[i]);
+      if (tu_is_r8g8(format))
+         has_r8g8 = true;
+      else
+         has_non_r8g8 = true;
+   }
+   return has_r8g8 && has_non_r8g8;
+}
+
+static bool
+format_list_has_swaps(const VkImageFormatListCreateInfo *fmt_list)
+{
+   /* If there's no format list, then the app may reinterpret to any compatible
+    * format, and presumably one would have the swap set.
+    */
+   if (!fmt_list || !fmt_list->viewFormatCount)
+      return true;
+
+   for (uint32_t i = 0; i < fmt_list->viewFormatCount; i++) {
+      enum pipe_format format =
+         tu_vk_format_to_pipe_format(fmt_list->pViewFormats[i]);
+
+      if (tu6_format_texture(format, TILE6_LINEAR).swap)
+         return true;
+   }
+   return false;
 }
 
 static VkResult
@@ -341,17 +425,11 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
               const VkImageCreateInfo *pCreateInfo, uint64_t modifier,
               const VkSubresourceLayout *plane_layouts)
 {
-   const VkExternalMemoryImageCreateInfo *external_info =
-      vk_find_struct_const(pCreateInfo->pNext, EXTERNAL_MEMORY_IMAGE_CREATE_INFO);
-   image->shareable = external_info != NULL;
-
-   image->vk_format = pCreateInfo->format;
-   image->level_count = pCreateInfo->mipLevels;
-   image->layer_count = pCreateInfo->arrayLayers;
+   vk_image_init(&device->vk, &image->vk, pCreateInfo);
+   image->vk.drm_format_mod = modifier;
 
    enum a6xx_tile_mode tile_mode = TILE6_3;
-   bool ubwc_enabled =
-      !(device->physical_device->instance->debug_flags & TU_DEBUG_NOUBWC);
+   bool ubwc_enabled = true;
 
    /* use linear tiling if requested */
    if (pCreateInfo->tiling == VK_IMAGE_TILING_LINEAR || modifier == DRM_FORMAT_MOD_LINEAR) {
@@ -360,7 +438,7 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
    }
 
    /* Force linear tiling for formats with "fake" optimalTilingFeatures */
-   if (!tiling_possible(image->vk_format)) {
+   if (!tiling_possible(image->vk.format)) {
       tile_mode = TILE6_LINEAR;
       ubwc_enabled = false;
    }
@@ -372,9 +450,16 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
    }
 
    enum pipe_format format =
-      tu_vk_format_to_pipe_format(image->vk_format);
+      tu_vk_format_to_pipe_format(image->vk.format);
    /* Whether a view of the image with an R8G8 format could be made. */
    bool has_r8g8 = tu_is_r8g8(format);
+
+   if (ubwc_enabled &&
+       !ubwc_possible(device, image->vk.format, pCreateInfo->imageType,
+                      pCreateInfo->usage, image->vk.stencil_usage,
+                      device->physical_device->info, pCreateInfo->samples,
+                      device->use_z24uint_s8uint))
+      ubwc_enabled = false;
 
    /* Mutable images can be reinterpreted as any other compatible format.
     * This is a problem with UBWC (compression for different formats is different),
@@ -389,61 +474,44 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
     * - figure out which UBWC compressions are compatible to keep it enabled
     */
    if ((pCreateInfo->flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT) &&
-       !vk_format_is_depth_or_stencil(image->vk_format)) {
+       !vk_format_is_depth_or_stencil(image->vk.format)) {
       const VkImageFormatListCreateInfo *fmt_list =
          vk_find_struct_const(pCreateInfo->pNext, IMAGE_FORMAT_LIST_CREATE_INFO);
-      bool may_be_swapped = true;
-      /* Whether a view of the image with a non-R8G8 but R8G8 compatible format
-       * could be made.
-       */
-      bool has_r8g8_compatible = false;
-      if (fmt_list) {
-         may_be_swapped = false;
-         has_r8g8_compatible = !has_r8g8 && tu_is_r8g8_compatible(format);
-         for (uint32_t i = 0; i < fmt_list->viewFormatCount; i++) {
-            enum pipe_format format =
-               tu_vk_format_to_pipe_format(fmt_list->pViewFormats[i]);
-            bool is_r8g8 = tu_is_r8g8(format);
-            has_r8g8 = has_r8g8 || is_r8g8;
-            has_r8g8_compatible = has_r8g8_compatible ||
-                                  (!is_r8g8 && tu_is_r8g8_compatible(format));
-
-            if (tu6_format_texture(format, TILE6_LINEAR).swap) {
-               may_be_swapped = true;
-               break;
+      if (!tu6_mutable_format_list_ubwc_compatible(fmt_list)) {
+         if (ubwc_enabled) {
+            if (fmt_list && fmt_list->viewFormatCount == 2) {
+               perf_debug(
+                  device,
+                  "Disabling UBWC on %dx%d %s resource due to mutable formats "
+                  "(fmt list %s, %s)",
+                  image->vk.extent.width, image->vk.extent.height,
+                  util_format_name(vk_format_to_pipe_format(image->vk.format)),
+                  util_format_name(vk_format_to_pipe_format(fmt_list->pViewFormats[0])),
+                  util_format_name(vk_format_to_pipe_format(fmt_list->pViewFormats[1])));
+            } else {
+               perf_debug(
+                  device,
+                  "Disabling UBWC on %dx%d %s resource due to mutable formats "
+                  "(fmt list %s)",
+                  image->vk.extent.width, image->vk.extent.height,
+                  util_format_name(vk_format_to_pipe_format(image->vk.format)),
+                  fmt_list ? "present" : "missing");
             }
+            ubwc_enabled = false;
          }
-      } else {
-         /* If there is no format list it could be reinterpreted as
-          * any compatible format.
-          */
-         has_r8g8 = tu_is_r8g8_compatible(format);
-         has_r8g8_compatible = has_r8g8;
+
+         if (format_list_reinterprets_r8g8_r16(format, fmt_list) ||
+            format_list_has_swaps(fmt_list)) {
+            tile_mode = TILE6_LINEAR;
+         }
       }
-
-      if (may_be_swapped)
-         tile_mode = TILE6_LINEAR;
-
-      /* R8G8 have a different block width/height and height alignment from other
-       * formats that would normally be compatible (like R16), and so if we are
-       * trying to, for example, sample R16 as R8G8 we need to demote to linear.
-       */
-      if (has_r8g8 && has_r8g8_compatible)
-         tile_mode = TILE6_LINEAR;
-
-      ubwc_enabled = false;
    }
 
-   const VkImageStencilUsageCreateInfo *stencil_usage_info =
-      vk_find_struct_const(pCreateInfo->pNext, IMAGE_STENCIL_USAGE_CREATE_INFO);
-
-   if (!ubwc_possible(image->vk_format, pCreateInfo->imageType, pCreateInfo->usage,
-                      stencil_usage_info ? stencil_usage_info->stencilUsage : pCreateInfo->usage,
-                      device->physical_device->info, pCreateInfo->samples))
-      ubwc_enabled = false;
-
    /* expect UBWC enabled if we asked for it */
-   assert(modifier != DRM_FORMAT_MOD_QCOM_COMPRESSED || ubwc_enabled);
+   if (modifier == DRM_FORMAT_MOD_QCOM_COMPRESSED)
+      assert(ubwc_enabled);
+   else if (device->physical_device->instance->debug_flags & TU_DEBUG_NOUBWC)
+      ubwc_enabled = false;
 
    /* Non-UBWC tiled R8G8 is probably buggy since media formats are always
     * either linear or UBWC. There is no simple test to reproduce the bug.
@@ -454,14 +522,14 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
       tile_mode = TILE6_LINEAR;
    }
 
-   for (uint32_t i = 0; i < tu6_plane_count(image->vk_format); i++) {
+   for (uint32_t i = 0; i < tu6_plane_count(image->vk.format); i++) {
       struct fdl_layout *layout = &image->layout[i];
-      enum pipe_format format = tu6_plane_format(image->vk_format, i);
+      enum pipe_format format = tu6_plane_format(image->vk.format, i);
       uint32_t width0 = pCreateInfo->extent.width;
       uint32_t height0 = pCreateInfo->extent.height;
 
       if (i > 0) {
-         switch (image->vk_format) {
+         switch (image->vk.format) {
          case VK_FORMAT_G8_B8R8_2PLANE_420_UNORM:
          case VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM:
             /* half width/height on chroma planes */
@@ -506,6 +574,9 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
          return vk_error(device, VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
       }
 
+      if (device->instance->debug_flags & TU_DEBUG_LAYOUT)
+         fdl_dump_layout(layout);
+
       /* fdl6_layout can't take explicit offset without explicit pitch
        * add offset manually for extra layouts for planes
        */
@@ -549,6 +620,35 @@ tu_image_init(struct tu_device *device, struct tu_image *image,
       image->lrz_offset = image->total_size;
       unsigned lrz_size = lrz_pitch * lrz_height * 2;
       image->total_size += lrz_size;
+
+      unsigned nblocksx = DIV_ROUND_UP(DIV_ROUND_UP(width, 8), 16);
+      unsigned nblocksy = DIV_ROUND_UP(DIV_ROUND_UP(height, 8), 4);
+
+      /* Fast-clear buffer is 1bit/block */
+      image->lrz_fc_size = DIV_ROUND_UP(nblocksx * nblocksy, 8);
+
+      /* Fast-clear buffer cannot be larger than 512 bytes (HW limitation) */
+      bool has_lrz_fc = image->lrz_fc_size <= 512 &&
+         device->physical_device->info->a6xx.enable_lrz_fast_clear &&
+         !unlikely(device->physical_device->instance->debug_flags & TU_DEBUG_NOLRZFC);
+
+      if (has_lrz_fc || device->physical_device->info->a6xx.has_lrz_dir_tracking) {
+         image->lrz_fc_offset = image->total_size;
+         image->total_size += 512;
+
+         if (device->physical_device->info->a6xx.has_lrz_dir_tracking) {
+            /* Direction tracking uses 1 byte */
+            image->total_size += 1;
+            /* GRAS_LRZ_DEPTH_VIEW needs 5 bytes: 4 for view data and 1 for padding */
+            image->total_size += 5;
+         }
+      }
+
+      if (!has_lrz_fc) {
+         image->lrz_fc_size = 0;
+      }
+   } else {
+      image->lrz_height = 0;
    }
 
    return VK_SUCCESS;
@@ -661,7 +761,8 @@ tu_get_image_memory_requirements(struct tu_image *image,
       case VK_STRUCTURE_TYPE_MEMORY_DEDICATED_REQUIREMENTS: {
          VkMemoryDedicatedRequirements *req =
             (VkMemoryDedicatedRequirements *) ext;
-         req->requiresDedicatedAllocation = image->shareable;
+         req->requiresDedicatedAllocation =
+            image->vk.external_handle_types != 0;
          req->prefersDedicatedAllocation = req->requiresDedicatedAllocation;
          break;
       }
@@ -726,7 +827,7 @@ tu_GetImageSubresourceLayout(VkDevice _device,
    TU_FROM_HANDLE(tu_image, image, _image);
 
    struct fdl_layout *layout =
-      &image->layout[tu6_plane_index(image->vk_format, pSubresource->aspectMask)];
+      &image->layout[tu6_plane_index(image->vk.format, pSubresource->aspectMask)];
    const struct fdl_slice *slice = layout->slices + pSubresource->mipLevel;
 
    pLayout->offset =
@@ -740,30 +841,9 @@ tu_GetImageSubresourceLayout(VkDevice _device,
       /* UBWC starts at offset 0 */
       pLayout->offset = 0;
       /* UBWC scanout won't match what the kernel wants if we have levels/layers */
-      assert(image->level_count == 1 && image->layer_count == 1);
+      assert(image->vk.mip_levels == 1 && image->vk.array_layers == 1);
    }
 }
-
-VKAPI_ATTR VkResult VKAPI_CALL
-tu_GetImageDrmFormatModifierPropertiesEXT(
-    VkDevice                                    device,
-    VkImage                                     _image,
-    VkImageDrmFormatModifierPropertiesEXT*      pProperties)
-{
-   TU_FROM_HANDLE(tu_image, image, _image);
-
-   /* TODO invent a modifier for tiled but not UBWC buffers */
-
-   if (!image->layout[0].tile_mode)
-      pProperties->drmFormatModifier = DRM_FORMAT_MOD_LINEAR;
-   else if (image->layout[0].ubwc_layer_size)
-      pProperties->drmFormatModifier = DRM_FORMAT_MOD_QCOM_COMPRESSED;
-   else
-      pProperties->drmFormatModifier = DRM_FORMAT_MOD_INVALID;
-
-   return VK_SUCCESS;
-}
-
 
 VKAPI_ATTR VkResult VKAPI_CALL
 tu_CreateImageView(VkDevice _device,
@@ -779,7 +859,7 @@ tu_CreateImageView(VkDevice _device,
    if (view == NULL)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   tu_image_view_init(view, pCreateInfo, device->physical_device->info->a6xx.has_z24uint_s8uint);
+   tu_image_view_init(device, view, pCreateInfo, device->use_z24uint_s8uint);
 
    *pView = tu_image_view_to_handle(view);
 
@@ -809,12 +889,8 @@ tu_buffer_view_init(struct tu_buffer_view *view,
 
    view->buffer = buffer;
 
-   uint32_t range;
-   if (pCreateInfo->range == VK_WHOLE_SIZE)
-      range = buffer->size - pCreateInfo->offset;
-   else
-      range = pCreateInfo->range;
-
+   uint32_t range = vk_buffer_range(&buffer->vk, pCreateInfo->offset,
+         pCreateInfo->range);
    uint8_t swiz[4] = { PIPE_SWIZZLE_X, PIPE_SWIZZLE_Y, PIPE_SWIZZLE_Z,
                        PIPE_SWIZZLE_W };
 

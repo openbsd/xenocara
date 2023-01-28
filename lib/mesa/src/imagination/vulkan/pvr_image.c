@@ -22,7 +22,9 @@
  */
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "pvr_csb.h"
 #include "pvr_device_info.h"
@@ -34,6 +36,7 @@
 #include "vk_format.h"
 #include "vk_image.h"
 #include "vk_log.h"
+#include "vk_object.h"
 #include "vk_util.h"
 #include "wsi_common.h"
 
@@ -230,12 +233,10 @@ VkResult pvr_BindImageMemory2(VkDevice _device,
    return VK_SUCCESS;
 }
 
-void pvr_GetImageSubresourceLayout(VkDevice device,
-                                   VkImage _image,
-                                   const VkImageSubresource *subresource,
-                                   VkSubresourceLayout *layout)
+void pvr_get_image_subresource_layout(const struct pvr_image *image,
+                                      const VkImageSubresource *subresource,
+                                      VkSubresourceLayout *layout)
 {
-   PVR_FROM_HANDLE(pvr_image, image, _image);
    const struct pvr_mip_level *mip_level =
       &image->mip_levels[subresource->mipLevel];
 
@@ -250,27 +251,38 @@ void pvr_GetImageSubresourceLayout(VkDevice device,
    layout->size = mip_level->size;
 }
 
+void pvr_GetImageSubresourceLayout(VkDevice device,
+                                   VkImage _image,
+                                   const VkImageSubresource *subresource,
+                                   VkSubresourceLayout *layout)
+{
+   PVR_FROM_HANDLE(pvr_image, image, _image);
+
+   pvr_get_image_subresource_layout(image, subresource, layout);
+}
+
 VkResult pvr_CreateImageView(VkDevice _device,
                              const VkImageViewCreateInfo *pCreateInfo,
                              const VkAllocationCallbacks *pAllocator,
                              VkImageView *pView)
 {
-   PVR_FROM_HANDLE(pvr_image, image, pCreateInfo->image);
    PVR_FROM_HANDLE(pvr_device, device, _device);
    struct pvr_texture_state_info info;
    unsigned char input_swizzle[4];
    const uint8_t *format_swizzle;
+   const struct pvr_image *image;
    struct pvr_image_view *iview;
    VkResult result;
 
    iview = vk_image_view_create(&device->vk,
+                                false /* driver_internal */,
                                 pCreateInfo,
                                 pAllocator,
                                 sizeof(*iview));
    if (!iview)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   iview->image = image;
+   image = vk_to_pvr_image(iview->vk.image);
 
    info.type = iview->vk.view_type;
    info.base_level = iview->vk.base_mip_level;
@@ -282,7 +294,7 @@ VkResult pvr_CreateImageView(VkDevice _device,
    info.offset = iview->vk.base_array_layer * image->layer_size +
                  image->mip_levels[info.base_level].offset;
    info.mipmaps_present = (image->vk.mip_levels > 1) ? true : false;
-   info.stride = image->physical_extent.width - 1;
+   info.stride = image->physical_extent.width;
    info.tex_state_type = PVR_TEXTURE_STATE_SAMPLE;
    info.mem_layout = image->memlayout;
    info.flags = 0;
@@ -305,10 +317,11 @@ VkResult pvr_CreateImageView(VkDevice _device,
       goto err_vk_image_view_destroy;
 
    /* Create an additional texture state for cube type if storage
-    * usage flat is set.
+    * usage flag is set.
     */
    if (info.is_cube && image->vk.usage & VK_IMAGE_USAGE_STORAGE_BIT) {
       info.tex_state_type = PVR_TEXTURE_STATE_STORAGE;
+
       result = pvr_pack_tex_state(device,
                                   &info,
                                   iview->texture_state[info.tex_state_type]);
@@ -316,26 +329,36 @@ VkResult pvr_CreateImageView(VkDevice _device,
          goto err_vk_image_view_destroy;
    }
 
-   /* Attachment state is created as if the mipmaps are not supported, so the
-    * baselevel is set to zero and num_mip_levels is set to 1. Which gives an
-    * impression that this is the only level in the image. This also requires
-    * that width, height and depth be adjusted as well. Given iview->vk.extent
-    * is already adjusted for base mip map level we use it here.
-    */
-   /* TODO: Investigate and document the reason for above approach. */
-   info.extent = iview->vk.extent;
+   if (image->vk.usage & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT) {
+      /* Attachment state is created as if the mipmaps are not supported, so the
+       * baselevel is set to zero and num_mip_levels is set to 1. Which gives an
+       * impression that this is the only level in the image. This also requires
+       * that width, height and depth be adjusted as well. Given
+       * iview->vk.extent is already adjusted for base mip map level we use it
+       * here.
+       */
+      /* TODO: Investigate and document the reason for above approach. */
+      info.extent = iview->vk.extent;
 
-   info.mip_levels = 1;
-   info.mipmaps_present = false;
-   info.stride = u_minify(image->physical_extent.width, info.base_level) - 1;
-   info.base_level = 0;
-   info.tex_state_type = PVR_TEXTURE_STATE_ATTACHMENT;
+      info.mip_levels = 1;
+      info.mipmaps_present = false;
+      info.stride = u_minify(image->physical_extent.width, info.base_level);
+      info.base_level = 0;
+      info.tex_state_type = PVR_TEXTURE_STATE_ATTACHMENT;
 
-   result = pvr_pack_tex_state(device,
-                               &info,
-                               iview->texture_state[info.tex_state_type]);
-   if (result != VK_SUCCESS)
-      goto err_vk_image_view_destroy;
+      if (iview->vk.image->image_type == VK_IMAGE_TYPE_3D &&
+          iview->vk.view_type == VK_IMAGE_VIEW_TYPE_2D) {
+         info.type = VK_IMAGE_VIEW_TYPE_3D;
+      } else {
+         info.type = iview->vk.view_type;
+      }
+
+      result = pvr_pack_tex_state(device,
+                                  &info,
+                                  iview->texture_state[info.tex_state_type]);
+      if (result != VK_SUCCESS)
+         goto err_vk_image_view_destroy;
+   }
 
    *pView = pvr_image_view_to_handle(iview);
 
@@ -365,13 +388,79 @@ VkResult pvr_CreateBufferView(VkDevice _device,
                               const VkAllocationCallbacks *pAllocator,
                               VkBufferView *pView)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_buffer, buffer, pCreateInfo->buffer);
+   PVR_FROM_HANDLE(pvr_device, device, _device);
+   struct pvr_texture_state_info info;
+   const uint8_t *format_swizzle;
+   struct pvr_buffer_view *bview;
+   VkResult result;
+
+   bview = vk_object_alloc(&device->vk,
+                           pAllocator,
+                           sizeof(*bview),
+                           VK_OBJECT_TYPE_BUFFER_VIEW);
+   if (!bview)
+      return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+
+   bview->format = pCreateInfo->format;
+   bview->range =
+      vk_buffer_range(&buffer->vk, pCreateInfo->offset, pCreateInfo->range);
+
+   /* If the remaining size of the buffer is not a multiple of the element
+    * size of the format, the nearest smaller multiple is used.
+    */
+   bview->range -= bview->range % vk_format_get_blocksize(bview->format);
+
+   /* The range of the buffer view shouldn't be smaller than one texel. */
+   assert(bview->range >= vk_format_get_blocksize(bview->format));
+
+   info.base_level = 0U;
+   info.mip_levels = 1U;
+   info.mipmaps_present = false;
+   info.extent.width = 8192U;
+   info.extent.height = bview->range / vk_format_get_blocksize(bview->format);
+   info.extent.height = DIV_ROUND_UP(info.extent.height, info.extent.width);
+   info.extent.depth = 0U;
+   info.sample_count = 1U;
+   info.stride = info.extent.width;
+   info.offset = 0U;
+   info.addr = PVR_DEV_ADDR_OFFSET(buffer->dev_addr, pCreateInfo->offset);
+   info.mem_layout = PVR_MEMLAYOUT_LINEAR;
+   info.is_cube = false;
+   info.type = VK_IMAGE_VIEW_TYPE_2D;
+   info.tex_state_type = PVR_TEXTURE_STATE_SAMPLE;
+   info.format = bview->format;
+   info.flags = PVR_TEXFLAGS_INDEX_LOOKUP;
+
+   if (PVR_HAS_FEATURE(&device->pdevice->dev_info, tpu_array_textures))
+      info.array_size = 1U;
+
+   format_swizzle = pvr_get_format_swizzle(info.format);
+   memcpy(info.swizzle, format_swizzle, sizeof(info.swizzle));
+
+   result = pvr_pack_tex_state(device, &info, bview->texture_state);
+   if (result != VK_SUCCESS)
+      goto err_vk_buffer_view_destroy;
+
+   *pView = pvr_buffer_view_to_handle(bview);
+
    return VK_SUCCESS;
+
+err_vk_buffer_view_destroy:
+   vk_object_free(&device->vk, pAllocator, bview);
+
+   return result;
 }
 
 void pvr_DestroyBufferView(VkDevice _device,
                            VkBufferView bufferView,
                            const VkAllocationCallbacks *pAllocator)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_buffer_view, bview, bufferView);
+   PVR_FROM_HANDLE(pvr_device, device, _device);
+
+   if (!bview)
+      return;
+
+   vk_object_free(&device->vk, pAllocator, bview);
 }

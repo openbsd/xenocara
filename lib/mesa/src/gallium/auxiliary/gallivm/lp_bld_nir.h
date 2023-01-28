@@ -115,6 +115,7 @@ struct lp_build_nir_context
                     LLVMValueRef index, LLVMValueRef offset, LLVMValueRef result[NIR_MAX_VEC_COMPONENTS]);
    void (*store_mem)(struct lp_build_nir_context *bld_base,
                      unsigned writemask, unsigned nc, unsigned bit_size,
+                     bool index_and_offset_are_uniform,
                      LLVMValueRef index, LLVMValueRef offset, LLVMValueRef dst);
 
    void (*atomic_mem)(struct lp_build_nir_context *bld_base,
@@ -221,6 +222,7 @@ struct lp_build_nir_context
                            LLVMValueRef dst[4]);
    void (*helper_invocation)(struct lp_build_nir_context *bld_base, LLVMValueRef *dst);
 
+   void (*clock)(struct lp_build_nir_context *bld_Base, LLVMValueRef dst[4]);
    void (*interp_at)(struct lp_build_nir_context *bld_base,
                      unsigned num_components,
                      nir_variable *var,
@@ -240,18 +242,14 @@ struct lp_build_nir_soa_context
    struct lp_build_context uint_elem_bld;
 
    LLVMValueRef consts_ptr;
-   LLVMValueRef const_sizes_ptr;
-   LLVMValueRef consts[LP_MAX_TGSI_CONST_BUFFERS];
-   LLVMValueRef consts_sizes[LP_MAX_TGSI_CONST_BUFFERS];
    const LLVMValueRef (*inputs)[TGSI_NUM_CHANNELS];
    LLVMValueRef (*outputs)[TGSI_NUM_CHANNELS];
+   LLVMTypeRef context_type;
    LLVMValueRef context_ptr;
+   LLVMTypeRef thread_data_type;
    LLVMValueRef thread_data_ptr;
 
    LLVMValueRef ssbo_ptr;
-   LLVMValueRef ssbo_sizes_ptr;
-   LLVMValueRef ssbos[LP_MAX_TGSI_SHADER_BUFFERS];
-   LLVMValueRef ssbo_sizes[LP_MAX_TGSI_SHADER_BUFFERS];
 
    LLVMValueRef shared_ptr;
    LLVMValueRef scratch_ptr;
@@ -285,35 +283,14 @@ struct lp_build_nir_soa_context
    unsigned gs_vertex_streams;
 };
 
-struct lp_build_nir_aos_context
-{
-   struct lp_build_nir_context bld_base;
-
-   /* Builder for integer masks and indices */
-   struct lp_build_context int_bld;
-
-   /*
-    * AoS swizzle used:
-    * - swizzles[0] = red index
-    * - swizzles[1] = green index
-    * - swizzles[2] = blue index
-    * - swizzles[3] = alpha index
-    */
-   unsigned char swizzles[4];
-   unsigned char inv_swizzles[4];
-
-   LLVMValueRef consts_ptr;
-   const LLVMValueRef *inputs;
-   LLVMValueRef *outputs;
-
-   const struct lp_build_sampler_aos *sampler;
-};
 
 bool
 lp_build_nir_llvm(struct lp_build_nir_context *bld_base,
                   struct nir_shader *nir);
 
-void lp_build_opt_nir(struct nir_shader *nir);
+void
+lp_build_opt_nir(struct nir_shader *nir);
+
 
 static inline LLVMValueRef
 lp_nir_array_build_gather_values(LLVMBuilderRef builder,
@@ -322,16 +299,17 @@ lp_nir_array_build_gather_values(LLVMBuilderRef builder,
 {
    LLVMTypeRef arr_type = LLVMArrayType(LLVMTypeOf(values[0]), value_count);
    LLVMValueRef arr = LLVMGetUndef(arr_type);
-   unsigned i;
 
-   for (i = 0; i < value_count; i++) {
+   for (unsigned i = 0; i < value_count; i++) {
       arr = LLVMBuildInsertValue(builder, arr, values[i], i, "");
    }
    return arr;
 }
 
-static inline struct lp_build_context *get_flt_bld(struct lp_build_nir_context *bld_base,
-                                                   unsigned op_bit_size)
+
+static inline struct lp_build_context *
+get_flt_bld(struct lp_build_nir_context *bld_base,
+            unsigned op_bit_size)
 {
    switch (op_bit_size) {
    case 64:
@@ -344,9 +322,11 @@ static inline struct lp_build_context *get_flt_bld(struct lp_build_nir_context *
    }
 }
 
-static inline struct lp_build_context *get_int_bld(struct lp_build_nir_context *bld_base,
-                                                   bool is_unsigned,
-                                                   unsigned op_bit_size)
+
+static inline struct lp_build_context *
+get_int_bld(struct lp_build_nir_context *bld_base,
+            bool is_unsigned,
+            unsigned op_bit_size)
 {
    if (is_unsigned) {
       switch (op_bit_size) {
@@ -375,11 +355,9 @@ static inline struct lp_build_context *get_int_bld(struct lp_build_nir_context *
    }
 }
 
-static inline struct lp_build_nir_aos_context *
-lp_nir_aos_context(struct lp_build_nir_context *bld_base)
-{
-   return (struct lp_build_nir_aos_context *)bld_base;
-}
 
-LLVMValueRef lp_nir_aos_conv_const(struct gallivm_state *gallivm, LLVMValueRef constval, int nc);
+unsigned
+lp_nir_aos_swizzle(struct lp_build_nir_context *bld_base, unsigned chan);
+
+
 #endif

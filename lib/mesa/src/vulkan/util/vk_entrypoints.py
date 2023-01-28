@@ -26,7 +26,7 @@ from collections import OrderedDict, namedtuple
 
 # Mesa-local imports must be declared in meson variable
 # '{file_without_suffix}_depend_files'.
-from vk_extensions import *
+from vk_extensions import Extension, VkVersion
 
 EntrypointParam = namedtuple('EntrypointParam', 'type name decl len')
 
@@ -114,7 +114,7 @@ def get_entrypoints(doc, entrypoints_to_defines):
                 type=p.find('./type').text,
                 name=p.find('./name').text,
                 decl=''.join(p.itertext()),
-                len=p.attrib.get('len', None)
+                len=p.attrib.get('altlen', p.attrib.get('len', None))
             ) for p in command.findall('./param')]
             guard = entrypoints_to_defines.get(name)
             # They really need to be unique

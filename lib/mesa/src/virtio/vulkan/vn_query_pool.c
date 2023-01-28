@@ -22,6 +22,7 @@ vn_CreateQueryPool(VkDevice device,
                    const VkAllocationCallbacks *pAllocator,
                    VkQueryPool *pQueryPool)
 {
+   VN_TRACE_FUNC();
    struct vn_device *dev = vn_device_from_handle(device);
    const VkAllocationCallbacks *alloc =
       pAllocator ? pAllocator : &dev->base.base.alloc;
@@ -38,17 +39,46 @@ vn_CreateQueryPool(VkDevice device,
 
    switch (pCreateInfo->queryType) {
    case VK_QUERY_TYPE_OCCLUSION:
+      /*
+       * Occlusion queries write one integer value - the number of samples
+       * passed.
+       */
       pool->result_array_size = 1;
       break;
    case VK_QUERY_TYPE_PIPELINE_STATISTICS:
+      /*
+       * Pipeline statistics queries write one integer value for each bit that
+       * is enabled in the pipelineStatistics when the pool is created, and
+       * the statistics values are written in bit order starting from the
+       * least significant bit.
+       */
       pool->result_array_size =
          util_bitcount(pCreateInfo->pipelineStatistics);
       break;
    case VK_QUERY_TYPE_TIMESTAMP:
+      /*  Timestamp queries write one integer value. */
       pool->result_array_size = 1;
       break;
    case VK_QUERY_TYPE_TRANSFORM_FEEDBACK_STREAM_EXT:
+      /*
+       * Transform feedback queries write two integers; the first integer is
+       * the number of primitives successfully written to the corresponding
+       * transform feedback buffer and the second is the number of primitives
+       * output to the vertex stream, regardless of whether they were
+       * successfully captured or not.
+       */
       pool->result_array_size = 2;
+      break;
+   case VK_QUERY_TYPE_PRIMITIVES_GENERATED_EXT:
+      /*
+       * Primitives generated queries write one integer value; the number of
+       * primitives output to the vertex stream, regardless of whether
+       * transform feedback is active or not, or whether they were
+       * successfully captured by transform feedback or not. This is identical
+       * to the second integer of the transform feedback queries if transform
+       * feedback is active.
+       */
+      pool->result_array_size = 1;
       break;
    default:
       unreachable("bad query type");
@@ -69,6 +99,7 @@ vn_DestroyQueryPool(VkDevice device,
                     VkQueryPool queryPool,
                     const VkAllocationCallbacks *pAllocator)
 {
+   VN_TRACE_FUNC();
    struct vn_device *dev = vn_device_from_handle(device);
    struct vn_query_pool *pool = vn_query_pool_from_handle(queryPool);
    const VkAllocationCallbacks *alloc;
@@ -90,6 +121,7 @@ vn_ResetQueryPool(VkDevice device,
                   uint32_t firstQuery,
                   uint32_t queryCount)
 {
+   VN_TRACE_FUNC();
    struct vn_device *dev = vn_device_from_handle(device);
 
    vn_async_vkResetQueryPool(dev->instance, device, queryPool, firstQuery,
@@ -106,6 +138,7 @@ vn_GetQueryPoolResults(VkDevice device,
                        VkDeviceSize stride,
                        VkQueryResultFlags flags)
 {
+   VN_TRACE_FUNC();
    struct vn_device *dev = vn_device_from_handle(device);
    struct vn_query_pool *pool = vn_query_pool_from_handle(queryPool);
    const VkAllocationCallbacks *alloc = &pool->allocator;

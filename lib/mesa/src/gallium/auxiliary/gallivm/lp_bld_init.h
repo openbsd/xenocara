@@ -46,8 +46,12 @@ struct gallivm_state
    LLVMModuleRef module;
    LLVMExecutionEngineRef engine;
    LLVMTargetDataRef target;
+#if GALLIVM_USE_NEW_PASS == 0
    LLVMPassManagerRef passmgr;
+#if GALLIVM_HAVE_CORO == 1
    LLVMPassManagerRef cgpassmgr;
+#endif
+#endif
    LLVMContextRef context;
    LLVMBuilderRef builder;
    LLVMMCJITMemoryManagerRef memorymgr;
@@ -57,6 +61,11 @@ struct gallivm_state
    LLVMValueRef coro_malloc_hook;
    LLVMValueRef coro_free_hook;
    LLVMValueRef debug_printf_hook;
+
+   LLVMTypeRef coro_malloc_hook_type;
+   LLVMTypeRef coro_free_hook_type;
+
+   LLVMValueRef get_time_hook;
 };
 
 
@@ -87,6 +96,7 @@ gallivm_jit_function(struct gallivm_state *gallivm,
 
 unsigned gallivm_get_perf_flags(void);
 
+void lp_init_clock_hook(struct gallivm_state *gallivm);
 #ifdef __cplusplus
 }
 #endif

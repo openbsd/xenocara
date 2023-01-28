@@ -1,38 +1,24 @@
 /*
  * Copyright © 2020 Google, Inc.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice (including the next
- * paragraph) shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
- * DEALINGS IN THE SOFTWARE.
+ * SPDX-License-Identifier: MIT
  */
 
-#include "tu_private.h"
+#include "tu_drm.h"
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdint.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
 
 #include "msm_kgsl.h"
 #include "vk_util.h"
 
-#include "util/debug.h"
+#include "util/u_debug.h"
+
+#include "tu_cmd_buffer.h"
+#include "tu_cs.h"
+#include "tu_device.h"
+#include "tu_dynamic_rendering.h"
 
 struct tu_syncobj {
    struct vk_object_base base;
@@ -83,9 +69,15 @@ tu_drm_submitqueue_close(const struct tu_device *dev, uint32_t queue_id)
 }
 
 VkResult
-tu_bo_init_new(struct tu_device *dev, struct tu_bo **out_bo, uint64_t size,
-               enum tu_bo_alloc_flags flags)
+tu_bo_init_new_explicit_iova(struct tu_device *dev,
+                             struct tu_bo **out_bo,
+                             uint64_t size,
+                             uint64_t client_iova,
+                             enum tu_bo_alloc_flags flags,
+                             const char *name)
 {
+   assert(client_iova == 0);
+
    struct kgsl_gpumem_alloc_id req = {
       .size = size,
    };
@@ -110,6 +102,7 @@ tu_bo_init_new(struct tu_device *dev, struct tu_bo **out_bo, uint64_t size,
       .size = req.mmapsize,
       .iova = req.gpuaddr,
       .refcnt = 1,
+      .name = tu_debug_bos_add(dev, req.mmapsize, name),
    };
 
    *out_bo = bo;
@@ -158,6 +151,7 @@ tu_bo_init_dmabuf(struct tu_device *dev,
       .size = info_req.size,
       .iova = info_req.gpuaddr,
       .refcnt = 1,
+      .name = tu_debug_bos_add(dev, info_req.size, "dmabuf"),
    };
 
    *out_bo = bo;
@@ -224,22 +218,34 @@ get_kgsl_prop(int fd, unsigned int type, void *value, size_t size)
 }
 
 VkResult
-tu_enumerate_devices(struct tu_instance *instance)
+tu_enumerate_devices(struct vk_instance *vk_instance)
 {
+   struct tu_instance *instance =
+      container_of(vk_instance, struct tu_instance, vk);
+
    static const char path[] = "/dev/kgsl-3d0";
    int fd;
 
-   struct tu_physical_device *device = &instance->physical_devices[0];
-
-   if (instance->vk.enabled_extensions.KHR_display)
-      return vk_errorf(instance, VK_ERROR_INCOMPATIBLE_DRIVER,
+   if (instance->vk.enabled_extensions.KHR_display) {
+      return vk_errorf(instance, VK_ERROR_INITIALIZATION_FAILED,
                        "I can't KHR_display");
+   }
 
    fd = open(path, O_RDWR | O_CLOEXEC);
    if (fd < 0) {
-      instance->physical_device_count = 0;
-      return vk_errorf(instance, VK_ERROR_INCOMPATIBLE_DRIVER,
+      if (errno == ENOENT)
+         return VK_SUCCESS;
+
+      return vk_errorf(instance, VK_ERROR_INITIALIZATION_FAILED,
                        "failed to open device %s", path);
+   }
+
+   struct tu_physical_device *device =
+      vk_zalloc(&instance->vk.alloc, sizeof(*device), 8,
+                VK_SYSTEM_ALLOCATION_SCOPE_INSTANCE);
+   if (!device) {
+      close(fd);
+      return vk_error(instance, VK_ERROR_OUT_OF_HOST_MEMORY);
    }
 
    struct kgsl_devinfo info;
@@ -264,8 +270,10 @@ tu_enumerate_devices(struct tu_instance *instance)
       ((info.chip_id >> 16) & 0xff) * 10 +
       ((info.chip_id >>  8) & 0xff);
    device->dev_id.chip_id = info.chip_id;
-   device->gmem_size = env_var_as_unsigned("TU_GMEM", info.gmem_sizebytes);
+   device->gmem_size = debug_get_num_option("TU_GMEM", info.gmem_sizebytes);
    device->gmem_base = gmem_iova;
+
+   device->submitqueue_priority_count = 1;
 
    device->heap.size = tu_get_system_heap_size();
    device->heap.used = 0u;
@@ -274,11 +282,12 @@ tu_enumerate_devices(struct tu_instance *instance)
    if (tu_physical_device_init(device, instance) != VK_SUCCESS)
       goto fail;
 
-   instance->physical_device_count = 1;
+   list_addtail(&device->vk.link, &instance->vk.physical_devices.list);
 
    return VK_SUCCESS;
 
 fail:
+   vk_free(&instance->vk.alloc, device);
    close(fd);
    return VK_ERROR_INITIALIZATION_FAILED;
 }
@@ -353,33 +362,60 @@ sync_merge(const VkSemaphore *syncobjs, uint32_t count, bool wait_all, bool rese
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
-tu_QueueSubmit(VkQueue _queue,
-               uint32_t submitCount,
-               const VkSubmitInfo *pSubmits,
-               VkFence _fence)
+tu_QueueSubmit2(VkQueue _queue,
+                uint32_t submitCount,
+                const VkSubmitInfo2 *pSubmits,
+                VkFence _fence)
 {
+   MESA_TRACE_FUNC();
    TU_FROM_HANDLE(tu_queue, queue, _queue);
    TU_FROM_HANDLE(tu_syncobj, fence, _fence);
    VkResult result = VK_SUCCESS;
 
+   if (unlikely(queue->device->physical_device->instance->debug_flags &
+                 TU_DEBUG_LOG_SKIP_GMEM_OPS)) {
+      tu_dbg_log_gmem_load_store_skips(queue->device);
+   }
+
+   struct tu_cmd_buffer **submit_cmd_buffers[submitCount];
+   uint32_t submit_cmd_buffer_count[submitCount];
+
    uint32_t max_entry_count = 0;
    for (uint32_t i = 0; i < submitCount; ++i) {
-      const VkSubmitInfo *submit = pSubmits + i;
+      const VkSubmitInfo2 *submit = pSubmits + i;
 
       const VkPerformanceQuerySubmitInfoKHR *perf_info =
          vk_find_struct_const(pSubmits[i].pNext,
                               PERFORMANCE_QUERY_SUBMIT_INFO_KHR);
 
+      struct tu_cmd_buffer *old_cmd_buffers[submit->commandBufferInfoCount];
+      uint32_t cmdbuf_count = submit->commandBufferInfoCount;
+      for (uint32_t j = 0; j < cmdbuf_count; ++j) {
+         TU_FROM_HANDLE(tu_cmd_buffer, cmdbuf, submit->pCommandBufferInfos[j].commandBuffer);
+         old_cmd_buffers[j] = cmdbuf;
+      }
+
+      struct tu_cmd_buffer **cmd_buffers = old_cmd_buffers;
+      tu_insert_dynamic_cmdbufs(queue->device, &cmd_buffers, &cmdbuf_count);
+      if (cmd_buffers == old_cmd_buffers) {
+         cmd_buffers =
+            vk_alloc(&queue->device->vk.alloc,
+                     sizeof(*cmd_buffers) * cmdbuf_count, 8,
+                     VK_SYSTEM_ALLOCATION_SCOPE_COMMAND);
+         memcpy(cmd_buffers, old_cmd_buffers,
+                sizeof(*cmd_buffers) * cmdbuf_count);
+      }
+      submit_cmd_buffers[i] = cmd_buffers;
+      submit_cmd_buffer_count[i] = cmdbuf_count;
+
       uint32_t entry_count = 0;
-      for (uint32_t j = 0; j < submit->commandBufferCount; ++j) {
-         TU_FROM_HANDLE(tu_cmd_buffer, cmdbuf, submit->pCommandBuffers[j]);
-         entry_count += cmdbuf->cs.entry_count;
+      for (uint32_t j = 0; j < cmdbuf_count; ++j) {
+         entry_count += cmd_buffers[i]->cs.entry_count;
          if (perf_info)
             entry_count++;
       }
 
-      struct tu_cmd_buffer **cmd_buffers = (void *)submit->pCommandBuffers;
-      if (tu_autotune_submit_requires_fence(cmd_buffers, submit->commandBufferCount))
+      if (tu_autotune_submit_requires_fence(cmd_buffers, cmdbuf_count))
          entry_count++;
 
       max_entry_count = MAX2(max_entry_count, entry_count);
@@ -393,15 +429,17 @@ tu_QueueSubmit(VkQueue _queue,
       return vk_error(queue, VK_ERROR_OUT_OF_HOST_MEMORY);
 
    for (uint32_t i = 0; i < submitCount; ++i) {
-      const VkSubmitInfo *submit = pSubmits + i;
+      const VkSubmitInfo2 *submit = pSubmits + i;
       uint32_t entry_idx = 0;
       const VkPerformanceQuerySubmitInfoKHR *perf_info =
          vk_find_struct_const(pSubmits[i].pNext,
                               PERFORMANCE_QUERY_SUBMIT_INFO_KHR);
 
 
-      for (uint32_t j = 0; j < submit->commandBufferCount; j++) {
-         TU_FROM_HANDLE(tu_cmd_buffer, cmdbuf, submit->pCommandBuffers[j]);
+      struct tu_cmd_buffer **cmd_buffers = submit_cmd_buffers[i];
+      uint32_t cmdbuf_count = submit_cmd_buffer_count[i];
+      for (uint32_t j = 0; j < cmdbuf_count; j++) {
+         struct tu_cmd_buffer *cmdbuf = cmd_buffers[j];
          struct tu_cs *cs = &cmdbuf->cs;
 
          if (perf_info) {
@@ -409,8 +447,8 @@ tu_QueueSubmit(VkQueue _queue,
                &cmdbuf->device->perfcntrs_pass_cs_entries[perf_info->counterPassIndex];
 
             cmds[entry_idx++] = (struct kgsl_command_object) {
-               .offset = perf_cs_entry->offset,
-               .gpuaddr = perf_cs_entry->bo->iova,
+               .offset = 0, // KGSL doesn't use offset
+               .gpuaddr = perf_cs_entry->bo->iova + perf_cs_entry->offset,
                .size = perf_cs_entry->size,
                .flags = KGSL_CMDLIST_IB,
                .id = perf_cs_entry->bo->gem_handle,
@@ -419,8 +457,8 @@ tu_QueueSubmit(VkQueue _queue,
 
          for (unsigned k = 0; k < cs->entry_count; k++) {
             cmds[entry_idx++] = (struct kgsl_command_object) {
-               .offset = cs->entries[k].offset,
-               .gpuaddr = cs->entries[k].bo->iova,
+               .offset = 0, // KGSL doesn't use offset
+               .gpuaddr = cs->entries[k].bo->iova + cs->entries[k].offset,
                .size = cs->entries[k].size,
                .flags = KGSL_CMDLIST_IB,
                .id = cs->entries[k].bo->gem_handle,
@@ -428,24 +466,29 @@ tu_QueueSubmit(VkQueue _queue,
          }
       }
 
-      struct tu_cmd_buffer **cmd_buffers = (void *)submit->pCommandBuffers;
-      if (tu_autotune_submit_requires_fence(cmd_buffers, submit->commandBufferCount)) {
+      if (tu_autotune_submit_requires_fence(cmd_buffers, cmdbuf_count)) {
          struct tu_cs *autotune_cs =
             tu_autotune_on_submit(queue->device,
                                   &queue->device->autotune,
                                   cmd_buffers,
-                                  submit->commandBufferCount);
+                                  cmdbuf_count);
          cmds[entry_idx++] = (struct kgsl_command_object) {
-            .offset = autotune_cs->entries[0].offset,
-            .gpuaddr = autotune_cs->entries[0].bo->iova,
+            .offset = 0, // KGSL doesn't use offset
+            .gpuaddr = autotune_cs->entries[0].bo->iova +
+                       autotune_cs->entries[0].offset,
             .size = autotune_cs->entries[0].size,
             .flags = KGSL_CMDLIST_IB,
             .id = autotune_cs->entries[0].bo->gem_handle,
          };
       }
 
-      struct tu_syncobj s = sync_merge(submit->pWaitSemaphores,
-                                       submit->waitSemaphoreCount,
+      VkSemaphore wait_semaphores[submit->waitSemaphoreInfoCount];
+      for (uint32_t j = 0; j < submit->waitSemaphoreInfoCount; j++) {
+         wait_semaphores[j] = submit->pWaitSemaphoreInfos[j].semaphore;
+      }
+
+      struct tu_syncobj s = sync_merge(wait_semaphores,
+                                       submit->waitSemaphoreInfoCount,
                                        true, true);
 
       struct kgsl_cmd_syncpoint_timestamp ts = {
@@ -477,8 +520,8 @@ tu_QueueSubmit(VkQueue _queue,
          goto fail;
       }
 
-      for (uint32_t i = 0; i < submit->signalSemaphoreCount; i++) {
-         TU_FROM_HANDLE(tu_syncobj, sem, submit->pSignalSemaphores[i]);
+      for (uint32_t i = 0; i < submit->signalSemaphoreInfoCount; i++) {
+         TU_FROM_HANDLE(tu_syncobj, sem, submit->pSignalSemaphoreInfos[i].semaphore);
          sem->timestamp = req.timestamp;
          sem->timestamp_valid = true;
       }
@@ -503,6 +546,9 @@ tu_QueueSubmit(VkQueue _queue,
          }
       }
    }
+
+   tu_debug_bos_print_stats(queue->device);
+
 fail:
    vk_free(&queue->device->vk.alloc, cmds);
 
@@ -614,6 +660,43 @@ tu_DestroyFence(VkDevice _device, VkFence fence, const VkAllocationCallbacks *pA
    vk_object_free(&device->vk, pAllocator, sync);
 }
 
+/* safe_ioctl is not enough as restarted waits would not adjust the timeout
+ * which could lead to waiting substantially longer than requested
+ */
+static int
+wait_timestamp_safe(int fd,
+                    unsigned int context_id,
+                    unsigned int timestamp,
+                    int64_t timeout_ms)
+{
+   int64_t start_time = os_time_get_nano();
+   struct kgsl_device_waittimestamp_ctxtid wait = {
+      .context_id = context_id,
+      .timestamp = timestamp,
+      .timeout = timeout_ms,
+   };
+
+   while (true) {
+      int ret = ioctl(fd, IOCTL_KGSL_DEVICE_WAITTIMESTAMP_CTXTID, &wait);
+
+      if (ret == -1 && (errno == EINTR || errno == EAGAIN)) {
+         int64_t current_time = os_time_get_nano();
+
+         /* update timeout to consider time that has passed since the start */
+         timeout_ms -= (current_time - start_time) / 1000000;
+         if (timeout_ms <= 0) {
+            errno = ETIME;
+            return -1;
+         }
+
+         wait.timeout = (unsigned int) timeout_ms;
+         start_time = current_time;
+      } else {
+         return ret;
+      }
+   }
+}
+
 VKAPI_ATTR VkResult VKAPI_CALL
 tu_WaitForFences(VkDevice _device,
                  uint32_t count,
@@ -627,12 +710,10 @@ tu_WaitForFences(VkDevice _device,
    if (!s.timestamp_valid)
       return VK_SUCCESS;
 
-   int ret = ioctl(device->fd, IOCTL_KGSL_DEVICE_WAITTIMESTAMP_CTXTID,
-                   &(struct kgsl_device_waittimestamp_ctxtid) {
-      .context_id = device->queues[0]->msm_queue_id,
-      .timestamp = s.timestamp,
-      .timeout = timeout / 1000000,
-   });
+   int ret = wait_timestamp_safe(device->fd, 
+                                 device->queues[0]->msm_queue_id, 
+                                 s.timestamp, 
+                                 timeout / 1000000);
    if (ret) {
       assert(errno == ETIME);
       return VK_TIMEOUT;
@@ -660,33 +741,17 @@ tu_GetFenceStatus(VkDevice _device, VkFence _fence)
    if (!sync->timestamp_valid)
       return VK_NOT_READY;
 
-   int ret = ioctl(device->fd, IOCTL_KGSL_DEVICE_WAITTIMESTAMP_CTXTID,
-               &(struct kgsl_device_waittimestamp_ctxtid) {
-      .context_id = device->queues[0]->msm_queue_id,
-      .timestamp = sync->timestamp,
-      .timeout = 0,
-   });
+
+   int ret = wait_timestamp_safe(device->fd, 
+                                 device->queues[0]->msm_queue_id, 
+                                 sync->timestamp, 
+                                 0);
    if (ret) {
       assert(errno == ETIME);
       return VK_NOT_READY;
    }
 
    return VK_SUCCESS;
-}
-
-int
-tu_signal_syncs(struct tu_device *device,
-                struct vk_sync *sync1, struct vk_sync *sync2)
-{
-   tu_finishme("tu_signal_syncs");
-   return 0;
-}
-
-int
-tu_syncobj_to_fd(struct tu_device *device, struct vk_sync *sync)
-{
-   tu_finishme("tu_syncobj_to_fd");
-   return -1;
 }
 
 VkResult

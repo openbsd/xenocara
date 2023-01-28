@@ -135,7 +135,7 @@ if with_tools.contains('drm-shim')
   )
 
   libintel_stub_gpu = shared_library(
-    ['intel_noop_drm_shim'],
+    'intel_noop_drm_shim',
     'intel_noop_drm_shim.c',
     include_directories: [inc_include, inc_src, inc_intel],
     link_with: libintel_dev,
@@ -156,7 +156,7 @@ if with_tools.contains('intel-ui')
     link_with : [libintel_common, libintel_compiler, libintel_dev, libaub],
     c_args : [no_override_init_args],
     gnu_symbol_visibility : 'hidden',
-    cpp_args : ['-fpermissive', '-Wno-parentheses', '-Wno-class-memaccess'],
+    cpp_args : ['-fpermissive', '-Wno-parentheses'],
     install : true
   )
 endif

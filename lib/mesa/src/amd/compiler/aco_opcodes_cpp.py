@@ -1,6 +1,6 @@
 
 template = """\
-/* 
+/*
  * Copyright (c) 2018 Valve Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -50,6 +50,11 @@ extern const aco::Info instr_info = {
    {
       % for name in opcode_names:
       ${opcodes[name].opcode_gfx10},
+      % endfor
+   },
+   {
+      % for name in opcode_names:
+      ${opcodes[name].opcode_gfx11},
       % endfor
    },
    std::bitset<${len(opcode_names)}>("${can_use_input_modifiers}"),

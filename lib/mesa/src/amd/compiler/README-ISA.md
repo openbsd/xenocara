@@ -171,6 +171,12 @@ When this happens, any store performed by a VS is not guaranteed
 to be complete when PS tries to load it, so we need to manually
 make sure to insert wait instructions before the position exports.
 
+## A16 and G16
+
+On GFX9, the A16 field enables both 16 bit addresses and derivatives.
+Since GFX10+ these are fully independent of each other, A16 controls 16 bit addresses
+and G16 opcodes 16 bit derivatives. A16 without G16 uses 32 bit derivatives.
+
 # Hardware Bugs
 
 ## SMEM corrupts VCCZ on SI/CI
@@ -214,7 +220,7 @@ VMEM/FLAT/GLOBAL/SCRATCH/DS instruction reads an SGPR (or EXEC, or M0).
 Then, a SALU/SMEM instruction writes the same SGPR.
 
 Mitigated by:
-A VALU instruction or an `s_waitcnt vmcnt(0)` between the two instructions.
+A VALU instruction or an `s_waitcnt` between the two instructions.
 
 ### SMEMtoVectorWriteHazard
 
@@ -251,8 +257,7 @@ ACO doesn't use FLAT load/store on GFX10, so is unaffected.
 ### VcmpxPermlaneHazard
 
 Triggered by:
-Any permlane instruction that follows any VOPC instruction.
-Confirmed by AMD devs that despite the name, this doesn't only affect v_cmpx.
+Any permlane instruction that follows any VOPC instruction which writes exec.
 
 Mitigated by: any VALU instruction except `v_nop`.
 
@@ -283,3 +288,53 @@ Only `s_waitcnt_vscnt null, 0`. Needed even if the first instruction is a load.
 
 NSA MIMG instructions should be limited to 3 dwords before GFX10.3 to avoid
 stability issues: https://reviews.llvm.org/D103348
+
+## RDNA3 / GFX11 hazards
+
+### VcmpxPermlaneHazard
+
+Same as GFX10.
+
+### LdsDirectVALUHazard
+
+Triggered by:
+LDSDIR instruction writing a VGPR soon after it's used by a VALU instruction.
+
+Mitigated by:
+A vdst wait, preferably using the LDSDIR's field.
+
+### LdsDirectVMEMHazard
+
+Triggered by:
+LDSDIR instruction writing a VGPR after it's used by a VMEM/DS instruction.
+
+Mitigated by:
+Waiting for the VMEM/DS instruction to finish, a VALU or export instruction, or
+`s_waitcnt_depctr 0xffe3`.
+
+### VALUTransUseHazard
+
+Triggered by:
+A VALU instrction reading a VGPR written by a transcendental VALU instruction without 6+ VALU or 2+
+transcendental instructions in-between.
+
+Mitigated by:
+A va_vdst=0 wait: `s_waitcnt_deptr 0x0fff`
+
+### VALUPartialForwardingHazard
+
+Triggered by:
+A VALU instruction reading two VGPRs: one written before an exec write by SALU and one after. To
+trigger, there must be less than 3 VALU between the first and second VGPR writes and less than 5
+VALU between the second VGPR write and the current instruction.
+
+Mitigated by:
+A va_vdst=0 wait: `s_waitcnt_deptr 0x0fff`
+
+### VALUMaskWriteHazard
+
+Triggered by:
+SALU writing then reading a SGPR that was previously used as a lane mask for a VALU.
+
+Mitigated by:
+A VALU instruction reading a SGPR or with literal, or a sa_sdst=0 wait: `s_waitcnt_depctr 0xfffe`

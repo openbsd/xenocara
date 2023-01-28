@@ -270,22 +270,7 @@ apply_hwconfig_item(struct intel_device_info *devinfo,
    }
 }
 
-static void
-intel_apply_hwconfig_table(struct intel_device_info *devinfo,
-                           const struct hwconfig *hwconfig,
-                           int32_t hwconfig_len)
-{
-   intel_process_hwconfig_table(devinfo, hwconfig, hwconfig_len,
-                                apply_hwconfig_item);
-
-   /* After applying hwconfig values, some items need to be recalculated. */
-   if (devinfo->apply_hwconfig) {
-      devinfo->max_cs_threads =
-         devinfo->max_eus_per_subslice * devinfo->num_thread_per_eu;
-   }
-}
-
-void
+bool
 intel_get_and_process_hwconfig_table(int fd,
                                      struct intel_device_info *devinfo)
 {
@@ -294,9 +279,14 @@ intel_get_and_process_hwconfig_table(int fd,
    hwconfig = intel_i915_query_alloc(fd, DRM_I915_QUERY_HWCONFIG_BLOB,
                                      &hwconfig_len);
    if (hwconfig) {
-      intel_apply_hwconfig_table(devinfo, hwconfig, hwconfig_len);
+      intel_process_hwconfig_table(devinfo, hwconfig, hwconfig_len,
+                                   apply_hwconfig_item);
       free(hwconfig);
+      if (devinfo->apply_hwconfig)
+         return true;
    }
+
+   return false;
 }
 
 static void

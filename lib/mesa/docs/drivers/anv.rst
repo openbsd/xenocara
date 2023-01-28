@@ -5,11 +5,11 @@ Debugging
 ---------
 
 Here are a few environment variable debug environment variables
-specific to Anv:
+specific to ANV:
 
 :envvar:`ANV_ENABLE_PIPELINE_CACHE`
    If defined to ``0`` or ``false``, this will disable pipeline
-   caching, forcing Anv to reparse and recompile any VkShaderModule
+   caching, forcing ANV to reparse and recompile any VkShaderModule
    (SPIRV) it is given.
 :envvar:`ANV_DISABLE_SECONDARY_CMD_BUFFER_CALLS`
    If defined to ``1`` or ``true``, this will prevent usage of self
@@ -22,7 +22,7 @@ specific to Anv:
    If defined to ``1`` or ``true``, this disables support for timeline
    semaphores.
 :envvar:`ANV_USERSPACE_RELOCS`
-   If defined to ``1`` or ``true``, this forces Anv to always do
+   If defined to ``1`` or ``true``, this forces ANV to always do
    kernel relocations in command buffers. This should only have an
    effect on hardware that doesn't support soft-pinning (Ivybridge,
    Haswell, Cherryview).
@@ -47,7 +47,7 @@ Experimental features
 Binding Model
 -------------
 
-Here is the Anv bindless binding model that was implemented for the
+Here is the ANV bindless binding model that was implemented for the
 descriptor indexing feature of Vulkan 1.2 :
 
 .. graphviz::
@@ -230,3 +230,45 @@ is a byte offset from the descriptor set memory to the associated
 binding. ``anv_descriptor_set_binding_layout::array_size`` is the
 number of ``anv_*_descriptor`` elements in the descriptor set memory
 from that offset for the binding.
+
+
+Pipeline state emission
+-----------------------
+
+Vulkan initially started by baking as much state as possible in
+pipelines. But extension after extension, more and more state has
+become potentially dynamic.
+
+ANV tries to limit the amount of time an instruction has to be packed
+to reprogram part of the 3D pipeline state. The packing is happening
+in 2 places :
+
+- ``genX_pipeline.c`` where the non dynamic state is emitted in the
+  pipeline batch. This batch is copied into the command buffer batch
+  when calling ``vkCmdBindPipeline()``
+
+- ``genX_cmd_buffer.c`` in the ``cmd_buffer_flush_state`` function
+  which ends up calling into ``gfx8_cmd_buffer.c`` &
+  ``gfx7_cmd_buffer.c``
+
+The rule to know where to emit an instruction programming the 3D
+pipeline is as follow :
+
+- If any field of the instruction can be made dynamic, it should be
+  emitted in ``genX_cmd_buffer.c``, ``gfx8_cmd_buffer.c`` or
+  ``gfx7_cmd_buffer.c``
+
+- Otherwise, the instruction can be emitted in ``genX_pipeline.c``
+
+When a piece of state programming is dynamic, it should have a
+corresponding field in ``anv_dynamic_state`` and the
+``anv_dynamic_state_copy()`` function should be updated to ensure we
+minimize the amount of time an instruction should be emitted. Each
+instruction should have a associated ``ANV_CMD_DIRTY_*`` mask so that
+the dynamic emission code can tell when to re-emit an instruction.
+
+An instruction can also be re-emitted when a pipeline changes by
+checking for ``ANV_CMD_DIRTY_PIPELINE``. It should only do so if it
+requires to know some value that is coming from the
+``anv_graphics_pipeline`` object that is not available from
+``anv_dynamic_state``.

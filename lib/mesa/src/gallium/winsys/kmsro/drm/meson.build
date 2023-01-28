@@ -37,6 +37,9 @@ endif
 if with_gallium_panfrost
   kmsro_c_args += '-DGALLIUM_PANFROST'
 endif
+if with_gallium_asahi
+  kmsro_c_args += '-DGALLIUM_ASAHI'
+endif
 
 libkmsrowinsys = static_library(
   'kmsrowinsys',
@@ -47,7 +50,7 @@ libkmsrowinsys = static_library(
   ],
   c_args : [kmsro_c_args],
   gnu_symbol_visibility : 'hidden',
-  dependencies: dep_libdrm,
+  dependencies: [dep_libdrm, idep_mesautil],
 )
 
 driver_kmsro = declare_dependency(

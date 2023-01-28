@@ -161,15 +161,25 @@ nir_remove_unused_io_vars(nir_shader *shader,
 
       if (!(other_stage & get_variable_io_mask(var, shader->info.stage))) {
          /* This one is invalid, make it a global variable instead */
+         if (shader->info.stage == MESA_SHADER_MESH &&
+               (shader->info.outputs_read & BITFIELD64_BIT(var->data.location)))
+            var->data.mode = nir_var_mem_shared;
+         else
+            var->data.mode = nir_var_shader_temp;
          var->data.location = 0;
-         var->data.mode = nir_var_shader_temp;
 
          progress = true;
       }
    }
 
-   if (progress)
+   nir_function_impl *impl = nir_shader_get_entrypoint(shader);
+   if (progress) {
+      nir_metadata_preserve(impl, nir_metadata_dominance |
+                            nir_metadata_block_index);
       nir_fixup_deref_modes(shader);
+   } else {
+      nir_metadata_preserve(impl, nir_metadata_all);
+   }
 
    return progress;
 }
@@ -1312,6 +1322,18 @@ nir_link_precision(unsigned producer, unsigned consumer, bool fs)
       return fs ? MAX2(producer, consumer) : consumer;
 }
 
+static nir_variable *
+find_consumer_variable(const nir_shader *consumer,
+                       const nir_variable *producer_var)
+{
+   nir_foreach_variable_with_modes(var, consumer, nir_var_shader_in) {
+      if (var->data.location == producer_var->data.location &&
+          var->data.location_frac == producer_var->data.location_frac)
+         return var;
+   }
+   return NULL;
+}
+
 void
 nir_link_varying_precision(nir_shader *producer, nir_shader *consumer)
 {
@@ -1322,8 +1344,8 @@ nir_link_varying_precision(nir_shader *producer, nir_shader *consumer)
       if (producer_var->data.location < 0)
          continue;
 
-      nir_variable *consumer_var = nir_find_variable_with_location(consumer,
-            nir_var_shader_in, producer_var->data.location);
+      nir_variable *consumer_var = find_consumer_variable(consumer,
+            producer_var);
 
       /* Skip if the variable will be eliminated */
       if (!consumer_var)
@@ -1392,7 +1414,8 @@ nir_link_opt_varyings(nir_shader *producer, nir_shader *consumer)
             /* The varying is loaded from same uniform, so no need to do any
              * interpolation. Mark it as flat explicitly.
              */
-            if (in_var && in_var->data.interpolation <= INTERP_MODE_NOPERSPECTIVE) {
+            if (!consumer->options->no_integers &&
+                in_var && in_var->data.interpolation <= INTERP_MODE_NOPERSPECTIVE) {
                in_var->data.interpolation = INTERP_MODE_FLAT;
                out_var->data.interpolation = INTERP_MODE_FLAT;
             }

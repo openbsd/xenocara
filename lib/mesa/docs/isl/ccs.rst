@@ -52,7 +52,7 @@ concerned, is that fast-clears use only 1 bit per cache-line pair whereas color
 compression uses 2 bits.
 
 What is a cache-line pair?  Both the X and Y tiling formats are arranged as an
-8x8 grid of cache lines.  (See the [chapter on tiling](#tiling) for more
+8x8 grid of cache lines.  (See the :doc:`chapter on tiling <tiling>` for more
 details.)  In either case, a cache-line pair is a pair of cache lines whose
 starting addresses differ by 512 bytes or 8 cache lines.  This results in the
 two cache lines being vertically adjacent when the main surface is X-tiled and
@@ -71,7 +71,7 @@ the byte granularity of most tiling formats.
 The following table represents the bit-layouts that yield the CCS tiling format
 on different hardware generations.  Bits 0-11 correspond to the regular swizzle
 of bytes within a 4KB page whereas the negative bits represent the address of
-the particular 1 or 2-bit portion of a byte. (Note: The haswell data was
+the particular 1 or 2-bit portion of a byte. (Note: The Haswell data was
 gathered on a dual-channel system so bit-6 swizzling was enabled.  It's unclear
 how this affects the CCS layout.)
 
@@ -91,7 +91,7 @@ CCS surface layout
 
 Starting with Broadwell, fast-clears and color compression can be used on
 mipmapped and array surfaces.  When considered from a higher level, the CCS is
-layed out like any other surface.  The Broadwell and Sky Lake PRMs describe
+laid out like any other surface.  The Broadwell and Sky Lake PRMs describe
 this as follows:
 
 Broadwell PRM Vol 7, "MCS Buffer for Render Target(s)" (p. 676):

@@ -3,6 +3,27 @@ Release Notes
 
 The release notes summarize what's new or changed in each Mesa release.
 
+-  :doc:`22.3.4 release notes <relnotes/22.3.4>`
+-  :doc:`22.3.3 release notes <relnotes/22.3.3>`
+-  :doc:`22.3.2 release notes <relnotes/22.3.2>`
+-  :doc:`22.3.1 release notes <relnotes/22.3.1>`
+-  :doc:`22.3.0 release notes <relnotes/22.3.0>`
+-  :doc:`22.2.2 release notes <relnotes/22.2.2>`
+-  :doc:`22.2.1 release notes <relnotes/22.2.1>`
+-  :doc:`22.2.0 release notes <relnotes/22.2.0>`
+-  :doc:`22.1.7 release notes <relnotes/22.1.7>`
+-  :doc:`22.1.6 release notes <relnotes/22.1.6>`
+-  :doc:`22.1.5 release notes <relnotes/22.1.5>`
+-  :doc:`22.1.4 release notes <relnotes/22.1.4>`
+-  :doc:`22.1.3 release notes <relnotes/22.1.3>`
+-  :doc:`22.1.2 release notes <relnotes/22.1.2>`
+-  :doc:`21.3.9 release notes <relnotes/21.3.9>`
+-  :doc:`22.0.5 release notes <relnotes/22.0.5>`
+-  :doc:`22.1.1 release notes <relnotes/22.1.1>`
+-  :doc:`22.0.4 release notes <relnotes/22.0.4>`
+-  :doc:`22.1.0 release notes <relnotes/22.1.0>`
+-  :doc:`22.0.3 release notes <relnotes/22.0.3>`
+-  :doc:`22.0.2 release notes <relnotes/22.0.2>`
 -  :doc:`22.0.1 release notes <relnotes/22.0.1>`
 -  :doc:`21.3.8 release notes <relnotes/21.3.8>`
 -  :doc:`22.0.0 release notes <relnotes/22.0.0>`
@@ -359,6 +380,27 @@ release notes, or in the `old docs`_.
    :maxdepth: 1
    :hidden:
 
+   relnotes/22.3.4
+   relnotes/22.3.3
+   relnotes/22.3.2
+   relnotes/22.3.1
+   relnotes/22.3.0
+   relnotes/22.2.2
+   relnotes/22.2.1
+   relnotes/22.2.0
+   relnotes/22.1.7
+   relnotes/22.1.6
+   relnotes/22.1.5
+   relnotes/22.1.4
+   relnotes/22.1.3
+   relnotes/22.1.2
+   relnotes/21.3.9
+   relnotes/22.0.5
+   relnotes/22.1.1
+   relnotes/22.0.4
+   relnotes/22.1.0
+   relnotes/22.0.3
+   relnotes/22.0.2
    relnotes/22.0.1
    relnotes/21.3.8
    relnotes/22.0.0

@@ -60,7 +60,7 @@ END_TEST
 
 BEGIN_TEST(isel.compute.simple)
    for (unsigned i = GFX7; i <= GFX8; i++) {
-      if (!set_variant((chip_class)i))
+      if (!set_variant((amd_gfx_level)i))
          continue;
 
       QoShaderModuleCreateInfo cs = qoShaderModuleCreateInfoGLSL(COMPUTE,
@@ -70,12 +70,12 @@ BEGIN_TEST(isel.compute.simple)
          };
          void main() {
             //>> v1: %data = p_parallelcopy 42
-            //buffer_store_dword %_, v1: undef, 0, %data disable_wqm storage:buffer semantics: scope:invocation
+            //! buffer_store_dword (kill)%_, v1: undef, 0, (kill)%data glc disable_wqm storage:buffer
             res = 42;
          }
       );
 
-      PipelineBuilder pbld(get_vk_device((chip_class)i));
+      PipelineBuilder pbld(get_vk_device((amd_gfx_level)i));
       pbld.add_cs(cs);
       pbld.print_ir(VK_SHADER_STAGE_COMPUTE_BIT, "ACO IR", true);
    }
@@ -83,7 +83,7 @@ END_TEST
 
 BEGIN_TEST(isel.gs.no_outputs)
    for (unsigned i = GFX8; i <= GFX10; i++) {
-      if (!set_variant((chip_class)i))
+      if (!set_variant((amd_gfx_level)i))
          continue;
 
       QoShaderModuleCreateInfo vs = qoShaderModuleCreateInfoGLSL(VERTEX,
@@ -100,7 +100,7 @@ BEGIN_TEST(isel.gs.no_outputs)
          }
       );
 
-      PipelineBuilder pbld(get_vk_device((chip_class)i));
+      PipelineBuilder pbld(get_vk_device((amd_gfx_level)i));
       pbld.add_stage(VK_SHADER_STAGE_VERTEX_BIT, vs);
       pbld.add_stage(VK_SHADER_STAGE_GEOMETRY_BIT, gs);
       pbld.create_pipeline();
@@ -112,7 +112,7 @@ END_TEST
 
 BEGIN_TEST(isel.gs.no_verts)
    for (unsigned i = GFX8; i <= GFX10; i++) {
-      if (!set_variant((chip_class)i))
+      if (!set_variant((amd_gfx_level)i))
          continue;
 
       QoShaderModuleCreateInfo vs = qoShaderModuleCreateInfoGLSL(VERTEX,
@@ -126,7 +126,7 @@ BEGIN_TEST(isel.gs.no_verts)
          void main() {}
       );
 
-      PipelineBuilder pbld(get_vk_device((chip_class)i));
+      PipelineBuilder pbld(get_vk_device((amd_gfx_level)i));
       pbld.add_stage(VK_SHADER_STAGE_VERTEX_BIT, vs);
       pbld.add_stage(VK_SHADER_STAGE_GEOMETRY_BIT, gs);
       pbld.create_pipeline();
@@ -138,7 +138,7 @@ END_TEST
 
 BEGIN_TEST(isel.sparse.clause)
    for (unsigned i = GFX10_3; i <= GFX10_3; i++) {
-      if (!set_variant((chip_class)i))
+      if (!set_variant((amd_gfx_level)i))
          continue;
 
       QoShaderModuleCreateInfo cs = qoShaderModuleCreateInfoGLSL(COMPUTE,
@@ -158,13 +158,13 @@ BEGIN_TEST(isel.sparse.clause)
             //;    funcs['sample_res'] = lambda _: 'v#_'
             //;    funcs['sample_coords'] = lambda _: '[v#_, v#_, v#_, v#_]'
             //>> v5: (noCSE)%zero0 = p_create_vector 0, 0, 0, 0, 0
-            //>> v5: %_ = image_sample_lz_o %_, %_, (kill)%zero0, (kill)%_, %_, %_ dmask:xyzw 2d tfe storage: semantics: scope:invocation
+            //>> v5: %_ = image_sample_lz_o %_, %_, (kill)%zero0, (kill)%_, %_, %_ dmask:xyzw 2d tfe
             //>> v5: (noCSE)%zero1 = p_create_vector 0, 0, 0, 0, 0
-            //>> v5: %_ = image_sample_lz_o %_, %_, (kill)%zero1, (kill)%_, %_, %_ dmask:xyzw 2d tfe storage: semantics: scope:invocation
+            //>> v5: %_ = image_sample_lz_o %_, %_, (kill)%zero1, (kill)%_, %_, %_ dmask:xyzw 2d tfe
             //>> v5: (noCSE)%zero2 = p_create_vector 0, 0, 0, 0, 0
-            //>> v5: %_ = image_sample_lz_o %_, %_, (kill)%zero2, (kill)%_, %_, %_ dmask:xyzw 2d tfe storage: semantics: scope:invocation
+            //>> v5: %_ = image_sample_lz_o %_, %_, (kill)%zero2, (kill)%_, %_, %_ dmask:xyzw 2d tfe
             //>> v5: (noCSE)%zero3 = p_create_vector 0, 0, 0, 0, 0
-            //>> v5: %_ = image_sample_lz_o (kill)%_, (kill)%_, (kill)%zero3, (kill)%_, (kill)%_, (kill)%_ dmask:xyzw 2d tfe storage: semantics: scope:invocation
+            //>> v5: %_ = image_sample_lz_o (kill)%_, (kill)%_, (kill)%zero3, (kill)%_, (kill)%_, (kill)%_ dmask:xyzw 2d tfe
             //>> s_clause 0x3
             //! image_sample_lz_o @sample_res, @sample_coords, @s256(img), @s128(samp) dmask:0xf dim:SQ_RSRC_IMG_2D tfe
             //! image_sample_lz_o @sample_res, @sample_coords, @s256(img), @s128(samp) dmask:0xf dim:SQ_RSRC_IMG_2D tfe
@@ -179,7 +179,7 @@ BEGIN_TEST(isel.sparse.clause)
 
       fprintf(output, "llvm_version: %u\n", LLVM_VERSION_MAJOR);
 
-      PipelineBuilder pbld(get_vk_device((chip_class)i));
+      PipelineBuilder pbld(get_vk_device((amd_gfx_level)i));
       pbld.add_cs(cs);
       pbld.print_ir(VK_SHADER_STAGE_COMPUTE_BIT, "ACO IR", true);
       pbld.print_ir(VK_SHADER_STAGE_COMPUTE_BIT, "Assembly", true);

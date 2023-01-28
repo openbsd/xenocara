@@ -24,6 +24,28 @@ dEQP-VK.memory_model.message_passing.ext.u32.noncoherent.atomic_atomic.atomicwri
 dEQP-VK.memory_model.write_after_read.ext.u32.noncoherent.fence_fence.atomicwrite.device.payload_local.buffer.guard_local.image.vert,Fail
 dEQP-VK.synchronization.op.single_queue.event.write_image_fragment_read_image_tess_eval.image_128x128_r16_uint,Fail
 dEQP-VK.synchronization2.op.single_queue.timeline_semaphore.write_image_geometry_read_copy_image.image_128x128_r8g8b8a8_unorm,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32f.dontunroll.volatile.storage_buffer.readonly.no_fmt_qual.len_35.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32f.unroll.nonvolatile.storage_image.fmt_qual.null_descriptor.samples_1.2d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32i.dontunroll.volatile.storage_buffer.readonly.no_fmt_qual.len_260.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32i.unroll.nonvolatile.storage_image.fmt_qual.null_descriptor.samples_4.2d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32ui.dontunroll.nonvolatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_252.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32ui.unroll.nonvolatile.storage_buffer.readwrite.no_fmt_qual.len_252.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32f.dontunroll.volatile.storage_buffer.readonly.no_fmt_qual.len_252.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32f.unroll.nonvolatile.sampled_image.no_fmt_qual.img.samples_4.2d_array.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32i.dontunroll.nonvolatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_32.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32i.unroll.nonvolatile.uniform_buffer_dynamic.no_fmt_qual.len_20.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32ui.dontunroll.nonvolatile.storage_buffer.readwrite.no_fmt_qual.len_12.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32ui.dontunroll.volatile.storage_image.fmt_qual.null_descriptor.samples_1.cube.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32ui.unroll.volatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_260.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32f.dontunroll.nonvolatile.storage_buffer.readonly.no_fmt_qual.len_20.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32f.unroll.nonvolatile.uniform_buffer.no_fmt_qual.len_252.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32f.unroll.volatile.storage_image.fmt_qual.null_descriptor.samples_4.2d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32i.dontunroll.nonvolatile.storage_image.fmt_qual.null_descriptor.samples_4.2d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32ui.dontunroll.nonvolatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_20.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32ui.unroll.nonvolatile.uniform_buffer_dynamic.no_fmt_qual.len_252.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.template.r32ui.unroll.volatile.storage_image.fmt_qual.null_descriptor.samples_1.2d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.template.rg32ui.dontunroll.nonvolatile.storage_buffer.readwrite.no_fmt_qual.null_descriptor.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.template.rgba32f.dontunroll.nonvolatile.storage_image.fmt_qual.null_descriptor.samples_1.2d.frag,Fail
 
 # Direct leak of 24 byte(s) in 1 object(s) allocated from:
 #     #0 0x7f29a36d1e8f in __interceptor_malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:145
@@ -68,3 +90,56 @@ dEQP-VK.synchronization.op.single_queue.timeline_semaphore.write_image_vertex_re
 dEQP-VK.synchronization.op.single_queue.timeline_semaphore.write_image_vertex_read_copy_image_to_buffer.image_128x128_r8_unorm,Fail
 dEQP-VK.synchronization.timeline_semaphore.wait_before_signal.write_copy_buffer_to_image_read_image_fragment.image_128x128_r16g16b16a16_uint,Fail
 dEQP-VK.synchronization2.op.single_queue.timeline_semaphore.write_image_geometry_read_blit_image.image_128x128_r16g16b16a16_uint,Fail
+
+# 1.3.2.0 uprev
+dEQP-VK.renderpass.dedicated_allocation.formats.r16_snorm.input.load.store.draw,Fail
+dEQP-VK.renderpass.dedicated_allocation.formats.r5g6b5_unorm_pack16.input.dont_care.store.self_dep_draw,Fail
+dEQP-VK.renderpass.suballocation.formats.a2b10g10r10_uint_pack32.input.load.dont_care.draw,Fail
+dEQP-VK.renderpass.suballocation.formats.r8g8b8a8_uint.input.clear.store.clear_draw_use_input_aspect,Fail
+dEQP-VK.renderpass2.suballocation.formats.a8b8g8r8_snorm_pack32.input.load.dont_care.self_dep_clear_draw,Fail
+dEQP-VK.renderpass2.suballocation.formats.r16g16b16a16_sint.input.dont_care.dont_care.self_dep_draw,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32f.dontunroll.volatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_31.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32f.unroll.nonvolatile.sampled_image.no_fmt_qual.img.samples_1.cube.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32i.dontunroll.nonvolatile.uniform_buffer.no_fmt_qual.null_descriptor.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32i.dontunroll.volatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_41.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32i.unroll.nonvolatile.vertex_attribute_fetch.no_fmt_qual.len_4.samples_1.1d.vert,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32ui.dontunroll.nonvolatile.storage_texel_buffer.fmt_qual.len_8.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32ui.unroll.nonvolatile.uniform_buffer_dynamic.no_fmt_qual.len_36.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.r32ui.unroll.volatile.storage_image.fmt_qual.img.samples_1.cube.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32f.dontunroll.volatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_36.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32f.unroll.volatile.storage_buffer.readonly.no_fmt_qual.len_33.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32i.unroll.nonvolatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_8.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32ui.dontunroll.nonvolatile.uniform_buffer_dynamic.no_fmt_qual.null_descriptor.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rg32ui.unroll.nonvolatile.uniform_buffer.no_fmt_qual.len_256.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32f.dontunroll.nonvolatile.storage_buffer_dynamic.readwrite.no_fmt_qual.len_8.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32f.unroll.nonvolatile.storage_buffer.readonly.no_fmt_qual.len_36.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32i.dontunroll.nonvolatile.vertex_attribute_fetch.no_fmt_qual.len_4.samples_1.1d.vert,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32i.unroll.nonvolatile.storage_image.fmt_qual.img.samples_1.cube.frag,Fail
+dEQP-VK.robustness.robustness2.bind.notemplate.rgba32ui.unroll.nonvolatile.storage_buffer_dynamic.readonly.no_fmt_qual.len_36.samples_1.1d.frag,Fail
+dEQP-VK.robustness.robustness2.bind.template.r32f.dontunroll.nonvolatile.storage_image.fmt_qual.null_descriptor.samples_1.cube.frag,Fail
+dEQP-VK.robustness.robustness2.bind.template.rg32ui.dontunroll.nonvolatile.sampled_image.no_fmt_qual.null_descriptor.samples_1.cube.frag,Fail
+dEQP-VK.synchronization.op.single_queue.event.write_image_fragment_read_copy_image_to_buffer.image_128x128_r16_uint,Fail
+dEQP-VK.synchronization2.op.single_queue.timeline_semaphore.write_image_tess_eval_read_image_fragment.image_128x128_r16g16b16a16_uint,Fail
+dEQP-VK.synchronization2.timeline_semaphore.wait_before_signal.write_image_tess_control_read_image_fragment.image_128x128_r16g16b16a16_uint,Fail
+dEQP-VK.transform_feedback.primitives_generated_query.copy.queue_reset.pgq_64bit_xfb_32bit.geom.xfb.rast.line_strip.pgq_0_xfb_1.single_draw,Fail
+dEQP-VK.transform_feedback.primitives_generated_query.get.host_reset.pgq_64bit_xfb_32bit.geom.xfb.no_rast.triangle_strip.pgq_default_xfb_0.single_draw,Fail
+dEQP-VK.transform_feedback.primitives_generated_query.get.queue_reset.pgq_32bit_xfb_64bit.geom.xfb.rast.line_strip_with_adjacency.pgq_default_xfb_1.single_draw,Fail
+
+# 1.3.3.0 uprev:
+# Direct leak of 1888 byte(s) in 2 object(s) allocated from:
+#     #0 0x7fcd07a72e8f in __interceptor_malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:145
+#     #1 0x7fcd02430bfd in vk_alloc ../src/vulkan/util/vk_alloc.h:48
+#     #2 0x7fcd02430bfd in vk_zalloc ../src/vulkan/util/vk_alloc.h:56
+#     #3 0x7fcd02430bfd in lvp_CreatePipelineLayout ../src/gallium/frontends/lavapipe/lvp_descriptor_set.c:261
+#     #4 0x55cd57134e08  (/deqp/external/vulkancts/modules/vulkan/deqp-vk+0x226be08)
+#
+# Indirect leak of 376 byte(s) in 1 object(s) allocated from:
+#     #0 0x7fcd07a72e8f in __interceptor_malloc ../../../../src/libsanitizer/asan/asan_malloc_linux.cpp:145
+#     #1 0x7fcd0242f0c0 in vk_alloc ../src/vulkan/util/vk_alloc.h:48
+#     #2 0x7fcd0242f0c0 in vk_zalloc ../src/vulkan/util/vk_alloc.h:56
+#     #3 0x7fcd0242f0c0 in lvp_CreateDescriptorSetLayout ../src/gallium/frontends/lavapipe/lvp_descriptor_set.c:65
+#     #4 0x55cd57134f28  (/deqp/external/vulkancts/modules/vulkan/deqp-vk+0x226bf28)
+dEQP-VK.transform_feedback.primitives_generated_query.copy.host_reset.pgq_32bit_xfb_64bit.geom.xfb.rast.point_list.pgq_0_xfb_1.single_draw,Fail
+dEQP-VK.transform_feedback.primitives_generated_query.copy.queue_reset.pgq_32bit_xfb_64bit.geom.xfb.no_rast.line_strip.pgq_default_xfb_0.single_draw,Fail
+dEQP-VK.transform_feedback.primitives_generated_query.get.host_reset.64bit.geom.xfb.rast.triangle_fan.pgq_default_xfb_1.single_draw,Fail
+dEQP-VK.transform_feedback.primitives_generated_query.get.queue_reset.64bit.geom.xfb.no_rast.line_list_with_adjacency.pgq_1_xfb_0.single_draw,Fail

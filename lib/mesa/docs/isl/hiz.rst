@@ -11,7 +11,7 @@ From the Sandy Bridge PRM Vol. 2, Pt. 1, 7.5.3 "Hierarchical Depth Buffer" (p.
 312):
 
    The hierarchical depth buffer does not support the LOD field, it is assumed
-   by hardware to be zero. A separate hierarachical depth buffer is required
+   by hardware to be zero. A separate hierarchical depth buffer is required
    for each LOD used, and the corresponding buffer’s state delivered to
    hardware each time a new depth buffer state with modified LOD is delivered.
 
@@ -23,7 +23,7 @@ with HiZ.
 As stated in the PRM, this means we need a separate HiZ or stencil buffer for
 each LOD.  However, it's not quite as simple as that.  If you ignore layered
 rendering, things are pretty straightforward: you need one HiZ surface for each
-main surface slice With layered, rendering, however, we have to be a bit more
+main surface slice. With layered rendering, however, we have to be a bit more
 clever because we need a "real" array surface at each LOD.  ISL solves this
 with a special miptree layout for layered rendering
 :cpp:enumerator:`isl_dim_layout::ISL_DIM_LAYOUT_GFX6_STENCIL_HIZ` which lays

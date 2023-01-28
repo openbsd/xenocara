@@ -261,7 +261,8 @@ fast_clear_color(struct iris_context *ice,
                               (devinfo->verx10 == 120 ?
                                  PIPE_CONTROL_DEPTH_STALL : 0) |
                               (devinfo->verx10 == 125 ?
-                                 PIPE_CONTROL_FLUSH_HDC : 0) |
+                                 PIPE_CONTROL_FLUSH_HDC |
+                                 PIPE_CONTROL_DATA_CACHE_FLUSH : 0) |
                               PIPE_CONTROL_PSS_STALL_SYNC);
 
    iris_batch_sync_region_start(batch);
@@ -404,7 +405,7 @@ can_fast_clear_depth(struct iris_context *ice,
       return false;
    }
 
-   if (!iris_resource_level_has_hiz(res, level))
+   if (!iris_resource_level_has_hiz(devinfo, res, level))
       return false;
 
    if (!blorp_can_hiz_clear_depth(devinfo, &res->surf, res->aux.usage,

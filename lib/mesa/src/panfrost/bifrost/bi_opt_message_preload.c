@@ -96,7 +96,7 @@ bi_opt_message_preload(bi_context *ctx)
         bi_builder b = bi_init_builder(ctx, bi_before_nonempty_block(block));
 
         bi_foreach_instr_in_block_safe(block, I) {
-                if (!bi_is_ssa(I->dest[0])) continue;
+                if (I->nr_dests != 1) continue;
 
                 struct bifrost_message_preload msg;
 
@@ -124,12 +124,23 @@ bi_opt_message_preload(bi_context *ctx)
                 /* Report the preloading */
                 ctx->info.bifrost->messages[nr_preload] = msg;
 
-                /* Replace with moves at the start. Ideally, they will be
-                 * coalesced out or copy propagated.
+                /* Replace with a collect of preloaded registers. The collect
+                 * kills the moves, so the collect is free (it is coalesced).
                  */
-                for (unsigned i = 0; i < bi_count_write_registers(I, 0); ++i) {
-                        bi_mov_i32_to(&b, bi_word(I->dest[0], i),
-                                          bi_register((nr_preload * 4) + i));
+                b.cursor = bi_before_instr(I);
+
+                unsigned nr = bi_count_write_registers(I, 0);
+                bi_instr *collect = bi_collect_i32_to(&b, I->dest[0], nr);
+
+                /* The registers themselves must be preloaded at the start of
+                 * the program. Preloaded registers are coalesced, so these
+                 * moves are free.
+                 */
+                b.cursor = bi_before_block(block);
+                bi_foreach_src(collect, i) {
+                        unsigned reg = (nr_preload * 4) + i;
+
+                        collect->src[i] = bi_mov_i32(&b, bi_register(reg));
                 }
 
                 bi_remove_instruction(I);

@@ -645,19 +645,32 @@ get_instruction_priority(const struct v3d_device_info *devinfo,
                 return next_score;
         next_score++;
 
+        /* Empirical testing shows that using priorities to hide latency of
+         * TMU operations when scheduling QPU leads to slightly worse
+         * performance, even at 2 threads. We think this is because the thread
+         * switching is already quite effective at hiding latency and NIR
+         * scheduling (and possibly TMU pipelining too) are sufficient to hide
+         * TMU latency, so piling up on that here doesn't provide any benefits
+         * and instead may cause us to postpone critical paths that depend on
+         * the TMU results.
+         */
+#if 0
         /* Schedule texture read results collection late to hide latency. */
         if (v3d_qpu_waits_on_tmu(inst))
                 return next_score;
         next_score++;
+#endif
 
         /* Default score for things that aren't otherwise special. */
         baseline_score = next_score;
         next_score++;
 
+#if 0
         /* Schedule texture read setup early to hide their latency better. */
         if (v3d_qpu_writes_tmu(devinfo, inst))
                 return next_score;
         next_score++;
+#endif
 
         /* We should increase the maximum if we assert here */
         assert(next_score < MAX_SCHEDULE_PRIORITY);
@@ -1313,6 +1326,12 @@ update_scoreboard_for_chosen(struct choose_scoreboard *scoreboard,
                 }
         }
 
+        if (v3d_qpu_sig_writes_address(devinfo, &inst->sig) && inst->sig_magic) {
+                update_scoreboard_for_magic_waddr(scoreboard,
+                                                  inst->sig_addr,
+                                                  devinfo);
+        }
+
         if (inst->sig.ldvary)
                 scoreboard->last_ldvary_tick = scoreboard->tick;
 }
@@ -1932,6 +1951,14 @@ emit_branch(struct v3d_compile *c,
                 if (scoreboard->last_unifa_write_tick + 3 >=
                     branch_tick - slots_filled - 1) {
                         break;
+                }
+
+                /* Do not move up a branch if it can disrupt an ldvary sequence
+                 * as that can cause stomping of the r5 register.
+                 */
+                if (scoreboard->last_ldvary_tick + 2 >=
+                    branch_tick - slots_filled) {
+                       break;
                 }
 
                 /* Can't move a conditional branch before the instruction

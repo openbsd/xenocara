@@ -104,7 +104,7 @@ fd4_sampler_state_create(struct pipe_context *pctx,
    so->texsamp1 =
       //		COND(miplinear, A4XX_TEX_SAMP_1_MIPFILTER_LINEAR_FAR) |
       COND(!cso->seamless_cube_map, A4XX_TEX_SAMP_1_CUBEMAPSEAMLESSFILTOFF) |
-      COND(!cso->normalized_coords, A4XX_TEX_SAMP_1_UNNORM_COORDS);
+      COND(cso->unnormalized_coords, A4XX_TEX_SAMP_1_UNNORM_COORDS);
 
    if (cso->min_mip_filter != PIPE_TEX_MIPFILTER_NONE) {
       so->texsamp1 |= A4XX_TEX_SAMP_1_MIN_LOD(cso->min_lod) |
@@ -250,7 +250,7 @@ fd4_set_sampler_views(struct pipe_context *pctx, enum pipe_shader_type shader,
    } else if (shader == PIPE_SHADER_COMPUTE) {
       sampler_swizzles = fd4_ctx->csampler_swizzles;
    } else {
-      debug_assert(0);
+      assert(0);
       sampler_swizzles = fd4_ctx->csampler_swizzles;
    }
 
@@ -279,7 +279,7 @@ fd4_set_sampler_views(struct pipe_context *pctx, enum pipe_shader_type shader,
                sampler_swizzles[start + i] |= 0x4000;
                break;
             default:
-               debug_assert(0);
+               assert(0);
             }
          }
       }

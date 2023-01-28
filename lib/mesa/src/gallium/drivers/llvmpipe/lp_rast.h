@@ -75,6 +75,7 @@ struct lp_rasterizer_task;
 
 extern const float lp_sample_pos_4x[4][2];
 
+
 /**
  * Rasterization state.
  * Objects of this type are put into the shared data bin and pointed
@@ -85,7 +86,7 @@ struct lp_rast_state {
     * the fragment shader, such as blend color and alpha ref value.
     */
    struct lp_jit_context jit_context;
-   
+
    /* The shader itself.  Probably we also need to pass a pointer to
     * the tile color/z/stencil data somehow
      */
@@ -119,6 +120,7 @@ struct lp_rast_shader_inputs {
    /* followed by a0, dadx, dady and planes[] */
 };
 
+
 struct lp_rast_plane {
    /* edge function values at minx,miny ?? */
    int64_t c;
@@ -135,6 +137,7 @@ struct lp_rast_plane {
     */
    uint32_t pad;
 };
+
 
 /**
  * Rasterization information for a triangle known to be in this bin,
@@ -186,25 +189,58 @@ struct lp_rast_clear_rb {
 };
 
 
-#define GET_A0(inputs) ((float (*)[4])((inputs)+1))
-#define GET_DADX(inputs) ((float (*)[4])((char *)((inputs) + 1) + (inputs)->stride))
-#define GET_DADY(inputs) ((float (*)[4])((char *)((inputs) + 1) + 2 * (inputs)->stride))
-#define GET_PLANES(tri) ((struct lp_rast_plane *)((char *)(&(tri)->inputs + 1) + 3 * (tri)->inputs.stride))
+/*
+ * Return the address (as float[][4]) of the FS input values which
+ * are immediately after the 'inputs' object.
+ */
+static inline float(*
+GET_A0(const struct lp_rast_shader_inputs *inputs))[4]
+{
+   return (float (*)[4]) (inputs + 1);
+}
 
+/*
+ * Return the address (as float[][4]) of the FS input partial derivatives
+ * (w.r.t. X) which are after the 'inputs' object.
+ */
+static inline float(*
+GET_DADX(const struct lp_rast_shader_inputs *inputs))[4]
+{
+   const uint8_t *p = (const uint8_t *) (inputs + 1);
+   return (float (*)[4]) (p + 1 * inputs->stride);
+}
+
+/*
+ * Return the address (as float[][4]) of the FS input partial derivatives
+ * (w.r.t. Y) which are after the 'inputs' object.
+ */
+static inline float(*
+GET_DADY(const struct lp_rast_shader_inputs *inputs))[4]
+{
+   const uint8_t *p = (const uint8_t *) (inputs + 1);
+   return (float (*)[4]) (p + 2 * inputs->stride);
+}
+
+static inline struct lp_rast_plane *
+GET_PLANES(const struct lp_rast_triangle *tri)
+{
+   const uint8_t *p = (const uint8_t *) (&tri->inputs + 1);
+   return (struct lp_rast_plane *) (p + 3 * tri->inputs.stride);
+}
 
 
 struct lp_rasterizer *
-lp_rast_create( unsigned num_threads );
+lp_rast_create(unsigned num_threads);
 
 void
-lp_rast_destroy( struct lp_rasterizer * );
-
-void 
-lp_rast_queue_scene( struct lp_rasterizer *rast,
-                     struct lp_scene *scene );
+lp_rast_destroy(struct lp_rasterizer *);
 
 void
-lp_rast_finish( struct lp_rasterizer *rast );
+lp_rast_queue_scene(struct lp_rasterizer *rast,
+                     struct lp_scene *scene);
+
+void
+lp_rast_finish(struct lp_rasterizer *rast);
 
 
 union lp_rast_cmd_arg {
@@ -220,7 +256,6 @@ union lp_rast_cmd_arg {
       uint64_t value;
       uint64_t mask;
    } clear_zstencil;
-   const struct lp_rast_state *state;
    struct lp_fence *fence;
    struct llvmpipe_query *query_obj;
 };
@@ -229,15 +264,16 @@ union lp_rast_cmd_arg {
 /* Cast wrappers.  Hopefully these compile to noops!
  */
 static inline union lp_rast_cmd_arg
-lp_rast_arg_inputs( const struct lp_rast_shader_inputs *shade_tile )
+lp_rast_arg_inputs(const struct lp_rast_shader_inputs *shade_tile)
 {
    union lp_rast_cmd_arg arg;
    arg.shade_tile = shade_tile;
    return arg;
 }
 
+
 static inline union lp_rast_cmd_arg
-lp_rast_arg_triangle( const struct lp_rast_triangle *triangle,
+lp_rast_arg_triangle(const struct lp_rast_triangle *triangle,
                       unsigned plane_mask)
 {
    union lp_rast_cmd_arg arg;
@@ -246,6 +282,7 @@ lp_rast_arg_triangle( const struct lp_rast_triangle *triangle,
    return arg;
 }
 
+
 /**
  * Build argument for a contained triangle.
  *
@@ -253,7 +290,7 @@ lp_rast_arg_triangle( const struct lp_rast_triangle *triangle,
  * left coordinates of the a block that fully encloses the triangle.
  */
 static inline union lp_rast_cmd_arg
-lp_rast_arg_triangle_contained( const struct lp_rast_triangle *triangle,
+lp_rast_arg_triangle_contained(const struct lp_rast_triangle *triangle,
                                 unsigned x, unsigned y)
 {
    union lp_rast_cmd_arg arg;
@@ -262,24 +299,27 @@ lp_rast_arg_triangle_contained( const struct lp_rast_triangle *triangle,
    return arg;
 }
 
+
 static inline union lp_rast_cmd_arg
-lp_rast_arg_rectangle( const struct lp_rast_rectangle *rectangle )
+lp_rast_arg_rectangle(const struct lp_rast_rectangle *rectangle)
 {
    union lp_rast_cmd_arg arg;
    arg.rectangle = rectangle;
    return arg;
 }
 
+
 static inline union lp_rast_cmd_arg
-lp_rast_arg_state( const struct lp_rast_state *state )
+lp_rast_arg_state(const struct lp_rast_state *state)
 {
    union lp_rast_cmd_arg arg;
    arg.set_state = state;
    return arg;
 }
 
+
 static inline union lp_rast_cmd_arg
-lp_rast_arg_fence( struct lp_fence *fence )
+lp_rast_arg_fence(struct lp_fence *fence)
 {
    union lp_rast_cmd_arg arg;
    arg.fence = fence;
@@ -288,7 +328,7 @@ lp_rast_arg_fence( struct lp_fence *fence )
 
 
 static inline union lp_rast_cmd_arg
-lp_rast_arg_clearzs( uint64_t value, uint64_t mask )
+lp_rast_arg_clearzs(uint64_t value, uint64_t mask)
 {
    union lp_rast_cmd_arg arg;
    arg.clear_zstencil.value = value;
@@ -298,15 +338,16 @@ lp_rast_arg_clearzs( uint64_t value, uint64_t mask )
 
 
 static inline union lp_rast_cmd_arg
-lp_rast_arg_query( struct llvmpipe_query *pq )
+lp_rast_arg_query(struct llvmpipe_query *pq)
 {
    union lp_rast_cmd_arg arg;
    arg.query_obj = pq;
    return arg;
 }
 
+
 static inline union lp_rast_cmd_arg
-lp_rast_arg_null( void )
+lp_rast_arg_null(void)
 {
    union lp_rast_cmd_arg arg;
    arg.set_state = NULL;
@@ -319,52 +360,53 @@ lp_rast_arg_null( void )
  * These get put into bins by the setup code and are called when
  * the bins are executed.
  */
-#define LP_RAST_OP_CLEAR_COLOR       0x0
-#define LP_RAST_OP_CLEAR_ZSTENCIL    0x1
-#define LP_RAST_OP_TRIANGLE_1        0x2
-#define LP_RAST_OP_TRIANGLE_2        0x3
-#define LP_RAST_OP_TRIANGLE_3        0x4
-#define LP_RAST_OP_TRIANGLE_4        0x5
-#define LP_RAST_OP_TRIANGLE_5        0x6
-#define LP_RAST_OP_TRIANGLE_6        0x7
-#define LP_RAST_OP_TRIANGLE_7        0x8
-#define LP_RAST_OP_TRIANGLE_8        0x9
-#define LP_RAST_OP_TRIANGLE_3_4      0xa
-#define LP_RAST_OP_TRIANGLE_3_16     0xb
-#define LP_RAST_OP_TRIANGLE_4_16     0xc
-#define LP_RAST_OP_SHADE_TILE        0xd
-#define LP_RAST_OP_SHADE_TILE_OPAQUE 0xe
-#define LP_RAST_OP_BEGIN_QUERY       0xf
-#define LP_RAST_OP_END_QUERY         0x10
-#define LP_RAST_OP_SET_STATE         0x11
-#define LP_RAST_OP_TRIANGLE_32_1     0x12
-#define LP_RAST_OP_TRIANGLE_32_2     0x13
-#define LP_RAST_OP_TRIANGLE_32_3     0x14
-#define LP_RAST_OP_TRIANGLE_32_4     0x15
-#define LP_RAST_OP_TRIANGLE_32_5     0x16
-#define LP_RAST_OP_TRIANGLE_32_6     0x17
-#define LP_RAST_OP_TRIANGLE_32_7     0x18
-#define LP_RAST_OP_TRIANGLE_32_8     0x19
-#define LP_RAST_OP_TRIANGLE_32_3_4   0x1a
-#define LP_RAST_OP_TRIANGLE_32_3_16  0x1b
-#define LP_RAST_OP_TRIANGLE_32_4_16  0x1c
+enum lp_rast_op {
+  LP_RAST_OP_CLEAR_COLOR =       0x0,
+  LP_RAST_OP_CLEAR_ZSTENCIL =    0x1,
+  LP_RAST_OP_TRIANGLE_1 =        0x2,
+  LP_RAST_OP_TRIANGLE_2 =        0x3,
+  LP_RAST_OP_TRIANGLE_3 =        0x4,
+  LP_RAST_OP_TRIANGLE_4 =        0x5,
+  LP_RAST_OP_TRIANGLE_5 =        0x6,
+  LP_RAST_OP_TRIANGLE_6 =        0x7,
+  LP_RAST_OP_TRIANGLE_7 =        0x8,
+  LP_RAST_OP_TRIANGLE_8 =        0x9,
+  LP_RAST_OP_TRIANGLE_3_4 =      0xa,
+  LP_RAST_OP_TRIANGLE_3_16 =     0xb,
+  LP_RAST_OP_TRIANGLE_4_16 =     0xc,
+  LP_RAST_OP_SHADE_TILE =        0xd,
+  LP_RAST_OP_SHADE_TILE_OPAQUE = 0xe,
+  LP_RAST_OP_BEGIN_QUERY =       0xf,
+  LP_RAST_OP_END_QUERY =         0x10,
+  LP_RAST_OP_SET_STATE =         0x11,
+  LP_RAST_OP_TRIANGLE_32_1 =     0x12,
+  LP_RAST_OP_TRIANGLE_32_2 =     0x13,
+  LP_RAST_OP_TRIANGLE_32_3 =     0x14,
+  LP_RAST_OP_TRIANGLE_32_4 =     0x15,
+  LP_RAST_OP_TRIANGLE_32_5 =     0x16,
+  LP_RAST_OP_TRIANGLE_32_6 =     0x17,
+  LP_RAST_OP_TRIANGLE_32_7 =     0x18,
+  LP_RAST_OP_TRIANGLE_32_8 =     0x19,
+  LP_RAST_OP_TRIANGLE_32_3_4 =   0x1a,
+  LP_RAST_OP_TRIANGLE_32_3_16 =  0x1b,
+  LP_RAST_OP_TRIANGLE_32_4_16 =  0x1c,
+  LP_RAST_OP_MS_TRIANGLE_1 =     0x1d,
+  LP_RAST_OP_MS_TRIANGLE_2 =     0x1e,
+  LP_RAST_OP_MS_TRIANGLE_3 =     0x1f,
+  LP_RAST_OP_MS_TRIANGLE_4 =     0x20,
+  LP_RAST_OP_MS_TRIANGLE_5 =     0x21,
+  LP_RAST_OP_MS_TRIANGLE_6 =     0x22,
+  LP_RAST_OP_MS_TRIANGLE_7 =     0x23,
+  LP_RAST_OP_MS_TRIANGLE_8 =     0x24,
+  LP_RAST_OP_MS_TRIANGLE_3_4 =   0x25,
+  LP_RAST_OP_MS_TRIANGLE_3_16 =  0x26,
+  LP_RAST_OP_MS_TRIANGLE_4_16 =  0x27,
+  LP_RAST_OP_RECTANGLE =         0x28,  /* Keep at end */
+  LP_RAST_OP_BLIT =              0x29,  /* Keep at end */
+  LP_RAST_OP_MAX =               0x2a,
+  LP_RAST_OP_MASK =              0xff
+};
 
-#define LP_RAST_OP_MS_TRIANGLE_1     0x1d
-#define LP_RAST_OP_MS_TRIANGLE_2     0x1e
-#define LP_RAST_OP_MS_TRIANGLE_3     0x1f
-#define LP_RAST_OP_MS_TRIANGLE_4     0x20
-#define LP_RAST_OP_MS_TRIANGLE_5     0x21
-#define LP_RAST_OP_MS_TRIANGLE_6     0x22
-#define LP_RAST_OP_MS_TRIANGLE_7     0x23
-#define LP_RAST_OP_MS_TRIANGLE_8     0x24
-#define LP_RAST_OP_MS_TRIANGLE_3_4   0x25
-#define LP_RAST_OP_MS_TRIANGLE_3_16  0x26
-#define LP_RAST_OP_MS_TRIANGLE_4_16  0x27
-#define LP_RAST_OP_RECTANGLE         0x28  /* Keep at end */
-#define LP_RAST_OP_BLIT              0x29  /* Keep at end */
-
-#define LP_RAST_OP_MAX               0x2a
-#define LP_RAST_OP_MASK              0xff
 
 /* Returned by characterize_bin:
  */
@@ -374,7 +416,7 @@ lp_rast_arg_null( void )
 #define LP_RAST_FLAGS_BLIT           (0x8)
 
 struct lp_bin_info {
-   unsigned type:8;
+   unsigned type:8;    // bitmask of LP_RAST_FLAGS_x
    unsigned count:24;
 };
 
@@ -382,12 +424,16 @@ struct lp_bin_info
 lp_characterize_bin(const struct cmd_bin *bin);
 
 void
-lp_debug_bins( struct lp_scene *scene );
-void
-lp_debug_draw_bins_by_cmd_length( struct lp_scene *scene );
-void
-lp_debug_draw_bins_by_coverage( struct lp_scene *scene );
+lp_debug_bins(struct lp_scene *scene);
 
-void lp_rast_fence(struct lp_rasterizer *rast,
-                   struct lp_fence **fence);
+void
+lp_debug_draw_bins_by_cmd_length(struct lp_scene *scene);
+
+void
+lp_debug_draw_bins_by_coverage(struct lp_scene *scene);
+
+void
+lp_rast_fence(struct lp_rasterizer *rast,
+              struct lp_fence **fence);
+
 #endif

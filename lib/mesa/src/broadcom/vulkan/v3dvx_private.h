@@ -75,6 +75,9 @@ v3dX(job_emit_binning_prolog)(struct v3dv_job *job,
                               uint32_t layers);
 
 void
+v3dX(job_emit_enable_double_buffer)(struct v3dv_job *job);
+
+void
 v3dX(cmd_buffer_execute_inside_pass)(struct v3dv_cmd_buffer *primary,
                                      uint32_t cmd_buffer_count,
                                      const VkCommandBuffer *cmd_buffers);
@@ -190,14 +193,14 @@ v3dX(meta_emit_copy_image_to_buffer_rcl)(struct v3dv_job *job,
                                          struct v3dv_buffer *buffer,
                                          struct v3dv_image *image,
                                          struct v3dv_meta_framebuffer *framebuffer,
-                                         const VkBufferImageCopy2KHR *region);
+                                         const VkBufferImageCopy2 *region);
 
 void
 v3dX(meta_emit_resolve_image_rcl)(struct v3dv_job *job,
                                   struct v3dv_image *dst,
                                   struct v3dv_image *src,
                                   struct v3dv_meta_framebuffer *framebuffer,
-                                  const VkImageResolve2KHR *region);
+                                  const VkImageResolve2 *region);
 
 void
 v3dX(meta_emit_copy_buffer)(struct v3dv_job *job,
@@ -224,7 +227,7 @@ v3dX(meta_emit_copy_image_rcl)(struct v3dv_job *job,
                                struct v3dv_image *dst,
                                struct v3dv_image *src,
                                struct v3dv_meta_framebuffer *framebuffer,
-                               const VkImageCopy2KHR *region);
+                               const VkImageCopy2 *region);
 
 void
 v3dX(meta_emit_tfu_job)(struct v3dv_cmd_buffer *cmd_buffer,
@@ -264,7 +267,7 @@ v3dX(meta_emit_copy_buffer_to_image_rcl)(struct v3dv_job *job,
                                          struct v3dv_image *image,
                                          struct v3dv_buffer *buffer,
                                          struct v3dv_meta_framebuffer *framebuffer,
-                                         const VkBufferImageCopy2KHR *region);
+                                         const VkBufferImageCopy2 *region);
 
 void
 v3dX(get_internal_type_bpp_for_image_aspects)(VkFormat vk_format,
@@ -278,7 +281,7 @@ v3dX(meta_copy_buffer)(struct v3dv_cmd_buffer *cmd_buffer,
                        uint32_t dst_offset,
                        struct v3dv_bo *src,
                        uint32_t src_offset,
-                       const VkBufferCopy2KHR *region);
+                       const VkBufferCopy2 *region);
 
 void
 v3dX(meta_fill_buffer)(struct v3dv_cmd_buffer *cmd_buffer,

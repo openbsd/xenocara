@@ -391,7 +391,7 @@ fd_submit_sp_destroy(struct fd_submit *submit)
 
    _mesa_hash_table_destroy(fd_submit->bo_table, NULL);
 
-   // TODO it would be nice to have a way to debug_assert() if all
+   // TODO it would be nice to have a way to assert() if all
    // rb's haven't been free'd back to the slab, because that is
    // an indication that we are leaking bo's
    slab_destroy_child(&fd_submit->ring_pool);
@@ -445,7 +445,7 @@ fd_pipe_sp_ringpool_fini(struct fd_pipe *pipe)
 static void
 finalize_current_cmd(struct fd_ringbuffer *ring)
 {
-   debug_assert(!(ring->flags & _FD_RINGBUFFER_OBJECT));
+   assert(!(ring->flags & _FD_RINGBUFFER_OBJECT));
 
    struct fd_ringbuffer_sp *fd_ring = to_fd_ringbuffer_sp(ring);
    APPEND(&fd_ring->u, cmds,
@@ -461,7 +461,7 @@ fd_ringbuffer_sp_grow(struct fd_ringbuffer *ring, uint32_t size)
    struct fd_ringbuffer_sp *fd_ring = to_fd_ringbuffer_sp(ring);
    struct fd_pipe *pipe = fd_ring->u.submit->pipe;
 
-   debug_assert(ring->flags & FD_RINGBUFFER_GROWABLE);
+   assert(ring->flags & FD_RINGBUFFER_GROWABLE);
 
    finalize_current_cmd(ring);
 
@@ -484,6 +484,35 @@ fd_ringbuffer_references_bo(struct fd_ringbuffer *ring, struct fd_bo *bo)
          return true;
    }
    return false;
+}
+
+static void
+fd_ringbuffer_sp_emit_bo_nonobj(struct fd_ringbuffer *ring, struct fd_bo *bo)
+{
+   assert(!(ring->flags & _FD_RINGBUFFER_OBJECT));
+
+   struct fd_ringbuffer_sp *fd_ring = to_fd_ringbuffer_sp(ring);
+   struct fd_submit_sp *fd_submit = to_fd_submit_sp(fd_ring->u.submit);
+
+   fd_submit_append_bo(fd_submit, bo);
+}
+
+static void
+fd_ringbuffer_sp_emit_bo_obj(struct fd_ringbuffer *ring, struct fd_bo *bo)
+{
+   assert(ring->flags & _FD_RINGBUFFER_OBJECT);
+
+   struct fd_ringbuffer_sp *fd_ring = to_fd_ringbuffer_sp(ring);
+
+   /* Avoid emitting duplicate BO references into the list.  Ringbuffer
+    * objects are long-lived, so this saves ongoing work at draw time in
+    * exchange for a bit at context setup/first draw.  And the number of
+    * relocs per ringbuffer object is fairly small, so the O(n^2) doesn't
+    * hurt much.
+    */
+   if (!fd_ringbuffer_references_bo(ring, bo)) {
+      APPEND(&fd_ring->u, reloc_bos, fd_bo_ref(bo));
+   }
 }
 
 #define PTRSZ 64
@@ -543,6 +572,7 @@ fd_ringbuffer_sp_destroy(struct fd_ringbuffer *ring)
 
 static const struct fd_ringbuffer_funcs ring_funcs_nonobj_32 = {
    .grow = fd_ringbuffer_sp_grow,
+   .emit_bo = fd_ringbuffer_sp_emit_bo_nonobj,
    .emit_reloc = fd_ringbuffer_sp_emit_reloc_nonobj_32,
    .emit_reloc_ring = fd_ringbuffer_sp_emit_reloc_ring_32,
    .cmd_count = fd_ringbuffer_sp_cmd_count,
@@ -552,6 +582,7 @@ static const struct fd_ringbuffer_funcs ring_funcs_nonobj_32 = {
 
 static const struct fd_ringbuffer_funcs ring_funcs_obj_32 = {
    .grow = fd_ringbuffer_sp_grow,
+   .emit_bo = fd_ringbuffer_sp_emit_bo_obj,
    .emit_reloc = fd_ringbuffer_sp_emit_reloc_obj_32,
    .emit_reloc_ring = fd_ringbuffer_sp_emit_reloc_ring_32,
    .cmd_count = fd_ringbuffer_sp_cmd_count,
@@ -560,6 +591,7 @@ static const struct fd_ringbuffer_funcs ring_funcs_obj_32 = {
 
 static const struct fd_ringbuffer_funcs ring_funcs_nonobj_64 = {
    .grow = fd_ringbuffer_sp_grow,
+   .emit_bo = fd_ringbuffer_sp_emit_bo_nonobj,
    .emit_reloc = fd_ringbuffer_sp_emit_reloc_nonobj_64,
    .emit_reloc_ring = fd_ringbuffer_sp_emit_reloc_ring_64,
    .cmd_count = fd_ringbuffer_sp_cmd_count,
@@ -569,6 +601,7 @@ static const struct fd_ringbuffer_funcs ring_funcs_nonobj_64 = {
 
 static const struct fd_ringbuffer_funcs ring_funcs_obj_64 = {
    .grow = fd_ringbuffer_sp_grow,
+   .emit_bo = fd_ringbuffer_sp_emit_bo_obj,
    .emit_reloc = fd_ringbuffer_sp_emit_reloc_obj_64,
    .emit_reloc_ring = fd_ringbuffer_sp_emit_reloc_ring_64,
    .cmd_count = fd_ringbuffer_sp_cmd_count,
@@ -581,7 +614,7 @@ fd_ringbuffer_sp_init(struct fd_ringbuffer_sp *fd_ring, uint32_t size,
 {
    struct fd_ringbuffer *ring = &fd_ring->base;
 
-   debug_assert(fd_ring->ring_bo);
+   assert(fd_ring->ring_bo);
 
    uint8_t *base = fd_bo_map(fd_ring->ring_bo);
    ring->start = (void *)(base + fd_ring->offset);

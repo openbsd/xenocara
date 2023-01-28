@@ -161,6 +161,8 @@ void IntelDriver::enable_perfcnt(uint64_t sampling_period_ns)
 {
    this->sampling_period_ns = sampling_period_ns;
 
+   intel_gem_read_render_timestamp(drm_device.fd, &gpu_timestamp_udw);
+   gpu_timestamp_udw &= ~perf->cfg->oa_timestamp_mask;
    if (!perf->open(sampling_period_ns, selected_query)) {
       PPS_LOG_FATAL("Failed to open intel perf");
    }
@@ -212,10 +214,13 @@ std::vector<PerfRecord> IntelDriver::parse_perf_records(const std::vector<uint8_
           * do it now. If we see a roll over the lower 32bits capture it
           * again.
           */
-         if (gpu_timestamp_udw == 0 || (gpu_timestamp_udw + gpu_timestamp_ldw) < last_gpu_timestamp)
-            gpu_timestamp_udw = intel_read_gpu_timestamp(drm_device.fd) & 0xffffffff00000000;
+         if (gpu_timestamp_udw == 0 ||
+             (gpu_timestamp_udw | gpu_timestamp_ldw) < last_gpu_timestamp) {
+            intel_gem_read_render_timestamp(drm_device.fd, &gpu_timestamp_udw);
+            gpu_timestamp_udw &= ~perf->cfg->oa_timestamp_mask;
+         }
 
-         uint64_t gpu_timestamp = gpu_timestamp_udw + gpu_timestamp_ldw;
+         uint64_t gpu_timestamp = gpu_timestamp_udw | gpu_timestamp_ldw;
 
          auto duration = intel_device_info_timebase_scale(&perf->devinfo,
                                                           gpu_timestamp - prev_gpu_timestamp);
@@ -301,7 +306,6 @@ uint64_t IntelDriver::gpu_next()
 
    intel_perf_query_result_accumulate_fields(&perf->result,
                                              selected_query,
-                                             &perf->devinfo,
                                              record_a + 1,
                                              record_b + 1,
                                              false /* no_oa_accumulate */);
@@ -329,8 +333,9 @@ uint32_t IntelDriver::gpu_clock_id() const
 
 uint64_t IntelDriver::gpu_timestamp() const
 {
-   return intel_device_info_timebase_scale(&perf->devinfo,
-                                           intel_read_gpu_timestamp(drm_device.fd));
+   uint64_t timestamp;
+   intel_gem_read_render_timestamp(drm_device.fd, &timestamp);
+   return intel_device_info_timebase_scale(&perf->devinfo, timestamp);
 }
 
 } // namespace pps

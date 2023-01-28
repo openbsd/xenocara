@@ -31,14 +31,10 @@
 
 #include "nir.h"
 
-#ifndef _WIN32
-#include <wsl/winadapter.h>
-#endif
-
-#define D3D12_IGNORE_SDK_LAYERS
-#include <directx/d3d12.h>
+#include "d3d12_common.h"
 
 struct pb_manager;
+struct util_dl_library;
 
 enum resource_dimension
 {
@@ -64,9 +60,15 @@ struct d3d12_memory_info {
 struct d3d12_screen {
    struct pipe_screen base;
    struct sw_winsys *winsys;
+   LUID adapter_luid;
+   char driver_uuid[PIPE_UUID_SIZE];
+   char device_uuid[PIPE_UUID_SIZE];
 
+   util_dl_library *d3d12_mod;
    ID3D12Device3 *dev;
    ID3D12CommandQueue *cmdqueue;
+   bool (*init)(struct d3d12_screen *screen);
+   void (*deinit)(struct d3d12_screen *screen);
    void (*get_memory_info)(struct d3d12_screen *screen, struct d3d12_memory_info *output);
 
    mtx_t submit_mutex;
@@ -77,10 +79,14 @@ struct d3d12_screen {
    ID3D12Fence *residency_fence;
    uint64_t residency_fence_value;
 
+   struct list_head context_list;
+
    struct slab_parent_pool transfer_pool;
    struct pb_manager *bufmgr;
    struct pb_manager *cache_bufmgr;
+   struct pb_manager *slab_cache_bufmgr;
    struct pb_manager *slab_bufmgr;
+   struct pb_manager *readback_slab_cache_bufmgr;
    struct pb_manager *readback_slab_bufmgr;
 
    mtx_t descriptor_pool_mutex;
@@ -93,9 +99,11 @@ struct d3d12_screen {
    struct d3d12_descriptor_handle null_rtv;
 
    volatile uint32_t ctx_count;
+   volatile uint64_t resource_id_generator;
 
    /* capabilities */
    D3D_FEATURE_LEVEL max_feature_level;
+   D3D_SHADER_MODEL max_shader_model;
    D3D12_FEATURE_DATA_ARCHITECTURE architecture;
    D3D12_FEATURE_DATA_D3D12_OPTIONS opts;
    D3D12_FEATURE_DATA_D3D12_OPTIONS1 opts1;
@@ -107,6 +115,9 @@ struct d3d12_screen {
 
    /* description */
    uint32_t vendor_id;
+   uint32_t device_id;
+   uint32_t subsys_id;
+   uint32_t revision;
    uint64_t driver_version;
    uint64_t memory_size_megabytes;
    double timestamp_multiplier;
@@ -150,6 +161,15 @@ d3d12_dxcore_screen(struct d3d12_screen *screen)
 }
 
 bool
-d3d12_init_screen(struct d3d12_screen *screen, struct sw_winsys *winsys, IUnknown *adapter);
+d3d12_init_screen_base(struct d3d12_screen *screen, struct sw_winsys *winsys, LUID *adapter_luid);
+
+bool
+d3d12_init_screen(struct d3d12_screen *screen, IUnknown *adapter);
+
+void
+d3d12_deinit_screen(struct d3d12_screen *screen);
+
+void
+d3d12_destroy_screen(struct d3d12_screen *screen);
 
 #endif

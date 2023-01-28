@@ -76,10 +76,15 @@ wglCreateContextAttribsARB(HDC hDC, HGLRC hShareContext, const int *attribList)
    int majorVersion = 1, minorVersion = 0, layerPlane = 0;
    int contextFlags = 0x0;
    int profileMask = WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
+   int resetStrategy = WGL_NO_RESET_NOTIFICATION_ARB;
    int i;
    BOOL done = FALSE;
    const int contextFlagsAll = (WGL_CONTEXT_DEBUG_BIT_ARB |
-                                WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB);
+                                WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB |
+                                WGL_CONTEXT_ROBUST_ACCESS_BIT_ARB);
+
+   if (!stw_dev)
+      return NULL;
 
    /* parse attrib_list */
    if (attribList) {
@@ -99,6 +104,9 @@ wglCreateContextAttribsARB(HDC hDC, HGLRC hShareContext, const int *attribList)
             break;
          case WGL_CONTEXT_PROFILE_MASK_ARB:
             profileMask = attribList[++i];
+            break;
+         case WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB:
+            resetStrategy = attribList[++i];
             break;
          case 0:
             /* end of list */
@@ -150,6 +158,12 @@ wglCreateContextAttribsARB(HDC hDC, HGLRC hShareContext, const int *attribList)
       return 0;
    }
 
+   if (resetStrategy != WGL_NO_RESET_NOTIFICATION_ARB &&
+       resetStrategy != WGL_LOSE_CONTEXT_ON_RESET_ARB) {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return NULL;
+   }
+
    /* Get pointer to OPENGL32.DLL's wglCreate/DeleteContext() functions */
    if (!wglCreateContext_func || !wglDeleteContext_func) {
       /* Get the OPENGL32.DLL library */
@@ -199,9 +213,15 @@ wglCreateContextAttribsARB(HDC hDC, HGLRC hShareContext, const int *attribList)
 
       struct stw_context *share_stw = stw_lookup_context(share_dhglrc);
 
+      const struct stw_pixelformat_info *pfi = stw_pixelformat_get_info_from_hdc(hDC);
+      if (!pfi)
+         return 0;
+
       struct stw_context *stw_ctx = stw_create_context_attribs(hDC, layerPlane, share_stw,
+                                                               stw_dev->smapi,
                                                                majorVersion, minorVersion,
-                                                               contextFlags, profileMask, 0);
+                                                               contextFlags, profileMask, pfi,
+                                                               resetStrategy);
 
       if (!stw_ctx) {
          wglDeleteContext_func(context);
@@ -229,6 +249,9 @@ wglMakeContextCurrentARB(HDC hDrawDC, HDC hReadDC, HGLRC hglrc)
    if (stw_dev && stw_dev->callbacks.pfnGetDhglrc) {
       /* Convert HGLRC to DHGLRC */
       dhglrc = stw_dev->callbacks.pfnGetDhglrc(hglrc);
+   } else {
+      /* not using ICD */
+      dhglrc = (DHGLRC)(INT_PTR)hglrc;
    }
 
    return stw_make_current_by_handles(hDrawDC, hReadDC, dhglrc);

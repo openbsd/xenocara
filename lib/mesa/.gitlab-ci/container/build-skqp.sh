@@ -41,7 +41,7 @@ download_skia_source() {
     # Skia cloned from https://android.googlesource.com/platform/external/skqp
     # has all needed assets tracked on git-fs
     SKQP_REPO=https://android.googlesource.com/platform/external/skqp
-    SKQP_BRANCH=android-cts-10.0_r11
+    SKQP_BRANCH=android-cts-11.0_r7
 
     git clone --branch "${SKQP_BRANCH}" --depth 1 "${SKQP_REPO}" "${SKIA_DIR}"
 }
@@ -55,9 +55,9 @@ BASE_ARGS_GN_FILE="${SCRIPT_DIR}/build-skqp_base.gn"
 SKQP_ARCH=${SKQP_ARCH:-x64}
 SKIA_DIR=${SKIA_DIR:-$(mktemp -d)}
 SKQP_OUT_DIR=${SKIA_DIR}/out/${SKQP_ARCH}
-SKQP_INSTALL_DIR=/skqp
+SKQP_INSTALL_DIR=${SKQP_INSTALL_DIR:-/skqp}
 SKQP_ASSETS_DIR="${SKQP_INSTALL_DIR}/assets"
-SKQP_BINARIES=(skqp)
+SKQP_BINARIES=(skqp list_gpu_unit_tests list_gms)
 
 download_skia_source
 

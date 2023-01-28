@@ -45,7 +45,7 @@ lower_subgroups_64bit_split_intrinsic(nir_builder *b, nir_intrinsic_instr *intri
    intr->const_index[1] = intrin->const_index[1];
    intr->src[0] = nir_src_for_ssa(comp);
    if (nir_intrinsic_infos[intrin->intrinsic].num_srcs == 2)
-      nir_src_copy(&intr->src[1], &intrin->src[1]);
+      nir_src_copy(&intr->src[1], &intrin->src[1], &intr->instr);
 
    intr->num_components = 1;
    nir_builder_instr_insert(b, &intr->instr);
@@ -98,7 +98,7 @@ uint_to_ballot_type(nir_builder *b, nir_ssa_def *value,
     * have enough ballot bits.
     */
    if (value->num_components > num_components)
-      value = nir_channels(b, value, nir_component_mask(num_components));
+      value = nir_trim_vector(b, value, num_components);
 
    return value;
 }
@@ -126,7 +126,7 @@ lower_subgroup_op_to_scalar(nir_builder *b, nir_intrinsic_instr *intrin,
       /* invocation */
       if (nir_intrinsic_infos[intrin->intrinsic].num_srcs > 1) {
          assert(nir_intrinsic_infos[intrin->intrinsic].num_srcs == 2);
-         nir_src_copy(&chan_intrin->src[1], &intrin->src[1]);
+         nir_src_copy(&chan_intrin->src[1], &intrin->src[1], &chan_intrin->instr);
       }
 
       chan_intrin->const_index[0] = intrin->const_index[0];
@@ -209,7 +209,7 @@ lower_shuffle_to_swizzle(nir_builder *b, nir_intrinsic_instr *intrin,
    nir_intrinsic_instr *swizzle = nir_intrinsic_instr_create(
       b->shader, nir_intrinsic_masked_swizzle_amd);
    swizzle->num_components = intrin->num_components;
-   nir_src_copy(&swizzle->src[0], &intrin->src[0]);
+   nir_src_copy(&swizzle->src[0], &intrin->src[0], &swizzle->instr);
    nir_intrinsic_set_swizzle_mask(swizzle, (mask << 10) | 0x1f);
    nir_ssa_dest_init(&swizzle->instr, &swizzle->dest,
                      intrin->dest.ssa.num_components,
@@ -288,7 +288,7 @@ lower_to_shuffle(nir_builder *b, nir_intrinsic_instr *intrin,
    nir_intrinsic_instr *shuffle =
       nir_intrinsic_instr_create(b->shader, nir_intrinsic_shuffle);
    shuffle->num_components = intrin->num_components;
-   nir_src_copy(&shuffle->src[0], &intrin->src[0]);
+   nir_src_copy(&shuffle->src[0], &intrin->src[0], &shuffle->instr);
    shuffle->src[1] = nir_src_for_ssa(index);
    nir_ssa_dest_init(&shuffle->instr, &shuffle->dest,
                      intrin->dest.ssa.num_components,
@@ -420,14 +420,14 @@ build_ballot_imm_ishl(nir_builder *b, int64_t val, nir_ssa_def *shift,
     * answer or 0 for the first component (and something similar with the
     * second component). This idea is generalized here for any component count
     */
-   nir_const_value min_shift[4] = { 0 };
+   nir_const_value min_shift[4];
    for (unsigned i = 0; i < options->ballot_components; i++)
-      min_shift[i].i32 = i * options->ballot_bit_size;
+      min_shift[i] = nir_const_value_for_int(i * options->ballot_bit_size, 32);
    nir_ssa_def *min_shift_val = nir_build_imm(b, options->ballot_components, 32, min_shift);
 
-   nir_const_value max_shift[4] = { 0 };
+   nir_const_value max_shift[4];
    for (unsigned i = 0; i < options->ballot_components; i++)
-      max_shift[i].i32 = (i + 1) * options->ballot_bit_size;
+      max_shift[i] = nir_const_value_for_int((i + 1) * options->ballot_bit_size, 32);
    nir_ssa_def *max_shift_val = nir_build_imm(b, options->ballot_components, 32, max_shift);
 
    return nir_bcsel(b, nir_ult(b, shift, max_shift_val),
@@ -501,9 +501,9 @@ build_subgroup_mask(nir_builder *b,
     * result if we just follow (2) and then replace the first component with
     * "result". 
     */ 
-   nir_const_value min_idx[4] = { 0 };
+   nir_const_value min_idx[4];
    for (unsigned i = 0; i < options->ballot_components; i++)
-      min_idx[i].i32 = i * options->ballot_bit_size;
+      min_idx[i] = nir_const_value_for_int(i * options->ballot_bit_size, 32);
    nir_ssa_def *min_idx_val = nir_build_imm(b, options->ballot_components, 32, min_idx);
 
    nir_ssa_def *result_extended =
@@ -568,7 +568,7 @@ lower_dynamic_quad_broadcast(nir_builder *b, nir_intrinsic_instr *intrin,
 
       qbcst->num_components = intrin->num_components;
       qbcst->src[1] = nir_src_for_ssa(nir_imm_int(b, i));
-      nir_src_copy(&qbcst->src[0], &intrin->src[0]);
+      nir_src_copy(&qbcst->src[0], &intrin->src[0], &qbcst->instr);
       nir_ssa_dest_init(&qbcst->instr, &qbcst->dest,
                         intrin->dest.ssa.num_components,
                         intrin->dest.ssa.bit_size, NULL);
@@ -742,7 +742,7 @@ lower_subgroups_instr(nir_builder *b, nir_instr *instr, void *_options)
                                   nir_udiv_imm(b, idx, int_val->bit_size));
          }
 
-         return nir_i2b(b, nir_iand_imm(b, nir_ushr(b, int_val, idx), 1));
+         return nir_test_mask(b, nir_ushr(b, int_val, idx), 1);
       }
       case nir_intrinsic_ballot_bit_count_reduce:
          return vec_bit_count(b, int_val);

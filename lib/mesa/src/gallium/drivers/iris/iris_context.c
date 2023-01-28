@@ -24,7 +24,7 @@
 #include <time.h>
 #include "pipe/p_defines.h"
 #include "pipe/p_state.h"
-#include "util/debug.h"
+#include "util/u_debug.h"
 #include "util/ralloc.h"
 #include "util/u_inlines.h"
 #include "util/format/u_format.h"
@@ -83,6 +83,7 @@ iris_lost_context_state(struct iris_batch *batch)
    memset(&ice->shaders.urb, 0, sizeof(ice->shaders.urb));
    memset(ice->state.last_block, 0, sizeof(ice->state.last_block));
    memset(ice->state.last_grid, 0, sizeof(ice->state.last_grid));
+   ice->state.last_grid_dim = 0;
    batch->last_binder_address = ~0ull;
    batch->last_aux_map_state = 0;
    batch->screen->vtbl.lost_genx_state(ice, batch);
@@ -242,7 +243,7 @@ iris_destroy_context(struct pipe_context *ctx)
       iris_destroy_ctx_measure(ice);
 
    u_upload_destroy(ice->state.surface_uploader);
-   u_upload_destroy(ice->state.bindless_uploader);
+   u_upload_destroy(ice->state.scratch_surface_uploader);
    u_upload_destroy(ice->state.dynamic_uploader);
    u_upload_destroy(ice->query_buffer_uploader);
 
@@ -342,9 +343,9 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
       u_upload_create(ctx, 64 * 1024, PIPE_BIND_CUSTOM, PIPE_USAGE_IMMUTABLE,
                       IRIS_RESOURCE_FLAG_SURFACE_MEMZONE |
                       IRIS_RESOURCE_FLAG_DEVICE_MEM);
-   ice->state.bindless_uploader =
+   ice->state.scratch_surface_uploader =
       u_upload_create(ctx, 64 * 1024, PIPE_BIND_CUSTOM, PIPE_USAGE_IMMUTABLE,
-                      IRIS_RESOURCE_FLAG_BINDLESS_MEMZONE |
+                      IRIS_RESOURCE_FLAG_SCRATCH_MEMZONE |
                       IRIS_RESOURCE_FLAG_DEVICE_MEM);
    ice->state.dynamic_uploader =
       u_upload_create(ctx, 64 * 1024, PIPE_BIND_CUSTOM, PIPE_USAGE_IMMUTABLE,
@@ -364,6 +365,8 @@ iris_create_context(struct pipe_screen *pscreen, void *priv, unsigned flags)
       priority = INTEL_CONTEXT_HIGH_PRIORITY;
    if (flags & PIPE_CONTEXT_LOW_PRIORITY)
       priority = INTEL_CONTEXT_LOW_PRIORITY;
+   if (flags & PIPE_CONTEXT_PROTECTED)
+      ice->protected = true;
 
    if (INTEL_DEBUG(DEBUG_BATCH))
       ice->state.sizes = _mesa_hash_table_u64_create(ice);

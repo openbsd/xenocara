@@ -85,15 +85,30 @@ aco_ptr<Instruction> create_s_mov(Definition dst, Operand src);
 
 enum sendmsg {
    sendmsg_none = 0,
-   _sendmsg_gs = 2,
-   _sendmsg_gs_done = 3,
-   sendmsg_save_wave = 4,
-   sendmsg_stall_wave_gen = 5,
-   sendmsg_halt_waves = 6,
-   sendmsg_ordered_ps_done = 7,
-   sendmsg_early_prim_dealloc = 8,
-   sendmsg_gs_alloc_req = 9,
+   _sendmsg_gs = 2, /* gfx6 to gfx10.3 */
+   _sendmsg_gs_done = 3, /* gfx6 to gfx10.3 */
+   sendmsg_hs_tessfactor = 2, /* gfx11+ */
+   sendmsg_dealloc_vgprs = 3, /* gfx11+ */
+   sendmsg_save_wave = 4, /* gfx8 to gfx10.3 */
+   sendmsg_stall_wave_gen = 5, /* gfx9+ */
+   sendmsg_halt_waves = 6, /* gfx9+ */
+   sendmsg_ordered_ps_done = 7, /* gfx9+ */
+   sendmsg_early_prim_dealloc = 8, /* gfx9 to gfx10 */
+   sendmsg_gs_alloc_req = 9, /* gfx9+ */
+   sendmsg_get_doorbell = 10, /* gfx9 to gfx10.3 */
+   sendmsg_get_ddid = 11, /* gfx10 to gfx10.3 */
    sendmsg_id_mask = 0xf,
+};
+
+/* gfx11+ */
+enum sendmsg_rtn {
+   sendmsg_rtn_get_doorbell = 0,
+   sendmsg_rtn_get_ddid = 1,
+   sendmsg_rtn_get_tma = 2,
+   sendmsg_rtn_get_realtime = 3,
+   sendmsg_rtn_save_wave = 4,
+   sendmsg_rtn_get_tba = 5,
+   sendmsg_rtn_mask = 0xff,
 };
 
 inline sendmsg
@@ -109,6 +124,15 @@ sendmsg_gs_done(bool cut, bool emit, unsigned stream)
     assert(stream < 4);
     return (sendmsg)((unsigned)_sendmsg_gs_done | (cut << 4) | (emit << 5) | (stream << 8));
 }
+
+enum bperm_swiz {
+   bperm_b1_sign = 8,
+   bperm_b3_sign = 9,
+   bperm_b5_sign = 10,
+   bperm_b7_sign = 11,
+   bperm_0 = 12,
+   bperm_255 = 13,
+};
 
 class Builder {
 public:
@@ -361,10 +385,10 @@ public:
    Result v_mul_imm(Definition dst, Temp tmp, uint32_t imm, bool bits24=false)
    {
       assert(tmp.type() == RegType::vgpr);
-      bool has_lshl_add = program->chip_class >= GFX9;
+      bool has_lshl_add = program->gfx_level >= GFX9;
       /* v_mul_lo_u32 has 1.6x the latency of most VALU on GFX10 (8 vs 5 cycles),
        * compared to 4x the latency on <GFX10. */
-      unsigned mul_cost = program->chip_class >= GFX10 ? 1 : (4 + Operand::c32(imm).isLiteral());
+      unsigned mul_cost = program->gfx_level >= GFX10 ? 1 : (4 + Operand::c32(imm).isLiteral());
       if (imm == 0) {
          return copy(dst, Operand::zero());
       } else if (imm == 1) {
@@ -426,9 +450,9 @@ public:
 
       if (!carry_in.op.isUndefined())
          return vop2(aco_opcode::v_addc_co_u32, Definition(dst), def(lm), a, b, carry_in);
-      else if (program->chip_class >= GFX10 && carry_out)
+      else if (program->gfx_level >= GFX10 && carry_out)
          return vop3(aco_opcode::v_add_co_u32_e64, Definition(dst), def(lm), a, b);
-      else if (program->chip_class < GFX9 || carry_out)
+      else if (program->gfx_level < GFX9 || carry_out)
          return vop2(aco_opcode::v_add_co_u32, Definition(dst), def(lm), a, b);
       else
          return vop2(aco_opcode::v_add_u32, Definition(dst), a, b);
@@ -436,7 +460,7 @@ public:
 
    Result vsub32(Definition dst, Op a, Op b, bool carry_out=false, Op borrow=Op(Operand(s2)))
    {
-      if (!borrow.op.isUndefined() || program->chip_class < GFX9)
+      if (!borrow.op.isUndefined() || program->gfx_level < GFX9)
          carry_out = true;
 
       bool reverse = !b.op.isTemp() || b.op.regClass().type() != RegType::vgpr;
@@ -457,10 +481,10 @@ public:
          op = reverse ? aco_opcode::v_subrev_u32 : aco_opcode::v_sub_u32;
       }
       bool vop3 = false;
-      if (program->chip_class >= GFX10 && op == aco_opcode::v_subrev_co_u32) {
+      if (program->gfx_level >= GFX10 && op == aco_opcode::v_subrev_co_u32) {
         vop3 = true;
         op = aco_opcode::v_subrev_co_u32_e64;
-      } else if (program->chip_class >= GFX10 && op == aco_opcode::v_sub_co_u32) {
+      } else if (program->gfx_level >= GFX10 && op == aco_opcode::v_sub_co_u32) {
         vop3 = true;
         op = aco_opcode::v_sub_co_u32_e64;
       }
@@ -485,31 +509,32 @@ public:
 
    Result readlane(Definition dst, Op vsrc, Op lane)
    {
-      if (program->chip_class >= GFX8)
+      if (program->gfx_level >= GFX8)
          return vop3(aco_opcode::v_readlane_b32_e64, dst, vsrc, lane);
       else
          return vop2(aco_opcode::v_readlane_b32, dst, vsrc, lane);
    }
    Result writelane(Definition dst, Op val, Op lane, Op vsrc) {
-      if (program->chip_class >= GFX8)
+      if (program->gfx_level >= GFX8)
          return vop3(aco_opcode::v_writelane_b32_e64, dst, val, lane, vsrc);
       else
          return vop2(aco_opcode::v_writelane_b32, dst, val, lane, vsrc);
    }
 <%
 import itertools
-formats = [("pseudo", [Format.PSEUDO], 'Pseudo_instruction', list(itertools.product(range(5), range(6))) + [(8, 1), (1, 8)]),
+formats = [("pseudo", [Format.PSEUDO], 'Pseudo_instruction', list(itertools.product(range(5), range(6))) + [(8, 1), (1, 8), (2, 6), (3,6)]),
            ("sop1", [Format.SOP1], 'SOP1_instruction', [(0, 1), (1, 0), (1, 1), (2, 1), (3, 2)]),
            ("sop2", [Format.SOP2], 'SOP2_instruction', itertools.product([1, 2], [2, 3])),
            ("sopk", [Format.SOPK], 'SOPK_instruction', itertools.product([0, 1, 2], [0, 1])),
            ("sopp", [Format.SOPP], 'SOPP_instruction', itertools.product([0, 1], [0, 1])),
            ("sopc", [Format.SOPC], 'SOPC_instruction', [(1, 2)]),
            ("smem", [Format.SMEM], 'SMEM_instruction', [(0, 4), (0, 3), (1, 0), (1, 3), (1, 2), (0, 0)]),
-           ("ds", [Format.DS], 'DS_instruction', [(1, 1), (1, 2), (0, 3), (0, 4)]),
+           ("ds", [Format.DS], 'DS_instruction', [(1, 1), (1, 2), (1, 3), (0, 3), (0, 4)]),
+           ("ldsdir", [Format.LDSDIR], 'LDSDIR_instruction', [(1, 1)]),
            ("mubuf", [Format.MUBUF], 'MUBUF_instruction', [(0, 4), (1, 3)]),
            ("mtbuf", [Format.MTBUF], 'MTBUF_instruction', [(0, 4), (1, 3)]),
            ("mimg", [Format.MIMG], 'MIMG_instruction', itertools.product([0, 1], [3, 4, 5, 6, 7])),
-           ("exp", [Format.EXP], 'Export_instruction', [(0, 4)]),
+           ("exp", [Format.EXP], 'Export_instruction', [(0, 4), (0, 5)]),
            ("branch", [Format.PSEUDO_BRANCH], 'Pseudo_branch_instruction', itertools.product([1], [0, 1])),
            ("barrier", [Format.PSEUDO_BARRIER], 'Pseudo_barrier_instruction', [(0, 0)]),
            ("reduction", [Format.PSEUDO_REDUCTION], 'Pseudo_reduction_instruction', [(3, 2)]),
@@ -521,7 +546,8 @@ formats = [("pseudo", [Format.PSEUDO], 'Pseudo_instruction', list(itertools.prod
            ("vopc_sdwa", [Format.VOPC, Format.SDWA], 'SDWA_instruction', itertools.product([1, 2], [2])),
            ("vop3", [Format.VOP3], 'VOP3_instruction', [(1, 3), (1, 2), (1, 1), (2, 2)]),
            ("vop3p", [Format.VOP3P], 'VOP3P_instruction', [(1, 2), (1, 3)]),
-           ("vintrp", [Format.VINTRP], 'Interp_instruction', [(1, 2), (1, 3)]),
+           ("vinterp_inreg", [Format.VINTERP_INREG], 'VINTERP_inreg_instruction', [(1, 3)]),
+           ("vintrp", [Format.VINTRP], 'VINTRP_instruction', [(1, 2), (1, 3)]),
            ("vop1_dpp", [Format.VOP1, Format.DPP16], 'DPP16_instruction', [(1, 1)]),
            ("vop2_dpp", [Format.VOP2, Format.DPP16], 'DPP16_instruction', itertools.product([1, 2], [2, 3])),
            ("vopc_dpp", [Format.VOPC, Format.DPP16], 'DPP16_instruction', itertools.product([1, 2], [2])),
@@ -532,7 +558,8 @@ formats = [("pseudo", [Format.PSEUDO], 'Pseudo_instruction', list(itertools.prod
            ("vop2_e64", [Format.VOP2, Format.VOP3], 'VOP3_instruction', itertools.product([1, 2], [2, 3])),
            ("vopc_e64", [Format.VOPC, Format.VOP3], 'VOP3_instruction', itertools.product([1, 2], [2])),
            ("flat", [Format.FLAT], 'FLAT_instruction', [(0, 3), (1, 2)]),
-           ("global", [Format.GLOBAL], 'FLAT_instruction', [(0, 3), (1, 2)])]
+           ("global", [Format.GLOBAL], 'FLAT_instruction', [(0, 3), (1, 2)]),
+           ("scratch", [Format.SCRATCH], 'FLAT_instruction', [(0, 3), (1, 2)])]
 formats = [(f if len(f) == 5 else f + ('',)) for f in formats]
 %>\\
 % for name, formats, struct, shapes, extra_field_setup in formats:

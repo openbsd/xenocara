@@ -61,6 +61,8 @@ cache_dump_stats(struct v3dv_pipeline_cache *cache)
    fprintf(stderr, "  cache entries:      %d\n", cache->stats.count);
    fprintf(stderr, "  cache miss count:   %d\n", cache->stats.miss);
    fprintf(stderr, "  cache hit  count:   %d\n", cache->stats.hit);
+
+   fprintf(stderr, "  on-disk cache hit  count:   %d\n", cache->stats.on_disk_hit);
 }
 
 static void
@@ -219,7 +221,7 @@ v3dv_pipeline_cache_init(struct v3dv_pipeline_cache *cache,
       cache->stats.count = 0;
 
       cache->externally_synchronized = flags &
-         VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT_EXT;
+         VK_PIPELINE_CACHE_CREATE_EXTERNALLY_SYNCHRONIZED_BIT;
    } else {
       cache->nir_cache = NULL;
       cache->cache = NULL;
@@ -309,7 +311,7 @@ v3dv_pipeline_cache_search_for_pipeline(struct v3dv_pipeline_cache *cache,
 
       size_t buffer_size;
       uint8_t *buffer = disk_cache_get(disk_cache, cache_key, &buffer_size);
-      if (unlikely(V3D_DEBUG & V3D_DEBUG_CACHE)) {
+      if (V3D_DBG(CACHE)) {
          char sha1buf[41];
          _mesa_sha1_format(sha1buf, cache_key);
          fprintf(stderr, "[v3dv on-disk cache] %s %s\n",
@@ -326,6 +328,11 @@ v3dv_pipeline_cache_search_for_pipeline(struct v3dv_pipeline_cache *cache,
          free(buffer);
 
          if (shared_data) {
+            /* Technically we could increase on_disk_hit as soon as we have a
+             * buffer, but we are more interested on hits that got a valid
+             * shared_data
+             */
+            cache->stats.on_disk_hit++;
             if (cache)
                pipeline_cache_upload_shared_data(cache, shared_data, true);
             return shared_data;
@@ -395,15 +402,13 @@ v3dv_pipeline_shared_data_new(struct v3dv_pipeline_cache *cache,
                                       "pipeline shader assembly", true);
    if (!bo) {
       fprintf(stderr, "failed to allocate memory for shaders assembly\n");
-      v3dv_pipeline_shared_data_unref(cache->device, new_entry);
-      return NULL;
+      goto fail;
    }
 
    bool ok = v3dv_bo_map(cache->device, bo, total_assembly_size);
    if (!ok) {
       fprintf(stderr, "failed to map source shader buffer\n");
-      v3dv_pipeline_shared_data_unref(cache->device, new_entry);
-      return NULL;
+      goto fail;
    }
 
    memcpy(bo->map, total_assembly, total_assembly_size);
@@ -411,6 +416,10 @@ v3dv_pipeline_shared_data_new(struct v3dv_pipeline_cache *cache,
    new_entry->assembly_bo = bo;
 
    return new_entry;
+
+fail:
+   v3dv_pipeline_shared_data_unref(cache->device, new_entry);
+   return NULL;
 }
 
 static void
@@ -427,8 +436,13 @@ pipeline_cache_upload_shared_data(struct v3dv_pipeline_cache *cache,
       return;
 
    pipeline_cache_lock(cache);
-   struct hash_entry *entry =
-      _mesa_hash_table_search(cache->cache, shared_data->sha1_key);
+   struct hash_entry *entry = NULL;
+
+   /* If this is being called from the disk cache, we already know that the
+    * entry is not on the hash table
+    */
+   if (!from_disk_cache)
+      entry = _mesa_hash_table_search(cache->cache, shared_data->sha1_key);
 
    if (entry) {
       pipeline_cache_unlock(cache);
@@ -466,7 +480,7 @@ pipeline_cache_upload_shared_data(struct v3dv_pipeline_cache *cache,
          cache_key cache_key;
          disk_cache_compute_key(disk_cache, shared_data->sha1_key, 20, cache_key);
 
-         if (unlikely(V3D_DEBUG & V3D_DEBUG_CACHE)) {
+         if (V3D_DBG(CACHE)) {
             char sha1buf[41];
             _mesa_sha1_format(sha1buf, shared_data->sha1_key);
             fprintf(stderr, "[v3dv on-disk cache] storing %s\n", sha1buf);
@@ -564,6 +578,7 @@ v3dv_pipeline_shared_data_create_from_blob(struct v3dv_pipeline_cache *cache,
    const unsigned char *sha1_key = blob_read_bytes(blob, 20);
 
    struct v3dv_descriptor_maps *maps[BROADCOM_SHADER_STAGES] = { 0 };
+   struct v3dv_shader_variant *variants[BROADCOM_SHADER_STAGES] = { 0 };
 
    uint8_t descriptor_maps_count = blob_read_uint8(blob);
    for (uint8_t count = 0; count < descriptor_maps_count; count++) {
@@ -573,14 +588,14 @@ v3dv_pipeline_shared_data_create_from_blob(struct v3dv_pipeline_cache *cache,
          blob_read_bytes(blob, sizeof(struct v3dv_descriptor_maps));
 
       if (blob->overrun)
-         return NULL;
+         goto fail;
 
       maps[stage] = vk_zalloc2(&cache->device->vk.alloc, NULL,
                                sizeof(struct v3dv_descriptor_maps), 8,
                                VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
 
       if (maps[stage] == NULL)
-         return NULL;
+         goto fail;
 
       memcpy(maps[stage], current_maps, sizeof(struct v3dv_descriptor_maps));
       if (broadcom_shader_stage_is_render_with_binning(stage)) {
@@ -591,8 +606,6 @@ v3dv_pipeline_shared_data_create_from_blob(struct v3dv_pipeline_cache *cache,
    }
 
    uint8_t variant_count = blob_read_uint8(blob);
-
-   struct v3dv_shader_variant *variants[BROADCOM_SHADER_STAGES] = { 0 };
 
    for (uint8_t count = 0; count < variant_count; count++) {
       uint8_t stage = blob_read_uint8(blob);
@@ -606,10 +619,25 @@ v3dv_pipeline_shared_data_create_from_blob(struct v3dv_pipeline_cache *cache,
       blob_read_bytes(blob, total_assembly_size);
 
    if (blob->overrun)
-      return NULL;
+      goto fail;
 
-   return v3dv_pipeline_shared_data_new(cache, sha1_key, maps, variants,
-                                        total_assembly, total_assembly_size);
+   struct v3dv_pipeline_shared_data *data =
+      v3dv_pipeline_shared_data_new(cache, sha1_key, maps, variants,
+                                    total_assembly, total_assembly_size);
+
+   if (!data)
+      goto fail;
+
+   return data;
+
+fail:
+   for (int i = 0; i < BROADCOM_SHADER_STAGES; i++) {
+      if (maps[i])
+         vk_free2(&cache->device->vk.alloc, NULL, maps[i]);
+      if (variants[i])
+         v3dv_shader_variant_destroy(cache->device, variants[i]);
+   }
+   return NULL;
 }
 
 static void
@@ -618,7 +646,7 @@ pipeline_cache_load(struct v3dv_pipeline_cache *cache,
                     const void *data)
 {
    struct v3dv_device *device = cache->device;
-   struct v3dv_physical_device *pdevice = &device->instance->physicalDevice;
+   struct v3dv_physical_device *pdevice = device->pdevice;
    struct vk_pipeline_cache_header header;
 
    if (cache->cache == NULL || cache->nir_cache == NULL)
@@ -934,7 +962,7 @@ v3dv_GetPipelineCacheData(VkDevice _device,
       blob_init_fixed(&blob, NULL, SIZE_MAX);
    }
 
-   struct v3dv_physical_device *pdevice = &device->instance->physicalDevice;
+   struct v3dv_physical_device *pdevice = device->pdevice;
    VkResult result = VK_INCOMPLETE;
 
    pipeline_cache_lock(cache);

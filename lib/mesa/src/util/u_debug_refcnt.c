@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 
+#include "util/simple_mtx.h"
 #include "util/u_debug.h"
 #include "util/u_debug_refcnt.h"
 #include "util/u_debug_stack.h"
@@ -52,12 +53,8 @@ static FILE *stream;
 /* TODO: maybe move this serial machinery to a stand-alone module and
  * expose it?
  */
-#ifdef PIPE_OS_WINDOWS
-static mtx_t serials_mutex;
-#else
-static mtx_t serials_mutex = _MTX_INITIALIZER_NP;
-#endif
 
+static simple_mtx_t serials_mutex = SIMPLE_MTX_INITIALIZER;
 static struct hash_table *serials_hash;
 static unsigned serials_last;
 
@@ -70,16 +67,8 @@ debug_serial(void *p, unsigned *pserial)
 {
    unsigned serial;
    boolean found = TRUE;
-#ifdef PIPE_OS_WINDOWS
-   static boolean first = TRUE;
 
-   if (first) {
-      (void) mtx_init(&serials_mutex, mtx_plain);
-      first = FALSE;
-   }
-#endif
-
-   mtx_lock(&serials_mutex);
+   simple_mtx_lock(&serials_mutex);
    if (!serials_hash)
       serials_hash = util_hash_table_create_ptr_keys();
 
@@ -97,7 +86,7 @@ debug_serial(void *p, unsigned *pserial)
       _mesa_hash_table_insert(serials_hash, p, (void *) (uintptr_t) serial);
       found = FALSE;
    }
-   mtx_unlock(&serials_mutex);
+   simple_mtx_unlock(&serials_mutex);
 
    *pserial = serial;
 
@@ -111,9 +100,9 @@ debug_serial(void *p, unsigned *pserial)
 static void
 debug_serial_delete(void *p)
 {
-   mtx_lock(&serials_mutex);
+   simple_mtx_lock(&serials_mutex);
    _mesa_hash_table_remove_key(serials_hash, p);
-   mtx_unlock(&serials_mutex);
+   simple_mtx_unlock(&serials_mutex);
 }
 
 
@@ -174,10 +163,12 @@ debug_reference_slowpath(const struct pipe_reference *p,
          /* this is here to provide a gradual change even if we don't see
           * the initialization
           */
-         for (i = 1; i <= refcnt - change; ++i) {
-            fprintf(stream, "<%s> %p %u AddRef %u\n", buf, (void *) p,
-                    serial, i);
-            debug_backtrace_print(stream, frames, STACK_LEN);
+         if (refcnt <= 10) {
+            for (i = 1; i <= refcnt - change; ++i) {
+               fprintf(stream, "<%s> %p %u AddRef %u\n", buf, (void *) p,
+                  serial, i);
+               debug_backtrace_print(stream, frames, STACK_LEN);
+            }
          }
       }
 

@@ -77,9 +77,6 @@
 #include <memcheck.h>
 #include <valgrind.h>
 #define VG(x) x
-#ifdef DEBUG
-#define __gen_validate_value(x) VALGRIND_CHECK_MEM_IS_DEFINED(&(x), sizeof(x))
-#endif
 #else
 #define VG(x)
 #endif
@@ -2375,7 +2372,7 @@ crocus_upload_sampler_state(struct crocus_batch *batch,
       samp.TCZAddressControlMode = wrap_r;
 
 #if GFX_VER >= 6
-      samp.NonnormalizedCoordinateEnable = !state->normalized_coords;
+      samp.NonnormalizedCoordinateEnable = state->unnormalized_coords;
 #endif
       samp.MinModeFilter = state->min_img_filter;
       samp.MagModeFilter = cso->mag_img_filter;
@@ -3374,8 +3371,14 @@ crocus_set_viewport_states(struct pipe_context *ctx,
                            const struct pipe_viewport_state *states)
 {
    struct crocus_context *ice = (struct crocus_context *) ctx;
+   struct crocus_screen *screen = (struct crocus_screen *)ctx->screen;
 
    memcpy(&ice->state.viewports[start_slot], states, sizeof(*states) * count);
+
+   /* Fix depth test misrenderings by lowering translated depth range */
+   if (screen->driconf.lower_depth_range_rate != 1.0f)
+      ice->state.viewports[start_slot].translate[2] *=
+         screen->driconf.lower_depth_range_rate;
 
    ice->state.dirty |= CROCUS_DIRTY_SF_CL_VIEWPORT;
    ice->state.dirty |= CROCUS_DIRTY_RASTER;
@@ -4275,12 +4278,12 @@ static uint32_t *
 crocus_create_so_decl_list(const struct pipe_stream_output_info *info,
                            const struct brw_vue_map *vue_map)
 {
-   struct GENX(SO_DECL) so_decl[MAX_VERTEX_STREAMS][128];
-   int buffer_mask[MAX_VERTEX_STREAMS] = {0, 0, 0, 0};
-   int next_offset[MAX_VERTEX_STREAMS] = {0, 0, 0, 0};
-   int decls[MAX_VERTEX_STREAMS] = {0, 0, 0, 0};
+   struct GENX(SO_DECL) so_decl[PIPE_MAX_VERTEX_STREAMS][128];
+   int buffer_mask[PIPE_MAX_VERTEX_STREAMS] = {0, 0, 0, 0};
+   int next_offset[PIPE_MAX_VERTEX_STREAMS] = {0, 0, 0, 0};
+   int decls[PIPE_MAX_VERTEX_STREAMS] = {0, 0, 0, 0};
    int max_decls = 0;
-   STATIC_ASSERT(ARRAY_SIZE(so_decl[0]) >= MAX_PROGRAM_OUTPUTS);
+   STATIC_ASSERT(ARRAY_SIZE(so_decl[0]) >= PIPE_MAX_SO_OUTPUTS);
 
    memset(so_decl, 0, sizeof(so_decl));
 
@@ -4292,7 +4295,7 @@ crocus_create_so_decl_list(const struct pipe_stream_output_info *info,
       const int buffer = output->output_buffer;
       const int varying = output->register_index;
       const unsigned stream_id = output->stream;
-      assert(stream_id < MAX_VERTEX_STREAMS);
+      assert(stream_id < PIPE_MAX_VERTEX_STREAMS);
 
       buffer_mask[stream_id] |= 1 << buffer;
 
@@ -6441,11 +6444,13 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
           * incorrect for subspans where some of the pixels are unlit.  We believe
           * the bit just didn't take effect in previous generations.
           */
-         ps.VectorMaskEnable = GFX_VER >= 8;
+         ps.VectorMaskEnable = GFX_VER >= 8 && wm_prog_data->uses_vmask;
 
-         ps._8PixelDispatchEnable = wm_prog_data->dispatch_8;
-         ps._16PixelDispatchEnable = wm_prog_data->dispatch_16;
-         ps._32PixelDispatchEnable = wm_prog_data->dispatch_32;
+         brw_fs_get_dispatch_enables(&batch->screen->devinfo, wm_prog_data,
+                                     ice->state.framebuffer.samples,
+                                     &ps._8PixelDispatchEnable,
+                                     &ps._16PixelDispatchEnable,
+                                     &ps._32PixelDispatchEnable);
 
          ps.DispatchGRFStartRegisterForConstantSetupData0 =
             brw_wm_prog_data_dispatch_grf_start_reg(wm_prog_data, ps, 0);
@@ -7167,9 +7172,11 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
 #endif
      {
 #if GFX_VER <= 6
-         wm._8PixelDispatchEnable = wm_prog_data->dispatch_8;
-         wm._16PixelDispatchEnable = wm_prog_data->dispatch_16;
-         wm._32PixelDispatchEnable = wm_prog_data->dispatch_32;
+         brw_fs_get_dispatch_enables(&batch->screen->devinfo, wm_prog_data,
+                                     ice->state.framebuffer.samples,
+                                     &wm._8PixelDispatchEnable,
+                                     &wm._16PixelDispatchEnable,
+                                     &wm._32PixelDispatchEnable);
 #endif
 #if GFX_VER == 4
       /* On gen4, we only have one shader kernel */

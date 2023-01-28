@@ -35,7 +35,14 @@ bi_optimizer(bi_context *ctx)
    bi_opt_dead_code_eliminate(ctx);
 }
 
-#define CASE(instr, expected) INSTRUCTION_CASE(instr, expected, bi_optimizer)
+/* Define reg first so it has a consistent variable index, and pass it to an
+ * instruction that cannot be dead code eliminated so the program is nontrivial.
+ */
+#define CASE(instr, expected) INSTRUCTION_CASE(\
+      { UNUSED bi_index reg = bi_temp(b->shader); instr; bi_kaboom(b, reg); }, \
+      { UNUSED bi_index reg = bi_temp(b->shader); expected; bi_kaboom(b, reg); }, \
+      bi_optimizer);
+
 #define NEGCASE(instr) CASE(instr, instr)
 
 class Optimizer : public testing::Test {
@@ -43,7 +50,6 @@ protected:
    Optimizer() {
       mem_ctx = ralloc_context(NULL);
 
-      reg     = bi_register(0);
       x       = bi_register(1);
       y       = bi_register(2);
       negabsx = bi_neg(bi_abs(x));
@@ -55,7 +61,6 @@ protected:
 
    void *mem_ctx;
 
-   bi_index reg;
    bi_index x;
    bi_index y;
    bi_index negabsx;
@@ -351,4 +356,119 @@ TEST_F(Optimizer, DoNotFuseSpecialComparisons)
 {
    NEGCASE(bi_discard_b32(b, bi_fcmp_f32(b, x, y, BI_CMPF_GTLT, BI_RESULT_TYPE_F1)));
    NEGCASE(bi_discard_b32(b, bi_fcmp_f32(b, x, y, BI_CMPF_TOTAL, BI_RESULT_TYPE_F1)));
+}
+
+TEST_F(Optimizer, FuseResultType)
+{
+   CASE(bi_mux_i32_to(b, reg, bi_imm_f32(0.0), bi_imm_f32(1.0),
+                      bi_fcmp_f32(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_fcmp_f32_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_F1));
+
+   CASE(bi_mux_i32_to(b, reg, bi_imm_f32(0.0), bi_imm_f32(1.0),
+                      bi_fcmp_f32(b, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_fcmp_f32_to(b, reg, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_F1));
+
+   CASE(bi_mux_i32_to(b, reg, bi_imm_u32(0), bi_imm_u32(1),
+                      bi_fcmp_f32(b, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_fcmp_f32_to(b, reg, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_v2i16_to(b, reg, bi_imm_f16(0.0), bi_imm_f16(1.0),
+                      bi_fcmp_v2f16(b, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_fcmp_v2f16_to(b, reg, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_F1));
+
+   CASE(bi_mux_v2i16_to(b, reg, bi_imm_u16(0), bi_imm_u16(1),
+                      bi_fcmp_v2f16(b, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_fcmp_v2f16_to(b, reg, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_i32_to(b, reg, bi_imm_u32(0), bi_imm_u32(1),
+                      bi_icmp_u32(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_icmp_u32_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_v2i16_to(b, reg, bi_imm_u16(0), bi_imm_u16(1),
+                      bi_icmp_v2u16(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_icmp_v2u16_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_v4i8_to(b, reg, bi_imm_u8(0), bi_imm_u8(1),
+                      bi_icmp_v4u8(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_icmp_v4u8_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_i32_to(b, reg, bi_imm_u32(0), bi_imm_u32(1),
+                      bi_icmp_s32(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_icmp_s32_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_v2i16_to(b, reg, bi_imm_u16(0), bi_imm_u16(1),
+                      bi_icmp_v2s16(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_icmp_v2s16_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_I1));
+
+   CASE(bi_mux_v4i8_to(b, reg, bi_imm_u8(0), bi_imm_u8(1),
+                      bi_icmp_v4s8(b, x, y, BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO),
+        bi_icmp_v4s8_to(b, reg, x, y, BI_CMPF_LE, BI_RESULT_TYPE_I1));
+}
+
+TEST_F(Optimizer, DoNotFuseMixedSizeResultType)
+{
+   NEGCASE(bi_mux_i32_to(b, reg, bi_imm_f32(0.0), bi_imm_f32(1.0),
+                      bi_fcmp_v2f16(b, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO));
+
+   NEGCASE(bi_mux_v2i16_to(b, reg, bi_imm_f16(0.0), bi_imm_f16(1.0),
+                      bi_fcmp_f32(b, bi_abs(x), bi_neg(y), BI_CMPF_LE, BI_RESULT_TYPE_M1),
+                      BI_MUX_INT_ZERO));
+}
+
+TEST_F(Optimizer, VarTexCoord32)
+{
+   CASE({
+         bi_index ld = bi_ld_var_imm(b, bi_null(), BI_REGISTER_FORMAT_F32, BI_SAMPLE_CENTER, BI_UPDATE_STORE, BI_VECSIZE_V2, 0);
+
+         bi_index x = bi_temp(b->shader);
+         bi_index y = bi_temp(b->shader);
+         bi_instr *split = bi_split_i32_to(b, 2, ld);
+         split->dest[0] = x;
+         split->dest[1] = y;
+
+         bi_texs_2d_f32_to(b, reg, x, y, false, 0, 0);
+   }, {
+         bi_var_tex_f32_to(b, reg, false, BI_SAMPLE_CENTER, BI_UPDATE_STORE, 0, 0);
+   });
+}
+
+TEST_F(Optimizer, Int8ToFloat32)
+{
+   for (unsigned i = 0; i < 4; ++i) {
+      CASE(bi_s32_to_f32_to(b, reg, bi_s8_to_s32(b, bi_byte(x, i))),
+           bi_s8_to_f32_to(b, reg, bi_byte(x, i)));
+
+      CASE(bi_s32_to_f32_to(b, reg, bi_u8_to_u32(b, bi_byte(x, i))),
+           bi_u8_to_f32_to(b, reg, bi_byte(x, i)));
+
+      CASE(bi_u32_to_f32_to(b, reg, bi_u8_to_u32(b, bi_byte(x, i))),
+           bi_u8_to_f32_to(b, reg, bi_byte(x, i)));
+   }
+}
+
+
+TEST_F(Optimizer, Int16ToFloat32)
+{
+   for (unsigned i = 0; i < 2; ++i) {
+      CASE(bi_s32_to_f32_to(b, reg, bi_s16_to_s32(b, bi_half(x, i))),
+           bi_s16_to_f32_to(b, reg, bi_half(x, i)));
+
+      CASE(bi_s32_to_f32_to(b, reg, bi_u16_to_u32(b, bi_half(x, i))),
+           bi_u16_to_f32_to(b, reg, bi_half(x, i)));
+
+      CASE(bi_u32_to_f32_to(b, reg, bi_u16_to_u32(b, bi_half(x, i))),
+           bi_u16_to_f32_to(b, reg, bi_half(x, i)));
+   }
 }

@@ -1,4 +1,3 @@
-dEQP-VK.glsl.builtin.precision_double.determinant.compute.mat3,Fail
 dEQP-VK.texture.mipmap.2d.image_view_min_lod.base_level.linear_linear,Fail
 dEQP-VK.texture.mipmap.2d.image_view_min_lod.base_level.linear_linear_integer_texel_coord,Fail
 dEQP-VK.texture.mipmap.2d.image_view_min_lod.base_level.linear_nearest,Fail

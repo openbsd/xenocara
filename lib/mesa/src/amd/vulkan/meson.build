@@ -26,12 +26,15 @@ radv_entrypoints = custom_target(
     prog_python, '@INPUT0@', '--xml', '@INPUT1@', '--proto', '--weak',
     '--out-h', '@OUTPUT0@', '--out-c', '@OUTPUT1@', '--prefix', 'radv',
     '--device-prefix', 'sqtt', '--device-prefix', 'metro_exodus',
+    '--device-prefix', 'rra',
   ],
   depend_files : vk_entrypoints_gen_depend_files,
 )
 
 libradv_files = files(
+  'bvh/bvh.h',
   'layers/radv_metro_exodus.c',
+  'layers/radv_rra_layer.c',
   'layers/radv_sqtt_layer.c',
   'winsys/null/radv_null_bo.c',
   'winsys/null/radv_null_bo.h',
@@ -49,6 +52,7 @@ libradv_files = files(
   'radv_device.c',
   'radv_descriptor_set.c',
   'radv_descriptor_set.h',
+  'radv_device_generated_commands.c',
   'radv_formats.c',
   'radv_image.c',
   'radv_meta.c',
@@ -70,15 +74,16 @@ libradv_files = files(
   'radv_meta_resolve_cs.c',
   'radv_meta_resolve_fs.c',
   'radv_nir_apply_pipeline_layout.c',
+  'radv_nir_lower_abi.c',
   'radv_nir_lower_ray_queries.c',
   'radv_nir_lower_ycbcr_textures.c',
-  'radv_pass.c',
   'radv_perfcounter.c',
   'radv_pipeline.c',
   'radv_pipeline_cache.c',
   'radv_pipeline_rt.c',
   'radv_private.h',
   'radv_radeon_winsys.h',
+  'radv_rra.c',
   'radv_rt_common.c',
   'radv_sdma_copy_image.c',
   'radv_shader.c',
@@ -120,6 +125,11 @@ if with_llvm
   )
 endif
 
+subdir('radix_sort')
+libradv_files += radix_sort_files
+
+subdir('bvh')
+
 radv_deps = []
 radv_flags = cc.get_supported_arguments(['-Wimplicit-fallthrough', '-Wshadow'])
 
@@ -149,12 +159,15 @@ if with_ld_version_script
   libvulkan_radeon_link_depends += files('vulkan.sym')
 endif
 
-vulkan_radv_def = 'vulkan_radv.def'
+radv_build_id = get_option('radv-build-id')
+if radv_build_id != ''
+  radv_flags += '-DRADV_BUILD_ID_OVERRIDE="' + radv_build_id + '"'
+endif
 
 libvulkan_radeon = shared_library(
   'vulkan_radeon',
-  [libradv_files, radv_entrypoints, sha1_h],
-  vs_module_defs : vulkan_radv_def,
+  [libradv_files, radv_entrypoints, sha1_h, radix_sort_spv, bvh_spv],
+  vs_module_defs : vulkan_api_def,
   include_directories : [
     inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_gallium_aux, inc_amd, inc_amd_common, inc_amd_common_llvm, inc_compiler, inc_util,
   ],
@@ -166,7 +179,7 @@ libvulkan_radeon = shared_library(
     dep_valgrind, radv_deps, idep_aco,
     idep_mesautil, idep_nir, idep_vulkan_util, idep_vulkan_wsi,
     idep_vulkan_runtime, idep_amdgfxregs_h, idep_xmlconfig,
-    idep_vulkan_common_entrypoints_h
+    idep_vulkan_common_entrypoints_h, idep_vulkan_wsi_entrypoints_h
   ],
   c_args : [no_override_init_args, radv_flags, c_msvc_compat_args],
   cpp_args : [radv_flags, cpp_msvc_compat_args],
@@ -175,6 +188,7 @@ libvulkan_radeon = shared_library(
   ],
   link_depends : [libvulkan_radeon_link_depends,],
   gnu_symbol_visibility : 'hidden',
+  name_prefix : host_machine.system() == 'windows' ? '' : 'lib',
   install : true,
 )
 
@@ -195,7 +209,7 @@ endif
 icd_lib_path = join_paths(get_option('prefix'), get_option('libdir'))
 icd_file_name = 'libvulkan_radeon.so'
 if with_platform_windows
-  icd_lib_path = '.'
+  icd_lib_path = join_paths(get_option('prefix'), get_option('bindir'))
   icd_file_name = 'vulkan_radeon.dll'
 endif
 

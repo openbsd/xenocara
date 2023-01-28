@@ -108,7 +108,7 @@ struct intel_measure_snapshot {
    enum intel_measure_snapshot_type type;
    unsigned count, event_count;
    const char* event_name;
-   uintptr_t framebuffer, vs, tcs, tes, gs, fs, cs;
+   uintptr_t framebuffer, vs, tcs, tes, gs, fs, cs, ms, ts;
    /* for vulkan secondary command buffers */
    struct intel_measure_batch *secondary;
 };
@@ -124,9 +124,13 @@ struct intel_measure_ringbuffer {
    struct intel_measure_buffered_result results[0];
 };
 
+/* This function will be called when enqueued snapshots have been processed */
+typedef void (*intel_measure_release_batch_cb)(struct intel_measure_batch *base);
+
 struct intel_measure_device {
    struct intel_measure_config *config;
    unsigned frame;
+   intel_measure_release_batch_cb release_batch;
 
    /* Holds the list of (iris/anv)_measure_batch snapshots that have been
     * submitted for rendering, but have not completed.
@@ -153,13 +157,14 @@ void intel_measure_init(struct intel_measure_device *device);
 const char * intel_measure_snapshot_string(enum intel_measure_snapshot_type type);
 bool intel_measure_state_changed(const struct intel_measure_batch *batch,
                                  uintptr_t vs, uintptr_t tcs, uintptr_t tes,
-                                 uintptr_t gs, uintptr_t fs, uintptr_t cs);
+                                 uintptr_t gs, uintptr_t fs, uintptr_t cs,
+                                 uintptr_t ms, uintptr_t ts);
 void intel_measure_frame_transition(unsigned frame);
 
 bool intel_measure_ready(struct intel_measure_batch *batch);
 
 struct intel_device_info;
 void intel_measure_gather(struct intel_measure_device *device,
-                          struct intel_device_info *info);
+                          const struct intel_device_info *info);
 
 #endif /* INTEL_MEASURE_H */

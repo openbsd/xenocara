@@ -25,10 +25,13 @@
  *    Rob Clark <robclark@freedesktop.org>
  */
 
+#define FD_BO_NO_HARDPIN 1
+
 #include "util/format_srgb.h"
 #include "util/half_float.h"
 #include "util/u_dump.h"
 #include "util/u_log.h"
+#include "util/u_surface.h"
 
 #include "freedreno_blitter.h"
 #include "freedreno_fence.h"
@@ -37,7 +40,6 @@
 
 #include "fd6_blitter.h"
 #include "fd6_emit.h"
-#include "fd6_format.h"
 #include "fd6_resource.h"
 
 static inline enum a6xx_2d_ifmt
@@ -198,16 +200,16 @@ can_do_blit(const struct pipe_blit_info *info)
    fail_if(!ok_format(info->src.format));
    fail_if(!ok_format(info->dst.format));
 
-   debug_assert(!util_format_is_compressed(info->src.format));
-   debug_assert(!util_format_is_compressed(info->dst.format));
+   assert(!util_format_is_compressed(info->src.format));
+   assert(!util_format_is_compressed(info->dst.format));
 
    fail_if(!ok_dims(info->src.resource, &info->src.box, info->src.level));
 
    fail_if(!ok_dims(info->dst.resource, &info->dst.box, info->dst.level));
 
-   debug_assert(info->dst.box.width >= 0);
-   debug_assert(info->dst.box.height >= 0);
-   debug_assert(info->dst.box.depth >= 0);
+   assert(info->dst.box.width >= 0);
+   assert(info->dst.box.height >= 0);
+   assert(info->dst.box.depth >= 0);
 
    fail_if(info->dst.resource->nr_samples > 1);
 
@@ -228,6 +230,16 @@ can_do_blit(const struct pipe_blit_info *info)
    }
 
    fail_if(info->alpha_blend);
+
+   return true;
+}
+
+static bool
+can_do_clear(const struct pipe_resource *prsc, unsigned level,
+             const struct pipe_box *box)
+{
+   return ok_format(prsc->format) &&
+          ok_dims(prsc, box, level);
 
    return true;
 }
@@ -315,16 +327,16 @@ emit_blit_buffer(struct fd_context *ctx, struct fd_ringbuffer *ring,
    src = fd_resource(info->src.resource);
    dst = fd_resource(info->dst.resource);
 
-   debug_assert(src->layout.cpp == 1);
-   debug_assert(dst->layout.cpp == 1);
-   debug_assert(info->src.resource->format == info->dst.resource->format);
-   debug_assert((sbox->y == 0) && (sbox->height == 1));
-   debug_assert((dbox->y == 0) && (dbox->height == 1));
-   debug_assert((sbox->z == 0) && (sbox->depth == 1));
-   debug_assert((dbox->z == 0) && (dbox->depth == 1));
-   debug_assert(sbox->width == dbox->width);
-   debug_assert(info->src.level == 0);
-   debug_assert(info->dst.level == 0);
+   assert(src->layout.cpp == 1);
+   assert(dst->layout.cpp == 1);
+   assert(info->src.resource->format == info->dst.resource->format);
+   assert((sbox->y == 0) && (sbox->height == 1));
+   assert((dbox->y == 0) && (dbox->height == 1));
+   assert((sbox->z == 0) && (sbox->depth == 1));
+   assert((dbox->z == 0) && (dbox->depth == 1));
+   assert(sbox->width == dbox->width);
+   assert(info->src.level == 0);
+   assert(info->dst.level == 0);
 
    /*
     * Buffers can have dimensions bigger than max width, remap into
@@ -358,8 +370,8 @@ emit_blit_buffer(struct fd_context *ctx, struct fd_ringbuffer *ring,
       w = MIN2(sbox->width - off, (0x4000 - 0x40));
       p = align(w, 64);
 
-      debug_assert((soff + w) <= fd_bo_size(src->bo));
-      debug_assert((doff + w) <= fd_bo_size(dst->bo));
+      assert((soff + w) <= fd_bo_size(src->bo));
+      assert((doff + w) <= fd_bo_size(dst->bo));
 
       /*
        * Emit source:
@@ -413,16 +425,16 @@ emit_blit_buffer(struct fd_context *ctx, struct fd_ringbuffer *ring,
       OUT_RING(ring, 0x3f);
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, ctx->screen->info->a6xx.magic.RB_UNKNOWN_8E04_blit);
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, ctx->screen->info->a6xx.magic.RB_DBG_ECO_CNTL_blit);
 
       OUT_PKT7(ring, CP_BLIT, 1);
       OUT_RING(ring, CP_BLIT_0_OP(BLIT_OP_SCALE));
 
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, 0); /* RB_UNKNOWN_8E04 */
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, 0); /* RB_DBG_ECO_CNTL */
    }
 }
 
@@ -508,16 +520,16 @@ fd6_clear_ubwc(struct fd_batch *batch, struct fd_resource *rsc) assert_dt
       OUT_RING(ring, 0x3f);
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, batch->ctx->screen->info->a6xx.magic.RB_UNKNOWN_8E04_blit);
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, batch->ctx->screen->info->a6xx.magic.RB_DBG_ECO_CNTL_blit);
 
       OUT_PKT7(ring, CP_BLIT, 1);
       OUT_RING(ring, CP_BLIT_0_OP(BLIT_OP_SCALE));
 
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, 0); /* RB_UNKNOWN_8E04 */
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, 0); /* RB_DBG_ECO_CNTL */
 
       offset += w * h;
       size -= w * h;
@@ -686,16 +698,16 @@ emit_blit_texture(struct fd_context *ctx, struct fd_ringbuffer *ring,
       OUT_RING(ring, 0x3f);
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, ctx->screen->info->a6xx.magic.RB_UNKNOWN_8E04_blit);
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, ctx->screen->info->a6xx.magic.RB_DBG_ECO_CNTL_blit);
 
       OUT_PKT7(ring, CP_BLIT, 1);
       OUT_RING(ring, CP_BLIT_0_OP(BLIT_OP_SCALE));
 
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, 0); /* RB_UNKNOWN_8E04 */
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, 0); /* RB_DBG_ECO_CNTL */
    }
 }
 
@@ -783,7 +795,7 @@ convert_color(enum pipe_format format, union pipe_color_union *pcolor)
 
 void
 fd6_clear_surface(struct fd_context *ctx, struct fd_ringbuffer *ring,
-                  struct pipe_surface *psurf, uint32_t width, uint32_t height,
+                  struct pipe_surface *psurf, const struct pipe_box *box2d,
                   union pipe_color_union *color, uint32_t unknown_8c01)
 {
    if (DEBUG_BLIT) {
@@ -794,9 +806,10 @@ fd6_clear_surface(struct fd_context *ctx, struct fd_ringbuffer *ring,
 
    uint32_t nr_samples = fd_resource_nr_samples(psurf->texture);
    OUT_PKT4(ring, REG_A6XX_GRAS_2D_DST_TL, 2);
-   OUT_RING(ring, A6XX_GRAS_2D_DST_TL_X(0) | A6XX_GRAS_2D_DST_TL_Y(0));
-   OUT_RING(ring, A6XX_GRAS_2D_DST_BR_X(width * nr_samples - 1) |
-                     A6XX_GRAS_2D_DST_BR_Y(height - 1));
+   OUT_RING(ring, A6XX_GRAS_2D_DST_TL_X(box2d->x * nr_samples) |
+                     A6XX_GRAS_2D_DST_TL_Y(box2d->y));
+   OUT_RING(ring, A6XX_GRAS_2D_DST_BR_X((box2d->x + box2d->width) * nr_samples - 1) |
+                     A6XX_GRAS_2D_DST_BR_Y(box2d->y + box2d->height - 1));
 
    union pipe_color_union clear_color = convert_color(psurf->format, color);
 
@@ -814,17 +827,112 @@ fd6_clear_surface(struct fd_context *ctx, struct fd_ringbuffer *ring,
       OUT_RING(ring, 0x3f);
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, ctx->screen->info->a6xx.magic.RB_UNKNOWN_8E04_blit);
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, ctx->screen->info->a6xx.magic.RB_DBG_ECO_CNTL_blit);
 
       OUT_PKT7(ring, CP_BLIT, 1);
       OUT_RING(ring, CP_BLIT_0_OP(BLIT_OP_SCALE));
 
       OUT_WFI5(ring);
 
-      OUT_PKT4(ring, REG_A6XX_RB_UNKNOWN_8E04, 1);
-      OUT_RING(ring, 0); /* RB_UNKNOWN_8E04 */
+      OUT_PKT4(ring, REG_A6XX_RB_DBG_ECO_CNTL, 1);
+      OUT_RING(ring, 0); /* RB_DBG_ECO_CNTL */
    }
+}
+
+static void
+fd6_clear_texture(struct pipe_context *pctx, struct pipe_resource *prsc,
+                  unsigned level, const struct pipe_box *box, const void *data)
+   assert_dt
+{
+   struct fd_context *ctx = fd_context(pctx);
+   struct fd_resource *rsc = fd_resource(prsc);
+
+   if (DEBUG_BLIT) {
+      fprintf(stderr, "surface texture:\ndst resource: ");
+      util_dump_resource(stderr, prsc);
+      fprintf(stderr, "\n");
+   }
+
+   if (!can_do_clear(prsc, level, box))
+      goto fallback;
+
+   union pipe_color_union color;
+
+   if (util_format_is_depth_or_stencil(prsc->format)) {
+      const struct util_format_description *desc =
+             util_format_description(prsc->format);
+      float depth = 0.0f;
+      uint8_t stencil = 0;
+
+      if (util_format_has_depth(desc))
+         util_format_unpack_z_float(prsc->format, &depth, data, 1);
+
+      if (util_format_has_stencil(desc))
+         util_format_unpack_s_8uint(prsc->format, &stencil, data, 1);
+
+      if (rsc->stencil)
+         fd6_clear_texture(pctx, &rsc->stencil->b.b, level, box, &stencil);
+
+      color.f[0] = depth;
+      color.ui[1] = stencil;
+   } else {
+      util_format_unpack_rgba(prsc->format, color.ui, data, 1);
+   }
+
+   struct fd_batch *batch = fd_bc_alloc_batch(ctx, true);
+
+   fd_screen_lock(ctx->screen);
+   fd_batch_resource_write(batch, rsc);
+   fd_screen_unlock(ctx->screen);
+
+   ASSERTED bool ret = fd_batch_lock_submit(batch);
+   assert(ret);
+
+   /* Marking the batch as needing flush must come after the batch
+    * dependency tracking (resource_read()/resource_write()), as that
+    * can trigger a flush
+    */
+   fd_batch_needs_flush(batch);
+
+   fd_batch_update_queries(batch);
+
+   emit_setup(batch);
+
+   struct pipe_surface surf = {
+         .format = prsc->format,
+         .texture = prsc,
+         .u = {
+               .tex = {
+                     .level = level,
+                     .first_layer = box->z,
+                     .last_layer = box->depth + box->z - 1,
+               },
+         },
+   };
+
+   fd6_clear_surface(ctx, batch->draw, &surf, box, &color, 0);
+
+   fd6_event_write(batch, batch->draw, PC_CCU_FLUSH_COLOR_TS, true);
+   fd6_event_write(batch, batch->draw, PC_CCU_FLUSH_DEPTH_TS, true);
+   fd6_event_write(batch, batch->draw, CACHE_FLUSH_TS, true);
+   fd_wfi(batch, batch->draw);
+   fd6_cache_inv(batch, batch->draw);
+
+   fd_batch_unlock_submit(batch);
+
+   fd_batch_flush(batch);
+   fd_batch_reference(&batch, NULL);
+
+   /* Acc query state will have been dirtied by our fd_batch_update_queries, so
+    * the ctx->batch may need to turn its queries back on.
+    */
+   ctx->update_active_queries = true;
+
+   return;
+
+fallback:
+   util_clear_texture(pctx, prsc, level, box, data);
 }
 
 void
@@ -905,7 +1013,7 @@ handle_rgba_blit(struct fd_context *ctx,
 {
    struct fd_batch *batch;
 
-   debug_assert(!(info->mask & PIPE_MASK_ZS));
+   assert(!(info->mask & PIPE_MASK_ZS));
 
    if (!can_do_blit(info))
       return false;
@@ -950,8 +1058,8 @@ handle_rgba_blit(struct fd_context *ctx,
       emit_blit_buffer(ctx, batch->draw, info);
    } else {
       /* I don't *think* we need to handle blits between buffer <-> !buffer */
-      debug_assert(info->src.resource->target != PIPE_BUFFER);
-      debug_assert(info->dst.resource->target != PIPE_BUFFER);
+      assert(info->src.resource->target != PIPE_BUFFER);
+      assert(info->dst.resource->target != PIPE_BUFFER);
       emit_blit_texture(ctx, batch->draw, info, sample_0);
    }
 
@@ -992,7 +1100,7 @@ do_rewritten_blit(struct fd_context *ctx,
          mesa_logw("sample averaging on fallback blit when we shouldn't.");
       success = fd_blitter_blit(ctx, info);
    }
-   debug_assert(success); /* fallback should never fail! */
+   assert(success); /* fallback should never fail! */
    return success;
 }
 
@@ -1019,7 +1127,7 @@ handle_zs_blit(struct fd_context *ctx,
 
    switch (info->dst.format) {
    case PIPE_FORMAT_S8_UINT:
-      debug_assert(info->mask == PIPE_MASK_S);
+      assert(info->mask == PIPE_MASK_S);
       blit.mask = PIPE_MASK_R;
       blit.src.format = PIPE_FORMAT_R8_UINT;
       blit.dst.format = PIPE_FORMAT_R8_UINT;
@@ -1052,7 +1160,7 @@ handle_zs_blit(struct fd_context *ctx,
 
    case PIPE_FORMAT_Z32_UNORM:
    case PIPE_FORMAT_Z32_FLOAT:
-      debug_assert(info->mask == PIPE_MASK_Z);
+      assert(info->mask == PIPE_MASK_Z);
       blit.mask = PIPE_MASK_R;
       blit.src.format = PIPE_FORMAT_R32_UINT;
       blit.dst.format = PIPE_FORMAT_R32_UINT;
@@ -1107,7 +1215,7 @@ handle_compressed_blit(struct fd_context *ctx,
    if (util_format_get_blocksize(info->src.format) == 8) {
       blit.src.format = blit.dst.format = PIPE_FORMAT_R16G16B16A16_UINT;
    } else {
-      debug_assert(util_format_get_blocksize(info->src.format) == 16);
+      assert(util_format_get_blocksize(info->src.format) == 16);
       blit.src.format = blit.dst.format = PIPE_FORMAT_R32G32B32A32_UINT;
    }
 
@@ -1119,16 +1227,16 @@ handle_compressed_blit(struct fd_context *ctx,
     * be:
     */
 
-   debug_assert((blit.src.box.x % bw) == 0);
-   debug_assert((blit.src.box.y % bh) == 0);
+   assert((blit.src.box.x % bw) == 0);
+   assert((blit.src.box.y % bh) == 0);
 
    blit.src.box.x /= bw;
    blit.src.box.y /= bh;
    blit.src.box.width = DIV_ROUND_UP(blit.src.box.width, bw);
    blit.src.box.height = DIV_ROUND_UP(blit.src.box.height, bh);
 
-   debug_assert((blit.dst.box.x % bw) == 0);
-   debug_assert((blit.dst.box.y % bh) == 0);
+   assert((blit.dst.box.x % bw) == 0);
+   assert((blit.dst.box.y % bh) == 0);
 
    blit.dst.box.x /= bw;
    blit.dst.box.y /= bh;
@@ -1188,6 +1296,7 @@ fd6_blitter_init(struct pipe_context *pctx) disable_thread_safety_analysis
    if (FD_DBG(NOBLIT))
       return;
 
+   pctx->clear_texture = fd6_clear_texture;
    ctx->blit = fd6_blit;
 }
 

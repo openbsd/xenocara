@@ -531,7 +531,11 @@ get_equation_str(const struct pan_blend_rt_state *rt_state,
         int ret;
 
         if (!rt_state->equation.blend_enable) {
-		ret = snprintf(str, len, "replace");
+		ret = snprintf(str, len, "replace(%s%s%s%s)",
+                               (rt_state->equation.color_mask & 1) ? "R" : "",
+                               (rt_state->equation.color_mask & 2) ? "G" : "",
+                               (rt_state->equation.color_mask & 4) ? "B" : "",
+                               (rt_state->equation.color_mask & 8) ? "A" : "");
                 assert(ret > 0);
                 return;
         }
@@ -583,10 +587,10 @@ pan_inline_blend_constants(nir_builder *b, nir_instr *instr, void *data)
 
         float *floats = data;
         const nir_const_value constants[4] = {
-                { .f32 = floats[0] },
-                { .f32 = floats[1] },
-                { .f32 = floats[2] },
-                { .f32 = floats[3] }
+                nir_const_value_for_float(floats[0], 32),
+                nir_const_value_for_float(floats[1], 32),
+                nir_const_value_for_float(floats[2], 32),
+                nir_const_value_for_float(floats[3], 32)
         };
 
         b->cursor = nir_after_instr(instr);
@@ -621,6 +625,16 @@ GENX(pan_blend_create_shader)(const struct panfrost_device *dev,
         const struct util_format_description *format_desc =
                 util_format_description(rt_state->format);
         nir_alu_type nir_type = pan_unpacked_type_for_format(format_desc);
+
+        /* Bifrost/Valhall support 16-bit and 32-bit register formats for
+         * LD_TILE/ST_TILE/BLEND, but do not support 8-bit. Rather than making
+         * the fragment output 8-bit and inserting extra conversions in the
+         * compiler, promote the output to 16-bit. The larger size is still
+         * compatible with correct conversion semantics.
+         */
+        if (PAN_ARCH >= 6 && nir_alu_type_get_type_size(nir_type) == 8)
+                nir_type = nir_alu_type_get_base_type(nir_type) | 16;
+
         enum glsl_base_type glsl_type = nir_get_glsl_base_type_for_nir_type(nir_type);
 
         nir_lower_blend_options options = {
@@ -681,13 +695,18 @@ GENX(pan_blend_create_shader)(const struct panfrost_device *dev,
 
         nir_ssa_def *s_src[] = {nir_load_var(&b, c_src), nir_load_var(&b, c_src1)};
 
-        /* Saturate integer conversions */
+        /* On Midgard, the blend shader is responsible for format conversion.
+         * As the OpenGL spec requires integer conversions to saturate, we must
+         * saturate ourselves here. On Bifrost and later, the conversion
+         * hardware handles this automatically.
+         */
         for (int i = 0; i < ARRAY_SIZE(s_src); ++i) {
                 nir_alu_type T = nir_alu_type_get_base_type(nir_type);
+                bool should_saturate = (PAN_ARCH <= 5) && (T != nir_type_float);
                 s_src[i] = nir_convert_with_rounding(&b, s_src[i],
                                 src_types[i], nir_type,
                                 nir_rounding_mode_undef,
-                                T != nir_type_float);
+                                should_saturate);
         }
 
         /* Build a trivial blend shader */
@@ -695,7 +714,7 @@ GENX(pan_blend_create_shader)(const struct panfrost_device *dev,
 
         options.src1 = s_src[1];
 
-        NIR_PASS_V(b.shader, nir_lower_blend, options);
+        NIR_PASS_V(b.shader, nir_lower_blend, &options);
         nir_shader_instructions_pass(b.shader, pan_inline_blend_constants,
                         nir_metadata_block_index | nir_metadata_dominance,
                         (void *) state->constants);
@@ -780,6 +799,11 @@ GENX(pan_blend_get_shader_locked)(const struct panfrost_device *dev,
                 .equation = state->rts[rt].equation,
         };
 
+        /* Blend shaders should only be used for blending on Bifrost onwards */
+        assert(dev->arch <= 5 || state->logicop_enable ||
+               !pan_blend_is_opaque(state->rts[rt].equation));
+        assert(state->rts[rt].equation.color_mask != 0);
+
         struct hash_entry *he = _mesa_hash_table_search(dev->blend_shaders.shaders, &key);
         struct pan_blend_shader *shader = he ? he->data : NULL;
 
@@ -823,6 +847,7 @@ GENX(pan_blend_get_shader_locked)(const struct panfrost_device *dev,
                 .is_blend = true,
                 .blend.rt = shader->key.rt,
                 .blend.nr_samples = key.nr_samples,
+                .fixed_sysval_ubo = -1,
                 .rt_formats = { key.format },
         };
 
@@ -834,6 +859,9 @@ GENX(pan_blend_get_shader_locked)(const struct panfrost_device *dev,
         struct pan_shader_info info;
 
         GENX(pan_shader_compile)(nir, &inputs, &variant->binary, &info);
+
+        /* Blend shaders can't have sysvals */
+        assert(info.sysvals.sysval_count == 0);
 
         variant->work_reg_count = info.work_reg_count;
 

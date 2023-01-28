@@ -1,6 +1,6 @@
 variables:
   FDO_UPSTREAM_REPO: mesa/mesa
-  MESA_TEMPLATES_COMMIT: &ci-templates-commit 290b79e0e78eab67a83766f4e9691be554fc4afd
+  MESA_TEMPLATES_COMMIT: &ci-templates-commit d5aa3941aa03c2f716595116354fb81eb8012acb
   CI_PRE_CLONE_SCRIPT: |-
           set -o xtrace
           wget -q -O download-git-cache.sh ${CI_PROJECT_URL}/-/raw/${CI_COMMIT_SHA}/.gitlab-ci/download-git-cache.sh
@@ -8,7 +8,7 @@ variables:
           rm download-git-cache.sh
           set +o xtrace
   CI_JOB_JWT_FILE: /minio_jwt
-  MINIO_HOST: minio-packet.freedesktop.org
+  MINIO_HOST: s3.freedesktop.org
   # per-pipeline artifact storage on MinIO
   PIPELINE_ARTIFACTS_BASE: ${MINIO_HOST}/artifacts/${CI_PROJECT_PATH}/${CI_PIPELINE_ID}
   # per-job artifact storage on MinIO
@@ -18,8 +18,11 @@ variables:
   # Individual CI farm status, set to "offline" to disable jobs
   # running on a particular CI farm (ie. for outages, etc):
   FD_FARM: "online"
-  COLLABORA_FARM: "offline"
-  MICROSOFT_FARM: "offline"
+  COLLABORA_FARM: "online"
+  MICROSOFT_FARM: "online"
+  LIMA_FARM: "online"
+  IGALIA_FARM: "online"
+  ANHOLT_FARM: "online"
 
 default:
   before_script:
@@ -36,9 +39,15 @@ default:
       export CI_JOB_JWT="$(<${CI_JOB_JWT_FILE})" &&
       rm "${CI_JOB_JWT_FILE}"
 
+  # Retry build or test jobs up to twice when the gitlab-runner itself fails somehow.
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+
 include:
   - project: 'freedesktop/ci-templates'
-    ref: 34f4ade99434043f88e164933f570301fd18b125
+    ref: ffe4d1b10aab7534489f0c4bbc4c5899df17d3f2
     file:
       - '/templates/ci-fairy.yml'
   - project: 'freedesktop/ci-templates'
@@ -59,11 +68,9 @@ include:
   - local: 'src/gallium/drivers/crocus/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/d3d12/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/i915/ci/gitlab-ci.yml'
-  - local: 'src/gallium/drivers/iris/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/lima/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/llvmpipe/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/nouveau/ci/gitlab-ci.yml'
-  - local: 'src/gallium/drivers/radeonsi/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/softpipe/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/virgl/ci/gitlab-ci.yml'
   - local: 'src/gallium/drivers/zink/ci/gitlab-ci.yml'
@@ -71,6 +78,7 @@ include:
   - local: 'src/intel/ci/gitlab-ci.yml'
   - local: 'src/microsoft/ci/gitlab-ci.yml'
   - local: 'src/panfrost/ci/gitlab-ci.yml'
+  - local: 'src/virtio/ci/gitlab-ci.yml'
 
 stages:
   - sanity
@@ -78,6 +86,7 @@ stages:
   - git-archive
   - build-x86_64
   - build-misc
+  - lint
   - amd
   - intel
   - nouveau
@@ -89,12 +98,6 @@ stages:
   - layered-backends
   - deploy
 
-# Generic rule to not run the job during scheduled pipelines
-# ----------------------------------------------------------
-.scheduled_pipelines-rules:
-  rules: &ignore_scheduled_pipelines
-    if: &is-scheduled-pipeline '$CI_PIPELINE_SOURCE == "schedule"'
-    when: never
 
 # YAML anchors for rule conditions
 # --------------------------------
@@ -126,10 +129,10 @@ stages:
 .docs-base:
   extends:
     - .fdo.ci-fairy
-    - .ci-run-policy
+    - .build-rules
   script:
   - apk --no-cache add graphviz doxygen
-  - pip3 install sphinx breathe mako sphinx_rtd_theme
+  - pip3 install sphinx===5.1.1 breathe===4.34.0 mako===1.2.3 sphinx_rtd_theme===1.0.0
   - docs/doxygen-wrapper.py --out-dir=docs/doxygen_xml
   - sphinx-build -W -b html docs public
 
@@ -141,7 +144,7 @@ pages:
     - public
   needs: []
   rules:
-    - *ignore_scheduled_pipelines
+    - !reference [.no_scheduled_pipelines-rules, rules]
     - if: *is-mesa-main
       changes: &docs-or-ci
       - docs/**/*
@@ -156,7 +159,7 @@ test-docs:
   stage: deploy
   needs: []
   rules:
-    - *ignore_scheduled_pipelines
+    - !reference [.no_scheduled_pipelines-rules, rules]
     - if: *is-forked-branch
       changes: *docs-or-ci
       when: manual
@@ -177,10 +180,10 @@ test-docs-mr:
       when: on_success
     # Other cases default to never
 
-# When to automatically run the CI
-.ci-run-policy:
+# When to automatically run the CI for build jobs
+.build-rules:
   rules:
-    - *ignore_scheduled_pipelines
+    - !reference [.no_scheduled_pipelines-rules, rules]
     # If any files affecting the pipeline are changed, build/test jobs run
     # automatically once all dependency jobs have passed
     - changes: &all_paths
@@ -200,12 +203,7 @@ test-docs-mr:
       - include/**/*
       - src/**/*
       when: on_success
-    # Otherwise, build/test jobs won't run
-    - when: never
-  retry:
-    max: 2
-    when:
-      - runner_system_failure
+    # Otherwise, build/test jobs won't run because no rule matched.
 
 
 .ci-deqp-artifacts:
@@ -221,10 +219,8 @@ test-docs-mr:
       - _build/meson-logs/strace
 
 .container-rules:
-  extends:
-    - .ci-run-policy
   rules:
-    - *ignore_scheduled_pipelines
+    - !reference [.no_scheduled_pipelines-rules, rules]
     # Run pipeline by default in the main project if any CI pipeline
     # configuration files were changed, to ensure docker images are up to date
     - if: *is-post-merge
@@ -249,8 +245,7 @@ test-docs-mr:
     - changes:
         *all_paths
       when: manual
-    # Otherwise, container jobs won't run
-    - when: never
+    # Otherwise, container jobs won't run because no rule matched.
 
 # Git archive
 
@@ -259,8 +254,7 @@ make git archive:
     - .fdo.ci-fairy
   stage: git-archive
   rules:
-    - if: *is-scheduled-pipeline
-      when: on_success
+    - !reference [.scheduled_pipeline-rules, rules]
   # ensure we are running on packet
   tags:
     - packet.net
@@ -270,9 +264,7 @@ make git archive:
     # compress the current folder
     - tar -cvzf ../$CI_PROJECT_NAME.tar.gz .
 
-    # login with the JWT token file
-    - ci-fairy minio login --token-file "${CI_JOB_JWT_FILE}"
-    - ci-fairy minio cp ../$CI_PROJECT_NAME.tar.gz minio://$MINIO_HOST/git-cache/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/$CI_PROJECT_NAME.tar.gz
+    - ci-fairy s3cp --token-file "${CI_JOB_JWT_FILE}" ../$CI_PROJECT_NAME.tar.gz https://$MINIO_HOST/git-cache/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME/$CI_PROJECT_NAME.tar.gz
 
 
 # Sanity checks of MR settings and commit logs
@@ -294,34 +286,17 @@ sanity:
     reports:
       junit: check-*.xml
 
-# Rules for tests that should not be present in MRs or the main
-# project's pipeline (don't block marge or report red on
-# mesa/mesa main) but should be present on pipelines in personal
-# branches (so you can opt in to running the flaky test when you want
-# to).
-.test-manual:
-  rules:
-    - *ignore_scheduled_pipelines
-    - if: *is-forked-branch
-      changes:
-        *all_paths
-      when: manual
-    - when: never
-  variables:
-    GIT_STRATEGY: none
-    JOB_TIMEOUT: 80
-
-# The above .test-manual rules doesn't allow the jobs to be available for MRs
-# but we should have an option to have manual jobs in MRs as well.
+# Rules for tests that should not block merging, but should be available to
+# optionally run with the "play" button in the UI in pre-merge non-marge
+# pipelines.  This should appear in "extends:" after any includes of
+# test-source-dep.yml rules, so that these rules replace those.
 .test-manual-mr:
   rules:
-    - *ignore_scheduled_pipelines
+    - !reference [.no_scheduled_pipelines-rules, rules]
     - if: *is-forked-branch-or-pre-merge-not-for-marge
       changes:
         *all_paths
       when: manual
-    - when: never
   variables:
-    GIT_STRATEGY: none
     JOB_TIMEOUT: 80
 

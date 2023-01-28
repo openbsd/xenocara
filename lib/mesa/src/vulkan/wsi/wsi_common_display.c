@@ -927,7 +927,7 @@ wsi_display_surface_get_surface_counters(
    VkIcdSurfaceBase *surface_base,
    VkSurfaceCounterFlagsEXT *counters)
 {
-   *counters = VK_SURFACE_COUNTER_VBLANK_EXT;
+   *counters = VK_SURFACE_COUNTER_VBLANK_BIT_EXT;
    return VK_SUCCESS;
 }
 
@@ -997,7 +997,7 @@ wsi_display_surface_get_formats(VkIcdSurfaceBase *icd_surface,
    for (unsigned i = 0; i < ARRAY_SIZE(sorted_formats); i++) {
       vk_outarray_append_typed(VkSurfaceFormatKHR, &out, f) {
          f->format = sorted_formats[i];
-         f->colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+         f->colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
       }
    }
 
@@ -1021,7 +1021,7 @@ wsi_display_surface_get_formats2(VkIcdSurfaceBase *surface,
       vk_outarray_append_typed(VkSurfaceFormat2KHR, &out, f) {
          assert(f->sType == VK_STRUCTURE_TYPE_SURFACE_FORMAT_2_KHR);
          f->surfaceFormat.format = sorted_formats[i];
-         f->surfaceFormat.colorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+         f->surfaceFormat.colorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
       }
    }
 
@@ -1104,11 +1104,8 @@ wsi_display_image_init(VkDevice device_h,
    memset(image->buffer, 0, sizeof (image->buffer));
 
    for (unsigned int i = 0; i < image->base.num_planes; i++) {
-      int ret = drmPrimeFDToHandle(wsi->fd, image->base.fds[i],
+      int ret = drmPrimeFDToHandle(wsi->fd, image->base.dma_buf_fd,
                                    &image->buffer[i]);
-
-      close(image->base.fds[i]);
-      image->base.fds[i] = -1;
       if (ret < 0)
          goto fail_handle;
    }
@@ -1136,10 +1133,6 @@ fail_handle:
    for (unsigned int i = 0; i < image->base.num_planes; i++) {
       if (image->buffer[i])
          wsi_display_destroy_buffer(wsi, image->buffer[i]);
-      if (image->base.fds[i] != -1) {
-         close(image->base.fds[i]);
-         image->base.fds[i] = -1;
-      }
    }
 
    wsi_destroy_image(&chain->base, &image->base);
@@ -1171,7 +1164,6 @@ wsi_display_swapchain_destroy(struct wsi_swapchain *drv_chain,
 
    for (uint32_t i = 0; i < chain->base.image_count; i++)
       wsi_display_image_finish(drv_chain, allocator, &chain->images[i]);
-   wsi_destroy_image_info(&chain->base, &chain->base.image_info);
 
    wsi_swapchain_finish(&chain->base);
    vk_free(allocator, chain);
@@ -1958,8 +1950,14 @@ wsi_display_surface_create_swapchain(
    if (chain == NULL)
       return VK_ERROR_OUT_OF_HOST_MEMORY;
 
+   struct wsi_drm_image_params image_params = {
+      .base.image_type = WSI_IMAGE_TYPE_DRM,
+      .same_gpu = true,
+   };
+
    VkResult result = wsi_swapchain_init(wsi_device, &chain->base, device,
-                                        create_info, allocator, false);
+                                        create_info, &image_params.base,
+                                        allocator);
    if (result != VK_SUCCESS) {
       vk_free(allocator, chain);
       return result;
@@ -1977,15 +1975,6 @@ wsi_display_surface_create_swapchain(
 
    chain->surface = (VkIcdSurfaceDisplay *) icd_surface;
 
-   result = wsi_configure_native_image(&chain->base, create_info,
-                                       0, NULL, NULL,
-                                       NULL /* alloc_shm */,
-                                       &chain->base.image_info);
-   if (result != VK_SUCCESS) {
-      vk_free(allocator, chain);
-      goto fail_init_images;
-   }
-
    for (uint32_t image = 0; image < chain->base.image_count; image++) {
       result = wsi_display_image_init(device, &chain->base,
                                       create_info, allocator,
@@ -1996,7 +1985,7 @@ wsi_display_surface_create_swapchain(
             wsi_display_image_finish(&chain->base, allocator,
                                      &chain->images[image]);
          }
-         wsi_destroy_image_info(&chain->base, &chain->base.image_info);
+         wsi_swapchain_finish(&chain->base);
          vk_free(allocator, chain);
          goto fail_init_images;
       }
@@ -2250,6 +2239,8 @@ wsi_ReleaseDisplayEXT(VkPhysicalDevice physicalDevice,
       close(wsi->fd);
       wsi->fd = -1;
    }
+
+   wsi_display_connector_from_handle(display)->active = false;
 
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
    wsi_display_connector_from_handle(display)->output = None;

@@ -158,7 +158,7 @@ X-tiling so we have historically used X-tiling for all window-system buffers
 Bit-6 Swizzling
 ^^^^^^^^^^^^^^^
 
-When bit-6 swizzling is enabled, bits 9 and 10 are XOR'd in with bit 6 of the
+When bit-6 swizzling is enabled, bits 9 and 10 are XORed in with bit 6 of the
 tiled address:
 
 .. code-block:: c
@@ -201,7 +201,7 @@ Starting with Sky Lake, we can scan out from Y-tiled buffers.
 Bit-6 Swizzling
 ^^^^^^^^^^^^^^^
 
-When bit-6 swizzling is enabled, bit 9 is XOR'd in with bit 6 of the tiled
+When bit-6 swizzling is enabled, bit 9 is XORed in with bit 6 of the tiled
 address:
 
 .. code-block:: c
@@ -320,7 +320,7 @@ are relatively expensive in hardware while interleaving bits in a well-defined
 pattern is practically free. For a format that has more than one byte per
 element, you simply chop bits off the bottom of the pattern, hard-code them to
 0, and adjust bit indices as needed.  For a 128-bit format, for instance, the
-Y-tiled pattern becomes u_2 u_1 u_0 v_4 v_3 v_2 v_1 v_0.  The Sky Lake PRM
-Vol. 5 in the section "2D Surfaces" contains an expanded version of the above
-table (which we will not repeat here) that also includes the bit patterns for
-the Ys and Yf tiling formats.
+Y-tiled pattern becomes :math:`u_2 u_1 u_0 v_4 v_3 v_2 v_1 v_0`.  The Sky Lake
+PRM Vol. 5 in the section "2D Surfaces" contains an expanded version of the
+above table (which we will not repeat here) that also includes the bit patterns
+for the Ys and Yf tiling formats.

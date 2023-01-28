@@ -38,6 +38,7 @@ libv3dv_files = files(
   'v3dv_debug.h',
   'v3dv_descriptor_set.c',
   'v3dv_device.c',
+  'v3dv_event.c',
   'v3dv_formats.c',
   'v3dv_image.c',
   'v3dv_limits.h',
@@ -51,7 +52,7 @@ libv3dv_files = files(
   'v3dv_queue.c',
   'v3dv_uniforms.c',
   'v3dv_wsi.c',
-)
+) + [v3d_xml_pack, vk_common_entrypoints[0], wsi_entrypoints[0]]
 
 files_per_version = files(
   'v3dvx_cmd_buffer.c',
@@ -156,7 +157,7 @@ broadcom_icd = custom_target(
   output : 'broadcom_icd.@0@.json'.format(host_machine.cpu()),
   command : [
     prog_python, '@INPUT0@',
-    '--api-version', '1.1', '--xml', '@INPUT1@',
+    '--api-version', '1.2', '--xml', '@INPUT1@',
     '--lib-path', join_paths(get_option('prefix'), get_option('libdir'),
     		  	     'libvulkan_broadcom.so'),
     '--out', '@OUTPUT@',

@@ -70,7 +70,7 @@ struct lp_shader_input {
    uint interp:4;       /* enum lp_interp */
    uint usage_mask:4;   /* bitmask of TGSI_WRITEMASK_x flags */
    uint src_index:8;    /* where to find values in incoming vertices */
-   uint location:2;     /* TGSI_INTERPOLOATE_LOC_* */
+   uint location:2;     /* TGSI_INTERPOLATE_LOC_* */
    uint padding:14;
 };
 
@@ -90,6 +90,7 @@ struct lp_build_interp_soa_context
    double pos_offset;
    unsigned coverage_samples;
    LLVMValueRef num_loop;
+   LLVMTypeRef sample_pos_array_type;
    LLVMValueRef sample_pos_array;
 
    LLVMValueRef x;
@@ -107,6 +108,7 @@ struct lp_build_interp_soa_context
 
    LLVMValueRef xoffset_store;
    LLVMValueRef yoffset_store;
+   LLVMTypeRef store_elem_type;
 
    /*
     * Convenience pointers. Callers may access this one.
@@ -123,9 +125,9 @@ lp_build_interp_soa_init(struct lp_build_interp_soa_context *bld,
                          const struct lp_shader_input *inputs,
                          boolean pixel_center_integer,
                          unsigned coverage_samples,
+                         LLVMTypeRef sample_pos_array_type,
                          LLVMValueRef sample_pos_array,
                          LLVMValueRef num_loop,
-                         boolean depth_clamp,
                          LLVMBuilderRef builder,
                          struct lp_type type,
                          LLVMValueRef a0_ptr,
@@ -138,6 +140,7 @@ void
 lp_build_interp_soa_update_inputs_dyn(struct lp_build_interp_soa_context *bld,
                                       struct gallivm_state *gallivm,
                                       LLVMValueRef quad_start_index,
+                                      LLVMTypeRef mask_type,
                                       LLVMValueRef mask_store,
                                       LLVMValueRef sample_id);
 
@@ -151,6 +154,7 @@ LLVMValueRef
 lp_build_interp_soa(struct lp_build_interp_soa_context *bld,
                     struct gallivm_state *gallivm,
                     LLVMValueRef loop_iter,
+                    LLVMTypeRef mask_type,
                     LLVMValueRef mask_store,
                     unsigned attrib, unsigned chan,
                     unsigned loc,

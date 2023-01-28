@@ -26,11 +26,59 @@
 
 #include "util/u_inlines.h"
 
-#ifndef _WIN32
-#include <wsl/winadapter.h>
-#endif
+#include "d3d12_common.h"
 
-#include <directx/d3d12.h>
+
+constexpr uint64_t NsPerMs = 1000000;
+constexpr uint64_t MaxTimeoutInNs = (uint64_t)UINT_MAX * NsPerMs;
+
+#ifdef _WIN32
+inline void
+d3d12_fence_close_event(HANDLE event, int fd)
+{
+   if (event)
+      CloseHandle(event);
+}
+
+inline HANDLE
+d3d12_fence_create_event(int *fd)
+{
+   *fd = -1;
+   return CreateEvent(NULL, FALSE, FALSE, NULL);
+}
+
+inline bool
+d3d12_fence_wait_event(HANDLE event, int event_fd, uint64_t timeout_ns)
+{
+   DWORD timeout_ms = (timeout_ns == PIPE_TIMEOUT_INFINITE || timeout_ns > MaxTimeoutInNs) ? INFINITE : timeout_ns / NsPerMs;
+   return WaitForSingleObject(event, timeout_ms) == WAIT_OBJECT_0;
+}
+#else
+#include <sys/eventfd.h>
+#include <poll.h>
+#include <util/libsync.h>
+
+inline void
+d3d12_fence_close_event(HANDLE event, int fd)
+{
+   if (fd != -1)
+      close(fd);
+}
+
+inline HANDLE
+d3d12_fence_create_event(int *fd)
+{
+   *fd = eventfd(0, 0);
+   return (HANDLE)(size_t)*fd;
+}
+
+inline bool
+d3d12_fence_wait_event(HANDLE event, int event_fd, uint64_t timeout_ns)
+{
+   int timeout_ms = (timeout_ns == PIPE_TIMEOUT_INFINITE || timeout_ns > MaxTimeoutInNs) ? -1 : timeout_ns / NsPerMs;
+   return sync_wait(event_fd, timeout_ms) == 0;
+}
+#endif
 
 struct pipe_screen;
 struct d3d12_screen;
@@ -52,6 +100,9 @@ d3d12_fence(struct pipe_fence_handle *pfence)
 
 struct d3d12_fence *
 d3d12_create_fence(struct d3d12_screen *screen);
+
+struct d3d12_fence *
+d3d12_open_fence(struct d3d12_screen *screen, HANDLE handle, const void *name);
 
 void
 d3d12_fence_reference(struct d3d12_fence **ptr, struct d3d12_fence *fence);

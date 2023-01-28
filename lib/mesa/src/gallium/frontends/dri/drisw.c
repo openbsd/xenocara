@@ -245,6 +245,12 @@ drisw_swap_buffers(__DRIdrawable *dPriv)
    if (!ctx)
       return;
 
+   /* Wait for glthread to finish because we can't use pipe_context from
+    * multiple threads.
+    */
+   if (ctx->st->thread_finish)
+      ctx->st->thread_finish(ctx->st);
+
    ptex = drawable->textures[ST_ATTACHMENT_BACK_LEFT];
 
    if (ptex) {
@@ -286,6 +292,12 @@ drisw_copy_sub_buffer(__DRIdrawable *dPriv, int x, int y,
    ptex = drawable->textures[ST_ATTACHMENT_BACK_LEFT];
 
    if (ptex) {
+      /* Wait for glthread to finish because we can't use pipe_context from
+       * multiple threads.
+       */
+      if (ctx->st->thread_finish)
+         ctx->st->thread_finish(ctx->st);
+
       struct pipe_fence_handle *fence = NULL;
       if (ctx->pp && drawable->textures[ST_ATTACHMENT_DEPTH_STENCIL])
          pp_run(ctx->pp, ptex, ptex, drawable->textures[ST_ATTACHMENT_DEPTH_STENCIL]);
@@ -317,6 +329,12 @@ drisw_flush_frontbuffer(struct dri_context *ctx,
 
    if (!ctx || statt != ST_ATTACHMENT_FRONT_LEFT)
       return false;
+
+   /* Wait for glthread to finish because we can't use pipe_context from
+    * multiple threads.
+    */
+   if (ctx->st->thread_finish)
+      ctx->st->thread_finish(ctx->st);
 
    if (drawable->stvis.samples > 1) {
       /* Resolve the front buffer. */
@@ -352,6 +370,12 @@ drisw_allocate_textures(struct dri_context *stctx,
    unsigned width, height;
    boolean resized;
    unsigned i;
+
+   /* Wait for glthread to finish because we can't use pipe_context from
+    * multiple threads.
+    */
+   if (stctx->st->thread_finish)
+      stctx->st->thread_finish(stctx->st);
 
    width  = drawable->dPriv->w;
    height = drawable->dPriv->h;
@@ -438,6 +462,12 @@ drisw_update_tex_buffer(struct dri_drawable *drawable,
    int x, y, w, h;
    int ximage_stride, line;
    int cpp = util_format_get_blocksize(res->format);
+
+   /* Wait for glthread to finish because we can't use pipe_context from
+    * multiple threads.
+    */
+   if (ctx->st->thread_finish)
+      ctx->st->thread_finish(ctx->st);
 
    get_drawable_info(dPriv, &x, &y, &w, &h);
 
@@ -526,7 +556,7 @@ drisw_init_screen(__DRIscreen * sPriv)
       return NULL;
 
    screen->sPriv = sPriv;
-   screen->fd = -1;
+   screen->fd = sPriv->fd;
 
    screen->swrast_no_present = debug_get_option_swrast_no_present();
 
@@ -537,7 +567,14 @@ drisw_init_screen(__DRIscreen * sPriv)
          lf = &drisw_shm_lf;
    }
 
-   if (pipe_loader_sw_probe_dri(&screen->dev, lf)) {
+   bool success = false;
+#ifdef HAVE_DRISW_KMS
+   if (screen->fd != -1)
+      success = pipe_loader_sw_probe_kms(&screen->dev, screen->fd);
+#endif
+   if (!success)
+      success = pipe_loader_sw_probe_dri(&screen->dev, lf);
+   if (success) {
       pscreen = pipe_loader_create_screen(screen->dev);
       dri_init_options(screen);
    }
@@ -614,11 +651,27 @@ static const struct __DRIDriverVtableExtensionRec galliumsw_vtable = {
    .vtable = &galliumsw_driver_api,
 };
 
+/* swrast copy sub buffer entrypoint. */
+static void driswCopySubBuffer(__DRIdrawable *pdp, int x, int y,
+                               int w, int h)
+{
+   assert(pdp->driScreenPriv->swrast_loader);
+
+   pdp->driScreenPriv->driver->CopySubBuffer(pdp, x, y, w, h);
+}
+
+/* for swrast only */
+const __DRIcopySubBufferExtension driSWCopySubBufferExtension = {
+   .base = { __DRI_COPY_SUB_BUFFER, 1 },
+
+   .copySubBuffer               = driswCopySubBuffer,
+};
+
 /* This is the table of extensions that the loader will dlsym() for. */
 const __DRIextension *galliumsw_driver_extensions[] = {
     &driCoreExtension.base,
     &driSWRastExtension.base,
-    &driCopySubBufferExtension.base,
+    &driSWCopySubBufferExtension.base,
     &gallium_config_options.base,
     &galliumsw_vtable.base,
     NULL

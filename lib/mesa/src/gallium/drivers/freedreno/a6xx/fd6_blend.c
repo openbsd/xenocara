@@ -25,6 +25,8 @@
  *    Rob Clark <robclark@freedesktop.org>
  */
 
+#define FD_BO_NO_HARDPIN 1
+
 #include "pipe/p_state.h"
 #include "util/u_blend.h"
 #include "util/u_dual_blend.h"
@@ -33,7 +35,6 @@
 
 #include "fd6_blend.h"
 #include "fd6_context.h"
-#include "fd6_format.h"
 #include "fd6_pack.h"
 
 // XXX move somewhere common.. same across a3xx/a4xx/a5xx..
