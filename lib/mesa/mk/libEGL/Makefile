@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/01/28 08:56:33 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2023/01/29 12:20:31 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -41,9 +41,13 @@ CPPFLAGS+=	-I${MESA_SRC}/src/egl/main \
 
 LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
 	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
-	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
-	${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a \
-	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
+	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a
+
+.if ${WITH_SSE41} == "yes"
+LDADD+=	${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a
+.endif
+
+LDADD+=	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
 	-Wl,--gc-sections \
 	-lz -lm \
 	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb -lxcb-randr -lxcb-xfixes

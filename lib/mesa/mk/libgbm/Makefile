@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/01/29 12:20:31 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -23,9 +23,13 @@ LDADD+=	-Wl,--as-needed -Wl,--start-group \
 	${.CURDIR}/../libloader/${__objdir}/libloader.a \
 	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
 	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
-	${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
-	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
+
+.if ${WITH_SSE41} == "yes"
+LDADD+=${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a
+.endif
+
+LDADD+=	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
 	-Wl,--gc-sections \
 	-lz -lm -lexpat
 
