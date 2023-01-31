@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/29 12:20:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/01/31 03:29:36 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -181,7 +181,7 @@ LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 .endfor
 
 LDADD+=		-L${.CURDIR}/../libglapi/${__objdir} -lglapi
-LDADD+=		-lelf -lLLVM -lexpat -lz -lm
+LDADD+=		-lelf -lLLVM -lexpat -lz -lm -lpthread
 LDADD+=		-L${X11BASE}/lib -ldrm
 
 .if ${WITH_GALLIUM_I915} == "yes"

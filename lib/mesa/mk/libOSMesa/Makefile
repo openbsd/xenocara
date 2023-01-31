@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/29 12:20:31 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/01/31 03:29:36 jsg Exp $
 
 LIB=	OSMesa
 
@@ -58,7 +58,7 @@ LDADD+= -L${.CURDIR}/../libglapi/${__objdir} -lglapi
 
 LDADD+=	-Wl,--gc-sections
 LDADD+=	-Wl,--version-script ${MESA_SRC}/src/gallium/targets/osmesa/osmesa.sym
-LDADD+=	-lLLVM -lm -lz
+LDADD+=	-lLLVM -lm -lz -lpthread
 LDADD+=	-L${X11BASE}/lib -ldrm
 LDADD+=	-Wl,--end-group
 

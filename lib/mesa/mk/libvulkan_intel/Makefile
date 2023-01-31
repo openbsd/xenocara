@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/01/31 03:29:36 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -92,7 +92,7 @@ LDADD+=		-Wl,--no-whole-archive
 LDADD+=		${.CURDIR}/../${slib}/${__objdir}/${slib}.a
 .endfor
 
-LDADD+=		-pthread -lm -lz -lexpat
+LDADD+=		-lpthread -lm -lz -lexpat
 LDADD+=		-L${X11BASE}/lib -ldrm \
 		-lxcb-dri3 -lxcb-randr -lXrandr -lxcb -lX11-xcb \
 		-lX11 -lxcb-dri2 -lxcb-present -lxcb-xfixes -lxcb-sync \

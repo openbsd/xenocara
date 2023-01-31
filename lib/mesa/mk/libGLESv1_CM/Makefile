@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:33 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/01/31 03:29:36 jsg Exp $
 
 LIB=	GLESv1_CM
 
@@ -12,7 +12,7 @@ CPPFLAGS+=	-DMAPI_MODE_BRIDGE \
 
 LDADD+= -L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
-	-L${X11BASE}/lib -ldrm -lm
+	-L${X11BASE}/lib -ldrm -lm -lpthread
 
 obj: _xenocara_obj
 
