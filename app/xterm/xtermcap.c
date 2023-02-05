@@ -1,7 +1,7 @@
-/* $XTermId: xtermcap.c,v 1.56 2020/10/12 18:51:05 tom Exp $ */
+/* $XTermId: xtermcap.c,v 1.58 2023/01/02 18:19:19 tom Exp $ */
 
 /*
- * Copyright 2007-2018,2020 by Thomas E. Dickey
+ * Copyright 2007-2020,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -576,9 +576,10 @@ isLegalTcapName(const char *name)
     Bool result = False;
 
     if (*name != '\0') {
+	int length = 0;
 	result = True;
 	while (*name != '\0') {
-	    if (isgraph(CharOf(*name))) {
+	    if (++length < 32 && isgraph(CharOf(*name))) {
 		if (strchr("\\|,:'\"", *name) != 0) {
 		    result = False;
 		    break;
@@ -615,6 +616,7 @@ set_termcap(XtermWidget xw, const char *name)
 	if ((value = x_decode_hex(name, &temp)) != 0) {
 	    if (*temp == '\0' && isLegalTcapName(value)) {
 		if (TcapInit(buffer, value)) {
+		    TRACE(("...set_termcap(%s)\n", NonNull(value)));
 #if !USE_TERMINFO
 		    memcpy(screen->tcapbuf, buffer, sizeof(buffer));
 #endif

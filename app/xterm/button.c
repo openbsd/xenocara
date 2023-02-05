@@ -1,4 +1,4 @@
-/* $XTermId: button.c,v 1.645 2022/10/23 22:59:52 tom Exp $ */
+/* $XTermId: button.c,v 1.646 2022/11/25 00:26:32 tom Exp $ */
 
 /*
  * Copyright 1999-2021,2022 by Thomas E. Dickey
@@ -2555,7 +2555,7 @@ removeControls(XtermWidget xw, char *value)
 	    int ch = CharOf(value[src++]);
 
 #define ReplacePaste(n) \
-	    if (screen->disallow_paste_controls[n]) \
+	    if (screen->disallow_paste_ops[n]) \
 		value[dst] = ' '
 
 	    if (ch < 32) {

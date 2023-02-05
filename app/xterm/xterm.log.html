@@ -2,7 +2,7 @@
  *****************************************************************************
  * this file is part of xterm                                                *
  *                                                                           *
- * Copyright 1997-2021,2022 by Thomas E. Dickey                              *
+ * Copyright 1997-2022,2023 by Thomas E. Dickey                              *
  *                                                                           *
  * All Rights Reserved                                                       *
  *                                                                           *
@@ -30,7 +30,7 @@
  * sale, use or other dealings in this Software without prior written        *
  * authorization.                                                            *
  *****************************************************************************
-  $XTermId: xterm.log.html,v 1.2453 2022/10/24 00:25:20 tom Exp $
+  $XTermId: xterm.log.html,v 1.2478 2023/01/09 10:29:25 tom Exp $
   -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
@@ -50,7 +50,7 @@
 <body>
   <hr>
 
-  <p>Copyright &copy; 1997-2021,2022 by <a href=
+  <p>Copyright &copy; 1997-2022,2023 by <a href=
   "mailto:dickey@invisible-island.net">Thomas E. Dickey</a></p>
 
   <hr>
@@ -70,6 +70,12 @@
   CHANGELOG</a>).</p>
 
   <ul>
+    <li><a href="#xterm_378">Patch #378 - 2023/01/09</a></li>
+
+    <li><a href="#xterm_377">Patch #377 - 2022/11/25</a></li>
+
+    <li><a href="#xterm_376">Patch #376 - 2022/11/16</a></li>
+
     <li><a href="#xterm_375">Patch #375 - 2022/10/23</a></li>
 
     <li><a href="#xterm_374">Patch #374 - 2022/10/10</a></li>
@@ -1026,6 +1032,80 @@
     <li><a href="#xterm_02">Patch #2 - 1996/1/7</a></li>
 
     <li><a href="#xterm_01">Patch #1 - 1996/1/6</a></li>
+  </ul>
+
+  <h1><a name="xterm_378" id="xterm_378">Patch #378 -
+  2023/01/09</a></h1>
+
+  <ul>
+    <li>improve descriptions of <em>XTQMODKEYS</em> and
+    <em>XTQALLOWED</em> features in <tt>ctlseqs.ms</tt> (reports by
+    Bram Moolenaar, Thomas Wolff).</li>
+
+    <li>add <tt>bracketed+paste</tt> and <tt>report+version</tt>
+    building blocks to terminfo, from ncurses 6.4</li>
+
+    <li>improve check for unsupported formatting characters, e.g.,
+    zero-width space, to properly ignore them (report by Thomas
+    Wolff).</li>
+
+    <li>improve/document error-checking for some of the controls
+    which return responses: DECRQSS, XTGETXRES, XTSETTCAP,
+    XTGETTCAP (prompted by discussion with David Leadbeater).</li>
+
+    <li>improve limit-checks for fallback font cache (report by
+    Dimitrije Erdeljan).</li>
+
+    <li>improve check for too-wide glyph in fallback font by
+    allowing xterm to continue searching for a suitable font rather
+    than just failing on the first. Also add
+    <tt>limitFontWidth</tt> to allow changing the amount by which a
+    glyph must extend outside the font's bounding box to disallow
+    it.</li>
+  </ul>
+
+  <h1><a name="xterm_377" id="xterm_377">Patch #377 -
+  2022/11/25</a></h1>
+
+  <ul>
+    <li>add control sequences for reporting the current state of
+    the modified keys options (XTQMODKEYS) and allowed/disallowed
+    operations (XTQALLOWED), (prompted by discussion with Bram
+    Moolenaar).</li>
+
+    <li>amend <code>modifyOtherKeys</code> case 2 to distinguish
+    the escape character with modifiers, e.g., shift-escape, from a
+    plain escape character (suggested by Bram Moolenaar).</li>
+
+    <li>improve parsing and error-recovery in the case where a list
+    of X11 bitmap fonts is given in the <code>-fn</code> and
+    related options.</li>
+
+    <li>change default for <code>xftTrackMemUsage</code> to false,
+    because libXft does not handle certain fonts.</li>
+  </ul>
+
+  <h1><a name="xterm_376" id="xterm_376">Patch #376 -
+  2022/11/16</a></h1>
+
+  <ul>
+    <li>modify configure script to always check for gcc
+    attributes,</li>
+
+    <li>update <code>install-sh</code>.</li>
+
+    <li>fix parsing of <code>result&nbsp;-u</code> in
+    <code>vttests/halves.pl</code>.</li>
+
+    <li>add a note in <code>ctlseqs.ms</code> about compatibility
+    of <code>TBC</code>.</li>
+
+    <li>fix a copy/paste error in manual (patch by Grady
+    Martin).</li>
+
+    <li>add null-pointer checks in <code>x_strcasecmp</code> and
+    <code>x_strncasecmp</code>, to help with error-recovery for a
+    missing font (Debian #1022942).</li>
   </ul>
 
   <h1><a name="xterm_375" id="xterm_375">Patch #375 -

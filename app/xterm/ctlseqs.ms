@@ -1,9 +1,9 @@
 .\"#! troff -ms $1		-*- Nroff -*-
-.\" "Xterm Control Sequences" document
-.\" $XTermId: ctlseqs.ms,v 1.641 2022/10/10 14:18:26 tom Exp $
+.\" "XTerm Control Sequences" document
+.\" $XTermId: ctlseqs.ms,v 1.666 2023/01/07 01:30:20 tom Exp $
 .\"
 .\"
-.\" Copyright 1996-2021,2022 by Thomas E. Dickey
+.\" Copyright 1996-2022,2023 by Thomas E. Dickey
 .\"
 .\"                         All Rights Reserved
 .\"
@@ -69,8 +69,8 @@
 .\"
 .ds XT XTerm
 .ds xt xterm
-.ds LF Patch #374
-.ds RF 2022/10/10
+.ds LF Patch #378
+.ds RF 2023/01/06
 .\"
 .if n .pl 9999v		\" no page breaks in nroff
 .ND
@@ -346,7 +346,7 @@ X Consortium (1994)
 Thomas Dickey
 .AI
 XFree86 Project (1996-2006)
-invisible-island.net (2006-2022)
+invisible-island.net (2006-2023)
 updated for \*(XT \*(LF (\*(RF)
 .AU
 .
@@ -886,7 +886,7 @@ The string following the \*(``q\*('' is one of the following:
 for valid requests, replacing the \*(Pt with the corresponding \*(Cs
 string,
 or
-\*(Dc\*0\*$\*r\*(Pt\*s\*(ST
+\*(Dc\*0\*$\*r\*s\*(ST
 for invalid requests.
 .iP
 .IP \\*(Dc\\*(Ps\\*s\\*$\\*t\\*(Pt\\*s\\*(ST
@@ -903,27 +903,43 @@ The string following the \*(``Q\*('' is a list of names
 encoded in hexadecimal (2 digits per character)
 separated by \*;
 which correspond to \fI\*(xt\fP resource names.
-Only boolean, numeric and string resources are supported by this query.
 .sP
 \fI\*(xt\fP responds with
 .br
 \*(Dc\*1\*+\*R\*(Pt\*s\*(ST
 for valid requests, adding to \*(Pt an \*=,
-and the value of the corresponding resource that \fI\*(xt\fP is using,
+and the value of the corresponding \fI\*(xt\fP resource,
 or
 .br
 \*(Dc\*0\*+\*R\*(Pt\*s\*(ST
 for invalid requests.
 .br
 The strings are encoded in hexadecimal (2 digits per character).
+.sP
+Only boolean, numeric and string resources for the VT100 widget
+are supported by this query.
+\fI\*(XT\fP evaluates resources at startup time.
+Several of \fI\*(xt\fP's state variables
+use resources to determine their initial value.
+Because the resource variable may not reflect the current state,
+\fI\*(xt\fP provides control sequences for querying the state directly:
+.RS
+.iP
+.bP
+XTQALLOWED
+.bP
+XTQMODKEYS
+.RE
 .Ed
 .
 .iP
 .IP \\*(Dc\\*+\\*p\\*(Pt\\*s\\*(ST
 Set Termcap/Terminfo Data (XTSETTCAP), \fI\*(xt\fP.
-The string following the \*(``p\*('' is a name to use for retrieving data from
-the terminal database.
-The data will be used for the \*(``tcap\*('' keyboard
+The string following the \*(``p\*('' is encoded in hexadecimal.
+After decoding it, \fI\*(xt\fP will use the name to
+retrieve data from the terminal database.
+If successful, that overrides the \fBtermName\fP resource when
+handling the \*(``tcap\*('' keyboard
 configuration's function- and special-keys, as well as by the
 Request Termcap/Terminfo String control.
 .
@@ -956,10 +972,14 @@ for valid requests, adding to \*(Pt an \*=,
 and the value of the corresponding string that \fI\*(xt\fP would send,
 or
 .br
-\*(Dc\*0\*+\*r\*(Pt\*s\*(ST
+\*(Dc\*0\*+\*r\*(ST
 for invalid requests.
 .br
 The strings are encoded in hexadecimal (2 digits per character).
+If more than one name is given, \fI\*(xt\fP replies with each
+name/value pair in the same response.
+An invalid name (one not found in \fI\*(xt\fP's tables)
+ends processing of the list of names.
 .Ed
 .\"
 .Ss Functions using \*(Cs, ordered by the final character(s)
@@ -1287,6 +1307,10 @@ Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP).
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*g
 Tab Clear (TBC).
+ECMA-48 defines additional codes,
+but the VT100 user manual notes that it
+ignores other codes.
+DEC's later terminals (and \fI\*(xt\fP) do the same, for compatibility.
   \*(Ps = \*0 \(-> Clear Current Column (default).
   \*(Ps = \*3 \(-> Clear All.
 .
@@ -1341,7 +1365,7 @@ This may be disabled by the \fBtiteInhibit\fP resource.
   \*(Ps = \*6\*7 \(-> Backarrow key sends backspace (DECBKM), VT340, VT420.
 This sets the \fBbackarrowKey\fP resource to \*(``true\*(''.
   \*(Ps = \*6\*9 \(-> Enable left and right margin mode (DECLRMM), VT420 and up.
-  \*(Ps = \*8\*0 \(-> Enable \fISixel Display Mode\fP (DECSDM), VT330, VT340, VT382. 
+  \*(Ps = \*8\*0 \(-> Enable \fISixel Display Mode\fP (DECSDM), VT330, VT340, VT382.
   \*(Ps = \*9\*5 \(-> Do not clear screen when DECCOLM is set/reset
 (DECNCSM), VT510 and up.
   \*(Ps = \*1\*0\*0\*0 \(-> Send Mouse X & Y on button press and release.
@@ -1477,7 +1501,7 @@ This sets the \fBbackarrowKey\fP resource to \*(``false\*(''.
   \*(Ps = \*6\*9 \(-> Disable left and right margin mode (DECLRMM),
 VT420 and up.
   \*(Ps = \*8\*0 \(-> Disable \fISixel Display Mode\fP (DECSDM), VT330, VT340, VT382.
-Turns on ``Sixel Scrolling''.
+Turns on \*(``Sixel Scrolling\*(''.
 See the section \fBSixel Graphics\fP and mode \*8\*4\*5\*2.
   \*(Ps = \*9\*5 \(-> Clear screen when DECCOLM is set/reset (DECNCSM),
 VT510 and up.
@@ -1729,6 +1753,31 @@ Values \*3 and \*5 are reserved for keypad-keys and string-keys.
 .iP
 .IP
 If no parameters are given, all resources are reset to their initial values.
+.
+.iP
+.IP \\*(Cs\\*?\\*(Pp\\*s\\*m
+Query key modifier options (XTQMODKEYS), \fI\*(xt\fP.
+.iP
+.IP
+The parameter \*(Pp identifies the resource to query.
+.iP
+  \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
+.iP
+.IP
+\*(XT's response can be used to restore this state,
+because it is formatted as an XTMODKEYS control, i.e.,
+.iP
+  \*(Cs\*>\*(Pp\*s\*m
+.iP
+where
+.iP
+  \*(Pp = \*0 \(-> \fBmodifyKeyboard\fP.
+  \*(Pp = \*1 \(-> \fBmodifyCursorKeys\fP.
+  \*(Pp = \*2 \(-> \fBmodifyFunctionKeys\fP.
+  \*(Pp = \*4 \(-> \fBmodifyOtherKeys\fP.
 .
 .iP
 .IP \\*(Cs\\*(Ps\\*s\\*n
@@ -2568,6 +2617,34 @@ for each item from the list of selection parameters.
 If the second parameter is neither a base64 string nor \*?,
 then the selection is cleared.
 .sP
+  \*(Ps = \*6\*0 \(-> Query allowed features (XTQALLOWED).
+\fI\*(XT\fP replies with
+.sP
+  \*(Os\*6\*0\*s\*;\*(Pt\*s\*(ST
+.sP
+where \*(Pt is a comma-separated list
+of the \fIallowed\fP optional runtime features,
+i.e., zero or more of these resource names:
+.iP
+  \fBallowColorOps\fR
+  \fBallowFontOps\fR
+  \fBallowMouseOps\fR
+  \fBallowPasteControls\fR
+  \fBallowTcapOps\fR
+  \fBallowTitleOps\fR
+  \fBallowWindowOps\fR
+.sP
+  \*(Ps = \*6\*1 \(-> Query disallowed features (XTQDISALLOWED).
+The second parameter (i.e., the main feature)
+must be one of the resource names returned by \*(Os\*6\*0.
+\fI\*(XT\fP replies with
+.sP
+  \*(Os\*6\*1\*s\*;\*(Pt\*s\*(ST
+.sP
+where \*(Pt is a comma-separated list
+of the optional runtime features which would be disallowed
+if the main feature is disabled.
+.sP
   \*(Ps = \*1\*0\*4\*;\fIc\fP \(-> Reset Color Number \fIc\fP.  It is reset to
 the color specified by the corresponding X resource.
 Any number of \fIc\fP parameters may be given.
@@ -2693,14 +2770,14 @@ ordinary keys may be sent as escape sequences:
 .bP
 When \fBmodifyOtherKeys\fP is set to 1,
 only the alt- and meta-modifiers apply.
-For example, \fIalt-Tab\fP sends 
+For example, \fIalt-Tab\fP sends
 \*(Cs\*2\*7\*;\*3\*;\*9\*~
 (the second parameter is \*(``3\*('' for \fIalt\fP,
 and the third parameter is the ASCII value of tab, \*(``9\*('').
 .bP
 When \fBmodifyOtherKeys\fP is set to 2,
 all of the modifiers apply.
-For example, \fIshift-Tab\fP sends 
+For example, \fIshift-Tab\fP sends
 \*(Cs\*2\*7\*;\*2\*;\*9\*~
 rather than
 \*(Cs\*Z
@@ -2709,7 +2786,7 @@ rather than
 The \fBformatOtherKeys\fP resource tells \fI\*n\fP to change the
 format of the escape sequences sent when \fBmodifyOtherKeys\fP applies.
 When \fBmodifyOtherKeys\fP is set to 1,
-for example \fIalt-Tab\fP sends 
+for example \fIalt-Tab\fP sends
 \*(Cs\*9\*;\*3\*u
 (changing the order of parameters).
 One drawback to this format is that applications may confuse it with
@@ -3010,7 +3087,7 @@ _
 The VT100/VT220 keypad did not have all of those keys.
 They were implemented in \fI\*(xt\fP in X11R1 (1987),
 defining a mapping of all X11 keys which might be provided on a keypad.
-For instance, a Sun4/II type-4 keyboard provided 
+For instance, a Sun4/II type-4 keyboard provided
 \*(``=\*('' (equal),
 \*(``/\*('' (divide), and
 \*(``*\*('' (multiply).
@@ -3931,7 +4008,7 @@ which each manual agrees should \fIset\fP the Sixel Scrolling feature.
 The VT330/VT340 graphics programming manual (second edition, March 1988) says
 .RS 5
 .sp
-When sixel display mode is set, the \fISixel Scrolling\fP feature is enabled. 
+When sixel display mode is set, the \fISixel Scrolling\fP feature is enabled.
 .br
 When sixel display mode is reset, the \fISixel Scrolling\fP feature is disabled.
 .RE
@@ -4145,7 +4222,7 @@ as defined hereunder.
 This Standard addresses a whole class of devices which can vary greatly
 from each other depending on the application for which a device has
 been specifically designed. Obviously, a
-product which implements all facilities described in this standard \[en]   
+product which implements all facilities described in this standard \[en]
 thus being in \*(``full conformance\*('' with it \[en] whilst theoretically
 possible, would be technically and economically unthinkable.
 .ft R

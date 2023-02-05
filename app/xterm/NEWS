@@ -1,13 +1,22 @@
 The NEWS file was generated from xterm.log.html, which serves as the changelog
 for xterm.
 --------------------------------------------------------------------------------
-                            Patch #375 - 2022/10/23
+                            Patch #378 - 2023/01/09
 
-     * improve  error-recovery  when  setting  a bitmap font for the VT100
-       window,  e.g.,  in  case  OSC 50  failed, restoring the most recent
-       valid  font  so  that  a  subsequent  OSC 50 reports this correctly
-       (report by David Leadbeater).
-     * exclude  MC_XDG_OPEN  from environment variables trimmed on startup
-       (report by Gabor Hauzer).
-     * check for null pointer in isSelect() (report by Column Paget).
+     * improve  descriptions  of  XTQMODKEYS  and  XTQALLOWED  features in
+       ctlseqs.ms (reports by Bram Moolenaar, Thomas Wolff).
+     * add bracketed+paste and report+version building blocks to terminfo,
+       from ncurses 6.4
+     * improve   check   for   unsupported  formatting  characters,  e.g.,
+       zero-width space, to properly ignore them (report by Thomas Wolff).
+     * improve/document  error-checking  for  some  of  the controls which
+       return   responses:   DECRQSS,   XTGETXRES,   XTSETTCAP,  XTGETTCAP
+       (prompted by discussion with David Leadbeater).
+     * improve  limit-checks  for fallback font cache (report by Dimitrije
+       Erdeljan).
+     * improve check for too-wide glyph in fallback font by allowing xterm
+       to  continue searching for a suitable font rather than just failing
+       on  the first. Also add limitFontWidth to allow changing the amount
+       by  which  a  glyph  must extend outside the font's bounding box to
+       disallow it.
 

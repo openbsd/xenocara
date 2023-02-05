@@ -1,7 +1,7 @@
-/* $XTermId: ptyx.h,v 1.1076 2022/10/07 08:00:53 Ben.Wong Exp $ */
+/* $XTermId: ptyx.h,v 1.1082 2023/01/02 13:24:41 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -1912,12 +1912,13 @@ typedef struct {
 	 * FIXME: initially implement for Xft, but replace known_missing[] in
 	 * X11 fonts as well.
 	 */
+typedef Char XTfontNum;
 typedef struct {
 	int		depth;		/* number of fonts merged for map */
 	size_t		limit;		/* allocated size of per_font, etc */
 	size_t		first_char;	/* merged first-character index */
 	size_t		last_char;	/* merged last-character index */
-	Char *		per_font;	/* index 1-n of first font with char */
+	XTfontNum *	per_font;	/* index 1-n of first font with char */
 } XTermFontMap;
 
 typedef enum {
@@ -1961,11 +1962,13 @@ typedef struct {
 	XTermXftState	usage;
 } XTermXftCache;
 
+#define MaxXftCache	MaxUChar
+
 typedef struct {
 	XftPattern *	pattern;	/* pattern for main font */
 	XftFontSet *	fontset;	/* ordered list of fallback patterns */
-	XTermXftCache	cache[MaxUChar + 1]; /* list of open font pointers */
-	unsigned	fs_size;	/* allocated size of cache[] */
+	XTermXftCache	cache[MaxXftCache + 1]; /* list of open font pointers */
+	int		fs_size;	/* last usable index of cache[] */
 	Char		opened;		/* number in cache[] with xcOpened */
 	XTermFontInfo	font_info;	/* summary of font metrics */
 	XTermFontMap	font_map;	/* map of glyphs provided in fontset */
@@ -2495,8 +2498,8 @@ typedef struct {
 	String		disallowedMouseOps;
 	char		disallow_mouse_ops[emLAST];
 
-	String		disallowedPasteControls;
-	char		disallow_paste_controls[epLAST];
+	String		disallowedPasteOps;
+	char		disallow_paste_ops[epLAST];
 
 	String		disallowedTcapOps;
 	char		disallow_tcap_ops[etLAST];
@@ -3227,6 +3230,7 @@ typedef struct _Misc {
     float face_size[NMENUFONTS];
     char *render_font_s;
     int limit_fontsets;
+    int limit_fontwidth;
 #endif
 } Misc;
 

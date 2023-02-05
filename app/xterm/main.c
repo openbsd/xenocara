@@ -1,7 +1,7 @@
-/* $XTermId: main.c,v 1.891 2022/10/21 23:02:38 tom Exp $ */
+/* $XTermId: main.c,v 1.892 2023/01/09 00:28:06 tom Exp $ */
 
 /*
- * Copyright 2002-2021,2022 by Thomas E. Dickey
+ * Copyright 2002-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3798,9 +3798,7 @@ xtermTrimEnv(void)
 	char *equals = strchr(environ[j], '=');
 	size_t dstlen = strlen(environ[j]);
 
-	if (equals == NULL)
-	    equals = (environ[j] + dstlen);
-	else
+	if (equals != NULL)
 	    dstlen = (size_t) (equals - environ[j]);
 
 	for (k = 0; k < XtNumber(table); ++k) {

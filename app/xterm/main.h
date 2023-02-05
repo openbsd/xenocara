@@ -1,4 +1,4 @@
-/* $XTermId: main.h,v 1.81 2022/07/07 09:44:28 tom Exp $ */
+/* $XTermId: main.h,v 1.82 2022/11/21 22:28:35 tom Exp $ */
 
 /*
  * Copyright 2000-2021,2022 by Thomas E. Dickey
@@ -240,7 +240,7 @@
 #endif
 
 #ifndef DEF_TRACK_USAGE
-#define DEF_TRACK_USAGE		True
+#define DEF_TRACK_USAGE		False
 #endif
 
 #ifndef DEF_XFT_CACHE

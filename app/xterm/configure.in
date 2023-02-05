@@ -1,9 +1,9 @@
-dnl $XTermId: configure.in,v 1.390 2022/10/10 16:33:01 tom Exp $
+dnl $XTermId: configure.in,v 1.392 2023/01/08 11:41:52 tom Exp $
 dnl
 dnl -----------------------------------------------------------------------------
 dnl this file is part of xterm
 dnl
-dnl Copyright 1997-2021,2022 by Thomas E. Dickey
+dnl Copyright 1997-2022,2023 by Thomas E. Dickey
 dnl
 dnl                         All Rights Reserved
 dnl
@@ -65,14 +65,14 @@ CF_XOPEN_SOURCE(700)
 CF_SIGWINCH
 
 ###	checks for header files
+AC_CHECK_DECL(exit)
 AC_CHECK_HEADERS( \
 ncurses/curses.h \
 ncurses/term.h \
-stdlib.h \
-sys/ptem.h sys/ttydefaults.h \
+sys/ptem.h \
+sys/ttydefaults.h \
 term.h \
 termios.h \
-unistd.h \
 wchar.h \
 )
 AC_HEADER_TIME
@@ -1152,7 +1152,7 @@ if test -n "$cf_cv_lib_part_tgetent"; then
     AC_CHECK_FUNCS(use_extended_names)
 fi
 
-CF_ENABLE_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual)
+CF_ENABLE_WARNINGS(Wdeclaration-after-statement Wextra Wno-unknown-pragmas Wswitch-enum Wno-cast-qual,yes)
 
 AC_SUBST(EXTRA_CFLAGS)
 AC_SUBST(CHARPROC_DEPS)

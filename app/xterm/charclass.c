@@ -1,7 +1,7 @@
-/* $XTermId: charclass.c,v 1.45 2022/09/23 23:28:44 tom Exp $ */
+/* $XTermId: charclass.c,v 1.46 2023/01/04 09:26:46 tom Exp $ */
 
 /*
- * Copyright 2002-2021,2022 by Thomas E. Dickey
+ * Copyright 2002-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -77,20 +77,6 @@ static struct classentry {
     int first;
     int last;
 } *classtab;
-
-typedef enum {
-    IDENT = -1,
-    OTHER = 0,
-    CNTRL = 1,
-    ALNUM = 48,
-    BLANK = 32,
-    U_CJK = 0x4e00,
-    U_SUP = 0x2070,
-    U_SUB = 0x2080,
-    U_HIR = 0x3040,
-    U_KAT = 0x30a0,
-    U_HAN = 0xac00
-} Classes;
 
 #ifdef TEST_DRIVER
 static int opt_all;

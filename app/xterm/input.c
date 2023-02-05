@@ -1,7 +1,7 @@
-/* $XTermId: input.c,v 1.368 2021/09/12 18:20:03 tom Exp $ */
+/* $XTermId: input.c,v 1.369 2022/11/24 12:48:54 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -627,6 +627,7 @@ ModifyOtherKeys(XtermWidget xw,
 			result = True;
 		    break;
 #endif
+		case XK_Escape:
 		case XK_Return:
 		case XK_Tab:
 		    result = (modify_parm != 0);
@@ -634,8 +635,8 @@ ModifyOtherKeys(XtermWidget xw,
 		default:
 		    if (IsControlInput(kd)) {
 			result = True;
-		    } else if (state == ShiftMask) {
-			result = (kd->keysym == ' ' || kd->keysym == XK_Return);
+		    } else if (state == ShiftMask && kd->keysym == ' ') {
+			result = True;
 		    } else if (computeMaskedModifier(xw, state, ShiftMask)) {
 			result = True;
 		    }

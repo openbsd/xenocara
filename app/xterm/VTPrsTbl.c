@@ -1,7 +1,7 @@
-/* $XTermId: VTPrsTbl.c,v 1.104 2021/12/26 17:50:25 tom Exp $ */
+/* $XTermId: VTPrsTbl.c,v 1.106 2022/11/25 01:19:18 tom Exp $ */
 
 /*
- * Copyright 1999-2020,2021 by Thomas E. Dickey
+ * Copyright 1999-2021,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3478,7 +3478,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*	l		m		n		o	*/
 CASE_DECRST,
-CASE_GROUND_STATE,
+CASE_XTERM_REPORT_MOD_FKEYS,
 CASE_DSR,
 CASE_GROUND_STATE,
 /*	p		q		r		s	*/
@@ -3638,7 +3638,7 @@ CASE_GROUND_STATE,
 CASE_GROUND_STATE,
 /*      igrave          iacute          icircumflex     idiaeresis      */
 CASE_DECRST,
-CASE_GROUND_STATE,
+CASE_XTERM_REPORT_MOD_FKEYS,
 CASE_DSR,
 CASE_GROUND_STATE,
 /*      eth             ntilde          ograve          oacute          */

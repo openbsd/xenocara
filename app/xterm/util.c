@@ -1,7 +1,7 @@
-/* $XTermId: util.c,v 1.913 2022/09/25 17:46:22 tom Exp $ */
+/* $XTermId: util.c,v 1.914 2023/01/04 09:21:31 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -2699,34 +2699,6 @@ isDefaultBackground(const char *name)
 {
     return (Boolean) !x_strcasecmp(name, XtDefaultBackground);
 }
-
-#if OPT_WIDE_CHARS
-/*
- * Check for Unicode BIDI control characters, which may be miscategorized via
- * wcwidth() and iswprint() as zero-width printable characters.
- */
-Boolean
-isWideControl(unsigned ch)
-{
-    Boolean result;
-
-    switch (ch) {
-    case 0x200E:
-    case 0x200F:
-    case 0x202A:
-    case 0x202B:
-    case 0x202C:
-    case 0x202D:
-    case 0x202E:
-	result = True;
-	break;
-    default:
-	result = False;
-	break;
-    }
-    return result;
-}
-#endif
 
 /***====================================================================***/
 

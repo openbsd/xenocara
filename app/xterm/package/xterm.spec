@@ -1,11 +1,11 @@
-# $XTermId: xterm.spec,v 1.152 2022/10/21 00:45:30 tom Exp $
+# $XTermId: xterm.spec,v 1.156 2022/11/26 12:25:02 tom Exp $
 Summary: X terminal emulator (development version)
 %global my_middle xterm
 %global my_suffix -dev
 %global fullname %{my_middle}%{my_suffix}
 %global my_class XTermDev
 Name: %{fullname}
-Version: 375
+Version: 378
 Release: 1
 License: X11
 Group: User Interface/X
@@ -27,7 +27,9 @@ Provides: x-terminal-emulator >= %{version}
 BuildRequires: x11-docs
 %else
 %if %{is_redhat}
-BuildRequires: xorg-x11-docs
+# missing in Fedora 37:
+## BuildRequires: xorg-x11-docs
+BuildRequires: ncurses-devel
 %else
 %if %{is_suse}
 BuildRequires: xorg-docs
@@ -244,6 +246,9 @@ exit 0
 %{_pixmapsdir}/*.xpm
 
 %changelog
+
+* Fri Nov 25 2022 Thomas E. Dickey
+- Fedora 37 has no xorg-x11-docs
 
 * Thu Feb 24 2022 Thomas E. Dickey
 - double-buffer is not enabled by default

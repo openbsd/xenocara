@@ -1,10 +1,10 @@
-# $XTermId: terminfo,v 1.204 2022/06/20 23:37:59 tom Exp $
+# $XTermId: terminfo,v 1.206 2023/01/08 10:51:12 tom Exp $
 #
 # Updates/notes/new entries (e.g., xterm-8bit, xterm-16color, xterm-256color)
 # - Thomas E. Dickey
 #
 #------------------------------------------------------------------------------
-# Copyright 1996-2021,2022 by Thomas E. Dickey
+# Copyright 1996-2022,2023 by Thomas E. Dickey
 #
 #                         All Rights Reserved
 #
@@ -145,6 +145,8 @@ xterm-new|modern xterm terminal emulator,
 	use=xterm+pcfkeys,
 	use=xterm+tmux,
 	use=xterm+nofkeys,
+	use=bracketed+paste,
+	use=report+version,
 
 # Left/right margins are supported in xterm since patch #279 (2012/05/10)
 vt420+lrmm|VT420 left/right margins,
@@ -965,6 +967,28 @@ xterm+x11mouse|X11 xterm mouse protocol,
 		%'\s'%+%c
 		%p2%'!'%+%c
 		%p1%'!'%+%c,
+
+# https://invisible-island.net/xterm/xterm-paste64.html
+#
+# Bracketed paste was introduced by xterm patch #203 in May 2005, as part of a
+# larger feature for manipulating the clipboard selection.  Few terminals aside
+# from xterm fully implement the clipboard feature, but several copy this
+# detail.  The names for the extended capabilities here were introduced by vim
+# in January 2017, but used internally.  In 2023, vim patch 9.0.1117 is needed
+# to work with this change.
+bracketed+paste|xterm bracketed paste,
+	BD=\E[?2004l,
+	BE=\E[?2004h,
+	PE=\E[201~,
+	PS=\E[200~,
+
+# https://invisible-island.net/xterm/xterm.log.html#xterm_354
+#
+# The response is a DSR sequence identifying the version: DCS > | text ST
+# For example:
+#	^[P>|XTerm(354)^[\
+report+version|Report xterm name and version (XTVERSION).,
+	RV=\E[>0q,
 
 # This chunk is used for building the VT220/Sun/PC keyboard variants.
 xterm-basic|modern xterm terminal emulator - common,

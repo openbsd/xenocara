@@ -1,4 +1,4 @@
--- $XTermId: THANKS,v 1.35 2022/09/12 21:10:13 tom Exp $
+-- $XTermId: THANKS,v 1.36 2022/11/17 00:49:53 tom Exp $
 -- vile:txtmode fk=utf-8
 There's no AUTHORS file in this distribution; it would be redundant since
 I (Thomas E. Dickey) have done more than 80% of the work on xterm since 1996.
@@ -95,6 +95,7 @@ George Kouryachy
 George Nachman
 George Peter Staplin
 Gertjan Halkes
+Grady Martin
 Greg Badros
 Greg Klanderman
 Greg Smith

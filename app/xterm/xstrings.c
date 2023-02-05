@@ -1,7 +1,7 @@
-/* $XTermId: xstrings.c,v 1.78 2020/10/12 18:50:28 tom Exp $ */
+/* $XTermId: xstrings.c,v 1.79 2022/11/16 23:54:32 tom Exp $ */
 
 /*
- * Copyright 2000-2019,2020 by Thomas E. Dickey
+ * Copyright 2000-2020,2022 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -395,29 +395,39 @@ x_freeargs(char **argv)
 int
 x_strcasecmp(const char *s1, const char *s2)
 {
-    size_t len = strlen(s1);
+    size_t len1 = (s1 != NULL) ? strlen(s1) : 0;
+    size_t len2 = (s2 != NULL) ? strlen(s2) : 0;
 
-    if (len != strlen(s2))
-	return 1;
-
-    return x_strncasecmp(s1, s2, (unsigned) len);
+    return ((len1 != len2)
+	    ? 1
+	    : x_strncasecmp(s1, s2, (unsigned) len1));
 }
 
 int
 x_strncasecmp(const char *s1, const char *s2, unsigned n)
 {
-    while (n-- != 0) {
-	char c1 = x_toupper(*s1);
-	char c2 = x_toupper(*s2);
-	if (c1 != c2)
-	    return 1;
-	if (c1 == 0)
-	    break;
-	s1++;
-	s2++;
+    int result = 0;
+
+    if (s1 != NULL && s2 != NULL) {
+	while (n-- != 0) {
+	    char c1 = x_toupper(*s1);
+	    char c2 = x_toupper(*s2);
+	    if (c1 != c2) {
+		result = 1;
+		break;
+	    } else if (c1 == 0) {
+		break;
+	    }
+	    s1++;
+	    s2++;
+	}
+    } else if (s1 == NULL && s2 != NULL) {
+	result = 1;
+    } else if (s1 != NULL && s2 == NULL) {
+	result = 1;
     }
 
-    return 0;
+    return result;
 }
 
 /*

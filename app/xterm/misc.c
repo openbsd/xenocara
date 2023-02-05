@@ -1,7 +1,7 @@
-/* $XTermId: misc.c,v 1.1030 2022/10/23 22:56:44 tom Exp $ */
+/* $XTermId: misc.c,v 1.1044 2023/01/07 01:11:16 tom Exp $ */
 
 /*
- * Copyright 1999-2021,2022 by Thomas E. Dickey
+ * Copyright 1999-2022,2023 by Thomas E. Dickey
  *
  *                         All Rights Reserved
  *
@@ -3542,6 +3542,28 @@ typedef enum {
 #define OSC_RESET 100
 #define OSC_Reset(code) (code) + OSC_RESET
 
+/*
+ * Other (non-color) OSC controls
+ */
+typedef enum {
+    OSC_IconBoth = 0
+    ,OSC_IconOnly = 1
+    ,OSC_TitleOnly = 2
+    ,OSC_X_Property = 3
+    ,OSC_SetAnsiColor = 4
+    ,OSC_GetAnsiColors = 5
+    ,OSC_ColorMode = 6
+    ,OSC_SetupPointer = 22
+    ,OSC_Unused_30 = 30		/* Konsole (unused) */
+    ,OSC_Unused_31 = 31		/* Konsole (unused) */
+    ,OSC_NewLogFile = 46
+    ,OSC_FontOps = 50
+    ,OSC_Unused_51		/* Emacs (unused) */
+    ,OSC_SelectionData = 52
+    ,OSC_AllowedOps = 60
+    ,OSC_DisallowedOps = 61
+} OscMiscOps;
+
 static Bool
 GetOldColors(XtermWidget xw)
 {
@@ -3693,6 +3715,7 @@ OscToColorIndex(OscTextColors mode)
     case OSC_NCOLORS:
 	break;
     }
+#undef CASE
     return result;
 }
 
@@ -3972,6 +3995,44 @@ ChangeFontRequest(XtermWidget xw, String buf)
 
 /***====================================================================***/
 
+static void
+report_allowed_ops(XtermWidget xw, int final)
+{
+    TScreen *screen = TScreenOf(xw);
+    char delimiter = ';';
+
+    unparseputc1(xw, ANSI_OSC);
+    unparseputn(xw, OSC_AllowedOps);
+
+#define CASE(name) \
+    if (screen->name) { \
+	unparseputc(xw, delimiter); \
+	unparseputs(xw, #name); \
+	delimiter = ','; \
+    }
+    CASE(allowColorOps);
+    CASE(allowFontOps);
+    CASE(allowMouseOps);
+    CASE(allowPasteControls);
+    CASE(allowTcapOps);
+    CASE(allowTitleOps);
+    CASE(allowWindowOps);
+#undef CASE
+
+    unparseputc1(xw, final);
+}
+
+static void
+report_disallowed_ops(XtermWidget xw, char *value, int final)
+{
+    unparseputc1(xw, ANSI_OSC);
+    unparseputn(xw, OSC_DisallowedOps);
+    unparse_disallowed_ops(xw, value);
+    unparseputc1(xw, final);
+}
+
+/***====================================================================***/
+
 void
 do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 {
@@ -4058,14 +4119,15 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      */
     if (xw->work.palette_changed) {
 	switch (mode) {
-	case 03:		/* change X property */
-	case 30:		/* Konsole (unused) */
-	case 31:		/* Konsole (unused) */
-	case 50:		/* font operations */
-	case 51:		/* Emacs (unused) */
-#if OPT_PASTE64
-	case 52:		/* selection data */
-#endif
+	case OSC_AllowedOps:
+	case OSC_DisallowedOps:
+	case OSC_FontOps:
+	case OSC_NewLogFile:
+	case OSC_SelectionData:
+	case OSC_Unused_30:
+	case OSC_Unused_31:
+	case OSC_Unused_51:
+	case OSC_X_Property:
 	    TRACE(("forced repaint after palette changed\n"));
 	    xw->work.palette_changed = False;
 	    xtermRepaint(xw);
@@ -4081,10 +4143,10 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
      * a special case.
      */
     switch (mode) {
-    case 50:
+    case OSC_FontOps:
 #if OPT_ISO_COLORS
-    case OSC_Reset(4):
-    case OSC_Reset(5):
+    case OSC_Reset(OSC_SetAnsiColor):
+    case OSC_Reset(OSC_GetAnsiColors):
 	need_data = False;
 	optional_data = True;
 	break;
@@ -4102,6 +4164,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     case OSC_Reset(OSC_TEK_BG):
     case OSC_Reset(OSC_TEK_CURSOR):
 #endif
+    case OSC_AllowedOps:
 	need_data = False;
 	break;
 #endif
@@ -4135,34 +4198,34 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
     }
 
     switch (mode) {
-    case 0:			/* new icon name and title */
+    case OSC_IconBoth:		/* new icon name and title */
 	ChangeIconName(xw, buf);
 	ChangeTitle(xw, buf);
 	break;
 
-    case 1:			/* new icon name only */
+    case OSC_IconOnly:		/* new icon name only */
 	ChangeIconName(xw, buf);
 	break;
 
-    case 2:			/* new title only */
+    case OSC_TitleOnly:	/* new title only */
 	ChangeTitle(xw, buf);
 	break;
 
-    case 3:			/* change X property */
+    case OSC_X_Property:	/* change X property */
 	if (AllowWindowOps(xw, ewSetXprop))
 	    ChangeXprop(buf);
 	break;
 #if OPT_ISO_COLORS
-    case 5:
+    case OSC_GetAnsiColors:
 	ansi_colors = NUM_ANSI_COLORS;
 	/* FALLTHRU */
-    case 4:
+    case OSC_SetAnsiColor:
 	if (ChangeAnsiColorRequest(xw, mode, buf, ansi_colors, final))
 	    xw->work.palette_changed = True;
 	break;
-    case 6:
+    case OSC_ColorMode:
 	/* FALLTHRU */
-    case OSC_Reset(6):
+    case OSC_Reset(OSC_ColorMode):
 	TRACE(("parse colorXXMode:%s\n", buf));
 	while (*buf != '\0') {
 	    long which = 0;
@@ -4213,10 +4276,10 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	    }
 	}
 	break;
-    case OSC_Reset(5):
+    case OSC_Reset(OSC_GetAnsiColors):
 	ansi_colors = NUM_ANSI_COLORS;
 	/* FALLTHRU */
-    case OSC_Reset(4):
+    case OSC_Reset(OSC_SetAnsiColor):
 	if (ResetAnsiColorRequest(xw, buf, ansi_colors))
 	    xw->work.palette_changed = True;
 	break;
@@ -4258,17 +4321,12 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	}
 	break;
 
-    case 22:
+    case OSC_SetupPointer:
 	xtermSetupPointer(xw, buf);
 	break;
 
-    case 30:
-    case 31:
-	/* reserved for Konsole (Stephan Binner <Stephan.Binner@gmx.de>) */
-	break;
-
 #ifdef ALLOWLOGGING
-    case 46:			/* new log file */
+    case OSC_NewLogFile:
 #ifdef ALLOWLOGFILECHANGES
 	/*
 	 * Warning, enabling this feature allows people to overwrite
@@ -4288,7 +4346,7 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	break;
 #endif /* ALLOWLOGGING */
 
-    case 50:
+    case OSC_FontOps:
 #if OPT_SHIFT_FONTS
 	if (*buf == '?') {
 	    QueryFontRequest(xw, buf, final);
@@ -4297,19 +4355,24 @@ do_osc(XtermWidget xw, Char *oscbuf, size_t len, int final)
 	}
 #endif /* OPT_SHIFT_FONTS */
 	break;
-    case 51:
-	/* reserved for Emacs shell (Rob Mayoff <mayoff@dqd.com>) */
-	break;
 
 #if OPT_PASTE64
-    case 52:
+    case OSC_SelectionData:
 	ManipulateSelectionData(xw, screen, buf, final);
 	break;
 #endif
-	/*
-	 * One could write code to send back the display and host names,
-	 * but that could potentially open a fairly nasty security hole.
-	 */
+
+    case OSC_AllowedOps:	/* XTQALLOWED */
+	report_allowed_ops(xw, final);
+	break;
+
+    case OSC_DisallowedOps:	/* XTQDISALLOWED */
+	report_disallowed_ops(xw, buf, final);
+	break;
+
+    case OSC_Unused_30:
+    case OSC_Unused_31:
+    case OSC_Unused_51:
     default:
 	TRACE(("do_osc - unrecognized code\n"));
 	break;
@@ -4825,12 +4888,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	cp++;
 	switch (*cp) {
 #if OPT_TCAP_QUERY
-	case 'p':
+	case 'p':		/* XTSETTCAP */
 	    if (AllowTcapOps(xw, etSetTcap)) {
 		set_termcap(xw, cp + 1);
 	    }
 	    break;
-	case 'q':
+	case 'q':		/* XTGETTCAP */
 	    if (AllowTcapOps(xw, etGetTcap)) {
 		Bool fkey;
 		unsigned state;
@@ -4909,11 +4972,12 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 	    break;
 #endif
 #if OPT_XRES_QUERY
-	case 'Q':
+	case 'Q':		/* XTGETXRES */
 	    ++cp;
 	    if (AllowXResOps(xw)) {
 		Boolean first = True;
-		while (*cp != '\0') {
+		okay = True;
+		while (*cp != '\0' && okay) {
 		    const char *parsed = 0;
 		    const char *tmp;
 		    char *name = x_decode_hex(cp, &parsed);
@@ -4922,6 +4986,9 @@ do_dcs(XtermWidget xw, Char *dcsbuf, size_t dcslen)
 		    if (cp == parsed || name == NULL) {
 			free(name);
 			break;	/* no data found, error */
+		    }
+		    if ((cp - parsed) > 1024) {
+			break;	/* ignore improbable resource */
 		    }
 		    TRACE(("query-feature '%s'\n", name));
 		    if ((value = vt100ResourceToString(xw, name)) != 0) {

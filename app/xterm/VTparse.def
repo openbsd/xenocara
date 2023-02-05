@@ -1,10 +1,10 @@
-# $XTermId: VTparse.def,v 1.65 2021/12/26 17:49:45 tom Exp $
+# $XTermId: VTparse.def,v 1.66 2022/11/24 13:58:46 tom Exp $
 #
 # vile:confmode rs=lf
 # -----------------------------------------------------------------------------
 # this file is part of xterm
 #
-# Copyright 1996-2020,2021 by Thomas E. Dickey
+# Copyright 1996-2021,2022 by Thomas E. Dickey
 # 
 #                         All Rights Reserved
 # 
@@ -220,3 +220,4 @@ CASE_XTERM_POP_COLORS		# XTPOPCOLORS
 CASE_XTERM_SHIFT_ESCAPE		# XTSHIFTESCAPE
 CASE_DECSSDT
 CASE_DECSASD
+CASE_XTERM_REPORT_MOD_FKEYS	# XTQMODKEYS
