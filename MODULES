@@ -1,11 +1,11 @@
-# $OpenBSD: MODULES,v 1.497 2023/01/22 13:24:52 matthieu Exp $
+# $OpenBSD: MODULES,v 1.498 2023/02/05 08:18:37 matthieu Exp $
 #
 # X.Org maintained modules
 #
 
 app/appres		1.0.6
 app/bdftopcf		1.1.1
-app/beforelight		1.0.5
+app/beforelight		1.0.6		needs-update
 app/bitmap		1.1.0
 app/editres		1.0.8
 app/fonttosfnt		1.2.2
@@ -33,7 +33,7 @@ app/xcmsdb		1.0.6
 app/xcompmgr		1.1.9
 app/xconsole		1.0.8
 app/xdpyinfo		1.3.3
-app/xdriinfo		1.0.6
+app/xdriinfo		1.0.7		needs-update
 app/xedit		1.2.3
 app/xev			1.2.5
 app/xeyes		1.2.0
@@ -42,10 +42,10 @@ app/xfd			1.1.4
 app/xfontsel		1.1.0
 app/xgamma		1.0.7
 app/xgc			1.0.6
-app/xhost		1.0.8
+app/xhost		1.0.9		needs-update
 app/xinit		1.4.2
 app/xinput		1.6.3
-app/xkbcomp		1.4.5
+app/xkbcomp		1.4.6		needsupdate
 app/xkbevd		1.1.5
 app/xkbprint		1.0.6
 app/xkbutils		1.0.5
@@ -67,7 +67,7 @@ app/xrefresh		1.0.7
 app/xset		1.2.5
 app/xsetroot		1.1.3
 app/xsm			1.0.5
-app/xvidtune		1.0.3
+app/xvidtune		1.0.4		needs-update
 app/xvinfo		1.1.5
 app/xwd			1.0.8
 app/xwininfo		1.1.5
@@ -81,7 +81,7 @@ driver/xf86-input-acecad	1.5.0
 driver/xf86-input-elographics	1.4.2
 driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
-driver/xf86-input-joystick	1.6.3
+driver/xf86-input-joystick	1.6.4		needs-update
 driver/xf86-input-keyboard	2.0.0
 driver/xf86-input-mouse		1.9.4		needs-update
 driver/xf86-input-mutouch	1.3.0
@@ -91,7 +91,7 @@ driver/xf86-input-vmmouse	13.2.0		needs-update
 driver/xf86-input-void		1.4.2		needs-update
 driver/xf86-video-amdgpu	22.0.0
 driver/xf86-video-apm		1.3.0
-driver/xf86-video-ast		1.0.1
+driver/xf86-video-ast		1.1.6		needs-update
 driver/xf86-video-ati		19.1.0
 driver/xf86-video-cirrus	1.6.0		needs-update
 driver/xf86-video-dummy		0.4.0
@@ -104,9 +104,9 @@ driver/xf86-video-openchrome	0.6.179		needs-update
 driver/xf86-video-r128		6.12.1		needs-update
 driver/xf86-video-savage	2.3.9
 driver/xf86-video-siliconmotion	1.7.9
-driver/xf86-video-sunffb	1.2.2
-driver/xf86-video-vesa		2.5.0		needs-update
-driver/xf86-video-vmware	13.3.0
+driver/xf86-video-sunffb	1.2.3		needs-update
+driver/xf86-video-vesa		2.6.0		needs-update
+driver/xf86-video-vmware	13.4.0		needs-update
 driver/xf86-video-wsfb		0.4.1
 
 font/encodings			1.0.6
@@ -147,11 +147,11 @@ font/util			1.3.3
 font/winitzki-cyrillic		1.0.3
 font/xfree86-type1		1.0.4
 
-lib/libICE			1.1.0		needs-update
-lib/libSM			1.2.3
-lib/libX11			1.8.2		needs-update
+lib/libICE			1.1.1		needs-update
+lib/libSM			1.2.4		needs-update
+lib/libX11			1.8.4		needs-update
 lib/libXScrnSaver		1.2.4		needs-update
-lib/libXau			1.0.10
+lib/libXau			1.0.11		needs-update
 lib/libXaw			1.0.14
 lib/libXcomposite		0.4.6		needs-update
 lib/libXcursor			1.2.1
@@ -164,7 +164,7 @@ lib/libXft			2.3.7
 lib/libXi			1.8
 lib/libXinerama			1.1.5
 lib/libXmu			1.1.4
-lib/libXpm			3.5.14
+lib/libXpm			3.5.15		needs-update
 lib/libXpresent			1.0.1
 lib/libXrandr			1.5.3		needs-update
 lib/libXrender			0.9.11
@@ -175,15 +175,15 @@ lib/libXv			1.0.12		needs-update
 lib/libXvMC			1.0.12
 lib/libXxf86dga			1.1.6		needs-update
 lib/libXxf86vm			1.1.5
-lib/libfontenc			1.1.6
+lib/libfontenc			1.1.7		needs-update
 lib/libpciaccess		0.17
 lib/libxcb			1.15
 lib/libxcvt			0.1.2
-lib/libxkbfile			1.1.1
-lib/libxshmfence		1.3.1
+lib/libxkbfile			1.1.2		needs-update
+lib/libxshmfence		1.3.2		needs-update
 lib/libxtrans			1.4.0
 lib/pixman			0.42.2		needs-update
-lib/xcb-util			0.4.0
+lib/xcb-util			0.4.1		needs-update
 lib/xcb-util-cursor		0.1.4
 lib/xcb-util-image		0.4.1
 lib/xcb-util-keysyms		0.4.1
@@ -196,6 +196,6 @@ proto/xorgproto			2022.2
 util/cf				1.0.4
 util/gccmakedep			1.0.3
 util/macros			1.19.3
-util/makedepend			1.0.7
+util/makedepend			1.0.8		needs-update
 
 xserver				21.1.6

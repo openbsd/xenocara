@@ -1,5 +1,5 @@
 
-# $OpenBSD: 3RDPARTY,v 1.409 2023/01/28 10:04:18 jsg Exp $
+# $OpenBSD: 3RDPARTY,v 1.410 2023/02/05 08:18:37 matthieu Exp $
 #
 Package: 	Freetype
 Version:	2.12.1
@@ -9,7 +9,7 @@ Archive Site:	http://download.savannah.gnu.org/releases/freetype/
 
 Package:	xterm
 Version:	375
-Current Vers:	377
+Current Vers:	378
 Maintainer:	Thomas E. Dickey
 Archive Site:	http://invisible-island.net/xterm/xterm.html
 
@@ -39,7 +39,7 @@ Archive Site:	https://github.com/anholt/libepoxy/releases
 
 Package:	fontconfig
 Version:	2.14.0
-Current Vers:	2.14.1
+Current Vers:	2.14.2
 Maintainer:	Akira TAGOH
 Archive Site:	https://www.fontconfig.org/
 
