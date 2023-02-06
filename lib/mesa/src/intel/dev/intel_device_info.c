@@ -64,7 +64,7 @@ static const struct {
    { "whl", 0x3EA1 },
    { "cml", 0x9b41 },
    { "icl", 0x8a52 },
-   { "ehl", 0x4500 },
+   { "ehl", 0x4571 },
    { "jsl", 0x4E71 },
    { "tgl", 0x9a49 },
    { "rkl", 0x4c8a },

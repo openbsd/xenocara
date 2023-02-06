@@ -138,7 +138,6 @@ CHIPSET(0x8A5C, icl_gt1_5, "ICL GT1.5", "Intel(R) Iris(R) Plus Graphics")
 CHIPSET(0x8A5D, icl_gt1,   "ICL GT1",   "Intel(R) HD Graphics")
 CHIPSET(0x8A71, icl_gt0_5, "ICL GT0.5", "Intel(R) HD Graphics")
 
-CHIPSET(0x4500, ehl_4x8, "EHL", "Intel(R) UHD Graphics")
 CHIPSET(0x4541, ehl_2x4, "EHL", "Intel(R) UHD Graphics")
 CHIPSET(0x4551, ehl_4x4, "EHL", "Intel(R) UHD Graphics")
 CHIPSET(0x4555, ehl_2x8, "EHL", "Intel(R) UHD Graphics")
