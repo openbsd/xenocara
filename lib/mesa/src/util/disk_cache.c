@@ -80,11 +80,6 @@ disk_cache_create(const char *gpu_name, const char *driver_id,
    uint8_t cache_version = CACHE_VERSION;
    size_t cv_size = sizeof(cache_version);
 
-#ifdef __OpenBSD__
-   /* default to no disk shader cache to avoid pledge violations in chromium */
-      return NULL;
-#endif
-
    if (!disk_cache_enabled())
       return NULL;
 
