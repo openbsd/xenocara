@@ -181,7 +181,7 @@ CU_BOOL suite_jpeg_tests_enable(void)
 
 	if (info.hw_ip_version_major == 1)
 		jpeg_direct_reg = false;
-	else if (info.hw_ip_version_major > 1 && info.hw_ip_version_major <= 3)
+	else if (info.hw_ip_version_major > 1 && info.hw_ip_version_major <= 4)
 		jpeg_direct_reg = true;
 	else
 		return CU_FALSE;

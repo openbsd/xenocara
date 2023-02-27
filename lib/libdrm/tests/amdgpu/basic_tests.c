@@ -1293,7 +1293,7 @@ static void amdgpu_semaphore_test(void)
 	fence_status.ip_instance = 0;
 	fence_status.fence = ibs_request[1].seq_no;
 	r = amdgpu_cs_query_fence_status(&fence_status,
-					 500000000, 0, &expired);
+					 AMDGPU_TIMEOUT_INFINITE, 0, &expired);
 	CU_ASSERT_EQUAL(r, 0);
 	CU_ASSERT_EQUAL(expired, true);
 
@@ -1334,7 +1334,7 @@ static void amdgpu_semaphore_test(void)
 	fence_status.ip_instance = 0;
 	fence_status.fence = ibs_request[1].seq_no;
 	r = amdgpu_cs_query_fence_status(&fence_status,
-					 500000000, 0, &expired);
+					 AMDGPU_TIMEOUT_INFINITE, 0, &expired);
 	CU_ASSERT_EQUAL(r, 0);
 	CU_ASSERT_EQUAL(expired, true);
 
