@@ -331,20 +331,6 @@
 #include <stdbool.h>
 #include <libdrm_macros.h>
 
-drm_private bool intel_is_genx(unsigned int devid, int gen);
-drm_private bool intel_get_genx(unsigned int devid, int *gen);
-
-#define IS_GEN9(devid) intel_is_genx(devid, 9)
-#define IS_GEN10(devid) intel_is_genx(devid, 10)
-#define IS_GEN11(devid) intel_is_genx(devid, 11)
-#define IS_GEN12(devid) intel_is_genx(devid, 12)
-
-#define IS_9XX(dev)		(IS_GEN3(dev) || \
-				 IS_GEN4(dev) || \
-				 IS_GEN5(dev) || \
-				 IS_GEN6(dev) || \
-				 IS_GEN7(dev) || \
-				 IS_GEN8(dev) || \
-				 intel_get_genx(dev, NULL))
+#define IS_9XX(dev)		(!IS_GEN2(dev))
 
 #endif /* _INTEL_CHIPSET_H */

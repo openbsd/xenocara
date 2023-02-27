@@ -179,11 +179,15 @@ drmGetFormatModifierNameFromAmd(uint64_t modifier);
 static char *
 drmGetFormatModifierNameFromAmlogic(uint64_t modifier);
 
+static char *
+drmGetFormatModifierNameFromVivante(uint64_t modifier);
+
 static const struct drmVendorInfo modifier_format_vendor_table[] = {
     { DRM_FORMAT_MOD_VENDOR_ARM, drmGetFormatModifierNameFromArm },
     { DRM_FORMAT_MOD_VENDOR_NVIDIA, drmGetFormatModifierNameFromNvidia },
     { DRM_FORMAT_MOD_VENDOR_AMD, drmGetFormatModifierNameFromAmd },
     { DRM_FORMAT_MOD_VENDOR_AMLOGIC, drmGetFormatModifierNameFromAmlogic },
+    { DRM_FORMAT_MOD_VENDOR_VIVANTE, drmGetFormatModifierNameFromVivante },
 };
 
 #ifndef AFBC_FORMAT_MOD_MODE_VALUE_MASK
@@ -478,6 +482,9 @@ drmGetFormatModifierNameFromAmd(uint64_t modifier)
     case AMD_FMT_MOD_TILE_VER_GFX10_RBPLUS:
         str_tile_version = "GFX10_RBPLUS";
         break;
+    case AMD_FMT_MOD_TILE_VER_GFX11:
+        str_tile_version = "GFX11";
+        break;
     }
 
     if (str_tile_version) {
@@ -504,6 +511,9 @@ drmGetFormatModifierNameFromAmd(uint64_t modifier)
         break;
     case AMD_FMT_MOD_TILE_GFX9_64K_R_X:
         str_tile = "GFX9_64K_R_X";
+        break;
+    case AMD_FMT_MOD_TILE_GFX11_256K_R_X:
+        str_tile = "GFX11_256K_R_X";
         break;
     }
 
@@ -549,6 +559,70 @@ drmGetFormatModifierNameFromAmlogic(uint64_t modifier)
 
     asprintf(&mod_amlogic, "FBC,LAYOUT=%s,OPTIONS=%s", layout_str, opts_str);
     return mod_amlogic;
+}
+
+static char *
+drmGetFormatModifierNameFromVivante(uint64_t modifier)
+{
+    const char *color_tiling, *tile_status, *compression;
+    char *mod_vivante = NULL;
+
+    switch (modifier & VIVANTE_MOD_TS_MASK) {
+    case 0:
+        tile_status = "";
+        break;
+    case VIVANTE_MOD_TS_64_4:
+        tile_status = ",TS=64B_4";
+        break;
+    case VIVANTE_MOD_TS_64_2:
+        tile_status = ",TS=64B_2";
+        break;
+    case VIVANTE_MOD_TS_128_4:
+        tile_status = ",TS=128B_4";
+        break;
+    case VIVANTE_MOD_TS_256_4:
+        tile_status = ",TS=256B_4";
+        break;
+    default:
+        tile_status = ",TS=UNKNOWN";
+        break;
+    }
+
+    switch (modifier & VIVANTE_MOD_COMP_MASK) {
+    case 0:
+        compression = "";
+        break;
+    case VIVANTE_MOD_COMP_DEC400:
+        compression = ",COMP=DEC400";
+        break;
+    default:
+        compression = ",COMP=UNKNOWN";
+	break;
+    }
+
+    switch (modifier & ~VIVANTE_MOD_EXT_MASK) {
+    case 0:
+        color_tiling = "LINEAR";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_TILED:
+        color_tiling = "TILED";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_SUPER_TILED:
+        color_tiling = "SUPER_TILED";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_SPLIT_TILED:
+        color_tiling = "SPLIT_TILED";
+	break;
+    case DRM_FORMAT_MOD_VIVANTE_SPLIT_SUPER_TILED:
+        color_tiling = "SPLIT_SUPER_TILED";
+	break;
+    default:
+        color_tiling = "UNKNOWN";
+	break;
+    }
+
+    asprintf(&mod_vivante, "%s%s%s", color_tiling, tile_status, compression);
+    return mod_vivante;
 }
 
 static unsigned log2_int(unsigned x)

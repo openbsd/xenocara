@@ -1,11 +1,10 @@
-#	$OpenBSD: Makefile,v 1.1 2021/02/11 10:34:51 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/02/27 12:46:20 jsg Exp $
 
 LIB=	drm_intel
 
 SRCS=	intel_bufmgr.c \
 	intel_bufmgr_fake.c \
 	intel_bufmgr_gem.c \
-	intel_chipset.c \
 	intel_decode.c \
 	mm.c
 

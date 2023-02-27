@@ -3817,9 +3817,7 @@ drm_intel_decode_context_alloc(uint32_t devid)
 	struct drm_intel_decode *ctx;
 	int gen = 0;
 
-	if (intel_get_genx(devid, &gen))
-		;
-	else if (IS_GEN8(devid))
+	if (IS_GEN8(devid))
 		gen = 8;
 	else if (IS_GEN7(devid))
 		gen = 7;
@@ -3829,10 +3827,13 @@ drm_intel_decode_context_alloc(uint32_t devid)
 		gen = 5;
 	else if (IS_GEN4(devid))
 		gen = 4;
-	else if (IS_9XX(devid))
+	else if (IS_GEN3(devid))
 		gen = 3;
 	else if (IS_GEN2(devid))
 		gen = 2;
+	else
+		/* Just assume future unknown platforms behave as gen8. */
+		gen = 8;
 
 	if (!gen)
 		return NULL;
