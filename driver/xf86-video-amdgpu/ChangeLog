@@ -1,3 +1,170 @@
+commit 7025aefcdf9673665588cf291c5d71beb39cce89
+Author: Shashank Sharma <shashank.sharma@amd.com>
+Date:   Wed Feb 22 18:00:23 2023 +0100
+
+    Bump version for the 23.0.0 release
+    
+    This release includes some bug fixes.
+    
+    Signed-off-by: Shashank Sharma <shashank.sharma@amd.com>
+
+commit 6ee320917093ad0f7d68e516d3224d3c04ca13ee
+Author: Shashank Sharma <shashank.sharma@amd.com>
+Date:   Mon Nov 28 13:08:36 2022 +0100
+
+    config: Add hotplug driver name
+    
+    This patch adds the PCI-hotplug handler driver name in the
+    DDX config file with respect to Xorg commit:82bf391c
+    
+    Cc: Alexander Deucher <alexander.deucher@amd.com>
+    Signed-off-by: Shashank Sharma <shashank.sharma@amd.com>
+
+commit 2ec854d48e0e44fc60c3955663f700cbefea3553
+Author: Mario Kleiner <mario.kleiner.de@gmail.com>
+Date:   Fri Nov 11 02:18:07 2022 +0100
+
+    Fix primary output handling in amdgpu_crtc_covering_box().
+    
+    Commit e39a3ee07c9dea73b0452b71b1ef633b6cd6f389
+    tries to reintroduce the RandR primary output as a tie breaker
+    in amdgpu_crtc_covering_box(), but that function wrongly
+    assigns a void* devPrivate, which is actually a xf86CrtcPtr,
+    to the RRCrtcPtr primary_crtc, a pointer target type mismatch!
+    
+    This causes a later pointer comparison of primary_crtc with
+    RRCrtcPtr crtc to always fail, so that the user selected
+    primary output can not ever successfully act as a tie-breaker
+    when multiple candidate crtcs cover the same box area,
+    defeating the whole purpose of that commit! Not sure how
+    this failure could have ever evaded any basic testing.
+    
+    Fix this trivially by assigning the right variable.
+    
+    Successfully tested on a multi-display setup, verifying
+    that the primary output now works as tie breaker as
+    intended.
+    
+    Signed-off-by: Mario Kleiner <mario.kleiner.de@gmail.com>
+    Fixes: e39a3ee07c9d ("Prefer crtc of primary output for synchronization when screen has to crtcs with the same coverage")
+
+commit 9c959fac3af28d191105f63236096ad456dca614
+Author: Pierre-Eric Pelloux-Prayer <pierre-eric.pelloux-prayer@amd.com>
+Date:   Thu Sep 29 16:42:09 2022 +0200
+
+    Use DRM_CAP_CURSOR_WIDTH/HEIGHT if possible
+    
+    There's no need to hardcode the cursor size if the kernel can
+    report the value it wants.
+
+commit 4e011b91fa3ef58b85327d3429889efd934b3531
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Aug 2 15:03:19 2022 -0700
+
+    gitlab CI: enable gitlab's builtin static analysis
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dc81177ef342bf8c2aa5a6fd6687c7a09b4f9709
+Author: tiancyin <tianci.yin@amd.com>
+Date:   Wed Aug 10 16:46:15 2022 +0800
+
+    Fix screen corruption on secondary GPU
+    
+    [why]
+    On RHEL9+, xorg-server.pc shows that the Xorg no longer depends on dri,
+    and dri.pc provides "/opt/amdgpu/include" path for pkg-config, this
+    cause pkg-config no longer output "-I/opt/amdgpu/include", consequently
+    the configure can't find gbm.h and HAVE_GBM_BO_USE_LINEAR is not
+    declared, that cause the corruption.
+    
+    [how]
+    Since the gbm.pc also provides the "/opt/amdgpu/include" path, in module
+    dependence checking, GBM_CFLAGS get this path, so just explicitly add
+    GBM_CFLAGS into CPPFLAGS can fix this issue.
+    
+    Signed-off-by: tiancyin <tianci.yin@amd.com>
+
+commit a3a012b649eb9b3066abefe163a72854514792fa
+Author: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Mon Aug 8 10:49:11 2022 +0800
+
+    Initialize present extension for GPU screen
+    
+    Some laptops have the external outputs routed to dGPU, when the external
+    output over dGPU is the only display in reverse prime mode, we need
+    present extension so fake CRTC won't be used.
+
+commit f3f57a58342c286808220bdbe6dc6bb7098763b9
+Author: Lukasz Spintzyk <lukasz.spintzyk@displaylink.com>
+Date:   Fri Jun 11 14:54:35 2021 +0200
+
+    Do not consider disabled crtc anymore when looking for xf86crtc covering drawable.
+    
+    This is commit is removing obsolete switch done in
+    
+    xf86-video-ati at sha 61d0aec40e2521488c2fe43e7a6823e5c87d94d7:  video: add option to include disabled CRTCs in best CRTC search
+    This is not required anymore as with commit done in
+    xorg-server at sha 5c5c1b77982a9af7279a90bc3c2be48adaa9c778:     present: Add Present extension
+    That in case of lack of crtc is using fake_crtc with render 1Hz frequency
+    
+    When consider_disabled is removed then amdgpu_pick_best_crtc is doing the same what rr_crtc_covering_box is doing
+    so it can be reimplemented to reuse that function.
+    
+    Signed-off-by: Łukasz Spintzyk <lukasz.spintzyk@synaptics.com>
+    Signed-off-by: Shashank Sharma <contactshashanksharma@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit e39a3ee07c9dea73b0452b71b1ef633b6cd6f389
+Author: Lukasz Spintzyk <lukasz.spintzyk@displaylink.com>
+Date:   Mon Jun 21 11:41:40 2021 +0200
+
+    Prefer crtc of primary output for synchronization when screen has to crtcs with the same coverage
+    
+    This is adjusting randr_crtc_covering_drawable to cover scenario fixed in
+    9151f3b1c2ebcc34e63195888ba696f2183ba5e2
+    
+    Signed-off-by: Łukasz Spintzyk <lukasz.spintzyk@synaptics.com>
+    Signed-off-by: Shashank Sharma <contactshashanksharma@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 92fb43b8e96bbda77e03b7313ccbba75a304a1b1
+Author: Lukasz Spintzyk <lukasz.spintzyk@displaylink.com>
+Date:   Fri Jun 11 08:52:58 2021 +0200
+
+    Use randr_crtc_covering_drawable used in modesetting
+    
+    Use implementation from modesetting driver that is fixing issue:
+    https://gitlab.freedesktop.org/xorg/xserver/-/issues/1028
+    
+    Instead of returning primary crtc as fallback we can now find and return crtc that belongs to secondary outputs.
+    
+    v2:
+      restore original naming scheme for amdgpu_crtc_is_enabled, amdgpu_box_intersect, amdgpu_box_area functions
+    
+    Signed-off-by: Łukasz Spintzyk <lukasz.spintzyk@synaptics.com>
+    Signed-off-by: Emilia Majewska <emilia.majewska@synaptics.com>
+    Signed-off-by: Shashank Sharma <contactshashanksharma@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 57740ae2357ca7b973f78be31327365aaa60ed41
+Author: Łukasz Spintzyk <lukasz.spintzyk@synaptics.com>
+Date:   Tue Jun 22 07:36:42 2021 +0200
+
+    amdgpu: fixup driver for new X server ABI
+    
+    Signed-off-by: Łukasz Spintzyk <lukasz.spintzyk@synaptics.com>
+    Signed-off-by: Shashank Sharma <contactshashanksharma@gmail.com>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
+commit 89b3eb9fffe2ead4257eee6d65accbac135aedc9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 12:07:46 2022 -0800
+
+    Update URLs to reflect gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 533bd30ceaa373788b3d0bfd4d486f0f1c624d0c
 Author: Shashank Sharma <shashank.sharma@amd.com>
 Date:   Tue Feb 22 16:25:01 2022 +0100

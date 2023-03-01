@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-amdgpu],
-        [22.0.0],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/AMDgpu],
+        [23.0.0],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues],
         [xf86-video-amdgpu])
 
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -110,7 +110,7 @@ fi
 AM_CONDITIONAL(LIBUDEV, test x$LIBUDEV = xyes)
 
 SAVE_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$CPPFLAGS $XORG_CFLAGS"
+CPPFLAGS="$CPPFLAGS $XORG_CFLAGS $GBM_CFLAGS"
 
 AC_MSG_CHECKING([whether to include GLAMOR support])
 AC_ARG_ENABLE(glamor,

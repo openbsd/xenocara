@@ -42,6 +42,9 @@
 #define current_primary current_master
 #define primary_pixmap master_pixmap
 #define secondary_dst slave_dst
+#define secondary_list slave_list
+#define secondary_head slave_head
+#define is_output_secondary is_output_slave
 #endif
 
 #endif

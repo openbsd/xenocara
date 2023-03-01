@@ -140,7 +140,7 @@ https://www.x.org/wiki/radeon
 .IP " 2." 4
 Overview about amdgpu development code:
 .RS 4
-https://cgit.freedesktop.org/xorg/driver/xf86-video-amdgpu/
+https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu
 .RE
 .IP " 3." 4
 Mailing list:
@@ -153,14 +153,14 @@ IRC channel:
 #radeon on irc.freenode.net
 .RE
 .IP " 5." 4
-Query the bugtracker for amdgpu bugs:
+The bugtracker for amdgpu bugs:
 .RS 4
-https://bugs.freedesktop.org/query.cgi?product=xorg&component=Driver/AMDgpu
+https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/issues
 .RE
 .IP " 6." 4
-Submit bugs & patches:
+Submit merge requests:
 .RS 4
-https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/AMDgpu
+https://gitlab.freedesktop.org/xorg/driver/xf86-video-amdgpu/-/merge_requests
 .RE
 
 .SH AUTHORS

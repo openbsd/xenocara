@@ -417,8 +417,7 @@ static
 xf86CrtcPtr amdgpu_dri2_drawable_crtc(DrawablePtr pDraw)
 {
 	ScreenPtr pScreen = pDraw->pScreen;
-	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
-	xf86CrtcPtr crtc = amdgpu_pick_best_crtc(pScrn, TRUE,
+	xf86CrtcPtr crtc = amdgpu_pick_best_crtc(pScreen,
 						 pDraw->x, pDraw->x + pDraw->width,
 						 pDraw->y, pDraw->y + pDraw->height);
 
