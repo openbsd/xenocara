@@ -210,5 +210,5 @@ The core dump will be in /var/crash.
 
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
--- 
-$OpenBSD: README,v 1.44 2021/07/14 18:46:21 sthen Exp $
+--
+$OpenBSD: README,v 1.45 2023/03/03 15:26:53 tb Exp $
