@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.7 2023/01/31 03:29:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.8 2023/03/03 06:32:18 jsg Exp $
 
 LIB=	gallium_dri
 
@@ -78,6 +78,7 @@ SLIBS=	libdri \
 	libglcpp \
 	libmesa_util \
 	libmesa_format \
+	libmesa_util_sse41 \
 	libmesa_util_c11 \
 	libnir \
 	libcompiler \
@@ -93,8 +94,7 @@ SLIBS=	libdri \
 	libsoftpipe
 
 .if ${WITH_SSE41} == "yes"
-SLIBS+=	libmesa_sse41 \
-	libmesa_util_sse41
+SLIBS+=	libmesa_sse41
 .endif
 
 .if ${WITH_GALLIUM_R300} == "yes" || ${WITH_GALLIUM_R600} == "yes" || \

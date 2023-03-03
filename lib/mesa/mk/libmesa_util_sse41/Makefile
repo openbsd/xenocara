@@ -1,14 +1,13 @@
-#	$OpenBSD: Makefile,v 1.1 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/03/03 06:32:18 jsg Exp $
 
 LIB=	mesa_util_sse41
 
 NOPROFILE=
 
-.if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
 SRCS=		streaming-load-memcpy.c
+
+.if ${MACHINE_ARCH} == "i386" || ${MACHINE_ARCH} == "amd64"
 CFLAGS+=	${SSE41_ARGS}
-.else
-SRCS=
 .endif
 
 .include "../Makefile.inc"

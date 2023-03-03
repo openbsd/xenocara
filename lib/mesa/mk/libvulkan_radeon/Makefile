@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2023/01/28 22:09:39 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2023/03/03 06:32:18 jsg Exp $
 
 LIB=	vulkan_radeon
 
@@ -135,14 +135,11 @@ SLIBS=	libamd_common \
 	libxmlconfig \
 	libmesa_util \
 	libmesa_format \
+	libmesa_util_sse41 \
 	libmesa_util_c11 \
 	libaco \
 	libnir \
 	libcompiler
-
-.if ${WITH_SSE41} == "yes"
-SLIBS+=	libmesa_util_sse41
-.endif
 
 LDADD+=		-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 

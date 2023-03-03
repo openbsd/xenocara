@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:33 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/03/03 06:32:18 jsg Exp $
 
 .include "config.mk"
 
@@ -10,6 +10,7 @@ SUBDIR=		include pkgconfig \
 		libmesa libmesa_format \
 		libmesa_util libmesa_util_c11 \
 		libnir libpipe_loader_static libsoftpipe \
+		libmesa_util_sse41 \
 		libswdri libswkmsdri \
 		libws_null libwsw libxmlconfig
 
@@ -18,7 +19,7 @@ SUBDIR+=	libloader_dri3_helper
 .endif
 
 .if ${WITH_SSE41} == "yes" || make(obj)
-SUBDIR+=	libmesa_sse41 libmesa_util_sse41
+SUBDIR+=	libmesa_sse41
 .endif
 
 .if ${WITH_AMD_VK} == "yes" || ${WITH_GALLIUM_RADEONSI} == "yes" || make(obj)
