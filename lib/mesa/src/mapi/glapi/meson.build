@@ -37,7 +37,9 @@ bridge_glapi_files += files(
   '../entry.h',
   '../entry_x86-64_tls.h',
   '../entry_x86_tls.h',
+  '../entry_x86_tsd.h',
   '../entry_ppc64le_tls.h',
+  '../entry_ppc64le_tsd.h',
   '../mapi_tmp.h',
 )
 bridge_glapi_files += glapi_mapi_tmp_h

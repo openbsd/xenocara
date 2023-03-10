@@ -255,6 +255,11 @@ stw_cleanup(void)
 
    stw_dev->screen->destroy(stw_dev->screen);
 
+   /* glapi is statically linked: we can call the local destroy function. */
+#ifdef _GLAPI_NO_EXPORTS
+   _glapi_destroy_multithread();
+#endif
+
    stw_tls_cleanup();
 
    util_dynarray_fini(&stw_dev->pixelformats);

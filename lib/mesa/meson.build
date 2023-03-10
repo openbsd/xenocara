@@ -518,6 +518,13 @@ foreach platform : _platforms
   pre_args += '-DHAVE_@0@_PLATFORM'.format(platform.to_upper())
 endforeach
 
+if host_machine.system() == 'openbsd'
+  use_elf_tls = false
+else
+  use_elf_tls = true
+  pre_args += '-DUSE_ELF_TLS'
+endif
+
 if with_platform_android and get_option('platform-sdk-version') >= 29
   # By default the NDK compiler, at least, emits emutls references instead of
   # ELF TLS, even when building targeting newer API levels.  Make it actually do

@@ -29,8 +29,6 @@
 #ifndef EGLCURRENT_INCLUDED
 #define EGLCURRENT_INCLUDED
 
-#include <stdbool.h>
-
 #include "egltypedefs.h"
 
 
@@ -51,7 +49,6 @@ extern "C" {
  */
 struct _egl_thread_info
 {
-   bool inited;
    EGLint LastError;
    _EGLContext *CurrentContext;
    EGLenum CurrentAPI;
@@ -87,6 +84,10 @@ _eglGetCurrentThread(void);
 
 extern void
 _eglDestroyCurrentThread(void);
+
+
+extern EGLBoolean
+_eglIsCurrentThreadDummy(void);
 
 
 extern _EGLContext *
