@@ -1,3 +1,33 @@
+commit eee69c3f26f8e5d7f97599185d8d009f7fd76a7c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 22 10:41:20 2023 -0800
+
+    font-util 1.4.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da8ac70de2bb45092574084d89272e07c75796e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Feb 16 10:06:41 2023 -0800
+
+    Add COMPRESS_FLAGS to pass options to compression command
+    
+    By default, set to -n for gzip to stop recording timestamps and
+    enable reproducible builds, and to empty for all other methods.
+    
+    Will require adding COMPRESS_FLAGS to Makefile.am in each font
+    module to become effective.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 46aa5c0bf95c60361f9ec3d354b033785df8cd5f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 2ef6b22ad908c024b6c2fbde5c1de62123f82dc2
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Jul 12 11:28:17 2022 -0700
