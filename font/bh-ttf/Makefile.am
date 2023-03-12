@@ -40,7 +40,7 @@ actualconfigdir = $(FC_CONFDIR)/conf.d
 availconfigdir = $(FC_CONFDIR)/conf.avail
 dist_availconfig_DATA = 42-luxi-mono.conf
 
-EXTRA_DIST = $(FONT_FILES) COPYRIGHT.BH
+EXTRA_DIST = $(FONT_FILES) COPYRIGHT.BH README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

@@ -1,15 +1,13 @@
 AC_PREREQ([2.60])
-AC_INIT([encodings], [1.0.6],
-        [https://gitlab.freedesktop.org/xorg/font/encodings/issues])
+AC_INIT([encodings], [1.0.7],
+        [https://gitlab.freedesktop.org/xorg/font/encodings/-/issues])
 AM_INIT_AUTOMAKE([foreign dist-xz])
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require xorg-macros 1.20 or later: XORG_DEFAULT_NOCODE_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-XORG_DEFAULT_OPTIONS
-
-AC_PROG_INSTALL
+	  [m4_fatal([must install xorg-macros 1.20 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.20)
+XORG_DEFAULT_NOCODE_OPTIONS
 
 # Require X.Org's font util macros 1.2 or later
 m4_ifndef([XORG_FONT_MACROS_VERSION],
@@ -23,7 +21,7 @@ XORG_FONT_REQUIRED_PROG(MKFONTSCALE, mkfontscale)
 
 AC_MSG_CHECKING([if small encodings should be compressed])
 AC_ARG_ENABLE(gzip-small-encodings,
-	AC_HELP_STRING([--disable-gzip-small-encodings],
+	AS_HELP_STRING([--disable-gzip-small-encodings],
 			[Disable compression of small encoding files]),
 	[GZIP_SMALL="$enableval"], [GZIP_SMALL="yes"]) 
 AM_CONDITIONAL(GZIP_SMALL, [test x$GZIP_SMALL = xyes])
@@ -31,7 +29,7 @@ AC_MSG_RESULT([${GZIP_SMALL}])
 
 AC_MSG_CHECKING([if large encodings should be compressed])
 AC_ARG_ENABLE(gzip-large-encodings,
-	AC_HELP_STRING([--disable-gzip-large-encodings],
+	AS_HELP_STRING([--disable-gzip-large-encodings],
 			[Disable compression of large encoding files]),
 	[GZIP_LARGE="$enableval"], [GZIP_LARGE="yes"]) 
 AM_CONDITIONAL(GZIP_LARGE, [test x$GZIP_LARGE = xyes])
@@ -44,6 +42,8 @@ if test x$GZIP_SMALL = xyes -o x$GZIP_LARGE = xyes ; then
     if [[ -z $GZIP ]]; then
 	AC_MSG_ERROR([gzip is needed to compress font encodings])
     fi
+    COMPRESS_FLAGS="${COMPRESS_FLAGS--n}"
+    AC_SUBST([COMPRESS_FLAGS])
 fi
 
 XORG_FONTSUBDIR([ENCODINGSDIR], [encodingsdir], [encodings])

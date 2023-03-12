@@ -1,5 +1,160 @@
+commit 6c4a1c79b3b73c63ee7f9fc52318df3c356f7eb3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 27 15:50:39 2023 -0800
+
+    font-bitstream-75dpi 1.0.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cc52650593b04d54574135b53977414ac61c19ce
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 22 17:59:17 2023 -0800
+
+    Use COMPRESS_FLAGS to improve build reproducibility
+    
+    Raises required version of font-util from 1.2 to 1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f2f73f94da6967e45a3f3a3b24b4649ee1381a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 15 16:03:14 2023 -0800
+
+    Switch to XORG_DEFAULT_NOCODE_OPTIONS
+    
+    Stop running all sorts of compiler tests we don't need since there
+    is no code in this module to compile.  Requires xorg-macros 1.20.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f800fb0f561cc83e5095e78a1ad27ebbb38773e
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 7 10:10:39 2010 -0800
+
+    config: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 11a49b99300ea21c9ca58f6b0676cd015472e13b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 85e313b8f5a9c73a44911ac167db9bb4b34bde22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 15:59:41 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3ba9394658cd6a0e816cf77673fcbc0c56b8f8ba
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 15:59:41 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 252cb4bac0e8ee563d21e8529ff0c293e36b7818
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:26:26 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b05eead73a73772917fcd5c1ee9285bf835bc05
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 18:27:31 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e5b282c3d5735ed8b1b04224e96af21d3883fe63
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit ffe085cc05d2d34356d80b1f2673c9cfd6349853
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5dda43733b96d4ebe892b048fec4e2fe77e8e6f9
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 65d9937694a3aff5a613b4b471557cfd7dd9fd48
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Mon Sep 12 10:39:55 2016 +0200
+
+    Typo: font.dir -> fonts.dir
+    
+    Signed-off-by: Matthieu Herrb <matthieu@herrb.eu>
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Hans de Goede <hdegoede@redhat.com>
+
+commit e3cc9cbcc1ce789439563bd96f2f4665eca6e2b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:39:32 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 350653c7b7e10bdfcf02a4248ab94eea81ee90c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 31 21:38:41 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 874402e3124446502da3ac708cf0731e60c23511
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Mon Oct 28 08:08:55 2013 -0400
+
+    config: replace deprecated use of AC_OUTPUT with AC_CONFIG_FILES
+    
+    Fix Automake warning: AC_OUTPUT should be used without arguments.
+    www.gnu.org/software/autoconf/manual/autoconf.html#Configuration-Files
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
 commit e508a9afd88bf773a4c548ee722a0b8329926916
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Mon Nov 15 21:42:17 2010 +0100
 
     font-bitstream-75dpi 1.0.3

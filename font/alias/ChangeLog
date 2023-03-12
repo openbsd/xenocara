@@ -1,3 +1,75 @@
+commit 05282e1160350c2340d51ac991704f7e390f8420
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 27 15:20:00 2023 -0800
+
+    font-alias 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6c91212aaa04e56008954d807b63cc11b2457257
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 15 15:19:31 2023 -0800
+
+    configure: Switch to XORG_DEFAULT_NOCODE_OPTIONS
+    
+    Stop running all sorts of compiler tests we don't need since there
+    is no code in this module to compile.  Requires xorg-macros 1.20.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b0b5d11db0dc13d4999021d936c3036479dbba64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 17:22:24 2023 -0800
+
+    configure: replace deprecated AC_HELP_STRING with AS_HELP_STRING
+    
+    This silences an autoconf warning:
+    
+    configure.ac:43: warning: The macro `AC_HELP_STRING' is obsolete.
+    configure.ac:43: You should run autoupdate.
+    ./lib/autoconf/general.m4:204: AC_HELP_STRING is expanded from...
+    configure.ac:43: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fb44b3f7caa440cee9bafb505ee4719c946a93d7
+Author: Gaetan Nadon <memsize@videotron.ca>
+Date:   Sun Nov 7 10:10:39 2010 -0800
+
+    configure: update AC_PREREQ statement to 2.60
+    
+    Unrelated to the previous patches, the new value simply reflects
+    the reality that the minimum level for autoconf to configure
+    all x.org modules is 2.60 dated June 2006.
+    
+    ftp://ftp.gnu.org/gnu/autoconf/autoconf-2.60.tar.gz
+    
+    Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
+
+commit 3bf5b398c0d61bb311b6e99158e2b00719ffb59b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e8a37317f8e5b8006a3d4419849b9a489962af7b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 15:25:12 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f21966e52acd1a1beccdc3974331905074c8265
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 8 15:25:04 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 55ad2d3f0abcfc5e2ee2198e7615d2a372ed44ca
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Aug 6 14:04:03 2020 -0700

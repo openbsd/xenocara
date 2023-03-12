@@ -1,12 +1,17 @@
 #! /bin/sh
 
-srcdir=`dirname $0`
+srcdir=`dirname "$0"`
 test -z "$srcdir" && srcdir=.
 
 ORIGDIR=`pwd`
-cd $srcdir
+cd "$srcdir"
 
 autoreconf -v --install || exit 1
-cd $ORIGDIR || exit $?
+cd "$ORIGDIR" || exit $?
 
-$srcdir/configure --enable-maintainer-mode "$@"
+git config --local --get format.subjectPrefix >/dev/null 2>&1 ||
+    git config --local format.subjectPrefix "PATCH font/adobe-utopia-type1"
+
+if test -z "$NOCONFIGURE"; then
+    exec "$srcdir"/configure "$@"
+fi

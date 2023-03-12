@@ -31,13 +31,13 @@ SUFFIXES = .bdf .pcf$(COMPRESS_SUFFIX)
 
 .bdf.pcf$(COMPRESS_SUFFIX):
 	@rm -f $@
-	$(AM_V_GEN)$(BDFTOPCF) -t $< | $(COMPRESS) > $@
+	$(AM_V_GEN)$(BDFTOPCF) -t $< | $(COMPRESS) $(COMPRESS_FLAGS) > $@
 
 fontdir = @FONTDIR@
 font_DATA = $(PCF_FILES)
 CLEANFILES = $(font_DATA)
 
-EXTRA_DIST = $(BDF_FILES)
+EXTRA_DIST = $(BDF_FILES) README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

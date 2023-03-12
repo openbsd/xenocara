@@ -21,25 +21,22 @@ dnl  CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
-AC_PREREQ([2.57])
-AC_INIT([font-misc-misc], [1.1.2],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+AC_PREREQ([2.60])
+AC_INIT([font-misc-misc], [1.1.3],
+        [https://gitlab.freedesktop.org/xorg/font/misc-misc/-/issues],
         [font-misc-misc])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
-# Require xorg-macros: XORG_DEFAULT_OPTIONS
+# Require xorg-macros 1.20 or later: XORG_DEFAULT_NOCODE_OPTIONS
 m4_ifndef([XORG_MACROS_VERSION],
-	  [m4_fatal([must install xorg-macros 1.3 or later before running autoconf/autogen])])
-XORG_MACROS_VERSION(1.3)
-XORG_DEFAULT_OPTIONS
+	  [m4_fatal([must install xorg-macros 1.20 or later before running autoconf/autogen])])
+XORG_MACROS_VERSION(1.20)
+XORG_DEFAULT_NOCODE_OPTIONS
 
-AC_PROG_INSTALL
-
-# Require X.Org's font util macros 1.2 or later
+# Require X.Org's font util macros 1.4 or later for COMPRESS_FLAGS
 m4_ifndef([XORG_FONT_MACROS_VERSION],
-	  [m4_fatal([must install X.Org font-util 1.2 or later before running autoconf/autogen])])
-XORG_FONT_MACROS_VERSION(1.2)
+	  [m4_fatal([must install X.Org font-util 1.4 or later before running autoconf/autogen])])
+XORG_FONT_MACROS_VERSION(1.4)
 
 XORG_FONTDIR([misc])
 XORG_FONT_BDF_UTILS
@@ -50,4 +47,5 @@ XORG_FONT_CHECK_ENCODING_LIST([ISO8859-1 ISO8859-2 ISO8859-3 ISO8859-4
 			       ISO8859-10 ISO8859-11 ISO8859-13 ISO8859-14
 			       ISO8859-15 ISO8859-16 KOI8-R JISX0201])
 
-AC_OUTPUT([Makefile])
+AC_CONFIG_FILES([Makefile])
+AC_OUTPUT

@@ -28,7 +28,7 @@ otffont_DATA = GohaTibebZemen.otf
 # Used by RUN_FCCACHE
 fontdir = $(ttffontdir) $(otffontdir)
 
-EXTRA_DIST = $(ttffont_DATA) $(otffont_DATA) license.txt
+EXTRA_DIST = $(ttffont_DATA) $(otffont_DATA) license.txt README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

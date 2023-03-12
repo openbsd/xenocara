@@ -46,7 +46,7 @@ FONT_FILES = \
 fontdir = @FONTDIR@
 font_DATA = $(FONT_FILES)
 
-EXTRA_DIST = $(FONT_FILES) license.txt
+EXTRA_DIST = $(FONT_FILES) license.txt README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 

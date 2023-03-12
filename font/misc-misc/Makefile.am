@@ -206,7 +206,7 @@ SUFFIXES = .bdf .pcf$(COMPRESS_SUFFIX) t.bdf \
 
 .bdf.pcf$(COMPRESS_SUFFIX):
 	@rm -f $@
-	$(AM_V_GEN)$(BDFTOPCF) -t $< | $(COMPRESS) > $@
+	$(AM_V_GEN)$(BDFTOPCF) -t $< | $(COMPRESS) $(COMPRESS_FLAGS) > $@
 
 .bdft.bdf:
 	@rm -f $@
@@ -326,7 +326,7 @@ KOEIGHTEEN = 18x18ko.bdf.xaa 18x18ko.bdf.xab 18x18ko.bdf.xac 18x18ko.bdf.xad \
 
 CLEANFILES = $(font_DATA) $(TRUNC_BDF_FILES) $(BUILT_BDF_FILES) 18x18ko.bdf
 
-EXTRA_DIST = $(BDF_FILES)
+EXTRA_DIST = $(BDF_FILES) README.md
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
