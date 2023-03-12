@@ -38,3 +38,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog
+
+EXTRA_DIST = README.md

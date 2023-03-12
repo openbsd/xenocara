@@ -23,11 +23,11 @@ dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.62])
 AC_INIT([util-macros],
-        [1.19.2],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.20.0],
+        [https://gitlab.freedesktop.org/xorg/util/macros/issues],
         [util-macros])
 AC_CONFIG_SRCDIR([Makefile.am])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 AM_MAINTAINER_MODE
 

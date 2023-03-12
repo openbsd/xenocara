@@ -1,3 +1,112 @@
+commit cb147377e9341af05232f95814022abdecf14024
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 7 14:49:10 2023 -0800
+
+    Add XORG_DEFAULT_NOCODE_OPTIONS and bump version to 1.20.0
+    
+    Allows data, doc, & font modules that don't compile any code
+    to avoid spending time running a bunch of compiler tests whose
+    results they'll ignore and never use.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ec3ecf1b7cff226b6dc2d26604b1d234b262d8d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 14:01:29 2023 -0800
+
+    Call AC_PROG_CC instead of AC_PROG_CC_C99 if autoconf >= 2.70
+    
+    Clears up deprecation warnings:
+    
+    configure.ac:38: warning: The macro `AC_PROG_CC_C99' is obsolete.
+    configure.ac:38: You should run autoupdate.
+    ./lib/autoconf/c.m4:1659: AC_PROG_CC_C99 is expanded from...
+    aclocal.m4:2959: XORG_COMPILER_BRAND is expanded from...
+    aclocal.m4:3078: XORG_COMPILER_FLAGS is expanded from...
+    aclocal.m4:3267: XORG_DEFAULT_OPTIONS is expanded from...
+    configure.ac:38: the top level
+    
+    ./lib/autoconf/c.m4:1659: AC_PROG_CC_C99 is expanded from...
+    aclocal.m4:2990: XORG_TESTSET_CFLAG is expanded from...
+    aclocal.m4:3082: XORG_COMPILER_FLAGS is expanded from...
+    aclocal.m4:3254: XORG_DEFAULT_OPTIONS is expanded from...
+    configure.ac:28: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 35cd00d70e541574f9f491225b30096c4e291827
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0326ba3c4caa34116c0e7e4af98661858cf25d1c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 16:15:12 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d67cd49e414064f5569ad29ce397e8b642c76866
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:38:32 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 701a48e21f23f1d633099f0790ff1a58ca70a44c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 15 15:36:37 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b8766308d2f78bc572abe5198007cf7aeec9b761
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sun Jan 24 09:41:00 2021 -0500
+
+    Version bump: 1.19.3
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 334c9750017426a12b5018ec27201758c1b83a7f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 20:34:07 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0883f6fa6e0dd40ddcec7c0675b0bd0d660f5ed6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 23:37:25 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd66ce3ba4a9d1d1490cb5775a2fdd0b408879b6
+Author: Marvin Schmidt <marv@exherbo.org>
+Date:   Fri May 27 15:13:56 2016 +0200
+
+    XORG_PROG_RAWCPP: Use AC_PATH_TOOL to find preprocessor
+    
+    On some distributions tools like cpp are prefixed with the host-triple,
+    to check for this prefixed version first AC_PATH_TOOL should be used. If
+    no prefixed cpp, it will fallback to the unprefixed name.
+    
+    https://bugs.freedesktop.org/show_bug.cgi?id=96257
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 771b773b50717884b37f6b2473166b4be4670076
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 4 17:40:10 2018 -0800
@@ -2160,13 +2269,13 @@ Date:   Wed Oct 19 02:48:17 2005 +0000
     Update package version number for RC1 release.
 
 commit b15a7b3dcc5c8af0a1ab837d8ca03910611e0968
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Oct 17 16:04:44 2005 +0000
 
     Add missing comma in AC_HELP_STRING call.
 
 commit 764ee0f698a17e34998b0e6d85f2c6cbf8f624c7
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Oct 3 21:22:08 2005 +0000
 
     - For all drivers that have a <driver>.sgml file, add code in their build
