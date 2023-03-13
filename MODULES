@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.501 2023/03/01 21:19:10 matthieu Exp $
+# $OpenBSD: MODULES,v 1.502 2023/03/13 21:20:09 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -109,43 +109,43 @@ driver/xf86-video-vesa		2.6.0		needs-update
 driver/xf86-video-vmware	13.4.0		needs-update
 driver/xf86-video-wsfb		0.4.1
 
-font/encodings			1.0.7		needs-update
-font/adobe-100dpi		1.0.4		needs-update
-font/adobe-75dpi		1.0.4		needs-update		
-font/adobe-utopia-100dpi	1.0.5		needs-update
-font/adobe-utopia-75dpi		1.0.5		needs-update
-font/adobe-utopia-type1		1.0.5		needs-update
-font/alias			1.0.5		needs-update
-font/arabic-misc		1.0.4		needs-update
-font/bh-100dpi			1.0.4		needs-update
-font/bh-75dpi			1.0.4		needs-update
-font/bh-lucidatypewriter-100dpi	1.0.4		needs-update
-font/bh-lucidatypewriter-75dpi	1.0.4		needs-update
-font/bh-ttf			1.0.4		needs-update
-font/bh-type1			1.0.4		needs-update
-font/bitstream-100dpi		1.0.4		needs-update
-font/bitstream-75dpi		1.0.4		needs-update
-font/bitstream-type1		1.0.4		needs-update
-font/cronyx-cyrillic		1.0.4		needs-update
-font/cursor-misc		1.0.4		needs-update
-font/daewoo-misc		1.0.4		needs-update
-font/dec-misc			1.0.4		needs-update
-font/ibm-type1			1.0.4		needs-update
-font/isas-misc			1.0.4		needs-update
-font/jis-misc			1.0.4		needs-update
-font/micro-misc			1.0.4		needs-update
-font/misc-cyrillic		1.0.4		needs-update
-font/misc-ethiopic		1.0.5		needs-update
-font/misc-meltho		1.0.4		needs-update
-font/misc-misc			1.1.3		needs-update
-font/mutt-misc			1.0.4		needs-update
-font/schumacher-misc		1.1.3		needs-update
-font/screen-cyrillic		1.0.5		needs-update
-font/sony-misc			1.0.4		needs-update
-font/sun-misc			1.0.4		needs-update
-font/util			1.4.0		needs-update
-font/winitzki-cyrillic		1.0.4		needs-update
-font/xfree86-type1		1.0.5		needs-update
+font/encodings			1.0.7
+font/adobe-100dpi		1.0.4
+font/adobe-75dpi		1.0.4		
+font/adobe-utopia-100dpi	1.0.5
+font/adobe-utopia-75dpi		1.0.5
+font/adobe-utopia-type1		1.0.5
+font/alias			1.0.5
+font/arabic-misc		1.0.4
+font/bh-100dpi			1.0.4
+font/bh-75dpi			1.0.4
+font/bh-lucidatypewriter-100dpi	1.0.4
+font/bh-lucidatypewriter-75dpi	1.0.4
+font/bh-ttf			1.0.4
+font/bh-type1			1.0.4
+font/bitstream-100dpi		1.0.4
+font/bitstream-75dpi		1.0.4
+font/bitstream-type1		1.0.4
+font/cronyx-cyrillic		1.0.4
+font/cursor-misc		1.0.4
+font/daewoo-misc		1.0.4
+font/dec-misc			1.0.4
+font/ibm-type1			1.0.4
+font/isas-misc			1.0.4
+font/jis-misc			1.0.4
+font/micro-misc			1.0.4
+font/misc-cyrillic		1.0.4
+font/misc-ethiopic		1.0.5
+font/misc-meltho		1.0.4
+font/misc-misc			1.1.3
+font/mutt-misc			1.0.4
+font/schumacher-misc		1.1.3
+font/screen-cyrillic		1.0.5
+font/sony-misc			1.0.4
+font/sun-misc			1.0.4
+font/util			1.4.0
+font/winitzki-cyrillic		1.0.4
+font/xfree86-type1		1.0.5
 
 lib/libICE			1.1.1		needs-update
 lib/libSM			1.2.4		needs-update
@@ -195,7 +195,7 @@ proto/xorgproto			2022.2
 
 util/cf				1.0.4
 util/gccmakedep			1.0.3
-util/macros			1.20.0		needs-update
+util/macros			1.20.0
 util/makedepend			1.0.8		needs-update
 
 xserver				21.1.7		needs-update
