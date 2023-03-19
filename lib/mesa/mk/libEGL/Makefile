@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.10 2023/03/03 06:32:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.11 2023/03/19 10:24:26 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -39,7 +39,19 @@ CPPFLAGS+=	-I${MESA_SRC}/src/egl/main \
 		-I${MESA_SRC}/src/gbm/backends/dri \
 		-D_EGL_NATIVE_PLATFORM=_EGL_PLATFORM_X11
 
-LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
+LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
+
+.if ${XENOCARA_BUILD_DRI:L} == "yes"
+LDADD+= ${.CURDIR}/../libloader/${__objdir}/libloader.a \
+	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a
+.endif
+
+.if ${XENOCARA_BUILD_DRI3:L} == "yes"
+LDADD+= ${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a
+.endif
+
+LDADD+= -L${.CURDIR}/../libgbm/${__objdir} -lgbm \
+	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
 	${.CURDIR}/../libmesa_util/${__objdir}/libmesa_util.a \
 	${.CURDIR}/../libmesa_format/${__objdir}/libmesa_format.a \
 	${.CURDIR}/../libmesa_util_sse41/${__objdir}/libmesa_util_sse41.a \
@@ -49,19 +61,14 @@ LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
 	-L${X11BASE}/lib -lX11-xcb -lX11 -lxcb -lxcb-randr -lxcb-xfixes
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
-LDADD+= ${.CURDIR}/../libloader/${__objdir}/libloader.a \
-	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
-	-ldrm -lxcb-dri2 -lexpat
+LDADD+= -ldrm -lxcb-dri2 -lexpat
 .endif
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
-LDADD+= ${.CURDIR}/../libloader_dri3_helper/${__objdir}/libloader_dri3_helper.a \
-	-lxcb-dri3 -lxcb-present -lxcb-sync -lxshmfence
+LDADD+= -lxcb-dri3 -lxcb-present -lxcb-sync -lxshmfence
 .endif
 
-LDADD+= -L${.CURDIR}/../libgbm/${__objdir} -lgbm \
-	-L${.CURDIR}/../libglapi/${__objdir} -lglapi \
-	-Wl,--end-group
+LDADD+= -Wl,--end-group
 
 obj: _xenocara_obj
 
