@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: client.c,v 1.266 2022/02/26 15:19:18 okan Exp $
+ * $OpenBSD: client.c,v 1.267 2023/03/22 08:27:36 op Exp $
  */
 
 #include <sys/types.h>
@@ -596,7 +596,7 @@ client_draw_border(struct client_ctx *cc)
 		pixel = sc->xftcolor[CWM_COLOR_BORDER_URGENCY].pixel;
 
 	XSetWindowBorderWidth(X_Dpy, cc->win, (unsigned int)cc->bwidth);
-	XSetWindowBorder(X_Dpy, cc->win, pixel);
+	XSetWindowBorder(X_Dpy, cc->win, pixel | (0xffu << 24));
 }
 
 static void
