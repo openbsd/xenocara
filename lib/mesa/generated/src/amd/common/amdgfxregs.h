@@ -12977,7 +12977,7 @@
 #define   S_028A98_EN_DRAW_VP(x)                                      (((unsigned)(x) & 0x1) << 4) /* >= gfx10 */
 #define   G_028A98_EN_DRAW_VP(x)                                      (((x) >> 4) & 0x1)
 #define   C_028A98_EN_DRAW_VP                                         0xFFFFFFEF
-#define   S_028A98_EN_VRS_RATE(x)                                     (((unsigned)(x) & 0x1) << 6) /* gfx103 */
+#define   S_028A98_EN_VRS_RATE(x)                                     (((unsigned)(x) & 0x1) << 6) /* >= gfx103 */
 #define   G_028A98_EN_VRS_RATE(x)                                     (((x) >> 6) & 0x1)
 #define   C_028A98_EN_VRS_RATE                                        0xFFFFFFBF
 #define R_028AA0_VGT_INSTANCE_STEP_RATE_0                               0x028AA0 /* <= gfx103 */
@@ -14244,6 +14244,15 @@
 #define   S_028C78_FRAGMENT_COMPRESS_DISABLE(x)                       (((unsigned)(x) & 0x1) << 24)
 #define   G_028C78_FRAGMENT_COMPRESS_DISABLE(x)                       (((x) >> 24) & 0x1)
 #define   C_028C78_FRAGMENT_COMPRESS_DISABLE                          0xFEFFFFFF
+#define   S_028C78_DISABLE_OVERRIDE_INCONSISTENT_KEYS(x)              (((unsigned)(x) & 0x1) << 25)
+#define   G_028C78_DISABLE_OVERRIDE_INCONSISTENT_KEYS(x)              (((x) >> 25) & 0x1)
+#define   C_028C78_DISABLE_OVERRIDE_INCONSISTENT_KEYS                 0xFDFFFFFF
+#define   S_028C78_ENABLE_MAX_COMP_FRAG_OVERRIDE(x)                   (((unsigned)(x) & 0x1) << 26)
+#define   G_028C78_ENABLE_MAX_COMP_FRAG_OVERRIDE(x)                   (((x) >> 26) & 0x1)
+#define   C_028C78_ENABLE_MAX_COMP_FRAG_OVERRIDE                      0xFBFFFFFF
+#define   S_028C78_MAX_COMP_FRAGS(x)                                  (((unsigned)(x) & 0x7) << 27)
+#define   G_028C78_MAX_COMP_FRAGS(x)                                  (((x) >> 27) & 0x7)
+#define   C_028C78_MAX_COMP_FRAGS                                     0xC7FFFFFF
 #define R_028C7C_CB_COLOR0_CMASK                                        0x028C7C /* <= gfx103 */
 #define R_028C80_CB_COLOR0_CMASK_BASE_EXT                               0x028C80 /* gfx9 */
 #define   S_028C80_BASE_256B(x)                                       (((unsigned)(x) & 0xFF) << 0)

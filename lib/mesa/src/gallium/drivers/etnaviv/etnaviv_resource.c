@@ -570,15 +570,9 @@ etna_resource_from_handle(struct pipe_screen *pscreen,
       goto fail;
    }
 
-   if (screen->ro) {
-      struct pipe_resource *imp_prsc = prsc;
-      do {
-         etna_resource(imp_prsc)->scanout =
-               renderonly_create_gpu_import_for_resource(imp_prsc, screen->ro,
-                                                         NULL);
-         /* failure is expected for scanout incompatible buffers */
-      } while ((imp_prsc = imp_prsc->next));
-   }
+   if (screen->ro)
+      rsc->scanout = renderonly_create_gpu_import_for_resource(prsc, screen->ro,
+                                                               NULL);
 
    return prsc;
 

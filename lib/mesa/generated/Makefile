@@ -345,7 +345,8 @@ all:
 	    --prefix radv \
 	    --device-prefix sqtt \
 	    --device-prefix metro_exodus \
-	    --device-prefix rra
+	    --device-prefix rra \
+	    --device-prefix rage2
 .for SHADER in copy lbvh_internal leaf morton ploc_internal converter_internal converter_leaf
 	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
 	    --target-env spirv1.5 -x \

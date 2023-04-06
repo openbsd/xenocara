@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.10 2023/03/03 06:32:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.11 2023/04/06 10:23:44 jsg Exp $
 
 LIB=	vulkan_radeon
 
 NOPROFILE=
 
 SRCS=	radv_metro_exodus.c \
+	radv_rage2.c \
 	radv_rra_layer.c \
 	radv_sqtt_layer.c \
 	radv_null_bo.c \

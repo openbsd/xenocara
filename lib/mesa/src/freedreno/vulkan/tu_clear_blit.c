@@ -2551,6 +2551,8 @@ tu_clear_sysmem_attachments(struct tu_cmd_buffer *cmd,
    tu_cs_emit_regs(cs, A6XX_RB_STENCILWRMASK(.wrmask = 0xff));
    tu_cs_emit_regs(cs, A6XX_RB_STENCILREF(.ref = s_clear_val));
 
+   tu_cs_emit_regs(cs, A6XX_GRAS_SC_CNTL(.ccusinglecachelinesize = 2));
+
    unsigned num_rts = util_bitcount(clear_rts);
    tu_cs_emit_pkt7(cs, CP_LOAD_STATE6_FRAG, 3 + 4 * num_rts);
    tu_cs_emit(cs, CP_LOAD_STATE6_0_DST_OFF(0) |

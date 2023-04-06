@@ -247,14 +247,17 @@ LLVMValueRef si_get_tcs_in_vertex_dw_stride(struct si_shader_context *ctx);
 LLVMValueRef si_get_num_tcs_out_vertices(struct si_shader_context *ctx);
 void si_llvm_preload_tess_rings(struct si_shader_context *ctx);
 void si_llvm_ls_build_end(struct si_shader_context *ctx);
-void si_llvm_build_tcs_epilog(struct si_shader_context *ctx, union si_shader_part_key *key);
+void si_llvm_build_tcs_epilog(struct si_shader_context *ctx, union si_shader_part_key *key,
+                              bool separate_epilog);
 void si_llvm_tcs_build_end(struct si_shader_context *ctx);
 void si_llvm_init_tcs_callbacks(struct si_shader_context *ctx);
 
 /* si_shader_llvm_ps.c */
 LLVMValueRef si_get_sample_id(struct si_shader_context *ctx);
-void si_llvm_build_ps_prolog(struct si_shader_context *ctx, union si_shader_part_key *key);
-void si_llvm_build_ps_epilog(struct si_shader_context *ctx, union si_shader_part_key *key);
+void si_llvm_build_ps_prolog(struct si_shader_context *ctx, union si_shader_part_key *key,
+                             bool separate_prolog);
+void si_llvm_build_ps_epilog(struct si_shader_context *ctx, union si_shader_part_key *key,
+                             bool separate_epilog);
 void si_llvm_build_monolithic_ps(struct si_shader_context *ctx, struct si_shader *shader);
 void si_llvm_ps_build_end(struct si_shader_context *ctx);
 void si_llvm_init_ps_callbacks(struct si_shader_context *ctx);
@@ -274,7 +277,8 @@ void si_llvm_emit_streamout(struct si_shader_context *ctx, struct si_shader_outp
 void si_llvm_build_vs_exports(struct si_shader_context *ctx, LLVMValueRef num_export_threads,
                               struct si_shader_output_values *outputs, unsigned noutput);
 void si_llvm_vs_build_end(struct si_shader_context *ctx);
-void si_llvm_build_vs_prolog(struct si_shader_context *ctx, union si_shader_part_key *key);
+void si_llvm_build_vs_prolog(struct si_shader_context *ctx, union si_shader_part_key *key,
+                             bool separate_prolog);
 void si_llvm_init_vs_callbacks(struct si_shader_context *ctx, bool ngg_cull_shader);
 
 #endif

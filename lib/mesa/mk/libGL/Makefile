@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2023/03/03 06:32:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2023/04/06 10:23:44 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -80,7 +80,8 @@ LDADD+=	-L${X11BASE}/lib -lz -lexpat -lXfixes -lX11-xcb -lxcb-glx \
 	-ldrm -lm -lpthread -lXau -lXdmcp
 
 .if ${XENOCARA_BUILD_DRI3:L} == "yes"
-LDADD+=	-lxcb-dri3 -lxcb-xfixes -lxcb-present -lxcb-sync -lxshmfence
+LDADD+=	-lxcb-dri3 -lxcb-xfixes -lxcb-present -lxcb-sync -lxshmfence \
+	-lxcb-randr
 .endif
 
 LDADD+=	-Wl,--end-group

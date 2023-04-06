@@ -1341,7 +1341,9 @@ radv_emit_rbplus_state(struct radv_cmd_buffer *cmd_buffer)
              spi_format == V_028714_SPI_SHADER_UINT16_ABGR ||
              spi_format == V_028714_SPI_SHADER_SINT16_ABGR) {
             sx_ps_downconvert |= V_028754_SX_RT_EXPORT_8_8_8_8 << (i * 4);
-            sx_blend_opt_epsilon |= V_028758_8BIT_FORMAT << (i * 4);
+
+            if (G_028C70_NUMBER_TYPE(cb->cb_color_info) != V_028C70_NUMBER_SRGB)
+               sx_blend_opt_epsilon |= V_028758_8BIT_FORMAT << (i * 4);
          }
          break;
 
@@ -2946,7 +2948,7 @@ radv_emit_framebuffer_state(struct radv_cmd_buffer *cmd_buffer)
 
       if (cmd_buffer->device->physical_device->rad_info.gfx_level >= GFX11) {
          radeon_set_context_reg(cmd_buffer->cs, R_028424_CB_FDCC_CONTROL,
-                                S_028424_SAMPLE_MASK_TRACKER_WATERMARK(15));
+                                S_028424_SAMPLE_MASK_TRACKER_WATERMARK(0));
       } else {
         uint8_t watermark = gfx_level >= GFX10 ? 6 : 4;
 
@@ -4566,7 +4568,7 @@ radv_src_access_flush(struct radv_cmd_buffer *cmd_buffer, VkAccessFlags2 src_fla
 
    u_foreach_bit64(b, src_flags)
    {
-      switch ((VkAccessFlags2)(1 << b)) {
+      switch ((VkAccessFlags2)BITFIELD64_BIT(b)) {
       case VK_ACCESS_2_SHADER_WRITE_BIT:
       case VK_ACCESS_2_SHADER_STORAGE_WRITE_BIT:
          /* since the STORAGE bit isn't set we know that this is a meta operation.
@@ -4654,7 +4656,7 @@ radv_dst_access_flush(struct radv_cmd_buffer *cmd_buffer, VkAccessFlags2 dst_fla
 
    u_foreach_bit64(b, dst_flags)
    {
-      switch ((VkAccessFlags2)(1 << b)) {
+      switch ((VkAccessFlags2)BITFIELD64_BIT(b)) {
       case VK_ACCESS_2_INDIRECT_COMMAND_READ_BIT:
          /* SMEM loads are used to read compute dispatch size in shaders */
          if (!cmd_buffer->device->load_grid_size_from_user_sgpr)
@@ -4689,12 +4691,13 @@ radv_dst_access_flush(struct radv_cmd_buffer *cmd_buffer, VkAccessFlags2 dst_fla
       case VK_ACCESS_2_SHADER_BINDING_TABLE_READ_BIT_KHR:
       case VK_ACCESS_2_SHADER_READ_BIT:
       case VK_ACCESS_2_SHADER_STORAGE_READ_BIT:
-         flush_bits |= RADV_CMD_FLAG_INV_VCACHE;
          /* Unlike LLVM, ACO uses SMEM for SSBOs and we have to
           * invalidate the scalar cache. */
          if (!cmd_buffer->device->physical_device->use_llvm && !image)
             flush_bits |= RADV_CMD_FLAG_INV_SCACHE;
-
+         FALLTHROUGH;
+      case VK_ACCESS_2_SHADER_SAMPLED_READ_BIT:
+         flush_bits |= RADV_CMD_FLAG_INV_VCACHE;
          if (has_CB_meta || has_DB_meta)
             flush_bits |= RADV_CMD_FLAG_INV_L2_METADATA;
          if (!image_is_coherent)
@@ -5280,7 +5283,7 @@ radv_EndCommandBuffer(VkCommandBuffer commandBuffer)
       /* Flush noncoherent images on GFX9+ so we can assume they're clean on the start of a
        * command buffer.
        */
-      if (cmd_buffer->state.rb_noncoherent_dirty && can_skip_buffer_l2_flushes(cmd_buffer->device))
+      if (cmd_buffer->state.rb_noncoherent_dirty && !can_skip_buffer_l2_flushes(cmd_buffer->device))
          cmd_buffer->state.flush_bits |= radv_src_access_flush(
             cmd_buffer,
             VK_ACCESS_2_COLOR_ATTACHMENT_WRITE_BIT |
@@ -5371,6 +5374,12 @@ radv_bind_vs_input_state(struct radv_cmd_buffer *cmd_buffer,
       return;
 
    cmd_buffer->state.dynamic_vs_input = *src;
+
+   if (cmd_buffer->device->physical_device->rad_info.gfx_level == GFX6 ||
+       cmd_buffer->device->physical_device->rad_info.gfx_level >= GFX10) {
+      cmd_buffer->state.vbo_misaligned_mask = 0;
+      cmd_buffer->state.vbo_misaligned_mask_invalid = src->attribute_mask;
+   }
 
    cmd_buffer->state.dirty |= RADV_CMD_DIRTY_DYNAMIC_VERTEX_INPUT;
 }
@@ -6291,6 +6300,8 @@ radv_CmdExecuteCommands(VkCommandBuffer commandBuffer, uint32_t commandBufferCou
 
       primary->state.last_vrs_rates = secondary->state.last_vrs_rates;
       primary->state.last_vrs_rates_sgpr_idx = secondary->state.last_vrs_rates_sgpr_idx;
+
+      primary->state.rb_noncoherent_dirty |= secondary->state.rb_noncoherent_dirty;
    }
 
    /* After executing commands from secondary buffers we have to dirty
@@ -7008,6 +7019,25 @@ radv_emit_userdata_task(struct radv_cmd_buffer *cmd_buffer, uint32_t x, uint32_t
    radv_emit_userdata_task_ib_only(cmd_buffer, ib_va, first_task ? 8 : 0);
 }
 
+/* Bind an internal index buffer for GPUs that hang with 0-sized index buffers to handle robustness2
+ * which requires 0 for out-of-bounds access.
+ */
+static void
+radv_handle_zero_index_buffer_bug(struct radv_cmd_buffer *cmd_buffer, uint64_t *index_va,
+                                  uint32_t *remaining_indexes)
+{
+   const uint32_t zero = 0;
+   uint32_t offset;
+
+   if (!radv_cmd_buffer_upload_data(cmd_buffer, sizeof(uint32_t), &zero, &offset)) {
+      vk_command_buffer_set_error(&cmd_buffer->vk, VK_ERROR_OUT_OF_HOST_MEMORY);
+      return;
+   }
+
+   *index_va = radv_buffer_get_va(cmd_buffer->upload.upload_bo) + offset;
+   *remaining_indexes = 1;
+}
+
 ALWAYS_INLINE static void
 radv_emit_draw_packets_indexed(struct radv_cmd_buffer *cmd_buffer,
                                const struct radv_draw_info *info,
@@ -7028,17 +7058,16 @@ radv_emit_draw_packets_indexed(struct radv_cmd_buffer *cmd_buffer,
       if (vertexOffset) {
          radv_emit_userdata_vertex(cmd_buffer, info, *vertexOffset);
          vk_foreach_multi_draw_indexed(draw, i, minfo, drawCount, stride) {
-            const uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
-            /* Skip draw calls with 0-sized index buffers if the GPU can't handle them */
+            /* Handle draw calls with 0-sized index buffers if the GPU can't support them. */
             if (!remaining_indexes &&
                 cmd_buffer->device->physical_device->rad_info.has_zero_index_buffer_bug)
-               continue;
+               radv_handle_zero_index_buffer_bug(cmd_buffer, &index_va, &remaining_indexes);
 
             if (i > 0)
                radeon_set_sh_reg(cs, state->graphics_pipeline->vtx_base_sgpr + sizeof(uint32_t), i);
-
-            const uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
             if (!state->render.view_mask) {
                radv_cs_emit_draw_indexed_packet(cmd_buffer, index_va, remaining_indexes, draw->indexCount, false);
@@ -7052,12 +7081,13 @@ radv_emit_draw_packets_indexed(struct radv_cmd_buffer *cmd_buffer,
          }
       } else {
          vk_foreach_multi_draw_indexed(draw, i, minfo, drawCount, stride) {
-            const uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
-            /* Skip draw calls with 0-sized index buffers if the GPU can't handle them */
+            /* Handle draw calls with 0-sized index buffers if the GPU can't support them. */
             if (!remaining_indexes &&
                 cmd_buffer->device->physical_device->rad_info.has_zero_index_buffer_bug)
-               continue;
+               radv_handle_zero_index_buffer_bug(cmd_buffer, &index_va, &remaining_indexes);
 
             if (i > 0) {
                if (state->last_vertex_offset != draw->vertexOffset)
@@ -7066,8 +7096,6 @@ radv_emit_draw_packets_indexed(struct radv_cmd_buffer *cmd_buffer,
                   radeon_set_sh_reg(cs, state->graphics_pipeline->vtx_base_sgpr + sizeof(uint32_t), i);
             } else
                radv_emit_userdata_vertex(cmd_buffer, info, draw->vertexOffset);
-
-            const uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
             if (!state->render.view_mask) {
                radv_cs_emit_draw_indexed_packet(cmd_buffer, index_va, remaining_indexes, draw->indexCount, false);
@@ -7099,14 +7127,13 @@ radv_emit_draw_packets_indexed(struct radv_cmd_buffer *cmd_buffer,
 
          radv_emit_userdata_vertex(cmd_buffer, info, *vertexOffset);
          vk_foreach_multi_draw_indexed(draw, i, minfo, drawCount, stride) {
-            const uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
-            /* Skip draw calls with 0-sized index buffers if the GPU can't handle them */
+            /* Handle draw calls with 0-sized index buffers if the GPU can't support them. */
             if (!remaining_indexes &&
                 cmd_buffer->device->physical_device->rad_info.has_zero_index_buffer_bug)
-               continue;
-
-            const uint64_t index_va = state->index_va + draw->firstIndex * index_size;
+               radv_handle_zero_index_buffer_bug(cmd_buffer, &index_va, &remaining_indexes);
 
             if (!state->render.view_mask) {
                radv_cs_emit_draw_indexed_packet(cmd_buffer, index_va, remaining_indexes, draw->indexCount, can_eop && i < drawCount - 1);
@@ -7120,18 +7147,17 @@ radv_emit_draw_packets_indexed(struct radv_cmd_buffer *cmd_buffer,
          }
       } else {
          vk_foreach_multi_draw_indexed(draw, i, minfo, drawCount, stride) {
-            const uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint32_t remaining_indexes = MAX2(state->max_index_count, draw->firstIndex) - draw->firstIndex;
+            uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
-            /* Skip draw calls with 0-sized index buffers if the GPU can't handle them */
+            /* Handle draw calls with 0-sized index buffers if the GPU can't support them. */
             if (!remaining_indexes &&
                 cmd_buffer->device->physical_device->rad_info.has_zero_index_buffer_bug)
-               continue;
+               radv_handle_zero_index_buffer_bug(cmd_buffer, &index_va, &remaining_indexes);
 
             const VkMultiDrawIndexedInfoEXT *next = (const VkMultiDrawIndexedInfoEXT*)(i < drawCount - 1 ? ((uint8_t*)draw + stride) : NULL);
             const bool offset_changes = next && next->vertexOffset != draw->vertexOffset;
             radv_emit_userdata_vertex(cmd_buffer, info, draw->vertexOffset);
-
-            const uint64_t index_va = state->index_va + draw->firstIndex * index_size;
 
             if (!state->render.view_mask) {
                radv_cs_emit_draw_indexed_packet(cmd_buffer, index_va, remaining_indexes, draw->indexCount, can_eop && !offset_changes && i < drawCount - 1);
@@ -7508,6 +7534,12 @@ radv_get_ngg_culling_settings(struct radv_cmd_buffer *cmd_buffer, bool vp_y_inve
    const struct radv_graphics_pipeline *pipeline = cmd_buffer->state.graphics_pipeline;
    const struct radv_dynamic_state *d = &cmd_buffer->state.dynamic;
 
+   /* Disable shader culling entirely when conservative overestimate is used.
+    * The face culling algorithm can delete very tiny triangles (even if unintended).
+    */
+   if (d->conservative_rast_mode == VK_CONSERVATIVE_RASTERIZATION_MODE_OVERESTIMATE_EXT)
+      return radv_nggc_none;
+
    /* Cull every triangle when rasterizer discard is enabled. */
    if (d->rasterizer_discard_enable)
       return radv_nggc_front_face | radv_nggc_back_face;
@@ -7529,12 +7561,10 @@ radv_get_ngg_culling_settings(struct radv_cmd_buffer *cmd_buffer, bool vp_y_inve
    if (d->cull_mode & VK_CULL_MODE_BACK_BIT)
       nggc_settings |= radv_nggc_back_face;
 
-   /* Small primitive culling is only valid when conservative overestimation is not used. It's also
-    * disabled for user sample locations because small primitive culling assumes a sample
-    * position at (0.5, 0.5). */
-   bool uses_conservative_overestimate =
-      d->conservative_rast_mode == VK_CONSERVATIVE_RASTERIZATION_MODE_OVERESTIMATE_EXT;
-   if (!uses_conservative_overestimate && !pipeline->uses_user_sample_locations) {
+   /* Small primitive culling assumes a sample position at (0.5, 0.5)
+    * so don't enable it with user sample locations.
+    */
+   if (!pipeline->uses_user_sample_locations) {
       nggc_settings |= radv_nggc_small_primitives;
 
       /* small_prim_precision = num_samples / 2^subpixel_bits

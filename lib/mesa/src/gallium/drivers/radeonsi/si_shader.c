@@ -2005,7 +2005,8 @@ static struct si_shader_part *
 si_get_shader_part(struct si_screen *sscreen, struct si_shader_part **list,
                    gl_shader_stage stage, bool prolog, union si_shader_part_key *key,
                    struct ac_llvm_compiler *compiler, struct util_debug_callback *debug,
-                   void (*build)(struct si_shader_context *, union si_shader_part_key *),
+                   void (*build)(struct si_shader_context *, union si_shader_part_key *,
+                                 bool non_monolithic),
                    const char *name)
 {
    struct si_shader_part *result;
@@ -2062,7 +2063,7 @@ si_get_shader_part(struct si_screen *sscreen, struct si_shader_part **list,
    ctx.shader = &shader;
    ctx.stage = stage;
 
-   build(&ctx, key);
+   build(&ctx, key, true);
 
    /* Compile. */
    si_llvm_optimize_module(&ctx);

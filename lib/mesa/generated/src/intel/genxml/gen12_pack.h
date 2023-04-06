@@ -1990,7 +1990,7 @@ GFX12_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ReturnFilterWeightforNullTexels, 2, 2) |
       util_bitpack_uint(values->ReturnFilterWeightforBorderTexels, 3, 3) |
       util_bitpack_uint(values->Forcegather4Behavior, 5, 5) |
-      __gen_offset(values->BorderColorPointer, 6, 23);
+      __gen_offset(values->BorderColorPointer, 6, 31);
 
    dw[3] =
       util_bitpack_uint(values->TCZAddressControlMode, 0, 2) |

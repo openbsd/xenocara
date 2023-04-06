@@ -11497,6 +11497,9 @@ create_fs_exports(isel_context* ctx)
 
    if (ctx->program->info.ps.has_epilog) {
       create_fs_jump_to_epilog(ctx);
+
+      /* FS epilogs always have at least one color/null export. */
+      ctx->program->has_color_exports = true;
    } else {
       struct aco_export_mrt mrts[8];
       unsigned compacted_mrt_index = 0;

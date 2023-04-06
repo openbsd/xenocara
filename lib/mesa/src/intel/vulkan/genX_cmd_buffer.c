@@ -2501,7 +2501,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
             assert(desc_idx < MAX_PUSH_DESCRIPTORS);
 
             if (shader->push_desc_info.fully_promoted_ubo_descriptors & BITFIELD_BIT(desc_idx)) {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state = anv_bindless_state_for_binding_table(
+                  cmd_buffer->device->null_surface_state);
                break;
             }
          }
@@ -2531,7 +2532,9 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                   anv_bindless_state_for_binding_table(sstate.state);
                assert(surface_state.alloc_size);
             } else {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state =
+                  anv_bindless_state_for_binding_table(
+                     cmd_buffer->device->null_surface_state);
             }
             break;
          }
@@ -2561,7 +2564,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                                   "corresponding SPIR-V format enum.");
                }
             } else {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state = anv_bindless_state_for_binding_table(
+                  cmd_buffer->device->null_surface_state);
             }
             break;
          }
@@ -2572,7 +2576,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                surface_state = desc->set_buffer_view->surface_state;
                assert(surface_state.alloc_size);
             } else {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state = anv_bindless_state_for_binding_table(
+                  cmd_buffer->device->null_surface_state);
             }
             break;
 
@@ -2582,7 +2587,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                   desc->buffer_view->surface_state);
                assert(surface_state.alloc_size);
             } else {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state = anv_bindless_state_for_binding_table(
+                  cmd_buffer->device->null_surface_state);
             }
             break;
 
@@ -2619,7 +2625,9 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                                              format, ISL_SWIZZLE_IDENTITY,
                                              usage, address, range, 1);
             } else {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state =
+                  anv_bindless_state_for_binding_table(
+                     cmd_buffer->device->null_surface_state);
             }
             break;
          }
@@ -2632,7 +2640,8 @@ emit_binding_table(struct anv_cmd_buffer *cmd_buffer,
                   : desc->buffer_view->storage_surface_state);
                assert(surface_state.alloc_size);
             } else {
-               surface_state = cmd_buffer->device->null_surface_state;
+               surface_state = anv_bindless_state_for_binding_table(
+                  cmd_buffer->device->null_surface_state);
             }
             break;
 
@@ -3929,7 +3938,7 @@ update_dirty_vbs_for_gfx8_vb_flush(struct anv_cmd_buffer *cmd_buffer,
       vb_used |= 1ull << ANV_DRAWID_VB_INDEX;
 
    genX(cmd_buffer_update_dirty_vbs_for_gfx8_vb_flush)(cmd_buffer,
-                                                       access_type == RANDOM,
+                                                       access_type,
                                                        vb_used);
 #endif
 }
@@ -4058,12 +4067,13 @@ void genX(CmdDrawMultiEXT)(
          prim.StartInstanceLocation    = firstInstance;
          prim.BaseVertexLocation       = 0;
       }
+   }
 
 #if GFX_VERx10 == 125
-   genX(emit_dummy_post_sync_op)(cmd_buffer, draw->vertexCount);
+   genX(emit_dummy_post_sync_op)(cmd_buffer,
+                                 drawCount == 0 ? 0 :
+                                 pVertexInfo[drawCount - 1].vertexCount);
 #endif
-
-   }
 
    update_dirty_vbs_for_gfx8_vb_flush(cmd_buffer, SEQUENTIAL);
 
@@ -4233,11 +4243,14 @@ void genX(CmdDrawMultiIndexedEXT)(
             prim.StartInstanceLocation    = firstInstance;
             prim.BaseVertexLocation       = draw->vertexOffset;
          }
-#if GFX_VERx10 == 125
-         genX(emit_dummy_post_sync_op)(cmd_buffer, draw->indexCount);
-#endif
       }
    }
+
+#if GFX_VERx10 == 125
+   genX(emit_dummy_post_sync_op)(cmd_buffer,
+                                 drawCount == 0 ? 0 :
+                                 pIndexInfo[drawCount - 1].indexCount);
+#endif
 
    update_dirty_vbs_for_gfx8_vb_flush(cmd_buffer, RANDOM);
 
@@ -6006,28 +6019,6 @@ genX(flush_pipeline_select)(struct anv_cmd_buffer *cmd_buffer,
     */
    if (pipeline == GPGPU)
       anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_CC_STATE_POINTERS), t);
-
-   if (pipeline == _3D) {
-      /* There is a mid-object preemption workaround which requires you to
-       * re-emit MEDIA_VFE_STATE after switching from GPGPU to 3D.  However,
-       * even without preemption, we have issues with geometry flickering when
-       * GPGPU and 3D are back-to-back and this seems to fix it.  We don't
-       * really know why.
-       */
-      anv_batch_emit(&cmd_buffer->batch, GENX(MEDIA_VFE_STATE), vfe) {
-         vfe.MaximumNumberofThreads =
-            devinfo->max_cs_threads * devinfo->subslice_total - 1;
-         vfe.NumberofURBEntries     = 2;
-         vfe.URBEntryAllocationSize = 2;
-      }
-
-      /* We just emitted a dummy MEDIA_VFE_STATE so now that packet is
-       * invalid. Set the compute pipeline to dirty to force a re-emit of the
-       * pipeline in case we get back-to-back dispatch calls with the same
-       * pipeline and a PIPELINE_SELECT in between.
-       */
-      cmd_buffer->state.compute.pipeline_dirty = true;
-   }
 #endif
 
    /* From "BXML » GT » MI » vol1a GPU Overview » [Instruction]
@@ -6055,6 +6046,37 @@ genX(flush_pipeline_select)(struct anv_cmd_buffer *cmd_buffer,
                              ANV_PIPE_UNTYPED_DATAPORT_CACHE_FLUSH_BIT,
                              "flush and invalidate for PIPELINE_SELECT");
    genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
+
+#if GFX_VER == 9
+   if (pipeline == _3D) {
+      /* There is a mid-object preemption workaround which requires you to
+       * re-emit MEDIA_VFE_STATE after switching from GPGPU to 3D.  However,
+       * even without preemption, we have issues with geometry flickering when
+       * GPGPU and 3D are back-to-back and this seems to fix it.  We don't
+       * really know why.
+       *
+       * Also, from the Sky Lake PRM Vol 2a, MEDIA_VFE_STATE:
+       *
+       *    "A stalling PIPE_CONTROL is required before MEDIA_VFE_STATE unless
+       *    the only bits that are changed are scoreboard related ..."
+       *
+       * This is satisfied by applying pre-PIPELINE_SELECT pipe flushes above.
+       */
+      anv_batch_emit(&cmd_buffer->batch, GENX(MEDIA_VFE_STATE), vfe) {
+         vfe.MaximumNumberofThreads =
+            devinfo->max_cs_threads * devinfo->subslice_total - 1;
+         vfe.NumberofURBEntries     = 2;
+         vfe.URBEntryAllocationSize = 2;
+      }
+
+      /* We just emitted a dummy MEDIA_VFE_STATE so now that packet is
+       * invalid. Set the compute pipeline to dirty to force a re-emit of the
+       * pipeline in case we get back-to-back dispatch calls with the same
+       * pipeline and a PIPELINE_SELECT in between.
+       */
+      cmd_buffer->state.compute.pipeline_dirty = true;
+   }
+#endif
 
    anv_batch_emit(&cmd_buffer->batch, GENX(PIPELINE_SELECT), ps) {
       ps.MaskBits = GFX_VER >= 12 ? 0x13 : 3;
@@ -7539,7 +7561,7 @@ genX(batch_emit_dummy_post_sync_op)(struct anv_batch *batch,
         primitive_topology == _3DPRIM_POINTLIST_BF ||
         primitive_topology == _3DPRIM_LINESTRIP_CONT ||
         primitive_topology == _3DPRIM_LINESTRIP_BF ||
-        primitive_topology == _3DPRIM_LINESTRIP_CONT_BF) ||
+        primitive_topology == _3DPRIM_LINESTRIP_CONT_BF) &&
        (vertex_count == 1 || vertex_count == 2)) {
       anv_batch_emit(batch, GENX(PIPE_CONTROL), pc) {
          pc.PostSyncOperation = WriteImmediateData;

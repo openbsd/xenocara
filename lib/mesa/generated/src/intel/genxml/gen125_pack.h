@@ -2581,7 +2581,7 @@ GFX125_SAMPLER_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ReturnFilterWeightforNullTexels, 2, 2) |
       util_bitpack_uint(values->ReturnFilterWeightforBorderTexels, 3, 3) |
       util_bitpack_uint(values->Forcegather4Behavior, 5, 5) |
-      __gen_offset(values->BorderColorPointer, 6, 23);
+      __gen_offset(values->BorderColorPointer, 6, 31);
 
    dw[3] =
       util_bitpack_uint(values->TCZAddressControlMode, 0, 2) |
@@ -24377,7 +24377,7 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    dw[17] = (v16_address >> 32) | (v16 >> 32);
 
    dw[18] =
-      util_bitpack_uint(values->BindlessSurfaceStateSize, 12, 31);
+      util_bitpack_uint(values->BindlessSurfaceStateSize, 0, 31);
 
    const uint64_t v19 =
       util_bitpack_uint(values->BindlessSamplerStateBaseAddressModifyEnable, 0, 0) |

@@ -2427,6 +2427,10 @@ radv_lower_io_to_scalar_early(nir_shader *nir, nir_variable_mode mask)
 {
    bool progress = false;
 
+   NIR_PASS(progress, nir, nir_lower_array_deref_of_vec, mask,
+            nir_lower_direct_array_deref_of_vec_load | nir_lower_indirect_array_deref_of_vec_load |
+               nir_lower_direct_array_deref_of_vec_store |
+               nir_lower_indirect_array_deref_of_vec_store);
    NIR_PASS(progress, nir, nir_lower_io_to_scalar_early, mask);
    if (progress) {
       /* Optimize the new vector code and then remove dead vars */
@@ -6235,8 +6239,12 @@ radv_graphics_pipeline_init(struct radv_graphics_pipeline *pipeline, struct radv
     * GFX10 supports pixel shaders without exports by setting both the
     * color and Z formats to SPI_SHADER_ZERO. The hw will skip export
     * instructions if any are present.
+    *
+    * GFX11 requires one color output, otherwise the DCC decompression does nothing.
     */
-   if ((device->physical_device->rad_info.gfx_level <= GFX9 || ps->info.ps.can_discard) &&
+   if ((device->physical_device->rad_info.gfx_level <= GFX9 || ps->info.ps.can_discard ||
+        (extra && extra->custom_blend_mode == V_028808_CB_DCC_DECOMPRESS_GFX11 &&
+         device->physical_device->rad_info.gfx_level >= GFX11)) &&
        !blend.spi_shader_col_format) {
       if (!ps->info.ps.writes_z && !ps->info.ps.writes_stencil && !ps->info.ps.writes_sample_mask) {
          blend.spi_shader_col_format = V_028714_SPI_SHADER_32_R;

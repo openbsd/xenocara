@@ -117,6 +117,11 @@ extern "C"
 #define RADV_SUPPORT_ANDROID_HARDWARE_BUFFER 0
 #endif
 
+#if defined(VK_USE_PLATFORM_WAYLAND_KHR) || defined(VK_USE_PLATFORM_XCB_KHR) ||                    \
+   defined(VK_USE_PLATFORM_XLIB_KHR) || defined(VK_USE_PLATFORM_DISPLAY_KHR)
+#define RADV_USE_WSI_PLATFORM
+#endif
+
 #ifdef _WIN32
 #define RADV_SUPPORT_CALIBRATED_TIMESTAMPS 0
 #else

@@ -114,7 +114,7 @@ static void si_emit_cb_render_state(struct si_context *sctx)
       if (sctx->gfx_level >= GFX11) {
          radeon_opt_set_context_reg(sctx, R_028424_CB_FDCC_CONTROL, SI_TRACKED_CB_DCC_CONTROL,
                                     S_028424_SAMPLE_MASK_TRACKER_DISABLE(oc_disable) |
-                                    S_028424_SAMPLE_MASK_TRACKER_WATERMARK(15));
+                                    S_028424_SAMPLE_MASK_TRACKER_WATERMARK(0));
       } else {
          radeon_opt_set_context_reg(
             sctx, R_028424_CB_DCC_CONTROL, SI_TRACKED_CB_DCC_CONTROL,
@@ -193,7 +193,8 @@ static void si_emit_cb_render_state(struct si_context *sctx)
                 spi_format == V_028714_SPI_SHADER_UINT16_ABGR ||
                 spi_format == V_028714_SPI_SHADER_SINT16_ABGR) {
                sx_ps_downconvert |= V_028754_SX_RT_EXPORT_8_8_8_8 << (i * 4);
-               sx_blend_opt_epsilon |= V_028758_8BIT_FORMAT << (i * 4);
+               if (G_028C70_NUMBER_TYPE(surf->cb_color_info) != V_028C70_NUMBER_SRGB)
+                  sx_blend_opt_epsilon |= V_028758_8BIT_FORMAT << (i * 4);
             }
             break;
 
@@ -3302,6 +3303,11 @@ static void si_emit_framebuffer_state(struct si_context *sctx)
                            S_028C78_DISABLE_CONSTANT_ENCODE_REG(1) |
                            S_028C78_FDCC_ENABLE(vi_dcc_enabled(tex, cb->base.u.tex.level));
 
+         if (sctx->family >= CHIP_GFX1103_R2) {
+            cb_fdcc_control |= S_028C78_ENABLE_MAX_COMP_FRAG_OVERRIDE(1) |
+                               S_028C78_MAX_COMP_FRAGS(cb->base.texture->nr_samples >= 4);
+         }
+
          radeon_set_context_reg_seq(R_028C6C_CB_COLOR0_VIEW + i * 0x3C, 4);
          radeon_emit(cb->cb_color_view);                      /* CB_COLOR0_VIEW */
          radeon_emit(cb_color_info);                          /* CB_COLOR0_INFO */
@@ -5587,9 +5593,9 @@ void si_init_cs_preamble_state(struct si_context *sctx, bool uses_reg_shadowing)
       si_pm4_set_reg(pm4, R_028AC8_DB_PRELOAD_CONTROL, 0x0);
       si_pm4_set_reg(pm4, R_02800C_DB_RENDER_OVERRIDE, 0);
       si_pm4_set_reg(pm4, R_028A8C_VGT_PRIMITIVEID_RESET, 0x0);
-      si_pm4_set_reg(pm4, R_028B98_VGT_STRMOUT_BUFFER_CONFIG, 0x0);
 
       if (sctx->gfx_level < GFX11) {
+         si_pm4_set_reg(pm4, R_028B98_VGT_STRMOUT_BUFFER_CONFIG, 0x0);
          si_pm4_set_reg(pm4, R_028A5C_VGT_GS_PER_VS, 0x2);
          si_pm4_set_reg(pm4, R_028AB8_VGT_VTX_CNT_EN, 0x0);
       }
