@@ -26,7 +26,7 @@ radv_entrypoints = custom_target(
     prog_python, '@INPUT0@', '--xml', '@INPUT1@', '--proto', '--weak',
     '--out-h', '@OUTPUT0@', '--out-c', '@OUTPUT1@', '--prefix', 'radv',
     '--device-prefix', 'sqtt', '--device-prefix', 'metro_exodus',
-    '--device-prefix', 'rra',
+    '--device-prefix', 'rra', '--device-prefix', 'rage2',
   ],
   depend_files : vk_entrypoints_gen_depend_files,
 )
@@ -34,6 +34,7 @@ radv_entrypoints = custom_target(
 libradv_files = files(
   'bvh/bvh.h',
   'layers/radv_metro_exodus.c',
+  'layers/radv_rage2.c',
   'layers/radv_rra_layer.c',
   'layers/radv_sqtt_layer.c',
   'winsys/null/radv_null_bo.c',
@@ -155,8 +156,13 @@ libvulkan_radeon_ld_args = []
 libvulkan_radeon_link_depends = []
 
 if with_ld_version_script
-  libvulkan_radeon_ld_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'vulkan.sym')]
-  libvulkan_radeon_link_depends += files('vulkan.sym')
+  if with_platform_android
+    libvulkan_radeon_ld_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'vulkan-android.sym')]
+    libvulkan_radeon_link_depends += files('vulkan-android.sym')
+  else
+    libvulkan_radeon_ld_args += ['-Wl,--version-script', join_paths(meson.current_source_dir(), 'vulkan.sym')]
+    libvulkan_radeon_link_depends += files('vulkan.sym')
+  endif
 endif
 
 radv_build_id = get_option('radv-build-id')

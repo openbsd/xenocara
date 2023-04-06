@@ -128,6 +128,7 @@ enum zink_blit_flags {
    ZINK_BLIT_SAVE_FB = 1 << 2,
    ZINK_BLIT_SAVE_TEXTURES = 1 << 3,
    ZINK_BLIT_NO_COND_RENDER = 1 << 4,
+   ZINK_BLIT_SAVE_FS_CONST_BUF = 1 << 5,
 };
 
 /* descriptor types; also the ordering of the sets

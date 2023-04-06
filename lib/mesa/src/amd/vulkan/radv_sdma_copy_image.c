@@ -99,7 +99,7 @@ radv_sdma_v4_v5_copy_image_to_buffer(struct radv_cmd_buffer *cmd_buffer, struct 
 
       radeon_emit(cmd_buffer->cs, CIK_SDMA_PACKET(CIK_SDMA_OPCODE_COPY,
                                                   CIK_SDMA_COPY_SUB_OPCODE_LINEAR, (tmz ? 4 : 0)));
-      radeon_emit(cmd_buffer->cs, bytes);
+      radeon_emit(cmd_buffer->cs, bytes - 1);
       radeon_emit(cmd_buffer->cs, 0);
       radeon_emit(cmd_buffer->cs, src_address);
       radeon_emit(cmd_buffer->cs, src_address >> 32);
@@ -139,8 +139,9 @@ radv_sdma_v4_v5_copy_image_to_buffer(struct radv_cmd_buffer *cmd_buffer, struct 
                                   (tmz ? 4 : 0)) |
                      dcc << 19 | (is_v5 ? 0 : 0 /* tiled->buffer.b.b.last_level */) << 20 |
                      1u << 31);
-      radeon_emit(cmd_buffer->cs,
-                  (uint32_t)tiled_address | (image->planes[0].surface.tile_swizzle << 8));
+      radeon_emit(
+         cmd_buffer->cs,
+         (uint32_t)tiled_address | (image->planes[0].surface.tile_swizzle << 8));
       radeon_emit(cmd_buffer->cs, (uint32_t)(tiled_address >> 32));
       radeon_emit(cmd_buffer->cs, 0);
       radeon_emit(cmd_buffer->cs, ((tiled_width - 1) << 16));

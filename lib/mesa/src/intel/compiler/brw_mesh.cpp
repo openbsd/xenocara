@@ -1146,7 +1146,7 @@ emit_urb_indirect_reads(const fs_builder &bld, nir_intrinsic_instr *instr,
                    retype(quarter(dest_comp, q), BRW_REGISTER_TYPE_UD),
                    data,
                    comp,
-                   brw_imm_ud(4));
+                   brw_imm_ud(4 * REG_SIZE));
       }
    }
 }

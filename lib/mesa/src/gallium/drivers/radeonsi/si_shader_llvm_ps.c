@@ -570,7 +570,8 @@ static void si_llvm_emit_polygon_stipple(struct si_shader_context *ctx,
  * overriden by other states. (e.g. per-sample interpolation)
  * Interpolated colors are stored after the preloaded VGPRs.
  */
-void si_llvm_build_ps_prolog(struct si_shader_context *ctx, union si_shader_part_key *key)
+void si_llvm_build_ps_prolog(struct si_shader_context *ctx, union si_shader_part_key *key,
+                             bool separate_prolog)
 {
    LLVMValueRef ret, func;
    int num_returns, i, num_color_channels;
@@ -694,13 +695,13 @@ void si_llvm_build_ps_prolog(struct si_shader_context *ctx, union si_shader_part
 
       /* Read LINEAR_SAMPLE. */
       for (i = 0; i < 2; i++)
-         linear_sample[i] = LLVMGetParam(func, base + 6 + i);
+         linear_sample[i] = LLVMGetParam(func, base + (separate_prolog ? 6 : 9) + i);
       /* Overwrite LINEAR_CENTER. */
       for (i = 0; i < 2; i++)
-         ret = LLVMBuildInsertValue(ctx->ac.builder, ret, linear_sample[i], base + 8 + i, "");
+         ret = LLVMBuildInsertValue(ctx->ac.builder, ret, linear_sample[i], base + (separate_prolog ? 8 : 11) + i, "");
       /* Overwrite LINEAR_CENTROID. */
       for (i = 0; i < 2; i++)
-         ret = LLVMBuildInsertValue(ctx->ac.builder, ret, linear_sample[i], base + 10 + i, "");
+         ret = LLVMBuildInsertValue(ctx->ac.builder, ret, linear_sample[i], base + (separate_prolog ? 10 : 13) + i, "");
    }
 
    /* Force center interpolation. */
@@ -825,7 +826,8 @@ void si_llvm_build_ps_prolog(struct si_shader_context *ctx, union si_shader_part
  * Build the pixel shader epilog function. This handles everything that must be
  * emulated for pixel shader exports. (alpha-test, format conversions, etc)
  */
-void si_llvm_build_ps_epilog(struct si_shader_context *ctx, union si_shader_part_key *key)
+void si_llvm_build_ps_epilog(struct si_shader_context *ctx, union si_shader_part_key *key,
+                             UNUSED bool separate_epilog)
 {
    int i;
    struct si_ps_exports exp = {};
@@ -947,7 +949,7 @@ void si_llvm_build_monolithic_ps(struct si_shader_context *ctx, struct si_shader
    si_get_ps_prolog_key(shader, &prolog_key, false);
 
    if (si_need_ps_prolog(&prolog_key)) {
-      si_llvm_build_ps_prolog(ctx, &prolog_key);
+      si_llvm_build_ps_prolog(ctx, &prolog_key, false);
       parts[num_parts++] = ctx->main_fn;
    }
 
@@ -956,7 +958,7 @@ void si_llvm_build_monolithic_ps(struct si_shader_context *ctx, struct si_shader
 
    union si_shader_part_key epilog_key;
    si_get_ps_epilog_key(shader, &epilog_key);
-   si_llvm_build_ps_epilog(ctx, &epilog_key);
+   si_llvm_build_ps_epilog(ctx, &epilog_key, false);
    parts[num_parts++] = ctx->main_fn;
 
    si_build_wrapper_function(ctx, parts, num_parts, main_index, 0, main_arg_types, false);

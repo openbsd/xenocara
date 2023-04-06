@@ -1156,10 +1156,25 @@ vk_graphics_pipeline_state_fill(const struct vk_device *device,
     */
 
    VkGraphicsPipelineLibraryFlagsEXT lib;
-   if (info->flags & VK_PIPELINE_CREATE_LIBRARY_BIT_KHR) {
-      const VkGraphicsPipelineLibraryCreateInfoEXT *gfx_lib_info =
-         vk_find_struct_const(info->pNext, GRAPHICS_PIPELINE_LIBRARY_CREATE_INFO_EXT);
-      lib = gfx_lib_info->flags;
+   const VkGraphicsPipelineLibraryCreateInfoEXT *gpl_info =
+      vk_find_struct_const(info->pNext, GRAPHICS_PIPELINE_LIBRARY_CREATE_INFO_EXT);
+   const VkPipelineLibraryCreateInfoKHR *lib_info =
+      vk_find_struct_const(info->pNext, PIPELINE_LIBRARY_CREATE_INFO_KHR);
+
+   if (gpl_info) {
+      lib = gpl_info->flags;
+   } else if ((lib_info && lib_info->libraryCount > 0) ||
+              (info->flags & VK_PIPELINE_CREATE_LIBRARY_BIT_KHR)) {
+     /*
+      * From the Vulkan 1.3.210 spec:
+      *    "If this structure is omitted, and either VkGraphicsPipelineCreateInfo::flags
+      *    includes VK_PIPELINE_CREATE_LIBRARY_BIT_KHR or the
+      *    VkGraphicsPipelineCreateInfo::pNext chain includes a
+      *    VkPipelineLibraryCreateInfoKHR structure with a libraryCount greater than 0,
+      *    it is as if flags is 0. Otherwise if this structure is omitted, it is as if
+      *    flags includes all possible subsets of the graphics pipeline."
+      */
+      lib = 0;
    } else {
       /* We're building a complete pipeline.  From the Vulkan 1.3.218 spec:
        *
@@ -2527,7 +2542,7 @@ vk_common_CmdSetColorWriteMaskEXT(VkCommandBuffer commandBuffer,
       uint32_t a = firstAttachment + i;
       assert(a < ARRAY_SIZE(dyn->cb.attachments));
 
-      SET_DYN_VALUE(dyn, CB_BLEND_EQUATIONS,
+      SET_DYN_VALUE(dyn, CB_WRITE_MASKS,
                     cb.attachments[a].write_mask, pColorWriteMasks[i]);
    }
 }

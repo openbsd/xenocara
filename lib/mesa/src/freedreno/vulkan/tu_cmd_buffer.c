@@ -5387,6 +5387,11 @@ tu_CmdEndRendering(VkCommandBuffer commandBuffer)
       if (cmd_buffer->state.suspend_resume == SR_IN_PRE_CHAIN) {
          cmd_buffer->trace_renderpass_end = u_trace_end_iterator(&cmd_buffer->trace);
          tu_save_pre_chain(cmd_buffer);
+
+         /* Even we don't call tu_cmd_render here, renderpass is finished
+          * and draw states should be disabled.
+          */
+         tu_disable_draw_states(cmd_buffer, &cmd_buffer->cs);
       } else {
          tu_cmd_render(cmd_buffer);
       }

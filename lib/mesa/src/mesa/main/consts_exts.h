@@ -936,6 +936,9 @@ struct gl_constants
    /** GL_ARB_get_program_binary */
    GLuint NumProgramBinaryFormats;
 
+   /** GL_ARB_gl_spirv */
+   GLuint NumShaderBinaryFormats;
+
    /** GL_NV_conservative_raster */
    GLuint MaxSubpixelPrecisionBiasBits;
 

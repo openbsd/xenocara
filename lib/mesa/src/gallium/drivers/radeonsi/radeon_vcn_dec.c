@@ -278,6 +278,20 @@ static rvcn_dec_message_avc_t get_h264_msg(struct radeon_decoder *dec,
       }
    }
 
+   /* if reference picture exists, however no reference picture found at the end
+      curr_pic_ref_frame_num == 0, which is not reasonable, should be corrected. */
+   if (result.used_for_reference_flags && (result.curr_pic_ref_frame_num == 0)) {
+      for (i = 0; i < ARRAY_SIZE(result.ref_frame_list); i++) {
+         result.ref_frame_list[i] = pic->ref[i] ?
+                (uintptr_t)vl_video_buffer_get_associated_data(pic->ref[i], &dec->base) : 0xff;
+         if (result.ref_frame_list[i] != 0xff) {
+            result.curr_pic_ref_frame_num++;
+            result.non_existing_frame_flags &= ~(1 << i);
+            break;
+         }
+      }
+   }
+
    for (i = 0; i < ARRAY_SIZE(result.ref_frame_list); i++) {
       if (result.ref_frame_list[i] != 0xff) {
          dec->h264_valid_ref_num[i]         = result.frame_num_list[i];
@@ -3160,7 +3174,8 @@ struct pipe_video_codec *radeon_create_decoder(struct pipe_context *context,
    case CHIP_GFX1100:
    case CHIP_GFX1101:
    case CHIP_GFX1102:
-   case CHIP_GFX1103:
+   case CHIP_GFX1103_R1:
+   case CHIP_GFX1103_R2:
       dec->jpg.direct_reg = true;
       dec->addr_gfx_mode = RDECODE_ARRAY_MODE_ADDRLIB_SEL_GFX11;
       dec->av1_version = RDECODE_AV1_VER_1;

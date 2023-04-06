@@ -29,9 +29,9 @@
 #include "compiler/shader_info.h"
 
 struct zink_vs_key_base {
+   bool last_vertex_stage : 1;
    bool clip_halfz : 1;
    bool push_drawid : 1;
-   bool last_vertex_stage : 1;
    uint8_t pad : 5;
 };
 
@@ -57,7 +57,7 @@ struct zink_vs_key {
 };
 
 struct zink_fs_key {
-   bool coord_replace_yinvert : 1;
+   bool point_coord_yinvert : 1;
    bool samples : 1;
    bool force_dual_color_blend : 1;
    bool force_persample_interp : 1;
@@ -106,6 +106,19 @@ union zink_shader_key_optimal {
    };
    uint32_t val;
 };
+
+/* the default key has only last_vertex_stage set*/
+#define ZINK_SHADER_KEY_OPTIMAL_DEFAULT (1<<0)
+/* Ignore patch_vertices bits that would only be used if we had to generate the missing TCS */
+static inline uint32_t
+zink_shader_key_optimal_no_tcs(uint32_t key)
+{
+   union zink_shader_key_optimal k;
+   k.val = key;
+   k.tcs_bits = 0;
+   return k.val;
+}
+#define ZINK_SHADER_KEY_OPTIMAL_IS_DEFAULT(key) (zink_shader_key_optimal_no_tcs(key) == ZINK_SHADER_KEY_OPTIMAL_DEFAULT)
 
 static inline const struct zink_fs_key *
 zink_fs_key(const struct zink_shader_key *key)

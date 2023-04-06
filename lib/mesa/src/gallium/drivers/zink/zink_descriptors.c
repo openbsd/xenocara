@@ -586,6 +586,8 @@ zink_descriptor_program_deinit(struct zink_screen *screen, struct zink_program *
          pg->dd.pool_key[i]->use_count--;
          pg->dd.pool_key[i] = NULL;
       }
+   }
+   for (unsigned i = 0; pg->num_dsl && i < ZINK_DESCRIPTOR_NON_BINDLESS_TYPES; i++) {
       if (pg->dd.templates[i]) {
          VKSCR(DestroyDescriptorUpdateTemplate)(screen->dev, pg->dd.templates[i], NULL);
          pg->dd.templates[i] = VK_NULL_HANDLE;
@@ -972,7 +974,7 @@ zink_descriptors_update(struct zink_context *ctx, bool is_compute)
    /* bindless descriptors are context-based and get updated elsewhere */
    if (pg->dd.bindless && unlikely(!ctx->dd.bindless_bound)) {
       VKCTX(CmdBindDescriptorSets)(ctx->batch.state->cmdbuf, is_compute ? VK_PIPELINE_BIND_POINT_COMPUTE : VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                   pg->layout, ZINK_DESCRIPTOR_BINDLESS, 1, &ctx->dd.bindless_set,
+                                   pg->layout, screen->desc_set_id[ZINK_DESCRIPTOR_BINDLESS], 1, &ctx->dd.bindless_set,
                                    0, NULL);
       ctx->dd.bindless_bound = true;
    }
@@ -1009,11 +1011,11 @@ void
 zink_batch_descriptor_deinit(struct zink_screen *screen, struct zink_batch_state *bs)
 {
    for (unsigned i = 0; i < ZINK_DESCRIPTOR_BASE_TYPES; i++) {
-      while (util_dynarray_contains(&bs->dd.pools[i], struct zink_descriptor_pool_multi *)) {
-         struct zink_descriptor_pool_multi *mpool = util_dynarray_pop(&bs->dd.pools[i], struct zink_descriptor_pool_multi *);
-         if (mpool) {
-            deinit_multi_pool_overflow(screen, mpool);
-            multi_pool_destroy(screen, mpool);
+      for (unsigned j = 0; j < bs->dd.pools[i].capacity / sizeof(struct zink_descriptor_pool_multi *); j++) {
+         struct zink_descriptor_pool_multi **mppool = util_dynarray_element(&bs->dd.pools[i], struct zink_descriptor_pool_multi *, j);
+         if (mppool && *mppool) {
+            deinit_multi_pool_overflow(screen, *mppool);
+            multi_pool_destroy(screen, *mppool);
          }
       }
       util_dynarray_fini(&bs->dd.pools[i]);

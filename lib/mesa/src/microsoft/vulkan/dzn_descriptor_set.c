@@ -645,7 +645,7 @@ dzn_pipeline_layout_create(struct dzn_device *device,
    D3D12_ROOT_PARAMETER1 root_params[MAX_ROOT_PARAMS] = { 0 };
    D3D12_DESCRIPTOR_RANGE1 *range_ptr = ranges;
    D3D12_ROOT_PARAMETER1 *root_param;
-   uint32_t root_dwords = 0;
+   ASSERTED uint32_t root_dwords = 0;
 
    for (uint32_t i = 0; i < MAX_SHADER_VISIBILITIES; i++) {
       dzn_foreach_pool_type (type) {

@@ -1053,10 +1053,10 @@ _iris_batch_flush(struct iris_batch *batch, const char *file, int line)
 
    }
 
-   uint64_t start_ts = intel_ds_begin_submit(batch->ds);
-   uint64_t submission_id = batch->ds->submission_id;
+   uint64_t start_ts = intel_ds_begin_submit(&batch->ds);
+   uint64_t submission_id = batch->ds.submission_id;
    int ret = submit_batch(batch);
-   intel_ds_end_submit(batch->ds, start_ts);
+   intel_ds_end_submit(&batch->ds, start_ts);
 
    /* When batch submission fails, our end-of-batch syncobj remains
     * unsignalled, and in fact is not even considered submitted.

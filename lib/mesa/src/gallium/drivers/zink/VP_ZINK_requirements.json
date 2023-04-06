@@ -31,9 +31,15 @@
                 "VkPhysicalDeviceCustomBorderColorFeaturesEXT": {
                     "customBorderColorWithoutFormat": true
                 },
+                "VkPhysicalDeviceBorderColorSwizzleFeaturesEXT": {
+                    "borderColorSwizzleFromImage": true
+                },
                 "VkPhysicalDeviceLineRasterizationFeaturesEXT": {
                     "rectangularLines": true,
                     "bresenhamLines": true
+                },
+                "VkPhysicalDeviceProvokingVertexFeaturesEXT": {
+                    "provokingVertexLast": true
                 }
             },
             "properties": {
@@ -49,13 +55,22 @@
             "features": {
                 "VkPhysicalDeviceScalarBlockLayoutFeaturesEXT": {
                     "scalarBlockLayout": true
+                },
+                "VkPhysicalDeviceTimelineSemaphoreFeaturesKHR": {
+                    "timelineSemaphore": true
+                },
+                "VkPhysicalDeviceImagelessFramebufferFeatures": {
+                    "imagelessFramebuffer": true
                 }
             }
         },
         "gl21_baseline_vk12": {
             "features": {
                 "VkPhysicalDeviceVulkan12Features": {
-                    "scalarBlockLayout": true
+                    "scalarBlockLayout": true,
+                    "drawIndirectCount": true,
+                    "imagelessFramebuffer": true,
+                    "timelineSemaphore": true
                 }
             }
         },
@@ -72,6 +87,12 @@
             "features": {
                 "VkPhysicalDeviceFeatures": {
                     "independentBlend": true
+                },
+                "VkPhysicalDeviceTransformFeedbackFeaturesEXT": {
+                    "transformFeedback": true
+                },
+                "VkPhysicalDeviceConditionalRenderingFeaturesEXT": {
+                    "conditionalRendering": true
                 }
             }
         },
@@ -107,6 +128,9 @@
                 "VkPhysicalDeviceFeatures": {
                     "occlusionQueryPrecise": true,
                     "dualSrcBlend": true
+                },
+                "VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT": {
+                    "vertexAttributeInstanceRateDivisor": true
                 }
             }
         },
@@ -170,6 +194,9 @@
                     "shaderStorageImageWriteWithoutFormat": true,
                     "vertexPipelineStoresAndAtomics": true,
                     "fragmentStoresAndAtomics": true
+                },
+                "VkPhysicalDeviceImage2DViewOf3DFeaturesEXT": {
+                    "image2DViewOf3D": true
                 }
             }
         },
@@ -271,9 +298,6 @@
             }
         },
         "gl44_baseline": {
-            "extensions": {
-                "VK_KHR_sampler_mirror_clamp_to_edge": 1
-            },
             "formats": {
                 "VK_FORMAT_B10G11R11_UFLOAT_PACK32": {
                     "VkFormatProperties": {
@@ -281,6 +305,18 @@
                             "VK_FORMAT_FEATURE_VERTEX_BUFFER_BIT"
                         ]
                     }
+                }
+            }
+        },
+        "gl44_baseline_ext": {
+            "extensions": {
+                "VK_KHR_sampler_mirror_clamp_to_edge": 1
+            }
+        },
+        "gl44_baseline_vk12": {
+            "features": {
+                "VkPhysicalDeviceVulkan12Features": {
+                    "samplerMirrorClampToEdge": true
                 }
             }
         },
@@ -698,7 +734,8 @@
                 "gl42_baseline",
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
-                "gl44_baseline"
+                "gl44_baseline",
+                [ "gl44_baseline_ext", "gl44_baseline_vk12" ]
             ]
         },
         "VP_ZINK_gl45_baseline": {
@@ -720,6 +757,7 @@
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
                 "gl44_baseline",
+                [ "gl44_baseline_ext", "gl44_baseline_vk12" ],
                 "gl45_baseline"
             ]
         },
@@ -742,6 +780,7 @@
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
                 "gl44_baseline",
+                [ "gl44_baseline_ext", "gl44_baseline_vk12" ],
                 "gl45_baseline",
                 "gl46_baseline"
             ]
@@ -765,6 +804,7 @@
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
                 "gl44_baseline",
+                [ "gl44_baseline_ext", "gl44_baseline_vk12" ],
                 "gl45_baseline",
                 "gl46_baseline",
                 "gl46_optimal",

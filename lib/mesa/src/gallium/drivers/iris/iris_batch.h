@@ -197,7 +197,7 @@ struct iris_batch {
    struct u_trace trace;
 
    /** Batch wrapper structure for perfetto */
-   struct intel_ds_queue *ds;
+   struct intel_ds_queue ds;
 };
 
 void iris_init_batches(struct iris_context *ice, int priority);
