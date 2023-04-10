@@ -58,7 +58,7 @@ void printUsage (void) {
 
 int main (int argc, char *argv[]) {
     Display *dpy;
-    int nScreens, screenNum, i;
+    int nScreens, screenNum;
     enum INFO_FUNC func = LIST;
     char *funcArg = NULL;
     char *dpyName = NULL;
@@ -71,7 +71,7 @@ int main (int argc, char *argv[]) {
     }
 
   /* parse the command line */
-    for (i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i) {
 	char **argPtr = NULL;
 	if (!strcmp (argv[i], "-display"))
 	    argPtr = &dpyName;
@@ -112,6 +112,8 @@ int main (int argc, char *argv[]) {
 	    return 1;
 	}
     }
+    else
+        screenNum = -1;
 
   /* driver command needs a valid screen number */
     if (func == DRIVER && screenNum == -1) {
@@ -179,7 +181,7 @@ int main (int argc, char *argv[]) {
 	  break;
       }
       case LIST:
-	for (i = 0; i < nScreens; ++i) {
+	for (int i = 0; i < nScreens; ++i) {
 	    const char *name = (*GetScreenDriver) (dpy, i);
 	    if (name)
 		printf ("Screen %d: %s\n", i, name);

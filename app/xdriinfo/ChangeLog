@@ -1,3 +1,78 @@
+commit 149e46f06a661bd51f3a247dd41a49b553fdca65
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 19 18:33:43 2022 -0800
+
+    xdriiinfo 1.0.7
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c311687d90564f670e1ec943371c5cab4711f3e3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 14:47:33 2022 -0800
+
+    Ensure screenNum is always initialized
+    
+    Clears this warning from clang, even though it seems like a
+    false positive, as all the uses are behind the same conditions:
+    
+    xdriinfo.c:117:27: warning: variable 'screenNum' may be uninitialized
+      when used here [-Wconditional-uninitialized]
+        if (func == DRIVER && screenNum == -1) {
+                              ^~~~~~~~~
+    xdriinfo.c:61:28: note: initialize the variable 'screenNum' to silence
+      this warning
+        int nScreens, screenNum;
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a318124b38bbfac36f6bfe537839b0d3a9065b94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 14:45:02 2022 -0800
+
+    Variable scope reduction
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 710f7c9e9fad765bfe4c31071a82460c473abee7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8567c4d6f5c7663cde7b7c0f0c6d7f5ded175e18
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 12:01:08 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b1b5e4e826d739f203ab899af965f0557b10e0f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 12:01:05 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8346a277d26d8b476709aa740cb1aaaa2824bb76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 17:02:07 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8f0c54ec113bb7502fa75d2057224f9c98d9cdf1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 21:36:46 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3727e9dd2b964bed15083e79e55051132522a148
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Mar 6 23:22:03 2018 -0800
