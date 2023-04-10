@@ -61,7 +61,7 @@
 
 #define HID_USAGE2(p,u) (((p) << 16) | u)
 
-/* The UMS mices have middle button as number 3 */
+/* The UMS mice have middle button as number 3 */
 #define UMS_BUT(i) ((i) == 0 ? 2 : (i) == 1 ? 0 : (i) == 2 ? 1 : (i))
 #endif /* USBMOUSE_SUPPORT */
 
@@ -87,7 +87,7 @@ static const char *mouseDevs[] = {
         NULL
 };
 #elif (defined(__OpenBSD__) || defined(__NetBSD__)) && defined(WSCONS_SUPPORT)
-/* Only wsmouse mices are autoconfigured for now on OpenBSD */
+/* Only wsmouse mice are autoconfigured for now on OpenBSD */
 #define DEFAULT_WSMOUSE_DEV             "/dev/wsmouse"
 #define DEFAULT_WSMOUSE0_DEV            "/dev/wsmouse0"
 
@@ -236,7 +236,7 @@ SetSysMouseRes(InputInfoPtr pInfo, const char *protocol, int rate, int res)
         (protocol && xf86NameCmp(protocol, "SysMouse") == 0)) {
         /*
          * As the FreeBSD sysmouse driver defaults to protocol level 0
-         * everytime it is opened we enforce protocol level 1 again at
+         * every time it is opened we enforce protocol level 1 again at
          * this point.
          */
         mode.level = 1;
@@ -687,7 +687,7 @@ usbPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
             return FALSE;
         }
     }
-    /* Get USB informations */
+    /* Get USB information */
     reportDesc = hid_get_report_desc(pInfo->fd);
     /* Get packet size & iid */
 #ifdef USB_NEW_HID

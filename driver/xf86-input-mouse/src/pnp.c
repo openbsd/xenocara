@@ -411,7 +411,7 @@ pnpparse(InputInfoPtr pInfo, pnpid_t *id, char *buf, int len)
     xf86MsgVerb(X_INFO, 2, "%s: PnP rev %d.%02d\n", pInfo->name,
                 id->revision / 100, id->revision % 100);
 
-    /* EISA vender and product ID */
+    /* EISA vendor and product ID */
     id->eisaid = &buf[3];
     id->neisaid = 7;
 
@@ -601,7 +601,7 @@ ps2SendPacket(InputInfoPtr pInfo, unsigned char *bytes, int len)
                 return FALSE;
             }
 #ifdef DEBUG
-            xf86ErrorF("Recieved: 0x%x\n",c);
+            xf86ErrorF("Received: 0x%x\n",c);
 #endif
             if (c == 0xFA) /* ACK */
                 break;
@@ -613,7 +613,7 @@ ps2SendPacket(InputInfoPtr pInfo, unsigned char *bytes, int len)
             if (c == 0xFC) /* error */
                 return FALSE;
 
-            /* Some mice accidently enter wrap mode during init */
+            /* Some mice accidentally enter wrap mode during init */
             if (c == *(bytes + i)    /* wrap mode */
                 && (*(bytes + i) != 0xEC)) /* avoid recursion */
                 ps2DisableWrapMode(pInfo);

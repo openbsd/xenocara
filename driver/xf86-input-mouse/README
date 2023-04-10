@@ -248,7 +248,7 @@
   console driver is supported. You need to run binaries compiled on
   NetBSD 1.4 to have support for it though. Use "/dev/wsmouse0" for the
   device. Refer to the wsmouse(4) manual page for kernel configuration
-  informations.
+  information.
 
   This driver also provides support for USB mice. See the ums(4) manual
   page for details.

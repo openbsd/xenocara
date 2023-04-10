@@ -1,3 +1,175 @@
+commit ecd043f1de248cc03d240f1ae5850ce4f9f159a4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 1 19:30:06 2022 -0700
+
+    xf86-input-mouse 1.9.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 426c8e099fe19d3b495821ed6e7beb67a29a4115
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 1 19:37:49 2022 -0700
+
+    sun_mouse.c: #include "config.h"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 29456a2ad33897b0834aa097390cdfe5e92d1364
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 12:19:47 2022 -0700
+
+    configure: check for timingsafe_memcmp
+    
+    Not needed by mouse driver, but quiets warnings from xorg server headers:
+    
+    In file included from /usr/include/xorg/misc.h:117:0,
+                     from /usr/include/xorg/xf86str.h:37,
+                     from /usr/include/xorg/xf86.h:44,
+                     from mouse.c:57:
+    /usr/include/xorg/os.h:595:1: warning: redundant redeclaration of ‘timingsafe_memcmp’ [-Wredundant-decls]
+     timingsafe_memcmp(const void *b1, const void *b2, size_t len);
+     ^~~~~~~~~~~~~~~~~
+    In file included from mouse.c:52:0:
+    /usr/include/string.h:235:12: note: previous declaration of ‘timingsafe_memcmp’ was here
+     extern int timingsafe_memcmp(const void *s1, const void *s2, size_t n);
+                ^~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cbb97f4249ac6768e4a68423825ef0394104f5d8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 12:14:57 2022 -0700
+
+    autoGood: quiet -Wimplicit-fallthrough warning
+    
+    mouse.c: In function ‘autoGood’:
+    mouse.c:3724:12: warning: this statement may fall through [-Wimplicit-fallthrough=]
+             if (mPriv->goodCount < PROBE_UNCERTAINTY/2)
+                ^
+    mouse.c:3726:5: note: here
+         default:
+         ^~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b888251a032dfff5f7219334d2e8f256251fa98e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 12:07:37 2022 -0700
+
+    InputDriverRec: Fix -Wmissing-field-initializers warning
+    
+    mouse.c:185:1: warning: missing initializer for field ‘default_options’ of ‘InputDriverRec {aka struct _InputDriverRec}’ [-Wmissing-field-initializers]
+     };
+     ^
+    In file included from mouse.c:63:0:
+    /usr/include/xorg/xf86Xinput.h:83:18: note: ‘default_options’ declared here
+         const char **default_options;
+                      ^~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 03fb2ae36be7314416b1c57b391039fb948468eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 12:02:51 2022 -0700
+
+    SetupMouse: fix -Wsign-compare warning
+    
+    mouse.c: In function ‘SetupMouse’:
+    mouse.c:2620:27: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+                 for (i = 0; i < sizeof(pMse->protoPara); i++)
+                               ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a8ff2170cb89145056d6f30a96219393316f1a96
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 11:58:47 2022 -0700
+
+    checkForErraticMovements: Fix -Wempty-body warnings
+    
+    mouse.c: In function ‘checkForErraticMovements’:
+    mouse.c:3759:52: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+                     AP_DBG(("accDx=%i\n",mPriv->accDx));
+                                                        ^
+    mouse.c:3772:52: warning: suggest braces around empty body in an ‘else’ statement [-Wempty-body]
+                     AP_DBG(("accDy=%i\n",mPriv->accDy));
+                                                        ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 72323bf07cc74fb03e63898b14136ae30a770580
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 11:53:20 2022 -0700
+
+    sun_mouse: Fix -Wnull-dereference warning
+    
+    sun_mouse.c: In function ‘vuidReadInput’:
+    sun_mouse.c:291:10: warning: potential null pointer dereference [-Wnull-dereference]
+         pBuf = pVuidMse->buffer;
+         ~~~~~^~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f62f35747ec65e7f8819fab2c928db1b1b4c56eb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 11:47:18 2022 -0700
+
+    sun_mouse: Fix -Wsign-compare warnings
+    
+    sun_mouse.c: In function ‘vuidReadInput’:
+    sun_mouse.c:299:22: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             } else if (n == -1) {
+                          ^~
+    sun_mouse.c: In function ‘vuidMouseProc’:
+    sun_mouse.c:507:33: warning: comparison between signed and unsigned integer expressions [-Wsign-compare]
+             if (vuidMouseGeneration != serverGeneration) {
+                                     ^~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d963a9f619420834274cedf407b754caecbccb3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3bb98d758bfcab4c03d5f3f906a1bab0810e51e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jan 17 16:07:04 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 84bca281c4875c7446688fc8ffe76da4c24c7724
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 12:36:16 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9255be3c68207929266e920be8461b7669ae4efd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 12:30:22 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 03092c520b0365570df6e30360dacee0f5924ca0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 12:48:28 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cfde5e9f348db6e6b2639dd7e592520dff028452
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Jun 18 21:35:56 2018 -0700
@@ -1360,7 +1532,7 @@ Date:   Tue Apr 27 13:50:20 2010 -0400
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit 3ee9b720856efa240b70d38172706485f6420289
-Author: Márton Németh <nm127@freemail.hu>
+Author: Márton Németh < <nm127@freemail.hu>
 Date:   Tue Apr 13 00:35:57 2010 -0700
 
     Bug 10866 - serial Genius NetScroll+ autodetection
@@ -1993,7 +2165,7 @@ Date:   Thu Jun 14 00:24:07 2007 +1000
     Update version using PACKAGE_VERSION_*
 
 commit e567cb0792ea3dc2cd68c46628332c1f8bbb173d
-Author: Jürgen Appel <jappel@linux01.gwdg.de>
+Author: Jürgen Appel  <jappel@linux01.gwdg.de>
 Date:   Mon Apr 23 15:54:08 2007 +0200
 
     Added "Sensitivity" option. Use for slowing down high resolution mice.
@@ -2298,13 +2470,13 @@ Date:   Mon Oct 17 00:08:59 2005 +0000
     Use sed & cpp to substitute variables in driver man pages
 
 commit 34856ca1f73108ca19c20d9223457be328890dc1
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Oct 4 20:01:02 2005 +0000
 
     Check in generated README files
 
 commit 55e29446456e51ccdca57f348ed4660f65ab7dee
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Oct 3 21:22:06 2005 +0000
 
     - For all drivers that have a <driver>.sgml file, add code in their build
@@ -2343,7 +2515,7 @@ Date:   Mon Aug 15 23:48:35 2005 +0000
     Set ZAxisMapping default to "4 5 6 7".
 
 commit f355ef63c60adc7a72517ca71fdc9983f3881db9
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Aug 10 14:07:23 2005 +0000
 
     Don\'t lose existing CFLAGS in all the input drivers and some of the video

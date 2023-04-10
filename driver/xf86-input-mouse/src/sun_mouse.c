@@ -47,6 +47,10 @@
  * XFree86 Project.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
@@ -118,7 +122,7 @@ static void vuidReadInput(InputInfoPtr pInfo);
 static void vuidMouseSendScreenSize(ScreenPtr pScreen, VuidMsePtr pVuidMse);
 static void vuidMouseAdjustFrame(ADJUST_FRAME_ARGS_DECL);
 
-static int vuidMouseGeneration = 0;
+static unsigned long vuidMouseGeneration = 0;
 
 #if HAS_DEVPRIVATEKEYREC
 static DevPrivateKeyRec vuidMouseScreenIndex;
@@ -280,16 +284,19 @@ vuidReadInput(InputInfoPtr pInfo)
     VuidMsePtr pVuidMse;
     int buttons;
     int dx = 0, dy = 0, dz = 0, dw = 0;
-    unsigned int n;
+    ssize_t n;
     unsigned char *pBuf;
     int absX = 0, absY = 0;
     Bool absXset = FALSE, absYset = FALSE;
 
     pMse = pInfo->private;
-    pVuidMse = getVuidMsePriv(pInfo);
     buttons = pMse->lastButtons;
+    pVuidMse = getVuidMsePriv(pInfo);
+    if (pVuidMse == NULL) {
+        xf86Msg(X_ERROR, "%s: cannot locate VuidMsePtr\n", pInfo->name);
+        return;
+    }
     pBuf = pVuidMse->buffer;
-    n = 0;
 
     do {
         n = read(pInfo->fd, pBuf, sizeof(Firm_event));
@@ -324,7 +331,7 @@ vuidReadInput(InputInfoPtr pInfo)
                     return;
             }
         } else if (n != sizeof(Firm_event)) {
-            xf86Msg(X_WARNING, "%s: incomplete packet, size %d\n",
+            xf86Msg(X_WARNING, "%s: incomplete packet, size %zd\n",
                         pInfo->name, n);
         }
 
