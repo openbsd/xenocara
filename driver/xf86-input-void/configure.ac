@@ -23,15 +23,15 @@ dnl Process this file with autoconf to produce a configure script
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-void],
-        [1.4.1],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.4.2],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-input-void/-/issues],
         xf86-input-void)
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 DRIVER_NAME=void
 AC_SUBST([DRIVER_NAME])

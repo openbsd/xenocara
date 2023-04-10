@@ -137,7 +137,8 @@ xf86VoidControlProc(DeviceIntPtr device, int what)
 	  InitValuatorAxisStruct(device,
 				 0,
 				 axes_labels[0],
-				 0, /* min val */1, /* max val */
+				 0, /* min val */
+				 1, /* max val */
 				 1, /* resolution */
 				 0, /* min_res */
 				 1, /* max_res */
@@ -145,7 +146,8 @@ xf86VoidControlProc(DeviceIntPtr device, int what)
 	  InitValuatorAxisStruct(device,
 				 1,
 				 axes_labels[1],
-				 0, /* min val */1, /* max val */
+				 0, /* min val */
+				 1, /* max val */
 				 1, /* resolution */
 				 0, /* min_res */
 				 1, /* max_res */
@@ -213,12 +215,16 @@ xf86VoidInit(InputDriverPtr	drv,
 }
 
 _X_EXPORT InputDriverRec VOID = {
-    1,				/* driver version */
-    "void",			/* driver name */
-    NULL,			/* identify */
-    xf86VoidInit,		/* pre-init */
-    xf86VoidUninit,		/* un-init */
-    NULL,			/* module */
+    .driverVersion		= 1,
+    .driverName			= "void",
+    .Identify			= NULL,
+    .PreInit			= xf86VoidInit,
+    .UnInit			= xf86VoidUninit,
+    .module			= NULL,
+    .default_options		= NULL,
+#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) >= 21
+    .capabilities		= 0
+#endif
 };
 
 /*

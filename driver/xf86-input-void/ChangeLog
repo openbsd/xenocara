@@ -1,3 +1,107 @@
+commit 182fca360b4868f18941ef6baddca8e49b11b67f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 5 12:34:16 2022 -0700
+
+    xf86-input-void 1.4.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 371d5174a5ebfa1513a8ef873c508543d29bfdf0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 13:16:28 2022 -0700
+
+    InitValuatorAxisStruct: Add missing line breaks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 094d363aa99de2c4747fc502bba848a82846578e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Oct 16 13:11:21 2022 -0700
+
+    InputDriverRec: Resolve -Wmissing-field-initializers warning
+    
+    void.c:222:1: warning: missing initializer for field ‘default_options’ of ‘InputDriverRec {aka struct _InputDriverRec}’ [-Wmissing-field-initializers]
+     };
+     ^
+    In file included from void.c:39:0:
+    /usr/include/xorg/xf86Xinput.h:83:18: note: ‘default_options’ declared here
+         const char **default_options;
+                      ^~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be765e39fbfcf22b538731e0b5c51b626eecb4dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f79ee6ad5015a8b20250a64aadc8fb8a6d0a9ac1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 13:11:53 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 18589fc6a93a6f4d273197b623347180f7736e8e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 13:09:49 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 68566543a1e437c80c45487197e808d9b11bd7e1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 13:04:37 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 94a6c6ca02ba6057320d29af8ac22c97994976c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 12:12:14 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2a29db157c37ec115d7d31160a9b729062675e7d
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit f4b10fd60682be92265513e055723bccbf8dcde9
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 09ad879327e361af49f7c5ed1df969eab9deb89b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit aad39023f01be4133943ba8bc86246804dc7b1af
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Mon Apr 20 11:42:01 2015 +1000
@@ -196,7 +300,7 @@ Date:   Wed Oct 27 22:23:03 2010 -0700
     Wasn't used in the server and is now removed.
     
     Fixes compiler error:
-    	"void.c", line 340: too many struct/union initializers
+            "void.c", line 340: too many struct/union initializers
     
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
@@ -594,7 +698,7 @@ Date:   Thu Aug 18 09:03:45 2005 +0000
     Update autogen.sh to one that does objdir != srcdir.
 
 commit f584f76032e3e9aaf17b9206489cc77c98de3c00
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Aug 10 14:07:24 2005 +0000
 
     Don\'t lose existing CFLAGS in all the input drivers and some of the video
