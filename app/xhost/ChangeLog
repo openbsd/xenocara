@@ -1,3 +1,66 @@
+commit f9a30c707c14fc1ab75f7cc90c9c1eb6fcec3b6d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 12 15:41:52 2022 -0800
+
+    xhost 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 728ba52d5dc966e423d9416647c2e903c95d2217
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 10:10:05 2022 -0800
+
+    Simplify i18n of 'unable to get ... address for ...' error message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 167ad7fa3a339da96798da49d05c3125045a87c2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 7 16:03:47 2022 -0800
+
+    Use gettext() to localize messages if available
+    
+    Originally fixed for Solaris in May 2000 by Steve Swales under
+    Sun bug 4256527 "xhost messages not internationalized"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b54c211e5e86d6ed62386ad9b7d676808b55766
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 7 14:21:28 2022 -0800
+
+    Recognize raw IPv6 numeric address
+    
+    Originally fixed for Solaris in Oct. 2002 under Sun bug 4759889
+    "xhost does not accept raw IPv6 numeric address"
+    
+    Before this fix:
+    % xhost +2001:DB8::11
+    xhost: unknown address family "2001"
+    xhost:  bad hostname "2001:DB8::11"
+    
+    After this fix:
+    % xhost +2001:DB8::11
+    2001:DB8::11 being added to access control list
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1d7015ba70362b09ac6a001d77e693a03fa0375e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:31:13 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8de485ec2760ba7de2391c3864d4fe62ceeb23d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:31:10 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 997135c6e37faa50f8b42a5f95c0cc8461ed6be9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Feb 19 14:50:20 2019 -0800
@@ -807,7 +870,7 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8b783444a5341f4698027d3a66650c179bc8fa2e
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 21:12:45 2005 +0000
 
     Add autogen.sh for xhost

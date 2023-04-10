@@ -99,6 +99,9 @@
 /* Support UNIX socket connections */
 #undef UNIXCONN
 
+/* Define to 1 if you want to use the gettext() function. */
+#undef USE_GETTEXT
+
 /* Enable extensions on AIX 3, Interix.  */
 #ifndef _ALL_SOURCE
 # undef _ALL_SOURCE
