@@ -32,10 +32,6 @@ in this Software without prior written authorization from the X Consortium.
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 #include <X11/Shell.h>
-#ifdef NOTDEF
-#include <X11/Xaw/Label.h>
-#include <X11/Xaw/Cardinals.h>
-#endif
 #include <X11/extensions/scrnsaver.h>
 #include <X11/Xcms.h>
 #include <stdlib.h>
@@ -45,16 +41,6 @@ in this Software without prior written authorization from the X Consortium.
 # define ZERO ((Cardinal)0)
 #endif
 
-#ifdef NOTDEF
-static void quit (Widget w, XEvent *event, 
-		  String *params, Cardinal *num_params);
-
-static XtActionsRec beforedark_actions[] = {
-    { "quit",	quit },
-};
-
-static Atom wm_delete_window;
-#endif
 
 static int  ss_event, ss_error;
 
@@ -126,38 +112,38 @@ StepPen (void)
 }
 
 static void
-DrawPoints (Drawable draw, GC gc, XPoint *p, int n)
+DrawPoints (Drawable draw, GC draw_gc, XPoint *pt, int n)
 {
     XPoint  xp[MAX_POINTS + 1];
     int	    i;
 
     switch (n) {
     case 1:
-	XDrawPoint (display, draw, gc, p->x, p->y);
+	XDrawPoint (display, draw, draw_gc, pt->x, pt->y);
 	break;
     case 2:
-	XDrawLine (display, draw, gc, p[0].x, p[0].y, p[1].x, p[1].y);
+	XDrawLine (display, draw, draw_gc, pt[0].x, pt[0].y, pt[1].x, pt[1].y);
 	break;
     default:
 	for (i = 0; i < n; i++) {
-	    xp[i].x = p[i].x; xp[i].y = p[i].y;
+	    xp[i].x = pt[i].x; xp[i].y = pt[i].y;
 	}
-	xp[i].x = p[0].x; xp[i].y = p[0].y;
+	xp[i].x = pt[0].x; xp[i].y = pt[0].y;
 	if (filled)
-	    XFillPolygon (display, draw, gc, xp, i+1, Complex, CoordModeOrigin);
+	    XFillPolygon (display, draw, draw_gc, xp, i+1, Complex, CoordModeOrigin);
 	else
-	    XDrawLines (display, draw, gc, xp, i + 1, CoordModeOrigin);
+	    XDrawLines (display, draw, draw_gc, xp, i + 1, CoordModeOrigin);
     }
 }
 
 static void
-Draw (Moving *p, int n)
+Draw (Moving *mp, int n)
 {
     XPoint  xp[MAX_POINTS];
     int	    i;
     for (i = 0; i < n; i++) 
     {
-	xp[i].x = p[i].x; xp[i].y = p[i].y;
+	xp[i].x = mp[i].x; xp[i].y = mp[i].y;
     }
     old_pixels[history_head] = pixels[cur_pen];
     StepPen ();
@@ -173,7 +159,7 @@ Draw (Moving *p, int n)
 }
 
 static void
-Erase (XPoint *p, int n)
+Erase (XPoint *pt, int n)
 {
     if (filled) {
 	XSetForeground (display, erase_gc, black_pixel ^ old_pixels[history_tail]);
@@ -181,7 +167,7 @@ Erase (XPoint *p, int n)
 		    0, 0, scr_wid, scr_hei, 0, 0, 1);
     }
     else
-	DrawPoints (saver, black_gc, p, n);
+	DrawPoints (saver, black_gc, pt, n);
 }
 
 #define STEP_MAX    32
@@ -276,7 +262,7 @@ StopSaver (void)
 }
 
 static int 
-ignoreError (Display *display, XErrorEvent *error)
+ignoreError (Display *dpy, XErrorEvent *error)
 {
     return 0;
 }
@@ -301,11 +287,7 @@ main(int argc, char *argv[])
     unsigned int	    w, h, b, d;
     Status		    s;
 
-#if !defined(X_NOT_POSIX)
     srand((int)time((time_t *)NULL));
-#else
-    srand((int)time((int *)NULL));
-#endif
 
     toplevel = XtAppInitialize (&app_con, "Beforelight", NULL, ZERO,
 				&argc, argv, NULL, NULL, ZERO);
@@ -316,24 +298,6 @@ main(int argc, char *argv[])
     scr_hei = DisplayHeight (display, screen);
     if (!XScreenSaverQueryExtension (display, &ss_event, &ss_error))
 	exit (1);
-#ifdef NOTDEF
-    XtAppAddActions (app_con, beforedark_actions, XtNumber(beforedark_actions));
-
-    /*
-     * This is a hack so that f.delete will do something useful in this
-     * single-window application.
-     */
-    XtOverrideTranslations(toplevel, 
-		    XtParseTranslationTable ("<Message>WM_PROTOCOLS: quit()"));
-
-    XtCreateManagedWidget ("label", labelWidgetClass, toplevel, NULL, ZERO);
-    XtRealizeWidget (toplevel);
-    wm_delete_window = XInternAtom (XtDisplay(toplevel), "WM_DELETE_WINDOW",
-				    False);
-    (void) XSetWMProtocols (XtDisplay(toplevel), XtWindow(toplevel),
-			    &wm_delete_window, 1);
-    
-#endif
     oldHandler = XSetErrorHandler (ignoreError);
     if (XScreenSaverGetRegistered (display, screen, &kill_id, &kill_type)) {
 	s = XGetGeometry(display, kill_id, &r, &x, &y, &w, &h, &b, &d);
@@ -346,11 +310,7 @@ main(int argc, char *argv[])
     XSync(display, FALSE);
     XSetErrorHandler(oldHandler);
     XScreenSaverSelectInput (display, root, ScreenSaverNotifyMask);
-#ifdef NOTDEF
-    cmap = XCreateColormap (display, root, DefaultVisual (display, screen), AllocNone);
-#else
     cmap = DefaultColormap (display, screen);
-#endif
     AllocateColors();
     blank_pix = XCreatePixmap (display, root, 1, 1, 1);
     XScreenSaverRegister (display, screen, (XID) blank_pix, XA_PIXMAP);
@@ -416,16 +376,3 @@ main(int argc, char *argv[])
     }
 }
 
-#ifdef NOTDEF
-static void 
-quit (Widget w, XEvent *event, String *params, Cardinal *num_params)
-{
-    if (event->type == ClientMessage &&
-	event->xclient.data.l[0] != wm_delete_window) {
-	XBell (XtDisplay(w), 0);
-	return;
-    }
-    XCloseDisplay (XtDisplay(w));
-    exit (0);
-}
-#endif

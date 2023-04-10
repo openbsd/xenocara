@@ -1,3 +1,137 @@
+commit c6841b8e5d56edf1a673bf9f3489cb11925cb93f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 28 09:24:15 2023 -0800
+
+    beforelight 1.0.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee6eed4ace4c0dac1928428eaca2ba3e96a35bcf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 12:02:01 2022 -0800
+
+    Drop X_NOT_POSIX support
+    
+    It was only used to determine if time() took a time_t pointer or
+    an int pointer as it's argument, and ANSI/ISO C have required a
+    time_t since C89, so we rely on that.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4f7fff260d15b6b6c2b069644eb3875cba8e859d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 10:38:27 2022 -0800
+
+    unifdef -UNOTDEF b4light.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 141220bae2bc0d9ba9f6ed185d10bfe31cd5145e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 10:35:52 2022 -0800
+
+    Rename several function arguments to avoid -Wshadow warnings
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 268eec6cd7c4f3c9e9efbbadef470dba84ec59b2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa1e473dd64673a36a73a01a84a8db61eaa425dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 11:04:35 2022 -0800
+
+    Fill in COPYING file with copyright notices from source code
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 42ce2cfad31e5324bba51773860376eb8f25c84c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:26:22 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 26154bc4ba8353254feacc5c9de8e374feae6d71
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:26:11 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 958e3ccae8c52ce707369b2492bf649e792c77da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 21 16:41:43 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2bfea54fc7716e76882f7ef27d6346ba854e24c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 16 19:34:46 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0c3fc79ce76281eaddcef8c43658e48888805586
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:20 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit c007caa5fb62548c312619cf46ee2a94f43014de
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 72af47fd7a070bb564c013b2ccdf2f6e0d7ab471
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit c4e903e72bbed1dbd186ca34797bfa3611b2d5cd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:02:34 2014 -0700
+
+    autogen.sh: Honor NOCONFIGURE=1
+    
+    See http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53e49c1a9e6c6d79d6af98e093c2694d8eaa8c50
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jun 1 21:02:34 2014 -0700
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 86bbd2205a3372c7803bb803723a72ff9a62f3f4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Jan 14 21:21:59 2013 -0800
@@ -432,26 +566,26 @@ Date:   Fri Jul 1 16:55:14 2005 +0000
     More freedestkop->freedesktop typo fixes
 
 commit 09d6aaa4292e2a9017cc1f4a91e1b062e5766a87
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jun 23 21:32:26 2005 +0000
 
     Do .ad files in a more convoluted way (strip .ad when installing)
 
 commit 5bed580a99a1eb5c30624ffc76593292c0cd3d66
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jun 23 20:19:16 2005 +0000
 
     Use $(sysconfdir), not /etc
 
 commit 2264bd39793459e3794154ce9027f724f91e1a86
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jun 23 20:04:35 2005 +0000
 
     - Install B4light.ad
     - make sure distcheck works
 
 commit 78d7d8bac5b1f756c102d9052484663c57671e61
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jun 23 18:10:35 2005 +0000
 
     Add build system for beforelight
