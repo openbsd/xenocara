@@ -1,3 +1,88 @@
+commit 13826f0412926eb4659bca21a6f0e179c7a45f11
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 9 09:59:46 2023 -0700
+
+    xwininfo 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a5623e2ffc6995b2c6edf379f191d76d7b4444a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 13:06:06 2023 -0800
+
+    Add option to use libxcb-errors to improve X protocol error messages
+    
+    Requires passing --with-xcb-errors to configure
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a60fe9c681990e0710e81ce88839aef2247e0d28
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 15:43:57 2022 -0800
+
+    Variable scope reduction as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a4505ad3a938cfecb501b1ce806aa39ead42ec81
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 15:19:02 2022 -0800
+
+    Silence -Wdiscarded-qualifiers warning on systems with non-const iconv
+    
+    xwininfo.c: In function ‘print_utf8’:
+    xwininfo.c:1914:26: warning: initialization discards ‘const’ qualifier
+     from pointer target type [-Wdiscarded-qualifiers]
+      ICONV_CONST char *inp = u8str;
+                              ^~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 41ea77d4b64413648dd2fb61c42bf7b980b17783
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 90fe017c5db9ead2e8fe64bfc1d146268a2eae97
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Apr 10 13:59:59 2022 -0700
+
+    Window_With_Name(): make sure cookies.get_net_wm_name is set
+    
+    Reported by Oracle Parfait:
+    
+    Error: Uninitialised memory
+       Uninitialised memory [uninitialised-mem] (CWE 456):
+          Possible access to uninitialised memory referenced by 'cookies'
+            at line 289 of dsimple.c in function 'recursive_Window_With_Name'.
+            called at line 420 in function 'Window_With_Name' with cookies = &cookies.
+            Path avoiding write at line 416
+            Write does not overlap at line 417
+            Write does not overlap at line 418
+              cookies allocated at line 410
+              cookies passed in at line 276 in function 'recursive_Window_With_Name'
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f8ff22d7d00a96ab43bab7accbd2fcc01a1b5e0c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 15:56:32 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9882388975f299bbff8788326e698752dd32c73c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 15:56:29 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 985a3a70918038bf2569e0a5ebe3fa14d720e4de
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 14 13:51:36 2019 -0700
@@ -53,7 +138,7 @@ Date:   Sun Jun 9 10:21:39 2019 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 58213a0cd39dc4ba044f48fab52ed3256ab9a9bd
-Author: Stéphane Aulery <lkppo@free.fr>
+Author: Stéphane Aulery  <lkppo@free.fr>
 Date:   Wed Jul 3 00:29:17 2013 +0200
 
     Improve manpage and -h option
@@ -1082,7 +1167,7 @@ Date:   Wed Jul 20 19:32:05 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 97aa768841e147fde3cf16ba9a4c852358085d27
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 8 21:00:46 2005 +0000
 
     Build system for xwininfo

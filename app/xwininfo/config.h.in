@@ -94,6 +94,10 @@
 #endif
 
 
+/* Define to 1 to call xcb-errors library functions instead of local
+   replacements */
+#undef USE_XCB_ERRORS
+
 /* Define to 1 to call xcb-icccm library functions instead of local
    replacements */
 #undef USE_XCB_ICCCM
