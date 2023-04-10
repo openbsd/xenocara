@@ -1,3 +1,127 @@
+commit 1ed3ed39fc47058f56db11f0d59d586bdbb05050
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Oct 8 19:32:01 2022 -0400
+
+    xf86-input-vmmouse 13.2.0
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit fa02334233a801046afa1f4655380335b3823d68
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Aug 22 21:42:30 2022 -0400
+
+    tools: Fix declaration of xf86EnableIO()
+    
+    /usr/include/xorg/xf86_OSproc.h:115:23: error: type of 'xf86EnableIO' does not match original declaration [-Werror=lto-type-mismatch]
+      115 | extern _X_EXPORT Bool xf86EnableIO(void);
+          |                       ^
+    vmmouse_iopl.c:125:6: note: return value type mismatch
+      125 | bool xf86EnableIO(void)
+          |      ^
+
+commit 2ff6677768b49e9ecc54051432be3e8b771b24ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 18 16:09:53 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 040f3b48aedb78eacb02bc5cd7d01d335e1c6943
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 13:07:26 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d5bbd986b457f2fa217b2d2511104a1752c73240
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 13:02:26 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8823b14cbcaf0c9a52efa2c5092b90c45149b1d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 5 16:28:12 2015 -0800
+
+    Update "See Also" list in vmmouse_detect man page
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+    Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
+
+commit 4b0126a2bd8b77710684301284f5448e3d1b53ec
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 8e2f2d5389f945fa4254efe721d377426c4a326c
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 5e712d2facb5ab78d2c12c398e8283d26aea535b
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit dd312ea6a86472c74fc141fcfd799585a63b244f
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 54654ce684f940603d4b2b8561811bf88c18b098
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 11:19:23 2017 +1000
+
+    Drop maintainer mode from autogen.sh
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 8081bdcaeae7dce7b4ffa5ada4737716421dba47
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Fri Jun 26 10:31:53 2015 +0200
+
+    Add NetBSD/amd64 support for iopl calls.
+    
+    While here, correct AC_DEFINE usage.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
+commit e57a592d35273f1e5ba5c944b8bc87efb9503c32
+Author: Thomas Klausner <wiz@NetBSD.org>
+Date:   Fri Jun 26 10:34:42 2015 +0200
+
+    Replace unportable test(1) operator.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+    Reviewed-by: Thomas Hellstrom <thellstrom@vmware.com>
+
 commit bbe41fae444e58c98db64db20114418ec78b99d6
 Author: Thomas Hellstrom <thellstrom@vmware.com>
 Date:   Thu Jun 25 03:20:34 2015 -0700

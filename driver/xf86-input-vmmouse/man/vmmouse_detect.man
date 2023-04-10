@@ -55,4 +55,5 @@ details.
 This manual page is licensed under the GNU General Public License.
 .SH SEE ALSO
 .IR mdetect (1),
-.IR XFree86 (1)
+.IR Xorg (1),
+.IR vmmouse (__drivermansuffix__)

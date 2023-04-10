@@ -40,24 +40,32 @@
 #include <xorg-config.h>
 #endif
 
+#include <X11/Xdefs.h>
 #include <stdbool.h>
 
 #if defined(VMMOUSE_OS_BSD)
 #include <sys/types.h>
-#ifdef USE_I386_IOPL
+#if defined(USE_I386_IOPL) || defined(USE_AMD64_IOPL) || defined(USE_X86_64_IOPL)
 #include <machine/sysarch.h>
+#if defined(USE_I386_IOPL)
+#define IOPL_NAME i386_iopl
+#elif defined(USE_AMD64_IOPL)
+#define IOPL_NAME amd64_iopl
+#elif defined(USE_X86_64_IOPL)
+#define IOPL_NAME x86_64_iopl
+#endif
 /***************************************************************************/
 /* I/O Permissions section                                                 */
 /***************************************************************************/
-static bool ExtendedEnabled = false;
+static Bool ExtendedEnabled = false;
 
-bool
+Bool
 xf86EnableIO()
 {
     if (ExtendedEnabled)
-	return true;
+	return false;
 
-    if (i386_iopl(1) < 0)
+    if (IOPL_NAME(1) < 0)
 	return false;
 
     ExtendedEnabled = true;
@@ -70,48 +78,13 @@ xf86DisableIO()
     if (!ExtendedEnabled)
 	return;
 
-    i386_iopl(0);
+    IOPL_NAME(0);
 
     ExtendedEnabled = false;
     return;
 }
 
-#endif /* USE_I386_IOPL */
-
-#ifdef USE_AMD64_IOPL
-#include <machine/sysarch.h>
-/***************************************************************************/
-/* I/O Permissions section                                                 */
-/***************************************************************************/
-
-static bool ExtendedEnabled = false;
-
-bool
-xf86EnableIO()
-{
-    if (ExtendedEnabled)
-	return true;
-
-    if (amd64_iopl(1) < 0)
-	return false;
-
-    ExtendedEnabled = true;
-    return true;
-}
-
-void
-xf86DisableIO()
-{
-    if (!ExtendedEnabled)
-	return;
-
-    if (amd64_iopl(0) == 0)
-	ExtendedEnabled = false;
-
-    return;
-}
-
-#endif /* USE_AMD64_IOPL */
+#endif /* defined(USE_I386_IOPL) || defined(USE_AMD64_IOPL) || defined(USE_X86_64_IOPL) */
 
 #ifdef USE_DEV_IO
 #include <sys/stat.h>
@@ -119,7 +92,7 @@ xf86DisableIO()
 #include <unistd.h>
 static int IoFd = -1;
 
-bool
+Bool
 xf86EnableIO()
 {
     if (IoFd >= 0)
@@ -145,12 +118,12 @@ xf86DisableIO()
 
 #elif defined(VMMOUSE_OS_GENERIC)
 
-static bool ExtendedEnabled = false;
+static Bool ExtendedEnabled = false;
 
 extern int ioperm(unsigned long __from, unsigned long __num, int __turn_on);
 extern int iopl(int __level);
 
-bool xf86EnableIO(void)
+Bool xf86EnableIO(void)
 {
     if (ExtendedEnabled)
 	return true;
@@ -209,9 +182,9 @@ xf86DisableIO(void)
 #include <sys/psw.h>
 #endif
 
-static bool ExtendedEnabled = false;
+static Bool ExtendedEnabled = false;
 
-bool
+Bool
 xf86EnableIO(void)
 {
     if (ExtendedEnabled)

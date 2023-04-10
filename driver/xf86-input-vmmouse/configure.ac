@@ -22,15 +22,15 @@
 
 AC_PREREQ(2.60)
 AC_INIT([xf86-input-vmmouse],
-        [13.1.0],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [13.2.0],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-input-vmmouse/issues],
         xf86-input-vmmouse)
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_AUX_DIR(.)
 AC_CONFIG_HEADERS([config.h])
 
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # XORG_DEFAULT_OPTIONS below forces C99. Solaris GCC doesn't like that.
 AC_PROG_CC
@@ -135,7 +135,7 @@ case $host_os in
          AC_DEFINE(VMMOUSE_OS_BSD, 1, [Building for BSD flavour])
      ;;
      solaris*)
-	 if test "x$GCC" == "xyes"; then
+	 if test "x$GCC" = "xyes"; then
             CC="$save_solaris_cc -fms-extensions"
 	 fi
          AC_DEFINE(VMMOUSE_OS_SOLARIS, 1, [Building for Solaris flavour])
@@ -152,15 +152,15 @@ case $host_cpu in
      i*86)
 	case $host_os in
 		*freebsd*)	AC_DEFINE(USE_DEV_IO) ;;
-		*netbsd*)	AC_DEFINE(USE_I386_IOPL)
+		*netbsd*)	AC_DEFINE([USE_I386_IOPL], [], [BSD i386 iopl])
 				use_i386_iopl=yes ;;
 	esac
 	;;
      x86_64*|amd64*)
 	case $host_os in
 		*freebsd*)	AC_DEFINE(USE_DEV_IO, 1, [BSD /dev/io]) ;;
-		*netbsd*)	AC_DEFINE(USE_I386_IOPL, 1, [BSD i386 iopl])
-				use_i386_iopl=yes ;;
+		*netbsd*)	AC_DEFINE(USE_X86_64_IOPL, 1, [BSD X86_64 iopl])
+				use_x86_64_iopl=yes ;;
 	esac
 	;;
 esac
@@ -173,6 +173,11 @@ fi
 if test x$use_amd64_iopl = xyes; then
    AC_CHECK_LIB(amd64, amd64_iopl,[],
 		[AC_MSG_ERROR([cannot find library for amd64_iopl])])
+fi
+
+if test x$use_x86_64_iopl = xyes; then
+   AC_CHECK_LIB(x86_64, x86_64_iopl,[],
+                [AC_MSG_ERROR([cannot find library for x86_64_iopl])])
 fi
 
 PKG_CHECK_MODULES(XORG, [xorg-server >= 1.0.1] xproto $REQUIRED_MODULES)

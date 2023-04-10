@@ -29,6 +29,9 @@
 /* Has libudev installed */
 #undef HAVE_LIBUDEV
 
+/* Define to 1 if you have the `x86_64' library (-lx86_64). */
+#undef HAVE_LIBX86_64
+
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
@@ -104,6 +107,9 @@
 
 /* BSD i386 iopl */
 #undef USE_I386_IOPL
+
+/* BSD X86_64 iopl */
+#undef USE_X86_64_IOPL
 
 /* Version number of package */
 #undef VERSION
