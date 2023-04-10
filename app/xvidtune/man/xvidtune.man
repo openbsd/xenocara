@@ -39,6 +39,9 @@ xvidtune \- video mode tuner for __xservername__
 .B -next
 |
 .B -unlock
+|
+.B -timeout
+.I sec
 ] [
 .I \-toolkitoption
 \&.\|.\|. ]
@@ -165,6 +168,9 @@ via hot-keys while it is running.  If for some reason the program
 did not exit cleanly and they are still disabled, the program can
 be re-run with this option to re-enable the mode switching key
 combinations.
+.TP 10
+.B \-timeout \fIsec\fP
+Set testmode timeout in seconds.
 .SH SEE ALSO
 .BR xrandr (__appmansuffix__),
 .BR __xservername__ (__appmansuffix__),

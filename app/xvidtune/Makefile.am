@@ -1,4 +1,4 @@
-# $Id: Makefile.am,v 1.4 2013/03/09 15:24:46 matthieu Exp $
+# $Id: Makefile.am,v 1.5 2023/04/10 15:39:00 matthieu Exp $
 #  Copyright 2005  Red Hat, Inc.
 # 
 #  Permission to use, copy, modify, distribute, and sell this software and its
@@ -46,3 +46,5 @@ ChangeLog:
 	$(CHANGELOG_CMD)
 
 dist-hook: ChangeLog INSTALL
+
+EXTRA_DIST = README.md
