@@ -246,7 +246,7 @@ AddInterp(CompatInfo * info, SymInterpInfo * new)
             old->interp.match |= (new->interp.match & XkbSI_LevelOneOnly);
             old->defs.defined |= _SI_LevelOneOnly;
         }
-        if (collide)
+        if (collide && (warningLevel > 0))
         {
             WARN("Multiple interpretations of \"%s\"\n", siText(new, info));
             ACTION("Using %s definition for duplicate fields\n",

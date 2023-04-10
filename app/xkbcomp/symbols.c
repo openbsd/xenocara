@@ -588,7 +588,7 @@ MergeKeys(SymbolsInfo * info, KeyInfo * into, KeyInfo * from)
         into->groupInfo = from->groupInfo;
         into->defs.defined |= _Key_GroupInfo;
     }
-    if (collide)
+    if (collide && (warningLevel > 0))
     {
         WARN("Symbol map for key %s redefined\n",
               longText(into->name, XkbMessage));
@@ -968,7 +968,11 @@ AddSymbolsToKey(KeyInfo * key,
     key->symsDefined |= (1 << ndx);
     for (i = 0; i < nSyms; i++) {
         if (!LookupKeysym(value->value.list.syms[i], &key->syms[ndx][i])) {
-            WARN("Could not resolve keysym %s\n", value->value.list.syms[i]);
+            if (warningLevel > 0)
+            {
+                WARN("Could not resolve keysym %s\n",
+                      value->value.list.syms[i]);
+            }
             key->syms[ndx][i] = NoSymbol;
         }
     }
@@ -1533,10 +1537,13 @@ SetExplicitGroup(SymbolsInfo * info, KeyInfo * key)
     if ((key->typesDefined | key->symsDefined | key->actsDefined) & ~1)
     {
         int i;
-        WARN("For the map %s an explicit group specified\n", info->name);
-        WARN("but key %s has more than one group defined\n",
-              longText(key->name, XkbMessage));
-        ACTION("All groups except first one will be ignored\n");
+        if (warningLevel > 0)
+        {
+            WARN("For map %s an explicit group is specified\n", info->name);
+            WARN("but key %s has more than one group defined\n",
+                  longText(key->name, XkbMessage));
+            ACTION("All groups except first one will be ignored\n");
+        }
         for (i = 1; i < XkbNumKbdGroups; i++)
         {
             key->numLevels[i] = 0;
@@ -1778,7 +1785,7 @@ KSIsUpper(KeySym ks)
  *
  * Simple recipe:
  * - ONE_LEVEL for width 0/1
- * - ALPHABETIC for 2 shift levels, with lower/upercase
+ * - ALPHABETIC for 2 shift levels, with lower/uppercase
  * - KEYPAD for keypad keys.
  * - TWO_LEVEL for other 2 shift level keys.
  * and the same for four level keys.

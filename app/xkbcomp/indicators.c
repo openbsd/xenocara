@@ -133,7 +133,7 @@ AddIndicatorMap(LEDInfo * oldLEDs, LEDInfo * new)
                 old->flags |= (new->flags & XkbIM_LEDDrivesKB);
                 old->defs.defined |= _LED_DrivesKbd;
             }
-            if (collide)
+            if (collide && (warningLevel > 0))
             {
                 WARN("Map for indicator %s redefined\n",
                       XkbAtomText(NULL, old->name, XkbMessage));

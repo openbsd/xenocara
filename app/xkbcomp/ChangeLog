@@ -1,3 +1,82 @@
+commit 7bac6a25bb44d39710f1b2b5fdad56d7f4c01c39
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Dec 7 17:53:16 2022 -0800
+
+    xkbcomp 1.4.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7cdd50a7471ab67591ceb2e8734483220c5a9205
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Nov 29 12:00:20 2022 -0500
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 76eed4986b8c94008853c2215408a100b7e95ecb
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Mon Jul 11 09:16:55 2022 +0200
+
+    suppress four more warnings when 'warningLevel' is zero
+    
+    This addresses issue #20 some more.
+    
+    Reported-by: Vincent Lefevre
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit c230cee968c7e7956a04e4d73bd6f23260f435db
+Author: Benno Schulenberg <bensberg@telfort.nl>
+Date:   Sun Jul 10 17:31:52 2022 +0200
+
+    suppress the "Could not resolve" warning when 'warningLevel' is zero
+    
+    Two years ago, commit c8cfca25ab changed an error to a warning
+    but forgot to add a check for 'warningLevel'.
+    
+    This partially addresses issue #20.
+    
+    Reported-by: Vincent Lefevre
+    
+    Signed-off-by: Benno Schulenberg <bensberg@telfort.nl>
+
+commit 97311ebd18e0dbc545d18d1a4b8b94b59c1fbd08
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 2 11:58:18 2022 -0700
+
+    man page: remove out-of-date COPYRIGHT section
+    
+    The information previously listed here didn't match what is present in
+    the source code or the COPYING file, and the X(7) man page doesn't list
+    any license information as this had claimed.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f3f71746ebee5404ccb736b53cddca557cc62060
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:54:08 2021 -0800
+
+    gitlab CI: update to new templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3aa424c245090ac594b85ce0ba0a438c921101d6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:44:55 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 97390d9e15c0c7ac8c69de42e1be1028ae846aad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 11:35:20 2021 -0800
+
+    Fix "upercase" typo
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f8b240e897ed68b90c116ce4c2f8814e71e5aa97
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Mar 17 15:39:53 2021 +1000
@@ -90,7 +169,7 @@ Date:   Thu Nov 5 14:24:24 2020 +1000
     Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit a0a4f112c5858ac2b932247dba2d85061bb59145
-Author: Miroslav Koškár <mk@mkoskar.com>
+Author: Miroslav Koškár < <mk@mkoskar.com>
 Date:   Mon Jul 6 07:48:48 2020 +0200
 
     Fix lockdevbtn to be XkbSA_LockDeviceBtn action
@@ -186,7 +265,7 @@ Date:   Sat Feb 15 17:34:41 2014 +0100
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9edd61b91a02bda31fc6edd2c32c553e872b6ea2
-Author: Miroslav Koškár <mk@mkoskar.com>
+Author: Miroslav Koškár < <mk@mkoskar.com>
 Date:   Fri Jan 18 20:01:01 2019 +0100
 
     Fix invalid error report on F_Accel field
@@ -1877,7 +1956,7 @@ Date:   Fri Oct 14 00:25:46 2005 +0000
     Use sed to fill in variables in man page
 
 commit 8c0d310c1acccc424dae29554a5075f9b339e95f
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Thu Sep 1 19:37:02 2005 +0000
 
     Define DFLT_XKB_CONFIG_ROOT to $(datadir)/X11/xkb so we look in the right
@@ -1918,13 +1997,13 @@ Date:   Wed Jul 20 19:31:57 2005 +0000
         configure cache, you cache it, and the cached value is probably wrong.
 
 commit 8335e5fa471e25675c6a369ec2348883953fcdd0
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Sat Jul 16 20:56:47 2005 +0000
 
     Add xkbcomp data to symlink.sh. Some fixes to xkbcomp/Makefile.am
 
 commit d7b3354575f31caa9044b6c5f7aee4f010f6192a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 18:02:35 2005 +0000
 
     Build system for xkbcomp

@@ -22,13 +22,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xkbcomp], [1.4.5],
-        [https://gitlab.freedesktop.org/xorg/app/xkbcomp/issues], [xkbcomp])
+AC_INIT([xkbcomp], [1.4.6],
+        [https://gitlab.freedesktop.org/xorg/app/xkbcomp/-/issues], [xkbcomp])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -49,6 +49,9 @@ AC_CHECK_FUNCS([strdup strcasecmp])
 
 # Checks for pkg-config packages
 PKG_CHECK_MODULES(XKBCOMP, [x11 xkbfile xproto >= 7.0.17])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
 
 AC_ARG_WITH([xkb_config_root],
     [AS_HELP_STRING([--with-xkb-config-root=<paths>],
