@@ -81,6 +81,7 @@ GNU autotools packages installed:
     - autoconf 2.69 (devel/autoconf/2.69)
     - metaauto 0.9 (or later) (devel/metaauto)
     - libtool 2.4.2 (or later) (devel/libtool)
+    - gettext-tools (devel/gettext)
 
 If you have your source tree on an NFS partition, make sure the clock
 of your server and client are properly synchronised. Any significant
@@ -211,4 +212,4 @@ The core dump will be in /var/crash.
 See also <http://xorg.freedesktop.org/wiki/Development/Documentation/ServerDebugging>
 
 --
-$OpenBSD: README,v 1.45 2023/03/03 15:26:53 tb Exp $
+$OpenBSD: README,v 1.46 2023/04/10 17:45:01 matthieu Exp $
