@@ -234,12 +234,12 @@ static void nv4CalcArbitration (
     nv4_sim_state *arb
 )
 {
-    int data, pagemiss, cas,width, video_enable, bpp;
+    int data, pagemiss, cas, width, video_enable, bpp;
     int nvclks, mclks, pclks, vpagemiss, crtpagemiss, vbs;
     int found, mclk_extra, mclk_loop, cbs, m1, p1;
     int mclk_freq, pclk_freq, nvclk_freq, mp_enable;
     int us_m, us_n, us_p, video_drain_rate, crtc_drain_rate;
-    int vpm_us, us_video, vlwm, video_fill_us, cpm_us, us_crt,clwm;
+    int vpm_us, us_video, vlwm, video_fill_us, cpm_us, us_crt, clwm;
 
     fifo->valid = 1;
     pclk_freq = arb->pclk_khz;

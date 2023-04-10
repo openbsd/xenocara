@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-nv],
-        [2.1.21],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [2.1.22],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-nv/issues],
         [xf86-video-nv])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -38,8 +38,7 @@ XORG_DEFAULT_OPTIONS
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_DISABLE_STATIC

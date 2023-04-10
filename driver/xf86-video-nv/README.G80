@@ -5,7 +5,7 @@ There are a few caveats of which to be aware:
  - The XVideo extension is not supported.
  - The RENDER extension is not accelerated by this driver.
 
-Bugs should be reported at http://bugs.freedesktop.org/ under the "xorg"
-product, "Driver/nVidia (open)" component.  Please be sure to fill out the
-platform, OS, and severity fields.  Also attach a copy of your Xorg log file and
-provide a detailed description of your problem and how to reproduce it.
+Bugs should be reported at
+  https://gitlab.freedesktop.org/xorg/driver/xf86-video-nv
+Please be sure to state the platform & OS. Also attach a copy of your Xorg log
+file and provide a detailed description of your problem and how to reproduce it.

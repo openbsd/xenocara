@@ -32,6 +32,7 @@ nv_drv_la_SOURCES = $(nv_sources) $(riva_sources) $(g80_sources)
 
 nv_sources = \
          compat-api.h \
+         pci_ids.h \
          nv_const.h \
          nv_cursor.c \
          nv_dac.c \

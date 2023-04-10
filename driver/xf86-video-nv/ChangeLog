@@ -1,3 +1,147 @@
+commit bc1b6343f776ffcf1c398792b3aa3ad2ea5ded2a
+Author: Yusuf Khan <yusisamerican@gmail.com>
+Date:   Wed Jul 27 15:12:44 2022 -0400
+
+    bump to version 2.1.22
+    
+    Signed-off-by: Yusuf Khan <yusisamerican@gmail.com>
+
+commit 94d6ea61377220d937eb5da9ef99e95fc6356b90
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Jul 25 19:13:06 2022 -0700
+
+    riva_xaa: don't build RivaSetRopPattern when XAA is not supported
+    
+    Fixes gcc warnings:
+    
+    riva_xaa.c: In function ‘RivaSetRopPattern’:
+    riva_xaa.c:94:33: warning: implicit declaration of function
+      ‘XAAGetPatternROP’; did you mean ‘RivaSetPattern’?
+      [-Wimplicit-function-declaration]
+             pRiva->riva.Rop->Rop3 = XAAGetPatternROP(rop);
+                                     ^~~~~~~~~~~~~~~~
+                                     RivaSetPattern
+    At top level:
+    riva_xaa.c:89:1: warning: ‘RivaSetRopPattern’ defined but not used
+      [-Wunused-function]
+     RivaSetRopPattern(RivaPtr pRiva, int rop)
+     ^~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9f256b16f74b898d311c0ca310afc75456b73c9
+Author: Yusuf <yusisamerican@gmail.com>
+Date:   Fri Jun 24 18:46:06 2022 -0500
+
+    Replace xf86PciInfo.h with our own pci ids
+    
+    Signed-off-by: YusufKhan-improves-things's avatarYusuf Khan <yusisamerican@gmail.com>
+    ---
+    v2: Add header to Makefile
+    
+    v3: commit v2
+
+commit 7ccde0d6c8ba79ff6d5a495038b928b52d042a2b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 19 11:40:04 2022 -0800
+
+    Update README.G80 for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e33c6327fa161cca684f6894044810fbe96e84f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 14:03:42 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6168d934890e1066cf34f5bd97fd8c17b9dff548
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 14:02:12 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ec6c1e02f91ad84577543a0a3bb24c27ca3bca23
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 13:59:51 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80b2d1f93adbe1e9bde3a7001de02b340a9e6b89
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 14:34:43 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 80c1b93552a2830a107d5305068a63274b5d2d51
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 13:31:22 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b7d57087d082d027f059f4e0a6ce9982c3e5f0fb
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:22 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 860b2bffc1a88cfd1ca6ff6d3d97783bdb2aeda9
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 90d2db6619c57c4af28763288c61fc12f3969c72
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit caf8230a1ffed71d4613ebf34addae7ee4506afe
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit eac0278003e9e762b3fd268687b1648a442eb422
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 11:18:06 2017 +1000
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit e4134c4ebd3522e730689e0bda7b9f8fd39aedb8
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue Jan 17 14:42:07 2017 -0800
@@ -402,7 +546,7 @@ Date:   Wed Jun 2 15:29:57 2010 -0700
     
     Conflicts:
     
-    	src/nv_driver.c
+            src/nv_driver.c
 
 commit 133f7c4d51b3c7d7e1e7af80056947d3a7ec2097
 Author: Ben Skeggs <bskeggs@redhat.com>
@@ -1093,7 +1237,7 @@ Date:   Tue Feb 19 14:17:57 2008 -0800
     G80: Fix connector mapping and TMDS initialization on certain GPUs.
 
 commit 3f2a1898fedbada151da31fc163ae54daac0e896
-Author: Søren Sandmann Pedersen <sandmann@redhat.com>
+Author: Søren Sandmann Pedersen  <sandmann@redhat.com>
 Date:   Wed Feb 13 10:43:28 2008 -0800
 
     [PATCH] Bug #14484: Fix G80SorSetProperty return value.
@@ -1489,12 +1633,12 @@ Date:   Tue Apr 24 15:43:48 2007 -0700
     
     Conflicts:
     
-    	configure.ac
-    	man/Makefile.am
-    	man/nv.man
-    	src/g80_display.h
-    	src/g80_output.c
-    	src/nv_driver.c
+            configure.ac
+            man/Makefile.am
+            man/nv.man
+            src/g80_display.h
+            src/g80_output.c
+            src/nv_driver.c
 
 commit 4ff648c85f8aa90b343b7e2df176c0511b3cdaa5
 Author: Aaron Plattner <aplattner@nvidia.com>
@@ -2007,7 +2151,7 @@ Date:   Mon Oct 17 00:09:04 2005 +0000
     Use sed & cpp to substitute variables in driver man pages
 
 commit 1e3c84f332b7b9a4b320b370b8b2ecafbbdd8f8a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Oct 4 21:36:51 2005 +0000
 
     Link nvidida readme file into nvidia driver, Exclude duplicated neomagic
@@ -2086,7 +2230,7 @@ Date:   Fri Jul 29 21:22:44 2005 +0000
     - Update modular Xorg version
 
 commit 6ea22f19210448605b9a18bf500c33168a77e77c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 26 18:40:29 2005 +0000
 
     Build system for nv

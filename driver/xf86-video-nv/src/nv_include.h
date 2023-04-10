@@ -15,8 +15,8 @@
 #endif
 #include "compiler.h"
 
-/* Drivers for PCI hardware need this */
-#include "xf86PciInfo.h"
+/* PCI IDS */
+#include "pci_ids.h"
 
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"

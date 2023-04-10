@@ -85,6 +85,7 @@ RivaSetRopSolid(RivaPtr pRiva, int rop)
     }
 }
 
+#ifdef HAVE_XAA_H
 static void
 RivaSetRopPattern(RivaPtr pRiva, int rop)
 {
@@ -94,7 +95,7 @@ RivaSetRopPattern(RivaPtr pRiva, int rop)
         pRiva->riva.Rop->Rop3 = XAAGetPatternROP(rop);
     }
 }
-#ifdef HAVE_XAA_H
+
 /*
  * Fill solid rectangles.
  */
