@@ -23,16 +23,15 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-input-joystick],
-        [1.6.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
+        [1.6.4],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-input-joystick/-/issues],
         [xf86-input-joystick])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_AUX_DIR(.)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_DISABLE_STATIC
@@ -101,6 +100,7 @@ AC_CHECK_HEADERS([usbhid.h dev/usb/usbhid.h],, [bsd_backend=no],
 #include <dev/usb/usb.h>
 #endif
 ]])
+AC_CHECK_HEADERS([dev/hid/hid.h])
 AC_CHECK_LIB([usbhid],[hid_get_item],, [bsd_backend=no])
 AM_CONDITIONAL(BSD_BACKEND, [test "x$bsd_backend" = xyes])
 if test "x$bsd_backend" = xyes; then

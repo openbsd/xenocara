@@ -125,7 +125,7 @@ jstkAxisTimer(OsTimerPtr        timer,
 	     *
 	     *   a >>= 1.414 
 	     *
-	     * the following formula achieves results inbetween,
+	     * the following formula achieves results in between,
 	     * so it should feel natural on both devices while maintaining a
 	     * nice acceleration:
 	     * 

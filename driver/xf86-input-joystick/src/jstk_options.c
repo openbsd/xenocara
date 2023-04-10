@@ -78,7 +78,7 @@ jstkGetAxisMapping(float *value, const char* param, const char* name)
  *
  * jstkParseButtonOption --
  *
- * Interpretes one ButtonMappingX option, given in 'org'
+ * Interprets one ButtonMappingX option, given in 'org'
  * stores the result in *button
  * name is the name of the InputDevice
  *
@@ -163,7 +163,7 @@ jstkParseButtonOption(const char* org,
  *
  * jstkParseAxisOption --
  *
- * Interpretes one AxisMappingX option, given in 'org'
+ * Interprets one AxisMappingX option, given in 'org'
  * stores the result in *axis
  * name is the name of the InputDevice
  *

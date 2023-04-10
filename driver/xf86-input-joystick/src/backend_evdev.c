@@ -226,7 +226,7 @@ jstkCloseDevice_evdev(JoystickDevPtr joystick)
  *
  * Reads data from fd and stores it in the JoystickDevRec struct
  * fills in the type of event and the number of the button/axis
- * return 1 if success, 0 otherwise. Success does not neccessarily
+ * return 1 if success, 0 otherwise. Success does not necessarily
  * mean that there is a new event waiting.
  *
  ***********************************************************************

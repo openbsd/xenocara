@@ -1,3 +1,130 @@
+commit 8326644a0dd5e0457e404691b5f2143ae612901b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 16:03:10 2022 -0800
+
+    xf86-input-joystick 1.6.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9bb1dbbaef71b28b82061d467a5f2234baab0bac
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0e37171b20da87c663bc41b2304ee15b00ff785d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 11:23:24 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 758adebe135beb5a5a7324d41be00dafb09e7254
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 11:01:54 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aca8dee2b359d7bd03b5bf52c1a870aefbb37bf1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 16 10:58:36 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2d7f96e5ac9b56ffeecfd6a38ad13f691eea96e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 25 12:46:18 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 64d03c11a7720a07cac5cf4d5f8ba70b59a2148b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 11:32:37 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 463fd02a4e11f0a256755795b4e5a2b195ee10dd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 16 22:58:22 2018 -0700
+
+    Fix quoting in man page synopsis section
+    
+    Fixes: https://gitlab.freedesktop.org/xorg/driver/xf86-input-joystick/issues/1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f45c3d0f3514abedbd532148678f7edbecabc2e3
+Author: Manuel Bouyer <bouyer@NetBSD.org>
+Date:   Wed Dec 27 15:18:49 2017 +0100
+
+    Adapt to USB HID header changes on NetBSD-8.99.9.
+    
+    Signed-off-by: Thomas Klausner <wiz@NetBSD.org>
+
+commit e28608c8fbd060b0bfb4dae2a396a03a781140b0
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 6920963c8f38db745147be5d55cfbb79196e046c
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 73a8c2908225163d94e1acb439cdb05ff4880fd8
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
+commit 99a2b4957ae7fd2c0cd93bf37bc420cffca6e1b4
+Author: Colin Walters <walters@verbum.org>
+Date:   Wed Jan 4 17:37:06 2012 -0500
+
+    autogen.sh: Implement GNOME Build API
+    
+    http://people.gnome.org/~walters/docs/build-api.txt
+    
+    Signed-off-by: Adam Jackson <ajax@redhat.com>
+
+commit 2a35c37bb21bcca69304dce2811e787b87157ea2
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Jan 26 11:18:06 2017 +1000
+
+    configure: Drop AM_MAINTAINER_MODE
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
 commit de424865ece983d8da62b7f7e3d013eabac0b8b5
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Fri Nov 18 08:58:35 2016 +1000
@@ -2255,7 +2382,7 @@ Date:   Thu Aug 18 09:03:39 2005 +0000
     Update autogen.sh to one that does objdir != srcdir.
 
 commit ff835930aee87f0cc3db60d5e03b0adf6b18d05f
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Aug 10 14:07:23 2005 +0000
 
     Don\'t lose existing CFLAGS in all the input drivers and some of the video

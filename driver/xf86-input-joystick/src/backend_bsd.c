@@ -44,6 +44,9 @@
 #include <usbhid.h>
 #include <dev/usb/usb.h>
 #include <dev/usb/usbhid.h>
+#ifdef HAVE_DEV_HID_HID_H
+    #include <dev/hid/hid.h>
+#endif
 #ifdef HAVE_DEV_USB_USB_IOCTL_H
     #include <dev/usb/usb_ioctl.h>
 #endif
@@ -227,7 +230,7 @@ jstkCloseDevice_bsd(JoystickDevPtr joystick)
  *
  * Reads data from fd and stores it in the JoystickDevRec struct
  * fills in the type of event and the number of the button/axis
- * return 1 if success, 0 otherwise. Success does not neccessarily
+ * return 1 if success, 0 otherwise. Success does not necessarily
  * mean that there is a new event waiting.
  *
  ***********************************************************************

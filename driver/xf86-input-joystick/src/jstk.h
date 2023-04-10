@@ -107,7 +107,7 @@ typedef struct _JoystickDevRec {
     jstkOpenDeviceProc open_proc; /* Call for re-open backend */
     jstkCloseDeviceProc close_proc; /* Callback for closing the backend */
     jstkReadDataProc read_proc; /* Callback for reading data from the backend */
-    void         *devicedata; /* Extra platform device dependend data */
+    void         *devicedata; /* Extra platform device dependent data */
     char         *device;     /* Name of the device */
     InputInfoPtr joystick_device; /* Back pointer to the joystick device */
     InputInfoPtr keyboard_device; /* Slave device for keyboard events */

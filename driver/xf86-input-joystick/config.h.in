@@ -9,6 +9,9 @@
 /* Compile Linux evdev backend */
 #undef EVDEV_BACKEND
 
+/* Define to 1 if you have the <dev/hid/hid.h> header file. */
+#undef HAVE_DEV_HID_HID_H
+
 /* Define to 1 if you have the <dev/usb/usbhid.h> header file. */
 #undef HAVE_DEV_USB_USBHID_H
 

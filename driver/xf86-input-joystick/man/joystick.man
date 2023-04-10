@@ -11,7 +11,7 @@ Snipped for xorg.conf.d(5):
 .BI "  Identifier \*q" joystick-all \*q
 .BI "  Driver \*q" joystick \*q
 .BI "  Option \*qMatchIsJoystick\*q   \*q" on \*q
-.BI "  Option \*qMatchDevicePath \*q" /dev/input/event* \*q
+.BI "  Option \*qMatchDevicePath\*q   \*q" /dev/input/event* \*q
 \ \ ...
 .B EndSection
 .fi
@@ -380,7 +380,7 @@ You might also want to set the device "floating" to stop it from reporting core 
 .SH "NOTES"
 It is not recommended to enable the
 .B joystick
-input driver by default unless explicitely requested by the user.
+input driver by default unless explicitly requested by the user.
 
 Configuration through
 .I InputClass
