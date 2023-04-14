@@ -339,6 +339,12 @@ StartClient (
 			  name, _SysErrorMsg (errno));
 		return (0);
 	    }
+	    /*
+	     * setusercontext(3) will update the environment based on
+	     * the login class so update our idea about the environment
+	     * as well
+	     */
+	    vinfo->userEnviron = defaultEnv (vinfo->userEnviron);
 	} else {
 	    LogError ("getpwnam for \"%s\" failed: %s\n",
 		      name, _SysErrorMsg (errno));
@@ -452,11 +458,11 @@ execute (char **argv, char **environ)
 }
 
 char **
-defaultEnv (void)
+defaultEnv (char **e)
 {
     char    **env, **exp, *value;
 
-    env = NULL;
+    env = e;
     for (exp = exportList; exp && *exp; ++exp) {
 	value = getenv (*exp);
 	if (value)
@@ -470,7 +476,7 @@ systemEnv (struct display *d, char *user, char *home)
 {
     char	**env;
 
-    env = defaultEnv ();
+    env = defaultEnv (NULL);
     env = setEnv (env, "DISPLAY", d->name);
     if (home)
 	env = setEnv (env, "HOME", home);

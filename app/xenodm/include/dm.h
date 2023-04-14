@@ -222,7 +222,7 @@ extern void LoadSessionResources (struct display *d);
 extern void ReinitResources (void);
 
 /* in session.c */
-extern char **defaultEnv (void);
+extern char **defaultEnv (char **e);
 extern char **systemEnv (struct display *d, char *user, char *home);
 extern int source (char **environ, char *file);
 extern void ClearCloseOnFork (int fd);

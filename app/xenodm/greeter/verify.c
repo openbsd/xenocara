@@ -60,7 +60,7 @@ userEnv (struct display *d, int useSystemPath, char *user, char *home, char *she
     const char	**envvar;
     const char	*str;
 
-    env = defaultEnv ();
+    env = defaultEnv (NULL);
     env = setEnv (env, "DISPLAY", d->name);
     env = setEnv (env, "HOME", home);
     env = setEnv (env, "LOGNAME", user); /* POSIX, System V */
