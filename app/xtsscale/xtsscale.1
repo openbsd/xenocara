@@ -1,4 +1,4 @@
-.\" $OpenBSD: xtsscale.1,v 1.16 2015/03/13 20:47:23 matthieu Exp $
+.\" $OpenBSD: xtsscale.1,v 1.17 2023/04/24 09:28:39 bentley Exp $
 .\"
 .\" Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
 .\" Copyright (c) 2009 Matthieu Herrb <matthieu@herrb.eu>
@@ -24,7 +24,7 @@
 .\" (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 .\" OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 .\"
-.Dd $Mdocdate: March 13 2015 $
+.Dd $Mdocdate: April 24 2023 $
 .Dt XTSSCALE 1
 .Os
 .Sh NAME
@@ -99,15 +99,15 @@ To use
 .Nm
 the mode of the input device should be set to raw in the
 .Pa /etc/X11/xorg.conf
-X configuration file. See
+X configuration file.
+See
 .Xr ws 4
 for details.
 .Pp
 .Pa /etc/wsconsctl.conf
 cannot currently be used to set the calibration data of a device
-that is not the first device. (
-.Pa /dev/wsmouse0
-)
+that is not the first device
+.Pq Pa /dev/wsmouse0 .
 .Sh SEE ALSO
 .Xr xinput 1 ,
 .Xr xrandr 1 ,
