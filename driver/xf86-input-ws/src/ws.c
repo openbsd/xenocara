@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.67 2022/05/27 16:34:34 matthieu Exp $ */
+/* $OpenBSD: ws.c,v 1.68 2023/04/25 20:18:48 bentley Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -241,7 +241,7 @@ wsPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS,
 		    &priv->coords) != 0) {
 			xf86IDrvMsg(pInfo, X_ERROR,
-			    "GCALIBCOORS failed %s\n", strerror(errno));
+			    "GCALIBCOORDS failed %s\n", strerror(errno));
 			goto fail;
 		}
 
@@ -444,7 +444,7 @@ wsDeviceOn(DeviceIntPtr pWS)
 	if (priv->type == WSMOUSE_TYPE_TPANEL) {
 		/* get calibration values */
 		if (ioctl(pInfo->fd, WSMOUSEIO_GCALIBCOORDS, &coords) != 0) {
-			xf86IDrvMsg(pInfo, X_ERROR, "GCALIBCOORS failed %s\n",
+			xf86IDrvMsg(pInfo, X_ERROR, "GCALIBCOORDS failed %s\n",
 			    strerror(errno));
 			return !Success;
 		}
@@ -455,7 +455,8 @@ wsDeviceOn(DeviceIntPtr pWS)
 			if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS,
 			    &coords) != 0) {
 				xf86IDrvMsg(pInfo, X_ERROR,
-				    "SCALIBCOORS failed %s\n", strerror(errno));
+				    "SCALIBCOORDS failed %s\n",
+				    strerror(errno));
 				return !Success;
 			}
 		}
@@ -484,7 +485,7 @@ wsDeviceOff(DeviceIntPtr pWS)
 		/* Restore calibration data */
 		memcpy(&coords, &priv->coords, sizeof coords);
 		if (ioctl(pInfo->fd, WSMOUSEIO_SCALIBCOORDS, &coords) != 0) {
-			xf86IDrvMsg(pInfo, X_ERROR, "SCALIBCOORS failed %s\n",
+			xf86IDrvMsg(pInfo, X_ERROR, "SCALIBCOORDS failed %s\n",
 			    strerror(errno));
 		}
 	}
