@@ -1,4 +1,4 @@
-.\"	$OpenBSD: ws.man,v 1.15 2022/05/11 07:48:58 bentley Exp $
+.\"	$OpenBSD: ws.man,v 1.16 2023/04/25 16:07:13 bentley Exp $
 .\"
 .\" Copyright (c) 2005,2009,2011 Matthieu Herrb
 .\"
@@ -142,7 +142,7 @@ This option is mandatory.
 .BI "Option \*qMaxY\*q \*q" integer \*q
 These options represent the coordinate space returned by the device.
 They default to the screen dimensions, since the calibration is handled in
-the kernel by the uts(4) driver and the xtsscale(8) utility.
+the kernel by the uts(4) driver and the xtsscale(1) utility.
 .TP 4
 .BI "Option \*qRaw\*q \*q" boolean \*q
 This option selects the raw (uncalibrated) mode for tablet devices.
@@ -237,4 +237,4 @@ tablets and touchscreens).
 
 .SH "SEE ALSO"
 __xservername__(1), xinput(1), __xconfigfile__(__filemansuffix__),
-ums(4), uts(4), sysctl(8), xtsscale(8).
+ums(4), uts(4), sysctl(8), xtsscale(1).
