@@ -1,4 +1,4 @@
-/*      $OpenBSD: xtsscale.c,v 1.24 2019/02/11 07:10:45 matthieu Exp $ */
+/*      $OpenBSD: xtsscale.c,v 1.25 2023/04/27 18:17:25 bentley Exp $ */
 /*
  * Copyright (c) 2007 Robert Nagy <robert@openbsd.org>
  * Copyright (c) 2009,2011 Matthieu Herrb <matthieu@herrb.eu>
@@ -258,12 +258,12 @@ create_empty_cursor(void)
 	XColor          nullcolor;
 	Pixmap          src = XCreateBitmapFromData(display, root, nothing, 1, 1);
 	Pixmap          msk = XCreateBitmapFromData(display, root, nothing, 1, 1);
-	Cursor          mcyursor = XCreatePixmapCursor(display, src, msk,
+	Cursor          mycursor = XCreatePixmapCursor(display, src, msk,
 					      &nullcolor, &nullcolor, 0, 0);
 	XFreePixmap(display, src);
 	XFreePixmap(display, msk);
 
-	return mcyursor;
+	return mycursor;
 }
 
 int
