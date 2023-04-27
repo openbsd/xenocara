@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.68 2023/04/25 20:18:48 bentley Exp $ */
+/* $OpenBSD: ws.c,v 1.69 2023/04/27 12:25:56 bentley Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -563,8 +563,13 @@ wsReadHwState(InputInfoPtr pInfo, wsHwState *hw)
 
 	bzero(hw, sizeof(wsHwState));
 	hw->buttons = priv->lastButtons;
-	hw->ax = priv->old_ax;
-	hw->ay = priv->old_ay;
+	if (!priv->swap_axes) {
+		hw->ax = priv->old_ax;
+		hw->ay = priv->old_ay;
+	} else {
+		hw->ax = priv->old_ay;
+		hw->ay = priv->old_ax;
+	}
 
 	while ((event = wsGetEvent(pInfo)) != NULL) {
 		switch (event->type) {
