@@ -26,8 +26,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 21.1.6, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
-RELEASE_DATE="2022-12-19"
+AC_INIT([xorg-server], 21.1.8, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
+RELEASE_DATE="2023-03-29"
 RELEASE_NAME="Caramel Ice Cream"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
@@ -723,7 +723,6 @@ case $host_os in
 			XVFB=no
 			XNEST=no
 
-			COMPOSITE=no
 			DGA=no
 			DPMSExtension=no
 			XF86VIDMODE=no
@@ -2210,7 +2209,7 @@ if test "x$XQUARTZ" = xyes; then
 	AC_DEFINE(XQUARTZ,1,[Have Quartz])
 	AC_DEFINE(ROOTLESS,1,[Build Rootless code])
 
-	XQUARTZ_LIBS="$FB_LIB $FIXES_LIB $XEXT_LIB $DBE_LIB $RECORD_LIB $RANDR_LIB $RENDER_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $XPSTUBS_LIB $PRESENT_LIB"
+	XQUARTZ_LIBS="$COMPOSITE_LIB $FB_LIB $FIXES_LIB $XEXT_LIB $DBE_LIB $RECORD_LIB $RANDR_LIB $RENDER_LIB $DAMAGE_LIB $MIEXT_SYNC_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $XPSTUBS_LIB $PRESENT_LIB"
 	AC_SUBST([XQUARTZ_LIBS])
 
 	AC_CHECK_LIB([Xplugin],[xp_init],[:])

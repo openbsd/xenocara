@@ -135,6 +135,7 @@ conf_data.set('HAVE_STRING_H', cc.has_header('string.h') ? '1' : false)
 conf_data.set('HAVE_STRINGS_H', cc.has_header('strings.h') ? '1' : false)
 conf_data.set('HAVE_SYS_AGPGART_H', cc.has_header('sys/agpgart.h') ? '1' : false)
 conf_data.set('HAVE_SYS_AGPIO_H', cc.has_header('sys/agpio.h') ? '1' : false)
+conf_data.set('HAVE_SYS_UN_H', cc.has_header('sys/un.h') ? '1' : false)
 conf_data.set('HAVE_SYS_UTSNAME_H', cc.has_header('sys/utsname.h') ? '1' : false)
 conf_data.set('HAVE_SYS_SYSMACROS_H', cc.has_header('sys/sysmacros.h') ? '1' : false)
 conf_data.set('HAVE_UNISTD_H', cc.has_header('unistd.h') ? '1' : false)
@@ -201,9 +202,7 @@ conf_data.set('UNIXCONN', host_machine.system() != 'windows' ? '1' : false)
 conf_data.set('IPv6', build_ipv6 ? '1' : false)
 
 conf_data.set('BIGREQS', '1')
-if build_composite
-    conf_data.set('COMPOSITE', '1')
-endif
+conf_data.set('COMPOSITE', '1')
 conf_data.set('DAMAGE', '1')
 conf_data.set('DBE', '1')
 conf_data.set('DGA', build_dga ? '1' : false)
