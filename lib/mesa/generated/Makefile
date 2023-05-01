@@ -363,17 +363,17 @@ all:
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
 	    --api-version 1.3 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
-	    --lib-path ${X11BASE}/lib/libvulkan_radeon.so \
+	    --lib-path libvulkan_radeon.so \
 	    --out src/amd/vulkan/radeon_icd.json
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
 	    --api-version 1.3 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
-	    --lib-path ${X11BASE}/lib/libvulkan_intel.so \
+	    --lib-path libvulkan_intel.so \
 	    --out src/intel/vulkan/intel_icd.json
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_icd_gen.py \
 	    --api-version 1.3 \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
-	    --lib-path ${X11BASE}/lib/libvulkan_intel_hasvk.so \
+	    --lib-path libvulkan_intel_hasvk.so \
 	    --out src/intel/vulkan_hasvk/intel_hasvk_icd.json
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
