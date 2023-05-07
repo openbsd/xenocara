@@ -1,3 +1,78 @@
+commit 39ca6ea5c66044b40ace47e79f416d980a799eea
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 15:50:24 2022 -0800
+
+    libXxf86dga 1.1.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit def6d25fc3918caf890a5a63bff6f2b9e0d3dcb9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:58:33 2022 -0700
+
+    unifdef DGUX
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 43b8136a07fbbdf6e5bdd786d06be89904fc0854
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:57:28 2022 -0700
+
+    unifdef Lynx
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d58ba314d1fe6fdb1aab7a9f471caabb6f13968c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:54:25 2022 -0700
+
+    unifdef ISC
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c8ae9b549e781dece49ca1576948b3d6d644b2f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:47:07 2022 -0700
+
+    Remove SunOS 4 support (defined(sun) && (SVR4))
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b512d07b3125ed3ec5ae962ebb1a01d007d0efe9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:42:33 2022 -0700
+
+    unifdef __UNIXOS2__
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd5436d2ef3484a0eaec619cf69870c18d7cb3ca
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:36:13 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6ea676e23770cf0d5c272f2a57375f5ed03e965
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:35:06 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd301c9f1bebc008193f281826b38dfa0064b5f3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:34:10 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit e605c540995554af99d8b728c7d1d4e82e514199
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 15:20:28 2019 -0700
@@ -727,7 +802,7 @@ Date:   Fri Jul 1 16:16:15 2005 +0000
     spell freedesktop.org correctly
 
 commit 139215564ee6e63101858b9481f3413361a6d4a7
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 22:38:47 2005 +0000
 
     Apply patch from Jeff Smith (whydoubt@yahoo.com):

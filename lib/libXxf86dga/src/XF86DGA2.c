@@ -10,12 +10,6 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #include <config.h>
 #endif
 
-#ifdef __UNIXOS2__ /* needed here to override certain constants in X headers */
-#define INCL_DOS
-#define INCL_DOSIOCTL
-#define I_NEED_OS2_H
-#include <os2.h>
-#endif
 
 #include <X11/Xlibint.h>
 #include <X11/extensions/Xxf86dga.h>
@@ -743,30 +737,7 @@ void XDGAKeyEventToXKeyEvent(
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#if defined(ISC)
-# define HAS_SVR3_MMAP
-# include <sys/types.h>
-# include <errno.h>
-
-# include <sys/at_ansi.h>
-# include <sys/kd.h>
-
-# include <sys/sysmacros.h>
-# include <sys/immu.h>
-# include <sys/region.h>
-
-# include <sys/mmap.h>
-#else
-# if defined(Lynx) && defined(NO_MMAP)
-#  include <sys/types.h>
-#  include <errno.h>
-#  include <smem.h>
-# else
-#  if !defined(__UNIXOS2__)
-#   include <sys/mman.h>
-#  endif
-# endif
-#endif
+#include <sys/mman.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
@@ -892,13 +863,6 @@ DGAMapPhysical(
    CARD32 extra,		/* optional extra data */
    DGAMapPtr pMap
 ) {
-#if defined(ISC) && defined(HAS_SVR3_MMAP)
-    struct kd_memloc mloc;
-#elif defined(__UNIXOS2__)
-    APIRET rc;
-    ULONG action;
-    HFILE hfd;
-#endif
 
     base += offset;
 
@@ -906,53 +870,6 @@ DGAMapPhysical(
     pMap->physical = base;
     pMap->size = size;
 
-#if defined(ISC) && defined(HAS_SVR3_MMAP)
-    if ((pMap->fd = open("/dev/mmap", O_RDWR)) < 0)
-	return False;
-    mloc.vaddr = (char *)0;
-    mloc.physaddr = (char *)base;
-    mloc.length = size;
-    mloc.ioflg=1;
-
-    if ((pMap->virtual = (void *)ioctl(pMap->fd, MAP, &mloc)) == (void *)-1)
-	return False;
-#elif defined (__UNIXOS2__)
-    /*
-     * Dragon warning here! /dev/pmap$ is never closed, except on progam exit.
-     * Consecutive calling of this routine will make PMAP$ driver run out
-     * of memory handles. Some umap/close mechanism should be provided
-     */
-
-    rc = DosOpen("/dev/pmap$", &hfd, &action, 0, FILE_NORMAL, FILE_OPEN,
-		 OPEN_ACCESS_READWRITE | OPEN_SHARE_DENYNONE, (PEAOP2)NULL);
-    if (rc != 0)
-	return False;
-    {
-	struct map_ioctl {
-		union {
-			ULONG phys;
-			void* user;
-		} a;
-		ULONG size;
-	} pmap,dmap;
-	ULONG plen,dlen;
-#define XFREE86_PMAP	0x76
-#define PMAP_MAP	0x44
-
-	pmap.a.phys = base;
-	pmap.size = size;
-	rc = DosDevIOCtl(hfd, XFREE86_PMAP, PMAP_MAP,
-			 (PULONG)&pmap, sizeof(pmap), &plen,
-			 (PULONG)&dmap, sizeof(dmap), &dlen);
-	if (rc == 0) {
-		pMap->virtual = dmap.a.user;
-	}
-   }
-   if (rc != 0)
-	return False;
-#elif defined (Lynx) && defined(NO_MMAP)
-    pMap->virtual = smem_create("XF86DGA", (char*)base, size, SM_READ|SM_WRITE);
-#else
 #ifndef MAP_FILE
 #define MAP_FILE 0
 #endif
@@ -965,7 +882,6 @@ DGAMapPhysical(
     if (pMap->virtual == (void *)-1)
 	return False;
     mprotect(pMap->virtual, size, PROT_READ | PROT_WRITE);
-#endif
 
     return True;
 }
@@ -975,15 +891,6 @@ DGAMapPhysical(
 static void
 DGAUnmapPhysical(DGAMapPtr pMap)
 {
-#if defined(ISC) && defined(HAS_SVR3_MMAP)
-    /* XXX Add unmapping code here. */
-#elif defined (__UNIXOS2__)
-    /* XXX Add unmapping code here. */
-#elif defined(Lynx) && defined(NO_MMAP)
-	/* XXX this doesn't allow enable after disable */
-    smem_create(NULL, pMap->virtual, pMap->size, SM_DETACH);
-    smem_remove("XF86DGA");
-#else
     if (pMap->virtual && pMap->virtual != (void *)-1) {
 	mprotect(pMap->virtual,pMap->size, PROT_READ);
 	munmap(pMap->virtual, pMap->size);
@@ -993,5 +900,4 @@ DGAUnmapPhysical(DGAMapPtr pMap)
 	close(pMap->fd);
 	pMap->fd = -1;
     }
-#endif
 }

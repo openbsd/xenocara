@@ -8,12 +8,6 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 
 /* THIS IS NOT AN X CONSORTIUM STANDARD */
 
-#ifdef __UNIXOS2__ /* needed here to override certain constants in X headers */
-#define INCL_DOS
-#define INCL_DOSIOCTL
-#define I_NEED_OS2_H
-#include <os2.h>
-#endif
 
 #if defined(linux)
 #define HAS_MMAP_ANON
@@ -32,27 +26,12 @@ Copyright (c) 1995,1996  The XFree86 Project, Inc
 #include <sys/mman.h>
 #endif /* CSRG_BASED */
 
-#if defined(DGUX)
-#define HAS_GETPAGESIZE
+#if defined(SVR4)
 #define MMAP_DEV_ZERO
 #include <sys/types.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#endif /* DGUX */
-
-#if defined(SVR4) && !defined(DGUX)
-#define MMAP_DEV_ZERO
-#include <sys/types.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#endif /* SVR4 && !DGUX */
-
-#if defined(sun) && !defined(SVR4) /* SunOS */
-#define MMAP_DEV_ZERO   /* doesn't SunOS have MAP_ANON ?? */
-#define HAS_GETPAGESIZE
-#include <sys/types.h>
-#include <sys/mman.h>
-#endif /* sun && !SVR4 */
+#endif /* SVR4 */
 
 #ifdef XNO_SYSCONF
 #undef _SC_PAGESIZE
@@ -342,30 +321,7 @@ Bool XF86DGAViewPortChanged(
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
-#if defined(ISC)
-# define HAS_SVR3_MMAP
-# include <sys/types.h>
-# include <errno.h>
-
-# include <sys/at_ansi.h>
-# include <sys/kd.h>
-
-# include <sys/sysmacros.h>
-# include <sys/immu.h>
-# include <sys/region.h>
-
-# include <sys/mmap.h>
-#else
-# if defined(Lynx) && defined(NO_MMAP)
-#  include <sys/types.h>
-#  include <errno.h>
-#  include <smem.h>
-# else
-#  if !defined(__UNIXOS2__)
-#   include <sys/mman.h>
-#  endif
-# endif
-#endif
+#include <sys/mman.h>
 #include <sys/wait.h>
 #include <signal.h>
 #include <unistd.h>
@@ -467,13 +423,6 @@ MapPhysAddress(unsigned long address, unsigned long size)
     int pagesize = -1;
     void *vaddr;
     MapPtr mp;
-#if defined(ISC) && defined(HAS_SVR3_MMAP)
-    struct kd_memloc mloc;
-#elif defined(__UNIXOS2__)
-    APIRET rc;
-    ULONG action;
-    HFILE hfd;
-#endif
 
     if ((mp = FindMap(address, size))) {
 	mp->refcount++;
@@ -500,57 +449,6 @@ MapPhysAddress(unsigned long address, unsigned long size)
 
    delta = address % pagesize;
    offset = address - delta;
-
-#if defined(ISC) && defined(HAS_SVR3_MMAP)
-    if (mapFd < 0) {
-	if ((mapFd = open("/dev/mmap", O_RDWR)) < 0)
-	    return NULL;
-    }
-    mloc.vaddr = (char *)0;
-    mloc.physaddr = (char *)offset;
-    mloc.length = size + delta;
-    mloc.ioflg=1;
-
-    if ((vaddr = (void *)ioctl(mapFd, MAP, &mloc)) == (void *)-1)
-	return NULL;
-#elif defined (__UNIXOS2__)
-    /*
-     * Dragon warning here! /dev/pmap$ is never closed, except on progam exit.
-     * Consecutive calling of this routine will make PMAP$ driver run out
-     * of memory handles. Some umap/close mechanism should be provided
-     */
-
-    rc = DosOpen("/dev/pmap$", &hfd, &action, 0, FILE_NORMAL, FILE_OPEN,
-		 OPEN_ACCESS_READWRITE | OPEN_SHARE_DENYNONE, (PEAOP2)NULL);
-    if (rc != 0)
-	return NULL;
-    {
-	struct map_ioctl {
-		union {
-			ULONG phys;
-			void* user;
-		} a;
-		ULONG size;
-	} pmap,dmap;
-	ULONG plen,dlen;
-#define XFREE86_PMAP	0x76
-#define PMAP_MAP	0x44
-
-	pmap.a.phys = offset;
-	pmap.size = size + delta;
-	rc = DosDevIOCtl(hfd, XFREE86_PMAP, PMAP_MAP,
-			 (PULONG)&pmap, sizeof(pmap), &plen,
-			 (PULONG)&dmap, sizeof(dmap), &dlen);
-	if (rc == 0) {
-		vaddr = dmap.a.user;
-	}
-   }
-   if (rc != 0)
-	return NULL;
-#elif defined(Lynx) && defined(NO_MMAP)
-    vaddr = (void *)smem_create("XF86DGA", (char *)offset,
-				size + delta, SM_READ|SM_WRITE);
-#else
 #ifndef MAP_FILE
 #define MAP_FILE 0
 #endif
@@ -559,10 +457,9 @@ MapPhysAddress(unsigned long address, unsigned long size)
 	    return NULL;
     }
     vaddr = (void *)mmap(NULL, size + delta, PROT_READ | PROT_WRITE,
-                        MAP_FILE | MAP_SHARED, mapFd, (off_t)offset);
+			 MAP_FILE | MAP_SHARED, mapFd, (off_t)offset);
     if (vaddr == (void *)-1)
 	return NULL;
-#endif
 
     if (!vaddr) {
 	if (!(mp = AddMap()))
@@ -622,23 +519,11 @@ XF86DGADirectVideo(
 	mp = sp->map;
 
     if (enable & XF86DGADirectGraphics) {
-#if !defined(ISC) && !defined(HAS_SVR3_MMAP) \
-	&& !(defined(Lynx) && defined(NO_MMAP)) \
-	&& !defined(__UNIXOS2__)
 	if (mp && mp->vaddr)
 	    mprotect(mp->vaddr, mp->size + mp->delta, PROT_READ | PROT_WRITE);
-#endif
     } else {
-#if !defined(ISC) && !defined(HAS_SVR3_MMAP) \
-	&& !(defined(Lynx) && defined(NO_MMAP)) \
-	&& !defined(__UNIXOS2__)
 	if (mp && mp->vaddr)
 	    mprotect(mp->vaddr, mp->size + mp->delta, PROT_READ);
-#elif defined(Lynx) && defined(NO_MMAP)
-	/* XXX this doesn't allow enable after disable */
-	smem_create(NULL, mp->vaddr, mp->size + mp->delta, SM_DETACH);
-	smem_remove("XF86DGA");
-#endif
     }
 
     XF86DGADirectVideoLL(dis, screen, enable);
@@ -715,4 +600,3 @@ XF86DGAGetVideo(
 
     return 1;
 }
-

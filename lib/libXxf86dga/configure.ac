@@ -1,13 +1,14 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXxf86dga], [1.1.5],
-        [https://gitlab.freedesktop.org/xorg/lib/libXxf86dga/issues], [libXxf86dga])
+AC_INIT([libXxf86dga], [1.1.6],
+        [https://gitlab.freedesktop.org/xorg/lib/libxxf86dga/-/issues],
+        [libXxf86dga])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS(src/config.h)
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -19,7 +20,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XXF86DGA, xproto [x11 >= 1.6] xextproto xext [xf86dgaproto >= 2.0.99.2])
 
 AC_CONFIG_FILES([Makefile
