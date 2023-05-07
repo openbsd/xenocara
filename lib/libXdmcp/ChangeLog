@@ -1,3 +1,133 @@
+commit 7f5677e87df575298f62320d76408823b54cd883
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 18 15:05:39 2022 -0800
+
+    libXdmcp 1.1.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c01da8ebd0969efd15388ce999e121127cc46f67
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Nov 4 19:29:35 2022 -0700
+
+    Only link with libbsd if needed for arc4random_buf()
+    
+    Avoid unnecessary library dependency when using a libc with this
+    function included
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e5ace1c5fe009e5c66fa16f886b13cce2558684a
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Thu Oct 6 00:31:30 2022 +0000
+
+    Switch from libbsd to libbsd-overlay
+    
+    This is the preferred usage form for libbsd, as it makes the code more
+    portable and requires no special includes for libbsd, by transparently
+    injects the needed standard headers that would be used on a BSD.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+
+commit b71d34f635d8827db76310a4b127a6926f2df1d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 14:51:50 2022 -0700
+
+    XdmcpDisposeARRAYofARRAY8: Reduce scope of i
+    
+    As suggested by cppcheck
+    Also makes it unsigned to match array->length (a CARD8)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eb10c58258c3d4e6d207c390282f7d329e63910a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 14:47:56 2022 -0700
+
+    arc4random_buf: Only declare ret if HAVE_GETENTROPY is defined
+    
+    Clears unused variable warning from cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 07f93358ac7bc532b16ceff13bed356ac2a0c6f1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 6 14:42:03 2022 -0700
+
+    Use memcpy() instead of memmove() when buffers are known not to overlap
+    
+    This was introduced by a bcopy() -> memmove() substitution in 1993.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 185a91c6e7f7e40d916f0554df2aceb73509fd52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 12:22:50 2022 -0700
+
+    gitlab CI: enable doc builds in basic build test
+    
+    Also drops requirement for Signed-off-by in commit checks
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8570239e74569411dc8c470e687c9ca042746cb5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 12:16:48 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e886976a3e3eeddcf7db894eec6aaa1d1a2548a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 12:13:58 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4a71fdf6d34df67d3f1335590da6ae3050128fb2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 23 13:09:09 2022 -0800
+
+    Fix build on Solaris 11.3.0 - 11.3.8
+    
+    Solaris 11.3.0  added getentropy() to libc and <sys/random.h>
+    Solaris 11.3.9  added arc4random() to libc and <stdlib.h>
+    Solaris 11.4.16 added getentropy() to <stdlib.h>
+    
+    So when building on Solaris releases from 11.3.0 to 11.3.8, libXdmcp
+    would not find arc4random(), and thus fallback to using getentropy(),
+    but was only looking for it in <stdlib.h>, resulting in a build error:
+    
+    Key.c: In function ‘arc4random_buf’:
+    Key.c:86:5: error: implicit declaration of function ‘getentropy’ [-Werror=implicit-function-declaration]
+         ret = getentropy (auth, len);
+         ^
+    
+    Reported-by: https://gnats.netbsd.org/cgi-bin/query-pr-single.pl?number=54628
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 13b72ec5540757ccbb62c4b31961a556ab77d005
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Feb 23 12:50:41 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bc141f304712a109b6b518724e1feb66293bf472
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 16 12:38:45 2019 -0700
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 618b3ba5f826d930df2ca6a6a0ce212fa75cef42
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 09:19:02 2019 -0700
@@ -455,7 +585,7 @@ Date:   Thu Dec 16 17:55:30 2010 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit b64cac63e0bcdd87bbfd19678552fd7ed1a3b58f
-Author: Cristian Rodríguez <cristian.rodriguez@opensuse.org>
+Author: Cristian Rodríguez  <cristian.rodriguez@opensuse.org>
 Date:   Tue Dec 14 15:40:20 2010 -0500
 
     Export only public API symbols
@@ -972,7 +1102,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 2f31285482451b8ed44b0b61969a7f324dbe905a
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue May 17 14:43:47 2005 +0000
 
     Tue May 17 10:38:30 2005 Søren Sandmann <sandmann@redhat.com>
@@ -999,7 +1129,7 @@ Date:   Sat May 14 07:46:48 2005 +0000
         source can reference them with <X11/...>.
 
 commit 0ea8a9fde966a2fbdc075e4cfc47235d3c899022
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu May 12 16:27:25 2005 +0000
 
     Thu May 12 12:24:16 2005 Søren Sandmann <sandmann@redhat.com>
@@ -1007,7 +1137,7 @@ Date:   Thu May 12 16:27:25 2005 +0000
     add Makefile.am
 
 commit 845dff36906d99a80ea920a8d0efb73bd0b88d56
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu May 12 16:12:34 2005 +0000
 
     Make xtrans install in $(includedir)/X11/Xtrans. Remove all references to

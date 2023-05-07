@@ -32,10 +32,6 @@ in this Software without prior written authorization from The Open Group.
 #include <X11/Xmd.h>
 #include <X11/Xdmcp.h>
 
-#ifdef HAVE_LIBBSD
-#include <bsd/stdlib.h> /* for arc4random_buf() */
-#endif
-
 #ifndef HAVE_ARC4RANDOM_BUF
 static void
 getbits (long data, unsigned char *dst)
@@ -64,6 +60,11 @@ getbits (long data, unsigned char *dst)
 
 #ifndef HAVE_ARC4RANDOM_BUF
 
+/* Solaris 11.3.0 - 11.4.15 only define getentropy() in <sys/random.h> */
+#if HAVE_GETENTROPY && HAVE_SYS_RANDOM_H
+# include <sys/random.h>
+#endif
+
 static void
 insecure_getrandom_buf (unsigned char *auth, int len)
 {
@@ -79,9 +80,9 @@ insecure_getrandom_buf (unsigned char *auth, int len)
 static void
 arc4random_buf (void *auth, int len)
 {
+#if HAVE_GETENTROPY
     int	    ret;
 
-#if HAVE_GETENTROPY
     /* weak emulation of arc4random through the getentropy libc call */
     ret = getentropy (auth, len);
     if (ret == 0)
