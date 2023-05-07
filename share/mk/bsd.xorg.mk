@@ -1,4 +1,4 @@
-# $OpenBSD: bsd.xorg.mk,v 1.64 2022/11/14 07:52:06 sthen Exp $ -*- makefile  -*-
+# $OpenBSD: bsd.xorg.mk,v 1.65 2023/05/07 06:55:21 matthieu Exp $ -*- makefile  -*-
 #
 # Copyright © 2006,2012 Matthieu Herrb
 #
@@ -20,7 +20,7 @@
 .endif
 
 AUTOMAKE_VERSION=	1.12
-AUTOCONF_VERSION=	2.69
+AUTOCONF_VERSION=	2.71
 PYTHON_VERSION=		3.10
 
 # Where source lives
