@@ -105,7 +105,7 @@ static entry drivers[] =
       test_xi2,
     },
     { "map-to-output",
-      "<device> <output name>",
+      "<device> <output name>|all",
       map_to_output,
     },
 #endif
@@ -352,7 +352,7 @@ usage(void)
 {
     entry	*pdriver = drivers;
 
-    fprintf(stderr, "usage :\n");
+    fprintf(stderr, "usage:\n");
 
     while(pdriver->func_name) {
 	fprintf(stderr, "\txinput %s %s\n", pdriver->func_name,
@@ -388,6 +388,7 @@ main(int argc, char * argv[])
     entry	*driver = drivers;
     char        *func;
     int event, error;
+    int xwl_op, xwl_ev, xwl_err;
 
     if (argc > 1) {
 	func = argv[1];
@@ -422,7 +423,7 @@ main(int argc, char * argv[])
 	goto out;
     }
 
-    if (is_xwayland(display))
+    if (XQueryExtension(display, "XWAYLAND", &xwl_op, &xwl_ev, &xwl_err) || is_xwayland(display))
         fprintf(stderr, "WARNING: running xinput against an Xwayland server. See the xinput man page for details.\n");
 
     while(driver->func_name) {

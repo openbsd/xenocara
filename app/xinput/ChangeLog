@@ -1,3 +1,93 @@
+commit b6092488058da39754ece13475aab53616397af7
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 28 10:55:33 2023 +1000
+
+    xinput 1.6.4
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 2dbdc2adf8cc7983f153b6ca90c3a87b0997ddb5
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Jul 29 12:05:32 2022 +1000
+
+    Add support for the XWAYLAND extension
+    
+    Where this extension is present, we can be sure the X server is
+    Xwayland. Since it'll take a while for servers to propagate, leave the
+    existing check in place as fallback.
+    
+    See https://gitlab.freedesktop.org/xorg/proto/xorgproto/-/merge_requests/54
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 889cfceebd77c58734477e3083d1577b17884046
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8cebd89a644545c91a3d1c146977fe023798ee2a
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Oct 24 18:44:39 2019 +1000
+
+    test-xi2: print timestamps for all events
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit ea196bdcb912505277166aa12a21ca8739cdc8fb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 10 09:31:30 2022 +1000
+
+    Drop the space before colon in the usage output
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c57678d333ca993afa50134d7b7beb252d02f35c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu Mar 10 09:28:35 2022 +1000
+
+    man: rename the options to commands and drop the double-dash
+    
+    "xinput list" is much more modern than xinput --list, let's list it as
+    such in the man page. --help already lists it without double-dash as
+    well.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit dad6251572071089c680932f86ff62a703054202
+Author: Luca Carlon <carlon.luca@gmail.com>
+Date:   Tue Mar 8 13:05:15 2022 +0100
+
+    Use a constant id to let the user reset the input transformation matrix.
+    
+    Signed-off-by: Luca Carlon <carlon.luca@gmail.com>
+
+commit f77ed7621e6e7918fe1eb3d390f22b545b883a33
+Author: Ben Kallus <benjamin.p.kallus.gr@dartmouth.edu>
+Date:   Fri Jan 14 17:55:53 2022 -0500
+
+    Add argc checks to delete-prop
+    
+    Signed-off-by: Ben Kallus <benjamin.p.kallus.gr@dartmouth.edu>
+
+commit 7cc6456425cd15532768a2edda4fb4d9f432baf9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:40:50 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1b749abc611985a9dd0bc7a349689b44a01143bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 6 14:40:47 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit cef07c0c8280d7e7b82c3bcc62a1dfbe8cc43ff8
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Wed Jul 17 15:25:10 2019 +1000

@@ -47,6 +47,7 @@ static void print_deviceevent(XIDeviceEvent* event)
     int i;
 
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
+    printf("    time: %ld\n", event->time);
     printf("    detail: %d\n", event->detail);
     switch(event->evtype) {
         case XI_KeyPress:
@@ -100,6 +101,7 @@ static void print_deviceevent(XIDeviceEvent* event)
 static void print_devicechangedevent(Display *dpy, XIDeviceChangedEvent *event)
 {
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
+    printf("    time: %ld\n", event->time);
     printf("    reason: %s\n", (event->reason == XISlaveSwitch) ? "SlaveSwitch" :
                                 "DeviceChanged");
     print_classes_xi2(dpy, event->classes, event->num_classes);
@@ -108,6 +110,7 @@ static void print_devicechangedevent(Display *dpy, XIDeviceChangedEvent *event)
 static void print_hierarchychangedevent(XIHierarchyEvent *event)
 {
     int i;
+    printf("    time: %ld\n", event->time);
     printf("    Changes happened: %s %s %s %s %s %s %s %s\n",
             (event->flags & XIMasterAdded) ? "[new master]" : "",
             (event->flags & XIMasterRemoved) ? "[master removed]" : "",
@@ -157,6 +160,7 @@ static void print_rawevent(XIRawEvent *event)
     double *val, *raw_val;
 
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
+    printf("    time:   %ld\n", event->time);
     printf("    detail: %d\n", event->detail);
 #if HAVE_XI21
     switch(event->evtype) {
@@ -184,6 +188,7 @@ static void print_enterleave(XILeaveEvent* event)
     int i;
 
     printf("    device: %d (%d)\n", event->deviceid, event->sourceid);
+    printf("    time:   %ld\n", event->time);
     printf("    windows: root 0x%lx event 0x%lx child 0x%ld\n",
             event->root, event->event, event->child);
     switch(event->mode)
@@ -239,6 +244,7 @@ static void print_propertyevent(Display *display, XIPropertyEvent* event)
     else
         changed = "modified";
     name = XGetAtomName(display, event->property);
+    printf("     time:   %ld\n", event->time);
     printf("     property: %ld '%s'\n", event->property, name);
     printf("     changed: %s\n", changed);
 

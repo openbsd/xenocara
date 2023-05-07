@@ -331,6 +331,14 @@ map_to_output(Display *dpy, int argc, char *argv[], char *name, char *desc)
     }
 
     output_name = argv[1];
+
+    if (!strcmp("all", output_name))
+    {
+        Matrix m;
+        matrix_set_unity(&m);
+        return apply_matrix(dpy, info->deviceid, &m);
+    }
+
     output_info = find_output_xrandr(dpy, output_name);
     if (!output_info)
     {

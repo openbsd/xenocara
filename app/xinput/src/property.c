@@ -270,6 +270,12 @@ delete_prop_xi1(Display *dpy, int argc, char** argv, char* n, char *desc)
     char        *name;
     Atom        prop;
 
+    if (argc < 2)
+    {
+        fprintf(stderr, "Usage: xinput %s %s\n", n, desc);
+        return EXIT_FAILURE;
+    }
+
     info = find_device_info(dpy, argv[0], False);
     if (!info)
     {
@@ -577,6 +583,12 @@ delete_prop_xi2(Display *dpy, int argc, char** argv, char* n, char *desc)
     XIDeviceInfo *info;
     char        *name;
     Atom        prop;
+
+    if (argc < 2)
+    {
+        fprintf(stderr, "Usage: xinput %s %s\n", n, desc);
+        return EXIT_FAILURE;
+    }
 
     info = xi2_find_device_info(dpy, argv[0]);
     if (!info)
