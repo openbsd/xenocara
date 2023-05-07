@@ -22,7 +22,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libxkbfile], [1.1.1],
+AC_INIT([libxkbfile], [1.1.2],
         [https://gitlab.freedesktop.org/xorg/lib/libxkbfile/-/issues],
         [libxkbfile])
 AC_CONFIG_SRCDIR([Makefile.am])
@@ -47,6 +47,9 @@ AC_CHECK_FUNC(getc_unlocked, AC_DEFINE([HAVE_UNLOCKED_STDIO], 1,
 
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XKBFILE, x11 kbproto)
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile

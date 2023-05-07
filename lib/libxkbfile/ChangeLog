@@ -1,3 +1,19 @@
+commit 3c0bca45d61982295ae0051fb874d57dc3d6f327
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Dec 8 10:39:07 2022 -0500
+
+    libxkbfile 1.1.2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit b7c76402831a91a4f0867c03e2f403c9c4c7dca1
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Nov 29 12:07:53 2022 -0500
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
 commit f855ea9cf3aecc74c3b07da924ff2e36944e4be1
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Mon Oct 17 19:00:30 2022 -0700
@@ -242,7 +258,7 @@ Date:   Thu Apr 30 22:24:39 2015 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9fa04388dcbb5bf205319569f540a62c03754688
-Author: Jörg Sonnenberger  <joerg@NetBSD.org>
+Author: Jörg Sonnenberger <joerg@NetBSD.org>
 Date:   Wed Nov 26 14:33:38 2014 +0100
 
     Remove unnecessary check.
@@ -877,20 +893,20 @@ Date:   Sat Jul 2 06:35:04 2005 +0000
     Add appropriate lib*_CFLAGS to Makefile.am's -- fixes build problems
 
 commit e5ddd6b3020045b7d8426618fd2515bc02ca045d
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 22:54:28 2005 +0000
 
     Makefile.am: Add $(top_srcdir)/include to INCLUDES
 
 commit 019fc282d476d3dd8f79e0472d3868f6a0785a56
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 21:51:46 2005 +0000
 
     Add xkbfile to symlink.sh, conditionally include "config.h" in
         xc/lib/xkbfile
 
 commit 43a2d4898c64c11101b500ab12466570d747ce5f
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 21:49:05 2005 +0000
 
     - Add xkbfile build system
