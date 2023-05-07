@@ -1,3 +1,356 @@
+commit f131de92d6c4e2f62934e85b012287276ecf009c
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Apr 17 15:22:35 2023 -0400
+
+    libXpm 3.5.16
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 8b9c4e4c5d278409dc41d19f0c8a8940403cd5c7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 18:21:12 2023 -0700
+
+    xpmReadRgbNames: constify filename argument
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd620b4f6c59674090b956a9d9e188a1250a4663
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 18:15:41 2023 -0700
+
+    test: Add simple test cases for functions in src/rgb.c
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e01d691aa684d0d1247f772b7c537ec3254bb9bc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Mar 27 18:03:13 2023 -0700
+
+    test: Use PACKAGE_BUGREPORT instead of hard-coded URL's
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 92030dd4c221e8043521ae4dc9d32d50e6ff44c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 12 13:22:57 2023 -0800
+
+    parse.c: remove unused function xstrlcpy()
+    
+    parse.c:74:1: warning: unused function 'xstrlcpy' [-Wunused-function]
+    xstrlcpy(char *dst, const char *src, size_t dstsize)
+    ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8e0e63519069bed43b3bf1ce1f11fd0cd516d3e4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 12 10:51:46 2023 -0800
+
+    parse.c: Wrap FREE_CIDX definition in do { ... } while(0)
+    
+    Makes it match the definition in create.c and eliminates
+    clang warnings:
+    
+    create.c:2409:13: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                            FREE_CIDX;
+                                     ^
+    create.c:2440:17: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                                FREE_CIDX;
+                                         ^
+    create.c:2444:13: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                            FREE_CIDX;
+                                     ^
+    create.c:2449:15: warning: empty expression statement has no effect;
+     remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+                FREE_CIDX;
+                         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 25616112983cd3f8bfe5379771b5bfd63b3c3621
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 12 09:23:09 2023 -0800
+
+    XpmCreateDataFromXpmImage: Fix misleading indentation
+    
+    CrDatFrI.c: In function ‘XpmCreateDataFromXpmImage’:
+    CrDatFrI.c:245:13: warning: this ‘if’ clause does not guard... [-Wmisleading-indentation]
+      245 |             if (header[l])
+          |             ^~
+    In file included from CrDatFrI.c:40:
+    XpmI.h:80:22: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the ‘if’
+       80 | #define XpmFree(ptr) free(ptr)
+          |                      ^~~~
+    CrDatFrI.c:247:17: note: in expansion of macro ‘XpmFree’
+      247 |                 XpmFree(header);
+          |                 ^~~~~~~
+    CrDatFrI.c: In function ‘CreateColors’:
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 45d8f4f20665c77dd1924b78559fb2494a77ad7a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 12 09:20:44 2023 -0800
+
+    Require LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    configure.ac:14: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:14: You should run autoupdate.
+    m4/libtool.m4:100: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:14: the top level
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c52082c6e4811958dd741d67e1178b4e36a09923
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 12:14:43 2023 -0800
+
+    open-zfile: Make compress & uncompress commands optional
+    
+    If compress is not found, we disable writing to .Z files,
+    but leave the rest of the compression code active.
+    
+    If uncompress is not found, we use gzip to read .Z files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77e3b389eb92b8d8f94f5b83c1d3d7cd4db5b037
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 23 19:57:28 2023 +1000
+
+    Fix a memleak in ParsePixels error code path
+    
+    In this particular error path we have already allocated cidx[0..256]
+    with 256 instances of fresh and juicy memory. Freeing that is annoying,
+    but luckily there's a helpful FREE_CIDX macro that does exactly that.
+    
+    Fixes f80fa6a:
+      Fix CVE-2022-44617: Runaway loop with width of 0 and enormous height
+    
+    Found by covscan
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 71d7149cb356b96cc83e2ec95d06df4022039e2c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 19 12:16:26 2023 -0800
+
+    configure: correct error message to suggest --disable-open-zfile
+    
+    When one of the compression helper programs is not found, the message
+    suggesting how to compile without it should say --disable-open-zfile,
+    not --disable-stat-zfile.
+    
+    Fixes: 515294b ("Fix CVE-2022-4883: compression commands depend on $PATH")
+    Closes: #4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9bc32a1a9c788eed2982d3fd35f2295a95af3817
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 19 12:06:38 2023 -0800
+
+    gitlab CI: build with each of --enable-open-zfile & --disable-open-zfile
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d9cbea1c6bc2b7f2c11964da0d437130bed82279
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 17 18:41:32 2023 -0800
+
+    test: skip compressed file tests when --disable-open-zfile is used
+    
+    Reported-by: T.J. Townsend
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ddd8339e262cbb7b25993599299ad40e0c95ccf6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 17 08:19:26 2023 -0800
+
+    libXpm 3.5.15
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8178eb0834d82242e1edbc7d4fb0d1b397569c68
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Mon Jan 16 19:44:52 2023 +1000
+
+    Use gzip -d instead of gunzip
+    
+    GNU gunzip [1] is a shell script that exec's `gzip -d`. Even if we call
+    /usr/bin/gunzip with the correct built-in path, the actual gzip call
+    will use whichever gzip it finds first, making our patch pointless.
+    
+    Fix this by explicitly calling gzip -d instead.
+    
+    https://git.savannah.gnu.org/cgit/gzip.git/tree/gunzip.in
+    
+    [Part of the fix for CVE-2022-4883]
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit c5ab17bcc34914c0b0707d2135dbebe9a367c5f0
+Author: Matthieu Herrb <matthieu@herrb.eu>
+Date:   Thu Jan 12 15:05:39 2023 +1000
+
+    Prevent a double free in the error code path
+    
+    xpmParseDataAndCreate() calls XDestroyImage() in the error path.
+    Reproducible with sxpm "zero-width.xpm", that file is in the test/
+    directory.
+    
+    The same approach is needed in the bytes_per_line == 0 condition though
+    here it just plugs a memory leak.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 515294bb8023a45ff916696d0a14308ff4f3a376
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jan 6 12:50:48 2023 -0800
+
+    Fix CVE-2022-4883: compression commands depend on $PATH
+    
+    By default, on all platforms except MinGW, libXpm will detect if a
+    filename ends in .Z or .gz, and will when reading such a file fork off
+    an uncompress or gunzip command to read from via a pipe, and when
+    writing such a file will fork off a compress or gzip command to write
+    to via a pipe.
+    
+    In libXpm 3.5.14 or older these are run via execlp(), relying on $PATH
+    to find the commands.  If libXpm is called from a program running with
+    raised privileges, such as via setuid, then a malicious user could set
+    $PATH to include programs of their choosing to be run with those
+    privileges.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f80fa6ae47ad4a5beacb287c0030c9913b046643
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 7 12:44:28 2023 -0800
+
+    Fix CVE-2022-44617: Runaway loop with width of 0 and enormous height
+    
+    When reading XPM images from a file with libXpm 3.5.14 or older, if a
+    image has a width of 0 and a very large height, the ParsePixels() function
+    will loop over the entire height calling getc() and ungetc() repeatedly,
+    or in some circumstances, may loop seemingly forever, which may cause a
+    denial of service to the calling program when given a small crafted XPM
+    file to parse.
+    
+    Closes: #2
+    
+    Reported-by: Martin Ettl <ettl.martin78@googlemail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7fbbb92f6d383b21dd1587c3703a5de37c625b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Jan 3 17:23:58 2023 -0800
+
+    test: add test cases for CVE-2022-44617 (zero-width w/enormous height)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a3a7c6dcc3b629d765014816c566c63165c63ca8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 17 12:23:45 2022 -0800
+
+    Fix CVE-2022-46285: Infinite loop on unclosed comments
+    
+    When reading XPM images from a file with libXpm 3.5.14 or older, if a
+    comment in the file is not closed (i.e. a C-style comment starts with
+    "/*" and is missing the closing "*/"), the ParseComment() function will
+    loop forever calling getc() to try to read the rest of the comment,
+    failing to notice that it has returned EOF, which may cause a denial of
+    service to the calling program.
+    
+    Reported-by: Marco Ivaldi <raptor@0xdeadbeef.info>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7a167a48a950b89b91f5123a0ec8d9a7cb97495
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 17 12:18:24 2022 -0800
+
+    test: add test case for CVE-2022-46285 (unclosed comments)
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ff2c6af823ce7712c06150c43c9b403846a035f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 7 15:43:20 2023 -0800
+
+    cxpm: getc/ungetc wrappers should not adjust position when c == EOF
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 501494c6c68a84114fdd0b44d4b67ef9cde776c9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 7 13:39:56 2023 -0800
+
+    test: Add unit tests using glib framework
+    
+    Includes rudimentary tests for XpmReadFileToXpmImage, XpmReadFileToData,
+    XpmReadFileToBuffer, XpmCreateXpmImageFromData, XpmCreateXpmImageFromBuffer,
+    XpmWriteFileFromXpmImage, XpmWriteFileFromData, XpmWriteFileFromBuffer,
+    XpmAttributesSize, XpmGetErrorString, XpmLibraryVersion
+    
+    Includes test cases for CVE-2004-0687
+    
+    Tests .Z and .gz files if --enable-open-zfile is active
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4841039e5385f264d12757903894f47c64f59361
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 5 15:42:36 2023 -0800
+
+    configure: add --disable-open-zfile instead of requiring -DNO_ZPIPE
+    
+    Documents the two compression options in the README, makes their
+    configure options reflect the interdependency of their implementation,
+    and makes the configure script report their configuration.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aef0c8dd129838ac35b3cf8a7cdf04c7fd67dff1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 14:19:17 2023 -0800
+
+    man pages: Apply standard man page style/formatting
+    
+    Function & macro names in bold, argument names in italics.
+    
+    In the man page body, bold function names followed by plain ()
+    for functions defined in this page, plain (3) for functions defined
+    in other man pages.
+    
+    New paragraphs start with .PP, not just a blank line.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5d55a0be3f8a8d3e53c65c286878fc3224fce135
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 10:48:01 2023 -0800
+
+    man pages: Replace "See Also" entries with more useful ones
+    
+    "See Also" entries in man pages should list other man pages to
+    look at, not the alternate names for the current man page.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 392cb8fb444ae632176829076f412cb4029dbdbc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jan 1 10:21:38 2023 -0800
+
+    man pages: Fix typos and other minor editing
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 08bc174f28af028b6ebaa9edeccd3ff56c396e92
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Nov 19 12:23:53 2022 -0800
@@ -331,7 +684,7 @@ Date:   Tue Dec 6 22:31:53 2016 +0100
     Reviewed-by: Matthieu Herrb <matthieu@herrb.eu>
 
 commit 42ca8d956276bc00bec09e410d76daf053ae35f9
-Author: Jörg Sonnenberger  <joerg@NetBSD.org>
+Author: Jörg Sonnenberger <joerg@NetBSD.org>
 Date:   Wed Mar 19 09:26:37 2014 +0100
 
     Fix abs() usage.
@@ -1235,13 +1588,13 @@ Date:   Thu Jun 9 13:42:36 2005 +0000
     Use $(top_srcdir)/src instead of $(top_builddir)/src in INCLUDES
 
 commit 769751fba3e32f49272d19799929e1ad5a3d2cd0
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 19 17:09:13 2005 +0000
 
     Add $(top_builddir)/include to INCLUDES
 
 commit 2cc1896c61eef5739bb6a8ffa89e58ba5c175a05
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 19 15:02:48 2005 +0000
 
     - Add build system for lib/Xpm
@@ -1249,7 +1602,7 @@ Date:   Thu May 19 15:02:48 2005 +0000
     - Conditionally include config.h in xc/extras/Xpm
 
 commit cf0d69c7ace679f27f105c582760b9be14923aba
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Thu May 19 14:37:53 2005 +0000
 
     Thu May 19 10:36:54 2005 Søren Sandmann <sandmann@redhat.com>
@@ -1312,9 +1665,6 @@ Date:   Tue Sep 21 17:57:35 2004 +0000
     Added new libs to the bindist control files.
     Removed inclusion of unnecessary kernel header on Linux. This may fail in
         an -ansi environment.
-
-Notes:
-    Fixes CVE-2004-0687 (integer overflows) and CVE-2004-0688 (stack overflows)
 
 commit 2773a7214e282f6f673483f5233b880505947c3f
 Author: Egbert Eich <eich@suse.de>

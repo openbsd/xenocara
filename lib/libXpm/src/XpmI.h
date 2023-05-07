@@ -254,7 +254,7 @@ FUNC(xpmParseExtensions, int, (xpmData *data, XpmExtension **extensions,
 
 /* RGB utility */
 
-FUNC(xpmReadRgbNames, int, (char *rgb_fname, xpmRgbName *rgbn));
+FUNC(xpmReadRgbNames, int, (const char *rgb_fname, xpmRgbName *rgbn));
 FUNC(xpmGetRgbName, char *, (xpmRgbName *rgbn, int rgbn_max,
 			     int red, int green, int blue));
 FUNC(xpmFreeRgbNames, void, (xpmRgbName *rgbn, int rgbn_max));

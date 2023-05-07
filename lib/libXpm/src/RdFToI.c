@@ -246,12 +246,16 @@ OpenReadFile(
 	if ( ext && !strcmp(ext, ".Z") )
 	{
 	    mdata->type = XPMPIPE;
+#ifdef XPM_PATH_UNCOMPRESS
 	    mdata->stream.file = xpmPipeThrough(fd, XPM_PATH_UNCOMPRESS, "-c", "r");
+#else
+	    mdata->stream.file = xpmPipeThrough(fd, XPM_PATH_GZIP, "-dqc", "r");
+#endif
 	}
 	else if ( ext && !strcmp(ext, ".gz") )
 	{
 	    mdata->type = XPMPIPE;
-	    mdata->stream.file = xpmPipeThrough(fd, XPM_PATH_GUNZIP, "-qc", "r");
+	    mdata->stream.file = xpmPipeThrough(fd, XPM_PATH_GZIP, "-dqc", "r");
 	}
 	else
 #endif /* z-files */

@@ -241,10 +241,11 @@ XpmCreateDataFromXpmImage(
 /* exit point, free only locally allocated variables */
 exit:
     if (header) {
-	for (l = 0; l < header_nlines; l++)
+	for (l = 0; l < header_nlines; l++) {
 	    if (header[l])
 		XpmFree(header[l]);
-		XpmFree(header);
+	}
+	XpmFree(header);
     }
     return(ErrorStatus);
 }

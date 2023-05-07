@@ -26,12 +26,20 @@
 .SH NAME
 XpmCreatePixmap \- create a pixmap
 .SH SYNOPSIS
+.nf
 .HP
-int XpmCreatePixmapFromData(Display *display, Drawable d, char **data, Pixmap *pixmap_return, Pixmap *shapemask_return, XpmAttributes *attributes);
+.BI "int XpmCreatePixmapFromData(Display *" display ", Drawable " d ,
+.BI "char **" data ", Pixmap *" pixmap_return ", Pixmap *" shapemask_return ,
+.BI "XpmAttributes *" attributes );
 .HP
-int XpmCreatePixmapFromBuffer(Display *display, Drawable d, char *buffer, Pixmap *pixmap_return, Pixmap *shapemask_return, XpmAttributes *attributes);
+.BI "int XpmCreatePixmapFromBuffer(Display *" display ", Drawable " d ,
+.BI "char *" buffer ", Pixmap *" pixmap_return ", Pixmap *" shapemask_return ,
+.BI "XpmAttributes *" attributes );
 .HP
-int XpmCreatePixmapFromXpmImage(Display *display, Drawable d, XpmImage *image, Pixmap *pixmap_return, Pixmap *shapemask_return, XpmAttributes *attributes);
+.BI "int XpmCreatePixmapFromXpmImage(Display *" display ", Drawable " d ,
+.BI "XpmImage *" image ", Pixmap *" pixmap_return ", Pixmap *" shapemask_return ,
+.BI "XpmAttributes *" attributes );
+.fi
 
 .SH ARGUMENTS
 
@@ -52,27 +60,65 @@ Specifies the XpmImage.
 
 .SH DESCRIPTION
 .SS XpmCreatePixmapFromData
-To create a Pixmap from an XPM data, use XpmCreatePixmapFromData.
-The XpmCreatePixmapFromData function creates X images using XpmCreateImageFromData() and
-thus returns the same errors. In addition on success it then creates the related pixmaps, using XPutImage,
-which are returned to pixmap_return and shapemask_return if not NULL, and finally destroys the created images using XDestroyImage.
-Do not forget to free the returned pixmaps, the colors, and possibly the data returned into the XpmAttributes structure when done.
+.PP
+To create a Pixmap from an XPM data, use
+.BR XpmCreatePixmapFromData ().
+The
+.BR XpmCreatePixmapFromData ()
+function creates X images using
+.BR XpmCreateImageFromData (__libmansuffix__)
+and thus returns the same errors.
+In addition on success it then creates the related pixmaps, using
+.BR XPutImage (__libmansuffix__),
+which are returned to
+.I pixmap_return
+and
+.I shapemask_return
+if not NULL, and finally destroys the created images using
+.BR XDestroyImage (__libmansuffix__).
+Do not forget to free the returned pixmaps, the colors, and possibly the data
+returned into the XpmAttributes structure when done.
 
 .SS XpmCreatePixmapFromBuffer
-To create a Pixmap from an XPM buffer, use XpmCreatePixmapFromBuffer.
-The XpmCreatePixmapFromBuffer function works the same way as XpmReadFileToPixmap (),
-it just calls XpmCreateImageFromBuffer instead of XpmReadFileToImage.
+.PP
+To create a Pixmap from an XPM buffer, use
+.BR XpmCreatePixmapFromBuffer ().
+The
+.BR XpmCreatePixmapFromBuffer ()
+function works the same way as
+.BR XpmReadFileToPixmap (__libmansuffix__),
+it just calls
+.BR XpmCreateImageFromBuffer (__libmansuffix__)
+instead of
+.BR XpmReadFileToImage (__libmansuffix__).
 
 .SS XpmCreatePixmapFromXpmImage
-XpmCreatePixmapFromXpmImage creates X images calling XpmCreateImageFromXpmImage () with
-the given XpmImage and XpmAttributes, then it creates the related pixmaps which are returned topixmap_return
-and shapemask_return using XPutImage.
-Finally it destroys the X images with XDestroyImage.
-When finished the caller must free the pixmaps using XFreePixmap, the colors using XFreeColors or the application
-equivalent function when the standard Xlib functions are not used, and possibly the data returned into the
-XpmAttributes using XpmFreeAttributes.
+.PP
+.BR XpmCreatePixmapFromXpmImage ()
+creates X images calling
+.BR XpmCreateImageFromXpmImage (__libmansuffix__)
+with the given XpmImage and XpmAttributes, then it creates the related pixmaps
+which are returned to
+.I pixmap_return
+and
+.I shapemask_return
+using
+.BR XPutImage (__libmansuffix__).
+Finally it destroys the X images with
+.BR XDestroyImage (__libmansuffix__).
+When finished the caller must free the pixmaps using
+.BR XFreePixmap (__libmansuffix__),
+the colors using
+.BR XFreeColors (__libmansuffix__)
+or the application equivalent function when the standard Xlib functions are not
+used, and possibly the data returned into the XpmAttributes using
+.BR XpmFreeAttributes (__libmansuffix__).
 
 .SH "SEE ALSO"
-.BR XpmCreatePixmapFromBuffer(__libmansuffix__) ,
-.BR XpmCreatePixmapFromData(__libmansuffix__) ,
-.BR XpmCreatePixmapFromXpmImage(__libmansuffix__)
+.ad l
+.nh
+.BR XpmCreateImageFromData (__libmansuffix__),
+.BR XpmCreateImageFromXpmImage (__libmansuffix__),
+.BR XpmFreeAttributes (__libmansuffix__),
+.BR XpmReadFileToPixmap (__libmansuffix__)
+

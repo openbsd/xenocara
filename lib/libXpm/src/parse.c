@@ -66,25 +66,6 @@ xstrlcat(char *dst, const char *src, size_t dstsize)
 #endif
 }
 
-/**
- * like strlcpy() but returns true on success and false if the string got
- * truncated.
- */
-static inline Bool
-xstrlcpy(char *dst, const char *src, size_t dstsize)
-{
-#if defined(HAS_STRLCAT) || defined(HAVE_STRLCAT)
-    return strlcpy(dst, src, dstsize) < dstsize;
-#else
-    if (strlen(src) < dstsize) {
-        strcpy(dst, src);
-        return True;
-    } else {
-        return False;
-    }
-#endif
-}
-
 LFUNC(ParsePixels, int, (xpmData *data, unsigned int width,
 			 unsigned int height, unsigned int ncolors,
 			 unsigned int cpp, XpmColor *colorTable,
@@ -524,6 +505,7 @@ do \
 	    for (y = 0; y < height; y++) {
 		ErrorStatus = xpmNextString(data);
 		if (ErrorStatus != XpmSuccess) {
+		    FREE_CIDX;
 		    XpmFree(iptr2);
 		    return (ErrorStatus);
 		}

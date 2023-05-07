@@ -79,6 +79,9 @@
 /* Patch version of this package */
 #undef PACKAGE_VERSION_PATCHLEVEL
 
+/* Define to 1 to automatically look for files with .Z & .gz extensions */
+#undef STAT_ZFILE
+
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
 
@@ -90,9 +93,6 @@
 
 /* Path to compress */
 #undef XPM_PATH_COMPRESS
-
-/* Path to gunzip */
-#undef XPM_PATH_GUNZIP
 
 /* Path to gzip */
 #undef XPM_PATH_GZIP

@@ -27,19 +27,23 @@
 XpmWrite \- write an XPM file
 
 .SH SYNOPSIS
+.nf
 .HP
-int XpmWriteFileFromPixmap(Display *display, char *filename, Pixmap pixmap, Pixmap shapemask, XpmAttributes *attributes);
+.BI "int XpmWriteFileFromPixmap(Display *" display ", char *" filename ,
+.BI "Pixmap " pixmap ", Pixmap " shapemask ", XpmAttributes *" attributes );
 .HP
-int XpmWriteFileFromImage(Display *display, char *filename, XImage *image, XImage *shapeimage, XpmAttributes *attributes);
+.BI "int XpmWriteFileFromImage(Display *" display " , char *" filename ,
+.BI "XImage *"image ", XImage *" shapeimage ", XpmAttributes *" attributes );
 .HP
-int XpmWriteFileFromData(char *filename, char **data);
+.BI "int XpmWriteFileFromData(char *" filename ", char **" data );
 .HP
-int XpmWriteFileFromXpmImage(char *filename, XpmImage *image, XImage *shapeimage, XpmInfo *info);
+.BI "int XpmWriteFileFromXpmImage(char *" filename ", XpmImage *" image ,
+.BI "XImage *" shapeimage ", XpmInfo *" info );
 .HP
-int XpmWriteFileFromBuffer(char *filename,  char *buffer);
+.BI "int XpmWriteFileFromBuffer(char *" filename ", char *" buffer );
+.fi
 
 .SH ARGUMENTS
-
 .IP \fIdisplay\fP li
 Specifies the connection to the X server.
 .IP \fIfilename\fP li
@@ -61,67 +65,132 @@ Specifies the buffer to read.
 
 .SH DESCRIPTION
 .SS XpmWriteFileFromImage
-
-The XpmWriteFileFromImage function writes an image and its possible shapeimage out to a file in the XPM format.
-If the file cannot be opened, it returns XpmOpenFailed.
-If insufficient working storage is allocated, it returns XpmNoMemory.
-If no error occurs then it returns XpmSuccess.
+.PP
+The
+.BR XpmWriteFileFromImage ()
+function writes an
+.I image and its possible
+.I shapeimage
+out to a file in the XPM format.
+If the file cannot be opened, it returns
+.BR XpmOpenFailed .
+If insufficient working storage is allocated, it returns
+.BR XpmNoMemory .
+If no error occurs then it returns
+.BR XpmSuccess .
 If the passed XpmAttributes structure pointer is not NULL,
-XpmWriteFileFromImage looks for the following attributes:
+.BR XpmWriteFileFromImage ()
+looks for the following attributes:
 XpmColormap, XpmHotspot, XpmCharsPerPixel, XpmRgbFilename, and XpmExtensions.
-As a backward compatibility feature, XpmWriteFileFromImage also looks for the XpmInfos attributes.
-If the filename contains an extension such as “.xpm”, in order to get a valid C variable name, the dot character is
+As a backward compatibility feature,
+.BR XpmWriteFileFromImage ()
+also looks for the XpmInfos attributes.
+If the filename contains an extension such as “.xpm”, in order to get a valid C
+variable name, the dot character is
 replaced by an underscore ’_’ when writing out.
 As a backward compatibility feature, if the XpmInfos attributes are defined it writes out possible stored
 information such as comments, color defaults and symbol.
-Finally, if the XpmRgbFilenameattribute is defined, XpmWriteFileFromImage searches for color names in
+Finally, if the XpmRgbFilenameattribute is defined,
+.BR XpmWriteFileFromImage ()
+searches for color names in
 this file and if found writes them out instead of the rgb values.
-
-In addition on systems which support such features if the given file name ends by ’.Z’ or ’.gz’
-it is assumed to be a compressed file. Then, XpmWriteFileFromImage writes to a pipedcompress or gzip process.
-And if instead of a file name NULL is passed to XpmWriteFileFromImage, it writes to the standard output.
+.PP
+In addition on systems which support such features if the given file name ends
+by ’.Z’ or ’.gz’ it is assumed to be a compressed file. Then,
+.BR XpmWriteFileFromImage ()
+writes to a piped compress or gzip process.
+And if instead of a file name, NULL is passed to
+.BR XpmWriteFileFromImage (),
+it writes to the standard output.
 
 .SS XpmWriteFileFromPixmap
-To write out a Pixmap to an XPM file, use XpmWriteFileFromPixmap.
-
+.PP
+To write out a Pixmap to an XPM file, use
+.BR XpmWriteFileFromPixmap ().
+.PP
 If the passed XpmAttributes structure pointer is not NULL,
-XpmWriteFileFromPixmap looks for the following attributes: XpmSize.
+.BR XpmWriteFileFromPixmap ()
+looks for the following attributes: XpmSize.
 If they are not defined it performs an XGetGeometry operation.
-Then it uses XGetImage to get from the given pixmaps the related X images which are passed to XpmWriteFileFromImage.
-Finally XpmWriteFileFromPixmap destroys the created images using XDestroyImage.
-The XpmWriteFileFromPixmap function returns the same errors as XpmWriteFileFromImage.
+Then it uses XGetImage to get from the given pixmaps the related X images which are passed to
+.BR XpmWriteFileFromImage ().
+Finally
+.BR XpmWriteFileFromPixmap ()
+destroys the created images using XDestroyImage.
+The
+.BR XpmWriteFileFromPixmap ()
+function returns the same errors as
+.BR XpmWriteFileFromImage ().
 
 .SS XpmWriteFileFromData
-XpmWriteFileFromData writes an XPM data array to an XPM file.
-
-XpmWriteFileToData returns XpmOpenFailed if it cannot open the file,
-XpmFileInvalid if this is not a valid XPM data, and XpmSuccess otherwise.
+.PP
+.BR XpmWriteFileFromData ()
+writes an XPM data array to an XPM file.
+.PP
+.BR XpmWriteFileToData ()
+returns
+.B XpmOpenFailed
+if it cannot open the file,
+.B XpmFileInvalid
+if this is not a valid XPM data, and
+.B XpmSuccess
+otherwise.
 
 .SS XpmWriteFileFromXpmImage
-To write out an XpmImage to an XPM file, use XpmWriteFileFromXpmImage.
-The XpmWriteFileFromXpmImage function writes an image out to a file in the XPM format.
-If the file cannot be opened, it returns XpmOpenFailed.
-If insufficient working storage is allocated, it returns XpmNoMemory.
-If no error occurs then it returns XpmSuccess.
-If the passed XpmInfo structure pointer is not NULL, XpmWriteFileFromXpmImage looks for the following attributes:
-XpmComments, XpmExtensions, and XpmHotspot, and writes the related information out as well.
-In addition on systems which support such features if the given file name ends by ’.Z’ or ’.gz’ it is assumed to be a
-compressed file. Then, XpmWriteFileFromXpmImage writes to a piped compress or gzip process. And if instead
-of a file name NULL is passed to XpmWriteFileFromXpmImage, it writes to the standard output.
+.PP
+To write out an XpmImage to an XPM file, use
+.BR XpmWriteFileFromXpmImage ().
+The
+.BR XpmWriteFileFromXpmImage ()
+function writes an image out to a file in the XPM format.
+If the file cannot be opened, it returns
+.BR XpmOpenFailed .
+If insufficient working storage is allocated, it returns
+.BR XpmNoMemory .
+If no error occurs then it returns
+.BR XpmSuccess .
+If the passed XpmInfo structure pointer is not NULL,
+.BR XpmWriteFileFromXpmImage()
+looks for the following attributes:
+XpmComments, XpmExtensions, and XpmHotspot,
+and writes the related information out as well.
+In addition on systems which support such features if the given file name ends
+by ’.Z’ or ’.gz’ it is assumed to be a compressed file. Then,
+.BR XpmWriteFileFromXpmImage ()
+writes to a piped compress or gzip process.
+And if instead of a file name, NULL is passed to
+.BR XpmWriteFileFromXpmImage (),
+it writes to the standard output.
 
 .SS XpmWriteFileFromBuffer
-XpmWriteFileFromBuffer writes a XPM-buffer to a file.
-XpmWriteFileFromBuffer returns XpmOpenFailed if it cannot open the file, and XpmSuccess otherwise.
-
-As a convenience, the XpmReadFileToBuffer and XpmWriteFileFromBuffer are provided to copy a
-file to a buffer and to write a file from a buffer.
-Thus for instance one may decide to use XpmReadFileToBuffer, XpmCreatePixmapFromBuffer, and XpmFree
-instead of XpmReadFileToPixmap. On some systems this may lead to a performance improvement,
+.PP
+.BR XpmWriteFileFromBuffer ()
+writes a XPM buffer to a file.
+.BR XpmWriteFileFromBuffer ()
+returns
+.B XpmOpenFailed
+if it cannot open the file, and
+.B XpmSuccess
+otherwise.
+.PP
+As a convenience, the
+.BR XpmReadFileToBuffer ()
+and
+.BR XpmWriteFileFromBuffer ()
+functions
+are provided to copy a file to a buffer and to write a file from a buffer.
+Thus for instance one may decide to use
+.BR XpmCreateBufferFromPixmap (),
+.BR XpmWriteFileFromBuffer (),
+and
+.BR XpmFree ()
+instead of
+.BR XpmWriteFileFromPixmap ().
+On some systems this may lead to a performance improvement,
 since the parsing will be performed in memory, but it uses more memory.
 
+
 .SH "SEE ALSO"
-.BR XpmWriteFileFromData(__libmansuffix__) ,
-.BR XpmWriteFileFromPixmap(__libmansuffix__) ,
-.BR XpmWriteFileFromImage(__libmansuffix__) ,
-.BR XpmWriteFileFromXpmImage(__libmansuffix__) ,
-.BR XpmWriteFileFromBuffer(__libmansuffix__)
+.ad l
+.nh
+.BR XpmRead (__libmansuffix__)

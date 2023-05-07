@@ -27,12 +27,17 @@
 XpmCreateData \- create an Data structure
 
 .SH SYNOPSIS
+.nf
 .HP
-int XpmCreateDataFromImage(Display *display, char ***data_return, XImage *image, XImage *shapeimage, XpmAttributes *attributes);
+.BI "int XpmCreateDataFromImage(Display *" display ", char ***" data_return ,
+.BI "XImage *" image ", XImage *" shapeimage ", XpmAttributes *" attributes );
 .HP
-int XpmCreateDataFromPixmap(Display *display, char ***data_return, Pixmap pixmap, Pixmap shapemask, XpmAttributes *attributes);
+.BI "int XpmCreateDataFromPixmap(Display *" display ", char ***" data_return ,
+.BI "Pixmap " pixmap ", Pixmap " shapemask ", XpmAttributes *" attributes );
 .HP
-int XpmCreateDataFromXpmImage(char ***data_return, XpmImage *image, XpmInfo *info);
+.BI "int XpmCreateDataFromXpmImage(char ***" data_return ", XpmImage *" image ,
+.BI "XpmInfo *" info );
+.fi
 
 .SH ARGUMENTS
 
@@ -53,27 +58,58 @@ Specifies the image
 
 .SH DESCRIPTION
 .SS XpmCreateDataFromImage
-In some cases, one may want to create an XPM data from an XImage, to do so use XpmCreateDataFromImage.
-The XpmCreateDataFromImage function exactly works as XpmWriteFileFromImage() does and returns the same way.
+.PP
+In some cases, one may want to create an XPM data from an XImage, to do so use
+.BR XpmCreateDataFromImage ().
+The
+.BR XpmCreateDataFromImage ()
+function exactly works as
+.BR XpmWriteFileFromImage (__libmansuffix__)
+does and returns the same way.
 It just writes to a single block malloc’ed data instead of to a file.
-It is the caller’s responsibility to free the data, using XpmFree when finished.
+It is the caller’s responsibility to free the data, using
+.BR XpmFree (__libmansuffix__)
+when finished.
 
 .SS XpmCreateDataFromPixmap
-XpmCreateDataFromPixmap creates an XPM data from a Pixmap.
-The XpmCreateDataFromPixmap function uses XGetImage to get from the given pixmaps
-the related X images which are passed to XpmCreateDataFromImage.
-Then it destroys the created images using XDestroyImage.
-XpmCreateDataFromPixmap returns the same errors as XpmCreateDataFromImage.
+.PP
+.BR XpmCreateDataFromPixmap ()
+creates an XPM data from a Pixmap.
+The
+.BR XpmCreateDataFromPixmap ()
+function uses
+.BR XGetImage (__libmansuffix__)
+to get from the given pixmaps
+the related X images which are passed to
+.BR XpmCreateDataFromImage ().
+Then it destroys the created images using
+.BR XDestroyImage (__libmansuffix__).
+.BR XpmCreateDataFromPixmap ()
+returns the same errors as
+.BR XpmCreateDataFromImage ().
 
 .SS XpmCreateDataFromXpmImage
-XpmCreateDataFromXpmImage creates an XPM data from an XmImage.
-The XpmCreateDataFromXpmImage function writes out the given image to a single block malloc’ed data in XPM format.
-If insufficient working storage is allocated, it returns XpmNoMemory, and returns XpmSuccess on success.
-If the passed XpmInfo structure pointer is not NULL, XpmCreateDataFromXpmImage looks for the following attributes:
+.PP
+.BR XpmCreateDataFromXpmImage ()
+creates an XPM data from an XpmImage.
+The
+.BR XpmCreateDataFromXpmImage ()
+function writes out the given image to a single block malloc’ed data in XPM format.
+If insufficient working storage is allocated, it returns
+.BR XpmNoMemory ,
+and returns
+.B XpmSuccess
+on success.
+If the passed XpmInfo structure pointer is not NULL,
+.BR XpmCreateDataFromXpmImage ()
+looks for the following attributes:
 XpmExtensions, and XpmHotspot, and writes the related information out as well.
-It is the caller’s responsibility to free the data, using XpmFree when finished.
+It is the caller’s responsibility to free the data, using
+.BR XpmFree (__libmansuffix__)
+when finished.
 
 .SH "SEE ALSO"
-.BR XpmCreateDataFromImage(__libmansuffix__) ,
-.BR XpmCreateDataFromPixmap(__libmansuffix__) ,
-.BR XpmCreateDataFromXpmImage(__libmansuffix__)
+.ad l
+.nh
+.BR XpmFree (__libmansuffix__),
+.BR XpmWriteFileFromImage (__libmansuffix__)

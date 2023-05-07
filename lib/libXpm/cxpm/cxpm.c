@@ -61,7 +61,7 @@ sGetc(xpmData *data, FILE *file)
     if (c == '\n') {
         data->lineNum++;
         data->charNum = 0;
-    } else {
+    } else if (c != EOF) {
         data->charNum++;
     }
     return c;
@@ -74,7 +74,7 @@ sUngetc(xpmData *data, int c, FILE *file)
     if (c == '\n') {
         data->lineNum--;
         data->charNum = 0;
-    } else {
+    } else if (c != EOF) {
         data->charNum--;
     }
 }

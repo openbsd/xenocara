@@ -57,7 +57,7 @@
  */
 int
 xpmReadRgbNames(
-    char	*rgb_fname,
+    const char	*rgb_fname,
     xpmRgbName	 rgbn[])
 {
     FILE *rgbf;
@@ -162,7 +162,7 @@ xpmFreeRgbNames(
 
 int
 xpmReadRgbNames(
-    char	*rgb_fname,
+    const char	*rgb_fname,
     xpmRgbName	 rgbn[])
 {
     /*

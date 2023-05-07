@@ -24,14 +24,22 @@
 .hw XImage
 .TH  XpmCreateImage __libmansuffix__ __xorgversion__ "libXpm functions"
 .SH NAME
-XpmCreateImage \- create an Xpm-image
+XpmCreateImage \- create an XImage from an XPM
 .SH SYNOPSIS
+.nf
 .HP
-int XpmCreateImageFromData(Display *display, char **data, XImage **image_return, XImage **shapeimage_return, XpmAttributes *attributes);
+.BI "int XpmCreateImageFromData(Display *" display ", char **" data ,
+.BI "XImage **" image_return ", XImage **" shapeimage_return ,
+.BI "XpmAttributes *" attributes );
 .HP
-int XpmCreateImageFromBuffer(Display *display, char *buffer, XImage **image_return, XImage **shapeimage_return, XpmAttributes *attributes);
+.BI "int XpmCreateImageFromBuffer(Display *" display ", char *" buffer ,
+.BI "XImage **" image_return ", XImage **" shapeimage_return ,
+.BI "XpmAttributes *" attributes );
 .HP
-int XpmCreateImageFromXpmImage(Display *display,  XpmImage *image, XImage *image_return, XImage *shapeimage_return, XpmAttributes *attributes);
+.BI "int XpmCreateImageFromXpmImage(Display *" display ",  XpmImage *" image ,
+.BI "XImage *" image_return ", XImage *" shapeimage_return ,
+.BI "XpmAttributes *" attributes );
+.fi
 
 .SH ARGUMENTS
 
@@ -51,31 +59,56 @@ Specifies the shape mask image which is created if any.
 .SH DESCRIPTION
 
 .SS XpmCreateImageFromData
-To create an XImage from an XPM data, use XpmCreateImageFromData.
-
-The XpmCreateImageFromData function allows you to include in your C program an XPM file which was
-written out by functions such as XpmWriteFileFromImage or XpmWriteFileFromPixmap without reading in the file.
-XpmCreateImageFromData exactly works as XpmReadFileToImage() does and returns the same way.
+.PP
+To create an XImage from an XPM data, use
+.BR XpmCreateImageFromData ().
+.PP
+The
+.BR XpmCreateImageFromData ()
+function allows you to include in your C program an XPM file which was
+written out by functions such as
+.BR XpmWriteFileFromImage (__libmansuffix__)
+or
+.BR XpmWriteFileFromPixmap (__libmansuffix__)
+without reading in the file.
+.BR XpmCreateImageFromData ()
+exactly works as
+.BR XpmReadFileToImage (__libmansuffix__)
+does and returns the same way.
 It just reads data instead of a file.
-Here again, it is the caller’s responsibility to free the returned images, the colors
-and possibly the data returned into the XpmAttributes structure.
+Here again, it is the caller’s responsibility to free the returned images,
+the colors and possibly the data returned into the XpmAttributes structure.
 
 .SS XpmCreateImageFromBuffer
-To create an XImage from an XPM buffer, use XpmCreateImageFromBuffer.
-The XpmCreateImageFromBuffer function works the same way as XpmReadFileToImage(),
+.PP
+To create an XImage from an XPM buffer, use
+.BR XpmCreateImageFromBuffer ().
+The
+.BR XpmCreateImageFromBuffer()
+function works the same way as
+.BR XpmReadFileToImage (__libmansuffix__),
 it just parses the buffer instead of the file.
-Be aware that the feature provided on some systems by XpmReadFileToImage
+Be aware that the feature provided on some systems by
+.BR XpmReadFileToImage (__libmansuffix__)
 to deal with compressed files is not available here.
 
 .SS XpmCreateImageFromXpmImage
-To create an XImage from an XpmImage, use XpmCreateImageFromXpmImage.
-From the given XpmImage and XpmAttributes if not NULL, XpmCreateImageFromXpmImage allocates colors
-and creates X images following the same mechanism as XpmReadFileToImage().
-When finished the caller must free the images using XDestroyImage,
-the colors using XFreeColors, and possibly the
-data returned into the XpmAttributes using XpmFreeAttributes().
+.PP
+To create an XImage from an XpmImage, use
+.BR XpmCreateImageFromXpmImage ().
+From the given XpmImage and XpmAttributes if not NULL,
+.BR XpmCreateImageFromXpmImage ()
+allocates colors and creates X images following the same mechanism as
+.BR XpmReadFileToImage (__libmansuffix__).
+When finished the caller must free the images using
+.BR XDestroyImage (__libmansuffix__),
+the colors using
+.BR XFreeColors (__libmansuffix__),
+and possibly the data returned into the XpmAttributes using
+.BR XpmFreeAttributes (__libmansuffix__).
 
 .SH "SEE ALSO"
-.BR XpmCreateImageFromBuffer(__libmansuffix__) ,
-.BR XpmCreateImageFromData(__libmansuffix__) ,
-.BR XpmCreateImageFromXpmImage(__libmansuffix__)
+.ad l
+.nh
+.BR XpmFreeAttributes (__libmansuffix__),
+.BR XpmReadFileToImage (__libmansuffix__)

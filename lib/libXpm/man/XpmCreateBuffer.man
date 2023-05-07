@@ -24,15 +24,20 @@
 .hw XImage
 .TH XpmCreateBuffer __libmansuffix__ __xorgversion__ "libXpm functions"
 .SH NAME
-XpmCreateBuffer  \- create an Xpm-Buffer
+XpmCreateBuffer  \- create an XPM Buffer
 
 .SH SYNOPSIS
+.nf
 .HP
-int XpmCreateBufferFromImage(Display *display, char **buffer_return, XImage *image, XImage *shapeimage, XpmAttributes *attributes);
+.BI "int XpmCreateBufferFromImage(Display *" display " , char **" buffer_return ,
+.BI "XImage *" image ", XImage *" shapeimage ", XpmAttributes *" attributes );
 .HP
-int XpmCreateBufferFromPixmap(Display *display, char **buffer_return, Pixmap pixmap, Pixmap shapemask, XpmAttributes *attributes);
+.BI "int XpmCreateBufferFromPixmap(Display *" display ", char **" buffer_return ,
+.BI "Pixmap " pixmap ", Pixmap " shapemask ", XpmAttributes *" attributes );
 .HP
-int XpmCreateBufferFromXpmImage(char **buffer_return, XpmImage *image, XpmInfo *info);
+.BI "int XpmCreateBufferFromXpmImage(char **" buffer_return ", XpmImage *" image ,
+.BI "XpmInfo *" info );
+.fi
 
 .SH ARGUMENTS
 
@@ -52,30 +57,72 @@ Specifies the location of a structure to get possible information (or NULL).
 .SH DESCRIPTION
 
 .SS XpmCreateBufferFromPixmap
-XpmCreateBufferFromPixmap creates an XPM buffer from a Pixmap.
-The XpmCreateBufferFromPixmap function works as XpmWriteFileFromPixmap(), it just calls
-XpmCreateBufferFromImage instead of XpmWriteFileFromImage. Once again, the caller should free the buffer using
-XpmFree when finished.
-
-As a convenience, the XpmReadFileToBuffer and XpmWriteFileFromBuffer functions
-are provided to copy a file to a buffer
-and to write a file from a buffer. Thus for instance one may decide to use XpmReadFileToBuffer,
-XpmCreatePixmapFromBuffer, and XpmFree instead of XpmReadFileToPixmap. On some systems this may lead to a
-performance improvement, since the parsing will be performed in memory, but it uses more memory.
+.PP
+.BR XpmCreateBufferFromPixmap ()
+creates an XPM buffer from a Pixmap.
+The
+.BR XpmCreateBufferFromPixmap ()
+function works as
+.BR XpmWriteFileFromPixmap (__libmansuffix__),
+it just calls
+.BR XpmCreateBufferFromImage ()
+instead of
+.BR XpmWriteFileFromImage (__libmansuffix__).
+Once again, the caller should free the buffer using
+.BR XpmFree (__libmansuffix__)
+when finished.
+.PP
+As a convenience, the
+.BR XpmReadFileToBuffer (__libmansuffix__)
+and
+.BR XpmWriteFileFromBuffer (__libmansuffix__)
+functions are provided to copy a file to a buffer
+and to write a file from a buffer. Thus for instance one may decide to use
+.BR XpmCreateBufferFromPixmap (),
+.BR XpmWriteFileFromBuffer (__libmansuffix__),
+and
+.BR XpmFree (__libmansuffix__)
+instead of
+.BR XpmWriteFileFromPixmap (__libmansuffix__).
+On some systems this may lead to a performance improvement, since the
+processing will be performed in memory, but it uses more memory.
 
 .SS XpmCreateBufferFromImage
-The XpmCreateBufferFromImage function works as XpmWriteFileFromImage(), it just writes to a malloc’ed buffer instead of to a file.
-The caller should free the buffer using XpmFree when finished.
+.PP
+The
+.BR XpmCreateBufferFromImage ()
+function works as
+.BR XpmWriteFileFromImage (__libmansuffix__),
+it just writes to a malloc’ed buffer instead of to a file.
+The caller should free the buffer using
+.BR XpmFree (__libmansuffix__)
+when finished.
 
 .SS XpmCreateBufferFromXpmImage.
-To create an XPM buffer from an XpmImage, use XpmCreateBufferFromXpmImage.
-The XpmCreateBufferFromXpmImage function writes out the givenimage to a single block malloc’ed buffer inXPM format.
-If insufficient working storage is allocated, it returns XpmNoMemory, and returns XpmSuccess on success.
-If the passed XpmInfo structure pointer is not NULL, XpmCreateBufferFromXpmImage looks for the following
-attributes: XpmComments, XpmExtensions, and XpmHotspot, and writes the related information out as well.
-The caller should free the buffer using XpmFree when finished.
+.PP
+To create an XPM buffer from an XpmImage, use
+.BR XpmCreateBufferFromXpmImage ().
+The
+.BR XpmCreateBufferFromXpmImage ()
+function writes out the given image to a single block malloc’ed buffer
+in XPM format.
+If insufficient working storage is allocated, it returns
+.BR XpmNoMemory,
+and returns
+.B XpmSuccess
+on success.
+If the passed XpmInfo structure pointer is not NULL,
+.BR XpmCreateBufferFromXpmImage ()
+looks for the following attributes: XpmComments, XpmExtensions, and XpmHotspot,
+and writes the related information out as well.
+The caller should free the buffer using
+.BR XpmFree (__libmansuffix__)
+when finished.
 
 .SH "SEE ALSO"
-.BR XpmCreateBufferFromImage(__libmansuffix__) ,
-.BR XpmCreateBufferFromPixmap(__libmansuffix__) ,
-.BR XpmCreateBufferFromXpmImage(__libmansuffix__)
+.ad l
+.nh
+.BR XpmFree (__libmansuffix__),
+.BR XpmWriteFileFromBuffer (__libmansuffix__),
+.BR XpmWriteFileFromImage (__libmansuffix__),
+.BR XpmWriteFileFromPixmap (__libmansuffix__)
