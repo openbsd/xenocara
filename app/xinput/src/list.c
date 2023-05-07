@@ -24,6 +24,8 @@
 #include "xinput.h"
 #include <string.h>
 
+static Bool have_utf8(void);
+
 enum print_format {
     FORMAT_NONE,
     FORMAT_SHORT,
@@ -323,10 +325,12 @@ list_xi2(Display *display,
                      (sd->attachment == dev->deviceid))
                 {
                     if (format == FORMAT_SHORT || format == FORMAT_LONG)
+                    {
                         if (have_utf8())
                             printf("%s   ↳ ", dev->use == XIMasterPointer ? "⎜" : " ");
                         else
                             printf("%s   + ", dev->use == XIMasterPointer ? "|" : " ");
+                    }
                     print_info_xi2(display, sd, format);
                 }
             }
@@ -413,7 +417,7 @@ list(Display	*display,
     }
 }
 
-Bool
+static Bool
 have_utf8(void){
     char *t;
 
