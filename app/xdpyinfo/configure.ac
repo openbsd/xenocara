@@ -23,8 +23,8 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xdpyinfo], [1.3.3],
-	[https://gitlab.freedesktop.org/xorg/app/xdpyinfo/issues], [xdpyinfo])
+AC_INIT([xdpyinfo], [1.3.4],
+	[https://gitlab.freedesktop.org/xorg/app/xdpyinfo/-/issues], [xdpyinfo])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -76,8 +76,8 @@ else
 fi
 
 
-AC_ARG_WITH(xf86misc, AS_HELP_STRING([--without-xf86misc],[Disable xf86misc support.]),
-		[USE_XF86MISC="$withval"], [USE_XF86MISC="yes"])
+AC_ARG_WITH(xf86misc, AS_HELP_STRING([--with-xf86misc],[Enable xf86misc support.]),
+		[USE_XF86MISC="$withval"], [USE_XF86MISC="no"])
 if test "x$USE_XF86MISC" != "xno" ; then
 	PKG_CHECK_MODULES(DPY_XF86MISC, xxf86misc,
 		[SAVE_CPPFLAGS="$CPPFLAGS"

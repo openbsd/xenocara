@@ -1,3 +1,57 @@
+commit ea4083ccb2a5ce4252acabeb2eb7bf49f7be25e0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Apr 27 16:58:51 2023 -0700
+
+    xdpyinfo 1.3.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e4688bb9e4b6e0333a84420864bf39cf4c4fa86f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 18:46:20 2022 -0800
+
+    Call memset() instead of hand-coding our own equivalent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6bb053f46101e659c4f3a877bf8d17ad37a23225
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 13:26:00 2022 -0800
+
+    Remove unnecessary downcast of double to float
+    
+    The printf family always takes double arguments, not float.
+    
+    Clears clang warning of:
+    
+    xdpyinfo.c:767:5: warning: implicit conversion increases floating-point
+          precision: 'float' to 'double' [-Wdouble-promotion]
+               (float)dotclock/1000.0,
+               ^~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 04f4911bedc988b917a268978d9592780aa34651
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Dec 8 13:24:47 2022 -0800
+
+    Variable scope reduction
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 563f4c9eb22b5389a2cf63276ec08025ad0d794b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Nov 22 14:12:16 2022 -0800
+
+    configure: Make xf86misc support disabled by default
+    
+    Require --with-xf86misc to enable it.
+    
+    The server side of the XF86-Misc extension was removed in the xserver-1.6.0
+    release in 2008, so this code is unusable on most systems now.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 61bc4b764030bdc9a731ee74c7c56bf2b2a4bddf
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Thu Apr 7 13:43:48 2022 -0700

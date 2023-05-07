@@ -170,12 +170,10 @@ print_extension_info(Display *dpy)
     printf ("number of extensions:    %d\n", n);
 
     if (extlist) {
-	int i;
-
 	qsort(extlist, (size_t)n, sizeof(char *), StrCmp);
 
 	if (!queryExtensions) {
-	    for (i = 0; i < n; i++) {
+	    for (int i = 0; i < n; i++) {
 		printf ("    %s\n", extlist[i]);
 	    }
 	} else {
@@ -192,7 +190,7 @@ print_extension_info(Display *dpy)
 	     * Generate all extension queries at once, so they can be
 	     * sent to the xserver in a single batch
 	     */
-	    for (i = 0; i < n; i++) {
+	    for (int i = 0; i < n; i++) {
 		qe_cookies[i] = xcb_query_extension (xcb_conn,
 						     (uint16_t)strlen(extlist[i]),
 						     extlist[i]);
@@ -203,7 +201,7 @@ print_extension_info(Display *dpy)
 	     * The first call will flush the queue to the server, then
 	     * each one will wait, if needed, for its reply.
 	     */
-	    for (i = 0; i < n; i++) {
+	    for (int i = 0; i < n; i++) {
 		xcb_query_extension_reply_t *rep
 		    = xcb_query_extension_reply(xcb_conn, qe_cookies[i], NULL);
 
@@ -229,7 +227,7 @@ print_display_info(Display *dpy)
     char dummybuf[40];
     const char *cp;
     int minkeycode, maxkeycode;
-    int i, n;
+    int n;
     long req_size;
     XPixmapFormatValues *pmf;
     Window focuswin;
@@ -364,7 +362,7 @@ print_display_info(Display *dpy)
     printf ("number of supported pixmap formats:    %d\n", n);
     if (pmf) {
 	printf ("supported pixmap formats:\n");
-	for (i = 0; i < n; i++) {
+	for (int i = 0; i < n; i++) {
 	    printf ("    depth %d, bits_per_pixel %d, scanline_pad %d\n",
 		    pmf[i].depth, pmf[i].bits_per_pixel, pmf[i].scanline_pad);
 	}
@@ -457,7 +455,6 @@ print_screen_info(Display *dpy, int scr)
     XVisualInfo viproto;		/* fill in for getting info */
     XVisualInfo *vip;			/* returned info */
     int nvi;				/* number of elements returned */
-    int i;				/* temp variable: iterator */
     char eventbuf[80];			/* want 79 chars per line + nul */
     static const char *yes = "YES", *no = "NO", *when = "WHEN MAPPED";
     double xres, yres;
@@ -487,7 +484,7 @@ print_screen_info(Display *dpy, int scr)
     depths = XListDepths (dpy, scr, &ndepths);
     if (!depths) ndepths = 0;
     printf ("  depths (%d):    ", ndepths);
-    for (i = 0; i < ndepths; i++) {
+    for (int i = 0; i < ndepths; i++) {
 	printf ("%d", depths[i]);
 	if (i < ndepths - 1) {
 	    putchar (',');
@@ -526,7 +523,7 @@ print_screen_info(Display *dpy, int scr)
     printf ("  number of visuals:    %d\n", nvi);
     printf ("  default visual id:  0x%lx\n",
 	    XVisualIDFromVisual (DefaultVisual (dpy, scr)));
-    for (i = 0; i < nvi; i++) {
+    for (int i = 0; i < nvi; i++) {
 	print_visual_info (vip+i);
     }
     if (vip) XFree ((char *) vip);
@@ -576,18 +573,16 @@ print_event_mask(char *buf,     /* string to write into */
                  int indent,    /* amount by which to indent */
                  long mask)     /* event mask */
 {
-    struct _event_table *etp;
     int len;
     int bitsfound = 0;
 
     buf[0] = buf[lastcol] = '\0';	/* just in case */
 
-#define INDENT() { register int i; len = indent; \
-		   for (i = 0; i < indent; i++) buf[i] = ' '; }
+#define INDENT() do { len = indent; memset(buf, ' ', indent); } while (0)
 
     INDENT ();
 
-    for (etp = event_table; etp->name; etp++) {
+    for (struct _event_table *etp = event_table; etp->name; etp++) {
 	if (mask & etp->value) {
 	    if (len + MASK_NAME_WIDTH > lastcol) {
 		puts (buf);
@@ -627,11 +622,7 @@ print_standard_extension_info(Display *dpy, const char *extname,
 static int
 print_multibuf_info(Display *dpy, const char *extname)
 {
-    int i, j;			/* temp variable: iterator */
-    int nmono, nstereo;		/* count */
-    XmbufBufferInfo *mono_info = NULL, *stereo_info = NULL; /* arrays */
 #define MULTIBUF_FMT "    visual id, max buffers, depth:    0x%lx, %d, %d\n"
-    int scr = 0;
     int majorrev, minorrev;
 
     if (!XmbufGetVersion(dpy, &majorrev, &minorrev))
@@ -639,8 +630,12 @@ print_multibuf_info(Display *dpy, const char *extname)
 
     print_standard_extension_info(dpy, extname, majorrev, minorrev);
 
-    for (i = 0; i < ScreenCount (dpy); i++)
+    for (int i = 0; i < ScreenCount (dpy); i++)
     {
+        int nmono, nstereo;		/* count */
+        XmbufBufferInfo *mono_info = NULL, *stereo_info = NULL; /* arrays */
+        const int scr = 0;
+
 	if (!XmbufGetScreenInfo (dpy, RootWindow(dpy, scr), &nmono, &mono_info,
 				 &nstereo, &stereo_info)) {
 	    fprintf (stderr,
@@ -648,12 +643,12 @@ print_multibuf_info(Display *dpy, const char *extname)
 		     ProgramName, scr);
 	} else {
 	    printf ("  screen %d number of mono multibuffer types:    %d\n", i, nmono);
-	    for (j = 0; j < nmono; j++) {
+	    for (int j = 0; j < nmono; j++) {
 		printf (MULTIBUF_FMT, mono_info[j].visualid,
 			mono_info[j].max_buffers, mono_info[j].depth);
 	    }
 	    printf ("  number of stereo multibuffer types:    %d\n", nstereo);
-	    for (j = 0; j < nstereo; j++) {
+	    for (int j = 0; j < nstereo; j++) {
 		printf (MULTIBUF_FMT, stereo_info[j].visualid,
 			stereo_info[j].max_buffers, stereo_info[j].depth);
 	    }
@@ -681,7 +676,7 @@ print_sync_info(Display *dpy, const char *extname)
 {
     int majorrev, minorrev;
     XSyncSystemCounter *syscounters;
-    int ncounters, i;
+    int ncounters;
 
     if (!XSyncInitialize(dpy, &majorrev, &minorrev))
 	return 0;
@@ -689,7 +684,7 @@ print_sync_info(Display *dpy, const char *extname)
 
     syscounters = XSyncListSystemCounters(dpy, &ncounters);
     printf("  system counters: %d\n", ncounters);
-    for (i = 0; i < ncounters; i++)
+    for (int i = 0; i < ncounters; i++)
     {
 	printf("    %s  id: 0x%08x  resolution_lo: %d  resolution_hi: %d\n",
 	       syscounters[i].name, (unsigned int)syscounters[i].counter,
@@ -768,7 +763,7 @@ print_XF86VidMode_modeline(
     unsigned int        flags)
 {
     printf("    %6.2f   %4d %4d %4d %4d   %4d %4d %4d %4d ",
-	   (float)dotclock/1000.0,
+	   dotclock/1000.0,
 	   hdisplay, hsyncstart, hsyncend, htotal,
 	   vdisplay, vsyncstart, vsyncend, vtotal);
     if (flags & V_PHSYNC)    printf(" +hsync");
@@ -786,10 +781,8 @@ print_XF86VidMode_modeline(
 static int
 print_XF86VidMode_info(Display *dpy, const char *extname)
 {
-    int majorrev, minorrev, modecount, dotclock, i;
+    int majorrev, minorrev;
     XF86VidModeMonitor monitor;
-    XF86VidModeModeLine modeline;
-    XF86VidModeModeInfo **modelines;
 
     if (!XF86VidModeQueryVersion(dpy, &majorrev, &minorrev))
 	return 0;
@@ -802,11 +795,11 @@ print_XF86VidMode_info(Display *dpy, const char *extname)
 	       monitor.model == NULL ? "" : monitor.model);
 	printf("    Num hsync: %d, Num vsync: %d\n",
 	       monitor.nhsync, monitor.nvsync);
-	for (i = 0; i < monitor.nhsync; i++) {
+	for (int i = 0; i < monitor.nhsync; i++) {
 	    printf("    hsync range %d: %6.2f - %6.2f\n", i,
 		   monitor.hsync[i].lo, monitor.hsync[i].hi);
 	}
-	for (i = 0; i < monitor.nvsync; i++) {
+	for (int i = 0; i < monitor.nvsync; i++) {
 	    printf("    vsync range %d: %6.2f - %6.2f\n", i,
 		   monitor.vsync[i].lo, monitor.vsync[i].hi);
 	}
@@ -819,11 +812,15 @@ print_XF86VidMode_info(Display *dpy, const char *extname)
     }
 
     if ((majorrev > 0) || (majorrev == 0 && minorrev > 5)) {
+      int modecount, dotclock;
+      XF86VidModeModeLine modeline;
+      XF86VidModeModeInfo **modelines;
+
       if (XF86VidModeGetAllModeLines(dpy, DefaultScreen(dpy), &modecount,
 				     &modelines)) {
 	  printf("  Available Video Mode Settings:\n");
 	  printf("     Clock   Hdsp Hbeg Hend Httl   Vdsp Vbeg Vend Vttl  Flags\n");
-	  for (i = 0; i < modecount; i++) {
+	  for (int i = 0; i < modecount; i++) {
 	      print_XF86VidMode_modeline
 		  (modelines[i]->dotclock, modelines[i]->hdisplay,
 		   modelines[i]->hsyncstart, modelines[i]->hsyncend,
@@ -872,8 +869,6 @@ static int
 print_XF86Misc_info(Display *dpy, const char *extname)
 {
     int majorrev, minorrev;
-    XF86MiscMouseSettings mouseinfo;
-    XF86MiscKbdSettings kbdinfo;
 
     if (!XF86MiscQueryVersion(dpy, &majorrev, &minorrev))
 	return 0;
@@ -882,6 +877,9 @@ print_XF86Misc_info(Display *dpy, const char *extname)
     old_handler = XSetErrorHandler(silent_errors);
 
     if ((majorrev > 0) || (majorrev == 0 && minorrev > 0)) {
+      XF86MiscKbdSettings kbdinfo;
+      XF86MiscMouseSettings mouseinfo;
+
       if (!XF86MiscGetKbdSettings(dpy, &kbdinfo))
 	return 0;
       printf("  Keyboard Settings-    Type: %s, Rate: %d, Delay: %d, ServerNumLock: %s\n",
@@ -971,17 +969,16 @@ print_dbe_info(Display *dpy, const char *extname)
     int majorrev, minorrev;
     XdbeScreenVisualInfo *svi;
     int numscreens = 0;
-    int iscrn, ivis;
 
     if (!XdbeQueryExtension(dpy, &majorrev, &minorrev))
 	return 0;
 
     print_standard_extension_info(dpy, extname, majorrev, minorrev);
     svi = XdbeGetVisualInfo(dpy, (Drawable *)NULL, &numscreens);
-    for (iscrn = 0; iscrn < numscreens; iscrn++)
+    for (int iscrn = 0; iscrn < numscreens; iscrn++)
     {
 	printf("  Double-buffered visuals on screen %d\n", iscrn);
-	for (ivis = 0; ivis < svi[iscrn].count; ivis++)
+	for (int ivis = 0; ivis < svi[iscrn].count; ivis++)
 	{
 	    printf("    visual id 0x%lx  depth %d  perflevel %d\n",
 		   svi[iscrn].visinfo[ivis].visual,
@@ -1008,9 +1005,8 @@ print_record_info(Display *dpy, const char *extname)
 static int
 print_xinput_info(Display *dpy, const char *extname)
 {
-  int           loop, num_extensions, num_devices;
+  int           loop, num_extensions;
   char          **extensions;
-  XDeviceInfo   *devices;
   XExtensionVersion *ext;
 
   ext = XGetExtensionVersion(dpy, extname);
@@ -1027,6 +1023,9 @@ print_xinput_info(Display *dpy, const char *extname)
          (strcmp(extensions[loop], extname) != 0); loop++);
   XFreeExtensionList(extensions);
   if (loop != num_extensions) {
+      int           num_devices;
+      XDeviceInfo   *devices;
+
       printf("  Extended devices :\n");
       devices = XListInputDevices(dpy, &num_devices);
       for(loop=0; loop<num_devices; loop++) {
@@ -1070,18 +1069,7 @@ print_xrender_info(Display *dpy, const char *extname)
 {
   int		    loop, num_extensions;
   char		    **extensions;
-  XRenderPictFormat *pictform;
-  int		    count;
   int		    major, minor;
-  int		    i, j;
-  XVisualInfo	    viproto;		/* fill in for getting info */
-  XVisualInfo	    *vip;		/* returned info */
-  int		    nvi;		/* number of elements returned */
-  int		    ndepths = 0, *depths = NULL;
-#if RENDER_MAJOR > 0 || RENDER_MINOR >= 6
-  XFilters	    *filters;
-  int		    f;
-#endif
 
   if (!XRenderQueryVersion (dpy, &major, &minor))
     return 0;
@@ -1093,8 +1081,11 @@ print_xrender_info(Display *dpy, const char *extname)
          (strcmp(extensions[loop], extname) != 0); loop++);
   XFreeExtensionList(extensions);
   if (loop != num_extensions) {
+    XRenderPictFormat *pictform;
+
     printf ("  Render formats :\n");
-    for (count = 0; (pictform = XRenderFindFormat (dpy, 0, NULL, count)); count++)
+    for (int count = 0; (pictform = XRenderFindFormat (dpy, 0, NULL, count));
+         count++)
     {
       printf  ("  pict format:\n");
       printf  ("\tformat id:    0x%lx\n", pictform->id);
@@ -1111,7 +1102,15 @@ print_xrender_info(Display *dpy, const char *extname)
 	printf("\tcolormap      0x%lx\n", pictform->colormap);
     }
     printf ("  Screen formats :\n");
-    for (i = 0; i < ScreenCount (dpy); i++) {
+    for (int i = 0; i < ScreenCount (dpy); i++) {
+      int	     nvi;		/* number of elements returned */
+      XVisualInfo    viproto;		/* fill in for getting info */
+      XVisualInfo    *vip;		/* returned info */
+      int 	     ndepths = 0, *depths = NULL;
+#if RENDER_MAJOR > 0 || RENDER_MINOR >= 6
+      XFilters	    *filters;
+#endif
+
       nvi = 0;
       viproto.screen = i;
       vip = XGetVisualInfo (dpy, VisualScreenMask, &viproto, &nvi);
@@ -1130,7 +1129,7 @@ print_xrender_info(Display *dpy, const char *extname)
       if (filters)
       {
 	printf ("      filters: ");
-	for (f = 0; f < filters->nfilter; f++)
+	for (int f = 0; f < filters->nfilter; f++)
 	{
 	  printf ("%s", filters->filter[f]);
 	  if (f < filters->nalias && filters->alias[f] != FilterAliasNone)
@@ -1142,7 +1141,7 @@ print_xrender_info(Display *dpy, const char *extname)
       }
 #endif
       printf ("\n");
-      for (j = 0; j < nvi; j++)
+      for (int j = 0; j < nvi; j++)
       {
 	printf  ("      visual format:\n");
 	printf  ("        visual id:      0x%lx\n", vip[j].visualid);
@@ -1155,15 +1154,18 @@ print_xrender_info(Display *dpy, const char *extname)
       if (vip) XFree ((char *) vip);
       depths = XListDepths (dpy, i, &ndepths);
       if (!depths) ndepths = 0;
-      for (j = 0; j < ndepths; j++)
+      for (int j = 0; j < ndepths; j++)
       {
 	XRenderPictFormat templ;
 
 	templ.depth = depths[j];
 	printf  ("     depth formats:\n");
 	printf  ("       depth           %d\n", depths[j]);
-	for (count = 0; (pictform = XRenderFindFormat (dpy, PictFormatDepth, &templ, count)); count++)
+	for (int count = 0;
+             (pictform = XRenderFindFormat (dpy, PictFormatDepth, &templ, count));
+             count++) {
 	  printf("       pict format id: 0x%lx\n", pictform->id);
+        }
       }
       if (depths) XFree (depths);
     }
@@ -1204,10 +1206,10 @@ print_xinerama_info(Display *dpy, const char *extname)
   if (!XineramaIsActive(dpy)) {
     printf("  Xinerama is inactive.\n");
   } else {
-    int i, count = 0;
+    int count = 0;
     XineramaScreenInfo *xineramaScreens = XineramaQueryScreens(dpy, &count);
 
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
       XineramaScreenInfo *xs = &xineramaScreens[i];
       printf("  head #%d: %dx%d @ %d,%d\n", xs->screen_number,
              xs->width, xs->height, xs->x_org, xs->y_org);
@@ -1233,10 +1235,7 @@ static int print_dmx_info(Display *dpy, const char *extname)
 {
     int                  event_base, error_base;
     int                  major_version, minor_version, patch_version;
-    DMXScreenAttributes  sinfo;
-    DMXInputAttributes   iinfo;
     int                  count;
-    int                  i;
 
     if (!DMXQueryExtension(dpy, &event_base, &error_base)
         || !DMXQueryVersion(dpy, &major_version, &minor_version,
@@ -1246,7 +1245,9 @@ static int print_dmx_info(Display *dpy, const char *extname)
 
     if (!DMXGetScreenCount(dpy, &count)) return 1;
     printf("  Screen count: %d\n", count);
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
+        DMXScreenAttributes  sinfo;
+
         if (DMXGetScreenAttributes(dpy, i, &sinfo)) {
             printf("    %2d %s %ux%u+%d+%d %d @%dx%d\n",
                    i, sinfo.displayName,
@@ -1263,7 +1264,8 @@ static int print_dmx_info(Display *dpy, const char *extname)
         return 1;
 
     printf("  Input count = %d\n", count);
-    for (i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++) {
+        DMXInputAttributes   iinfo;
 #ifdef XINPUT
         Display *backend;
         char    *backendname = NULL;
@@ -1286,11 +1288,11 @@ static int print_dmx_info(Display *dpy, const char *extname)
                         if (ext
                             && ext != (XExtensionVersion *)NoSuchExtension) {
 
-                            int         dcount, d;
+                            int         dcount;
                             XDeviceInfo *devInfo = XListInputDevices(backend,
                                                                      &dcount);
                             if (devInfo) {
-                                for (d = 0; d < dcount; d++) {
+                                for (int d = 0; d < dcount; d++) {
                                     if ((unsigned)iinfo.physicalId
                                         == devInfo[d].id
                                         && devInfo[d].name) {
@@ -1403,16 +1405,14 @@ print_known_extensions(FILE *f)
 static void
 mark_extension_for_printing(const char *extname)
 {
-    int i;
-
     if (strcmp(extname, "all") == 0)
     {
-	for (i = 0; i < num_known_extensions; i++)
+	for (int i = 0; i < num_known_extensions; i++)
 	    known_extensions[i].printit = True;
     }
     else
     {
-	for (i = 0; i < num_known_extensions; i++)
+	for (int i = 0; i < num_known_extensions; i++)
 	{
 	    if (strcmp(extname, known_extensions[i].extname) == 0)
 	    {
@@ -1427,8 +1427,7 @@ mark_extension_for_printing(const char *extname)
 static void
 print_marked_extensions(Display *dpy)
 {
-    int i;
-    for (i = 0; i < num_known_extensions; i++)
+    for (int i = 0; i < num_known_extensions; i++)
     {
 	if (known_extensions[i].printit)
 	{
@@ -1462,11 +1461,10 @@ main(int argc, char *argv[])
 {
     Display *dpy;			/* X connection */
     char *displayname = NULL;		/* server to contact */
-    int i;				/* temp variable:  iterator */
 
     ProgramName = argv[0];
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
 	char *arg = argv[i];
 	size_t len = strlen(arg);
 
@@ -1504,7 +1502,7 @@ main(int argc, char *argv[])
     }
 
     print_display_info (dpy);
-    for (i = 0; i < ScreenCount (dpy); i++) {
+    for (int i = 0; i < ScreenCount (dpy); i++) {
 	print_screen_info (dpy, i);
     }
 
