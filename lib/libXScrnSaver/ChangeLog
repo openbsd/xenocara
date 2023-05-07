@@ -1,3 +1,95 @@
+commit 34f3f72b88c0a0a10d618e9dfbc88474ae5ce880
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 15:36:44 2022 -0800
+
+    libXScrnSaver 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9dc9fb1bb8ca8e304a191430278703b7bc092eb2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 12:17:00 2022 -0800
+
+    Handle implicit conversion warnings from clang
+    
+    Clears 16 -Wimplicit-int-conversion, 11 -Wshorten-64-to-32, and
+    8 -Wsign-conversion warnings.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d32243b670b472fc08f577957d1a3fd9bab6430d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 12:12:35 2022 -0800
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 73a14e8562d6d133982d89bf07ea89bf546d98e5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 12:08:45 2022 -0800
+
+    Whitespace fixes
+    
+    Remove leading spaces before tabs and trailing whitespace, and
+    fix a couple of incorrect indentations.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d39f92be6b513c28546ebb0baf335f32ab154a89
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:00:50 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2e96d5feebdfaeb72b098402e6682ed3a6e6e628
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:59:57 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit eecc14f810ec2b0324b7b9f549aeb2c4663ecd52
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:59:12 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit aa9fd5061d0a8832480ad0c1acc9d2e864e807f4
+Author: Samanta Navarro <ferivoz@riseup.net>
+Date:   Sat Oct 3 11:51:02 2020 +0000
+
+    Fix typo in manual page
+
+commit bc819c99a1eee22194b561bcfe267c31071152ae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:50:34 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dfc721414e0ee35fa1b465d8c333831b73171ba4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 21:28:50 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 96fffcd9dcaf2ba37ec56aa798677de9ad58ae81
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Thu Jul 5 12:29:44 2018 -0400
@@ -496,7 +588,7 @@ Date:   Thu Jul 13 14:58:47 2006 -0700
     renamed: .cvsignore -> .gitignore
 
 commit a183fb1a70d48155b67d98fb4e4aaca825842f12
-Author: Fredrik Höglund <fredrik@kde.org>
+Author: Fredrik Höglund  <fredrik@kde.org>
 Date:   Fri Mar 31 18:43:09 2006 +0000
 
     Update the package version number to 1.1. Require scrnsaverproto >= 1.1.
@@ -636,7 +728,7 @@ Date:   Sat Jul 9 06:04:32 2005 +0000
     Add .cvsignore files
 
 commit 3817722549db9a2377f034b0af5768f8c36bbf62
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 22:46:39 2005 +0000
 
     Apply these patches from Theo van Klaveren:
@@ -661,7 +753,7 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit 21286ccdf3418566b424a9f086289994ac0877f1
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jun 10 19:57:07 2005 +0000
 
     Build system for XScrnSaver

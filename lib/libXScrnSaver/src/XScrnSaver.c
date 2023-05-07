@@ -95,21 +95,21 @@ static Bool wire_to_event (
 
     switch ((event->u.u.type & 0x7f) - info->codes->first_event) {
     case ScreenSaverNotify:
-    	se = (XScreenSaverNotifyEvent *) re;
+	se = (XScreenSaverNotifyEvent *) re;
 	sevent = (xScreenSaverNotifyEvent *) event;
-    	se->type = sevent->type & 0x7f;
-    	se->serial = _XSetLastRequestRead(dpy,(xGenericReply *) event);
-    	se->send_event = (sevent->type & 0x80) != 0;
-    	se->display = dpy;
-    	se->window = sevent->window;
+	se->type = sevent->type & 0x7f;
+	se->serial = _XSetLastRequestRead(dpy,(xGenericReply *) event);
+	se->send_event = (sevent->type & 0x80) != 0;
+	se->display = dpy;
+	se->window = sevent->window;
 	se->root = sevent->root;
-    	se->state = sevent->state;
+	se->state = sevent->state;
 	se->kind = sevent->kind;
 	se->forced = True;
 	if (sevent->forced == xFalse)
 	    se->forced = False;
 	se->time = sevent->timestamp;
-    	return True;
+	return True;
     }
     return False;
 }
@@ -127,27 +127,27 @@ static Status event_to_wire (
 
     switch ((re->type & 0x7f) - info->codes->first_event) {
     case ScreenSaverNotify:
-    	se = (XScreenSaverNotifyEvent *) re;
+	se = (XScreenSaverNotifyEvent *) re;
 	sevent = (xScreenSaverNotifyEvent *) event;
-    	sevent->type = se->type | (se->send_event ? 0x80 : 0);
-    	sevent->sequenceNumber = se->serial & 0xffff;
-    	sevent->root = se->root;
-    	sevent->window = se->window;
-    	sevent->state = se->state;
-	sevent->kind = se->kind;
+	sevent->type = (CARD8) (se->type | (se->send_event ? 0x80 : 0));
+	sevent->sequenceNumber = se->serial & 0xffff;
+	sevent->root = (CARD32) se->root;
+	sevent->window = (CARD32) se->window;
+	sevent->state = (BYTE) se->state;
+	sevent->kind = (BYTE) se->kind;
 	sevent->forced = xFalse;
 	if (se->forced == True)
 	    sevent->forced = xTrue;
-	sevent->timestamp = se->time;
-    	return 1;
+	sevent->timestamp = (CARD32) se->time;
+	return 1;
     }
     return 0;
 }
 
 /****************************************************************************
- *                                                                          *
- *			    ScreenSaver public interfaces                         *
- *                                                                          *
+ *									    *
+ *			    ScreenSaver public interfaces		    *
+ *									    *
  ****************************************************************************/
 
 Bool XScreenSaverQueryExtension (
@@ -180,7 +180,7 @@ Status XScreenSaverQueryVersion(
 
     LockDisplay (dpy);
     GetReq (ScreenSaverQueryVersion, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->saverReqType = X_ScreenSaverQueryVersion;
     req->clientMajor = ScreenSaverMajorVersion;
     req->clientMinor = ScreenSaverMinorVersion;
@@ -214,9 +214,9 @@ Status XScreenSaverQueryInfo (
 
     LockDisplay (dpy);
     GetReq (ScreenSaverQueryInfo, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->saverReqType = X_ScreenSaverQueryInfo;
-    req->drawable = drawable;
+    req->drawable = (CARD32) drawable;
     if (!_XReply (dpy, (xReply *) &rep, 0, xTrue)) {
 	UnlockDisplay (dpy);
 	SyncHandle ();
@@ -239,16 +239,16 @@ void XScreenSaverSelectInput (
     unsigned long	 mask)
 {
     XExtDisplayInfo *info = find_display (dpy);
-    register xScreenSaverSelectInputReq   *req;
+    register xScreenSaverSelectInputReq	  *req;
 
     ScreenSaverSimpleCheckExtension (dpy, info);
 
     LockDisplay (dpy);
     GetReq (ScreenSaverSelectInput, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->saverReqType = X_ScreenSaverSelectInput;
-    req->drawable = drawable;
-    req->eventMask = mask;
+    req->drawable = (CARD32) drawable;
+    req->eventMask = (CARD32) mask;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -259,49 +259,49 @@ XScreenSaverProcessWindowAttributes (
     xChangeWindowAttributesReq		*req,
     register unsigned long		 valuemask,
     register XSetWindowAttributes	*attributes)
-    {
-    unsigned long values[32];
+{
+    unsigned long values[32] = { 0 };
     register unsigned long *value = values;
-    unsigned int nvalues;
+    unsigned long nvalues;
 
     if (valuemask & CWBackPixmap)
 	*value++ = attributes->background_pixmap;
 
     if (valuemask & CWBackPixel)
-    	*value++ = attributes->background_pixel;
+	*value++ = attributes->background_pixel;
 
     if (valuemask & CWBorderPixmap)
-    	*value++ = attributes->border_pixmap;
+	*value++ = attributes->border_pixmap;
 
     if (valuemask & CWBorderPixel)
-    	*value++ = attributes->border_pixel;
+	*value++ = attributes->border_pixel;
 
     if (valuemask & CWBitGravity)
-    	*value++ = attributes->bit_gravity;
+	*value++ = (unsigned long) attributes->bit_gravity;
 
     if (valuemask & CWWinGravity)
-	*value++ = attributes->win_gravity;
+	*value++ = (unsigned long) attributes->win_gravity;
 
     if (valuemask & CWBackingStore)
-        *value++ = attributes->backing_store;
+	*value++ = (unsigned long) attributes->backing_store;
 
     if (valuemask & CWBackingPlanes)
 	*value++ = attributes->backing_planes;
 
     if (valuemask & CWBackingPixel)
-    	*value++ = attributes->backing_pixel;
+	*value++ = attributes->backing_pixel;
 
     if (valuemask & CWOverrideRedirect)
-    	*value++ = attributes->override_redirect;
+	*value++ = (unsigned long) attributes->override_redirect;
 
     if (valuemask & CWSaveUnder)
-    	*value++ = attributes->save_under;
+	*value++ = (unsigned long) attributes->save_under;
 
     if (valuemask & CWEventMask)
-	*value++ = attributes->event_mask;
+	*value++ = (unsigned long) attributes->event_mask;
 
     if (valuemask & CWDontPropagate)
-	*value++ = attributes->do_not_propagate_mask;
+	*value++ = (unsigned long) attributes->do_not_propagate_mask;
 
     if (valuemask & CWColormap)
 	*value++ = attributes->colormap;
@@ -309,12 +309,13 @@ XScreenSaverProcessWindowAttributes (
     if (valuemask & CWCursor)
 	*value++ = attributes->cursor;
 
-    req->length += (nvalues = value - values);
+    nvalues = (unsigned long) (value - values);
+    req->length += nvalues;
 
     nvalues <<= 2;			    /* watch out for macros... */
     Data32 (dpy, (long *) values, (long)nvalues);
 
-    }
+}
 
 void XScreenSaverSetAttributes (
     Display			*dpy,
@@ -337,23 +338,23 @@ void XScreenSaverSetAttributes (
 
     LockDisplay (dpy);
     GetReq (ScreenSaverSetAttributes, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->saverReqType = X_ScreenSaverSetAttributes;
-    req->drawable = drawable;
-    req->x = x;
-    req->y = y;
-    req->width = width;
-    req->height = height;
-    req->borderWidth = border_width;
-    req->c_class = class;
-    req->depth = depth;
+    req->drawable = (CARD32) drawable;
+    req->x = (INT16) x;
+    req->y = (INT16) y;
+    req->width = (CARD16) width;
+    req->height = (CARD16) height;
+    req->borderWidth = (CARD16) border_width;
+    req->c_class = (BYTE) class;
+    req->depth = (CARD8) depth;
     if (visual == (Visual *)CopyFromParent)
 	req->visualID = CopyFromParent;
     else
-	req->visualID = visual->visualid;
+	req->visualID = (CARD32) visual->visualid;
     /* abuse an Xlib internal interface - is this legal for us? */
-    if ((req->mask = valuemask))
-        XScreenSaverProcessWindowAttributes (dpy,
+    if ((req->mask = (CARD32) valuemask) != 0)
+	XScreenSaverProcessWindowAttributes (dpy,
 			(xChangeWindowAttributesReq *)req,
 			valuemask, attributes);
     UnlockDisplay (dpy);
@@ -372,9 +373,9 @@ void XScreenSaverUnsetAttributes (
 
     LockDisplay (dpy);
     GetReq (ScreenSaverUnsetAttributes, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->saverReqType = X_ScreenSaverUnsetAttributes;
-    req->drawable = drawable;
+    req->drawable = (CARD32) drawable;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -461,10 +462,9 @@ XScreenSaverSuspend (Display *dpy, Bool suspend)
 
     LockDisplay (dpy);
     GetReq (ScreenSaverSuspend, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->saverReqType = X_ScreenSaverSuspend;
-    req->suspend = suspend;
+    req->suspend = (CARD32) suspend;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
-

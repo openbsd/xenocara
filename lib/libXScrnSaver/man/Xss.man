@@ -46,7 +46,7 @@ typedef struct {
 typedef struct {
     int type;               /\(** of event */
     unsigned long serial;   /\(** # of last request processed by server */
-    Bool send_event;        /\(** true if this came frome a SendEvent request */
+    Bool send_event;        /\(** true if this came from a SendEvent request */
     Display *display;       /\(** Display the event was read from */
     Window window;          /\(** screen saver window */
     Window root;            /\(** root window of event screen */
@@ -326,7 +326,7 @@ the screensaver if it's been suspended by another client.
 If a client that has suspended the screensaver becomes disconnected from
 the X server, the screensaver timer will automatically be restarted, unless
 it's still suspended by another client. Suspending the screensaver timer
-doesn't prevent the screensaver from being forceably activated with the
+doesn't prevent the screensaver from being forcibly activated with the
 \fBForceScreenSaver\fP request, or a DPMS mode from being set with the
 \fBDPMSForceLevel\fP request.
 .br

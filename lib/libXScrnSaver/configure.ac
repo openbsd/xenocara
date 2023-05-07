@@ -22,14 +22,14 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXScrnSaver], [1.2.3],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXScrnSaver])
+AC_INIT([libXScrnSaver], [1.2.4],
+        [https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver/-/issues],
+        [libXScrnSaver])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
-AM_MAINTAINER_MODE
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -41,7 +41,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XSCRNSAVER, x11 xext xextproto [scrnsaverproto >= 1.2])
 
 # Allow checking code with lint, sparse, etc.

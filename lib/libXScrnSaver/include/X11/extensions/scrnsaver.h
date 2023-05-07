@@ -36,7 +36,7 @@ in this Software without prior written authorization from the X Consortium.
 typedef struct {
     int	type;		    /* of event */
     unsigned long serial;   /* # of last request processed by server */
-    Bool send_event;	    /* true if this came frome a SendEvent request */
+    Bool send_event;	    /* true if this came from a SendEvent request */
     Display *display;	    /* Display the event was read from */
     Window window;	    /* screen saver window */
     Window root;	    /* root window of event screen */
@@ -126,7 +126,7 @@ extern Status XScreenSaverGetRegistered (
 
 extern void XScreenSaverSuspend (
     Display*	/* display */,
-    Bool 	/* suspend */
+    Bool	/* suspend */
 );
 
 _XFUNCPROTOEND
