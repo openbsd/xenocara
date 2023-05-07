@@ -1,3 +1,109 @@
+commit f77165c819b05af27d9878efe8526a157f569b1a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 15:17:26 2022 -0800
+
+    libXres 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bed46b55c06a3488971fda8271cf9fc0e3dd84d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 11:07:30 2022 -0800
+
+    Use calloc instead of malloc to allocate arrays
+    
+    Makes code more consistent with other functions in this library
+    which already do this and adds extra protection against overflows
+    or failures to properly fill in values.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c71236d5ae587f6a673a8bf1b6fd5de64a3ba78c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 11:03:55 2022 -0800
+
+    Handle implicit conversion warnings from clang
+    
+    Clears 6 -Wimplicit-int-conversion, 6 -Wshorten-64-to-32, and
+    7 -Wsign-conversion warnings.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9e0db673a7869861eeb6eccbc8270a019f4aacd1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 10:31:39 2022 -0800
+
+    Resolve -Wsign-compare warnings from gcc
+    
+    XRes.c: In function ‘XResQueryClients’:
+    XRes.c:121:31: warning: comparison between signed and unsigned integer
+      expressions [-Wsign-compare]
+                 for (int i = 0; i < rep.num_clients; i++) {
+                                   ^
+    XRes.c: In function ‘XResQueryClientResources’:
+    XRes.c:176:31: warning: comparison between signed and unsigned integer
+      expressions [-Wsign-compare]
+                 for (int i = 0; i < rep.num_types; i++) {
+                                   ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a43105c0da6613798437afaa531c2a576f8efc99
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 10:30:10 2022 -0800
+
+    Variable scope reductions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b1fb8150d6adac3b564575dec470a740457f66dc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 10:20:59 2022 -0800
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fa5642244aa4b0882b8604d1e693d31882a7adda
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 09:25:13 2022 -0800
+
+    Reformat code to X.Org standard style
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7bb6561cb44ce8f38615d2436dae89e7ca9a773b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:44:40 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 090026087de8961a7c49145f347e65afa1bbcb9b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:43:50 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d5031be051ea7c969e7fdf5885235ae56825b697
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:43:25 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c05c6d918b0e2011d4bfa370c321482e34630b17
 Author: Keith Packard <keithp@keithp.com>
 Date:   Tue Mar 30 21:36:16 2021 -0700
@@ -214,7 +320,7 @@ Date:   Mon Apr 23 18:57:48 2012 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 01fc6f81f0a2935741dd1114aa3fa267d8be9095
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Wed Dec 15 13:48:09 2010 +0200
 
     Implemented second part of XResource extension v1.2: XResQueryResourceBytes
@@ -225,7 +331,7 @@ Date:   Wed Dec 15 13:48:09 2010 +0200
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 0f38938a27df1f865dcdda35f4d2ef191092ba42
-Author: Erkki Seppälä <erkki.seppala@vincit.fi>
+Author: Erkki Seppälä < <erkki.seppala@vincit.fi>
 Date:   Mon Nov 29 12:43:51 2010 +0200
 
     Implemented first part of XResource extension v1.2: XResQueryClientIds
@@ -731,7 +837,7 @@ Date:   Sat Jul 9 06:03:13 2005 +0000
     Add .cvsignore files Switch _la_CFLAGS for AM_CFLAGS to clean up directory
 
 commit c1ed34d39740625d52eca7f2c5bf5c6797f28097
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 22:46:38 2005 +0000
 
     Apply these patches from Theo van Klaveren:
@@ -740,13 +846,13 @@ Date:   Wed Jun 22 22:46:38 2005 +0000
     to make the libraries distcheck.
 
 commit 2dbb8e41c6accaf9d86f3fdadfed5aea330da1fd
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 14 17:31:59 2005 +0000
 
     XRes/src/Makefile.am: Add $(top_srcdir)/include to INCLUDES
 
 commit a30727351e6cdeb7ff2ffa0bddad8c3a1be9eda0
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 7 18:51:23 2005 +0000
 
     - symlink.sh: Move XRes.h from proto/Resource to

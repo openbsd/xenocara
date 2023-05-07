@@ -29,13 +29,13 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so XRes version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXres], [1.2.1],
-        [https://gitlab.freedesktop.org/xorg/lib/libXRes/issues], [libXres])
+AC_INIT([libXres], [1.2.2],
+        [https://gitlab.freedesktop.org/xorg/lib/libxres/-/issues], [libXres])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -47,7 +47,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XRES, [x11 >= 1.6] xext xextproto [resourceproto >= 1.2.0])
 
 AC_CONFIG_FILES([Makefile
