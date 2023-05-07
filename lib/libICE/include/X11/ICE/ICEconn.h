@@ -171,7 +171,7 @@ struct _IceConn {
      * Before we read a message, the major opcode of the message must be
      * mapped to our corresponding major opcode (the two clients can use
      * different opcodes for the same protocol).  In order to save space,
-     * we keep track of the mininum and maximum major opcodes used by the
+     * we keep track of the minimum and maximum major opcodes used by the
      * other client.  To get the information on how to process this message,
      * we do the following...
      *

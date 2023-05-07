@@ -87,7 +87,7 @@ IceOpenConnection (
      *
      * If 'majorOpcodeCheck' is non-zero, it will contain a protocol major
      * opcode that we should make sure is not already active on the ICE
-     * connection.  Some clients will want two seperate connections for the
+     * connection.  Some clients will want two separate connections for the
      * same protocol to the same destination client.
      */
 
@@ -104,11 +104,11 @@ IceOpenConnection (
 		 * OK, we found a connection.  Make sure we can reuse it.
 		 */
 
-		IceConn iceConn = _IceConnectionObjs[i];
+		IceConn iConn = _IceConnectionObjs[i];
 
-		if (iceConn->want_to_close || iceConn->free_asap ||
-		    (context && iceConn->context &&
-		     iceConn->context != context))
+		if (iConn->want_to_close || iConn->free_asap ||
+		    (context && iConn->context &&
+		     iConn->context != context))
 		{
 		    /* force a new connection to be created */
 		    break;
@@ -116,20 +116,20 @@ IceOpenConnection (
 
 		if (majorOpcodeCheck)
 		{
-		    for (j = iceConn->his_min_opcode;
-		        j <= iceConn->his_max_opcode; j++)
+		    for (j = iConn->his_min_opcode;
+		        j <= iConn->his_max_opcode; j++)
 		    {
-			if (iceConn->process_msg_info[
-			    j - iceConn->his_min_opcode].in_use &&
-			    iceConn->process_msg_info[
-			    j - iceConn->his_min_opcode].my_opcode ==
+			if (iConn->process_msg_info[
+			    j - iConn->his_min_opcode].in_use &&
+			    iConn->process_msg_info[
+			    j - iConn->his_min_opcode].my_opcode ==
 			    majorOpcodeCheck)
 			    break;
 		    }
 
-		    if (j <= iceConn->his_max_opcode ||
-			(iceConn->protosetup_to_you &&
-			iceConn->protosetup_to_you->my_opcode ==
+		    if (j <= iConn->his_max_opcode ||
+			(iConn->protosetup_to_you &&
+			iConn->protosetup_to_you->my_opcode ==
 			majorOpcodeCheck))
 		    {
 			/* force a new connection to be created */
@@ -137,10 +137,10 @@ IceOpenConnection (
 		    }
 		}
 
-		iceConn->open_ref_count++;
-		if (context && !iceConn->context)
-		    iceConn->context = context;
-		return (iceConn);
+		iConn->open_ref_count++;
+		if (context && !iConn->context)
+		    iConn->context = context;
+		return (iConn);
 	    }
 	}
     }
@@ -282,7 +282,7 @@ IceOpenConnection (
     {
 	_IceFreeConnection (iceConn);
 	if (errorStringRet && errorLength > 0) {
-	    strncpy (errorStringRet, "IO error occured opening connection",
+	    strncpy (errorStringRet, "IO error occurred opening connection",
 		 errorLength);
 	    errorStringRet[errorLength - 1] = '\0';
 	}
@@ -347,23 +347,46 @@ IceOpenConnection (
     pSetupMsg->authCount = authUsableCount;
     pSetupMsg->mustAuthenticate = mustAuthenticate;
 
-    STORE_STRING (pData, IceVendorString);
-    STORE_STRING (pData, IceReleaseString);
+    if (_X_LIKELY(pData != NULL)) {
+	STORE_STRING (pData, IceVendorString);
+	STORE_STRING (pData, IceReleaseString);
 
-    for (i = 0; i < _IceAuthCount; i++)
-	if (authUsableFlags[i])
+	for (i = 0; i < _IceAuthCount; i++)
 	{
-	    STORE_STRING (pData, _IceAuthNames[i]);
+	    if (authUsableFlags[i])
+	    {
+		STORE_STRING (pData, _IceAuthNames[i]);
+	    }
 	}
 
-    for (i = 0; i < _IceVersionCount; i++)
-    {
-	STORE_CARD16 (pData, _IceVersions[i].major_version);
-	STORE_CARD16 (pData, _IceVersions[i].minor_version);
+	for (i = 0; i < _IceVersionCount; i++)
+	{
+	    STORE_CARD16 (pData, _IceVersions[i].major_version);
+	    STORE_CARD16 (pData, _IceVersions[i].minor_version);
+	}
     }
+    else {
+	SEND_STRING (iceConn, IceVendorString);
+	SEND_STRING (iceConn, IceReleaseString);
 
+	for (i = 0; i < _IceAuthCount; i++)
+	{
+	    if (authUsableFlags[i])
+	    {
+		SEND_STRING (iceConn, _IceAuthNames[i]);
+	    }
+	}
+
+	for (i = 0; i < _IceVersionCount; i++)
+	{
+	    CARD16 v;
+	    v = _IceVersions[i].major_version;
+	    IceWriteData16 (iceConn, 2, &v);
+	    v = _IceVersions[i].minor_version;
+	    IceWriteData16 (iceConn, 2, &v);
+	}
+    }
     IceFlush (iceConn);
-
 
     /*
      * Process messages until we get a Connection Reply or an Error Message.
@@ -386,7 +409,7 @@ IceOpenConnection (
 	if (ioErrorOccured)
 	{
 	    if (errorStringRet && errorLength > 0) {
-		strncpy (errorStringRet, "IO error occured opening connection",
+		strncpy (errorStringRet, "IO error occurred opening connection",
 		    errorLength);
 		errorStringRet[errorLength - 1] = '\0';
 	    }
@@ -530,6 +553,7 @@ ConnectToPeer (char *networkIdsList, char **actualConnectionRet)
 	    if ((connect_stat = _IceTransConnect (trans_conn, address)) < 0)
 	    {
 		_IceTransClose (trans_conn);
+		trans_conn = NULL;
 
 		if (connect_stat == TRANS_TRY_CONNECT_AGAIN)
 		{

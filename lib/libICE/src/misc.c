@@ -63,7 +63,52 @@ IceAllocScratch (
     return (iceConn->scratch);
 }
 
+/*
+ * Fatal IO error.  First notify each protocol's IceIOErrorProc
+ * callback, then invoke the application IO error handler.
+ */
 
+static void _X_COLD
+IceFatalIOError (
+	IceConn	iceConn
+)
+{
+    iceConn->io_ok = False;
+
+    if (iceConn->connection_status == IceConnectPending)
+    {
+	/*
+	 * Don't invoke IO error handler if we are in the
+	 * middle of a connection setup.
+	 */
+
+	return;
+    }
+
+    if (iceConn->process_msg_info)
+    {
+	for (int i = iceConn->his_min_opcode;
+	     i <= iceConn->his_max_opcode; i++)
+	{
+	    _IceProcessMsgInfo *process;
+
+	    process = &iceConn->process_msg_info[i - iceConn->his_min_opcode];
+
+	    if ((process != NULL) && process->in_use)
+	    {
+		IceIOErrorProc IOErrProc = process->accept_flag ?
+		    process->protocol->accept_client->io_error_proc :
+		    process->protocol->orig_client->io_error_proc;
+
+		if (IOErrProc)
+		    (*IOErrProc) (iceConn);
+	    }
+	}
+    }
+
+    (*_IceIOErrorHandler) (iceConn);
+    return;
+}
 
 /*
  * Output/Input buffer functions
@@ -74,6 +119,16 @@ IceFlush (
 	IceConn iceConn
 )
 {
+    /*
+     * Should be impossible, unless we messed up our buffer math somewhere,
+     * or one of our pointers has been corrupted.
+     */
+    if (_X_UNLIKELY(iceConn->outbufptr > iceConn->outbufmax))
+    {
+	IceFatalIOError (iceConn);
+	return 0;
+    }
+
     _IceWrite (iceConn,
 	(unsigned long) (iceConn->outbufptr - iceConn->outbuf),
 	iceConn->outbuf);
@@ -246,48 +301,7 @@ _IceRead (
 	    }
 	    else
 	    {
-		/*
-		 * Fatal IO error.  First notify each protocol's IceIOErrorProc
-		 * callback, then invoke the application IO error handler.
-		 */
-
-		iceConn->io_ok = False;
-
-		if (iceConn->connection_status == IceConnectPending)
-		{
-		    /*
-		     * Don't invoke IO error handler if we are in the
-		     * middle of a connection setup.
-		     */
-
-		    return (1);
-		}
-
-		if (iceConn->process_msg_info)
-		{
-		    int i;
-
-		    for (i = iceConn->his_min_opcode;
-			i <= iceConn->his_max_opcode; i++)
-		    {
-			_IceProcessMsgInfo *process;
-
-			process = &iceConn->process_msg_info[
-			    i - iceConn->his_min_opcode];
-
-			if ((process != NULL) && process->in_use)
-			{
-			    IceIOErrorProc IOErrProc = process->accept_flag ?
-			      process->protocol->accept_client->io_error_proc :
-			      process->protocol->orig_client->io_error_proc;
-
-			    if (IOErrProc)
-				(*IOErrProc) (iceConn);
-			}
-		    }
-		}
-
-		(*_IceIOErrorHandler) (iceConn);
+		IceFatalIOError (iceConn);
 		return (1);
 	    }
 	}
@@ -354,48 +368,7 @@ _IceWrite (
 #ifdef WIN32
 	    errno = WSAGetLastError();
 #endif
-	    /*
-	     * Fatal IO error.  First notify each protocol's IceIOErrorProc
-	     * callback, then invoke the application IO error handler.
-	     */
-
-	    iceConn->io_ok = False;
-
-	    if (iceConn->connection_status == IceConnectPending)
-	    {
-		/*
-		 * Don't invoke IO error handler if we are in the
-		 * middle of a connection setup.
-		 */
-
-		return;
-	    }
-
-	    if (iceConn->process_msg_info)
-	    {
-		int i;
-
-		for (i = iceConn->his_min_opcode;
-		     i <= iceConn->his_max_opcode; i++)
-		{
-		    _IceProcessMsgInfo *process;
-
-		    process = &iceConn->process_msg_info[
-			i - iceConn->his_min_opcode];
-
-		    if (process->in_use)
-		    {
-			IceIOErrorProc IOErrProc = process->accept_flag ?
-			    process->protocol->accept_client->io_error_proc :
-			    process->protocol->orig_client->io_error_proc;
-
-			if (IOErrProc)
-			    (*IOErrProc) (iceConn);
-		    }
-		}
-	    }
-
-	    (*_IceIOErrorHandler) (iceConn);
+	    IceFatalIOError (iceConn);
 	    return;
 	}
 

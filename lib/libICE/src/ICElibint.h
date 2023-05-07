@@ -102,7 +102,7 @@ Author: Ralph Mor, X Consortium
 
 
 /*
- * Maxium number of ICE authentication methods allowed, and maxiumum
+ * Maximum number of ICE authentication methods allowed, and maximum
  * number of authentication data entries allowed to be set in the
  * IceSetPaAuthData function.
  *
@@ -178,6 +178,20 @@ typedef struct {
         _pBuf += PAD32 (2 + _len); \
 }
 
+
+/*
+ * SEND FOO - write to connection instead of buffer
+ */
+#define SEND_STRING(_iceConn, _string) \
+{ \
+    char _padding[3] = { 0 }; \
+    CARD16 _len = (CARD16) strlen (_string); \
+    IceWriteData32 (_iceConn, 2, &_len); \
+    if (_len) \
+        IceSendData (_iceConn, _len, (char *) _string);  \
+    if (PAD32 (2 + _len)) \
+        IceSendData (_iceConn, PAD32 (2 + _len), _padding); \
+}
 
 /*
  * EXTRACT FOO

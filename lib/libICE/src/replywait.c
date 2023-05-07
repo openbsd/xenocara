@@ -60,6 +60,8 @@ _IceAddReplyWait (
     }
 
     savedReplyWait = malloc (sizeof (_IceSavedReplyWait));
+    if (!savedReplyWait)
+      return;
 
     savedReplyWait->reply_wait = replyWait;
     savedReplyWait->reply_ready = False;

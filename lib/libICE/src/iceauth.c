@@ -35,8 +35,8 @@ Author: Ralph Mor, X Consortium
 
 #include <time.h>
 
-#ifdef HAVE_LIBBSD
-#include <bsd/stdlib.h>	/* for arc4random_buf() */
+#ifdef HAVE_ARC4RANDOM_BUF
+#include <stdlib.h>	/* for arc4random_buf() */
 #endif
 
 #include <unistd.h>
@@ -151,7 +151,7 @@ _IcePoMagicCookie1Proc (
     {
 	/*
 	 * This is the first time we're being called.  Search the
-	 * authentication data for the first occurence of
+	 * authentication data for the first occurrence of
 	 * MIT-MAGIC-COOKIE-1 that matches iceConn->connection_string.
 	 */
 
@@ -229,7 +229,7 @@ _IcePaMagicCookie1Proc (
     else
     {
 	/*
-	 * Search the authentication data for the first occurence of
+	 * Search the authentication data for the first occurrence of
 	 * MIT-MAGIC-COOKIE-1 that matches iceConn->connection_string.
 	 */
 

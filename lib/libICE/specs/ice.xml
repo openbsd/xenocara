@@ -94,7 +94,7 @@ allow them to share the same transport layer connection.</para>
 
 <para>Through some mechanism outside ICE, two parties make themselves known to
 each other and agree that they would like to communicate using an ICE
-subprotocol.  ICE assumes that this negotation includes some notion by which
+subprotocol.  ICE assumes that this negotiation includes some notion by which
 the parties will decide which is the <quote>originating</quote> party and which is
 the <quote>answering</quote> party.  The negotiation will also need to provide the
 originating party with a name or address of the answering party.  Examples

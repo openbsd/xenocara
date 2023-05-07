@@ -68,7 +68,7 @@ typedef struct {
  */
 
 #define IceAuthLockSuccess	0   /* lock succeeded */
-#define IceAuthLockError	1   /* lock unexpectely failed, check errno */
+#define IceAuthLockError	1   /* lock unexpectedly failed, check errno */
 #define IceAuthLockTimeout	2   /* lock failed, timeouts expired */
 
 

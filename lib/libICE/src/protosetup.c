@@ -150,6 +150,17 @@ IceProtocolSetup (
 	SIZEOF (iceProtocolSetupMsg), WORD64COUNT (extra),
 	iceProtocolSetupMsg, pMsg, pData);
 
+    if (pData == NULL) {
+	iceConn->outbufptr -= SIZEOF (iceProtocolSetupMsg);
+	free(authIndices);
+	if (errorStringRet && errorLength > 0) {
+	    strncpy (errorStringRet,
+		"Too much extra data for iceProtocolSetupMsg", errorLength);
+	    errorStringRet[errorLength - 1] = '\0';
+	}
+	return (IceProtocolSetupFailure);
+    }
+
     setup_sequence = iceConn->send_sequence;
 
     pMsg->protocolOpcode = myOpcode;
@@ -206,7 +217,7 @@ IceProtocolSetup (
 	{
 	    if (errorStringRet && errorLength > 0) {
 		strncpy (errorStringRet,
-		    "IO error occured doing Protocol Setup on connection",
+		    "IO error occurred doing Protocol Setup on connection",
 		    errorLength);
 		errorStringRet[errorLength - 1] = '\0';
 	    }

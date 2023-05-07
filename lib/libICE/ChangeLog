@@ -1,3 +1,294 @@
+commit be1888a46e446dfcaa62ac0a97d96bb77b6816d4
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Dec 8 10:41:44 2022 -0500
+
+    libICE 1.1.1
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit e176b676cff17948d68299c00dddefe41638c752
+Author: Arsen Arsenović <arsen@aarsen.me>
+Date:   Sun Dec 4 22:19:20 2022 +0100
+
+    ICEmsg: Fix C++ interoperability error due to static_assert define
+    
+    Commit 0269c687e954db7aca2a4344e32cb203315a00b6 added a static_assert helper
+    that gets defined to blank if left undefined by assert.h.  As this is not a
+    macro in other languages that use this header, this can lead to a compile-time
+    error.
+    
+    Bug: https://bugs.gentoo.org/884369
+
+commit 6c057be0f0aef0aeabb9a00e6814548fed0c125a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 3 16:48:25 2022 -0800
+
+    libICE 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f032db0964e6d73b4f3c3264c1f8fbbb023fdf4c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 23 10:29:44 2022 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    The only files libICE operates on are .ICEauthority files, which
+    it only uses internally and does not make available to other code,
+    so there is no concern about ABI mismatch here.
+    
+    While .ICEauthority files should never be more than 2gb in size,
+    they may be stored on filesystems with large inodes.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dd207b23f8d8ffe36e6727c813372a7858aafd02
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Nov 10 10:02:24 2022 -0800
+
+    ice.pc.in: "Libs.Private" should be "Libs.private"
+    
+    Fixes: b9411f7 ("ice.pc.in: add -lbsd flags when required")
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0515b88aa55e6e55d7ab2808d245fdd64f7863ff
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 27 19:01:46 2022 -0700
+
+    Avoid -Wdeclaration-after-statement warnings from static_assert
+    
+    Some implementations of static_assert() define a new variable.
+    Avoid warnings from those when calling static_assert() from a
+    macro that may not be at the top of a new code block.
+    
+    ../../src/accept.c: In function 'IceAcceptConnection':
+    ../../src/accept.c:159:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+      159 |     IceGetHeader (iceConn, 0, ICE_ByteOrder,
+          |     ^~~~~~~~~~~~
+    ../../src/connect.c: In function 'IceOpenConnection':
+    ../../src/connect.c:254:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+      254 |     IceGetHeader (iceConn, 0, ICE_ByteOrder,
+          |     ^~~~~~~~~~~~
+    ../../src/connect.c:340:5: warning: ISO C90 forbids mixed declarations and code [-Wdeclaration-after-statement]
+      340 |     IceGetHeaderExtra (iceConn, 0, ICE_ConnectionSetup,
+          |     ^~~~~~~~~~~~~~~~~
+    [...etc...]
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 246cbc402aabe5e971c43d1a21b66ab4c602f1cf
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Oct 27 18:42:47 2022 -0700
+
+    Only link with libbsd if needed for arc4random_buf() or getentropy()
+    
+    Avoid unnecessary library dependency when using a libc with these
+    functions included
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 81da58f39d274ab7f822fb22e56b5b2027597a51
+Author: Guillem Jover <guillem@hadrons.org>
+Date:   Thu Oct 6 00:26:11 2022 +0000
+
+    Switch from libbsd to libbsd-overlay
+    
+    This is the preferred usage form for libbsd, as it makes the code more
+    portable and requires no special includes for libbsd, by transparently
+    injects the needed standard headers that would be used on a BSD.
+    
+    Signed-off-by: Guillem Jover <guillem@hadrons.org>
+
+commit 96c84e563610d5c7846e601605f675f3d3840dd2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 14 16:29:32 2022 -0700
+
+    Handle arrays too large to fit in iceConn buffers
+    
+    Fixes numerous gcc warnings of the form:
+    
+    connect.c: In function ‘IceOpenConnection’:
+    ICElibint.h:160:25: warning: potential null pointer dereference [-Wnull-dereference]
+         *((CARD16 *) _pBuf) = _val; \
+                             ^
+    ICElibint.h:174:5: note: in expansion of macro ‘STORE_CARD16’
+         STORE_CARD16 (_pBuf, _len); \
+         ^~~~~~~~~~~~
+    connect.c:351:5: note: in expansion of macro ‘STORE_STRING’
+         STORE_STRING (pData, IceReleaseString);
+         ^~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0269c687e954db7aca2a4344e32cb203315a00b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 7 14:22:44 2022 -0700
+
+    ICEmsg.h: Add static asserts that message header length <= ICE_OUTBUFSIZE
+    
+    A message header length larger than ICE_OUTBUFSIZE will cause
+    buffer overflows.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b399fc2b3c5c2cf5f0d36d98c372f353a8186d15
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 7 13:37:34 2022 -0700
+
+    IceFlush: signal fatal I/O error if bufptr is past end of buffer
+    
+    It should never happen, but has been possible in the past when
+    we didn't handle buffer checks properly - this would help us
+    catch it if a similar mistake ever happens again (or the wrong
+    memory pointer gets corrupted by something else).
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 918d58772595e7cd9907a7b08874196442fbf599
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 7 13:36:28 2022 -0700
+
+    Refactor Fatal I/O error handling into a common function
+    
+    Reduce duplicated code in _IceRead() and _IceWrite()
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6ca1ea376c7c6c9dc719d607b7684d87bcf96712
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 7 11:33:13 2022 -0700
+
+    IceGetHeaderExtra: only include extra space in outbufptr if there's room
+    
+    If there's not room for it in the buffer, we already set pData to
+    NULL, but still set the outbufptr to include the space, which could
+    lead to IceFlush() reading past the end of the buffer.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 76fd1cf6534358426cddaed045514d79270275b5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Aug 20 16:54:52 2022 -0700
+
+    Only link to libbsd for arc4random_buf if it is not found in libc
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0124a9ea65118ae70bcc155e2a9a36a6c4869310
+Author: walter harms <wharms@bfs.de>
+Date:   Wed Oct 18 18:09:05 2017 +0200
+
+    make sure buffer is zero filled and report if allocation failed
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e7787324a788fe84f7e438f4db9a47c8f6dd952
+Author: walter harms <wharms@bfs.de>
+Date:   Wed Oct 18 18:03:47 2017 +0200
+
+    add check for malloc
+    
+    fix a potential null pointer deference error
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+
+commit 7b439c788b94849d4f07cda77518bec43ebbd9a6
+Author: walter harms <wharms@bfs.de>
+Date:   Thu Sep 7 18:46:39 2017 +0200
+
+    connect.c: FIX 'iceConn' shadows a previous local, [-Wshadow]
+    
+    In function 'IceOpenConnection':  gcc give the following warning:
+     connect.c:106:11: warning: declaration of 'iceConn' shadows a previous local  [-Wshadow]
+    fixed by renaming 2. iceConn to iConn (and all its uses)
+    
+    Signed-off-by: Walter Harms <wharms@bfs.de>
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 348b9a46086ad72d6f29f2637036accff6630db4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 15:17:40 2022 -0700
+
+    ProcessAuthReply: rename status variable to avoid shadowing
+    
+    Fixes gcc complaint:
+    
+    process.c: In function ‘ProcessAuthReply’:
+    process.c:1478:20: warning: declaration of ‘status’ shadows a previous local [-Wshadow]
+     1478 |             Status status = 1;
+          |                    ^~~~~~
+    process.c:1426:25: note: shadowed declaration is here
+     1426 |         IcePaAuthStatus status =
+          |                         ^~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d70c666549a9ee17de7349904529cf41bf023926
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 15:04:53 2022 -0700
+
+    ConnectToPeer: be doubly sure that use-after-free doesn't happen
+    
+    This resolves an issue reported by the Oracle Parfait static analyzer:
+    
+    Error: Use after free
+       Use after free [use-after-free] (CWE 416):
+          Use after free of pointer trans_conn
+            at line 566 of lib/libICE/src/connect.c in function 'ConnectToPeer'.
+              trans_conn previously freed with _IceTransClose at line 532
+              trans_conn was allocated at line 525 with _IceTransOpenCOTSClient
+    
+    even though I believe this is already handled by the
+    'if (madeConnection) { ... } else trans_conn = NULL;'
+    block, but the analyzer apparently doesn't follow that logic,
+    while this simple change makes it obvious.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d2cb9e7a897a070b2509f9de60961c9d154ee99
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 14:39:02 2022 -0700
+
+    configure: check for libbsd before libxtrans checks for strlcpy
+    
+    If we're going to link to libbsd, might as well use it for strlcpy too
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9a3534b3e0808a5294f85f2402a2b4410a153b76
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 14:27:55 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 410d2005f5a1f11e8204d9bc3432e0b145ae3161
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 14:08:43 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 08df47e4786d112a639915331702b4a27def6a56
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 30 13:58:58 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9411f79f59b63d7d363234d795fa5c77cc738c9
+Author: David Callu <callu.david@gmail.com>
+Date:   Tue Apr 7 10:20:49 2020 +0200
+
+    ice.pc.in: add -lbsd flags when required
+
 commit 8e6a14c63d6b73cde87cb331439f2a4d19cba5b9
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 14 10:37:25 2019 -0700

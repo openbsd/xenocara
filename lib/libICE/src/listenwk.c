@@ -68,11 +68,14 @@ IceListenForWellKnownConnections (
 	return (0);
     }
 
-    if ((listenObjs = malloc (transCount * sizeof (struct _IceListenObj))) == NULL)
+    listenObjs = calloc (transCount, sizeof (struct _IceListenObj));
+    if (listenObjs == NULL)
     {
 	for (i = 0; i < transCount; i++)
 	    _IceTransClose (transConns[i]);
 	free (transConns);
+
+	strncpy (errorStringRet, "Malloc failed", errorLength);
 	return (0);
     }
 

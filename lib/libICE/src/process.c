@@ -148,7 +148,7 @@ asprintf(char ** ret, const char *format, ...)
  * for a reply, and while calling IceProcessMessages, a callback can be
  * invoked which will wait for another reply).  We take advantage of the
  * fact that for a given protocol, we are guaranteed that messages are
- * processed in the order we sent them.  So, everytime we have a new
+ * processed in the order we sent them.  So, every time we have a new
  * replyWait, we add it to the END of the 'saved_reply_waits' list.  When
  * we read a message and want to see if it matches a replyWait, we use the
  * FIRST replyWait in the list with the major opcode of the message.  If the
@@ -160,7 +160,7 @@ asprintf(char ** ret, const char *format, ...)
  * The return value of IceProcessMessages is one of the following:
  *
  * IceProcessMessagesSuccess - the message was processed successfully.
- * IceProcessMessagesIOError - an IO error occured.  The caller should
+ * IceProcessMessagesIOError - an IO error occurred.  The caller should
  *			       invoked IceCloseConnection.
  * IceProcessMessagesConnectionClosed - the connection was closed as a
  *					result of shutdown negotiation.
@@ -207,7 +207,7 @@ IceProcessMessages (
     if (!iceConn->io_ok)
     {
 	/*
-	 * An unexpected IO error occured.  The caller of IceProcessMessages
+	 * An unexpected IO error occurred.  The caller of IceProcessMessages
 	 * should call IceCloseConnection which will cause the watch procedures
 	 * to be invoked and the ICE connection to be freed.
 	 */
@@ -526,10 +526,15 @@ AcceptConnection (
 
     pMsg->versionIndex = versionIndex;
 
-    STORE_STRING (pData, IceVendorString);
-    STORE_STRING (pData, IceReleaseString);
+    if (pData != NULL) {
+	STORE_STRING (pData, IceVendorString);
+	STORE_STRING (pData, IceReleaseString);
 
-    IceFlush (iceConn);
+	IceFlush (iceConn);
+    } else {
+	SEND_STRING (iceConn, IceVendorString);
+	SEND_STRING (iceConn, IceReleaseString);
+    }
 
     iceConn->connection_status = IceConnectAccepted;
 }
@@ -559,10 +564,15 @@ AcceptProtocol (
     pMsg->protocolOpcode = myOpcode;
     pMsg->versionIndex = versionIndex;
 
-    STORE_STRING (pData, vendor);
-    STORE_STRING (pData, release);
+    if (pData != NULL) {
+	STORE_STRING (pData, vendor);
+	STORE_STRING (pData, release);
 
-    IceFlush (iceConn);
+	IceFlush (iceConn);
+    } else {
+	SEND_STRING (iceConn, vendor);
+	SEND_STRING (iceConn, release);
+    }
 
 
     /*
@@ -1475,7 +1485,7 @@ ProcessAuthReply (
 	    _IceProcessMsgInfo *process_msg_info;
 	    IcePointer clientData = NULL;
 	    char *failureReason = NULL;
-	    Status status = 1;
+	    Status setupStatus = 1;
 
 	    protocolSetupProc = myProtocol->protocol_setup_proc;
 	    protocolActivateProc = myProtocol->protocol_activate_proc;
@@ -1486,7 +1496,7 @@ ProcessAuthReply (
 		 * Notify the client of the Protocol Setup.
 		 */
 
-		status = (*protocolSetupProc) (iceConn,
+		setupStatus = (*protocolSetupProc) (iceConn,
 		    myProtocol->version_recs[iceConn->protosetup_to_me->
 		        my_version_index].major_version,
 		    myProtocol->version_recs[iceConn->protosetup_to_me->
@@ -1505,7 +1515,7 @@ ProcessAuthReply (
 		iceConn->protosetup_to_me->his_release = NULL;
 	    }
 
-	    if (status != 0)
+	    if (setupStatus != 0)
 	    {
 		/*
 		 * Send the Protocol Reply
@@ -1869,7 +1879,7 @@ ProcessProtocolSetup (
     {
 	/*
 	 * If we sent a WantToClose message, but just got a ProtocolSetup,
-	 * we must cancel our WantToClose.  It is the responsiblity of the
+	 * we must cancel our WantToClose.  It is the responsibility of the
 	 * other client to send a WantToClose later on.
 	 */
 
@@ -2555,4 +2565,3 @@ _IceProcessCoreMessage (
 const int		_IceVersionCount = 1;
 const _IceVersion	_IceVersions[] = {
 			    {IceProtoMajor, IceProtoMinor, _IceProcessCoreMessage}};
-
