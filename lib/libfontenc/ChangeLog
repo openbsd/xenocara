@@ -1,3 +1,19 @@
+commit 68300c3452592a9e7bf60b4edb008785c4c891c4
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Dec 8 10:37:07 2022 -0500
+
+    libfontenc 1.1.7
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit ec2ef12a0daf7bea60e9616ea8bc4bd61f3cf36f
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Nov 29 12:05:32 2022 -0500
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
 commit c8f8ce35a5eafe8ca0d1ed3dfdd098fe0943b99c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Aug 30 16:51:28 2022 -0700
@@ -816,7 +832,7 @@ Date:   Wed Jul 13 16:51:34 2005 +0000
     Update INCLUDES to find <X11/fonts/fontenc.h>
 
 commit 85094af610ba990c6bc2377eff1f6f31dffd48e2
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jul 12 21:05:28 2005 +0000
 
     Remove encodings build system from libfontenc
@@ -853,27 +869,27 @@ Date:   Thu Jun 30 13:21:11 2005 +0000
     Check for zlib
 
 commit 092271385632708fb5dd53dca3dcfc3ead06ef6c
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 15:40:27 2005 +0000
 
     modularizeapp.sh: initialize LAST to "" symlink.sh: Add bitmaps for oclock,
         and an extra textfile for pclcomp
 
 commit 21e552451c095c5668a57765c2eb941750e00ecd
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 14:48:02 2005 +0000
 
     Add generation of encodings.dir
 
 commit a18d9ec0c4bfa36460d5e3eba1c5fb8a90086500
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 14:17:12 2005 +0000
 
     Add encodings to fontenc build system, plus various fixes to make it
         distcheck.
 
 commit bcdcaebcd2127f4e7e1c368f341a781b4cf8af6b
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 16:09:14 2005 +0000
 
     - Remove fontenc from Xfont

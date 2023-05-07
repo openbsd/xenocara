@@ -21,7 +21,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libfontenc], [1.1.6],
+AC_INIT([libfontenc], [1.1.7],
         [https://gitlab.freedesktop.org/xorg/lib/libfontenc/-/issues], [libfontenc])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -57,6 +57,9 @@ AC_CHECK_LIB(z, gzclose, [],
 
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(FONTENC, xproto)
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
 
 # Checks for library functions.
 AC_REPLACE_FUNCS([reallocarray])
