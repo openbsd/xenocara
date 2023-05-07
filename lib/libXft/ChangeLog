@@ -1,3 +1,71 @@
+commit c532908f5fdd3aee9d88d9704aedbe3be82c7ce5
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Mon Apr 17 15:23:49 2023 -0400
+
+    libXft 2.3.8
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit d587bbef21f5b6137508883f2be0e91fc5132a62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:39: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:39: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:39: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c1f79c998b36d95778e433f396e19eff7402cf7a
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Wed Jan 18 19:17:43 2023 -0500
+
+    issue 18: Problems with rotated text (monospace font only)
+    
+    Updates for version 2.3.5 included improvements for font rotation.
+    One of the minus-signs was dropped, causing a change to the orientation
+    of strings.  Restore the minus-sign.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 28b2983e684dbbfd5fa3636997fa671acb3703eb
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 27 17:26:51 2022 -0500
+
+    issue 17: libxft-2.3.7: Bold fonts in urxvt missing leftmost pixels
+    
+    Update for issue 16 replaced maximum advance with truncated offsets.
+    However, in some cases (e.g., server providing a fake bold version
+    of a font), the result may extend outside the bounding box for the
+    glyph.  To work around this, use the minimum of old/new values.
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 309c2da98a4c739bcdabc3a80610d86a40ce12e6
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Sun Nov 20 13:56:15 2022 -0500
+
+    add check for missing glyph in XftFontCheckGlyph()
+    
+    This check is needed when updating the linked list of glyphs, since the
+    older/newer links are not set, causing an xterm crash for certain fonts
+    which have holes (e.g., Kochi Mincho).
+    
+    reported by Jeff Chua
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
 commit 1463255cd4f537baabf8f2c65270e4924d4ed656
 Author: Thomas E. Dickey <dickey@invisible-island.net>
 Date:   Tue Nov 15 03:39:55 2022 -0500

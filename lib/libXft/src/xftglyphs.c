@@ -840,18 +840,22 @@ XftFontLoadGlyphs (Display	    *dpy,
 		}
 		FT_Vector_Transform(&vector, &font->info.matrix);
 		xftg->metrics.xOff = (short)(TRUNC(ROUND(vector.x)));
-		xftg->metrics.yOff = (short)(TRUNC(ROUND(vector.y)));
+		xftg->metrics.yOff = (short)(-TRUNC(ROUND(vector.y)));
 	    }
 	    else
 	    {
+		short maximum_x = (short)(font->public.max_advance_width);
+		short maximum_y = (short)(-font->public.max_advance_width);
+		short trimmed_x = (short)(TRUNC(ROUND(glyphslot->advance.x)));
+		short trimmed_y = (short)(-TRUNC(ROUND(glyphslot->advance.y)));
 		if (font->info.load_flags & FT_LOAD_VERTICAL_LAYOUT)
 		{
 		    xftg->metrics.xOff = 0;
-		    xftg->metrics.yOff = (short)(-TRUNC(ROUND(glyphslot->advance.y)));
+		    xftg->metrics.yOff = min(maximum_y,trimmed_y);
 		}
 		else
 		{
-		    xftg->metrics.xOff = (short)(TRUNC(ROUND(glyphslot->advance.x)));
+		    xftg->metrics.xOff = min(maximum_x,trimmed_x);
 		    xftg->metrics.yOff = 0;
 		}
 	    }
@@ -1245,8 +1249,11 @@ XftFontCheckGlyph (Display	*dpy,
     /*
      * Make unloading faster by moving newly-referenced glyphs to the front
      * of the list, leaving the less-used glyphs on the end.
+     *
+     * If the glyph is zero, the older/newer data may not have been set.
      */
-    if (font->track_mem_usage
+    if (glyph != 0
+     && font->track_mem_usage
      && font->total_inuse > 10
      && font->newest != FT_UINT_MAX
      && font->newest != glyph)
