@@ -1,3 +1,137 @@
+commit dc882ac7b748048f12b033d0d8e5267a6e36036a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 19 18:17:34 2022 -0800
+
+    libSM 1.2.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 12812dca0f852178d8cc3813e4056b396a8f3ab5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 7 12:44:33 2022 -0700
+
+    Handle arrays too large to fit in iceConn buffers
+    
+    Fixes numerous gcc warnings of the form:
+    
+    sm_client.c: In function ‘SmcOpenConnection’:
+    SMlibint.h:109:25: warning: potential null pointer dereference [-Wnull-dereference]
+         *((CARD32 *) _pBuf) = _val; \
+    SMlibint.h:160:5: note: in expansion of macro ‘STORE_CARD32’
+         STORE_CARD32 (_pBuf, (CARD32) _len); \
+         ^~~~~~~~~~~~
+    sm_client.c:207:5: note: in expansion of macro ‘STORE_ARRAY8’
+         STORE_ARRAY8 (pData, len, previousId);
+         ^~~~~~~~~~~~
+    
+    v2: Raise required libICE version to 1.1.0 to get the updated
+    IceGetHeaderExtra macro definition needed for this to work correctly.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bb02359ff464d51cbb29d3c93e7e55f3649e5b91
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 12:07:40 2022 -0800
+
+    gitlab CI: build current libICE, to meet dependency on >= 1.1.0
+    
+    Allow us to pass CI without waiting for Debian to pick up yesterday's
+    release of libICE 1.1.0.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6e541c8fa782ca816f8bf78a54eea27dab27e4a2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 449fdba5482549361a4cd6376d877ebd5162988a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 7 11:07:56 2022 -0700
+
+    SmcCloseConnection: remove unnecessary cast from free()
+    
+    commit b17f93a1d041e63261ff followed the style of the time it was
+    written, before commit e77dd2e4bc8227 had removed them.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b17f93a1d041e63261ff63419796136a26489549
+Author: Kim Woelders <kim@woelders.dk>
+Date:   Sat Oct 30 10:00:13 2010 +0200
+
+    Fix some potential memory leaks in SmcCloseConnection().
+    
+    Signed-off-by: Kim Woelders <kim@woelders.dk>
+    Reviewed-by: Corbin Simpson <MostAwesomeDude@gmail.com>
+
+commit a32df086f823099a5e0c00b20f0bb965fed5aa60
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 5 10:49:14 2022 -0800
+
+    Add uuid as private dependency to sm.pc for static linking
+    
+    If a uuid.pc file was found, add it to Requires.private.
+    Otherwise, add $LIBUUID_LIBS to Libs.private.
+    
+    Fixes: #1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d2076f6a990acc295f2e98bdc2c95649978e7b5f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 5 08:16:08 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0b6048d790499477b6a2907bf3fe755a54cbe68d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 5 08:09:47 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 56cdb14923310bfa4d393f2acfffeadb04d806c0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 5 08:09:19 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e6ccf19f8d1f71ef79f192b4ca9debf7280232a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:32:18 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 90df350229d3a687de8d65dc450bceb78eceb014
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 17:15:03 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82ed8b7d73f306835b951410f5c309a5774ab9d4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Nov 10 13:19:14 2018 -0800
+
+    Remove obsolete B16 & B32 tags in struct definitions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a52c79544fcd6b5e2242b9122dfaa34be07aebb2
 Author: Matthieu Herrb <matthieu@herrb.eu>
 Date:   Sun Sep 30 11:03:41 2018 +0200
@@ -908,7 +1042,7 @@ Date:   Thu Jan 14 21:00:53 2010 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 0b2e5ca9da6b35f5cf98ac879601cf8083c72dde
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Thu Dec 17 08:26:28 2009 +0100
 
     require autoconf 2.60 because of $(docdir) use
@@ -1032,7 +1166,7 @@ Date:   Fri Oct 9 23:28:11 2009 -0700
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit 7fc343e70202279fd3daa3adf789ca35b0ec8891
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Fri Aug 14 11:20:34 2009 +0200
 
     require libICE >= 1.0.5
@@ -1045,13 +1179,13 @@ Date:   Fri Aug 14 11:20:34 2009 +0200
     Signed-off-by: Rémi Cardona <remi@gentoo.org>
 
 commit 82bbf42a2ba0401a8346505b1292ddb7b58f4507
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Fri Aug 7 14:19:50 2009 +0200
 
     libSM 1.1.1, update libtool version
 
 commit 45720a2e266748ac15bc0544b56e035383695588
-Author: Diego Elio 'Flameeyes' Pettenò <flameeyes@gmail.com>
+Author: Diego Elio 'Flameeyes' Pettenò  <flameeyes@gmail.com>
 Date:   Sat May 16 01:01:39 2009 +0200
 
     Use FreeBSD uuid functions when available.
@@ -1330,7 +1464,7 @@ Date:   Thu May 19 00:10:07 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit 0b4b811191a1e74356b7ff78a09107e29a7ef695
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue May 17 21:25:16 2005 +0000
 
     - Conditionally include config.h in xc/lib/SM

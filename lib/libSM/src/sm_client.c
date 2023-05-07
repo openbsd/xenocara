@@ -204,9 +204,13 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 	SIZEOF (smRegisterClientMsg), WORD64COUNT (extra),
 	smRegisterClientMsg, pMsg, pData);
 
-    STORE_ARRAY8 (pData, len, previousId);
-
-    IceFlush (iceConn);
+    if (pData != NULL) {
+	STORE_ARRAY8 (pData, len, previousId);
+	IceFlush (iceConn);
+    }
+    else {
+	SEND_ARRAY8 (iceConn, len, previousId);
+    }
 
     replyWait.sequence_of_request = IceLastSentSequenceNumber (iceConn);
     replyWait.major_opcode_of_request = _SmcOpcode;
@@ -224,7 +228,7 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 	if (ioErrorOccured)
 	{
 	    if (errorStringRet && errorLength > 0) {
-		strncpy (errorStringRet, "IO error occured opening connection",
+		strncpy (errorStringRet, "IO error occurred opening connection",
 			 errorLength);
 		errorStringRet[errorLength - 1] = '\0';
 	    }
@@ -260,9 +264,13 @@ SmcOpenConnection(char *networkIdsList, SmPointer context,
 		    SIZEOF (smRegisterClientMsg), WORD64COUNT (extra),
 		    smRegisterClientMsg, pMsg, pData);
 
-		STORE_ARRAY8 (pData, 0, "");
-
-		IceFlush (iceConn);
+		if (pData != NULL) {
+		    STORE_ARRAY8 (pData, 0, "");
+		    IceFlush (iceConn);
+		}
+		else {
+		    SEND_ARRAY8 (iceConn, 0, "");
+		}
 
 		replyWait.sequence_of_request =
 		    IceLastSentSequenceNumber (iceConn);
@@ -296,13 +304,24 @@ SmcCloseConnection(SmcConn smcConn, int count, char **reasonMsgs)
 	SIZEOF (smCloseConnectionMsg), WORD64COUNT (extra),
 	smCloseConnectionMsg, pMsg, pData);
 
-    STORE_CARD32 (pData, (CARD32) count);
-    pData += 4;
+    if (pData != NULL) {
+	STORE_CARD32 (pData, (CARD32) count);
+	STORE_CARD32 (pData, (CARD32) 0); /* padding */
 
-    for (i = 0; i < count; i++)
-	STORE_ARRAY8 (pData, strlen (reasonMsgs[i]), reasonMsgs[i]);
+	for (i = 0; i < count; i++)
+	    STORE_ARRAY8 (pData, strlen (reasonMsgs[i]), reasonMsgs[i]);
 
-    IceFlush (iceConn);
+	IceFlush (iceConn);
+    } else {
+	CARD32 count_header[2] = {
+	    (CARD32) count,
+	    (CARD32) 0 /* padding */
+	};
+	IceWriteData32 (iceConn, 8, count_header);
+
+	for (i = 0; i < count; i++)
+	    SEND_ARRAY8 (iceConn, strlen (reasonMsgs[i]), reasonMsgs[i]);
+    }
 
     IceProtocolShutdown (iceConn, _SmcOpcode);
     IceSetShutdownNegotiation (iceConn, False);
@@ -316,6 +335,22 @@ SmcCloseConnection(SmcConn smcConn, int count, char **reasonMsgs)
 
     if (smcConn->client_id)
 	free (smcConn->client_id);
+
+    if (smcConn->interact_waits)
+    {
+	_SmcInteractWait *ptr = smcConn->interact_waits;
+	_SmcInteractWait *next;
+
+	while (ptr)
+	{
+	    next = ptr->next;
+	    free (ptr);
+	    ptr = next;
+	}
+    }
+
+    if (smcConn->phase2_wait)
+	free (smcConn->phase2_wait);
 
     if (smcConn->prop_reply_waits)
     {
@@ -396,13 +431,25 @@ SmcDeleteProperties(SmcConn smcConn, int numProps, char **propNames)
 	SIZEOF (smDeletePropertiesMsg), WORD64COUNT (extra),
 	smDeletePropertiesMsg, pMsg, pData);
 
-    STORE_CARD32 (pData, numProps);
-    pData += 4;
+    if (pData != NULL) {
+	STORE_CARD32 (pData, (CARD32) numProps);
+	STORE_CARD32 (pData, (CARD32) 0); /* padding */
 
-    for (i = 0; i < numProps; i++)
-	STORE_ARRAY8 (pData, strlen (propNames[i]), propNames[i]);
+	for (i = 0; i < numProps; i++)
+	    STORE_ARRAY8 (pData, strlen (propNames[i]), propNames[i]);
 
-    IceFlush (iceConn);
+	IceFlush (iceConn);
+    }
+    else {
+	CARD32 count_header[2] = {
+	    (CARD32) numProps,
+	    (CARD32) 0 /* padding */
+	};
+	IceWriteData32 (iceConn, 8, count_header);
+
+	for (i = 0; i < numProps; i++)
+	    SEND_ARRAY8 (iceConn, strlen (propNames[i]), propNames[i]);
+    }
 }
 
 

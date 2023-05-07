@@ -198,9 +198,13 @@ SmsRegisterClientReply(SmsConn smsConn, char *clientId)
 	SIZEOF (smRegisterClientReplyMsg), WORD64COUNT (extra),
 	smRegisterClientReplyMsg, pMsg, pData);
 
-    STORE_ARRAY8 (pData, strlen (clientId), clientId);
-
-    IceFlush (iceConn);
+    if (pData != NULL) {
+        STORE_ARRAY8 (pData, strlen (clientId), clientId);
+        IceFlush (iceConn);
+    }
+    else {
+        SEND_ARRAY8 (iceConn, strlen (clientId), clientId);
+    }
 
     return (1);
 }

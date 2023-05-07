@@ -37,7 +37,7 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
     /* n	ARRAY8		previousId */
 } smRegisterClientMsg;
 
@@ -45,7 +45,7 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
     /* n	ARRAY8		clientId */
 } smRegisterClientReplyMsg;
 
@@ -53,7 +53,7 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused1[2];
-    CARD32	length B32;
+    CARD32	length;
     CARD8	saveType;
     CARD8	shutdown;
     CARD8	interactStyle;
@@ -65,7 +65,7 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused1[2];
-    CARD32	length B32;
+    CARD32	length;
     CARD8	saveType;
     CARD8	shutdown;
     CARD8	interactStyle;
@@ -79,14 +79,14 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	dialogType;
     CARD8	unused;
-    CARD32	length B32;
+    CARD32	length;
 } smInteractRequestMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smInteractMsg;
 
 typedef struct {
@@ -94,7 +94,7 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8	cancelShutdown;
     CARD8	unused;
-    CARD32	length B32;
+    CARD32	length;
 } smInteractDoneMsg;
 
 typedef struct {
@@ -102,28 +102,28 @@ typedef struct {
     CARD8	minorOpcode;
     CARD8       success;
     CARD8	unused;
-    CARD32	length B32;
+    CARD32	length;
 } smSaveYourselfDoneMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smDieMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smShutdownCancelledMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
     /* b	LISTofARRAY8	reasons */
 } smCloseConnectionMsg;
 
@@ -131,7 +131,7 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
     /* a	LISTofPROPERTY	properties */
 } smSetPropertiesMsg;
 
@@ -139,7 +139,7 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
     /* a	LISTofARRAY8	property names */
 } smDeletePropertiesMsg;
 
@@ -147,14 +147,14 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smGetPropertiesMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
     /* a	LISTofPROPERTY	properties */
 } smPropertiesReplyMsg;
 
@@ -162,21 +162,21 @@ typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smSaveYourselfPhase2RequestMsg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smSaveYourselfPhase2Msg;
 
 typedef struct {
     CARD8	majorOpcode;
     CARD8	minorOpcode;
     CARD8	unused[2];
-    CARD32	length B32;
+    CARD32	length;
 } smSaveCompleteMsg;
 
 

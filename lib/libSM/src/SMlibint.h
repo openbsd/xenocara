@@ -182,6 +182,19 @@ in this Software without prior written authorization from The Open Group.
     } \
 }
 
+/*
+ * Send an ARRAY8 that doesn't fit in the iceConn send buffer.
+ */
+#define SEND_ARRAY8(_iceConn, _len, _array8) \
+{ \
+    char _padding[7] = { 0 }; \
+    CARD32 _array_len = (CARD32) _len;  \
+    IceWriteData32 (_iceConn, 4, &_array_len); \
+    if (_len) \
+        IceSendData (_iceConn, _len, (char *) _array8); \
+    IceSendData (_iceConn, PAD64 (4 + _len), _padding); \
+}
+
 
 /*
  * Client replies not processed by callbacks (we block for them).
