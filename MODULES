@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.504 2023/05/01 12:37:09 matthieu Exp $
+# $OpenBSD: MODULES,v 1.505 2023/05/07 17:44:52 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -26,13 +26,13 @@ app/x11perf		1.6.2
 app/xauth		1.1.2
 app/xbacklight		1.2.3
 app/xbiff		1.0.4
-app/xcalc		1.1.1
+app/xcalc		1.1.2
 app/xclipboard		1.1.4
 app/xclock		1.1.1
 app/xcmsdb		1.0.6
 app/xcompmgr		1.1.9
 app/xconsole		1.0.8
-app/xdpyinfo		1.3.4		needs-update
+app/xdpyinfo		1.3.4
 app/xdriinfo		1.0.7
 app/xedit		1.2.3
 app/xev			1.2.5
@@ -44,7 +44,7 @@ app/xgamma		1.0.7
 app/xgc			1.0.6
 app/xhost		1.0.9
 app/xinit		1.4.2
-app/xinput		1.6.4		needs-update
+app/xinput		1.6.4
 app/xkbcomp		1.4.6
 app/xkbevd		1.1.5
 app/xkbprint		1.0.6
@@ -83,7 +83,7 @@ driver/xf86-input-fpit		1.4.0
 driver/xf86-input-hyperpen	1.4.1
 driver/xf86-input-joystick	1.6.4
 driver/xf86-input-keyboard	2.0.0
-driver/xf86-input-mouse		1.9.4
+driver/xf86-input-mouse		1.9.5		needs-update
 driver/xf86-input-mutouch	1.3.0
 driver/xf86-input-penmount	1.5.0
 driver/xf86-input-synaptics	1.9.2
@@ -95,7 +95,7 @@ driver/xf86-video-ast		1.1.6		needs-update
 driver/xf86-video-ati		22.0.0		needs-update
 driver/xf86-video-cirrus	1.6.0		needs-update
 driver/xf86-video-dummy		0.4.0
-driver/xf86-video-geode		2.11.20		needs-update
+driver/xf86-video-geode		2.11.21		needs-update
 driver/xf86-video-intel		2.99.917	needs-update
 driver/xf86-video-mach64	6.9.7
 driver/xf86-video-mga		2.0.1
@@ -147,39 +147,39 @@ font/util			1.4.0
 font/winitzki-cyrillic		1.0.4
 font/xfree86-type1		1.0.5
 
-lib/libICE			1.1.1		needs-update
-lib/libSM			1.2.4		needs-update
+lib/libICE			1.1.1
+lib/libSM			1.2.4
 lib/libX11			1.8.4		needs-update
-lib/libXScrnSaver		1.2.4		needs-update
-lib/libXau			1.0.11		needs-update
+lib/libXScrnSaver		1.2.4
+lib/libXau			1.0.11
 lib/libXaw			1.0.15		needs-update
 lib/libXcomposite		0.4.6		needs-update
 lib/libXcursor			1.2.1
 lib/libXdamage			1.1.6		needs-update
-lib/libXdmcp			1.1.4		needs-update
+lib/libXdmcp			1.1.4
 lib/libXext			1.3.5
 lib/libXfixes			6.0.1		needs-update
 lib/libXfont2			2.0.6
-lib/libXft			2.3.8		needs-update
-lib/libXi			1.8
+lib/libXft			2.3.8
+lib/libXi			1.8.1		needs-update
 lib/libXinerama			1.1.5
 lib/libXmu			1.1.4
-lib/libXpm			3.5.16		needs-update
+lib/libXpm			3.5.16
 lib/libXpresent			1.0.1
 lib/libXrandr			1.5.3		needs-update
 lib/libXrender			0.9.11
-lib/libXres			1.2.2		needs-update
+lib/libXres			1.2.2
 lib/libXt			1.3.0		needs-update
 lib/libXtst			1.2.4
 lib/libXv			1.0.12		needs-update
 lib/libXvMC			1.0.13		needs-update
-lib/libXxf86dga			1.1.6		needs-update
+lib/libXxf86dga			1.1.6
 lib/libXxf86vm			1.1.5
-lib/libfontenc			1.1.7		needs-update
+lib/libfontenc			1.1.7
 lib/libpciaccess		0.17
 lib/libxcb			1.15
 lib/libxcvt			0.1.2
-lib/libxkbfile			1.1.2		needs-update
+lib/libxkbfile			1.1.2
 lib/libxshmfence		1.3.2		needs-update
 lib/libxtrans			1.4.0
 lib/pixman			0.42.2		needs-update
