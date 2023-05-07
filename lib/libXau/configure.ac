@@ -22,7 +22,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXau], [1.0.10],
+AC_INIT([libXau], [1.0.11],
 	[https://gitlab.freedesktop.org/xorg/lib/libxau/-/issues], [libXau])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -49,6 +49,9 @@ AC_CHECK_FUNCS([explicit_bzero pathconf])
 
 # Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XAU, xproto)
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
 
 AC_ARG_ENABLE(xthreads,
               AS_HELP_STRING([--disable-xthreads],

@@ -1,3 +1,19 @@
+commit 14fdf25db9f21c8f3ad37f0d32a5b8e726efdc0d
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Dec 8 10:36:36 2022 -0500
+
+    libXau 1.0.11
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 10f76cc702e0877743e21241b897ab93010367a2
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Nov 29 12:02:21 2022 -0500
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
 commit 4fbefa02d6c842401ff79065d364edd7087a12a6
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Aug 26 16:01:41 2022 -0700
@@ -987,7 +1003,7 @@ Date:   Sat May 14 07:46:48 2005 +0000
         source can reference them with <X11/...>.
 
 commit 56a655e717c5de6d91c890fdc6f9b0469ad1dd1a
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed May 11 22:44:53 2005 +0000
 
     lib/Xau:
@@ -1005,7 +1021,7 @@ Date:   Wed May 11 22:44:53 2005 +0000
     - New script that adds #include <config.h> to files
 
 commit 60177d823918d9ef7575da27870796c1285a2032
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Mon May 9 22:04:21 2005 +0000
 
     Add Xau library to lib/ and symlink.sh
