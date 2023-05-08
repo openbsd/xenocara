@@ -15,6 +15,7 @@ ENCODING_FILES =		\
 	ibm-cp866.enc		\
 	iso8859-11.enc		\
 	iso8859-13.enc		\
+	iso8859-14.enc		\
 	iso8859-16.enc		\
 	iso8859-6.16.enc	\
 	iso8859-6.8x.enc	\
