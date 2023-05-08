@@ -798,11 +798,16 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
     /* Setup the visuals we support. */
     
     if (!miSetVisualTypes(pScrn->depth,
-      		      miGetDefaultVisualMask(pScrn->depth),
-		      pScrn->rgbBits, pScrn->defaultVisual))
-         return FALSE;
+                          miGetDefaultVisualMask(pScrn->depth),
+                          pScrn->rgbBits, pScrn->defaultVisual)) {
+        free(pixels);
+        return FALSE;
+    }
 
-    if (!miSetPixmapDepths ()) return FALSE;
+    if (!miSetPixmapDepths ()) {
+        free(pixels);
+        return FALSE;
+    }
 
     /*
      * Call the framebuffer layer's ScreenInit function, and fill in other

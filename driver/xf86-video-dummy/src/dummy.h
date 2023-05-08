@@ -52,7 +52,7 @@ typedef struct dummyRec
     int cursorFG, cursorBG;
 
     dummy_colors colors[1024];
-    Bool        (*CreateWindow)() ;     /* wrapped CreateWindow */
+    Bool        (*CreateWindow)(WindowPtr) ;     /* wrapped CreateWindow */
     Bool prop;
     /* XRANDR support begin */
     int num_screens;

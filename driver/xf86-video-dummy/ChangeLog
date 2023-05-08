@@ -1,3 +1,53 @@
+commit 1fffb785d67cf21d6ff83d04b8ba7f5c50dc7dfb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun May 7 13:22:40 2023 -0700
+
+    xf86-video-dummy 0.4.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 234cb0271bbf69ef3bd0b90a2efdd8fb724b78f0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Mar 17 15:33:38 2023 -0700
+
+    List argument types in dummyRec->CreateWindow() function declaration
+    
+    Will be needed for C23 builds, since C23 treats () as (void),
+    not as an unspecified argument list.
+    
+    Fixes warning from Solaris Studio C compiler with -fd flag:
+    "dummy.h", line 55: warning: old style function declaration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 22c15ee0e696f6c250edbd8a3cf4c235a78b9f7d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 19 20:13:52 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffcae9381f914871cc51c80112ce39e83dc8d04b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Apr 19 20:12:30 2022 -0700
+
+    Avoid leaking pixel memory if DUMMYScreenInit fails
+    
+    Resolves issues reported by Oracle Parfait static analyzer:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pixels allocated with malloc((pScrn->videoRam * 1024))
+            at line 803 of dummy_driver.c in function 'DUMMYScreenInit'.
+              pixels allocated at line 790 with malloc((pScrn->videoRam * 1024))
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pixels allocated with malloc((pScrn->videoRam * 1024))
+            at line 805 of dummy_driver.c in function 'DUMMYScreenInit'.
+              pixels allocated at line 790 with malloc((pScrn->videoRam * 1024))
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 68e02860d9ee6d65733457e689d180653fc9829f
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Tue Apr 5 10:16:22 2022 -0700
@@ -34,7 +84,7 @@ Date:   Sat Jan 22 10:17:54 2022 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
 
 commit 9e8dce17c0c9aaa9ee193cc7280d7132163765ec
-Author: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Author: Marek Marczykowski-Górecki  <marmarek@invisiblethingslab.com>
 Date:   Tue Sep 27 22:26:30 2016 +0200
 
     Increase maximum number of video outputs to 16
@@ -44,7 +94,7 @@ Date:   Tue Sep 27 22:26:30 2016 +0200
     Signed-off-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
 
 commit a87cfeca7dca26a840793024cc44f5aea5adc7bf
-Author: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Author: Marek Marczykowski-Górecki  <marmarek@invisiblethingslab.com>
 Date:   Fri Jul 22 02:40:29 2016 +0200
 
     xf86-video-dummy: changeable physical output size
@@ -59,7 +109,7 @@ Date:   Fri Jul 22 02:40:29 2016 +0200
     Signed-off-by: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
 
 commit 327a25c4c3ab0b79a1103794449a1f7ccd6faff3
-Author: Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>
+Author: Marek Marczykowski-Górecki  <marmarek@invisiblethingslab.com>
 Date:   Tue Oct 16 16:48:47 2018 +0200
 
     RandR support in dummy video driver
@@ -872,7 +922,7 @@ Date:   Thu Aug 18 09:03:46 2005 +0000
     Update autogen.sh to one that does objdir != srcdir.
 
 commit d43c40d00ab34ae85e4684cc3860f641b0bea65c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Aug 10 14:07:24 2005 +0000
 
     Don\'t lose existing CFLAGS in all the input drivers and some of the video
@@ -893,14 +943,14 @@ Date:   Fri Jul 29 21:22:43 2005 +0000
     - Update modular Xorg version
 
 commit c5f63f703d838cfae54269c595e14a06ea04f243
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 13 21:52:24 2005 +0000
 
     Add Makefile.am here. Also, for the record, CVS needs a bullet through its
         head
 
 commit 30a2cce4b61e2b0e550479ee87f25c895cbca513
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 13 21:45:21 2005 +0000
 
     Build system for dummy video driver
