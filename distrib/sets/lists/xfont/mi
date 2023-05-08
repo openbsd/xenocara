@@ -1040,6 +1040,7 @@
 ./usr/X11R6/lib/X11/fonts/encodings/ibm-cp866.enc.gz
 ./usr/X11R6/lib/X11/fonts/encodings/iso8859-11.enc.gz
 ./usr/X11R6/lib/X11/fonts/encodings/iso8859-13.enc.gz
+./usr/X11R6/lib/X11/fonts/encodings/iso8859-14.enc.gz
 ./usr/X11R6/lib/X11/fonts/encodings/iso8859-16.enc.gz
 ./usr/X11R6/lib/X11/fonts/encodings/iso8859-6.16.enc.gz
 ./usr/X11R6/lib/X11/fonts/encodings/iso8859-6.8x.enc.gz
