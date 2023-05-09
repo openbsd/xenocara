@@ -30,7 +30,7 @@
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
-#include "xf86RamDac.h"
+#include "xf86Cursor.h"
 #ifdef HAVE_XAA_H
 #include "xaa.h"
 #endif
