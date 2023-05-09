@@ -53,7 +53,7 @@ if ((__fpriv)->rp_active != 0) { \
 	(__fpriv)->rp_active = 0; \
 } while(0)
 
-/* DEBUGGING:  You can use this if you suspect corruption is occuring
+/* DEBUGGING:  You can use this if you suspect corruption is occurring
  *             because someone is touching the framebuffer while the
  *	       raster processor is active.  If you enable this and the
  *	       problem goes away, odds are your suspicions are correct.

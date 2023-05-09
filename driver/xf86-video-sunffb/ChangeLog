@@ -1,3 +1,99 @@
+commit be0e7c885ce238e5f4159af9da41df330765ca09
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 9 10:15:25 2022 -0800
+
+    xf86-video-sunffb 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ad7b40d5db24e826e71512591f9a40ae31059c0b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 656dd83b489e7bdc72d6c1990025d20dea26dc22
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 11:05:25 2022 -0800
+
+    Include xf86Cursor.h instead of xf86RamDac.h
+    
+    ramdac drivers have been removed from xserver since version 21.0.99.1
+    and xorg/xserver@f0385fb4 resulting in the following build failure:
+    
+    In file included from ../../src/ffb_accel.c:39:
+    ../../src/ffb.h:33:10: fatal error: xf86RamDac.h: No such file or directory
+       33 | #include "xf86RamDac.h"
+          |          ^~~~~~~~~~~~~~
+    
+    but xf86RamDac.h in turn included xf86Cursor.h which we still need.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 688b7b059db391c28d530c97da0af12772e80f4d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:56:24 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d4e4327eb9fff4b9f3354e13c3a1b28b0e9a1fd3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:55:35 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 78732bb576b95f17b1f5b83cd2ae0bbf5c55704c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 29 10:53:15 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 623db2a643d86e60aaafb1a5c5a966c79fa4744a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:11:08 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bd7fe2f2ab5fc0b3839fcea8f3a22d90b5ccce37
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 16:24:28 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87b0054a899bf8fb45a16617307067e435bfebdc
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 14:00:21 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 181b60190c1f81fc9b9b5deb07d536b78f2536ab
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Mon Jun 10 21:51:08 2013 +0200
+
+    Unbreak when XAA is not present.
+    
+    Turn accel off if loading XAA fails.
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+    Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+
 commit 46e71051e0eb879a3d08ceb5675afbfdbff1f57b
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Mon Jan 21 22:47:57 2013 -0800
@@ -488,7 +584,7 @@ Date:   Mon Oct 17 00:09:06 2005 +0000
     Use sed & cpp to substitute variables in driver man pages
 
 commit 047c415b8f094d6fbcc24d09bc70bd02959b9ffc
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Sep 27 22:22:16 2005 +0000
 
     Add some files to the rendition and sunffb build systems
@@ -543,14 +639,14 @@ Date:   Fri Jul 29 21:22:45 2005 +0000
     - Update modular Xorg version
 
 commit d2b894704751df14f61e0b63333f4b2d89ca8e4e
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 27 21:23:29 2005 +0000
 
     Add xf86driproto to dependencies for drivers with DRI support. Patch from
         Donnie Berkholz
 
 commit 1aaf55726f4f85b24d24458dfca9d463df01bc15
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 26 23:36:05 2005 +0000
 
     Build system for sunffb

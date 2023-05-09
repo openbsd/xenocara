@@ -28,7 +28,7 @@
 #ifndef FFBREGS_H
 #define FFBREGS_H
 
-/* Auxilliary clips. */
+/* Auxiliary clips. */
 typedef struct  {
 	volatile unsigned int min;
 	volatile unsigned int max;
@@ -148,7 +148,7 @@ typedef struct _ffb_fbc {
 /*294*/	volatile unsigned int	xpmask;		/* X PlaneMask				*/
 /*298*/	volatile unsigned int	ypmask;		/* Y PlaneMask				*/
 /*29c*/	volatile unsigned int	zpmask;		/* Z PlaneMask				*/
-/*2a0*/	ffb_auxclip		auxclip[4]; 	/* Auxilliary Viewport Clip		*/
+/*2a0*/	ffb_auxclip		auxclip[4]; 	/* Auxiliary Viewport Clip		*/
 	
 	/* New 3dRAM III support regs */
 /*2c0*/	volatile unsigned int	rawblend2;
