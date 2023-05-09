@@ -1,4 +1,4 @@
-# $OpenBSD: MODULES,v 1.506 2023/05/08 16:43:56 matthieu Exp $
+# $OpenBSD: MODULES,v 1.507 2023/05/09 20:58:35 matthieu Exp $
 #
 # X.Org maintained modules
 #
@@ -104,7 +104,7 @@ driver/xf86-video-openchrome	0.6.179		needs-update
 driver/xf86-video-r128		6.12.1		needs-update
 driver/xf86-video-savage	2.4.0		needs-update
 driver/xf86-video-siliconmotion	1.7.9
-driver/xf86-video-sunffb	1.2.3		needs-update
+driver/xf86-video-sunffb	1.2.3
 driver/xf86-video-vesa		2.6.0		needs-update
 driver/xf86-video-vmware	13.4.0		needs-update
 driver/xf86-video-wsfb		0.4.1
