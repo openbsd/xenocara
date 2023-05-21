@@ -107,6 +107,7 @@
 		FT_GlyphSlot_Embolden;
 		FT_GlyphSlot_Oblique;
 		FT_GlyphSlot_Own_Bitmap;
+		FT_GlyphSlot_Slant;
 		FT_Glyph_Copy;
 		FT_Glyph_Get_CBox;
 		FT_Glyph_Stroke;

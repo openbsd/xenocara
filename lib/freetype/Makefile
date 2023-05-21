@@ -1,11 +1,11 @@
-#	$OpenBSD: Makefile,v 1.57 2022/07/23 19:27:21 matthieu Exp $
+#	$OpenBSD: Makefile,v 1.58 2023/05/21 09:25:29 matthieu Exp $
 
 .include <bsd.own.mk>
 
 FREETYPESRC=	${.CURDIR}/src
 
 # Get it from builds/unix/configure.ac
-FT_VERSION_INFO= 24.3.18
+FT_VERSION_INFO= 25.0.19
 
 INSTALL_PROGRAM = ${INSTALL} ${INSTALL_COPY} -m 755 -o $(BINOWN) -g $(BINGRP)
 
@@ -29,7 +29,7 @@ SRCS=   ftbase.c ftbbox.c ftbdf.c ftbitmap.c ftdebug.c ftcache.c \
 CPPFLAGS+= -I${.CURDIR}/include -I${.CURDIR}/builds/unix -I${.CURDIR}/src/lzw -DFT2_BUILD_LIBRARY -DFT_CONFIG_CONFIG_H='<ftconfig.h>'
 
 .if ${COMPILER_VERSION} != "gcc3"
-CFLAGS+= -fvisibility=hidden
+CFLAGS+= -fvisibility=hidden -std=gnu99 -Wall  -Wdeclaration-after-statement  -Werror=implicit-function-declaration  -Werror=undef  -Wextra  -Winit-self  -Winline  -Winvalid-pch  -Wmissing-declarations  -Wmissing-format-attribute  -Wmissing-prototypes  -Wnested-externs  -Wno-attributes  -Wno-long-long  -Wno-missing-field-initializers  -Wno-unused-parameter  -Wold-style-definition  -Wpacked  -Wpointer-arith  -Wshadow  -Wsign-compare  -Wstrict-aliasing=2  -Wstrict-prototypes  -Wwrite-strings
 PICFLAG= -fPIC
 VERSION_SCRIPT= ${.CURDIR}/Symbols.map
 .endif
