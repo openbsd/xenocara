@@ -1220,9 +1220,7 @@
                   delta == 1 ? "" : "s",
                   vertical ? "VVAR" : "HVAR" ));
 
-      // *avalue = ADD_INT( *avalue, delta );
-      *avalue += delta;
-	bug;
+      *avalue = ADD_INT( *avalue, delta );
     }
 
   Exit:
