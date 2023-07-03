@@ -1,3 +1,84 @@
+commit ff688ceacaddb8e2f345caadfe33e408d97782a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 3 10:40:03 2023 -0700
+
+    xrdb 1.2.2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 6085098c95847f1f9f13d26f2adc7518fabf3b24
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Feb 6 13:13:21 2023 -0800
+
+    configure: raise minimum autoconf requirement to 2.70
+    
+    Needed for builds on NetBSD to work correctly, since it depends on
+    AC_USE_SYSTEM_EXTENSIONS defining _OPENBSD_SOURCE to expose the
+    prototype for reallocarray() in the system headers.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit edcda53f9e66afadd871c23793e021e9725b4d6b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 10:48:30 2022 -0800
+
+    Fallback asprintf: don't truncate output that has a \0 in string
+    
+    Unlikely to be hit in xrdb, but may affect other uses if this code
+    gets copied to other programs.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 496bdd684935b9b7156222fec7009e8aa4a8dbad
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 10:44:17 2022 -0800
+
+    Rename variable 'dup' to avoid shadowing dup() function
+    
+    As recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da0bcc8b8746cd3eb93f20d61145edc6a1040dda
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 10:41:14 2022 -0800
+
+    Use C99 struct initialization
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0ac060079060419bdfc4e54ba1a8643cffa1d7d3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 10:34:27 2022 -0800
+
+    Variable scope reduction as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7db9aa5f73904c243201d4c52e4b157ded05af7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1e20d715f2a064993a1b83b49d2f355d0ef9c56b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:55:05 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 70d96ac2b99c5ebc959c4baf9a32760c41c0e440
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 13:55:02 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9c3a19e3f13252c6ac5b02ce703531b2bf9f7463
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Mon Aug 9 19:31:28 2021 +0200
@@ -971,7 +1052,7 @@ Date:   Sat Jul 2 01:17:35 2005 +0000
         (replaces per-OS hardcoding of CppCmd in Imake config files)
 
 commit 14ca3186594492b2733b9cc7e071ecfc039fb428
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:27:45 2005 +0000
 
     Build systems for xrdb, xrandr, xrefresh

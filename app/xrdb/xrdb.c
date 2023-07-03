@@ -168,24 +168,23 @@ asprintf(char **ret, const char *format, ...)
     if (len < 0)
         return -1;
 
-    if (len < sizeof(buf)) {
-        *ret = strdup(buf);
-    }
-    else {
-        *ret = malloc(len + 1); /* snprintf doesn't count trailing '\0' */
-        if (*ret != NULL) {
-            va_start(ap, format);
-            len = vsnprintf(*ret, len + 1, format, ap);
-            va_end(ap);
-            if (len < 0) {
-                free(*ret);
-                *ret = NULL;
-            }
-        }
-    }
-
+    *ret = malloc(len + 1); /* snprintf doesn't count trailing '\0' */
     if (*ret == NULL)
         return -1;
+
+    if (len < sizeof(buf)) {
+        memcpy(*ret, buf, len + 1);
+    }
+    else {
+        va_start(ap, format);
+        len = vsnprintf(*ret, len + 1, format, ap);
+        va_end(ap);
+        if (len < 0) {
+            free(*ret);
+            *ret = NULL;
+            return -1;
+        }
+    }
 
     return len;
 }
@@ -249,9 +248,7 @@ InitEntries(Entries *e)
 static void
 FreeEntries(Entries *e)
 {
-    size_t i;
-
-    for (i = 0; i < e->used; i++) {
+    for (size_t i = 0; i < e->used; i++) {
         if (e->entry[i].usable) {
             free(e->entry[i].tag);
             free(e->entry[i].value);
@@ -263,9 +260,7 @@ FreeEntries(Entries *e)
 static void
 AddEntry(Entries *e, Entry *entry)
 {
-    size_t n;
-
-    for (n = 0; n < e->used; n++) {
+    for (size_t n = 0; n < e->used; n++) {
         if (!strcmp(e->entry[n].tag, entry->tag)) {
             /* overwrite old entry */
             if (e->entry[n].lineno && !quiet) {
@@ -403,11 +398,12 @@ GetEntries(Entries *entries, Buffer *buff, int bequiet)
 static void
 GetEntriesString(Entries *entries, char *str)
 {
-    Buffer buff;
-
     if (str && *str) {
-        buff.buff = str;
-        buff.used = strlen(str);
+        Buffer buff = {
+            .buff = str,
+            .used = strlen(str)
+        };
+
         GetEntries(entries, &buff, 1);
     }
 }
@@ -512,13 +508,12 @@ AddDefTok(String *buff, const char *prefix, char *title)
 static void
 AddDefHostname(String *buff, const char *title, const char *value)
 {
-    char *s;
     char name[512];
     char c;
 
     strncpy(name, value, sizeof(name) - 1);
     name[sizeof(name) - 1] = '\0';
-    for (s = name; (c = *s); s++) {
+    for (char *s = name; (c = *s); s++) {
         if (!isalpha(c) && !isdigit(c) &&
             c != '_' && c != '.' && c != ':' && c != '-')
             *s = '_';
@@ -550,13 +545,10 @@ AddUndef(String *buff, const char *title)
 static void
 DoCmdDefines(String *buff)
 {
-    int i;
-    char *arg, *val;
-
-    for (i = 0; i < num_cmd_defines; i++) {
-        arg = cmd_defines[i];
+    for (int i = 0; i < num_cmd_defines; i++) {
+        char *arg = cmd_defines[i];
         if (arg[1] == 'D') {
-            val = strchr(arg, '=');
+            char *val = strchr(arg, '=');
             if (val) {
                 *val = '\0';
                 AddDefQ(buff, arg + 2, val + 1);
@@ -647,8 +639,7 @@ DoScreenDefines(Display *display, int scrno, String *defs)
     Screen *screen;
     Visual *visual;
     XVisualInfo vinfo, *vinfos;
-    int nv, i, j;
-    char name[50];
+    int nv;
 
     screen = ScreenOfDisplay(display, scrno);
     visual = DefaultVisualOfScreen(screen);
@@ -662,6 +653,8 @@ DoScreenDefines(Display *display, int scrno, String *defs)
     AddNum(defs, "PLANES", DisplayPlanes(display, scrno));
     AddNum(defs, "BITS_PER_RGB", visual->bits_per_rgb);
     if (visual->class >= 0 && visual->class < NUM_CLASS_NAMES) {
+        char name[50];
+
         AddDefQ(defs, "CLASS", ClassNames[visual->class]);
         snprintf(name, sizeof(name), "CLASS_%s", ClassNames[visual->class]);
         AddNum(defs, name, (int) visual->visualid);
@@ -679,7 +672,9 @@ DoScreenDefines(Display *display, int scrno, String *defs)
         AddSimpleDef(defs, "COLOR");
         break;
     }
-    for (i = 0; i < nv; i++) {
+    for (int i = 0; i < nv; i++) {
+        int j;
+
         for (j = i; --j >= 0;) {
             if (vinfos[j].class == vinfos[i].class &&
                 vinfos[j].depth == vinfos[i].depth)
@@ -687,6 +682,8 @@ DoScreenDefines(Display *display, int scrno, String *defs)
         }
         if (j < 0) {
             if (vinfos[i].class >= 0 && vinfos[i].class < NUM_CLASS_NAMES) {
+                char name[50];
+
                 snprintf(name, sizeof(name), "CLASS_%s_%d",
                          ClassNames[vinfos[i].class], vinfos[i].depth);
                 AddNum(defs, name, (int) vinfos[i].visualid);
@@ -704,22 +701,23 @@ DoScreenDefines(Display *display, int scrno, String *defs)
 static Entry *
 FindEntry(Entries *db, Buffer *b)
 {
-    size_t i;
-    register Entry *e;
-    Entries phoney;
-    Entry entry;
+    Entry entry = {
+        .usable = False,
+        .tag = NULL,
+        .value = NULL
+    };
+    Entries phoney = {
+        .used = 0,
+        .room = 1,
+        .entry = &entry
+    };
 
-    entry.usable = False;
-    entry.tag = NULL;
-    entry.value = NULL;
-    phoney.used = 0;
-    phoney.room = 1;
-    phoney.entry = &entry;
     GetEntries(&phoney, b, 1);
     if (phoney.used < 1)
         return NULL;
-    for (i = 0; i < db->used; i++) {
-        e = &db->entry[i];
+    for (size_t i = 0; i < db->used; i++) {
+        Entry *e = &db->entry[i];
+
         if (!e->usable)
             continue;
         if (strcmp(e->tag, entry.tag))
@@ -736,15 +734,16 @@ static void
 EditFile(Entries *new, FILE *in, FILE *out)
 {
     Buffer b;
-    char buff[BUFSIZ];
-    register Entry *e;
-    register char *c;
-    size_t i;
 
     InitBuffer(&b);
     while (in) {
+        Entry *e;
+
         b.used = 0;
         while (1) {
+            char *c;
+            char buff[BUFSIZ];
+
             buff[0] = '\0';
             if (!fgets(buff, BUFSIZ, in))
                 goto cleanup;
@@ -761,8 +760,8 @@ EditFile(Entries *new, FILE *in, FILE *out)
             fwrite(b.buff, 1, b.used, out);
     }
  cleanup:
-    for (i = 0; i < new->used; i++) {
-        e = &new->entry[i];
+    for (size_t i = 0; i < new->used; i++) {
+        Entry *e = &new->entry[i];
         if (e->usable)
             fprintf(out, "%s:\t%s\n", e->tag, e->value);
     }
@@ -896,7 +895,6 @@ addtokstring(String *arg, const char *s)
 int
 main(int argc, char *argv[])
 {
-    int i;
     char *displayname = NULL;
     int whichResources = RALL;
     int retainProp = 0;
@@ -917,28 +915,27 @@ main(int argc, char *argv[])
     if (cpp_program == NULL) {
         int number_of_elements
             = (sizeof cpp_locations) / (sizeof cpp_locations[0]);
-        int j;
 
-        for (j = 0; j < number_of_elements; j++) {
-            char *end, *dup;
+        for (int j = 0; j < number_of_elements; j++) {
+            char *end, *cmd;
 
             /* cut off arguments */
-            dup = strdup(cpp_locations[j]);
-            end = strchr(dup, ' ');
+            cmd = strdup(cpp_locations[j]);
+            end = strchr(cmd, ' ');
             if (end)
                 *end = '\0';
-            if (access(dup, X_OK) == 0) {
+            if (access(cmd, X_OK) == 0) {
                 cpp_program = cpp_locations[j];
-                free(dup);
+                free(cmd);
                 break;
             }
-            free(dup);
+            free(cmd);
         }
     }
 
     /* needs to be replaced with XrmParseCommand */
 
-    for (i = 1; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         char *arg = argv[i];
 
         if (arg[0] == '-') {
@@ -1086,9 +1083,13 @@ main(int argc, char *argv[])
     }                           /* end for */
 
 #ifndef WIN32
-    while ((i = open("/dev/null", O_RDONLY)) < 3)
-        ;      /* make sure later freopen won't clobber things */
-    (void) close(i);
+    {
+        int fd;
+
+        while ((fd = open("/dev/null", O_RDONLY)) < 3)
+            ;      /* make sure later freopen won't clobber things */
+        (void) close(fd);
+    }
 #endif
     /* Open display  */
     if (!(dpy = XOpenDisplay(displayname)))
@@ -1164,7 +1165,7 @@ main(int argc, char *argv[])
             if (need_newline)
                 printf("\n");
         }
-        for (i = 0; i < ScreenCount(dpy); i++) {
+        for (int i = 0; i < ScreenCount(dpy); i++) {
             if (need_newline) {
                 if (oper == OPSYMBOLS)
                     printf("# screen %d symbols\n", i);
@@ -1188,7 +1189,7 @@ main(int argc, char *argv[])
         dbs = mallocarray(ScreenCount(dpy), sizeof(Entries));
         if (dbs == NULL)
             fatal("%s: Can't allocate memory in %s\n", ProgramName, __func__);
-        for (i = 0; i < ScreenCount(dpy); i++) {
+        for (int i = 0; i < ScreenCount(dpy); i++) {
             Process(i, True, False);
             dbs[i] = newDB;
         }
@@ -1201,7 +1202,7 @@ main(int argc, char *argv[])
         ReProcess(0, False);
         if (need_newline)
             printf("\n");
-        for (i = 0; i < ScreenCount(dpy); i++) {
+        for (int i = 0; i < ScreenCount(dpy); i++) {
             newDB = dbs[i];
             if (need_newline) {
                 printf("! screen %d resources\n", i);
@@ -1228,14 +1229,12 @@ main(int argc, char *argv[])
 static void
 FormatEntries(Buffer *b, Entries *entries)
 {
-    size_t i;
-
     b->used = 0;
     if (!entries->used)
         return;
     if (oper == OPMERGE)
         qsort(entries->entry, entries->used, sizeof(Entry), CompareEntries);
-    for (i = 0; i < entries->used; i++) {
+    for (size_t i = 0; i < entries->used; i++) {
         if (entries->entry[i].usable)
             AppendEntryToBuffer(b, &entries->entry[i]);
     }
@@ -1338,11 +1337,11 @@ Process(int scrno, Bool doScreen, Bool execute)
         fclose(output);
         snprintf(old, sizeof(old), "%s%s", editFile, backup_suffix);
         if (dont_execute) {     /* then write to standard out */
-            char buf[BUFSIZ];
-            size_t n;
-
             output = fopen(template, "r");
             if (output) {
+                char buf[BUFSIZ];
+                size_t n;
+
                 while ((n = fread(buf, 1, sizeof buf, output)) > 0) {
                     fwrite(buf, 1, n, stdout);
                 }
@@ -1487,19 +1486,21 @@ static void
 ShuffleEntries(Entries *db, Entries *dbs, unsigned int num)
 {
     unsigned int *hits;
-    unsigned int i, j, k;
-    Entries cur, cmp;
-    char *curtag, *curvalue;
+    Entries cur;
 
     hits = mallocarray(num, sizeof(int));
     if (hits == NULL)
         fatal("%s: Can't allocate memory in %s\n", ProgramName, __func__);
     cur = dbs[0];
-    for (i = 0; i < cur.used; i++) {
-        curtag = cur.entry[i].tag;
-        curvalue = cur.entry[i].value;
+    for (unsigned int i = 0; i < cur.used; i++) {
+        char *curtag = cur.entry[i].tag;
+        char *curvalue = cur.entry[i].value;
+        unsigned int j;
+
         for (j = 1; j < num; j++) {
-            cmp = dbs[j];
+            Entries cmp = dbs[j];
+            unsigned int k;
+
             for (k = 0; k < cmp.used; k++) {
                 if (cmp.entry[k].usable &&
                     !strcmp(curtag, cmp.entry[k].tag) &&
