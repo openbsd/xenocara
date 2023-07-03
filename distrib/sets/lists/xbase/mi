@@ -280,7 +280,7 @@
 ./usr/X11R6/lib/libXss.so.6.0
 ./usr/X11R6/lib/libXt.a
 ./usr/X11R6/lib/libXt.la
-./usr/X11R6/lib/libXt.so.11.0
+./usr/X11R6/lib/libXt.so.11.1
 ./usr/X11R6/lib/libXtst.a
 ./usr/X11R6/lib/libXtst.la
 ./usr/X11R6/lib/libXtst.so.11.0
