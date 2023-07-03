@@ -23,9 +23,9 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ([2.60])
-AC_INIT([libxshmfence], [1.3.1],
-	[https://gitlab.freedesktop.org/xorg/lib/libxshmfence/-/issues],
-	[libxshmfence])
+AC_INIT([libxshmfence], [1.3.2],
+        [https://gitlab.freedesktop.org/xorg/lib/libxshmfence/-/issues],
+        [libxshmfence])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
@@ -48,7 +48,9 @@ dnl Allow checking code with lint, sparse, etc.
 XORG_WITH_LINT
 LINT_FLAGS="${LINT_FLAGS} ${FONTENC_CFLAGS}"
 
-		  
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
+
 dnl
 dnl Locate a suitable tmp file system for creating shared memory files
 dnl

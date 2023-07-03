@@ -1,3 +1,19 @@
+commit edbb7d9e5f3912fe521f0cfe5ae416bb9ca83633
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Thu Dec 8 10:40:00 2022 -0500
+
+    libxshmfence 1.3.2
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 7df37ab0c44ee9c24153c7a1eaf05a8a95e9ac80
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Nov 29 12:08:54 2022 -0500
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
 commit 43749ba6a7631f5060ef85c93942ec32dfd39bf8
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Oct 18 09:38:22 2022 -0700
@@ -74,7 +90,7 @@ Date:   Mon Feb 26 09:26:06 2018 -0800
     Signed-off-by: Matt Turner <mattst88@gmail.com>
 
 commit 30d946bc7b522ada9ec2fdbd502f9e36aae21bba
-Author: Michał Górny < <mgorny@gentoo.org>
+Author: Michał Górny <mgorny@gentoo.org>
 Date:   Thu Feb 22 19:23:38 2018 +0100
 
     Fix missing <limits.h> include for HAVE_UMTX branch of futex
