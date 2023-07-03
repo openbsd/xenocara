@@ -1075,24 +1075,35 @@ is_xwayland(void)
     Bool rc = False;
     XRRScreenResources *resources = NULL;
     XRROutputInfo *output = NULL;
+    int opcode, event_base, error_base, major, minor;
 
-    /* There is no definitive way of checking for an XWayland server,
-     * but the two working methods are:
+    /* With Xwayland 23.1 and above, the definitive way of checking for an
+     * Xwayland server is to check for the "XWAYLAND" extension.
+     */
+    if (XQueryExtension(dpy, "XWAYLAND", &opcode, &event_base, &error_base)) {
+        rc = True;
+        goto out;
+    }
+
+    /* For previous versions of Xwayland, there is no definitive way of checking
+     * for an Xwayland server, but the two working methods are:
      * - RandR output names in Xwayland are XWAYLAND0, XWAYLAND1, etc.
      * - XI devices are xwayland-pointer:10, xwayland-keyboard:11
      * Let's go with the XRandR check here because it's slightly less
      * code to write.
      */
 
-    int event_base, error_base, major, minor;
     if (!XRRQueryExtension(dpy, &event_base, &error_base) ||
             !XRRQueryVersion(dpy, &major, &minor)) {
         /* e.g. Xnest, but definitely not Xwayland */
         goto out;
     }
+    if (major < 1 || (major == 1 && minor < 3)) {
+        goto out;
+    }
 
     resources = XRRGetScreenResourcesCurrent(dpy, DefaultRootWindow(dpy));
-    if (!resources) {
+    if (!resources || resources->noutput < 1) {
         goto out;
     }
 
@@ -1119,7 +1130,7 @@ main(int argc, char **argv)
         exit(1);
 
     if (is_xwayland())
-	    MSG("WARNING: Running setxkbmap against an XWayland server\n");
+	    ERR("WARNING: Running setxkbmap against an Xwayland server\n");
 
     settings.locale.value = setlocale(LC_ALL, settings.locale.value);
     settings.locale.src = FROM_SERVER;
