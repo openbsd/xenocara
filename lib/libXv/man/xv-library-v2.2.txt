@@ -23,7 +23,7 @@ typedef struct {
 	     indicating the particular attribute is readable, writeable
 	     or readable and writeable.
 
-  min_value, max_value -  Indicate the minimun and maximum attribute
+  min_value, max_value -  Indicate the minimum and maximum attribute
 	     values which are valid for the driver.
 
   name -  A string describing the name of the attribute that may be used

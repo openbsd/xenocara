@@ -22,13 +22,13 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXv], [1.0.11],
-        [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXv])
+AC_INIT([libXv], [1.0.12],
+        [https://gitlab.freedesktop.org/xorg/lib/libxv/-/issues], [libXv])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -40,7 +40,7 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 XORG_CHECK_MALLOC_ZERO
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(XV, [x11 >= 1.6 xext xextproto videoproto])
 
 # Allow checking code with lint, sparse, etc.

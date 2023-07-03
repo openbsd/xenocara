@@ -50,6 +50,6 @@ SOFTWARE.
 #define XvGetReq(name, req) \
     req = (xv##name##Req *) _XGetRequest(                               \
         dpy, (CARD8) info->codes->major_opcode, SIZEOF(xv##name##Req)); \
-    req->xvReqType = xv_##name;
+    req->xvReqType = xv_##name
 
 #endif /* XVLIBINT_H */

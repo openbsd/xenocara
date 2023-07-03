@@ -1,3 +1,119 @@
+commit d419928942dbf1897c9627475aa4a2828a81240f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 15:43:12 2022 -0800
+
+    libXv 1.0.12
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7afb4d5b020780f8081564bfcc8ed3df7515899f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 13:23:07 2022 -0800
+
+    Handle implicit conversion warnings from clang
+    
+    Clears 62 -Wimplicit-int-conversion, 38 -Wshorten-64-to-32, and
+    11 -Wsign-conversion warnings.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4b1f9d0914833c671887fdedb8b0d8169618ed62
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 13:01:26 2022 -0800
+
+    Variable scope reductions
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9744d1f77b092eb4982c60e4750136fb19683545
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 18:16:29 2022 -0700
+
+    XvGetReq: remove trailing semicolon that caller is expected to provide
+    
+    Clears 20 clang warnings of the form:
+    Xv.c:126:34: warning: empty expression statement has no effect;
+      remove unnecessary ';' to silence this warning [-Wextra-semi-stmt]
+        XvGetReq(QueryExtension, req);
+                                     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ee48980aca0bc9deb61458fdb5ebda3928d944a0
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:27:19 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d478f60475e2ae50ce57bb9cc27d6a835dfa200c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:26:23 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2f0952f5f78f80463810e7dc41c944d2c03e99ab
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 18:25:35 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 03a6f599d060591a9a7cd8558bd2143a1c7c70d7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 19:55:25 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5af31d2a24abe5a41995c792012e5dc489ec2674
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 19 22:48:06 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3d64daf31207c9162acf2999ee566fde448b178d
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+
+commit 83c2f46c8e31dceda674a759b872282fb06b67c7
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit d5bae4a90c0c627d91c7bb97f607d3da7e7ba055
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+
 commit ef2a282876acc2316d338f8b66344ad5a2947057
 Author: Matthieu Herrb <matthieu.herrb@laas.fr>
 Date:   Tue Oct 4 21:29:55 2016 +0200
@@ -959,7 +1075,7 @@ Date:   Sat Jul 2 06:35:03 2005 +0000
     Add appropriate lib*_CFLAGS to Makefile.am's -- fixes build problems
 
 commit 9064f83cdb11b1515fec1c9f33bd7397ad7f492b
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 1 20:09:12 2005 +0000
 
     xtrap.pc.in: s/Xfixes/XTrap/ xi.pc.in: s/Xt/Xi/ Xv/src/Makefile.am: remove
@@ -985,13 +1101,13 @@ Date:   Tue Jun 21 15:41:36 2005 +0000
         src/Makefile.am
 
 commit ea1bfd2bef80ed33740916dfc8118ca8ac94a0eb
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 20:30:01 2005 +0000
 
     - Add Xv man pages
 
 commit 3e71b1e06264f84428e04264b740a634cd7a5499
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 13 19:55:32 2005 +0000
 
     - Add Xv to symlink.sh
