@@ -173,7 +173,7 @@ restored for the specified type.
 In the future, when
 .B XtDispatchEvent
 is called with an event of \fIevent_type\fP, the specified \fIproc\fP (or
-the default dispatcher) will be invoked to determine a widget ot which
+the default dispatcher) will be invoked to determine a widget at which
 to dispatch the event.
 .LP
 The

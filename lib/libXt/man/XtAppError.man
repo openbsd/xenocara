@@ -41,9 +41,9 @@ XtAppError, XtAppSetErrorHandler, XtAppSetWarningHandler, XtAppWarning \- low-le
 .SH SYNTAX
 #include <X11/Intrinsic.h>
 .HP
-void XtAppError(XtAppContext \fIapp_context\fP, const char *\fImessage\fP);
+_X_NORETURN void XtAppError(XtAppContext \fIapp_context\fP, const char *\fImessage\fP);
 .HP
-XtErrorHandler XtAppSetErrorHandler(XtAppContext \fIapp_context\fP, XtErrorHandler
+XtErrorHandler XtAppSetErrorHandler(XtAppContext \fIapp_context\fP, _X_NORETURN XtErrorHandler
 \fIhandler\fP);
 .HP
 XtErrorHandler XtAppSetWarningHandler(XtAppContext \fIapp_context\fP, XtErrorHandler

@@ -22,7 +22,6 @@ Except as contained in this notice, the name of The Open Group shall not be
 used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
-
 Copyright 1987, 1988 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
@@ -50,33 +49,28 @@ SOFTWARE.
 #endif
 #include "IntrinsicI.h"
 
-/* ARGSUSED */
-void XtCallbackNone(
-    Widget  widget,
-    XtPointer closure,
-    XtPointer call_data)
+void
+XtCallbackNone(Widget widget, XtPointer closure, XtPointer call_data _X_UNUSED)
 {
     XtSetSensitive(widget, FALSE);
     _XtPopup((Widget) closure, XtGrabNone, FALSE);
-} /* XtCallbackNone */
+}                               /* XtCallbackNone */
 
-/* ARGSUSED */
-void XtCallbackNonexclusive(
-    Widget  widget,
-    XtPointer closure,
-    XtPointer call_data)
+void
+XtCallbackNonexclusive(Widget widget,
+                       XtPointer closure,
+                       XtPointer call_data _X_UNUSED)
 {
 
     XtSetSensitive(widget, FALSE);
     _XtPopup((Widget) closure, XtGrabNonexclusive, FALSE);
-} /* XtCallbackNonexclusive */
+}                               /* XtCallbackNonexclusive */
 
-/* ARGSUSED */
-void XtCallbackExclusive(
-    Widget  widget,
-    XtPointer closure,
-    XtPointer call_data)
+void
+XtCallbackExclusive(Widget widget,
+                    XtPointer closure,
+                    XtPointer call_data _X_UNUSED)
 {
     XtSetSensitive(widget, FALSE);
     _XtPopup((Widget) closure, XtGrabExclusive, FALSE);
-} /* XtCallbackExclusive */
+}                               /* XtCallbackExclusive */

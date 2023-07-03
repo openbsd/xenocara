@@ -35,7 +35,7 @@
 .na
 .TH XtAllocateGC __libmansuffix__ __xorgversion__ "XT FUNCTIONS"
 .SH NAME
-XtAllocateGC \- obtain a sharable GC with modifiable fields
+XtAllocateGC \- obtain a shareable GC with modifiable fields
 .SH SYNTAX
 #include <X11/Intrinsic.h>
 .HP
@@ -58,7 +58,7 @@ Specifies the fields of the GC that will not be needed by the caller.
 .SH DESCRIPTION
 The
 .B XtAllocateGC
-function returns a sharable GC that may be modified by the client.
+function returns a shareable GC that may be modified by the client.
 The \fIscreen\fP field of the specified widget or of the nearest
 widget ancestor of the specified object and the specified \fIdepth\fP
 argument supply the root and drawable depths for which the GC is to

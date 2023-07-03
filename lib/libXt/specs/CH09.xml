@@ -1487,7 +1487,7 @@ perform an
 <function>XListFonts</function>
 using a wildcard font name and use the first
 font in the list.  This wildcard font name should be as broad as
-possible to maximize the probability of locating a useable font;
+possible to maximize the probability of locating a usable font;
 for example, &ldquo;<code>-*-*-*-R-*-*-*-120-*-*-*-*-ISO8859-1</code>&rdquo;.)
     </para>
   </listitem>
@@ -1527,7 +1527,7 @@ perform an
 <function>XCreateFontSet</function>
 using a wildcard base font name.
 This wildcard base font name should be as broad as
-possible to maximize the probability of locating a useable font;
+possible to maximize the probability of locating a usable font;
 for example, &ldquo;<code>-*-*-*-R-*-*-*-120-*-*-*-*</code>&rdquo;.)
     </para>
   </listitem>
@@ -2371,7 +2371,7 @@ Specifies the number of entries in <emphasis remap='I'>convert_args</emphasis>.
     <listitem>
       <para>
 Specifies whether or not resources produced by this
-converter are sharable or display-specific and when
+converter are shareable or display-specific and when
 they should be freed.
       </para>
     </listitem>
@@ -2473,7 +2473,7 @@ Specifies the number of entries in <emphasis remap='I'>convert_args</emphasis>.
     <listitem>
       <para>
 Specifies whether or not resources produced by this
-converter are sharable or display-specific and when
+converter are shareable or display-specific and when
 they should be freed.
       </para>
     </listitem>

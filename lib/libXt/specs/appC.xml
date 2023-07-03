@@ -1354,7 +1354,7 @@ Specifies the shared GC to be deallocated.
 </variablelist>
 
 <para>
-References to sharable GCs are counted and a free request is generated to the
+References to shareable GCs are counted and a free request is generated to the
 server when the last user of a given GC destroys it.
 Note that some earlier versions of
 <xref linkend='XtDestroyGC' xrefstyle='select: title'/>

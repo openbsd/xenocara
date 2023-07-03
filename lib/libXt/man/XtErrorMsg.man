@@ -40,13 +40,13 @@ XtErrorMsg, XtSetErrorMsgHandler, XtWarningMsg, XtSetWarningMsgHandler \- high-l
 .SH SYNTAX
 #include <X11/Intrinsic.h>
 .HP
-void XtErrorMsg(const char *\fIname\fP,
+_X_NORETURN void XtErrorMsg(const char *\fIname\fP,
 const char *\fItype\fP,
 const char *\fIclass\fP,
 const char *\fIdefaultMsg\fP,
 String *\fIparams\fP, Cardinal *\fInum_params\fP);
 .HP
-void XtSetErrorMsgHandler(XtErrorMsgHandler \fImsg_handler\fP);
+void XtSetErrorMsgHandler(_X_NORETURN XtErrorMsgHandler \fImsg_handler\fP);
 .HP
 void XtSetWarningMsgHandler(XtErrorMsgHandler \fImsg_handler\fP);
 .HP
@@ -74,22 +74,22 @@ Specifies a pointer to a list of values to be stored in the message.
 .SH DESCRIPTION
 The
 .B XtErrorMsg
-function has been superceded by
+function has been superseded by
 .BR XtAppErrorMsg .
 .LP
 The
 .B XtSetErrorMsgHandler
-function has been superceded by
+function has been superseded by
 .BR XtAppSetErrorMsgHandler .
 .LP
 The
 .B XtSetWarningMsgHandler
-function has been superceded by
+function has been superseded by
 .BR XtAppSetWarningMsgHandler .
 .LP
 The
 .B XtWarningMsg
-function has been superceded by
+function has been superseded by
 .B XtAppWarningMsg
 .SH "SEE ALSO"
 .BR XtAppErrorMsg (__libmansuffix__)

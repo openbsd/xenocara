@@ -36,7 +36,7 @@
 .na
 .TH XtMalloc __libmansuffix__ __xorgversion__ "XT FUNCTIONS"
 .SH NAME
-XtMalloc, XtCalloc, XtRealloc, XtFree, XtNew, XtNewString \- memory management functions
+XtMalloc, XtCalloc, XtRealloc, XtReallocArray, XtFree, XtNew, XtNewString \- memory management functions
 .SH SYNTAX
 #include <X11/Intrinsic.h>
 .HP
@@ -44,7 +44,9 @@ char *XtMalloc(Cardinal \fIsize\fP);
 .HP
 char *XtCalloc(Cardinal \fInum\fP, Cardinal \fIsize\fP);
 .HP
-char *XtRealloc(char *\fIptr\fP, Cardinal \fInum\fP);
+char *XtRealloc(char *\fIptr\fP, Cardinal \fIsize\fP);
+.HP
+void *XtReallocArray(void *\fIptr\fP, Cardinal \fInum\fP, Cardinal \fIsize\fP);
 .HP
 void XtFree(char *\fIptr\fP);
 .HP
@@ -55,7 +57,7 @@ String XtNewString(String \fIstring\fP);
 Cardinal XtAsprintf(char **\fInew_string\fP, const char *\fIformat\fP, ...);
 .SH ARGUMENTS
 .IP \fInum\fP 1i
-Specifies the number of bytes or array elements.
+Specifies the number of array elements.
 .IP \fIptr\fP 1i
 Specifies a pointer to the old storage or to the block of storage that is to be freed.
 .IP \fIsize\fP 1i
@@ -90,17 +92,18 @@ calls
 .LP
 The
 .B XtRealloc
-function changes the size of a block of storage (possibly moving it).
-Then, it copies the old contents (or as much as will fit) into the new block
-and frees the old block.
+and
+.B XtReallocArray
+functions change the size of a block of storage (possibly moving it).
+Then, they copy the old contents (or as much as will fit) into the new block
+and free the old block.
 If there is insufficient memory to allocate the new block,
-.B XtRealloc
-calls
+or the calculations for the size of the new block would cause an
+integer overflow, these functions call
 .BR XtErrorMsg .
 If ptr is NULL,
-.B XtRealloc
-allocates the new storage without copying the old contents;
-that is, it simply calls
+these functions allocate the new storage without copying the old contents;
+that is, they simply call
 .BR XtMalloc .
 .LP
 The

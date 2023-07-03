@@ -64,7 +64,7 @@ Specifies the number of additional arguments to the converter or zero.
 Specifies the destination type.
 .IP \fIcache_type\fP 1i
 Specifies whether or not resources produced by this converter are
-sharable or display-specific and when they should be freed.
+shareable or display-specific and when they should be freed.
 .IP \fIdestructor\fP 1i
 Specifies a destroy procedure for resources produced by this conversion,
 or NULL if no additional action is required to deallocate resources

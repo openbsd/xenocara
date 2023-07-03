@@ -112,7 +112,7 @@ If \fIfallback_resources\fP is non-NULL,
 is called with the value prior to calling
 .BR XtOpenDisplay .
 .LP
-XtAppInitialize and XtVaAppInitialize have been superceded by
+XtAppInitialize and XtVaAppInitialize have been superseded by
 .B XtOpenApplication
 and
 .B XtVaOpenApplication

@@ -39,9 +39,9 @@ XtError, XtSetErrorHandler, XtSetWarningHandler, XtWarning \- low-level error ha
 .SH SYNTAX
 #include <X11/Intrinsic.h>
 .HP
-void XtError(const char *\fImessage\fP);
+_X_NORETURN void XtError(const char *\fImessage\fP);
 .HP
-void XtSetErrorHandler(XtErrorHandler \fIhandler\fP);
+void XtSetErrorHandler(_X_NORETURN XtErrorHandler \fIhandler\fP);
 .HP
 void XtSetWarningHandler(XtErrorHandler \fIhandler\fP);
 .HP
@@ -57,22 +57,22 @@ Specifies the message that is to be reported.
 .SH DESCRIPTION
 The
 .B XtError
-function has been superceded by
+function has been superseded by
 .BR XtAppError .
 .LP
 The
 .B XtSetErrorHandler
-function has been superceded by
+function has been superseded by
 .BR XtAppSetErrorHandler .
 .LP
 The
 .B XtSetWarningHandler
-function has been superceded by
+function has been superseded by
 .BR XtAppSetWarningHandler .
 .LP
 The
 .B XtWarning
-function has been superceded by
+function has been superseded by
 .BR XtAppWarning .
 .SH "SEE ALSO"
 .BR XtAppError (__libmansuffix__)

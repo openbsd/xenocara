@@ -249,7 +249,7 @@ These modifiers and any others: mod1 mod2 &lt;event&gt; detail
 
 <para>
 The use of &ldquo;None&rdquo; for a modifier list is identical to the use
-of an exclamation point with no modifers.
+of an exclamation point with no modifiers.
 </para>
 
 <informaltable frame='topbot'>
@@ -729,11 +729,11 @@ The detail field is supported for the following event types:
     </row>
     <row>
       <entry>ButtonPress</entry>
-      <entry>button from event <emphasis>detail</emphasis></entry>
+      <entry>&ldquo;Button&rdquo; followed by button from event <emphasis>detail</emphasis> (e.g. <function>Button1</function>)</entry>
     </row>
     <row>
       <entry>ButtonRelease</entry>
-      <entry>button from event <emphasis>detail</emphasis></entry>
+      <entry>&ldquo;Button&rdquo; followed by button from event <emphasis>detail</emphasis> (e.g. <function>Button42</function>)</entry>
     </row>
     <row>
       <entry>MotionNotify</entry>

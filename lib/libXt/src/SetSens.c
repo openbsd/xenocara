@@ -1,5 +1,5 @@
 /***********************************************************
-Copyright (c) 1993, Oracle and/or its affiliates. All rights reserved.
+Copyright (c) 1993, Oracle and/or its affiliates.
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -75,16 +75,16 @@ in this Software without prior written authorization from The Open Group.
 #include "StringDefs.h"
 
 /*
- *	XtSetSensitive()
+ *      XtSetSensitive()
  */
 
-static void SetAncestorSensitive(
-    register Widget widget,
-    Boolean	    ancestor_sensitive)
+static void
+SetAncestorSensitive(register Widget widget, Boolean ancestor_sensitive)
 {
     Arg args[1];
 
-    if (widget->core.ancestor_sensitive == ancestor_sensitive) return;
+    if (widget->core.ancestor_sensitive == ancestor_sensitive)
+        return;
 
     XtSetArg(args[0], XtNancestorSensitive, ancestor_sensitive);
     XtSetValues(widget, args, XtNumber(args));
@@ -94,28 +94,27 @@ static void SetAncestorSensitive(
        ancestor_sensitive is already FALSE */
 
     if (widget->core.sensitive && XtIsComposite(widget)) {
-	Cardinal i;
-	WidgetList children;
+        Cardinal i;
+        WidgetList children;
 
-	children = ((CompositeWidget) widget)->composite.children;
-	for (i=0; i < ((CompositeWidget)widget)->composite.num_children; i++) {
-	    SetAncestorSensitive (children[i], ancestor_sensitive);
-	}
+        children = ((CompositeWidget) widget)->composite.children;
+        for (i = 0; i < ((CompositeWidget) widget)->composite.num_children; i++) {
+            SetAncestorSensitive(children[i], ancestor_sensitive);
+        }
     }
-} /* SetAncestorSensitive */
+}                               /* SetAncestorSensitive */
 
-
-void XtSetSensitive(
-    register Widget widget,
-    _XtBoolean	    sensitive)
+void
+XtSetSensitive(register Widget widget, _XtBoolean sensitive)
 {
-    Arg			args[1];
+    Arg args[1];
+
     WIDGET_TO_APPCON(widget);
 
     LOCK_APP(app);
     if (widget->core.sensitive == sensitive) {
-	UNLOCK_APP(app);
-	return;
+        UNLOCK_APP(app);
+        return;
     }
 
     XtSetArg(args[0], XtNsensitive, sensitive);
@@ -125,14 +124,14 @@ void XtSetSensitive(
        children's ancestor_sensitive; else do nothing as children's
        ancestor_sensitive is already FALSE */
 
-    if (widget->core.ancestor_sensitive && XtIsComposite (widget)) {
-	Cardinal   i;
-	WidgetList children;
+    if (widget->core.ancestor_sensitive && XtIsComposite(widget)) {
+        Cardinal i;
+        WidgetList children;
 
-	children = ((CompositeWidget) widget)->composite.children;
-	for (i = 0; i < ((CompositeWidget)widget)->composite.num_children; i++){
-	    SetAncestorSensitive (children[i], (Boolean) sensitive);
-	}
+        children = ((CompositeWidget) widget)->composite.children;
+        for (i = 0; i < ((CompositeWidget) widget)->composite.num_children; i++) {
+            SetAncestorSensitive(children[i], (Boolean) sensitive);
+        }
     }
     UNLOCK_APP(app);
-} /* XtSetSensitive */
+}                               /* XtSetSensitive */

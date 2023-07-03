@@ -65,12 +65,12 @@ Specifies the size of the buffer in bytes.
 .SH DESCRIPTION
 The
 .B XtGetErrorDatabase
-function has been superceded by
+function has been superseded by
 .BR XtAppGetErrorDatabase .
 .LP
 The
 .B XtGetErrorDatabaseText
-function has been superceded by
+function has been superseded by
 .BR XtAppGetErrorDatabaseText .
 .SH "SEE ALSO"
 .BR XtAppGetErrorDatabase (__libmansuffix__)

@@ -198,7 +198,6 @@ LN_S = @LN_S@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
-MALLOC_DEBUG_ENV = @MALLOC_DEBUG_ENV@
 MALLOC_ZERO_CFLAGS = @MALLOC_ZERO_CFLAGS@
 MANIFEST_TOOL = @MANIFEST_TOOL@
 MAN_SUBSTS = @MAN_SUBSTS@
@@ -291,6 +290,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -301,7 +301,9 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@TESTS = $(check_PROGRAMS)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@AM_CFLAGS = $(CWARNFLAGS) $(XT_CFLAGS) $(GLIB_CFLAGS)
-@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include \
+@ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@    -I$(top_builddir)/include/X11
+
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@LDADD = $(top_builddir)/src/libXt.la $(GLIB_LIBS)
 @ENABLE_UNIT_TESTS_TRUE@@HAVE_GLIB_TRUE@TESTS_ENVIRONMENT = $(MALLOC_DEBUG_ENV)
 all: all-am

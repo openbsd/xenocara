@@ -48,12 +48,12 @@ Specifies the selection timeout in milliseconds.
 .SH DESCRIPTION
 The
 .B XtGetSelectionTimeout
-function has been superceded by
+function has been superseded by
 .BR XtAppGetSelectionTimeout .
 .LP
 The
 .B XtSetSelectionTimeout
-function has been superceded by
+function has been superseded by
 .BR XtAppSetSelectionTimeout .
 .SH "SEE ALSO"
 .BR XtAppGetSelectionTimeout (__libmansuffix__)

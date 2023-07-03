@@ -41,11 +41,11 @@ XtAppErrorMsg, XtAppSetErrorMsgHandler, XtAppSetWarningMsgHandler, XtAppWarningM
 .SH SYNTAX
 #include <X11/Intrinsic.h>
 .HP
-void XtAppErrorMsg(XtAppContext \fIapp_context\fP, const char *\fIname\fP,
+_X_NORETURN void XtAppErrorMsg(XtAppContext \fIapp_context\fP, const char *\fIname\fP,
 const char *\fItype\fP, const char *\fIclass\fP, const char *\fIdefaultMsg\fP,
 String *\fIparams\fP, Cardinal *\fInum_params\fP);
 .HP
-XtErrorMsgHandler XtAppSetErrorMsgHandler(XtAppContext \fIapp_context\fP, XtErrorMsgHandler
+XtErrorMsgHandler XtAppSetErrorMsgHandler(XtAppContext \fIapp_context\fP, _X_NORETURN XtErrorMsgHandler
 \fImsg_handler\fP);
 .HP
 XtErrorMsgHandler XtAppSetWarningMsgHandler(XtAppContext \fIapp_context\fP,

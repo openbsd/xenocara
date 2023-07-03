@@ -56,14 +56,19 @@ SOFTWARE.
  * are not the same size on all systems.
  */
 typedef struct {
-    long	xrm_name;	  /* Resource name quark		*/
-    long	xrm_class;	  /* Resource class quark		*/
-    long	xrm_type;	  /* Resource representation type quark */
+    XtIntPtr	xrm_name;	  /* Resource name quark		*/
+    XtIntPtr	xrm_class;	  /* Resource class quark		*/
+    XtIntPtr	xrm_type;	  /* Resource representation type quark */
     Cardinal	xrm_size;	  /* Size in bytes of representation	*/
     int		xrm_offset;	  /* -offset-1				*/
-    long	xrm_default_type; /* Default representation type quark	*/
+    XtIntPtr	xrm_default_type; /* Default representation type quark	*/
     XtPointer	xrm_default_addr; /* Default resource address		*/
 } XrmResource, *XrmResourceList;
+#if __STDC_VERSION__ >= 201112L
+_Static_assert(XtOffsetOf(XrmResource, xrm_default_addr) ==
+                   XtOffsetOf(XtResource, default_addr),
+               "Field offset mismatch");
+#endif
 
 typedef unsigned long XtVersionType;
 

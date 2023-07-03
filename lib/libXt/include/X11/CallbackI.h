@@ -62,7 +62,11 @@ typedef struct internalCallbackRec {
     unsigned short count;
     char	   is_padded;	/* contains NULL padding for external form */
     char	   call_state;  /* combination of _XtCB{FreeAfter}Calling */
-#ifdef LONG64
+#if __STDC_VERSION__ >= 199901L
+    /* When compiling with C99 or newer, use a flexible member to ensure
+     * padding and alignment for sizeof(). */
+    XtCallbackRec callbacks[];
+#elif defined(LONG64)
     unsigned int   align_pad;	/* padding to align callback list */
 #endif
     /* XtCallbackList */
