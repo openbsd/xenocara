@@ -1,3 +1,71 @@
+commit f59e8cb5b47fa989d3c9a0ca104d7261a94324db
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu May 4 17:17:54 2023 -0700
+
+    xf86-input-mouse 1.9.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cad360554cdab324fc828cb5ffa47f610ca796c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:07:15 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 52073e2edc29059a5142d4460c5edc8739981e03
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 17:01:47 2022 -0800
+
+    sun_mouse: remove entry from vuidMouseList in DEVICE_CLOSE
+    
+    Originally written by fei.feng@oracle.com to fix Oracle Bug 17429216:
+    "global vuidMouseList should not keep info for removed mouse device"
+    
+    "During the testing for bug#17251473, I often see the mouse hang in X.
+     By debugging, I get that there seems something wrong in mouse_drv.so -
+     when a mouse is disconnected, the global vuidMouseList does not cleanup
+     the mouse's recorded info. So if a newly inserted mouse allocates a
+     input info pInfo which happens to have the same memory address as
+     previous pInfo, the driver would go wrong."
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit cd5b383c3f6c5b7ffa19f8e6ebb7d6551898a98b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 9 16:27:42 2022 -0800
+
+    sun_mouse: Add RelToAbs option to convert relative events to absolute
+    
+    Enabled automatically for the Sun ILOM device, to avoid acceleration
+    that causes the Remote KVMS mouse cursor to become unaligned with the
+    X mouse cursor.
+    
+    Code originally written by david.m.marx@oracle.com in 2013 to fix
+    Oracle bug 15798251 - SUNBT7177072 "actual mouse pointer is off from
+    the cursor on remote window"
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5f63ab04338fd811c610ae7617757ede52471316
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Nov 2 14:45:25 2022 -0700
+
+    sun_mouse: include more required system headers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b99e91aafb66790d3158c068c321e40c19c0571d
+Author: Thomas Klausner <wiz@gatalith.at>
+Date:   Wed Nov 2 09:11:33 2022 +0100
+
+    Rearrange includes to fix build on OmniOS. Include unistd.h for ioctl(2).
+    
+    Signed-off-by: Thomas Klausner <wiz@gatalith.at>
+
 commit ecd043f1de248cc03d240f1ae5850ce4f9f159a4
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Tue Nov 1 19:30:06 2022 -0700

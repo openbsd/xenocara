@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2004-2005, 2008-2010, Oracle and/or its affiliates.
- * All rights reserved.
+ * Copyright (c) 2004, 2022, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -55,6 +54,12 @@
 #include <xorg-config.h>
 #endif
 
+#include <unistd.h> /* for ioctl(2) */
+#include <sys/stropts.h>
+#include <sys/vuid_event.h>
+#include <sys/msio.h>
+#include <fcntl.h>
+#include <errno.h>
 #include "xorg-server.h"
 #include "xf86.h"
 #include "xf86_OSlib.h"
@@ -62,9 +67,6 @@
 #include "xisb.h"
 #include "mipointer.h"
 #include "xf86Crtc.h"
-#include <sys/stropts.h>
-#include <sys/vuid_event.h>
-#include <sys/msio.h>
 
 /* Wheel mouse support in VUID drivers in Solaris 9 updates & Solaris 10 */
 #ifdef WHEEL_DEVID /* Defined in vuid_event.h if VUID wheel support present */
@@ -73,6 +75,8 @@
 #ifdef HAVE_VUID_WHEEL
 # include <sys/vuid_wheel.h>
 #endif
+
+#include <libdevinfo.h>
 
 /* Support for scaling absolute coordinates to screen size in
  * Solaris 10 updates and beyond */
@@ -109,12 +113,18 @@ typedef struct _VuidMseRec {
     Ms_screen_resolution         absres;
 #endif
     OsTimerPtr          remove_timer;   /* Callback for removal on ENODEV */
+    int                 relToAbs;
+    int                 absX;
+    int                 absY;
 } VuidMseRec, *VuidMsePtr;
 
 static VuidMsePtr       vuidMouseList = NULL;
 
 static int  vuidMouseProc(DeviceIntPtr pPointer, int what);
 static void vuidReadInput(InputInfoPtr pInfo);
+
+static int CheckRelToAbs(InputInfoPtr pInfo);
+static int CheckRelToAbsWalker(di_node_t node, void *arg);
 
 #ifdef HAVE_ABSOLUTE_MOUSE_SCALING
 # include "compat-api.h"
@@ -224,6 +234,11 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 
     pVuidMse->buffer = (unsigned char *)&pVuidMse->event;
     pVuidMse->strmod = xf86SetStrOption(pInfo->options, "StreamsModule", NULL);
+    pVuidMse->relToAbs = xf86SetIntOption(pInfo->options, "RelToAbs", -1);
+    if (pVuidMse->relToAbs == -1)
+        pVuidMse->relToAbs = CheckRelToAbs(pInfo);
+    pVuidMse->absX = 0;
+    pVuidMse->absY = 0;
 
     /* Setup the local procs. */
     pVuidMse->wrapped_device_control = pInfo->device_control;
@@ -243,6 +258,120 @@ vuidPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
     pInfo->flags |= XI86_CONFIGURED;
 #endif
     return TRUE;
+}
+
+/*
+ * It seems that the mouse that is presented by the Emulex ILOM
+ * device (USB 0x430, 0xa101 and USB 0x430, 0xa102) sends relative
+ * mouse movements.  But relative mouse movements are subject to
+ * acceleration.  This causes the position indicated on the ILOM
+ * window to not match what the Xorg server actually has.  This
+ * makes the mouse in this environment rather unusable.  So, for the
+ * Emulex ILOM device, we will change all relative mouse movements
+ * into absolute mouse movements, making it appear more like a
+ * tablet.  This will not be subject to acceleration, and this
+ * should keep the ILOM window and Xorg server with the same values
+ * for the coordinates of the mouse.
+ */
+
+typedef struct reltoabs_match {
+	int matched;
+	char const *matchname;
+	} reltoabs_match_t;
+
+/* Sun Microsystems, keyboard / mouse */
+#define	RELTOABS_MATCH1	"usbif430,a101.config1.1"
+/* Sun Microsystems, keyboard / mouse / storage */
+#define	RELTOABS_MATCH2	"usbif430,a102.config1.1"
+
+static int
+CheckRelToAbsWalker(di_node_t node, void *arg)
+{
+	di_minor_t minor;
+	char *path;
+	int numvalues;
+	int valueon;
+	char const *stringptr;
+	int status;
+	reltoabs_match_t *const matchptr = (reltoabs_match_t *)arg;
+	char *stringvalues;
+
+	for (minor = di_minor_next(node, DI_MINOR_NIL);
+	  minor != DI_MINOR_NIL;
+	  minor = di_minor_next(node, minor)) {
+	    path = di_devfs_minor_path(minor);
+	    status = path != NULL && strcmp(path, matchptr -> matchname) == 0;
+	    di_devfs_path_free(path);
+	    if (status)
+		break;
+	    }
+
+	if (minor == DI_MINOR_NIL)
+	    return (DI_WALK_CONTINUE);
+
+	numvalues = di_prop_lookup_strings(DDI_DEV_T_ANY, node,
+	  "compatible", &stringvalues);
+	if (numvalues <= 0)
+	    return (DI_WALK_CONTINUE);
+
+	for (valueon = 0, stringptr = stringvalues; valueon < numvalues;
+	  valueon++, stringptr += strlen(stringptr) + 1) {
+	    if (strcmp(stringptr, RELTOABS_MATCH1) == 0) {
+		matchptr -> matched = 1;
+		return (DI_WALK_TERMINATE);
+	    }
+	    if (strcmp(stringptr, RELTOABS_MATCH2) == 0) {
+		matchptr -> matched = 2;
+		return (DI_WALK_TERMINATE);
+	    }
+	}
+	return (DI_WALK_CONTINUE);
+}
+
+static int
+CheckRelToAbs(InputInfoPtr pInfo)
+{
+	char const *device;
+	char const *matchname;
+	ssize_t readstatus;
+	di_node_t node;
+	struct stat statbuf;
+	char linkname[512];
+	reltoabs_match_t reltoabs_match;
+
+	device = xf86CheckStrOption(pInfo->options, "Device", NULL);
+	if (device == NULL)
+	    return (0);
+
+	matchname = device;
+
+	if (lstat(device, &statbuf) == 0 &&
+	  (statbuf.st_mode & S_IFMT) == S_IFLNK) {
+	    readstatus = readlink(device, linkname, sizeof(linkname));
+	    if (readstatus > 0 && readstatus < (ssize_t) sizeof(linkname)) {
+		linkname[readstatus] = 0;
+		matchname = linkname;
+		if (strncmp(matchname, "../..", sizeof("../..") - 1) == 0)
+		    matchname += sizeof("../..") - 1;
+	    }
+	}
+
+	if (strncmp(matchname, "/devices", sizeof("/devices") - 1) == 0)
+	    matchname += sizeof("/devices") - 1;
+
+	reltoabs_match.matched = 0;
+	reltoabs_match.matchname = matchname;
+
+	node = di_init("/", DINFOCPYALL);
+	if (node == DI_NODE_NIL)
+	    return (0);
+
+	di_walk_node(node, DI_WALK_CLDFIRST, (void *)&reltoabs_match,
+	  CheckRelToAbsWalker);
+
+	di_fini(node);
+
+	return (reltoabs_match.matched != 0);
 }
 
 static void
@@ -287,7 +416,9 @@ vuidReadInput(InputInfoPtr pInfo)
     ssize_t n;
     unsigned char *pBuf;
     int absX = 0, absY = 0;
+    int hdisplay = 0, vdisplay = 0;
     Bool absXset = FALSE, absYset = FALSE;
+    int relToAbs;
 
     pMse = pInfo->private;
     buttons = pMse->lastButtons;
@@ -297,6 +428,18 @@ vuidReadInput(InputInfoPtr pInfo)
         return;
     }
     pBuf = pVuidMse->buffer;
+    relToAbs = pVuidMse->relToAbs;
+    if (relToAbs) {
+	ScreenPtr   pScreen = miPointerGetScreen(pInfo->dev);
+	ScrnInfoPtr pScr = XF86SCRNINFO(pScreen);
+
+	if (pScr->currentMode) {
+	    hdisplay = pScr->currentMode->HDisplay;
+	    vdisplay = pScr->currentMode->VDisplay;
+	}
+	absX = pVuidMse->absX;
+	absY = pVuidMse->absY;
+    }
 
     do {
         n = read(pInfo->fd, pBuf, sizeof(Firm_event));
@@ -356,10 +499,34 @@ vuidReadInput(InputInfoPtr pInfo)
             int delta = pVuidMse->event.value;
             switch(pVuidMse->event.id) {
             case LOC_X_DELTA:
-                dx += delta;
+                if (!relToAbs)
+                    dx += delta;
+                else {
+                    if (absXset)
+                        vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
+                    absX += delta;
+                    if (absX < 0)
+                        absX = 0;
+                    else if (absX >= hdisplay && hdisplay > 0)
+                        absX = hdisplay - 1;
+                    pVuidMse->absX = absX;
+                    absXset = TRUE;
+                }
                 break;
             case LOC_Y_DELTA:
-                dy -= delta;
+                if (!relToAbs)
+                    dy -= delta;
+                else {
+                    if (absYset)
+                        vuidFlushAbsEvents(pInfo, absX, absY, &absXset, &absYset);
+                    absY -= delta;
+                    if (absY < 0)
+                        absY = 0;
+                    else if (absY >= vdisplay && vdisplay > 0)
+                        absY = vdisplay - 1;
+                    pVuidMse->absY = absY;
+                    absYset = TRUE;
+                }
                 break;
             case LOC_X_ABSOLUTE:
                 if (absXset) {
@@ -575,8 +742,21 @@ vuidMouseProc(DeviceIntPtr pPointer, int what)
         }
         break;
 
-    case DEVICE_OFF:
     case DEVICE_CLOSE:
+        if (vuidMouseList == pVuidMse)
+            vuidMouseList = vuidMouseList->next;
+        else {
+            VuidMsePtr m = vuidMouseList;
+
+            while ((m != NULL) && (m->next != pVuidMse)) {
+                m = m->next;
+            }
+
+            if (m != NULL)
+                m->next = pVuidMse->next;
+        }
+        /* fallthrough */
+    case DEVICE_OFF:
         if (pInfo->fd != -1) {
             if (pVuidMse->strmod) {
                 SYSCALL(i = ioctl(pInfo->fd, I_POP, pVuidMse->strmod));
