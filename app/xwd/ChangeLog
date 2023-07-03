@@ -1,3 +1,133 @@
+commit a6663cdafe97e3e7a1c60d03fc576dfe62b20d88
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jun 3 10:23:24 2023 -0700
+
+    xwd 1.0.9
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 55e90e61eb0ec32b6998ba3c562df3897aebbb43
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 11 18:26:12 2023 -0800
+
+    Make -help & -version work without requiring an open display
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9e78bf8f2de870fbf90cc247721df16805ba3da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 15:07:14 2022 -0800
+
+    list.c: Stop building functions that are never called
+    
+    This general-purpose list implementation includes functions xwd
+    doesn't use, so we don't need to build those here.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7d59a57f67f1c0be40b7e2ff0323026824b1f403
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 15:05:15 2022 -0800
+
+    Delete commented-out local copy of list function prototypes
+    
+    Duplicated list.h header contents
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0501a64d58ae6c1e9287188de120efbdd6aadd2d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 15:02:11 2022 -0800
+
+    Variable scope reduction as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9bf3f50c2a287a1d455df3e36e751604d7d50381
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 14:33:08 2022 -0800
+
+    Remove unnecessary casts from malloc() and free() calls
+    
+    Not needed in C89 & later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fd5e1e9ee9ed359e0ad0dddfbaa4d9c84dcb1810
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 14:27:25 2022 -0800
+
+    Handle -Wcomma warnings from clang
+    
+    xwd.c:332:22: warning: possible misuse of comma operator here [-Wcomma]
+            width += absx, absx = 0;
+                         ^
+    xwd.c:334:23: warning: possible misuse of comma operator here [-Wcomma]
+            height += absy, absy = 0;
+                          ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0601f552aa34af005270f3a65ec0e92421497cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 13 14:23:28 2022 -0800
+
+    Remove unused macros
+    
+    Found by clang:
+     multiVis.c:977:9: warning: macro is not used [-Wunused-macros]
+     #define DIRECT_COLOR    0x11
+             ^
+     multiVis.c:976:9: warning: macro is not used [-Wunused-macros]
+     #define TRUE_COLOR      0x10
+             ^
+     multiVis.c:975:9: warning: macro is not used [-Wunused-macros]
+     #define PSEUDO_COLOR    0x04
+             ^
+     multiVis.c:974:9: warning: macro is not used [-Wunused-macros]
+     #define GRAY_SCALE      0x02
+             ^
+     multiVis.c:973:9: warning: macro is not used [-Wunused-macros]
+     #define STATIC_GRAY     0x01
+             ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit da73a432704776e7e78097fb0c93d81e90bc7859
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d232d25f338fca51d583d5888cb9171fd958536e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:35:24 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3eeb0d0e145b1ae47d2ec8d638f46960a321cdf7
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 7 14:35:21 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e0341cc8ddd76e6af2b11bbcdda25f470aa4160d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 28 14:14:14 2021 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 57586247e0c6bce744c04f072185762e76879baf
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Aug 1 17:14:35 2021 -0700

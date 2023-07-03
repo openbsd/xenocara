@@ -148,6 +148,23 @@ main(int argc, char **argv)
 
     INIT_NAME;
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp (argn, "-help") == 0) {
+	    usage(NULL, EXIT_SUCCESS);
+	    exit(0);
+	}
+	if (strcmp (argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(EXIT_SUCCESS);
+	}
+    }
+
     Setup_Display_And_Screen(&argc, argv);
 
     /* Get window select on command line, if any */
@@ -162,11 +179,9 @@ main(int argc, char **argv)
             debug = True;
             continue;
         }
-        if (!strcmp(argv[i], "-help"))
-            usage(NULL);
         if (!strcmp(argv[i], "-out")) {
             if (++i >= argc)
-                usage("-out requires an argument");
+                usage("-out requires an argument", EXIT_FAILURE);
             if (!(out_file = fopen(argv[i], "wb")))
                 Fatal_Error("Can't open output file as specified.");
             standard_out = False;
@@ -186,7 +201,7 @@ main(int argc, char **argv)
         }
         if (!strcmp(argv[i], "-add")) {
             if (++i >= argc)
-                usage("-add requires an argument");
+                usage("-add requires an argument", EXIT_FAILURE);
             add_pixel_value = parse_long(argv[i]);
             continue;
         }
@@ -198,13 +213,9 @@ main(int argc, char **argv)
             silent = True;
             continue;
         }
-        if (!strcmp(argv[i], "-version")) {
-            puts(PACKAGE_STRING);
-            exit(0);
-        }
         fprintf(stderr, "%s: unrecognized argument '%s'\n",
                 program_name, argv[i]);
-        usage(NULL);
+        usage(NULL, EXIT_FAILURE);
     }
 #ifdef WIN32
     if (standard_out)
@@ -236,7 +247,7 @@ Get24bitDirectColors(XColor **colors)
     int i, ncolors = 256;
     XColor *tcol;
 
-    *colors = tcol = (XColor *) malloc(sizeof(XColor) * ncolors);
+    *colors = tcol = malloc(sizeof(XColor) * ncolors);
 
     for (i = 0; i < ncolors; i++) {
         tcol[i].pixel = i << 16 | i << 8 | i;
@@ -328,10 +339,14 @@ Window_Dump(Window window, FILE *out)
     dheight = DisplayHeight(dpy, screen);
 
     /* clip to window */
-    if (absx < 0)
-        width += absx, absx = 0;
-    if (absy < 0)
-        height += absy, absy = 0;
+    if (absx < 0) {
+        width += absx;
+        absx = 0;
+    }
+    if (absy < 0) {
+        height += absy;
+        absy = 0;
+    }
     if (absx + width > dwidth)
         width = dwidth - absx;
     if (absy + height > dheight)
@@ -508,7 +523,7 @@ Window_Dump(Window window, FILE *out)
      *  This copying of the bit stream (data) to a file is to be replaced
      *  by an Xlib call which hasn't been written yet.  It is not clear
      *  what other functions of xwd will be taken over by this (as yet)
-     *  non-existant X function.
+     *  non-existent X function.
      */
     if (fwrite(image->data, (int) buffer_size, 1, out) != 1) {
         perror("xwd");
@@ -542,7 +557,7 @@ Window_Dump(Window window, FILE *out)
  * Report the syntax for calling xwd.
  */
 void
-usage(const char *errmsg)
+usage(const char *errmsg, int exitval)
 {
     if (errmsg != NULL)
         fprintf(stderr, "%s: %s\n", program_name, errmsg);
@@ -568,7 +583,7 @@ usage(const char *errmsg)
           "  -icmap                   Use the first colormap of the screen\n"
           "  -screen                  Send the request against the root window\n"
           "  -silent                  Don't ring any bells\n", stderr);
-    exit(1);
+    exit(exitval);
 }
 
 /*
@@ -593,7 +608,7 @@ ReadColors(Visual *vis, Colormap cmap, XColor **colors)
 
     ncolors = vis->map_entries;
 
-    if (!(*colors = (XColor *) malloc(sizeof(XColor) * ncolors)))
+    if (!(*colors = malloc(sizeof(XColor) * ncolors)))
         Fatal_Error("Out of memory!");
 
     if (vis->class == DirectColor || vis->class == TrueColor) {
@@ -650,11 +665,10 @@ Get_XColors(XWindowAttributes *win_info, XColor **colors)
 void
 _swapshort(register char *bp, register unsigned n)
 {
-    register char c;
-    register char *ep = bp + n;
+    char *ep = bp + n;
 
     while (bp < ep) {
-        c = *bp;
+        char c = *bp;
         *bp = *(bp + 1);
         bp++;
         *bp++ = c;
@@ -664,11 +678,10 @@ _swapshort(register char *bp, register unsigned n)
 void
 _swaplong(register char *bp, register unsigned n)
 {
-    register char c;
-    register char *ep = bp + n;
+    char *ep = bp + n;
 
     while (bp < ep) {
-        c = bp[3];
+        char c = bp[3];
         bp[3] = bp[0];
         bp[0] = c;
         c = bp[2];

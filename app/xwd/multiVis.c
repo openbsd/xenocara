@@ -104,18 +104,6 @@ typedef struct {
 #define GREEN_SHIFT       8
 #define BLUE_SHIFT        0
 
-/*
-extern list_ptr	new_list();
-extern list_ptr	dup_list_head();
-extern void *	first_in_list();
-extern void *	next_in_list();
-extern int	add_to_list();
-extern void	zero_list();
-extern void	delete_list();
-extern void	delete_list_destroying();
-extern unsigned int list_length();
-*/
-
 /* Prototype Declarations for Static Functions */
 static void QueryColorMap(Display *, Colormap, Visual *,
                           XColor **, int *, int *, int *);
@@ -160,22 +148,22 @@ static void
 QueryColorMap(Display *disp, Colormap src_cmap, Visual *src_vis,
               XColor **src_colors, int *rShift, int *gShift, int *bShift)
 {
-    unsigned int ncolors, i;
-    unsigned long redMask, greenMask, blueMask;
-    int redShift, greenShift, blueShift;
+    unsigned int ncolors;
     XColor *colors;
 
     ncolors = (unsigned) src_vis->map_entries;
     *src_colors = colors = calloc(ncolors, sizeof(XColor));
 
     if (src_vis->class != TrueColor && src_vis->class != DirectColor) {
-        for (i = 0; i < ncolors; i++) {
+        for (unsigned int i = 0; i < ncolors; i++) {
             colors[i].pixel = i;
             colors[i].pad = 0;
             colors[i].flags = DoRed | DoGreen | DoBlue;
         }
     }
     else { /** src is decomposed rgb ***/
+        unsigned long redMask, greenMask, blueMask;
+        int redShift, greenShift, blueShift;
 
         /* Get the X colormap */
         redMask = src_vis->red_mask;
@@ -199,7 +187,7 @@ QueryColorMap(Display *disp, Colormap src_cmap, Visual *src_vis,
         *rShift = redShift;
         *gShift = greenShift;
         *bShift = blueShift;
-        for (i = 0; i < ncolors; i++) {
+        for (unsigned int i = 0; i < ncolors; i++) {
             if (i <= redMask)
                 colors[i].pixel = (i << redShift);
             if (i <= greenMask)
@@ -277,7 +265,6 @@ TransferImage(Display *disp, XImage *reg_image,
               image_region_type *reg, XImage *target_image,
               int dst_x, int dst_y)
 {
-    int i, j, old_pixel, new_pixel, red_ind, green_ind, blue_ind;
     XColor *colors;
     int rShift = 0, gShift = 0, bShift = 0;
 
@@ -286,15 +273,15 @@ TransferImage(Display *disp, XImage *reg_image,
 
     switch (reg->vis->class) {
     case TrueColor:
-        for (i = 0; i < srch; i++) {
-            for (j = 0; j < srcw; j++) {
-                old_pixel = XGetPixel(reg_image, j, i);
+        for (int i = 0; i < srch; i++) {
+            for (int j = 0; j < srcw; j++) {
+                int old_pixel = XGetPixel(reg_image, j, i);
+                int new_pixel;
 
                 if (reg->vis->map_entries == 16) {
-
-                    red_ind = (old_pixel & reg->vis->red_mask) >> rShift;
-                    green_ind = (old_pixel & reg->vis->green_mask) >> gShift;
-                    blue_ind = (old_pixel & reg->vis->blue_mask) >> bShift;
+                    int red_ind = (old_pixel & reg->vis->red_mask) >> rShift;
+                    int green_ind = (old_pixel & reg->vis->green_mask) >> gShift;
+                    int blue_ind = (old_pixel & reg->vis->blue_mask) >> bShift;
 
                     new_pixel = (
                         ((colors[red_ind].red >> 8) << RED_SHIFT) |
@@ -311,15 +298,15 @@ TransferImage(Display *disp, XImage *reg_image,
         }
         break;
     case DirectColor:
-        for (i = 0; i < srch; i++) {
+        for (int i = 0; i < srch; i++) {
 
-            for (j = 0; j < srcw; j++) {
-                old_pixel = XGetPixel(reg_image, j, i);
-                red_ind = (old_pixel & reg->vis->red_mask) >> rShift;
-                green_ind = (old_pixel & reg->vis->green_mask) >> gShift;
-                blue_ind = (old_pixel & reg->vis->blue_mask) >> bShift;
+            for (int j = 0; j < srcw; j++) {
+                int old_pixel = XGetPixel(reg_image, j, i);
+                int red_ind = (old_pixel & reg->vis->red_mask) >> rShift;
+                int green_ind = (old_pixel & reg->vis->green_mask) >> gShift;
+                int blue_ind = (old_pixel & reg->vis->blue_mask) >> bShift;
 
-                new_pixel = (
+                int new_pixel = (
                     ((colors[red_ind].red >> 8) << RED_SHIFT) |
                     ((colors[green_ind].green >> 8) << GREEN_SHIFT) |
                     ((colors[blue_ind].blue >> 8) << BLUE_SHIFT)
@@ -330,11 +317,11 @@ TransferImage(Display *disp, XImage *reg_image,
         }
         break;
     default:
-        for (i = 0; i < srch; i++) {
-            for (j = 0; j < srcw; j++) {
-                old_pixel = XGetPixel(reg_image, j, i);
+        for (int i = 0; i < srch; i++) {
+            for (int j = 0; j < srcw; j++) {
+                int old_pixel = XGetPixel(reg_image, j, i);
 
-                new_pixel = (
+                int new_pixel = (
                     ((colors[old_pixel].red >> 8) << RED_SHIFT) |
                     ((colors[old_pixel].green >> 8) << GREEN_SHIFT) |
                     ((colors[old_pixel].blue >> 8) << BLUE_SHIFT)
@@ -353,12 +340,9 @@ ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
                   XRectangle bbox,    /* bounding box of grabbed area */
                   list_ptr regions)   /* list of regions to read from */
 {
-    image_region_type *reg;
-    int dst_x, dst_y;           /* where in pixmap to write (UL) */
-    int datalen, diff;
+    int datalen;
 
     XImage *reg_image, *ximage;
-    int srcRect_x, srcRect_y, srcRect_width, srcRect_height;
     int bytes_per_line;
 
     ximage = XCreateImage(disp, fakeVis, depth, format, 0, NULL, width, height,
@@ -373,27 +357,28 @@ ReadRegionsInList(Display *disp, Visual *fakeVis, int depth, int format,
 
     ximage->bits_per_pixel = depth; /** Valid only if format is ZPixmap ***/
 
-    for (reg = (image_region_type *) first_in_list(regions); reg;
-         reg = (image_region_type *) next_in_list(regions)) {
-        int rect;
-        struct my_XRegion *vis_reg;
+    for (image_region_type *reg = (image_region_type *) first_in_list(regions);
+         reg; reg = (image_region_type *) next_in_list(regions)) {
 
-        vis_reg = (struct my_XRegion *) (reg->visible_region);
-        for (rect = 0; rect < vis_reg->numRects; rect++) {
+        struct my_XRegion *vis_reg = (struct my_XRegion *) (reg->visible_region);
+
+        for (int rect = 0; rect < vis_reg->numRects; rect++) {
 /** ------------------------------------------------------------------------
 	Intersect bbox with visible part of region giving src rect & output
 	location.  Width is the min right side minus the max left side.
 	Similar for height.  Offset src rect so x,y are relative to
 	origin of win, not the root-relative visible rect of win.
  ------------------------------------------------------------------------ **/
-            srcRect_width =
+            int srcRect_width =
                 MIN(vis_reg->rects[rect].x2, bbox.width + bbox.x) -
                 MAX(vis_reg->rects[rect].x1, bbox.x);
-            srcRect_height =
+            int srcRect_height =
                 MIN(vis_reg->rects[rect].y2, bbox.height + bbox.y) -
                 MAX(vis_reg->rects[rect].y1, bbox.y);
+            int srcRect_x, srcRect_y;
+            int dst_x, dst_y;           /* where in pixmap to write (UL) */
 
-            diff = bbox.x - vis_reg->rects[rect].x1;
+            int diff = bbox.x - vis_reg->rects[rect].x1;
             srcRect_x = MAX(0,diff) +
                 (vis_reg->rects[rect].x1 - reg->x_rootrel - reg->border);
             dst_x = MAX(0, -diff);
@@ -439,17 +424,12 @@ ReadAreaToImage(Display *disp,
     int depth;
     XImage *ximage, *ximage_ipm = NULL;
     Visual fakeVis;
-    int x1, y1;
     XImage *image;
 
 #if 0
     unsigned char *pmData, *ipmData;
 #endif
     int transparentColor, transparentType;
-    int srcRect_x, srcRect_y, srcRect_width, srcRect_height;
-    int diff;
-    int dst_x, dst_y;           /* where in pixmap to write (UL) */
-    int pixel;
 
     bbox.x = x;                 /* init X rect for bounding box */
     bbox.y = y;
@@ -475,13 +455,16 @@ ReadAreaToImage(Display *disp,
 #endif
     }
 /* Now tranverse the overlay visual windows and test for transparency index.  */
-/* If you find one, subsitute the value from the matching image plane pixmap. */
+/* If you find one, substitute the value from the matching image plane pixmap. */
 
     for (reg = (image_region_type *) first_in_list(vis_regions); reg;
          reg = (image_region_type *) next_in_list(vis_regions)) {
 
         if (src_in_overlay(reg, numOverlayVisuals, pOverlayVisuals,
                            &transparentColor, &transparentType)) {
+            int srcRect_x, srcRect_y, srcRect_width, srcRect_height;
+            int diff;
+            int dst_x, dst_y;           /* where in pixmap to write (UL) */
             int test = 0;
 
             srcRect_width =
@@ -508,10 +491,11 @@ ReadAreaToImage(Display *disp,
                 unsigned char *pixel_ptr;
                 unsigned char *start_of_line = (unsigned char *) image->data;
 
-                for (y1 = 0; y1 < srcRect_height; y1++) {
+                for (int y1 = 0; y1 < srcRect_height; y1++) {
                     pixel_ptr = start_of_line;
-                    for (x1 = 0; x1 < srcRect_width; x1++) {
+                    for (int x1 = 0; x1 < srcRect_width; x1++) {
                         if (*pixel_ptr++ == transparentColor) {
+                            int pixel;
 #if 0
                             *pmData++ = *ipmData++;
                             *pmData++ = *ipmData++;
@@ -537,11 +521,12 @@ ReadAreaToImage(Display *disp,
             }
             else {
                 if (transparentType == TransparentPixel) {
-                    for (y1 = 0; y1 < srcRect_height; y1++) {
-                        for (x1 = 0; x1 < srcRect_width; x1++) {
+                    for (int y1 = 0; y1 < srcRect_height; y1++) {
+                        for (int x1 = 0; x1 < srcRect_width; x1++) {
                             int pixel_value = XGetPixel(image, x1, y1);
 
                             if (pixel_value == transparentColor) {
+                                int pixel;
 #if 0
                                 *pmData++ = *ipmData++;
                                 *pmData++ = *ipmData++;
@@ -566,11 +551,12 @@ ReadAreaToImage(Display *disp,
                     }
                 }
                 else {
-                    for (y1 = 0; y1 < srcRect_height; y1++) {
-                        for (x1 = 0; x1 < srcRect_width; x1++) {
+                    for (int y1 = 0; y1 < srcRect_height; y1++) {
+                        for (int x1 = 0; x1 < srcRect_width; x1++) {
                             int pixel_value = XGetPixel(image, x1, y1);
 
                             if (pixel_value & transparentColor) {
+                                int pixel;
 #if 0
                                 *pmData++ = *ipmData++;
                                 *pmData++ = *ipmData++;
@@ -628,10 +614,8 @@ make_src_list(Display *disp, list_ptr image_wins,
 {
     XWindowAttributes child_attrs;
     Window root, parent, *child;        /* variables for XQueryTree() */
-    Window *save_child_list;            /* variables for XQueryTree() */
     unsigned int nchild;                /* variables for XQueryTree() */
     XRectangle child_clip;              /* vis part of child */
-    int curr_clipX, curr_clipY, curr_clipRt, curr_clipBt;
 
     /* check that win is mapped & not outside bounding box */
     if (curr_attrs->map_state == IsViewable &&
@@ -640,6 +624,9 @@ make_src_list(Display *disp, list_ptr image_wins,
           pclip->y >= (int) (bbox->y + bbox->height) ||
           (int) (pclip->x + pclip->width) <= bbox->x ||
           (int) (pclip->y + pclip->height) <= bbox->y)) {
+
+        Window *save_child_list;
+        int curr_clipX, curr_clipY, curr_clipRt, curr_clipBt;
 
         XQueryTree(disp, curr, &root, &parent, &child, &nchild);
         save_child_list = child;   /* so we can free list when we're done */
@@ -747,8 +734,7 @@ make_region_list(Display *disp, Window win, XRectangle *bbox,
             src_in_image(base_src, numImageVisuals, pImageVisuals)) {
             /* find a window whose visual hasn't been put in list yet */
             if (!src_in_region_list(base_src, image_regions)) {
-                if (!(new_reg = (image_region_type *)
-                      malloc(sizeof(image_region_type)))) {
+                if (!(new_reg = malloc(sizeof(image_region_type)))) {
                     return (list_ptr) NULL;
                 }
                 count++;
@@ -796,7 +782,7 @@ make_region_list(Display *disp, Window win, XRectangle *bbox,
                 }
                 else {
                     XDestroyRegion(new_reg->visible_region);
-                    free((void *) new_reg);
+                    free(new_reg);
                 }
             }
         }
@@ -815,7 +801,7 @@ static void
 destroy_image_region(image_region_type *image_region)
 {
     XDestroyRegion(image_region->visible_region);
-    free((void *) image_region);
+    free(image_region);
 }
 
 /** ------------------------------------------------------------------------
@@ -899,7 +885,7 @@ add_window_to_list(list_ptr image_wins, Window w,
 {
     image_win_type *new_src;
 
-    if ((new_src = (image_win_type *) malloc(sizeof(image_win_type))) == NULL)
+    if ((new_src = malloc(sizeof(image_win_type))) == NULL)
         return;
 
     new_src->win = w;
@@ -970,12 +956,6 @@ src_in_overlay(image_region_type *src, int numOverlayVisuals,
  ******************************************************************************/
 
 
-#define STATIC_GRAY	0x01
-#define GRAY_SCALE	0x02
-#define PSEUDO_COLOR	0x04
-#define TRUE_COLOR	0x10
-#define DIRECT_COLOR	0x11
-
 static int weCreateServerOverlayVisualsProperty = False;
 
 
@@ -996,7 +976,7 @@ static int weCreateServerOverlayVisualsProperty = False;
  * the array of the screen's visuals, determining whether the visual is an
  * overlay or image visual.
  *
- * If the routine sucessfully obtained the visual information, it returns zero.
+ * If the routine successfully obtained the visual information, it returns zero.
  * If the routine didn't obtain the visual information, it returns non-zero.
  *
  ******************************************************************************/
@@ -1027,15 +1007,13 @@ GetXVisualInfo(   /* Which X server (aka "display"). */
     XVisualInfo getVisInfo;     /* Parameters of XGetVisualInfo */
     int mask;
     XVisualInfo *pVis, **pIVis; /* Faster, local copies */
-    OverlayInfo *pOVis;
     OverlayVisualPropertyRec *pOOldVis;
-    int nVisuals, nOVisuals;
+    int nVisuals;
     Atom overlayVisualsAtom;    /* Parameters for XGetWindowProperty */
     Atom actualType;
     unsigned long numLongs, bytesAfter;
     int actualFormat;
     int nImageVisualsAlloced;   /* Values to process the XVisualInfo */
-    int imageVisual;            /* array */
 
     /* First, get the list of visuals for this screen. */
     getVisInfo.screen = screen;
@@ -1043,7 +1021,7 @@ GetXVisualInfo(   /* Which X server (aka "display"). */
 
     *pVisuals = XGetVisualInfo(display, mask, &getVisInfo, numVisuals);
     if ((nVisuals = *numVisuals) <= 0) {
-        /* Return that the information wasn't sucessfully obtained: */
+        /* Return that the information wasn't successfully obtained: */
         return (1);
     }
     pVis = *pVisuals;
@@ -1081,11 +1059,12 @@ GetXVisualInfo(   /* Which X server (aka "display"). */
     /* Process the pVisuals array. */
     *numImageVisuals = 0;
     nImageVisualsAlloced = 1;
-    pIVis = *pImageVisuals = (XVisualInfo **) malloc(sizeof(XVisualInfo *));
+    pIVis = *pImageVisuals = malloc(sizeof(XVisualInfo *));
     while (--nVisuals >= 0) {
-        nOVisuals = *numOverlayVisuals;
-        pOVis = *pOverlayVisuals;
-        imageVisual = True;
+        int nOVisuals = *numOverlayVisuals;
+        OverlayInfo *pOVis = *pOverlayVisuals;
+        int imageVisual = True;
+
         while (--nOVisuals >= 0) {
             pOOldVis = (OverlayVisualPropertyRec *) pOVis;
             if (pVis->visualid == pOOldVis->visualID) {
@@ -1109,7 +1088,7 @@ GetXVisualInfo(   /* Which X server (aka "display"). */
         pVis++;
     }
 
-    /* Return that the information was sucessfully obtained: */
+    /* Return that the information was successfully obtained: */
     return (0);
 
 }                               /* GetXVisualInfo() */

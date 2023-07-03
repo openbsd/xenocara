@@ -63,7 +63,7 @@ add_to_list(list_ptr lp, void *item)
     while (lp->next) {
         lp = lp->next;
     }
-    if ((lp->next = (list_ptr) malloc(sizeof(list_item))) == NULL) {
+    if ((lp->next = malloc(sizeof(list_item))) == NULL) {
 
         return 0;
     }
@@ -83,7 +83,7 @@ new_list(void)
 {
     list_ptr lp;
 
-    if ((lp = (list_ptr) malloc(sizeof(list_item)))) {
+    if ((lp = malloc(sizeof(list_item)))) {
         lp->next = NULL;
         lp->ptr.item = NULL;
     }
@@ -106,7 +106,7 @@ dup_list_head(list_ptr lp, int start_at_curr)
 {
     list_ptr new_listp;
 
-    if ((new_listp = (list_ptr) malloc(sizeof(list_item))) == NULL) {
+    if ((new_listp = malloc(sizeof(list_item))) == NULL) {
 
         return (list_ptr) NULL;
     }
@@ -117,6 +117,7 @@ dup_list_head(list_ptr lp, int start_at_curr)
 }
 
 
+#ifdef BUILD_UNUSED
 /** ------------------------------------------------------------------------
 	Returns the number of items in the list.
     -------------------------------------------------------------------- **/
@@ -135,7 +136,7 @@ list_length(list_ptr lp)
 
 
 /** ------------------------------------------------------------------------
-	Scans thru list, looking for a node whose ptr.item is equal to
+	Scans through list, looking for a node whose ptr.item is equal to
 	the "item" passed in.  "Equal" here means the same address - no
 	attempt is made to match equivalent values stored in different
 	locations.  If a match is found, that node is deleted from the
@@ -161,6 +162,7 @@ delete_from_list(list_ptr lp, void *item)
 
     return NULL;
 }
+#endif /* BUILD_UNUSED */
 
 
 /** ------------------------------------------------------------------------
@@ -172,12 +174,9 @@ delete_from_list(list_ptr lp, void *item)
 void
 delete_list(list_ptr lp, int free_items)
 {
-    list_ptr del_node;
-    void *item;
-
     while (lp->next) {
-        del_node = lp->next;
-        item = del_node->ptr.item;
+        list_ptr del_node = lp->next;
+        void *item = del_node->ptr.item;
         lp->next = del_node->next;
         free(del_node);
         if (free_items) {
@@ -189,13 +188,9 @@ delete_list(list_ptr lp, int free_items)
 void
 delete_list_destroying(list_ptr lp, void destructor(void *item))
 {
-    list_ptr del_node;
-
-    void *item;
-
     while (lp->next) {
-        del_node = lp->next;
-        item = del_node->ptr.item;
+        list_ptr del_node = lp->next;
+        void *item = del_node->ptr.item;
         lp->next = del_node->next;
         free(del_node);
         if (destructor) {
@@ -242,8 +237,10 @@ next_in_list(list_ptr lp)
     return lp->ptr.curr ? lp->ptr.curr->ptr.item : NULL;
 }
 
+#ifdef BUILD_UNUSED
 int
 list_is_empty(list_ptr lp)
 {
     return (lp == NULL || lp->next == NULL);
 }
+#endif  /* BUILD_UNUSED */
