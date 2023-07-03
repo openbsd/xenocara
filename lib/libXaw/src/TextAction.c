@@ -2607,7 +2607,7 @@ InsertNewLineAndIndent(Widget w, XEvent *event, String *p _X_UNUSED, Cardinal *n
 	strcpy(++ptr, line_to_ip);
 
 	length++;
-	while (length && (isspace(*ptr) || (*ptr == XawTAB)))
+	while (length && (isspace((unsigned char)*ptr) || (*ptr == XawTAB)))
 	    ptr++, length--;
 	*ptr = '\0';
 	text.length = (int)strlen(text.ptr);
@@ -2822,7 +2822,7 @@ RedrawDisplay(Widget w, XEvent *event, String *p _X_UNUSED, Cardinal *n _X_UNUSE
 
 /* This is kind of a hack, but, only one text widget can have focus at
  * a time on one display. There is a problem in the implementation of the
- * text widget, the scrollbars can not be adressed via editres, since they
+ * text widget, the scrollbars can not be addressed via editres, since they
  * are not children of a subclass of composite.
  * The focus variable is required to make sure only one text window will
  * show a block cursor at one time.
@@ -2971,7 +2971,7 @@ TextLeaveWindow(Widget w, XEvent *event, String *params _X_UNUSED, Cardinal *num
  *	Arguments: ctx - The text widget.
  *
  * Description:
- *	  Breaks the line at the previous word boundry when
+ *	  Breaks the line at the previous word boundary when
  *	called inside InsertChar.
  */
 static void
@@ -3201,7 +3201,7 @@ InsertChar(Widget w, XEvent *event, String *p _X_UNUSED, Cardinal *n _X_UNUSED)
  *
  * i18n requires the ability to specify multiple characters in a hexa-
  * decimal string at once.  Since Insert was already too long, I made
- * this a seperate routine.
+ * this a separate routine.
  *
  * A legal hex string in MBNF: '0' 'x' ( HEX-DIGIT HEX-DIGIT )+ '\0'
  *
@@ -3259,7 +3259,7 @@ IfHexConvertHexElseReturnParam(char *param, int *len_return)
 	}
     }
 
-    /* We quit the above loop becasue we hit a non hex.  If that char is \0... */
+    /* We quit the above loop because we hit a non hex.  If that char is \0... */
     if ((c == '\0') && first_digit) {
 	*len_return = (int)strlen(hexval);
 	return (hexval);       /* ...it was a legal hex string, so return it */
@@ -3393,7 +3393,7 @@ Numeric(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	long mult = ctx->text.mult;
 
 	if (*num_params != 1 || strlen(params[0]) != 1
-	    || (!isdigit(params[0][0])
+	    || (!isdigit((unsigned char)params[0][0])
 		&& (params[0][0] != '-' || mult != 0))) {
 	    char err_buf[256];
 
@@ -3591,7 +3591,7 @@ StripOutOldCRs(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 		    if (!iswspace(((wchar_t*)buf)[i]) || ((periodPos + i) >= to))
 			break;
 		}
-		else if (!isspace(buf[i]) || (periodPos + i) >= to)
+		else if (!isspace((unsigned char)buf[i]) || (periodPos + i) >= to)
 		    break;
 
 	    XtFree(buf);
@@ -3681,7 +3681,7 @@ InsertNewCRs(TextWidget ctx, XawTextPosition from, XawTextPosition to,
 		if (!iswspace(((wchar_t*)buf)[i]))
 		    break;
 	    }
-	    else if (!isspace(buf[i]))
+	    else if (!isspace((unsigned char)buf[i]))
 		break;
 
 	to -= (i - 1);
@@ -3811,7 +3811,7 @@ GetBlockBoundaries(TextWidget ctx,
 			   XawMin(ctx->text.s.left, ctx->text.s.right),
 			   XawstEOL, XawsdLeft, 1, False);
 	    to   = SrcScan(ctx->text.source,
-			   XawMax(ctx->text.s.right, ctx->text.s.right),
+			   XawMax(ctx->text.s.left, ctx->text.s.right),
 			   XawstEOL, XawsdRight, 1, False);
 	}
 	else {
@@ -4130,7 +4130,7 @@ NoOp(Widget w, XEvent *event _X_UNUSED, String *params, Cardinal *num_params)
 	case 'R':
 	case 'r':
 	    XBell(XtDisplay(w), 0);
-	    /*FALLTROUGH*/
+	    /*FALLTHROUGH*/
 	default:
 	    break;
     }

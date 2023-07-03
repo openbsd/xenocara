@@ -436,7 +436,7 @@ XawBoxResize(Widget w)
 
 /*
  * Try to do a new layout within the current width and height;
- * if that fails try to resize and do it within the box returne
+ * if that fails try to resize and do it within the box returned
  * by XawBoxQueryGeometry
  *
  * TryNewLayout just says if it's possible, and doesn't actually move the kids
@@ -533,7 +533,7 @@ XawBoxGeometryManager(Widget w, XtWidgetGeometry *request,
 	|| ((request->request_mode & CWY) && request->y != XtY(w)))
         return (XtGeometryNo);
 
-    /* Size changes must see if the new size can be accomodated */
+    /* Size changes must see if the new size can be accommodated */
     if (request->request_mode & (CWWidth | CWHeight | CWBorderWidth)) {
 	/* Make all three fields in the request valid */
 	if ((request->request_mode & CWWidth) == 0)

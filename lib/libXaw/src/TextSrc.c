@@ -399,7 +399,7 @@ XawTextSrcSetValues(Widget current _X_UNUSED, Widget request _X_UNUSED, Widget c
  *
  * Parameters:
  *	w      - TextSrc Object
- *	pos    - position of the text to retreive
+ *	pos    - position of the text to retrieve
  *	text   - text block that will contain returned text
  *	length - maximum number of characters to read
  *
@@ -446,8 +446,8 @@ Replace(Widget w _X_UNUSED, XawTextPosition startPos _X_UNUSED, XawTextPosition 
  *	position - position to start scanning
  *	type	 - type of thing to scan for
  *	dir	 - direction to scan
- *	count	 - which occurance if this thing to search for
- *		 include - whether or not to include the character found in
+ *	count	 - which occurrence 0f this thing to search for
+ *	include  - whether or not to include the character found in
  *		   the position that is returned
  *
  * Description:
@@ -472,7 +472,7 @@ Scan(Widget w _X_UNUSED, XawTextPosition position _X_UNUSED, XawTextScanType typ
  *	text	 - the text block to search for
  *
  * Description:
- *	Searchs the text source for the text block passed
+ *	Searches the text source for the text block passed
  */
 /*ARGSUSED*/
 static XawTextPosition
@@ -690,7 +690,7 @@ _XawSourceSetUndoErase(TextSrcObject src, int value)
 }
 
 /*
- * To diferentiate insert-char's separeted by cursor movements.
+ * To differentiate insert-char's separated by cursor movements.
  */
 void
 _XawSourceSetUndoMerge(TextSrcObject src, Bool state)
@@ -1399,7 +1399,7 @@ UndoGC(XawTextUndo *undo)
  *	position - position to start scanning
  *	type	 - type of thing to scan for
  *	dir	 - direction to scan
- *	count	 - which occurance if this thing to search for
+ *	count	 - which occurrence if this thing to search for
  *	include  - whether or not to include the character found in
  *		   the position that is returned.
  *
@@ -1439,7 +1439,7 @@ XawTextSourceScan(Widget w, XawTextPosition position,
  *	The position of the text we are searching for or XawTextSearchError.
  *
  * Description:
- *	Searchs the text source for the text block passed
+ *	Searches the text source for the text block passed
  */
 XawTextPosition
 XawTextSourceSearch(Widget w, XawTextPosition position,
@@ -1463,7 +1463,7 @@ XawTextSourceSearch(Widget w, XawTextPosition position,
  *	w	  - TextSrc object
  *	selection - current selection atom
  *	target	  - current target atom
- *	type	  - type to conver the selection to
+ *	type	  - type to convert the selection to
  *	value	  - return value that has been converted
  *	length	  - ""
  *	format	  - format of the returned value
@@ -1489,7 +1489,7 @@ XawTextSourceConvertSelection(Widget w, Atom *selection, Atom *target,
  * Parameters:
  *	w	  - TextSrc object
  *	left	  - bounds of the selection
- *	rigth	  - ""
+ *	right	  - ""
  *	selection - selection atom
  *
  * Description:
@@ -1522,7 +1522,7 @@ _XawTextFormat(TextWidget tw)
  *	The caller is responsible for freeing both the source and ret string
  *
  *	wstr	   - source wchar string
- * len_in_out - lengh of string.
+ *	len_in_out - length of string.
  *		     As In, length of source wchar string, measured in wchar
  *		     As Out, length of returned string
  */
@@ -1548,7 +1548,7 @@ _XawTextWCToMB(Display *d, wchar_t *wstr, int *len_in_out)
  *   The caller is responsible for freeing both the source and ret string.
  *
  *	str	   - source string
- *	len_in_out - lengh of string
+ *	len_in_out - length of string
  *		     As In, it is length of source string
  *		     As Out, it is length of returned string, measured in wchar
  */

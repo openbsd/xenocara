@@ -364,7 +364,7 @@ XawTextSinkSetValues(Widget current, Widget request _X_UNUSED, Widget cnew,
  *	y	  - ""
  *	pos1	  - location of starting and ending points in the text buffer
  *	pos2	  - ""
- *		 highlight - hightlight this text?
+ *		 highlight - highlight this text?
  *
  * Description:
  *	Stub function that in subclasses will display text.
@@ -475,7 +475,7 @@ FindPosition(Widget w _X_UNUSED, XawTextPosition fromPos _X_UNUSED, int fromx _X
  *	fromX	  - x location of starting Position
  *	toPos	  - end Position
  *	resWidth  - Distance between fromPos and toPos
- *	resPos	  - Acutal toPos used
+ *	resPos	  - Actual toPos used
  *	resHeight - Height required by this text
  *
  * Description:
@@ -503,7 +503,7 @@ FindDistance(Widget w _X_UNUSED, XawTextPosition fromPos, int fromx _X_UNUSED,
  *	resPos - resulting position
  *
  * Description:
- *	Resloves a location to a position.
+ *	Resolves a location to a position.
  */
 /*ARGSUSED*/
 static void
@@ -549,7 +549,7 @@ MaxLines(Widget w _X_UNUSED, unsigned int height _X_UNUSED)
  *	lines - number of lines
  *
  * Description:
- *	Finds the Minium height that will contain a given number lines.
+ *	Finds the Minimum height that will contain a given number lines.
  *
  * Returns:
  *	the height
@@ -610,7 +610,7 @@ GetCursorBounds(Widget w _X_UNUSED, XRectangle *rect)
  *	y	  - ""
  *	pos1	  - location of starting and ending points in the text buffer
  *	pos2	  - ""
- *	highlight - hightlight this text?
+ *	highlight - highlight this text?
  */
 /*ARGSUSED*/
 void
@@ -750,7 +750,7 @@ XawTextSinkFindPosition(Widget w, XawTextPosition fromPos, int fromx, int width,
  *	fromX	  - x location of starting Position
  *	toPos	  - end Position
  *	resWidth  - Distance between fromPos and toPos
- *	resPos	  - Acutal toPos used
+ *	resPos	  - Actual toPos used
  *	resHeight - Height required by this text
  *
  * Description:
@@ -780,7 +780,7 @@ XawTextSinkFindDistance(Widget w, XawTextPosition fromPos, int fromx,
  *	resPos - resulting position
  *
  * Description:
- *	Resloves a location to a position.
+ *	Resolves a location to a position.
  */
 /*ARGSUSED*/
 void
@@ -828,7 +828,7 @@ XawTextSinkMaxLines(Widget w, Dimension height)
  *	lines - number of lines
  *
  * Description:
- *	Finds the Minium height that will contain a given number lines.
+ *	Finds the Minimum height that will contain a given number lines.
  *
  * Returns:
  *	the height
@@ -1251,7 +1251,7 @@ _XawTextSinkAddProperty(XawTextPropertyList *list, XawTextProperty *property,
 	weight = asterisk;
     if (property->slant != NULLQUARK) {
 	slant = XrmQuarkToString(property->slant);
-	if (toupper(*slant) != 'R')
+	if (toupper((unsigned char)*slant) != 'R')
 	    slant = asterisk;	/* X defaults to italics, so, don't
 				   care in resolving between `I' and `O' */
     }
@@ -1583,6 +1583,7 @@ XawTextSinkConvertPropertyList(String name, String spec, Screen *screen,
 		if (prev)
 		    prev->next = NULL;
 		XawFreeParamsStruct(params);
+		XtFree((char *)prop);
 		return (NULL);
 	    }
 	    prop->mask |= XAW_TPROP_FONT;
@@ -1602,6 +1603,7 @@ XawTextSinkConvertPropertyList(String name, String spec, Screen *screen,
 		if (prev)
 		    prev->next = NULL;
 		XawFreeParamsStruct(params);
+		XtFree((char *)prop);
 		return (NULL);
 	    }
 	    prop->foreground = color.pixel;
@@ -1619,6 +1621,7 @@ XawTextSinkConvertPropertyList(String name, String spec, Screen *screen,
 		if (prev)
 		    prev->next = NULL;
 		XawFreeParamsStruct(params);
+		XtFree((char *)prop);
 		return (NULL);
 	    }
 	    prop->background = color.pixel;

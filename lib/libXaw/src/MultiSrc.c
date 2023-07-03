@@ -515,8 +515,8 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
  *	position - position to start scanning
  *	type	 - type of thing to scan for
  *	dir	 - direction to scan
- *	count	 - which occurance if this thing to search for
- *		   include - whether or not to include the character found in
+ *	count	 - which occurrence of this thing to search for
+ *	include  - whether or not to include the character found in
  *		   the position that is returned
  *
  * Description:
@@ -526,8 +526,8 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
  *	The position of the item found
  *
  * Note:
- *	  While there are only 'n' characters in the file there are n+1
- *	 possible cursor positions (one before the first character and
+ *	While there are only 'n' characters in the file there are n+1
+ *	possible cursor positions (one before the first character and
  *	one after the last character
  */
 static XawTextPosition
@@ -584,7 +584,7 @@ Scan(Widget w, register XawTextPosition position, XawTextScanType type,
 
 		    if (ptr < piece->text) {
 			piece = piece->prev;
-			if (piece == NULL)	/* Begining of text */
+			if (piece == NULL)	/* Beginning of text */
 			    return (0);
 			ptr = piece->text + piece->used - 1;
 			c = *ptr;
@@ -671,7 +671,7 @@ Scan(Widget w, register XawTextPosition position, XawTextScanType type,
  *	text	 - text block to search for
  *
  * Description:
- *	Searchs the text source for the text block passed.
+ *	Searches the text source for the text block passed.
  *
  * Returns:
  *	The position of the item found
@@ -708,7 +708,7 @@ Search(Widget w, register XawTextPosition position, XawTextScanDirection dir,
        I'm being passed a string claiming to be 8bit chars (ie, MB text.)
        If that is the case, naturally I convert to 32bit format */
 
-    /*if the block was FMT8BIT, length will convert to REAL wchar count bellow */
+    /*if the block was FMT8BIT, length will convert to REAL wchar count below */
     wtarget_len = text->length;
 
     if (text->format == XawFmtWide)
@@ -752,7 +752,7 @@ Search(Widget w, register XawTextPosition position, XawTextScanDirection dir,
 	    cnt = (int)(piece->text - ptr);
 
 	    piece = piece->prev;
-	    if (piece == NULL) {	/* Begining of text */
+	    if (piece == NULL) {	/* Beginning of text */
 		XtFree((char *)buf);
 		return (XawTextSearchError);
 	    }
@@ -877,7 +877,7 @@ XawMultiSrcGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
 		if (src->multi_src.use_string_in_place)
 		    *((char **)args[i].value) = (char *)
 			src->multi_src.first_piece->text;
-		else if (_XawMultiSave(w))	/* If save sucessful */
+		else if (_XawMultiSave(w))	/* If save successful */
 		    *((char **)args[i].value) = (char *)src->multi_src.string;
 		break;
 	    }
@@ -1025,7 +1025,7 @@ _XawMultiSave(Widget w)
  *	Save the current buffer as a file.
  *
  * Returns:
- *	True if the save was sucessful
+ *	True if the save was successful
  *
  * Note:
  * The public interface is XawAsciiSaveAsFile!
@@ -1078,10 +1078,10 @@ RemoveOldStringOrFile(MultiSrcObject src, Bool checkString)
  *	name   - name of the file
  *
  * Description:
- *	Write the string specified to the begining of the file  specified.
+ *	Write the string specified to the beginning of the file  specified.
  *
  * Returns:
- *	Returns True if sucessful, False otherwise
+ *	Returns True if successful, False otherwise
  */
 static Bool
 WriteToFile(String string, String name)

@@ -1,3 +1,161 @@
+commit 78eb3c75688a1e92ec435e5bc3ded063cd339a73
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Mar 15 16:29:53 2023 -0700
+
+    libXaw 1.0.15
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ebf701e9752a2c85f2fcfcce32b97f47d2546f47
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:13: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:13: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:13: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7246b984c287b64eb73ee0c303f1b61ee51caf2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 14:12:09 2023 -0800
+
+    Replace calls to index() with strchr()
+    
+    Use C standard API instead of old BSD equivalent
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 02d6fcb26ee1c77c26d98372898d0e48542da5cb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Feb 28 11:50:15 2023 -0800
+
+    Add .git-blame-ignore-revs to hide whitespace commits from git blame
+    
+    To use this in your local repo clone, you will need to either run
+    `git blame --ignore-revs-file .git-blame-ignore-revs`
+    or set it permanently with
+    `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c37efe7e63ce7be18238590b25042a8d7184f86c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:21:46 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9129b6dbca53afe7e1876ce11bb0386d91bcd589
+Author: Thomas E. Dickey <dickey@invisible-island.net>
+Date:   Mon Jul 4 08:46:04 2022 -0400
+
+    issue #6: fix typo in XawMax parameter in GetBlockBoundaries
+    
+    Signed-off-by: Thomas E. Dickey <dickey@invisible-island.net>
+
+commit 49cec54165b46116c73e7db78c46b624948b01c8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 7 10:20:30 2022 -0700
+
+    Stop memory leak in error paths in XawTextSinkConvertPropertyList()
+    
+    Fixes issues reported by Oracle Parfait static analyzer:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XtCalloc(1, 144)
+            at line 1586 of lib/libXaw/src/TextSink.c in function 'XawTextSinkConvertPropertyList'.
+              pointer allocated at line 1570 with XtCalloc(1, 144)
+              pointer leaks when XawFindArgVal(params, "font") != NULL at line 1573
+                  and argval->value != NULL at line 1574
+                  and XLoadQueryFont(screen->display, argval->value) == NULL at line 1577.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XtCalloc(1, 144)
+            at line 1605 of lib/libXaw/src/TextSink.c in function 'XawTextSinkConvertPropertyList'.
+              pointer allocated at line 1570 with XtCalloc(1, 144)
+              pointer leaks when argval->value == NULL at line 1574
+                  and XawFindArgVal(params, "foreground") != NULL at line 1593
+                  and argval->value != NULL at line 1594
+                  and XAllocNamedColor(...) == 0 at line 1595.
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XtCalloc(1, 144)
+            at line 1622 of lib/libXaw/src/TextSink.c in function 'XawTextSinkConvertPropertyList'.
+              pointer allocated at line 1570 with XtCalloc(1, 144)
+              pointer leaks when argval->value == NULL at line 1574
+                  and XawFindArgVal(params, "background") != NULL at line 1610
+                  and argval->value != NULL at line 1611
+                  and XAllocNamedColor(...) == 0 at line 1612.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11384211b9407eeab475e54e4806e47825fb1790
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 7 10:11:18 2022 -0700
+
+    Stop memory leak in GetResourcePixmapPath()
+    
+    Fixes issue reported by Oracle Parfait static analyzer:
+    
+    Error: Memory leak
+       Memory leak [memory-leak] (CWE 401):
+          Memory leak of pointer pointer allocated with XtMalloc((strlen(value.addr) + 1))
+            at line 700 of lib/libXaw/src/Pixmap.c in function 'GetResourcePixmapPath'.
+              pointer allocated at line 679 with XtMalloc((strlen(value.addr) + 1))
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01c0b0365a50a08e69dffe3c63ac62343560b26c
+Author: Taylor R Campbell <riastradh@netbsd.org>
+Date:   Mon Apr 4 14:53:48 2022 +0200
+
+    Fix ctype(3) users.
+    
+    The API requires "unsigned char" arguments.
+    
+    Signed-off-by: Thomas Klausner <tk@giga.or.at>
+
+commit 794367d1ac396842c0213064ebcfe1f4e2219657
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 7 10:56:22 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f704f8cf083140a592a79705a3b104063d9b67c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 7 10:36:59 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8d6e75133738d0311d7737faab841b44cbb86e6b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat May 7 10:31:31 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 9cfeba9db7f3ac4e0b351969c9ff5ab8f58ec7ef
 Author: Matt Turner <mattst88@gmail.com>
 Date:   Sat Mar 27 13:38:39 2021 -0400
@@ -1751,7 +1909,7 @@ Date:   Sun Jan 31 17:43:29 2010 -0500
     Signed-off-by: Gaetan Nadon <memsize@videotron.ca>
 
 commit ceaf6f7f0e516b1479744df421de404b1decc556
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Thu Dec 17 08:28:30 2009 +0100
 
     require autoconf 2.60 because of $(docdir) use
@@ -2409,7 +2567,7 @@ Date:   Sat Jul 9 06:11:58 2005 +0000
         libraries not yet installed will work properly.
 
 commit 5fc8851308321a65a6987aedea6618d056ff7879
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jul 6 19:26:27 2005 +0000
 
     - Xaw/xaw.m4: Change help string to say "enable xprint" instead of "disable
@@ -2420,7 +2578,7 @@ Date:   Wed Jul 6 19:26:27 2005 +0000
     - remove font/arabic-misc/README and font/mutt-misc/README
 
 commit d4f214b6255184a2cbf571c02409a0e3f4405fb0
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jul 5 22:51:11 2005 +0000
 
     Add build systems for xlogo, xlsatoms, xlsclients, xmag, xman, xmessage,
@@ -2441,7 +2599,7 @@ Date:   Sun Jul 3 07:00:56 2005 +0000
         <X11/fonts/foo.h>.
 
 commit f8e7a4ec6117006123dfdc7c970f9f1392bf7d84
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Jun 28 13:30:15 2005 +0000
 
     lib/Xaw/Makefile.am: install the libXaw.so symlink in $(DESTDIR)$(libdir) -
@@ -2449,7 +2607,7 @@ Date:   Tue Jun 28 13:30:15 2005 +0000
     lib/Xaw/man/Makefile.am: add Xaw.man to EXTRA_DIST to make it distcheck.
 
 commit c35ec1561bfc9bf8d79b68a071619f4904764002
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Jun 27 21:35:04 2005 +0000
 
     - Fix string test in lib/Xaw/xaw.m4
@@ -2457,26 +2615,26 @@ Date:   Mon Jun 27 21:35:04 2005 +0000
     - add build system for editres
 
 commit f6c298f70e13ecf37b4824f6ac01007b876dd3cb
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jun 24 22:54:24 2005 +0000
 
     Add m4 macro to check for versions of the Xaw library
 
 commit e3e78cd7815716d8af729c19833bec51d7e3f19c
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jun 24 21:20:32 2005 +0000
 
     Change the so names to libXaw{6,7,8}.so and install a symlink from
         libXaw.so to the newest version installed
 
 commit cc658b573a13f36868c5a2263e0b3ff8d0230b86
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon May 23 21:47:37 2005 +0000
 
     Conditionally include config.h in xc/lib/Xaw/*.c
 
 commit 62b680d868fbe4bfdf1af6e6067d0ef27f773559
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon May 23 20:01:46 2005 +0000
 
     Check in build system for Xaw
@@ -2517,7 +2675,7 @@ Date:   Thu Sep 2 01:10:29 2004 +0000
     Bump major version number of libXaw (Bug #1273).
 
 commit 93df4ff66635ea936d57723d317d0a0cdaa55e62
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Mon Aug 16 16:36:14 2004 +0000
 
     As discussed and agreed on on the release-wranglers meeting of August 16,

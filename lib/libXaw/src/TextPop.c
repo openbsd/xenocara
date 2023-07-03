@@ -34,7 +34,7 @@ in this Software without prior written authorization from The Open Group.
  * used by all more than one of these dialogs.
  *
  * The following functions are the only non-static ones defined
- * in this module.  They are located at the begining of the
+ * in this module.  They are located at the beginning of the
  * section that contains this dialog box that uses them.
  *
  * void _XawTextInsertFileAction(w, event, params, num_params);
@@ -296,7 +296,7 @@ DoInsert(Widget w, XtPointer closure, XtPointer call_data)
  *	Inserts a file into the text widget.
  *
  * Returns:
- *	True if the insert was sucessful, False otherwise.
+ *	True if the insert was successful, False otherwise.
  */
 static Bool
 InsertFileNamed(Widget tw, String str)
@@ -417,7 +417,7 @@ AddInsertFileChildren(Widget form, String ptr, Widget tw)
  *	will search for a string in the main Text Widget.
  *
  * Note:
- * If the search was sucessful and the argument popdown is passed to
+ * If the search was successful and the argument popdown is passed to
  * this action routine then the widget will automatically popdown the
  *	search widget
  */
@@ -515,7 +515,7 @@ SearchButton(Widget w _X_UNUSED, XtPointer closure, XtPointer call_data _X_UNUSE
  *
  * First Entry:
  *	  The first entry is the direction to search by default.
- *	This arguement must be specified and may have a value of
+ *	This argument must be specified and may have a value of
  *	"left" or "right".
  *
  * Second Entry:
@@ -547,7 +547,7 @@ _XawTextSearch(Widget w, XEvent *event, String *params, Cardinal *num_params)
 	ptr = params[1];
     else if (XawTextFormat(ctx, XawFmtWide)) {
 	/* This just does the equivalent of
-	   ptr = ""L, a waste because params[1] isnt W aligned */
+	   ptr = ""L, a waste because params[1] isn't W aligned */
 	ptr = (char *)wcs;
 	wcs[0] = 0;
     }
@@ -601,7 +601,7 @@ _XawTextSearch(Widget w, XEvent *event, String *params, Cardinal *num_params)
  *
  * Description:
  *	  This function initializes the search widget and
- *		   is called each time the search widget is poped up.
+ *		   is called each time the search widget is popped up.
  */
 static void
 InitializeSearchWidget(struct SearchAndReplace *search,
@@ -830,7 +830,7 @@ AddSearchChildren(Widget form, String ptr, Widget tw)
  *	Performs a search
  *
  * Returns:
- *	True if sucessful
+ *	True if successful
  */
 /*ARGSUSED*/
 static Bool
@@ -1256,7 +1256,7 @@ _SetField(Widget cnew, Widget old)
  *	name of the child and the shell widget of the dialog.
  *
  * Returns:
- *	True if sucessful
+ *	True if successful
  */
 static Bool
 SetResourceByName(Widget shell, String name, String res_name, XtArgVal value)

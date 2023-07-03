@@ -925,7 +925,7 @@ XawTextInitialize(Widget request _X_UNUSED, Widget cnew,
     ctx->text.update = XmuNewScanline(0, 0, 0);
     ctx->text.gc = XtGetGC(cnew, 0, 0);
     ctx->text.hasfocus = False;
-    ctx->text.margin = ctx->text.r_margin; /* Strucure copy */
+    ctx->text.margin = ctx->text.r_margin; /* Structure copy */
     ctx->text.left_margin = ctx->text.r_margin.left;
     ctx->text.update_disabled = False;
     ctx->text.clear_to_eol = True;
@@ -1095,7 +1095,7 @@ _XawTextGetText(TextWidget ctx, XawTextPosition left, XawTextPosition right)
 	bytes = sizeof(unsigned char);
     else if (XawTextFormat(ctx, XawFmtWide))
 	bytes = sizeof(wchar_t);
-    else /* if there is another fomat, add here */
+    else /* if there is another format, add here */
 	bytes = 1;
 
     /* leave space for ZERO */
@@ -1459,7 +1459,7 @@ _BuildLineTable(TextWidget ctx, XawTextPosition position, int line)
  *
  * Description:
  *	  Returns the width (in pixels) of the widest line that
- *		     is currently visable.
+ *		     is currently visible.
  *
  * Returns:
  *	The width of the widest line
@@ -2824,8 +2824,8 @@ DisplayText(Widget w, XawTextPosition left, XawTextPosition right)
 /*
  * This routine implements multi-click selection in a hardwired manner.
  * It supports multi-click entity cycling (char, word, line, file) and mouse
- * motion adjustment of the selected entitie (i.e. select a word then, with
- * button still down, adjust wich word you really meant by moving the mouse).
+ * motion adjustment of the selected entity (i.e. select a word then, with
+ * button still down, adjust which word you really meant by moving the mouse).
  * [NOTE: This routine is to be replaced by a set of procedures that
  * will allows clients to implements a wide class of draw through and
  * multi-click selection user interfaces.]
@@ -3289,7 +3289,7 @@ XawTextExpose(Widget w, XEvent *event, Region region)
 }
 
 /*
- * This routine does all setup required to syncronize batched screen updates
+ * This routine does all setup required to synchronize batched screen updates
  */
 void
 _XawTextPrepareToUpdate(TextWidget ctx)
@@ -3802,7 +3802,7 @@ XawTextGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
  *	pos - any position
  *
  * Description:
- *	Returns a valid position given any postition.
+ *	Returns a valid position given any position.
  *
  * Returns:
  *	A position between (0 and lastPos)

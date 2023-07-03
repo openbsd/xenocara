@@ -494,7 +494,7 @@ XawDestroyDisplayList(_XawDisplayList *dlist)
 
 /**********************************************************************
  * If you want to implement your own class of procedures, look at
- * the code bellow.
+ * the code below.
  **********************************************************************/
 /* Start of Implementation of class "xlib" */
 typedef struct _XawXlibData {
@@ -1941,7 +1941,7 @@ _Xaw_Xlib_ArgsInitProc(String proc_name, String *params, Cardinal *num_params,
     case EXPOSURES:
       if (*num_params == 1)
 	{
-	  if (isdigit(params[0][0]) || params[0][0] == '+' || params[0][0] == '-')
+	  if (isdigit((unsigned char)params[0][0]) || params[0][0] == '+' || params[0][0] == '-')
 	    retval = (void *)read_int((char *)params[0], NULL);
 	  else if (XmuCompareISOLatin1(params[0], "true") == 0 ||
 	    XmuCompareISOLatin1(params[0], "on") == 0)

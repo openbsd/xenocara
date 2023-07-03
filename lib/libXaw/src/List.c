@@ -455,11 +455,11 @@ ChangeSize(Widget w, unsigned int width, unsigned int height)
 		    Layout(w, False, False, &request.width, &request.height);
 		    request.request_mode = CWWidth | CWHeight;
 		    XtMakeGeometryRequest(w, &request, &reply);
-		    /*FALLTROUGH*/
+		    /*FALLTHROUGH*/
 		default:
 		    break;
 	}
-	/*FALLTROUGH*/
+	/*FALLTHROUGH*/
 	default:
 	    break;
     }

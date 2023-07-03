@@ -297,7 +297,7 @@ XawStripChartDestroy(Widget gw)
 }
 
 /*
- * NOTE: This function really needs to recieve graphics exposure
+ * NOTE: This function really needs to receive graphics exposure
  *       events, but since this is not easily supported until R4 I am
  *       going to hold off until then.
  */

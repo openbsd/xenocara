@@ -336,7 +336,7 @@ XawAsciiSrcInitialize(Widget request _X_UNUSED, Widget cnew,
  *
  * Parameters:
  *	w	- AsciiSource widget
- *	pos	- position of the text to retreive.
+ *	pos	- position of the text to retrieve.
  *	text	- text block that will contain returned text
  *	length	- maximum number of characters to read
  *
@@ -618,7 +618,7 @@ ReplaceText(Widget w, XawTextPosition startPos, XawTextPosition endPos,
  *	position - position to start scanning
  *	type	 - type of thing to scan for
  *	dir	 - direction to scan
- *		   count - which occurance if this thing to search for.
+ *		   count - which occurrence if this thing to search for.
  *		   include - whether or not to include the character found in
  *		   the position that is returned
  *
@@ -746,7 +746,7 @@ Scan(Widget w, register XawTextPosition position, XawTextScanType type,
 		    while (True) {
 			if (ptr < lim) {
 			    piece = piece->prev;
-			    if (piece == NULL)	/* Begining of text */
+			    if (piece == NULL)	/* Beginning of text */
 				return (0);
 			    ptr = piece->text + piece->used - 1;
 			    lim = piece->text;
@@ -821,7 +821,7 @@ Scan(Widget w, register XawTextPosition position, XawTextScanType type,
  *	text	 - text block to search for
  *
  * Description:
- *	Searchs the text source for the text block passed.
+ *	Searches the text source for the text block passed.
  *
  * Returns:
  *	The position of the item found
@@ -857,8 +857,8 @@ Search(Widget w, register XawTextPosition position, XawTextScanDirection dir,
 	/*CONSTCOND*/
 	while (1) {
 	    if (*ptr++ == c
-		|| (case_sensitive && isalpha(c) && isalpha(ptr[-1])
-		    && toupper(c) == toupper(ptr[-1]))) {
+		|| (case_sensitive && isalpha((unsigned char)c) && isalpha((unsigned char)ptr[-1])
+		    && toupper((unsigned char)c) == toupper((unsigned char)ptr[-1]))) {
 		if (++count == text->length)
 		    break;
 		c = *++str;
@@ -904,8 +904,8 @@ Search(Widget w, register XawTextPosition position, XawTextScanDirection dir,
 	/*CONSTCOND*/
 	while (1) {
 	    if (*ptr-- == c
-		|| (case_sensitive && isalpha(c) && isalpha(ptr[1])
-		    && toupper(c) == toupper(ptr[1]))) {
+		|| (case_sensitive && isalpha((unsigned char)c) && isalpha((unsigned char)ptr[1])
+		    && toupper((unsigned char)c) == toupper((unsigned char)ptr[1]))) {
 		if (++count == text->length)
 		    break;
 		c = *--str;
@@ -1046,7 +1046,7 @@ XawAsciiSrcGetValuesHook(Widget w, ArgList args, Cardinal *num_args)
 	    if (streq(args[i].name, XtNstring)) {
 		if (src->ascii_src.use_string_in_place)
 		    *((char **)args[i].value) = src->ascii_src.first_piece->text;
-		else if (XawAsciiSave(w))   /* If save sucessful */
+		else if (XawAsciiSave(w))   /* If save successful */
 		    *((char **)args[i].value) = src->ascii_src.string;
 		break;
 	    }
@@ -1181,7 +1181,7 @@ XawAsciiSave(Widget w)
  *	Save the current buffer as a file.
  *
  * Returns:
- *	True if the save was sucessful
+ *	True if the save was successful
  */
 Bool
 XawAsciiSaveAsFile(Widget w, _Xconst char *name)
@@ -1270,10 +1270,10 @@ RemoveOldStringOrFile(AsciiSrcObject src, Bool checkString)
  *	name   - the name of the file
  *
  * Description:
- *	Write the string specified to the begining of the file specified.
+ *	Write the string specified to the beginning of the file specified.
  *
  * Returns:
- *	returns True if sucessful, False otherwise
+ *	returns True if successful, False otherwise
  */
 static Bool
 WriteToFile(String string, String name, unsigned length)
@@ -1308,7 +1308,7 @@ WriteToFile(String string, String name, unsigned length)
  *	what can be useful when editing very large files.
  *
  * Returns:
- *	returns True if sucessful, False otherwise
+ *	returns True if successful, False otherwise
  */
 static Bool
 WritePiecesToFile(AsciiSrcObject src, String name)
@@ -1790,7 +1790,7 @@ GetDefaultPieceSize(Widget w _X_UNUSED, int offset _X_UNUSED, XrmValue *value)
 
 #ifdef ASCII_STRING
 /*
- * Compatability functions.
+ * Compatibility functions.
  */
 /*
  * Function:

@@ -650,7 +650,7 @@ ResizeChildren(Widget w)
 
 	if (fw->form.no_refigure) {
 	   /*
-	    * I am changing the widget wrapper w/o modifing the window.  This is
+	    * I am changing the widget wrapper w/o modifying the window. This is
 	    * risky, but I can get away with it since I am the parent of this
 	    * widget, and he must ask me for any geometry changes
 	    *
@@ -893,7 +893,7 @@ XawFormGeometryManager(Widget w, XtWidgetGeometry *request,
 
 	    if (fw->form.no_refigure) {
 		/*
-		 * I am changing the widget wrapper w/o modifing the window.
+		 * I am changing the widget wrapper w/o modifying the window.
 		 * This is risky, but I can get away with it since I am the
 		 * parent of this widget, and he must ask me for any geometry
 		 * changes

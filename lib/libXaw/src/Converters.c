@@ -154,7 +154,7 @@ XawInitializeDefaultConverters(void)
 
   first_time = False;
 
-  /* Replace with more apropriate converters */
+  /* Replace with more appropriate converters */
   XtSetTypeConverter(XtRCallback, XtRString, _XawCvtCARD32ToString,
 		     NULL, 0, XtCacheNone, NULL);
   XtSetTypeConverter(XtRColormap, XtRString, _XawCvtCARD32ToString,

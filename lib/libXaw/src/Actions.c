@@ -149,7 +149,7 @@ static Cardinal num_variable_list;
  * Start of Boolean Expression Evaluation Implementation Code
  */
 Bool
-XawParseBoolean(Widget w, String param, XEvent *event, Bool *succed)
+XawParseBoolean(Widget w, String param, XEvent *event, Bool *succeed)
 {
   char *tmp = (char *)param;
   int value;
@@ -179,7 +179,7 @@ XawParseBoolean(Widget w, String param, XEvent *event, Bool *succed)
   else if (XmuCompareISOLatin1(param, "faked") == 0)
     return (event->xany.send_event != 0);
   else
-    *succed = False;
+    *succeed = False;
 
   return (False);
 }
@@ -246,7 +246,7 @@ get_token(XawEvalInfo *info)
   /* It's a symbol name, resolve it. */
   if (ch == XAW_PRIV_VAR_PREFIX || isalnum(ch) || ch == '_' || ch == '\\')
     {
-      Bool succed = True;
+      Bool succeed = True;
 
       p = info->cp - 1;
 
@@ -262,13 +262,13 @@ get_token(XawEvalInfo *info)
 	  String value = XawConvertActionVar(info->vlist, name);
 
 	  info->value = info->parse_proc(info->widget, value, info->event,
-					 &succed) & 1;
+					 &succeed) & 1;
 	}
       else
 	{
 	  info->value = info->parse_proc(info->widget, name, info->event,
-					 &succed) & 1;
-	  if (!succed)
+					 &succeed) & 1;
+	  if (!succeed)
 	    {
 	      String value =
 		XawConvertActionRes(info->rlist, info->widget,
@@ -276,18 +276,18 @@ get_token(XawEvalInfo *info)
 	      /* '\\' may have been used to escape a resource name.
 	       */
 
-	      succed = True;
+	      succeed = True;
 	      info->value = info->parse_proc(info->widget, value, info->event,
-					     &succed) & 1;
-	      if (!succed)
+					     &succeed) & 1;
+	      if (!succeed)
 		{
 		  /* not a numeric value or boolean string */
 		  info->value = True;
-		  succed = True;
+		  succeed = True;
 		}
 	    }
 	}
-      if (succed)
+      if (succeed)
 	return (info->token = BOOLEAN);
     }
   else if (ch == '\0')

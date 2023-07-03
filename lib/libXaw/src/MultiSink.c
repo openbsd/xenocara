@@ -880,7 +880,7 @@ MaxLines(Widget w, unsigned int height)
  *	lines - number of lines
  *
  * Description:
- *	Finds the Minium height that will contain a given number lines.
+ *	Finds the Minimum height that will contain a given number lines.
  * Returns:
  *	The height
  */

@@ -1087,7 +1087,7 @@ CreateLabel(Widget w)
  * about the return values, and just want a relayout.
  *
  * if this is not the case then it will set width_ret and height_ret
- * to be width and height that the child would get if it were layed out
+ * to be width and height that the child would get if it were laid out
  * at this time.
  *
  *	"w" can be the simple menu widget or any of its object children.
@@ -1379,7 +1379,7 @@ PositionMenu(Widget w, XPoint *location)
  *
  * Description:
  *	  Actually moves the menu, may force it to
- *	to be fully visable if menu_on_screen is True.
+ *	to be fully visible if menu_on_screen is True.
  */
 static void
 MoveMenu(Widget w, int x, int y)

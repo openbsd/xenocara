@@ -527,7 +527,7 @@ frequency until the <function>stop</function> action occurs.
     <listitem>
       <para>
 This invokes the functions on the <function>stopCallback</function> list and prevents any
-further timers from occuring until the next <function>start</function> action.
+further timers from occurring until the next <function>start</function> action.
     </para>
   </listitem>
   </varlistentry>

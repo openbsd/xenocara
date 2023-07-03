@@ -305,12 +305,12 @@ SetTextWidthAndHeight(LabelWidget lw)
 	    lw->label.label_len = 0;
 	    lw->label.label_width = 0;
 	}
-	else if ((nl = index(lw->label.label, '\n')) != NULL) {
+	else if ((nl = strchr(lw->label.label, '\n')) != NULL) {
 	    char *label;
 
 	    lw->label.label_len = MULTI_LINE_LABEL;
 	    lw->label.label_width = 0;
-	    for (label = lw->label.label; nl != NULL; nl = index(label, '\n')) {
+	    for (label = lw->label.label; nl != NULL; nl = strchr(label, '\n')) {
 		int width = XmbTextEscapement(fset, label, (int)(nl - label));
 
 		if (width > (int)lw->label.label_width)
@@ -338,12 +338,12 @@ SetTextWidthAndHeight(LabelWidget lw)
 	    lw->label.label_len = 0;
 	    lw->label.label_width = 0;
 	}
-	else if ((nl = index(lw->label.label, '\n')) != NULL) {
+	else if ((nl = strchr(lw->label.label, '\n')) != NULL) {
 	    char *label;
 
 	    lw->label.label_len = MULTI_LINE_LABEL;
 	    lw->label.label_width = 0;
-	    for (label = lw->label.label; nl != NULL; nl = index(label, '\n')) {
+	    for (label = lw->label.label; nl != NULL; nl = strchr(label, '\n')) {
 		int width;
 
 		if (lw->label.encoding)
@@ -537,7 +537,7 @@ XawLabelRedisplay(Widget gw, XEvent *event, Region region)
 	    if (len == MULTI_LINE_LABEL) {
 		char *nl;
 
-		while ((nl = index(label, '\n')) != NULL) {
+		while ((nl = strchr(label, '\n')) != NULL) {
 		    XmbDrawString(XtDisplay(w), XtWindow(w), w->label.fontset,
 				  gc, w->label.label_x, ksy, label,
 				  (int)(nl - label));
@@ -554,7 +554,7 @@ XawLabelRedisplay(Widget gw, XEvent *event, Region region)
 	    if (len == MULTI_LINE_LABEL) {
 		char *nl;
 
-		while ((nl = index(label, '\n')) != NULL) {
+		while ((nl = strchr(label, '\n')) != NULL) {
 		    if (w->label.encoding)
 			XDrawString16(XtDisplay(gw), XtWindow(gw), gc,
 				      w->label.label_x, y,

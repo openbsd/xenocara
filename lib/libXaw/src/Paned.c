@@ -566,7 +566,7 @@ AdjustPanedSize(PanedWidget pw, unsigned int off_size,
  *
  *		   1) size < max && size > min
  *	2) skip adjust == False
- *	3) widget not its prefered height
+ *	3) widget not its preferred height
  *	   && this change will bring it closer
  *	   && The user has not resized this pane.
  *
@@ -723,7 +723,7 @@ LoopAndRefigureChildren(PanedWidget pw, int paneindex, Direction dir,
  *      dir   - AnyPane.
  *
  *      If either of these is true then all panes may be resized and
- *      the choosing of panes procedes in reverse order starting with the
+ *      the choosing of panes proceeds in reverse order starting with the
  *      last child.
  */
 static void
@@ -1822,7 +1822,7 @@ XawPanedChangeManaged(Widget w)
 
 		if (HasGrip(*childP))
 		    PaneInfo(pane->grip)->position = pw->paned.num_panes;
-		pane->position = pw->paned.num_panes; /* TEMPORY -CDP 3/89 */
+		pane->position = pw->paned.num_panes; /* TEMPORARY -CDP 3/89 */
 		pw->paned.num_panes++;
 	    }
 	    else

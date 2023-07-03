@@ -179,7 +179,7 @@ ToggleClassRec toggleClassRec = {
 WidgetClass toggleWidgetClass = (WidgetClass)&toggleClassRec;
 
 /*
- * Impelementation
+ * Implementation
  */
 static void
 XawToggleClassInitialize(void)
@@ -248,10 +248,10 @@ XawToggleInitialize(Widget request, Widget cnew,
      * have to handle the case where it needs to be set
      *
      * If this widget is in a radio group then it may cause another
-     * widget to be unset, thus calling the notify proceedure
+     * widget to be unset, thus calling the notify procedure
      *
      * I want to set the toggle if the user set the state to "On" in
-     * the resource group, reguardless of what my ancestors did
+     * the resource group, regardless of what my ancestors did
      */
     if (tw_req->command.set)
 	ToggleSet(cnew, NULL, NULL, NULL);

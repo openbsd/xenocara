@@ -707,7 +707,7 @@ ComputeLayout(Widget widget, Bool query, Bool destroy_scrollbars)
  * Parameters:
  *	widget	    - viewport widget
  *	query	    - whether or not to query the child
- *	intended    - cache of the childs height is stored here
+ *	intended    - cache of the child's height is stored here
  *		      (used and returned)
  *	clip_width  - size of clip window (used and returned)
  *	clip_height - ""

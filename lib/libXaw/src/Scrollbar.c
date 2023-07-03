@@ -807,7 +807,7 @@ EndScroll(Widget gw, XEvent *event _X_UNUSED, String *params _X_UNUSED, Cardinal
     ScrollbarWidget w = (ScrollbarWidget)gw;
 
     XtVaSetValues(gw, XtNcursor, w->scrollbar.inactiveCursor, NULL);
-    XFlush(XtDisplay(w));		/* make sure it get propogated */
+    XFlush(XtDisplay(w));		/* make sure it get propagated */
 
     w->scrollbar.direction = 0;
 }

@@ -332,7 +332,7 @@ XawTipExpose(Widget w, XEvent *event, Region region)
 
 	ksy = (ksy + XawAbs(ext->max_ink_extent.y));
 
-	while ((nl = index(label, '\n')) != NULL) {
+	while ((nl = strchr(label, '\n')) != NULL) {
 	    XmbDrawString(XtDisplay(w), XtWindow(w), tip->tip.fontset,
 			  gc, tip->tip.left_margin, ksy, label,
 			  (int)(nl - label));
@@ -345,7 +345,7 @@ XawTipExpose(Widget w, XEvent *event, Region region)
 			  tip->tip.left_margin, ksy, label, len);
     }
     else {
-	while ((nl = index(label, '\n')) != NULL) {
+	while ((nl = strchr(label, '\n')) != NULL) {
 	    if (tip->tip.encoding)
 		XDrawString16(XtDisplay(w), XtWindow(w), gc,
 			      tip->tip.left_margin, y,
@@ -411,7 +411,7 @@ TipLayout(XawTipInfo *info)
 	XFontSetExtents *ext = XExtentsOfFontSet(fset);
 
 	height = ext->max_ink_extent.height;
-	if ((nl = index(label, '\n')) != NULL) {
+	if ((nl = strchr(label, '\n')) != NULL) {
 	    /*CONSTCOND*/
 	    while (True) {
 		int w = XmbTextEscapement(fset, label, (int)(nl - label));
@@ -423,8 +423,8 @@ TipLayout(XawTipInfo *info)
 		label = nl + 1;
 		if (*label)
 		    height += ext->max_ink_extent.height;
-		if ((nl = index(label, '\n')) == NULL)
-		    nl = index(label, '\0');
+		if ((nl = strchr(label, '\n')) == NULL)
+		    nl = strchr(label, '\0');
 	    }
 	}
 	else
@@ -432,7 +432,7 @@ TipLayout(XawTipInfo *info)
     }
     else {
 	height = fs->max_bounds.ascent + fs->max_bounds.descent;
-	if ((nl = index(label, '\n')) != NULL) {
+	if ((nl = strchr(label, '\n')) != NULL) {
 	    /*CONSTCOND*/
 	    while (True) {
 		int w = info->tip->tip.encoding ?
@@ -445,8 +445,8 @@ TipLayout(XawTipInfo *info)
 		label = nl + 1;
 		if (*label)
 		    height += fs->max_bounds.ascent + fs->max_bounds.descent;
-		if ((nl = index(label, '\n')) == NULL)
-		    nl = index(label, '\0');
+		if ((nl = strchr(label, '\n')) == NULL)
+		    nl = strchr(label, '\0');
 	    }
 	}
 	else

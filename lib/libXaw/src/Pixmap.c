@@ -690,6 +690,7 @@ GetResourcePixmapPath(Display *display)
 		length = (length + (int)strlen(tok) + 3);
 	    }
 	}
+	XtFree(buffer);
 	pixmap_path = XtRealloc(pixmap_path, (Cardinal)((size_t)length + strlen(default_path) + 2));
 	if (length)
 	    pixmap_path[length++] = ':';

@@ -435,10 +435,11 @@ The first layout method uses the <function>fromVert</function> mand <function>fr
 resources to place the children of the Dialog.  A single
 pass is made through the Dialog widget's children in the
 order that they were created.  Each child is then placed in
-the Dialog widget below or to the right of the widget speci-
-fied by the <function>fromVert</function> mand <function>fromHoriz</function> mresources.  The distance
-the new child is placed from its left or upper neighbor is
-determined by the <function>horizDistance</function> mand <function>vertDistance</function> mresources.
+the Dialog widget below or to the right of the widget specified by the
+<function>fromVert</function> and <function>fromHoriz</function> resources.
+The distance the new child is placed from its left or upper neighbor is
+determined by the <function>horizDistance</function> and
+<function>vertDistance</function> resources.
 This implies some things about how the order of creation
 affects the possible placement of the children.  The Form
 widget registers a string to widget converter which does not
