@@ -13,6 +13,7 @@
 ./etc/fonts/conf.avail/10-hinting-medium.conf
 ./etc/fonts/conf.avail/10-hinting-none.conf
 ./etc/fonts/conf.avail/10-hinting-slight.conf
+./etc/fonts/conf.avail/10-no-antialias.conf
 ./etc/fonts/conf.avail/10-no-sub-pixel.conf
 ./etc/fonts/conf.avail/10-scale-bitmap-fonts.conf
 ./etc/fonts/conf.avail/10-sub-pixel-bgr.conf
@@ -20,6 +21,7 @@
 ./etc/fonts/conf.avail/10-sub-pixel-vbgr.conf
 ./etc/fonts/conf.avail/10-sub-pixel-vrgb.conf
 ./etc/fonts/conf.avail/10-unhinted.conf
+./etc/fonts/conf.avail/10-yes-antialias.conf
 ./etc/fonts/conf.avail/11-lcdfilter-default.conf
 ./etc/fonts/conf.avail/11-lcdfilter-legacy.conf
 ./etc/fonts/conf.avail/11-lcdfilter-light.conf
