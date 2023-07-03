@@ -276,7 +276,7 @@ r128_get_scrninfo(int entity_num)
         }
     }
 
-    /* mobility cards support Dual-Head, mark the entity as sharable*/
+    /* mobility cards support Dual-Head, mark the entity as shareable*/
     if (pEnt->chipset == PCI_CHIP_RAGE128LE ||
         pEnt->chipset == PCI_CHIP_RAGE128LF ||
         pEnt->chipset == PCI_CHIP_RAGE128MF ||

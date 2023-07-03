@@ -97,7 +97,7 @@
 #define PCI_CHIP_RAGE128TT		0x5454
 #define PCI_CHIP_RAGE128TU		0x5455
 
-extern DriverRec R128;
+extern _X_EXPORT DriverRec R128;
 
 typedef enum
 {
@@ -153,7 +153,7 @@ typedef struct
     Bool HasSecondary;
     Bool HasCRTC2;
     /*These two registers are used to make sure the CRTC2 is
-      retored before CRTC_EXT, otherwise it could lead to blank screen.*/
+      restored before CRTC_EXT, otherwise it could lead to blank screen.*/
     Bool IsSecondaryRestored;
     Bool RestorePrimary;
 

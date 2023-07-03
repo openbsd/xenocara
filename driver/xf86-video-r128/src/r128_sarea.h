@@ -181,7 +181,7 @@ typedef struct {
      * no need to choose whether to kick out your own texture or someone
      * else's - simply eject them all in LRU order.
      */
-				/* Last elt is sentinal */
+				/* Last elt is sentinel */
     drmTextureRegion texList[R128_NR_TEX_HEAPS][R128_NR_TEX_REGIONS+1];
 				/* last time texture was uploaded */
     unsigned int texAge[R128_NR_TEX_HEAPS];

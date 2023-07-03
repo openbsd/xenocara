@@ -1,3 +1,97 @@
+commit 24cf717079076992cdb58e1a89825608dc03282c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 13:05:03 2022 -0800
+
+    xf86-video-r128 6.12.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 01a5ffffd0c90f370a3c7c8ecc7ed559e48b3ac0
+Author: Niveditha Rau <Niveditha.Rau@Oracle.COM>
+Date:   Tue Jun 16 12:26:50 2015 -0800
+
+    Mark DriverRec exported in r128_probe.h to match r128_probe.c
+    
+    Fixes build failure when compiling with Solaris Studio compiler
+    using -xldscope=hidden:
+    "r128_probe.c", line 359: redeclaration must have the same or more
+      restrictive linker scoping: R128
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e9cf08f26c897b3f2de40eba7c07d2e1e47a14c1
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 11:13:00 2022 -0700
+
+    R128RAMRec: constify name pointer
+    
+    Clears 4 gcc warnings:
+    r128_driver.c:178:36: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+         { 4, 4, 3, 3, 1, 3, 1, 16, 12, "128-bit SDR SGRAM 1:1" },
+                                        ^~~~~~~~~~~~~~~~~~~~~~~
+    r128_driver.c:179:36: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+         { 4, 8, 3, 3, 1, 3, 1, 17, 13, "64-bit SDR SGRAM 1:1" },
+                                        ^~~~~~~~~~~~~~~~~~~~~~
+    r128_driver.c:180:36: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+         { 4, 4, 1, 2, 1, 2, 1, 16, 12, "64-bit SDR SGRAM 2:1" },
+                                        ^~~~~~~~~~~~~~~~~~~~~~
+    r128_driver.c:181:36: warning: initialization discards ‘const’ qualifier from pointer target type [-Wdiscarded-qualifiers]
+         { 4, 4, 3, 3, 2, 3, 1, 16, 12, "64-bit DDR SGRAM" },
+                                        ^~~~~~~~~~~~~~~~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3142544e8dd39aceea948d4d69810132240440b8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b0941d1213222fc5f6afaa813acb6092e9eb1e6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 27 17:12:07 2022 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b5529f9602bd25d0d042995a349edaba3e6f315a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 27 17:09:09 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 097c8e4f91e22cbeb8778febd1fc0ab8f2b58d3f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jan 27 17:07:12 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3af7cd1faf42f6458d72bd412349478e252e9bd6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 7 18:57:58 2018 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 49558fb904b53958e7bba46ebafa27f66360532f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 18 16:02:31 2018 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 38216bdc81321a8bb70a4c7ce226194537cc63d6
 Author: Kevin Brace <kevinbrace@gmx.com>
 Date:   Mon Oct 22 21:01:12 2018 -0700
@@ -275,7 +369,7 @@ Date:   Thu Jul 19 09:46:23 2018 -0700
     Signed-off-by: Kevin Brace <kevinbrace@gmx.com>
 
 commit 3acc004c6bfc17aca397ff2cc8c0b1a0e2d4ee63
-Author: Dylan Aïssi <bob.dybian@gmail.com>
+Author: Dylan Aïssi  <bob.dybian@gmail.com>
 Date:   Wed Jul 18 07:25:45 2018 -0700
 
     Fix typo: Initalizing --> Initializing
@@ -1962,7 +2056,7 @@ Date:   Sun Feb 24 05:37:22 2008 -0500
     
     Conflicts:
     
-    	src/radeon_commonfuncs.c
+            src/radeon_commonfuncs.c
 
 commit 27ddb39b12a0b54e099fd5274c4c91f08e2d2822
 Author: Alex Deucher <alex@samba.(none)>
@@ -2083,7 +2177,7 @@ Date:   Fri Feb 22 17:05:56 2008 -0500
     ATOM: properly set up DDIA output on RS6xx boards
 
 commit 1d0e9ab8b9451101b1b91943546f6c5833c21b3f
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed Feb 20 10:21:49 2008 +0100
 
     radeon: Fix typo flagged by gcc -Wall.
@@ -2700,7 +2794,7 @@ Date:   Thu Jan 10 14:49:48 2008 -0500
     RADEON: clean up output handling
 
 commit 10e7636c02478b8ffe183bb0c46229ca0d6584e1
-Author: Kristian Høgsberg <krh@bitplanet.net>
+Author: Kristian Høgsberg  <krh@bitplanet.net>
 Date:   Wed Jan 9 12:47:39 2008 -0500
 
     RADEON: fix crtc routing on r4xx cards when using atom to init DVO chip
@@ -2793,13 +2887,13 @@ Date:   Thu Jan 3 15:47:50 2008 -0500
     See bug 12129
 
 commit c652208861bffca94f06b7f67688ce220e050bfb
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jan 3 17:54:58 2008 +0100
 
     radeon: Adapt manpage to reality wrt AGP options.
 
 commit ab451e4b7a5423d61b57cf0646599267d8504af4
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jan 3 17:52:39 2008 +0100
 
     radeon: Miscellaneous warning fixes.
@@ -3048,8 +3142,8 @@ Date:   Fri Dec 21 09:36:22 2007 +1000
     
     Conflicts:
     
-    	src/radeon_display.c
-    	src/radeon_driver.c
+            src/radeon_display.c
+            src/radeon_driver.c
 
 commit eb99c3c5c9a2249cb84920f0f225e525fc3a4144
 Author: Alex Deucher <alex@botch2.(none)>
@@ -3247,7 +3341,7 @@ Date:   Sat Dec 15 20:51:53 2007 -0500
     RADEON: clean up units in PLL calculation
 
 commit b653e5a628bfa4dfb168e96f93f41eb910f409fb
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Dec 15 00:50:10 2007 +0100
 
     radeon: Default to 1x again with non-v3 AGP cards.
@@ -3256,7 +3350,7 @@ Date:   Sat Dec 15 00:50:10 2007 +0100
     crossed...
 
 commit 6229825fa5d6715569098afbb21a40f7a2e7e6be
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Dec 15 00:48:26 2007 +0100
 
     radeon: Warning fixes.
@@ -3265,7 +3359,7 @@ Date:   Sat Dec 15 00:48:26 2007 +0100
     though...
 
 commit 818ccf0fd4b5879171c5f20526d5a58638f8fde5
-Author: Fredrik Höglund <fredrik@kde.org>
+Author: Fredrik Höglund  <fredrik@kde.org>
 Date:   Fri Dec 14 23:56:12 2007 +0100
 
     RADEON: Fix the vertex coordinates for transformed pictures
@@ -3429,10 +3523,10 @@ Date:   Mon Dec 10 15:18:03 2007 +1000
     
     Conflicts:
     
-    	src/radeon.h
-    	src/radeon_crtc.c
-    	src/radeon_driver.c
-    	src/radeon_output.c
+            src/radeon.h
+            src/radeon_crtc.c
+            src/radeon_driver.c
+            src/radeon_output.c
 
 commit 6451ea2dcc4fac762442f699935864f4a8d445f7
 Merge: 0d89556 5896ca4
@@ -3448,7 +3542,7 @@ Date:   Fri Dec 7 09:45:05 2007 +0100
     radeon: Use %u instead of %d for unsigned value.
 
 commit df44f8380268c27d3978c4e91d736f093322b8b8
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Dec 7 09:41:47 2007 +0100
 
     radeon: Use gettimeofday instead of xf86getsecs.
@@ -3503,7 +3597,7 @@ Date:   Thu Dec 6 14:22:03 2007 +1000
     
     Conflicts:
     
-    	src/radeon_output.c
+            src/radeon_output.c
 
 commit 21ed435398e4a398dd8a0a5d7c1d4cc45e916332
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -3514,13 +3608,13 @@ Date:   Tue Dec 4 17:08:58 2007 -0500
     Thanks to Étienne Bersac for helping to figure this out.
 
 commit 54bfd522405d9fdfb69d3a59e111ac3d63483dbb
-Author: Étienne Bersac <bersace03@laposte.net>
+Author: Étienne Bersac  <bersace03@laposte.net>
 Date:   Tue Dec 4 14:22:42 2007 -0500
 
     RADEON: fix typo
 
 commit 5022d006cfc06ca0395981526b2c2c94c6878567
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Dec 2 17:27:33 2007 +0100
 
     radeon: Further XVideo fixes.
@@ -3537,7 +3631,7 @@ Date:   Sun Dec 2 17:18:46 2007 +0100
     See https://bugs.freedesktop.org/show_bug.cgi?id=13274 .
 
 commit a697b590899bb7704ec4d7ae9a9c3cbbfcaef382
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Dec 2 17:11:20 2007 +0100
 
     Fix build against xserver master.
@@ -4010,9 +4104,9 @@ Date:   Tue Nov 20 13:02:43 2007 +1000
     
     Conflicts:
     
-    	src/radeon_chipset.h
-    	src/radeon_driver.c
-    	src/radeon_probe.c
+            src/radeon_chipset.h
+            src/radeon_driver.c
+            src/radeon_probe.c
 
 commit 0d1e0c7805b3d8e56ccb49465e6b144afb7bdc51
 Author: Dave Airlie <airlied@redhat.com>
@@ -4035,8 +4129,8 @@ Date:   Tue Nov 20 08:04:32 2007 +1000
     
     Conflicts:
     
-    	src/radeon_cursor.c
-    	src/radeon_output.c
+            src/radeon_cursor.c
+            src/radeon_output.c
 
 commit 744c8cb6c293fcaa687566f52901644e699baace
 Merge: e258fbe e530af7
@@ -4449,7 +4543,7 @@ Date:   Tue Nov 6 18:04:43 2007 -0500
     some things.
 
 commit 37af2f6b52c8f217b205486742a6b46a864da8ed
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Nov 5 10:58:25 2007 +0100
 
     radeon: Use indirect register access for (un)hiding the cursor.
@@ -4458,13 +4552,13 @@ Date:   Mon Nov 5 10:58:25 2007 +0100
     busy with some cards.
 
 commit 5659e2f1b08e44d0c4f21a403e91b4801ef78f62
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Nov 5 10:32:04 2007 +0100
 
     radeon: Fix build warning on powerpc.
 
 commit d41d73f5f9d8baee7137e94da2c7852ea0412180
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Nov 5 10:30:23 2007 +0100
 
     Revert "radeon: Reinstate sync in radeon_crtc_show/hide_cursor."
@@ -4578,7 +4672,7 @@ Date:   Tue Oct 16 18:54:28 2007 -0400
     with RMX.
 
 commit 93561688087493fccb7ac387d728feec61212180
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Oct 16 10:57:06 2007 +0200
 
     radeon: Handle 64 bit PCI resource bases better.
@@ -4614,7 +4708,7 @@ Date:   Mon Oct 15 20:06:28 2007 -0400
     mode bugs.
 
 commit fd5bb7bb5e968127b87102320eccc1222f205e5a
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Oct 13 18:56:43 2007 +0200
 
     radeon: Improve detection of default value for Option "MacModel" on Linux.
@@ -4766,13 +4860,13 @@ Date:   Fri Oct 5 20:05:54 2007 -0400
     fixes bug 12048
 
 commit abbafe6db7c0d24efc61a05950d4214c00d3f043
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Oct 4 11:33:09 2007 +0200
 
     radeon: Fix compile warnings.
 
 commit 1110957ba703475847b8e72023c6edcbd1068aef
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Oct 4 11:32:48 2007 +0200
 
     radeon: Fix for pci-rework.
@@ -4781,7 +4875,7 @@ Date:   Thu Oct 4 11:32:48 2007 +0200
 
 commit 7addf41885ec5658f531624a9c24ea5bd7d22d19
 Merge: 3a958ba 78c6bd3
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Oct 4 11:06:08 2007 +0200
 
     Merge remote branch 'origin/pci-rework'
@@ -4889,7 +4983,7 @@ Date:   Fri Sep 28 14:50:42 2007 +1000
     rc410: disable DRI by default due to it not working
 
 commit 4d9f944e40c6b9ac7e80428dff49c6e83fda1d8f
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Sep 27 17:50:15 2007 +0200
 
     radeon: Fix build on little endian platforms.
@@ -4898,7 +4992,7 @@ Date:   Thu Sep 27 17:50:15 2007 +0200
     directly.
 
 commit 5902e913010a2fb0c17efe01f9aade73f9646f16
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Sep 27 12:53:34 2007 +0200
 
     radeon: EXA pitch fixes.
@@ -4913,7 +5007,7 @@ Date:   Thu Sep 27 12:53:34 2007 +0200
     Fixes https://bugs.freedesktop.org/show_bug.cgi?id=12551 .
 
 commit ca728973bce504e03bf6228d18287906c35eaa3f
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Sep 27 11:14:21 2007 +0200
 
     radeon: Don't use pixmap data pointer directly with EXA.
@@ -5001,7 +5095,7 @@ Date:   Sat Sep 22 15:11:20 2007 -0400
     LVDS + RMX doesn't seem to like having the crtc values tweaked.
 
 commit 9109e62e3be7f96b41b534ab517fdf1baf458806
-Author: Michel Dänzer <daenzer@debian.org>
+Author: Michel Dänzer  <daenzer@debian.org>
 Date:   Sat Sep 22 14:19:10 2007 -0400
 
     RADEON: fix crash when Xv window is outside of either crtc
@@ -5095,7 +5189,7 @@ Date:   Tue Sep 18 20:12:21 2007 -0400
     some chips seem to be pickier than others. fixes bug 12467
 
 commit 8a84dc8ee260716026fa661a6dced2000621efa2
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Sep 18 11:53:39 2007 +0200
 
     radeon: Remove declaration of unused variable.
@@ -5169,7 +5263,7 @@ Date:   Mon Sep 10 19:00:16 2007 +0300
     compile-tested only.
 
 commit 0241cac643fa1c08a45ea44f5c670b290e760ad8
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Sep 8 00:22:40 2007 +0200
 
     radeon: Reinstate sync in radeon_crtc_show/hide_cursor.
@@ -5193,7 +5287,7 @@ Date:   Thu Aug 30 11:40:13 2007 +0200
     radeon: Fix Option "MacModel".
 
 commit 2b860726fff058623e0e8e1b0aca092c246875ce
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 30 11:38:28 2007 +0200
 
     radeon: Don't build currently unused RADEONSavePalette.
@@ -5247,7 +5341,7 @@ Date:   Tue Aug 28 16:01:12 2007 +0300
     
     Conflicts:
     
-    	src/ati.c
+            src/ati.c
 
 commit 673f799729824f4439dd5f681f75dd5aab50947f
 Author: Alex Deucher <alex@botch2.(none)>
@@ -5344,13 +5438,13 @@ Date:   Fri Aug 24 20:42:13 2007 -0400
     Apparently some radeons need this?
 
 commit 71f650d1bc432514516f7ac64a5e8a54c5227881
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Aug 24 09:21:39 2007 +0200
 
     Require xorg-server >= 1.3 for RandR 1.2.
 
 commit d7230939f523610c57f92bdfc72966bdbc6f1070
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Aug 24 09:21:14 2007 +0200
 
     64 bit warning fixes.
@@ -5396,13 +5490,13 @@ Date:   Thu Aug 23 18:51:34 2007 -0400
     LVDS (via bios table or otherwise) assume it's connected.
 
 commit b0f170c5f736ecba1a5899d602c4173fe9b9b1fa
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 12:55:40 2007 +0200
 
     radeon: Remove unnecessary #include <time.h>.
 
 commit ac54c0e4360099697755d14b1030def73d8235b0
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed Aug 22 14:33:59 2007 +0200
 
     radeon: Warning fixes.
@@ -5433,7 +5527,7 @@ Date:   Thu Aug 23 12:11:51 2007 +0200
     https://bugs.freedesktop.org/show_bug.cgi?id=8983 .
 
 commit 633c1fff10a3be4c9f48c1995e330d60bf6abbb2
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 12:11:41 2007 +0200
 
     radeon: Sync pages when enabling page flipping with EXA as well.
@@ -5441,31 +5535,31 @@ Date:   Thu Aug 23 12:11:41 2007 +0200
     Exclude the DRI window(s) though to avoid scribbling over 3D rendering.
 
 commit 4f8010ce22043c0f8d60c0f49d270ce98c9d2466
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 12:11:12 2007 +0200
 
     radeon: Don't synchronize DRI windows between pages when possible.
 
 commit 7b527054a7c81d1d1dbc79d41b9e53064dab68cb
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 12:10:33 2007 +0200
 
     radeon: Restore memmap registers even if only AGP location changed.
 
 commit d7ba9f001c0ab645984526afd0e64d1c6a6d654a
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 11:39:54 2007 +0200
 
     radeon: Change a test to info->IsIGP from several IGP families.
 
 commit 8c7c22e22b6076abc80e4e1aaa8d1f4cf2f3ed14
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 11:38:17 2007 +0200
 
     radeon: Wait for pending overlay flip to finish before emitting new one.
 
 commit 92fa7cc00688d7bfc1fb72e645ac30c6d92669c6
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Aug 23 11:38:16 2007 +0200
 
     radeon: Don't call RADEONDRIRefreshArea when the damaged region is empty.
@@ -5478,13 +5572,13 @@ Date:   Thu Aug 23 18:46:41 2007 +1000
     (cherry picked from commit 3334c247540b113f9c4a5ce1879d8648a45a959a)
 
 commit 9d6261c024c697a211da4b6300420153eb72a264
-Author: Roland Bär <roland@verifysoft.de>
+Author: Roland Bär  <roland@verifysoft.de>
 Date:   Thu Aug 23 18:33:34 2007 +1000
 
     radeon: bug 11860 fix some mem leaks
 
 commit 7bc1f862bc5f992f213143fbafef52459ba7db4a
-Author: Roland Bär <roland@verifysoft.de>
+Author: Roland Bär  <roland@verifysoft.de>
 Date:   Thu Aug 23 18:37:35 2007 +1000
 
     radeon: bug 11861 - dead code removal in radeon_video.c
@@ -5518,14 +5612,14 @@ Date:   Thu Aug 23 19:42:19 2007 +1000
     
     Conflicts:
     
-    	src/radeon.h
-    	src/radeon_bios.c
-    	src/radeon_display.c
-    	src/radeon_dri.c
-    	src/radeon_driver.c
-    	src/radeon_modes.c
-    	src/radeon_probe.h
-    	src/radeon_video.c
+            src/radeon.h
+            src/radeon_bios.c
+            src/radeon_display.c
+            src/radeon_dri.c
+            src/radeon_driver.c
+            src/radeon_modes.c
+            src/radeon_probe.h
+            src/radeon_video.c
 
 commit 53a67e31904bec9a3aa1bd24de8034dcafea1d2a
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
@@ -6014,7 +6108,7 @@ Date:   Thu Jul 5 20:04:04 2007 -0400
     fixes bug 11357
 
 commit ac9cbaf32176cf144bc694ac879e7c9e2920f762
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jul 2 10:06:02 2007 +0200
 
     radeon: Fully zero-initialize info->CRT2pScrn->monitor.
@@ -6191,7 +6285,7 @@ Date:   Tue Jun 12 23:41:24 2007 -0400
     RADEON: additional LVDS off fix (missed in previous commit)
 
 commit 9fc416ce08cc5d74faa7b184e80ce43ed2f4fbee
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Jun 12 23:35:09 2007 -0400
 
     radeon: Fix panel size detection from registers with stretched mode programmed.
@@ -6229,19 +6323,19 @@ Date:   Tue Jun 12 23:20:18 2007 -0400
     - fixes bug 3483
 
 commit c6a3286d6f6ddda89115d98d45665dadd78bf41d
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jun 11 09:39:38 2007 +0200
 
     radeon: Fix panel size detection from registers with stretched mode programmed.
 
 commit 7a6b3c0f77c69019268f585c51c3dcbcc99014d4
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jun 11 09:39:38 2007 +0200
 
     radeon: Don't loop indefinitely if no mode matches detected panel size.
 
 commit f31fd9ce598841c505a0b5ed32bf124f49fea332
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jun 11 09:39:38 2007 +0200
 
     radeon: Fix some more ErrorFs when setting mode.
@@ -6366,7 +6460,7 @@ Date:   Thu May 31 22:23:57 2007 -0600
     Fix build whithout XF86DRI
 
 commit 0e0946e0aa2527794e07473199e851bbfbc47cb1
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed May 30 18:56:53 2007 +0200
 
     radeon: Lots of warning fixes.
@@ -6391,9 +6485,9 @@ Date:   Wed May 30 17:27:22 2007 +1000
     
     Conflicts:
     
-    	src/radeon_cursor.c
-    	src/radeon_display.c
-    	src/radeon_driver.c
+            src/radeon_cursor.c
+            src/radeon_display.c
+            src/radeon_driver.c
 
 commit 800bf53279e2c2bf854682bbfd6fa16d03afed00
 Author: Matthieu Herrb <matthieu@deville.herrb.com>
@@ -6545,7 +6639,7 @@ Date:   Wed May 23 21:18:40 2007 -0400
     RADEON: add output properties (not functional yet)
 
 commit 975da595f032c145ad74079ff8edeaead779dc7b
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue May 22 10:56:47 2007 +0200
 
     radeon: Provide new DRI texOffsetStart hook when available with EXA.
@@ -6557,7 +6651,7 @@ Date:   Tue May 22 00:09:46 2007 -0400
     RADEON: Only add valid connectors
 
 commit 8275151baac22c34149cef0b7d922771d24abc3e
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon May 21 10:25:48 2007 +0200
 
     radeon: HW cursor cleanup.
@@ -6570,7 +6664,7 @@ Date:   Mon May 21 10:25:48 2007 +0200
     the CRTC registers.
 
 commit 137e3fc1899078af0f72303ab0a4e6cf35804a7b
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon May 21 10:25:48 2007 +0200
 
     radeon: Suppress debugging output by default.
@@ -7056,7 +7150,7 @@ Date:   Mon Apr 9 22:08:31 2007 +1000
     2D now.
 
 commit 6b25a4c48796e022a093f3072574ffe9709ecaf4
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed Apr 4 10:47:29 2007 +0200
 
     radeon: Link nearest modes by default for clone mode.
@@ -7065,7 +7159,7 @@ Date:   Wed Apr 4 10:47:29 2007 +0200
     MergedFB.
 
 commit 3c892f163ec1fa9be6e733aab091c9b718f41efc
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed Apr 4 09:52:37 2007 +0200
 
     radeon: Always sort modes when adding to list.
@@ -7073,7 +7167,7 @@ Date:   Wed Apr 4 09:52:37 2007 +0200
     This makes sure mode lists will always be sorted from larger to smaller.
 
 commit 3a8190ccc79969925257e7b980b78d79053d208d
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed Apr 4 09:47:07 2007 +0200
 
     radeon: Don't shrink virtual size based on secondary modes.
@@ -7091,7 +7185,7 @@ Date:   Sat Mar 31 20:10:03 2007 -0800
     9337: EDID modes do not participate in validation for CRT monitor
 
 commit 1acd6d6fa42acec07fb11aeb189f492ddb021cb4
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Mar 30 11:06:10 2007 +0200
 
     radeon: Guard some MergedFB specific code with info->MergedFB tests.
@@ -7099,7 +7193,7 @@ Date:   Fri Mar 30 11:06:10 2007 +0200
     Fixes https://bugs.freedesktop.org/show_bug.cgi?id=10442 .
 
 commit 1a71106c0e4fe5f650239dc694163fdf52d33663
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 27 10:13:21 2007 +0200
 
     radeon: Fix typo.
@@ -7257,7 +7351,7 @@ Date:   Sun Mar 18 15:35:25 2007 +0200
     it should be handled with a CPIO driver anyway.
 
 commit 166c760a86165330175023e07c4b2bd6891633c5
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 20 09:16:02 2007 +0100
 
     Fix advertised minimum minor version of the DRI module.
@@ -7265,7 +7359,7 @@ Date:   Tue Mar 20 09:16:02 2007 +0100
     We don't automatically require bumped minor versions.
 
 commit 1bdd376dbd57de8925244f0808f974d6d8cff39d
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 20 09:14:39 2007 +0100
 
     radeon: Only sync to hardware when really necessary with EXA.
@@ -7275,13 +7369,13 @@ Date:   Tue Mar 20 09:14:39 2007 +0100
     which can be relevant in some situations.
 
 commit 3cfa3a5c8daf03aaad6fc30d275709f6eb717d29
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 20 09:13:24 2007 +0100
 
     radeon: Unify code to release the CP.
 
 commit e174d8df8c801fad95e5f79cff69187c200bee6e
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 20 09:12:51 2007 +0100
 
     radeon: Minor BlockHandler cleanups.
@@ -7291,7 +7385,7 @@ Date:   Tue Mar 20 09:12:51 2007 +0100
     Also set the EXA engine mode to unknown only at the end.
 
 commit 113fb4b61e709a9b54fc2ef73efce06011e771c1
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 20 09:12:09 2007 +0100
 
     radeon: Disable CP line acceleration on RV280s.
@@ -7300,7 +7394,7 @@ Date:   Tue Mar 20 09:12:09 2007 +0100
     xscreensaver hack hypercube.
 
 commit 4651d00b183cb498879d605c4b93cd3a0c63cb33
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Mar 20 09:10:19 2007 +0100
 
     radeon: Make sure 3D clients will re-upload textures to video RAM after LeaveVT.
@@ -7309,13 +7403,13 @@ Date:   Tue Mar 20 09:10:19 2007 +0100
     will consider them kicked out when they grab the HW lock next time.
 
 commit 2d2fb54ba370c1df9ef5102e83c17a7ff5c55403
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Mar 15 17:26:56 2007 +0100
 
     atimisc: Fix strict aliasing violation flagged by -Wall.
 
 commit cfb82631fb683a0dc9bbc8f2d214646a8f1bca0b
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Mar 15 17:12:43 2007 +0100
 
     radeon: Fix build warnings.
@@ -7379,8 +7473,8 @@ Date:   Sun Feb 25 23:27:19 2007 +1100
     
     Conflicts:
     
-    	src/radeon_display.c
-    	src/radeon_driver.c
+            src/radeon_display.c
+            src/radeon_driver.c
 
 commit 3b43788c45f51ad2d3e8e64383c412f4ddd97207
 Author: Dave Airlie <airlied@linux.ie>
@@ -8078,7 +8172,7 @@ Date:   Tue Dec 19 09:45:24 2006 +0200
     Use portable XORG_RELEASE_VERSION macro.
 
 commit 97df0a32b14e34f22dce9cd3b375c1ac5fb1c5eb
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Dec 19 11:28:21 2006 +0100
 
     radeon: Advertise 2D engine limits to EXA when we're not using the 3D engine.
@@ -8086,7 +8180,7 @@ Date:   Tue Dec 19 11:28:21 2006 +0100
     Also round up to the maximum width and height, as that's what EXA compares.
 
 commit 295823d0879a5b574bb79843a6acd43adb9259e5
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Tue Dec 19 11:19:20 2006 +0100
 
     radeon: Default to leaving AGP transfer mode and fast writes unchanged.
@@ -8192,7 +8286,7 @@ Date:   Fri Dec 8 02:51:52 2006 +0100
     affected may suffer from other slowness issues too.
 
 commit ccd37b3e88cdcfe03b7c707b6082339eb8f11e6b
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Dec 7 18:41:48 2006 +0100
 
     radeon: Move Xv option handling code into RADEONPreInitXv().
@@ -8201,7 +8295,7 @@ Date:   Thu Dec 7 18:41:48 2006 +0100
     against info->ChipFamily after that's initialized.
 
 commit 02be8c04a268eaa71bdfe891331758715fef4e71
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Dec 7 18:31:58 2006 +0100
 
     radeon: Make cache flushing for R300 series less invasive.
@@ -8210,7 +8304,7 @@ Date:   Thu Dec 7 18:31:58 2006 +0100
     into the CP stream.
 
 commit be46f7b6f7a729695a0affe2328077666283af12
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Dec 7 16:27:10 2006 +0100
 
     Fix radeon compile warnings.
@@ -8339,13 +8433,13 @@ Date:   Sat Dec 2 19:16:41 2006 +1100
     move HasCRTC2 to pRADEONEnt from info
 
 commit 3933b86390eb2f4198d490acd4914fb470c40f47
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Dec 1 18:00:17 2006 +0100
 
     Make log file output clear about origin of used overlay scaler buffer width.
 
 commit 563dfb52f5b24d2f765fae0394e599c11dcf0b5b
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Dec 1 17:56:19 2006 +0100
 
     Increase default overlay scaler buffer width for RV350.
@@ -8353,7 +8447,7 @@ Date:   Fri Dec 1 17:56:19 2006 +0100
     Works with 1920x1080 video on my M10.
 
 commit 984ea3d9b7c27d8183ca94ad9d7905f03613fe10
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Fri Dec 1 17:42:23 2006 +0100
 
     Fix build warning.
@@ -8401,14 +8495,14 @@ Date:   Wed Nov 22 13:38:01 2006 -0500
     on any laptops at the moment anyway.
 
 commit e4850610596a08082a528c38186268b72012e78c
-Author: Alain Péteut <alain.peteut@gmx.ch>
+Author: Alain Péteut  <alain.peteut@gmx.ch>
 Date:   Wed Nov 22 12:54:55 2006 -0500
 
     enable i2c for PCI_CHIP_RV250_If.  allows AIW fuctionality to work.
     patch and testing from Alain Péteut
 
 commit ff38c2c9cf0c6acbdaf53b681ec721487cf411f8
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Nov 19 17:11:46 2006 +0100
 
     radeon: Bug #8989: Fix page flipping artifacts with XAA.
@@ -8418,7 +8512,7 @@ Date:   Sun Nov 19 17:11:46 2006 +0100
     were last synced.
 
 commit 2dd0892817090709b2fb7ffba920595ada00fcad
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Nov 19 17:09:11 2006 +0100
 
     Fix compile warnings.
@@ -8507,7 +8601,7 @@ Date:   Mon Oct 23 16:52:07 2006 +1000
     radeon: set preferred modes
 
 commit 914a5f0117ccb76292bdd81ea4a2a79d33319550
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Oct 23 10:13:24 2006 +0200
 
     radeon: Pitch doesn't matter when height == 1.
@@ -8570,13 +8664,13 @@ Date:   Sun Oct 15 13:10:22 2006 -0400
     it won't be an issue anyway.
 
 commit 2933140b5f1f8a6e270460d8918a14943bd0f174
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Oct 15 17:05:02 2006 +0200
 
     radeon: Use xf86XVFillKeyHelperDrawable() when available.
 
 commit 4edbfb9eb952f9b3f5f597749192c17baf15cdce
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Oct 15 17:03:13 2006 +0200
 
     radeon: Track screen damage all the time for page flipping.
@@ -8585,7 +8679,7 @@ Date:   Sun Oct 15 17:03:13 2006 +0200
     never clobber one page's contents when we shouldn't.
 
 commit c9c2ac2b42398f5bfad909f3289e2545bb7b3888
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Oct 14 15:49:22 2006 +0200
 
     radeon: Don't try to synchronize pages when the CP isn't running.
@@ -8648,7 +8742,7 @@ Date:   Sun Oct 1 18:22:14 2006 +0200
     Fetch the correct displayWidth from fbdevhw after setting the mode.
 
 commit d43ad88fa3913437f6987ab5ab46a38f0cb555a8
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Sep 30 19:25:20 2006 +0200
 
     radeon: Add support for page flipping with EXA.
@@ -8658,7 +8752,7 @@ Date:   Sat Sep 30 19:25:20 2006 +0200
     tradeoff between performance and correctness.
 
 commit 146ea328b7962f56c6ab47fbe2adc7561b36189c
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Sep 30 19:22:26 2006 +0200
 
     radeon: Fix function name typo which could probably lead to an unresolved symbol.
@@ -8666,7 +8760,7 @@ Date:   Sat Sep 30 19:22:26 2006 +0200
     Also remove declaration of an unused variable.
 
 commit 6671c1b01bf29d8f1cacf9306ef658b967d8a3cf
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Sep 30 18:29:45 2006 +0200
 
     radeon: Always call RADEONGetAccessibleVRAM().
@@ -8686,7 +8780,7 @@ Date:   Sat Sep 30 15:14:42 2006 +0200
     resulting in garbage values.
 
 commit 37c114acbabe35881c39642e293519e2635907aa
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Sep 30 15:11:42 2006 +0200
 
     Remove some dead code.
@@ -8890,7 +8984,7 @@ Date:   Fri Sep 22 06:00:04 2006 +1000
     
     Conflicts:
     
-    	src/radeon_driver.c
+            src/radeon_driver.c
 
 commit 9fa176c7989030e7340cc9b85d0b6a7b34303091
 Author: Alex Deucher <alex@samba.(none)>
@@ -9049,7 +9143,7 @@ Date:   Tue Sep 12 07:04:23 2006 +1000
     second head and it breaks mergedfb for me.
 
 commit ad1778eb1eb59de14ec309b99131931cbccf64e9
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Sep 10 23:32:44 2006 +0200
 
     Revert "* [ Bug 6966 ] large negative refresh rates reported"
@@ -9248,7 +9342,7 @@ Date:   Sat Jul 29 00:51:53 2006 +0300
     Bug #807: split out TestRegisterCaching block for DP regs.
 
 commit fba8c839b47e2c8d6a6d65950c3431ff5b870aa0
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jul 23 18:51:47 2006 +0200
 
     Bug #6819: Fix broken rendering with *8b8g8r8 source formats.
@@ -9273,7 +9367,7 @@ Date:   Mon Jul 3 13:09:47 2006 +0200
     This is a workaround for ATI Radeon 7000 erratum F1.
 
 commit 920ac1f56fad6f48a30e65836ce054815f270738
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jul 3 01:21:18 2006 +0200
 
     Do even less cache flushing when the previous engine mode is known.
@@ -9288,13 +9382,13 @@ Date:   Mon Jul 3 01:10:10 2006 +0200
     Bug #6762: Remove gratuitous cache flushing.
 
 commit 22f165f290f57e638d198f24a37f62fc16b72bae
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jul 3 00:39:45 2006 +0200
 
     Build and warning fixes for !defined(USE_XAA).
 
 commit ea5105230c7c3519730b8d3c250e9ba9a4e4374a
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Mon Jul 3 00:03:22 2006 +0200
 
     Reserve HW cursor memory statically instead of from EXA offscreen.
@@ -9312,13 +9406,13 @@ Date:   Mon Jul 3 00:03:22 2006 +0200
     register is 32 bits wide, and to avoid issues with printf.
 
 commit 66586f905857ea5bf37cb5d34949cd450a9ed067
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jul 2 23:38:20 2006 +0200
 
     Clean up some redundant code.
 
 commit 1159c85861dc507ebf323aca82e32fcc67726420
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jul 2 18:24:28 2006 +0200
 
     Bug #6548: Fix playback of interlaced video with more than 1023 lines.
@@ -9326,7 +9420,7 @@ Date:   Sun Jul 2 18:24:28 2006 +0200
     This will still break with 2048 lines...
 
 commit 11bedb7c845fc6074383890d5525315aebe05f2c
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jul 2 17:03:23 2006 +0200
 
     Bug #6939: Disable RENDER acceleration by default on RN50.
@@ -9347,19 +9441,19 @@ Date:   Thu Jun 29 18:21:22 2006 +0200
     Fix build for !defined(USE_EXA).
 
 commit ee0544b670567491b7770f469a64a6cd85519ba1
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 29 18:19:58 2006 +0200
 
     Remove unused variables.
 
 commit 15c556f5a8c9069d3dd00ce139d46c39b7298951
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 29 18:18:21 2006 +0200
 
     Don't declare unused variables on __powerpc__ and __alpha__.
 
 commit 055ac2836ec0afd51cf554d043a59068c36a07d3
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 29 18:14:45 2006 +0200
 
     Fix strict aliasing violation flagged by gcc -Wall.
@@ -9377,7 +9471,7 @@ Date:   Mon Jun 26 20:34:34 2006 +1000
     Signed-off-by: Dave Airlie <airlied@linux.ie>
 
 commit c5d8c8db3e75976687bfb364f0a7b235c7ae8793
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sat Jun 24 16:01:19 2006 +0200
 
     Bug #7274: Fix corruption with 'small' accelerated DownloadFromScreen transfers.
@@ -9407,7 +9501,7 @@ Date:   Fri Jun 16 08:50:49 2006 +0200
     conditionally declare pPCI and PciReg, too
 
 commit a01c01787cfbe3706ae7747cde1657abd79ecdaa
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Wed Jun 21 09:38:47 2006 +0200
 
     Bug #7283: Build fixes for !defined(XF86DRI).
@@ -9415,7 +9509,7 @@ Date:   Wed Jun 21 09:38:47 2006 +0200
     Thanks to Matthieu Herrb for pointing out some of these.
 
 commit 79d1c573133e64ddf4446b6bb0eaab4a5a6c73ab
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jun 18 17:39:09 2006 +0200
 
     Implement accelerated EXA DownloadFromScreen hook.
@@ -9426,13 +9520,13 @@ Date:   Sun Jun 18 17:39:09 2006 +0200
     the need to disable this by default with AGP.
 
 commit 2bcdc7cfd013bd457d35f927390e5cc3544f30f1
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jun 18 16:01:00 2006 +0200
 
     Remove #include <fbdevhw.h>, not used here.
 
 commit 25a5ccb63a9e3074b4c8eaf48844877d84ff76bb
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jun 18 15:26:55 2006 +0200
 
     Prefer visuals with stencil when it's hardware acclerated.
@@ -9440,13 +9534,13 @@ Date:   Sun Jun 18 15:26:55 2006 +0200
     Also make the formatting of the if statements consistent.
 
 commit 8fcc436f19f9c1371295af2d0c45608fb43c584b
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jun 18 15:16:08 2006 +0200
 
     Take part of the blame for the radeon driver.
 
 commit c8366d7b457565a06acdf6b40c5448c7f13f1641
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Sun Jun 18 14:24:14 2006 +0200
 
     Add Option "DepthBits".
@@ -9472,13 +9566,13 @@ Date:   Fri Jun 16 16:22:03 2006 +1000
     Update some versions for release
 
 commit 9c534b5330534fc6cf392936a9b200a5128c787c
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 16:09:55 2006 +0200
 
     Some more ignores.
 
 commit 3d68698647fb17a6f5ae9a225f552cb0130fa946
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 16:07:15 2006 +0200
 
     Fix semantic glitches pointed out by gcc -Wall.
@@ -9486,20 +9580,20 @@ Date:   Thu Jun 15 16:07:15 2006 +0200
     The radeon driver builds warning-free with gcc -Wall here now.
 
 commit ab2b48e0df328fd08a2412911126b3184a601aea
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 16:06:13 2006 +0200
 
     Remove another unused variable.
 
 commit 56bd5a370472663af5607cd327f757367b238db0
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 15:35:05 2006 +0200
 
     Fix some more cosmetic warnings.
 
 commit ec93e08b24f7c0e583970d08bfe18ad142e6b047
 Merge: 051c49d 6ca9862
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 15:03:27 2006 +0200
 
     Merge branch 'master' of ssh+git://git.freedesktop.org/git/xorg/driver/xf86-video-ati
@@ -9518,7 +9612,7 @@ Date:   Thu Jun 15 21:24:16 2006 +1000
 
 commit 051c49d0f002c72d1d8f15f6df264d8b093d4e95
 Merge: a840afc dfac819
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 13:10:44 2006 +0200
 
     Merge branch 'master' of ssh+git://git.freedesktop.org/git/xorg/driver/xf86-video-ati
@@ -9543,7 +9637,7 @@ Date:   Thu Jun 15 20:59:33 2006 +1000
 
 commit a840afc75a0453b4694e3f987ebdbddc6844a169
 Merge: c90c49d d511ef4
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 12:46:58 2006 +0200
 
     Merge branch 'master' of ssh+git://git.freedesktop.org/git/xorg/driver/xf86-video-ati
@@ -9581,7 +9675,7 @@ Date:   Thu Jun 15 19:58:11 2006 +1000
     theatre*.[ch].
 
 commit c90c49da3844f93d2d29070b15bb7def72b98b0f
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 10:29:46 2006 +0200
 
     Collapse .gitignore files into single toplevel file, sorted with LC_ALL=C.
@@ -9589,13 +9683,13 @@ Date:   Thu Jun 15 10:29:46 2006 +0200
     Suggested by Keith Packard.
 
 commit b7a3e4c9b33f72ae447f99c0c765f24fce988142
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 09:45:12 2006 +0200
 
     Fix some implicit function declarations.
 
 commit 556ddc9c41020271e92389a3900d097ec443c625
-Author: Michel Dänzer <michel@tungstengraphics.com>
+Author: Michel Dänzer  <michel@tungstengraphics.com>
 Date:   Thu Jun 15 09:30:43 2006 +0200
 
     .cvsignore -> .gitignore
@@ -9838,13 +9932,13 @@ Date:   Thu Mar 23 01:37:15 2006 +0000
         update to a comment.
 
 commit 673e4d7501861066fdd0874919a4524b820b944b
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Thu Mar 23 00:06:56 2006 +0000
 
     Add atipciids.h.
 
 commit 5dcb4152dca6ac1fe9342f44eb48c0198b15772e
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Wed Mar 22 22:30:14 2006 +0000
 
     Convert use of xf86fopen() and other xf86 wrapped libc symbols to use libc
@@ -10363,13 +10457,13 @@ Date:   Sun Oct 9 10:36:50 2005 +0000
         the clients to get access to a secure area of framebuffer.
 
 commit e526211b86ec5343002978debfcf78f74a10c69e
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue Oct 4 20:01:03 2005 +0000
 
     Check in generated README files
 
 commit 431d0e144ae4c294e1f6110fc3db497ce9bd9cfd
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Mon Oct 3 21:22:07 2005 +0000
 
     - For all drivers that have a <driver>.sgml file, add code in their build
@@ -10402,7 +10496,7 @@ Date:   Sat Oct 1 17:09:48 2005 +0000
     add missing return value on success in RADEONSetupMemXAA().
 
 commit 98f7d043f894c73fecaf14440c1a24b6c2fc4b06
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Sep 28 15:10:38 2005 +0000
 
     Make ati driver distcheck
@@ -10718,7 +10812,7 @@ Date:   Fri Jul 29 19:45:14 2005 +0000
         some circumstances. (ATI Technologies Inc.)
 
 commit 44a66ec5a01c3b4dfa046a66b80a3b7e9dfff537
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri Jul 15 15:02:47 2005 +0000
 
     Install theathre drivers in @moduledir@/multimedia
@@ -10744,13 +10838,13 @@ Date:   Thu Jul 14 19:35:48 2005 +0000
         sdk headers. Expand help string for xorg-module-dir option.
 
 commit ab5264838ae34bb29791bc08d5a4f853a995faf1
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 14 17:10:01 2005 +0000
 
     fuck you cvs
 
 commit a608c4422665ce1e933483b7c2a25ab2daae5930
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 14 16:03:36 2005 +0000
 
     Try adding build system for ATI driver again. Who knows, maybe CVS works

@@ -1524,7 +1524,7 @@
 #define R128_CCE_VC_CNTL_PRIM_WALK_RING          0x00000030
 #define R128_CCE_VC_CNTL_NUM_SHIFT               16
 
-/* hmm copyed blindly (no specs) from radeon.h ... */
+/* hmm copied blindly (no specs) from radeon.h ... */
 #define R128_RE_TOP_LEFT                  0x26c0
 #       define R128_RE_LEFT_SHIFT         0
 #       define R128_RE_TOP_SHIFT          16

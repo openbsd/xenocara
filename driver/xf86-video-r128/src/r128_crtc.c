@@ -699,7 +699,7 @@ Bool R128InitDDARegisters(xf86CrtcPtr crtc, R128SavePtr save,
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "XclkFreq = %d; VclkFreq = %d; "
-                        "per = %d, %d (useable = %d)\n",
+                        "per = %d, %d (usable = %d)\n",
                         XclkFreq,
                         VclkFreq,
                         XclksPerTransfer,
@@ -778,7 +778,7 @@ Bool R128InitDDA2Registers(xf86CrtcPtr crtc, R128SavePtr save,
 
     DEBUG(xf86DrvMsg(pScrn->scrnIndex, X_INFO,
                         "XclkFreq = %d; VclkFreq = %d; "
-                        "per = %d, %d (useable = %d)\n",
+                        "per = %d, %d (usable = %d)\n",
                         XclkFreq,
                         VclkFreq,
                         XclksPerTransfer,

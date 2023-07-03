@@ -1847,7 +1847,7 @@ Bool R128ScreenInit(SCREEN_INIT_ARGS_DECL)
 #ifdef R128DRI
     if (info->directRenderingEnabled)
         /*
-         * Recalculate the texture offset and size to accomodate any
+         * Recalculate the texture offset and size to accommodate any
          * rounding to a whole number of scanlines.
          */
         info->textureOffset = scanlines * width_bytes;

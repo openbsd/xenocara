@@ -964,7 +964,7 @@ static void R128SubsequentScanlineImageWriteRect(ScrnInfoPtr pScrn,
     OUTREG(R128_DST_HEIGHT_WIDTH, (h << 16)       | ((w + shift) & ~shift));
 }
 
-/* Subsequent XAA indirect iamge write.  This is called once for each
+/* Subsequent XAA indirect image write.  This is called once for each
    scanline. */
 static void R128SubsequentImageWriteScanline(ScrnInfoPtr pScrn, int bufno)
 {
