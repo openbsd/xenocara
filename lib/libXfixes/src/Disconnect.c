@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2006, Oracle and/or its affiliates.
  * Copyright 2021 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -61,9 +61,9 @@ XFixesSetClientDisconnectMode(Display *dpy, int disconnect_mode)
 
     LockDisplay(dpy);
     GetReq(XFixesSetClientDisconnectMode, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->xfixesReqType = X_XFixesSetClientDisconnectMode;
-    req->disconnect_mode = disconnect_mode;
+    req->disconnect_mode = (CARD32) disconnect_mode;
     UnlockDisplay(dpy);
     SyncHandle();
 }
@@ -82,7 +82,7 @@ XFixesGetClientDisconnectMode(Display *dpy)
 
     LockDisplay(dpy);
     GetReq(XFixesGetClientDisconnectMode, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->xfixesReqType = X_XFixesGetClientDisconnectMode;
 
     if (!_XReply(dpy, (xReply *) &rep, 0, xFalse))
@@ -92,7 +92,7 @@ XFixesGetClientDisconnectMode(Display *dpy)
 	return XFixesClientDisconnectFlagDefault;
     }
 
-    disconnect_mode = rep.disconnect_mode;
+    disconnect_mode = (int) rep.disconnect_mode;
     UnlockDisplay(dpy);
     SyncHandle();
 
