@@ -39,10 +39,8 @@ XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors)
     XExtDisplayInfo	    *info = XRRFindDisplay(dpy);
     xRRGetMonitorsReply	    rep;
     xRRGetMonitorsReq	    *req;
-    int			    nbytes, nbytesRead, rbytes;
+    int			    nbytes, nbytesRead;
     int			    nmon, noutput;
-    int			    m, o;
-    char		    *buf, *buf_head;
     xRRMonitorInfo	    *xmon;
     CARD32		    *xoutput;
     XRRMonitorInfo	    *mon = NULL;
@@ -81,6 +79,7 @@ XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors)
     nbytesRead = nmon * SIZEOF(xRRMonitorInfo) + noutput * 4;
 
     if (nmon > 0) {
+	char	*buf, *buf_head;
 
 	/*
 	 * first we must compute how much space to allocate for
@@ -88,7 +87,8 @@ XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors)
 	 * allocation, on cleanlyness grounds.
 	 */
 
-	rbytes = nmon * sizeof (XRRMonitorInfo) + noutput * sizeof(RROutput);
+	size_t rbytes = (nmon * sizeof (XRRMonitorInfo))
+            + (noutput * sizeof(RROutput));
 
 	buf = buf_head = Xmalloc (nbytesRead);
 	mon = Xmalloc (rbytes);
@@ -106,7 +106,7 @@ XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors)
 
 	output = (RROutput *) (mon + nmon);
 
-	for (m = 0; m < nmon; m++) {
+	for (int m = 0; m < nmon; m++) {
 	    xmon = (xRRMonitorInfo *) buf;
 	    mon[m].name = xmon->name;
 	    mon[m].primary = xmon->primary;
@@ -129,7 +129,7 @@ XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors)
 	        return NULL;
 	    }
 	    rep.noutputs -= xmon->noutput;
-	    for (o = 0; o < xmon->noutput; o++)
+	    for (int o = 0; o < xmon->noutput; o++)
 		output[o] = xoutput[o];
 	    output += xmon->noutput;
 	    buf += xmon->noutput * 4;

@@ -103,12 +103,9 @@ static XRRScreenConfiguration *_XRRValidateCache (Display *dpy,
 						  XExtDisplayInfo *info,
 						  int screen)
 {
-    XRRScreenConfiguration **configs;
-    XRandRInfo *xrri;
-
     if ((screen >= 0) && (screen < ScreenCount(dpy)) && XextHasExtension(info)) {
-	xrri = (XRandRInfo *) info->data;
-	configs = xrri->config;
+	XRandRInfo *xrri = (XRandRInfo *) info->data;
+	XRRScreenConfiguration **configs = xrri->config;
 
 	if (configs[screen] == NULL)
 	    configs[screen] = _XRRGetScreenInfo (dpy, info, RootWindow(dpy, screen));
@@ -123,11 +120,11 @@ Rotation XRRRotations(Display *dpy, int screen, Rotation *current_rotation)
 {
   XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
-  Rotation cr;
+
   LockDisplay(dpy);
   if ((config = _XRRValidateCache(dpy, info, screen))) {
+    Rotation cr = config->rotations;
     *current_rotation = config->current_rotation;
-    cr = config->rotations;
     UnlockDisplay(dpy);
     return cr;
   }
@@ -143,12 +140,11 @@ XRRScreenSize *XRRSizes(Display *dpy, int screen, int *nsizes)
 {
   XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
-  XRRScreenSize *sizes;
 
   LockDisplay(dpy);
   if ((config = _XRRValidateCache(dpy, info, screen))) {
+    XRRScreenSize *sizes = config->sizes;
     *nsizes = config->nsizes;
-    sizes = config->sizes;
     UnlockDisplay(dpy);
     return sizes;
     }
@@ -163,11 +159,10 @@ short *XRRRates (Display *dpy, int screen, int sizeID, int *nrates)
 {
   XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
-  short *rates;
 
   LockDisplay(dpy);
   if ((config = _XRRValidateCache(dpy, info, screen))) {
-    rates = XRRConfigRates (config, sizeID, nrates);
+    short *rates = XRRConfigRates (config, sizeID, nrates);
     UnlockDisplay(dpy);
     return rates;
     }
@@ -183,12 +178,11 @@ Time XRRTimes (Display *dpy, int screen, Time *config_timestamp)
 {
   XRRScreenConfiguration *config;
   XExtDisplayInfo *info = XRRFindDisplay(dpy);
-  Time ts;
 
   LockDisplay(dpy);
   if ((config = _XRRValidateCache(dpy, info, screen))) {
+      Time ts = config->timestamp;
       *config_timestamp = config->config_timestamp;
-      ts = config->timestamp;
       UnlockDisplay(dpy);
       return ts;
     } else {
@@ -207,12 +201,10 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
     _XAsyncHandler 	    async;
     _XRRVersionState	    async_state;
     int			    nbytes, nbytesRead, rbytes;
-    int			    i;
     xScreenSizes	    size;
     struct _XRRScreenConfiguration  *scp;
     XRRScreenSize	    *ssp;
     short    		    *rates;
-    xRRQueryVersionReq      *vreq;
     XRandRInfo		    *xrri;
     Bool		    getting_version = False;
 
@@ -222,6 +214,8 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
 
     if (xrri->major_version == -1)
     {
+	xRRQueryVersionReq	*vreq;
+
 	/* hide a version query in the request */
 	GetReq (RRQueryVersion, vreq);
 	vreq->reqType = info->codes->major_opcode;
@@ -289,7 +283,7 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
 	  (rep.nSizes * sizeof (XRRScreenSize) +
 	   rep.nrateEnts * sizeof (int));
 
-	scp = (struct _XRRScreenConfiguration *) Xmalloc(rbytes);
+	scp = Xmalloc(rbytes);
     } else {
 	nbytes = 0;
 	nbytesRead = 0;
@@ -328,7 +322,7 @@ static XRRScreenConfiguration *_XRRGetScreenInfo (Display *dpy,
     /*
      * First the size information
      */
-    for (i = 0; i < rep.nSizes; i++)  {
+    for (unsigned int i = 0; i < rep.nSizes; i++)  {
 	_XReadPad (dpy, (char *) &size, SIZEOF (xScreenSizes));
 
         ssp[i].width = size.widthInPixels;

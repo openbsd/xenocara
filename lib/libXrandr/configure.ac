@@ -29,13 +29,14 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xrandr version l.n.m corresponds to protocol version l.n
 #
-AC_INIT([libXrandr], [1.5.2],
-        [https://gitlab.freedesktop.org/xorg/lib/libXrandr/issues], [libXrandr])
+AC_INIT([libXrandr], [1.5.3],
+        [https://gitlab.freedesktop.org/xorg/lib/libxrandr/-/issues],
+        [libXrandr])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -52,7 +53,7 @@ XORG_CHECK_MALLOC_ZERO
 RANDR_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 AC_SUBST(RANDR_VERSION)
 
-# Obtain compiler/linker options for depedencies
+# Obtain compiler/linker options for dependencies
 PKG_CHECK_MODULES(RANDR, [x11 >= 1.6] randrproto >= $RANDR_VERSION xext xextproto xrender renderproto)
 
 AC_CONFIG_FILES([Makefile

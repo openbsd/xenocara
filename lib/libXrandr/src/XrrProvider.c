@@ -67,7 +67,7 @@ XRRGetProviderResources(Display *dpy, Window window)
 
 	rbytes = (sizeof(XRRProviderResources) + rep.nProviders *
 		  sizeof(RRProvider));
-	xrpr = (XRRProviderResources *) Xmalloc(rbytes);
+	xrpr = Xmalloc(rbytes);
     } else {
 	nbytes = 0;
 	nbytesRead = 0;
@@ -104,7 +104,6 @@ XRRFreeProviderResources(XRRProviderResources *provider_resources)
     free(provider_resources);
 }
 
-#define ProviderInfoExtra	(SIZEOF(xRRGetProviderInfoReply) - 32)  
 XRRProviderInfo *
 XRRGetProviderInfo(Display *dpy, XRRScreenResources *resources, RRProvider provider)
 {
@@ -123,25 +122,22 @@ XRRGetProviderInfo(Display *dpy, XRRScreenResources *resources, RRProvider provi
     req->provider = provider;
     req->configTimestamp = resources->configTimestamp;
 
-    if (!_XReply (dpy, (xReply *) &rep, ProviderInfoExtra >> 2, xFalse))
+    if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
     {
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;
     }
 
-    if (rep.length > INT_MAX >> 2 || rep.length < ProviderInfoExtra >> 2)
+    if (rep.length > INT_MAX >> 2)
     {
-	if (rep.length < ProviderInfoExtra >> 2)
-	    _XEatDataWords (dpy, rep.length);
-	else
-	    _XEatDataWords (dpy, rep.length - (ProviderInfoExtra >> 2));
+	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;
     }
 
-    nbytes = ((long) rep.length << 2) - ProviderInfoExtra;
+    nbytes = ((long) rep.length << 2);
 
     nbytesRead = (long)(rep.nCrtcs * 4 +
 			rep.nOutputs * 4 +
@@ -154,9 +150,9 @@ XRRGetProviderInfo(Display *dpy, XRRScreenResources *resources, RRProvider provi
 	      rep.nAssociatedProviders * (sizeof(RRProvider) + sizeof(unsigned int))+
 	      rep.nameLength + 1);
 
-    xpi = (XRRProviderInfo *)Xmalloc(rbytes);
+    xpi = Xmalloc(rbytes);
     if (xpi == NULL) {
-	_XEatDataWords (dpy, rep.length - (ProviderInfoExtra >> 2));
+	_XEatDataWords (dpy, rep.length);
 	UnlockDisplay (dpy);
 	SyncHandle ();
 	return NULL;

@@ -90,7 +90,7 @@ XRRGetOutputInfo (Display *dpy, XRRScreenResources *resources, RROutput output)
 	      rep.nClones * sizeof (RROutput) +
 	      rep.nameLength + 1);	    /* '\0' terminate name */
 
-    xoi = (XRROutputInfo *) Xmalloc(rbytes);
+    xoi = Xmalloc(rbytes);
     if (xoi == NULL) {
 	_XEatDataWords (dpy, rep.length - (OutputInfoExtra >> 2));
 	UnlockDisplay (dpy);

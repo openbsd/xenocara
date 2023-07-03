@@ -75,7 +75,7 @@ XRRGetCrtcInfo (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
 		  rep.nOutput * sizeof (RROutput) +
 		  rep.nPossibleOutput * sizeof (RROutput));
 
-	xci = (XRRCrtcInfo *) Xmalloc(rbytes);
+	xci = Xmalloc(rbytes);
     }
     else
     {
@@ -375,11 +375,9 @@ XRRGetCrtcTransform (Display	*dpy,
 {
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRGetCrtcTransformReply	rep;
-    xRRGetCrtcTransformReq	*req;
     int				major_version, minor_version;
     XRRCrtcTransformAttributes	*attr;
     char			*extra = NULL, *end = NULL, *e;
-    int				p;
 
     *attributes = NULL;
 
@@ -398,6 +396,8 @@ XRRGetCrtcTransform (Display	*dpy,
     }
     else
     {
+	xRRGetCrtcTransformReq	*req;
+
 	LockDisplay (dpy);
 	GetReq (RRGetCrtcTransform, req);
 	req->reqType = info->codes->major_opcode;
@@ -466,7 +466,7 @@ XRRGetCrtcTransform (Display	*dpy,
     memcpy (attr->pendingFilter, e, rep.pendingNbytesFilter);
     attr->pendingFilter[rep.pendingNbytesFilter] = '\0';
     e += (rep.pendingNbytesFilter + 3) & ~3;
-    for (p = 0; p < rep.pendingNparamsFilter; p++) {
+    for (unsigned int p = 0; p < rep.pendingNparamsFilter; p++) {
 	INT32	f;
 	if (e + 4 > end) {
 	    XFree (attr);
@@ -487,7 +487,7 @@ XRRGetCrtcTransform (Display	*dpy,
     memcpy (attr->currentFilter, e, rep.currentNbytesFilter);
     attr->currentFilter[rep.currentNbytesFilter] = '\0';
     e += (rep.currentNbytesFilter + 3) & ~3;
-    for (p = 0; p < rep.currentNparamsFilter; p++) {
+    for (unsigned int p = 0; p < rep.currentNparamsFilter; p++) {
 	INT32	f;
 	if (e + 4 > end) {
 	    XFree (attr);
@@ -530,7 +530,7 @@ XRRGetPanning (Display *dpy, XRRScreenResources *resources, RRCrtc crtc)
 	return NULL;
     }
 
-    if (! (xp = (XRRPanning *) Xmalloc(sizeof(XRRPanning))) ) {
+    if (! (xp = Xmalloc(sizeof(XRRPanning))) ) {
 	_XEatData (dpy, sizeof(XRRPanning));
 	UnlockDisplay (dpy);
 	SyncHandle ();

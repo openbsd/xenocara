@@ -39,7 +39,6 @@ XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRListOutputPropertiesReply rep;
     xRRListOutputPropertiesReq	*req;
-    int				nbytes, rbytes;
     Atom			*props = NULL;
 
     RRCheckExtension (dpy, info, NULL);
@@ -58,10 +57,10 @@ XRRListOutputProperties (Display *dpy, RROutput output, int *nprop)
     }
 
     if (rep.nAtoms) {
-	rbytes = rep.nAtoms * sizeof (Atom);
-	nbytes = rep.nAtoms << 2;
+	size_t rbytes = rep.nAtoms * sizeof (Atom);
+	size_t nbytes = rep.nAtoms << 2;
 
-	props = (Atom *) Xmalloc (rbytes);
+	props = Xmalloc (rbytes);
 	if (props == NULL) {
 	    _XEatDataWords (dpy, rep.length);
 	    UnlockDisplay (dpy);
@@ -85,7 +84,7 @@ XRRQueryOutputProperty (Display *dpy, RROutput output, Atom property)
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRQueryOutputPropertyReply rep;
     xRRQueryOutputPropertyReq	*req;
-    unsigned int		rbytes, nbytes;
+    unsigned int		nbytes;
     XRRPropertyInfo		*prop_info;
 
     RRCheckExtension (dpy, info, NULL);
@@ -104,7 +103,7 @@ XRRQueryOutputProperty (Display *dpy, RROutput output, Atom property)
     }
 
     if (rep.length < ((INT_MAX / sizeof(long)) - sizeof (XRRPropertyInfo))) {
-        rbytes = sizeof (XRRPropertyInfo) + (rep.length * sizeof (long));
+        size_t rbytes = sizeof (XRRPropertyInfo) + (rep.length * sizeof (long));
         nbytes = rep.length << 2;
 
         prop_info = Xmalloc (rbytes);
@@ -257,7 +256,6 @@ XRRGetOutputProperty (Display *dpy, RROutput output,
     XExtDisplayInfo		*info = XRRFindDisplay(dpy);
     xRRGetOutputPropertyReply	rep;
     xRRGetOutputPropertyReq	*req;
-    unsigned long		nbytes, rbytes;
 
     /* Always initialize return values, in case callers fail to initialize
        them and fail to check the return code for an error. */
@@ -289,6 +287,7 @@ XRRGetOutputProperty (Display *dpy, RROutput output,
 
     if (rep.propertyType != None) {
 	int format = rep.format;
+	size_t nbytes, rbytes;
 
 	/*
 	 * Protect against both integer overflow and just plain oversized

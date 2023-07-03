@@ -1,3 +1,88 @@
+commit 3387129532899eaeee3477a2d92fa662d7292a84
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Nov 20 08:54:24 2022 -0800
+
+    libXrandr 1.5.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7181160b2c32b1bb804792990783fa25c1122bae
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 17:57:19 2022 -0700
+
+    Remove unnecessary casts of return values from malloc()
+    
+    Not needed in C89 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8710ed270fbb9ec905b906826cb09095c57003f8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 17:24:23 2022 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 684ed1b997f9e8a2fe2219524c1dea04b20a7e25
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 16:45:38 2022 -0700
+
+    XRRGetProviderInfo: Remove unneeded ProviderInfoExtra
+    
+    It was always 0, hence caused gcc warnings:
+    
+    XrrProvider.c: In function ‘XRRGetProviderInfo’:
+    XrrProvider.c:133:49: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
+         if (rep.length > INT_MAX >> 2 || rep.length < ProviderInfoExtra >> 2)
+                                                     ^
+    XrrProvider.c:135:17: warning: comparison of unsigned expression < 0 is always false [-Wtype-limits]
+      if (rep.length < ProviderInfoExtra >> 2)
+                     ^
+    XrrProvider.c:135:5: warning: this condition has identical branches [-Wduplicated-branches]
+      if (rep.length < ProviderInfoExtra >> 2)
+         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8ddb2aefcda77709cf98f15fbcb7d97a2d00ab7d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Oct 17 16:36:01 2022 -0700
+
+    Xrandr.h: remove misleading comment for XRRGetScreenSizeRange()
+    
+    Closes: #7
+    Fixes: 5e94f07 ("GetScreenSizeRange: Document funky return code in the header")
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d66693441f688867e6fd4a5d4a4bdade9a338755
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:32:18 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e4c7841eb916f8ad65bfe63daef0f1e81252c704
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:31:20 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit be3c7a7621e89bbde2884585179b9e4c5b9e6639
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 17:29:30 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 55dcda4518eda8ae03ef25ea29d3c994ad71eb0a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 13:54:20 2019 -0700
@@ -1094,7 +1179,7 @@ Date:   Sun Mar 4 20:03:59 2007 -0800
     Set version to 1.2.1 for release.
 
 commit c279b64ccca18b14974e413b0b1d55ac81abceda
-Author: Fredrik Höglund <fredrik@kde.org>
+Author: Fredrik Höglund  <fredrik@kde.org>
 Date:   Tue Feb 20 22:30:00 2007 +0100
 
     Fix the use of a C++ keyword as a parameter name in Xrandr.h
@@ -1458,21 +1543,21 @@ Date:   Thu Jun 9 12:52:44 2005 +0000
     Require renderproto instead of render for pkgconfig
 
 commit 9c36643810a7e837f325970ddd5964bbff4971b6
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 20:22:47 2005 +0000
 
     - Don't search for non-autoconf'ed X libs in Xrandr
     - Rename man page Xrandr.3
 
 commit 73b3dff9d12d417716c19a33a95eac5f73e5da13
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 19:19:31 2005 +0000
 
     Add Xcursor
     conditionally include config.h
 
 commit 32107cdd57b4796c3f41ac56c9ba683be3d894af
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 17:48:03 2005 +0000
 
     Check in build system for Xrandr

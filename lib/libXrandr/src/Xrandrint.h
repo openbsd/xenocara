@@ -60,8 +60,8 @@ struct _XRRScreenConfiguration {
 };
 
 /*
- * if a configure notify on the root is recieved, or
- * an XRRScreenChangeNotify is recieved,
+ * if a configure notify on the root is received, or
+ * an XRRScreenChangeNotify is received,
  * XRRUpdateConfiguration should be called to update the X library's
  * view of the screen configuration; it will also invalidate the cache
  * provided by XRRScreenConfig and XRRConfig, and force a round trip

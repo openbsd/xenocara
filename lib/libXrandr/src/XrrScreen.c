@@ -47,7 +47,6 @@ doGetScreenResources (Display *dpy, Window window, int poll)
     _XRRVersionState		async_state;
     int				nbytes, nbytesRead, rbytes;
     int				i;
-    xRRQueryVersionReq		*vreq;
     XRRScreenResources		*xrsr;
     char			*names;
     char			*wire_names, *wire_name;
@@ -61,6 +60,8 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 
     if (xrri->major_version == -1)
     {
+	xRRQueryVersionReq		*vreq;
+
 	/* hide a version query in the request */
 	GetReq (RRQueryVersion, vreq);
 	vreq->reqType = info->codes->major_opcode;
@@ -126,8 +127,8 @@ doGetScreenResources (Display *dpy, Window window, int poll)
 		  rep.nModes * sizeof (XRRModeInfo) +
 		  rep.nbytesNames + rep.nModes);    /* '\0' terminate names */
 
-	xrsr = (XRRScreenResources *) Xmalloc(rbytes);
-	wire_names = (char *) Xmalloc (rep.nbytesNames);
+	xrsr = Xmalloc(rbytes);
+	wire_names = Xmalloc (rep.nbytesNames);
     } else {
 	nbytes = 0;
 	nbytesRead = 0;

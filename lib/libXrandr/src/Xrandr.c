@@ -286,12 +286,12 @@ static Status XRREventToWire(Display *dpy, XEvent *event, xEvent *wire)
 _X_HIDDEN XExtDisplayInfo *
 XRRFindDisplay (Display *dpy)
 {
-    XExtDisplayInfo *dpyinfo;
-    XRandRInfo *xrri;
-    int i, numscreens;
+    XExtDisplayInfo *dpyinfo = XextFindDisplay (&XRRExtensionInfo, dpy);
 
-    dpyinfo = XextFindDisplay (&XRRExtensionInfo, dpy);
     if (!dpyinfo) {
+	XRandRInfo *xrri;
+	int numscreens;
+
 	dpyinfo = XextAddDisplay (&XRRExtensionInfo, dpy,
 				  XRRExtensionName,
 				  &rr_extension_hooks,
@@ -300,7 +300,7 @@ XRRFindDisplay (Display *dpy)
 	xrri = Xmalloc (sizeof(XRandRInfo) +
 				 sizeof(char *) * numscreens);
 	xrri->config = (XRRScreenConfiguration **)(xrri + 1);
-	for(i = 0; i < numscreens; i++)
+	for (int i = 0; i < numscreens; i++)
 	  xrri->config[i] = NULL;
 	xrri->major_version = -1;
 	dpyinfo->data = (char *) xrri;
@@ -311,21 +311,18 @@ XRRFindDisplay (Display *dpy)
 static int
 XRRCloseDisplay (Display *dpy, XExtCodes *codes)
 {
-    int i;
-    XRRScreenConfiguration **configs;
     XExtDisplayInfo *info = XRRFindDisplay (dpy);
-    XRandRInfo *xrri;
 
     LockDisplay(dpy);
     /*
      * free cached data
      */
     if (XextHasExtension(info)) {
-	xrri = (XRandRInfo *) info->data;
+	XRandRInfo *xrri = (XRandRInfo *) info->data;
 	if (xrri) {
-	    configs = xrri->config;
+	    XRRScreenConfiguration **configs = xrri->config;
 
-	    for (i = 0; i < ScreenCount(dpy); i++) {
+	    for (int i = 0; i < ScreenCount(dpy); i++) {
 		if (configs[i] != NULL) XFree (configs[i]);
 	    }
 	    XFree (xrri);
@@ -337,8 +334,7 @@ XRRCloseDisplay (Display *dpy, XExtCodes *codes)
 
 int XRRRootToScreen(Display *dpy, Window root)
 {
-  int snum;
-  for (snum = 0; snum < ScreenCount(dpy); snum++) {
+  for (int snum = 0; snum < ScreenCount(dpy); snum++) {
     if (RootWindow(dpy, snum) == root) return snum;
   }
   return -1;
