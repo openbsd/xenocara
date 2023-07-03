@@ -27,7 +27,7 @@
 
 /*
  * BUGS: The wrapper really should maintain one symbol table per port. This
- * could possibly be impemented, To do that, the port-independent symbols need to be lifted out,
+ * could possibly be implemented. To do that, the port-independent symbols need to be lifted out,
  * and one would have to create a number of mapping tables:
  *
  *                 port  -> symbol table

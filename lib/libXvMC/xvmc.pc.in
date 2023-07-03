@@ -6,7 +6,7 @@ includedir=@includedir@
 Name: XvMC
 Description: The XvMC Library
 Version: @PACKAGE_VERSION@
-Requires: xproto videoproto
-Requires.private: x11 xext
+Requires: videoproto xextproto
+Requires.private: x11 >= 1.6 xext xv
 Cflags: -I${includedir}
 Libs: -L${libdir} -lXvMC

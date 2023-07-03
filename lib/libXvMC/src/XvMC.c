@@ -519,7 +519,7 @@ Status XvMCGetDRInfo(Display *dpy, XvPortID port,
      * X server can read this pattern, we probably have a local connection.
      * Note that we can trigger the remote X server to read any shared
      * page on the remote machine, so we shouldn't be able to guess and verify
-     * any complicated data on those pages. Thats the explanation of this
+     * any complicated data on those pages. That's the explanation of this
      * otherwise stupid-looking pattern algorithm.
      */
 

@@ -31,7 +31,7 @@
 /********************************************************************/
 
      XvMC extends the X-Video extension (Xv) and makes use of the
-  familar concept of the XvPort.  Ports have attributes that can be set
+  familiar concept of the XvPort.  Ports have attributes that can be set
   and queried through Xv.  In XvMC ports can also have hardware motion
   compensation contexts created for use with them.  Ports which support
   XvImages (ie. they have an "XV_IMAGE" port encoding as described in
@@ -343,7 +343,7 @@ XvMCCreateSurface(
 
      Creates a surface (Frame) for use with the specified context.
    The surface structure is filled out and Success is returned if no
-   error occured.
+   error occurred.
 
    context - pointer to a valid context.  The context implies
              the surface type to be created, and its dimensions.
@@ -398,7 +398,7 @@ Status XvMCCreateBlocks (
 );
 
    This allocates an array of DCT blocks in the XvMCBlockArray
-   structure passed to it.  Success is returned if no error occured.
+   structure passed to it.  Success is returned if no error occurred.
 
     display - The connection to the server.
 
@@ -579,7 +579,7 @@ Status XvMCCreateMacroBlocks (
 );
 
    This allocates an array of XvMCMacroBlocks in the XvMCMacroBlockArray
-   structure passed to it.  Success is returned if no error occured.
+   structure passed to it.  Success is returned if no error occurred.
 
     display - The connection to the server.
 
@@ -634,7 +634,7 @@ Status XvMCRenderSurface(
     return until it has read all of the macroblocks, however, rendering
     will usually not be completed by that time.  The return of this
     function means it is safe to touch the blocks and macroblock_array.
-    To synchronize rendering see the section on sychronization below.
+    To synchronize rendering see the section on synchronization below.
 
     display - The connection to the server.
 
@@ -1120,9 +1120,9 @@ XvMCFlushSurface (Display *display, XvMCSurface *surface)
    This function commits pending rendering requests to ensure that
   they will be completed in a finite amount of time.
 
-    display -  The connnection to the server.
+    display -  The connection to the server.
 
-    surface -  The surface whos rendering requests should be flushed.
+    surface -  The surface whose rendering requests should be flushed.
 
      Errors:
 
@@ -1134,7 +1134,7 @@ XvMCGetSurfaceStatus (Display *display, XvMCSurface *surface, int *stat)
 
    display -  The connection to the server.
 
-   surface -  The surface whos status is being queried.
+   surface -  The surface whose status is being queried.
 
    stat -  May be any of the following OR'd together:
 
@@ -1181,7 +1181,7 @@ XvMCFlushSubpicture (Display *display, XvMCSubpicture *subpicture)
 
     display - The connection to the server.
 
-    subpicture - The subpicture whos compositing should be flushed.
+    subpicture - The subpicture whose compositing should be flushed.
 
      Errors:
 
@@ -1193,7 +1193,7 @@ XvMCGetSubpictureStatus (Display *display, XvMCSubpicture *subpic, int *stat)
 
     display - The connection to the server.
 
-    subpic - The subpicture whos status is being queried.
+    subpic - The subpicture whose status is being queried.
 
     stat - may be any of the following OR'd together:
 
@@ -1231,7 +1231,7 @@ XvMCQueryAttributes (
 
     display - The connection to the server.
 
-    context - The context whos attributes we are querying.
+    context - The context whose attributes we are querying.
 
     number - The returned number of recognized atoms.
 
@@ -1279,7 +1279,7 @@ XvMCGetAttribute (
 
     display - The connection to the server.
 
-    context - The context whos attribute we are querying.
+    context - The context whose attribute we are querying.
 
     attribute - The X Atom of the attribute to be retrieved.
 

@@ -1,3 +1,69 @@
+commit 590fb6835170aa60cd4d3d46eaeac51725300d23
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Mar 26 10:51:18 2022 -0700
+
+    libXvMC 1.0.13
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 2090940ded023df2a1c0ef8c7dd2cde16a686d7d
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Sat Mar 26 10:47:31 2022 -0700
+
+    meson: Fix typo
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit f65c43c05a766ef2e9335367d079b75273d5e53f
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Fri Mar 25 15:04:15 2022 -0700
+
+    autotools: fix Requires and Requires.Private in pkgconfig
+    
+    This only applies to the autotools generated pkg-config files, as Meson
+    does it's own dependency tracking for us.
+
+commit cdf1532b13efe667f40dd472f41b4e12a0282dea
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Fri Mar 25 14:55:36 2022 -0700
+
+    meson: Add a meson build system
+    
+    This does everything the autotools based system does, including building
+    both a static and shared version by default, though this can be
+    controlled with meson's builtin `default_library` option.
+
+commit 324ecde7352e7a129f30b795a1c2d9142600aeea
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Fri Mar 25 13:31:40 2022 -0700
+
+    editorconfig: add meson
+
+commit b391192bd391009f9d834ea920fd15c872fbe85b
+Author: Dylan Baker <dylan@pnwbakers.com>
+Date:   Fri Mar 25 13:31:17 2022 -0700
+
+    editorconfig: add
+
+commit bd930bf94f0bcb9964248cdb5196b97cf93a0921
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 26 08:56:25 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 53c3cfbecba041d1a215f7a5689df796b97949e8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 26 08:56:16 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 36086307ba9fd1272365b964056e8a6780109478
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Tue Sep 24 12:52:29 2019 -0400
