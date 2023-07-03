@@ -25,6 +25,7 @@
 #include <config.h>
 #endif
 #include "xdamageint.h"
+#include <X11/Xfuncproto.h>
 
 XDamageExtInfo XDamageExtensionInfo;
 
@@ -49,9 +50,8 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
                       const char	*ext_name)
 {
     XDamageExtDisplayInfo    *info;
-    int			    ev;
 
-    info = (XDamageExtDisplayInfo *) Xmalloc (sizeof (XDamageExtDisplayInfo));
+    info = Xmalloc (sizeof (XDamageExtDisplayInfo));
     if (!info) return NULL;
     info->display = dpy;
 
@@ -66,7 +66,7 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
 	xDamageQueryVersionReq	*req;
         XESetCloseDisplay (dpy, info->codes->extension,
                            XDamageCloseDisplay);
-	for (ev = info->codes->first_event;
+	for (int ev = info->codes->first_event;
 	     ev < info->codes->first_event + XDamageNumberEvents;
 	     ev++)
 	{
@@ -78,7 +78,7 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
 	 */
 	LockDisplay (dpy);
 	GetReq (DamageQueryVersion, req);
-	req->reqType = info->codes->major_opcode;
+	req->reqType = (CARD8) info->codes->major_opcode;
 	req->damageReqType = X_DamageQueryVersion;
 	req->majorVersion = DAMAGE_MAJOR;
 	req->minorVersion = DAMAGE_MINOR;
@@ -125,7 +125,7 @@ XDamageExtAddDisplay (XDamageExtInfo	*extinfo,
  * extension object. (Replaces XextRemoveDisplay.)
  */
 static int
-XDamageExtRemoveDisplay (XDamageExtInfo *extinfo, Display *dpy)
+XDamageExtRemoveDisplay (XDamageExtInfo *extinfo, const Display *dpy)
 {
     XDamageExtDisplayInfo *info, *prev;
 
@@ -155,7 +155,7 @@ XDamageExtRemoveDisplay (XDamageExtInfo *extinfo, Display *dpy)
     if (info == extinfo->cur) extinfo->cur = NULL;  /* flush cache */
     _XUnlockMutex(_Xglobal_lock);
 
-    Xfree ((char *) info);
+    Xfree (info);
     return 1;
 }
 
@@ -166,7 +166,7 @@ XDamageExtRemoveDisplay (XDamageExtInfo *extinfo, Display *dpy)
  */
 static XDamageExtDisplayInfo *
 XDamageExtFindDisplay (XDamageExtInfo *extinfo,
-		      Display	    *dpy)
+		       const Display  *dpy)
 {
     XDamageExtDisplayInfo *info;
 
@@ -205,7 +205,7 @@ XDamageFindDisplay (Display *dpy)
 }
 
 static int
-XDamageCloseDisplay (Display *dpy, XExtCodes *codes)
+XDamageCloseDisplay (Display *dpy, _X_UNUSED XExtCodes *codes)
 {
     return XDamageExtRemoveDisplay (&XDamageExtensionInfo, dpy);
 }
@@ -261,11 +261,11 @@ XDamageEventToWire(Display *dpy, XEvent *event, xEvent *wire)
 	xDamageNotifyEvent *awire;
 	awire = (xDamageNotifyEvent *) wire;
 	aevent = (XDamageNotifyEvent *) event;
-	awire->type = aevent->type | (aevent->send_event ? 0x80 : 0);
-	awire->drawable = aevent->drawable;
-	awire->damage = aevent->damage;
-	awire->level = aevent->level | (aevent->more ? DamageNotifyMore : 0);
-	awire->timestamp = aevent->timestamp;
+	awire->type = (CARD8) aevent->type | (aevent->send_event ? 0x80 : 0);
+	awire->drawable = (CARD32) aevent->drawable;
+	awire->damage = (CARD32) aevent->damage;
+	awire->level = (CARD8) aevent->level | (aevent->more ? DamageNotifyMore : 0);
+	awire->timestamp = (CARD32) aevent->timestamp;
 	awire->area.x = aevent->area.x;
 	awire->area.y = aevent->area.y;
 	awire->area.width = aevent->area.width;
@@ -321,11 +321,12 @@ XDamageCreate (Display *dpy, Drawable drawable, int level)
     XDamageCheckExtension (dpy, info, 0);
     LockDisplay (dpy);
     GetReq (DamageCreate, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->damageReqType = X_DamageCreate;
-    req->damage = damage = XAllocID (dpy);
-    req->drawable = drawable;
-    req->level = level;
+    damage = XAllocID (dpy);
+    req->damage = (CARD32) damage;
+    req->drawable = (CARD32) drawable;
+    req->level = (CARD8) level;
     UnlockDisplay (dpy);
     SyncHandle ();
     return damage;
@@ -340,9 +341,9 @@ XDamageDestroy (Display *dpy, Damage damage)
     XDamageSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (DamageDestroy, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->damageReqType = X_DamageDestroy;
-    req->damage = damage;
+    req->damage = (CARD32) damage;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -357,11 +358,11 @@ XDamageSubtract (Display *dpy, Damage damage,
     XDamageSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (DamageSubtract, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->damageReqType = X_DamageSubtract;
-    req->damage = damage;
-    req->repair = repair;
-    req->parts = parts;
+    req->damage = (CARD32) damage;
+    req->repair = (CARD32) repair;
+    req->parts = (CARD32) parts;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -375,10 +376,10 @@ XDamageAdd (Display *dpy, Drawable drawable, XserverRegion region)
     XDamageSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (DamageAdd, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->damageReqType = X_DamageAdd;
-    req->drawable = drawable;
-    req->region = region;
+    req->drawable = (CARD32) drawable;
+    req->region = (CARD32) region;
 
     UnlockDisplay (dpy);
     SyncHandle ();

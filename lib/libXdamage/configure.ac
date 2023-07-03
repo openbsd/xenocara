@@ -29,13 +29,14 @@ AC_PREREQ([2.60])
 # digit in the version number to track changes which don't affect the
 # protocol, so Xdamage version l.n.m corresponds to protocol version l.n
 #
-AC_INIT(libXdamage, [1.1.5],
-	[https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], [libXdamage])
+AC_INIT(libXdamage, [1.1.6],
+        [https://gitlab.freedesktop.org/xorg/lib/libxdamage/-/issues],
+        [libXdamage])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -51,8 +52,8 @@ XORG_DEFAULT_OPTIONS
 DAMAGEEXT_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 AC_SUBST(DAMAGEEXT_VERSION)
 
-# Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(XDAMAGE, [damageproto >= $DAMAGEEXT_VERSION] xfixes fixesproto xextproto x11)
+# Obtain compiler/linker options for dependencies
+PKG_CHECK_MODULES(XDAMAGE, [damageproto >= $DAMAGEEXT_VERSION xfixes fixesproto xextproto x11 xproto >= 7.0.22])
 
 AC_CONFIG_FILES([Makefile
 		src/Makefile
