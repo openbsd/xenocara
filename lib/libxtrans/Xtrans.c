@@ -62,7 +62,7 @@ from The Open Group.
  * Each transport is assigned a unique transport id.
  *
  * New transports can be added by adding an entry in this table.
- * For compatiblity, the transport ids should never be renumbered.
+ * For compatibility, the transport ids should never be renumbered.
  * Always add to the end of the list.
  */
 
@@ -75,10 +75,10 @@ from The Open Group.
 #define TRANS_SOCKET_TCP_INDEX		7
 #define TRANS_DNET_INDEX		8
 #define TRANS_LOCAL_LOCAL_INDEX		9
-#define TRANS_LOCAL_PTS_INDEX		10
+/* 10 used to be PTS, but that's gone. */
 #define TRANS_LOCAL_NAMED_INDEX		11
 /* 12 used to be ISC, but that's gone. */
-#define TRANS_LOCAL_SCO_INDEX		13
+/* 13 used to be SCO, but that's gone. */
 #define TRANS_SOCKET_INET6_INDEX	14
 #define TRANS_LOCAL_PIPE_INDEX		15
 
@@ -100,18 +100,12 @@ Xtransport_table Xtransports[] = {
 #endif /* UNIXCONN */
 #if defined(LOCALCONN)
     { &TRANS(LocalFuncs),	TRANS_LOCAL_LOCAL_INDEX },
-#ifndef __sun
-    { &TRANS(PTSFuncs),		TRANS_LOCAL_PTS_INDEX },
-#endif /* __sun */
 #if defined(SVR4) || defined(__SVR4)
     { &TRANS(NAMEDFuncs),	TRANS_LOCAL_NAMED_INDEX },
 #endif
 #ifdef __sun
     { &TRANS(PIPEFuncs),	TRANS_LOCAL_PIPE_INDEX },
 #endif /* __sun */
-#if defined(__SCO__) || defined(__UNIXWARE__)
-    { &TRANS(SCOFuncs),		TRANS_LOCAL_SCO_INDEX },
-#endif /* __SCO__ || __UNIXWARE__ */
 #endif /* LOCALCONN */
 };
 
@@ -189,10 +183,7 @@ TRANS(SelectTransport) (const char *protocol)
     return NULL;
 }
 
-#ifndef TEST_t
-static
-#endif /* TEST_t */
-int
+static int
 TRANS(ParseAddress) (const char *address,
                      char **protocol, char **host, char **port)
 
@@ -211,13 +202,35 @@ TRANS(ParseAddress) (const char *address,
      * If a "::" is found then assume DNET.
      */
 
-    char	*mybuf, *tmpptr;
-    const char	*_protocol;
+    char	*mybuf, *tmpptr = NULL;
+    const char	*_protocol = NULL;
     char	*_host, *_port;
     char	hostnamebuf[256];
     int		_host_len;
 
     prmsg (3,"ParseAddress(%s)\n", address);
+
+    /* First, check for AF_UNIX socket paths */
+    if (address[0] == '/') {
+        _protocol = "local";
+        _host = "";
+        _port = address;
+    } else
+#ifdef HAVE_LAUNCHD
+    /* launchd sockets will look like 'local//tmp/launch-XgkNns/:0' */
+    if(!strncmp(address,"local//",7)) {
+        _protocol="local";
+        _host="";
+        _port=address+6;
+    } else
+#endif
+    if (!strncmp(address, "unix:", 5)) {
+        _protocol = "local";
+        _host = "";
+        _port = address + 5;
+    }
+    if (_protocol)
+        goto done_parsing;
 
     /* Copy the string so it can be changed */
 
@@ -256,7 +269,7 @@ TRANS(ParseAddress) (const char *address,
 	{
 	    /* There is a hostname specified */
 	    _protocol = "tcp";
-	    mybuf = tmpptr;	/* reset to the begining of the host ptr */
+	    mybuf = tmpptr;	/* reset to the beginning of the host ptr */
 	}
     }
     else
@@ -340,15 +353,7 @@ TRANS(ParseAddress) (const char *address,
      */
 #endif
 
-#ifdef HAVE_LAUNCHD
-    /* launchd sockets will look like 'local//tmp/launch-XgkNns/:0' */
-    if(address != NULL && strlen(address)>8 && (!strncmp(address,"local//",7))) {
-      _protocol="local";
-      _host="";
-      _port=address+6;
-    }
-#endif
-
+done_parsing:
     /*
      * Now that we have all of the components, allocate new
      * string space for them.
@@ -646,7 +651,7 @@ TRANS(SetOption) (XtransConnInfo ciptr, int option, int arg)
 	    break;
 	case 1: /* Set to non-blocking mode */
 
-#if defined(O_NONBLOCK) && !defined(SCO325)
+#if defined(O_NONBLOCK)
 	    ret = fcntl (fd, F_GETFL, 0);
 	    if (ret != -1)
 		ret = fcntl (fd, F_SETFL, ret | O_NONBLOCK);
@@ -1004,7 +1009,7 @@ TRANS(GetConnectionNumber) (XtransConnInfo ciptr)
 /*
  * These functions are really utility functions, but they require knowledge
  * of the internal data structures, so they have to be part of the Transport
- * Independant API.
+ * Independent API.
  */
 
 #ifdef TRANS_SERVER
@@ -1179,6 +1184,9 @@ TRANS(MakeAllCOTSServerListeners) (const char *port, int *partial,
 
 	if ((status = TRANS(CreateListener (ciptr, port, flags))) < 0)
 	{
+            if (*partial != 0)
+		continue;
+
 	    if (status == TRANS_ADDR_IN_USE)
 	    {
 		/*
@@ -1318,7 +1326,7 @@ static int TRANS(WriteV) (XtransConnInfo ciptr, struct iovec *iov, int iovcnt)
 #endif /* WIN32 */
 
 
-#if defined(_POSIX_SOURCE) || defined(USG) || defined(SVR4) || defined(__SVR4) || defined(__SCO__)
+#if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__SVR4)
 #ifndef NEED_UTSNAME
 #define NEED_UTSNAME
 #endif

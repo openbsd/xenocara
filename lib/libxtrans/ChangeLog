@@ -1,3 +1,203 @@
+commit 3b3a3bd75d86aec78f6ef893b198c3efc378bc64
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Jun 2 17:29:41 2023 -0700
+
+    xtrans 1.5.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 232a11a947564762689e63c3a6603d3f956f696d
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Thu Dec 15 14:48:13 2022 -0500
+
+    DISPLAY starting with unix: or / is always a socket path
+    
+    Do not consider anything else in this case.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit b898f415e7c31de5b4beb06b22a5498049852e53
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Thu Dec 15 14:43:37 2022 -0500
+
+    Allow full paths to sockets on non-macOS
+    
+    This adds explicit checks for addresses that start with / or unix: and
+    uses full paths in this case.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit e24adec1203cd25423ab2835a5be4f6b828b72a5
+Author: Demi Marie Obenour <demiobenour@gmail.com>
+Date:   Thu Dec 17 03:28:45 2020 +0000
+
+    Remove client-side abstract socket support
+    
+    CVE-2020-25697 and the Flatpak documentation show that clients using
+    abstract sockets without mutual authentication is unsafe.
+    TRANS_ABSTRACT remains supported, but it is now a no-op on the client
+    side.  Abstract sockets are still supported for servers, as the X server
+    authenticates the client via other methods.
+    
+    Signed-off-by: Demi Marie Obenour <demiobenour@gmail.com>
+
+commit 9d77996f9f972da63c06099fd8c0f0529159b98f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:33:29 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9ae32feef793082a302e65d31514a958604c761d
+Author: Olivier Fourdan <ofourdan@redhat.com>
+Date:   Tue Jun 25 14:59:59 2019 +0200
+
+    Allow partial connection to succeed
+    
+    Xwayland can optionally be socket-activated by the Wayland compositor,
+    in which case it would use only the sockets provided by the compositor.
+    
+    However, that prevents other transport protocols from working, because
+    when it's given a socket from the Wayland compositor, it would disable
+    all other connections and rely solely on the given socket.
+    
+    Change `MakeAllCOTSServerListeners` to allow for partial connections so
+    that if `partial` is set to a non-zero value by the caller, we do not
+    bail out in the address is already in use.
+    
+    That allows to continue trying with other protocols even if the local
+    connection fails (as this is already handled by the socket from the
+    Wayland compositor).
+    
+    Related: https://gitlab.freedesktop.org/xorg/xserver/issues/817
+    Signed-off-by: Olivier Fourdan <ofourdan@redhat.com>
+
+commit c761c6505d49e8381a3eae94f2e5e118cbdf6487
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Jan 29 12:54:26 2014 -0800
+
+    Use font server ErrorF/VErrorF instead of private versions
+    
+    XTrans creates custom ErrorF/VErrorF functions when the including
+    project doesn't provide them, however the test for that is weak and xtrans
+    ends up using the private versions for the font server as well.
+    
+    This means that all xtrans error messages will not be included in the
+    font server log. It also causes redefinition warnings when building
+    the font server (which is how this problem was identified).
+    
+    However, the font server doesn't currently provide a VErrorF function,
+    so instead of just always relying on the font server to provide these
+    functions, this patch uses a new TRANS_HAS_ERRORF define to select
+    whether the project-provided or internal versions will be used. A
+    patch to the font server that adds VErrorF and defines
+    TRANS_HAS_ERRORF will be required to fix this bug.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 8c0f5228e75aa949963aa8d27dcfa2648db2e197
+Author: Keith Packard <keithp@keithp.com>
+Date:   Wed Jan 29 12:54:25 2014 -0800
+
+    move is_numeric to Xtranssock.c and only define for TCPCONN or TRANS_REOPEN
+    
+    Don't define this function unless it is actually going to be used.
+    
+    Signed-off-by: Keith Packard <keithp@keithp.com>
+
+commit 3309c75906a56de86607f59481304b3a2812162f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 10 09:18:15 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c069ede3c97f543d9bbe9ed67e56c74142921cc5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 10 09:15:11 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 16a015524f3820f969362c2d10a3664999a12c3b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue May 10 09:11:07 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7898badde44cf518da6879c2622b6db9cd709c7d
+Author: Ray Strode <rstrode@redhat.com>
+Date:   Fri May 6 14:23:59 2022 -0400
+
+    Automatically disable inet6 transport if ipv6 is disabled on machine
+    
+    If a machine is booted with ipv6.disable=1, trying to bind to an
+    AF_INET6 socket will fail with AFNOSUPPORT.
+    
+    The tcp transport automatically falls back to ipv4 in this case, but
+    the more specific inet6 transport just fails.
+    
+    This failure leads to MakeAllCOTSServerListeners returning a partial
+    success.
+    
+    Unfortunately, the X server can't really contiue with partial successes
+    from this function if -displayfd is in use, since that would, in other
+    cases, potentially lead to the -displayfd electing a display number that
+    is potentially partially in use by a rogue program.
+    
+    This commit addresses the issue by automatically disabling transports
+    when they fail with AFNOSUPPORT, leading them to get ignored, rather than
+    proceeding and ultimately returning from MakeAllCOTSServerListerns with
+    partial=TRUE.
+
+commit 3b5df889f58a99980a35a7b4a18eb4e7d2abeac4
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Oct 9 14:05:47 2019 -0400
+
+    TEST_t is never defined
+    
+    This didn't even correspond to any of the testing protocol extensions!
+    Apparently there used to be some test programs in xtrans itself, and
+    they've not been a thing since 1994:
+    
+    https://cgit.freedesktop.org/~alanc/xc-historical/commit/?id=73bf4832c427855b2ce111d47dd1f181564b8d06
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d0d471579ca69365d4cd5a548ce6fc8b4662d467
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Wed Sep 25 11:09:52 2019 -0400
+
+    Remove non-Solaris SysV support
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 521682b8b72e3ad50c9ae66a9b35249100188eb2
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 24 21:29:46 2019 -0400
+
+    Delete SCO support
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 3f8b27a9dff68792fdc448782459a6d41cade9ff
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Sep 24 19:48:17 2019 -0400
+
+    unifdef USG and NCR
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit c4262efc9688e495261d8b23a12f956ab38e006f
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sat Mar 16 14:25:35 2019 -0700
@@ -398,7 +598,7 @@ Date:   Wed Jul 10 16:29:12 2013 +0100
     Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 
 commit e1e6121a1638d43d9929589b4723da2b38cb6b44
-Author: Łukasz Stelmach <l.stelmach@samsung.com>
+Author: Łukasz Stelmach  <l.stelmach@samsung.com>
 Date:   Mon Nov 25 11:11:54 2013 +0100
 
     Enable systemd socket activation
@@ -419,7 +619,7 @@ Date:   Mon Nov 25 11:11:54 2013 +0100
     Acked-by: Peter Hutterer <peter.hutterer@who-t.net>
 
 commit b895d45e225dd3d1bf9d598774d3ae4f29fcbc25
-Author: Łukasz Stelmach <l.stelmach@samsung.com>
+Author: Łukasz Stelmach  <l.stelmach@samsung.com>
 Date:   Thu Nov 28 12:57:21 2013 +0100
 
     Define TRANS_RECEIVED flag for transports
@@ -634,7 +834,7 @@ Date:   Fri Jan 18 16:47:30 2013 -0800
     Signed-off-by: Keith Packard <keithp@keithp.com>
 
 commit f6a161f2a003f4da0a2e414b4faa0ee0de0c01f0
-Author: Łukasz Stelmach <l.stelmach@samsung.com>
+Author: Łukasz Stelmach  <l.stelmach@samsung.com>
 Date:   Tue Jul 9 16:24:43 2013 +0200
 
     Add const qualifier to unix_nolisten
@@ -1318,7 +1518,7 @@ Date:   Thu Jan 14 21:11:43 2010 -0800
     Signed-off-by: Alan Coopersmith <alan.coopersmith@sun.com>
 
 commit dab2bcdaf60977643ec55d71a81e67c1e3a162a9
-Author: Rémi Cardona <remi@gentoo.org>
+Author: Rémi Cardona  <remi@gentoo.org>
 Date:   Thu Dec 17 08:31:20 2009 +0100
 
     require autoconf 2.60 because of $(docdir) use
@@ -1776,7 +1976,7 @@ Date:   Tue Apr 15 12:32:35 2008 -0700
     <http://bugs.opensolaris.org/bugdatabase/view_bug.do?bug_id=6688467>
 
 commit 556a351de83fc6f401b02213dae95731553c216d
-Author: Loïc Minier <lool@dooz.org>
+Author: Loïc Minier  <lool@dooz.org>
 Date:   Mon Mar 24 15:38:27 2008 -0400
 
     Bug #10489: Don't retry unix socket connect()s on ENOENT.
@@ -2193,7 +2393,7 @@ Date:   Sat Jul 2 18:00:50 2005 +0000
     Make includedir=@includedir@ in xtrans.pc.in, not with /X11/Xtrans.
 
 commit b413f4c1dddc467014adf16bfe31627e65508c12
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed Jun 22 22:46:39 2005 +0000
 
     Apply these patches from Theo van Klaveren:
@@ -2209,7 +2409,7 @@ Date:   Wed Jun 22 22:36:51 2005 +0000
         platforms that don't define it in the system headers.
 
 commit f5a6a188407cec6e567070d192aac2db72cacd92
-Author: Kristian Høgsberg <krh@redhat.com>
+Author: Kristian Høgsberg  <krh@redhat.com>
 Date:   Wed Jun 22 01:21:24 2005 +0000
 
     Apply patch by Alan Coopersmith from #1605 to fix address resolution of
@@ -2237,7 +2437,7 @@ Date:   Wed Jun 8 06:24:53 2005 +0000
         prefix's aclocal dir is not in a default path for system aclocal.
 
 commit 58c7263ca5b64a21dc101bb4b24201ba67a8d068
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 25 21:47:56 2005 +0000
 
     - Add FSlib to symlink.sh
@@ -2284,7 +2484,7 @@ Date:   Thu May 19 00:10:08 2005 +0000
     Require automake 1.7 in AM_INIT_AUTOMAKE
 
 commit daa7168e9e0cdff5eb06b0c9a7155f8880681fff
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri May 13 22:53:43 2005 +0000
 
     - For now put xtrans in X11/Xtrans/X11, since libX11 is looking for it in
@@ -2298,32 +2498,32 @@ Date:   Fri May 13 22:53:43 2005 +0000
     - Conditionally include config.h in Xlib source
 
 commit d11d95fa4faec21655625b7de27d8a71c08ffe2d
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri May 13 15:16:43 2005 +0000
 
     Dummy changes to ChangeLog/configure.ac to see if that fixes group
         permissions
 
 commit b8a8c31f63a543d1c1c6bb4ae26a4019b4400edc
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri May 13 15:04:52 2005 +0000
 
     Re-adding ChangeLog and configure.ac files
 
 commit 798c08054ce5a8238f35fee3e69218ece74441fa
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri May 13 15:02:19 2005 +0000
 
     Temporarily remove ChangeLog configure.ac
 
 commit b3da86ae588df14dde916674a4f6593edf1964f7
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Fri May 13 14:43:37 2005 +0000
 
     Dummy commit to see if that fixes the group execute permissions
 
 commit ea04267da780c2c3f08a710d15468565897420c4
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu May 12 16:12:34 2005 +0000
 
     Make xtrans install in $(includedir)/X11/Xtrans. Remove all references to
@@ -2338,7 +2538,7 @@ Date:   Thu May 12 02:49:16 2005 +0000
     Add Xtransdef.h.in as an AM_CONFIG_HEADER.
 
 commit d628bf24f2bf0d017394b6961784d7ac5b33f46b
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Wed May 11 22:44:52 2005 +0000
 
     lib/Xau:

@@ -98,7 +98,7 @@ from The Open Group.
  * to avoid a race condition. JKJ (6/5/97)
  */
 
-# if defined(_POSIX_SOURCE) || defined(USG) || defined(SVR4) || defined(__SVR4) || defined(__SCO__)
+# if defined(_POSIX_SOURCE) || defined(SVR4) || defined(__SVR4)
 #  ifndef NEED_UTSNAME
 #   define NEED_UTSNAME
 #  endif
@@ -297,7 +297,9 @@ typedef struct _Xtransport_table {
 #define TRANS_DISABLED	(1<<2)	/* Don't open this one */
 #define TRANS_NOLISTEN  (1<<3)  /* Don't listen on this one */
 #define TRANS_NOUNLINK	(1<<4)	/* Don't unlink transport endpoints */
-#define TRANS_ABSTRACT	(1<<5)	/* Use abstract sockets if available */
+#define TRANS_ABSTRACT	(1<<5)	/* This previously meant that abstract sockets should be used available.  For security
+                                 * reasons, this is now a no-op on the client side, but it is still supported for servers.
+                                 */
 #define TRANS_NOXAUTH	(1<<6)	/* Don't verify authentication (because it's secure some other way at the OS layer) */
 #define TRANS_RECEIVED	(1<<7)  /* The fd for this has already been opened by someone else. */
 
@@ -351,11 +353,6 @@ static int TRANS(WriteV)(
 
 #endif /* WIN32 */
 
-
-static int is_numeric (
-    const char *	/* str */
-);
-
 #ifdef TRANS_SERVER
 static int trans_mkdir (
     const char *,	/* path */
@@ -375,10 +372,11 @@ static int trans_mkdir (
 #include <stdarg.h>
 
 /*
- * The X server provides ErrorF() & VErrorF(), for other software that uses
- * xtrans, we provide our own simple versions.
+ * The X server and the font server both provide ErrorF() & VErrorF(). For
+ * other software that uses xtrans, we provide our own simple
+ * versions.
  */
-# if defined(XSERV_t) && defined(TRANS_SERVER)
+# if (defined(XSERV_t) || defined(TRANS_HAS_ERRORF)) && defined(TRANS_SERVER)
 #  include "os.h"
 # else
 static inline void _X_ATTRIBUTE_PRINTF(1, 0)

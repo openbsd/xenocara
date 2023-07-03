@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2002, Oracle and/or its affiliates.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -141,7 +141,7 @@ from the copyright holders.
 /* others don't need this */
 #define SocketInitOnce() /**/
 
-#ifdef linux
+#ifdef __linux__
 #define HAVE_ABSTRACT_SOCKETS
 #endif
 
@@ -196,6 +196,20 @@ static Sockettrans2dev Sockettrans2devtab[] = {
 static int TRANS(SocketINETClose) (XtransConnInfo ciptr);
 #endif
 
+#if defined(TCPCONN) || defined(TRANS_REOPEN)
+static int
+is_numeric (const char *str)
+{
+    int i;
+
+    for (i = 0; i < (int) strlen (str); i++)
+	if (!isdigit (str[i]))
+	    return (0);
+
+    return (1);
+}
+#endif
+
 #ifdef UNIXCONN
 
 
@@ -227,7 +241,7 @@ static int TRANS(SocketINETClose) (XtransConnInfo ciptr);
 
 #if defined HAVE_SOCKLEN_T || (defined(IPv6) && defined(AF_INET6))
 # define SOCKLEN_T socklen_t
-#elif defined(SVR4) || defined(__SVR4) || defined(__SCO__)
+#elif defined(SVR4) || defined(__SVR4)
 # define SOCKLEN_T size_t
 #else
 # define SOCKLEN_T int
@@ -611,12 +625,19 @@ TRANS(SocketOpenCOTSServer) (Xtransport *thistrans, const char *protocol,
 	    break;
     }
     if (i < 0) {
-	if (i == -1)
-	    prmsg (1,"SocketOpenCOTSServer: Unable to open socket for %s\n",
-		   thistrans->TransName);
-	else
+	if (i == -1) {
+		if (errno == EAFNOSUPPORT) {
+			thistrans->flags |= TRANS_NOLISTEN;
+			prmsg (1,"SocketOpenCOTSServer: Socket for %s unsupported on this system.\n",
+			       thistrans->TransName);
+		} else {
+			prmsg (1,"SocketOpenCOTSServer: Unable to open socket for %s\n",
+			       thistrans->TransName);
+		}
+	} else {
 	    prmsg (1,"SocketOpenCOTSServer: Unable to determine socket type for %s\n",
 		   thistrans->TransName);
+	}
 	return NULL;
     }
 
@@ -990,7 +1011,7 @@ TRANS(SocketUNIXCreateListener) (XtransConnInfo ciptr, const char *port,
 	return TRANS_CREATE_LISTENER_FAILED;
     }
 
-#if (defined(BSD44SOCKETS) || defined(__UNIXWARE__))
+#if defined(BSD44SOCKETS)
     sockname.sun_len = strlen(sockname.sun_path);
 #endif
 
@@ -1068,7 +1089,7 @@ TRANS(SocketUNIXResetListener) (XtransConnInfo ciptr)
     if (!abstract && (
 	stat (unsock->sun_path, &statb) == -1 ||
         ((statb.st_mode & S_IFMT) !=
-#if defined(NCR) || defined(SCO325) || !defined(S_IFSOCK)
+#if !defined(S_IFSOCK)
 	  		S_IFIFO
 #else
 			S_IFSOCK
@@ -1818,12 +1839,6 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr,
     struct sockaddr_un	sockname;
     SOCKLEN_T		namelen;
 
-
-    int abstract = 0;
-#ifdef HAVE_ABSTRACT_SOCKETS
-    abstract = ciptr->transptr->flags & TRANS_ABSTRACT;
-#endif
-
     prmsg (2,"SocketUNIXConnect(%d,%s,%s)\n", ciptr->fd, host, port);
 
     /*
@@ -1859,12 +1874,12 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr,
 
     sockname.sun_family = AF_UNIX;
 
-    if (set_sun_path(port, UNIX_PATH, sockname.sun_path, abstract) != 0) {
+    if (set_sun_path(port, UNIX_PATH, sockname.sun_path, 0) != 0) {
 	prmsg (1, "SocketUNIXConnect: path too long\n");
 	return TRANS_CONNECT_FAILED;
     }
 
-#if (defined(BSD44SOCKETS) || defined(__UNIXWARE__))
+#if defined(BSD44SOCKETS)
     sockname.sun_len = strlen (sockname.sun_path);
 #endif
 
@@ -1874,16 +1889,6 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr,
     namelen = strlen (sockname.sun_path) + offsetof(struct sockaddr_un, sun_path);
 #endif
 
-
-
-    /*
-     * Adjust the socket path if using abstract sockets.
-     * Done here because otherwise all the strlen() calls above would fail.
-     */
-
-    if (abstract) {
-	sockname.sun_path[0] = '\0';
-    }
 
     /*
      * Do the connect()
@@ -1918,15 +1923,7 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr,
 		return TRANS_IN_PROGRESS;
 	    else if (olderrno == EINTR)
 		return TRANS_TRY_CONNECT_AGAIN;
-	    else if (olderrno == ENOENT || olderrno == ECONNREFUSED) {
-		/* If opening as abstract socket failed, try again normally */
-		if (abstract) {
-		    ciptr->transptr->flags &= ~(TRANS_ABSTRACT);
-		    return TRANS_TRY_CONNECT_AGAIN;
-		} else {
-		    return TRANS_CONNECT_FAILED;
-		}
-	    } else {
+	    else {
 		prmsg (2,"SocketUNIXConnect: Can't connect: errno = %d\n",
 		       EGET());
 
@@ -1947,9 +1944,6 @@ TRANS(SocketUNIXConnect) (XtransConnInfo ciptr,
 	"SocketUNIXCreateListener: Can't allocate space for the addr\n");
         return TRANS_CONNECT_FAILED;
     }
-
-    if (abstract)
-	sockname.sun_path[0] = '@';
 
     ciptr->family = AF_UNIX;
     ciptr->addrlen = namelen;

@@ -1,5 +1,5 @@
 dnl
-dnl Copyright (c) 2005, Oracle and/or its affiliates. All rights reserved.
+dnl Copyright (c) 2005, Oracle and/or its affiliates.
 dnl
 dnl Permission is hereby granted, free of charge, to any person obtaining a
 dnl copy of this software and associated documentation files (the "Software"),
@@ -122,7 +122,7 @@ AC_DEFUN([XTRANS_CONNECTION_FLAGS],[
 	XTRANS_TCP_FLAGS
  fi
  [case $host_os in
-	solaris*|sco*|sysv4*)	localdef="yes" ;;
+	solaris*)		localdef="yes" ;;
 	*)			localdef="no"  ;;
  esac]
  AC_ARG_ENABLE(local-transport,
