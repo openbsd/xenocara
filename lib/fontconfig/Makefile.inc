@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile.inc,v 1.3 2016/03/13 20:23:35 matthieu Exp $
+#	$OpenBSD: Makefile.inc,v 1.4 2023/07/03 13:18:53 matthieu Exp $
 
 X11BASE ?=	/usr/X11R6
 
@@ -6,7 +6,7 @@ FC_CACHEDIR =	/var/cache/fontconfig
 BASECONFIGDIR =	/etc/fonts
 MANDIR =	${X11BASE}/man/man
 
-CFLAGS +=	-Wall -Wpointer-arith -Wstrict-prototypes \
+CFLAGS +=	--std=c99 -Wall -Wpointer-arith -Wstrict-prototypes \
 		-Wmissing-prototypes -Wmissing-declarations \
 		-Wnested-externs -fno-strict-aliasing
 CFLAGS +=	-DHAVE_CONFIG_H

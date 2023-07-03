@@ -1,11 +1,55 @@
                               Fontconfig
              Font configuration and customization library
-                             Version 2.14
-                              2022-03-31
+                            Version 2.14.1
+                              2022-10-21
 
 
 Check INSTALL for compilation and installation instructions.
 Report bugs to https://gitlab.freedesktop.org/fontconfig/fontconfig/issues/new.
+
+2.14.1
+
+Akira TAGOH (6):
+      Use the latest stable release image for CI for mingw
+      Real fix of 91114d18c
+      Fix test cases for wrong use of remap-dir
+      Add back sort command
+      Add config files to enable/disable antialias
+      Enable 10-sub-pixel-rgb.conf by default
+
+Alan Coopersmith (1):
+      Bump the cache version to 8 in doc/fontconfig-user.sgml
+
+Jeremy Huddleston Sequoia (3):
+      meson: Fix linking libexpat on darwin
+      meson: Use fc_templatedir and fc_baseconfigdir are used when installing configs
+      meson: Use fc_configdir where appropriate during build
+
+NorwayFun (4):
+      add Georgian
+      add Georgian
+      po: add Georgian translation
+      po: Add Georgian translation
+
+Sam James (1):
+      configure.ac: allow disabling docbook
+
+Taylor R Campbell (1):
+      Avoid misuse of ctype(3)
+
+Tim-Philipp Müller (7):
+      meson: add 'default-hinting' option
+      meson: add 'default-fonts-dirs' option
+      meson: add 'additional-fonts-dirs' option
+      meson: add 'cache-dir' option
+      meson: add 'template-dir', 'baseconfig-dir', 'config-dir', and 'xml-dir' options
+      ci: update windows image to a 2022-server based one
+      ci: update macOS image
+
+Xavier Claessens (3):
+      meson: Do not run fc-cache when installing into a DESTDIR
+      meson: Fix configuration warnings
+      link_confs.py: Fix prepending DESTDIR to absolute path
 
 2.14
 
@@ -1661,7 +1705,7 @@ Behdad Esfahbod (119):
       [doc] Add const decorator for FcPatternDuplicate()
       Add FcPatternFilter() (#13016)
       [doc] Document that a zero rescanInterval disables automatic checks (#17103)
-      Get rid of $Id: README,v 1.6 2022/10/16 15:41:25 matthieu Exp $ tags
+      Get rid of $Id: README,v 1.7 2023/07/03 13:18:52 matthieu Exp $ tags
       [doc] Fix signature of FcConfigHome()
       Fix docs re 'orig' argument of FcPatternBuild and family
       Update sr.orth to actul subset of Cyrillic used by Serbian (#17208)

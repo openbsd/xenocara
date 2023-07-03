@@ -177,17 +177,14 @@ $FCCACHE "$FONTDIR"
 sleep 1
 ls -l "$CACHEDIR" > out1
 TESTTMPDIR=$(mktemp -d "$TMPDIR"/fontconfig.XXXXXXXX)
-sed "s!@FONTDIR@!$TESTTMPDIR/fonts!
+# Once font dir is remapped, we could use $FONTDIR as different one in theory.
+# but we don't use it here and to avoid duplicate entries, set the non-existing
+# directory here.
+sed "s!@FONTDIR@!$FONTDIR/a!
 s!@REMAPDIR@!<remap-dir as-path="'"'"$FONTDIR"'"'">$TESTTMPDIR/fonts</remap-dir>!
 s!@CACHEDIR@!$TESTTMPDIR/cache.dir!" < "$TESTDIR"/fonts.conf.in > bind-fonts.conf
-echo "$BWRAP --bind / / --bind \"$CACHEDIR\" \"$TESTTMPDIR\"/cache.dir --bind \"$FONTDIR\" \"$TESTTMPDIR\"/fonts --bind .. \"$TESTTMPDIR\"/build --dev-bind /dev /dev --setenv FONTCONFIG_FILE \"$TESTTMPDIR\"/build/test/bind-fonts.conf \"$TESTTMPDIR\"/build/fc-match/fc-match\"$EXEEXT\" -f \"%{file}\n\" \":foundry=Misc\" > xxx"
-ls $CACHEDIR
-ls $TESTTMPDIR
-ls $FONTDIR
 $BWRAP --bind / / --bind "$CACHEDIR" "$TESTTMPDIR"/cache.dir --bind "$FONTDIR" "$TESTTMPDIR"/fonts --bind .. "$TESTTMPDIR"/build --dev-bind /dev /dev --setenv FONTCONFIG_FILE "$TESTTMPDIR"/build/test/bind-fonts.conf "$TESTTMPDIR"/build/fc-match/fc-match"$EXEEXT" -f "%{file}\n" ":foundry=Misc" > xxx
-echo "$BWRAP --bind / / --bind \"$CACHEDIR\" \"$TESTTMPDIR\"/cache.dir --bind \"$FONTDIR\" \"$TESTTMPDIR\"/fonts --bind .. \"$TESTTMPDIR\"/build --dev-bind /dev /dev --setenv FONTCONFIG_FILE \"$TESTTMPDIR\"/build/test/bind-fonts.conf \"$TESTTMPDIR\"/build/test/test-bz106618\"$EXEEXT\" | sort > flist1"
 $BWRAP --bind / / --bind "$CACHEDIR" "$TESTTMPDIR"/cache.dir --bind "$FONTDIR" "$TESTTMPDIR"/fonts --bind .. "$TESTTMPDIR"/build --dev-bind /dev /dev --setenv FONTCONFIG_FILE "$TESTTMPDIR"/build/test/bind-fonts.conf "$TESTTMPDIR"/build/test/test-bz106618"$EXEEXT" | sort > flist1
-echo "$BWRAP --bind / / --bind \"$CACHEDIR\" \"$TESTTMPDIR\"/cache.dir --bind \"$FONTDIR\" \"$TESTTMPDIR\"/fonts --bind .. \"$TESTTMPDIR\"/build --dev-bind /dev /dev find \"$TESTTMPDIR\"/fonts/ -type f -name '*.pcf' | sort > flist2"
 $BWRAP --bind / / --bind "$CACHEDIR" "$TESTTMPDIR"/cache.dir --bind "$FONTDIR" "$TESTTMPDIR"/fonts --bind .. "$TESTTMPDIR"/build --dev-bind /dev /dev find "$TESTTMPDIR"/fonts/ -type f -name '*.pcf' | sort > flist2
 ls -l "$CACHEDIR" > out2
 if cmp out1 out2 > /dev/null ; then : ; else
@@ -279,7 +276,10 @@ sleep 1
 (cd "$CACHEDIR"; ls -1 --color=no ./*cache*) > out1
 TESTTMPDIR=$(mktemp -d "$TMPDIR"/fontconfig.XXXXXXXX)
 mkdir -p "$TESTTMPDIR"/cache.dir
-sed "s!@FONTDIR@!$TESTTMPDIR/fonts!
+# Once font dir is remapped, we could use $FONTDIR as different one in theory.
+# but we don't use it here and to avoid duplicate entries, set the non-existing
+# directory here.
+sed "s!@FONTDIR@!$FONTDIR/a!
 s!@REMAPDIR@!<remap-dir as-path="'"'"$FONTDIR"'"'">$TESTTMPDIR/fonts</remap-dir>!
 s!@CACHEDIR@!$TESTTMPDIR/cache.dir!" < "$TESTDIR"/fonts.conf.in > bind-fonts.conf
 $BWRAP --bind / / --bind "$FONTDIR" "$TESTTMPDIR"/fonts --bind .. "$TESTTMPDIR"/build --dev-bind /dev /dev --setenv FONTCONFIG_FILE "$TESTTMPDIR"/build/test/bind-fonts.conf "$TESTTMPDIR"/build/fc-cache/fc-cache"$EXEEXT" "$TESTTMPDIR"/fonts
