@@ -1,3 +1,35 @@
+commit f7ad4c3164cf673bc30a2a038beb7cdb45ee3e94
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 12 11:07:08 2022 -0800
+
+    makedepend 1.0.8
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 654f6355d501153fe1fbdbc073cb72fd6355e194
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 5 15:48:17 2022 -0800
+
+    Bug #2: fix regression introduced by fix for bug #1
+    
+    Refactor code to find the full file path before comparing against
+    existing items in the list so that we stop adding duplicate entries
+    for all the files in the system include path and with larger amounts
+    of code hitting the MAXFILES limit.
+    
+    Fixes: 3dc64b0 ("Add test case for bug #1 + proposed fix.")
+    Closes: #2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a17093a3f99f21bb999f3e0f9a45340eeed98da8
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 5 10:44:51 2022 -0800
+
+    man page: add line breaks in Synopsis section
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit d62a9e49c6b83f05c5692bbe4b80c485d08ecfd3
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Fri Oct 28 19:28:57 2022 -0700

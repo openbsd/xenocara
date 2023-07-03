@@ -37,7 +37,9 @@ makedepend \- create dependencies in makefiles
 .BI \-I includedir
 ] [
 .BI \-Y includedir
-] [
+]
+.br
+    [
 .B \-a
 ] [
 .BI \-f makefile
@@ -45,7 +47,9 @@ makedepend \- create dependencies in makefiles
 .BI \-include \ file
 ] [
 .BI \-o objsuffix
-] [
+]
+.br
+    [
 .BI \-p objprefix
 ] [
 .BI \-s string
@@ -55,14 +59,15 @@ makedepend \- create dependencies in makefiles
 .B \-v
 ] [
 .B \-m
-] [
+]
+.br
+    [
 \-\^\-
 .I otheroptions
 \-\^\-
 ]
 .I sourcefile
 \&.\|.\|.
-.br
 .SH DESCRIPTION
 The
 .B makedepend

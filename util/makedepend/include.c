@@ -222,59 +222,16 @@ inc_clean (void)
 	}
 }
 
-struct inclist *
-inc_path(const char *file, const char *include, int type)
+/*
+ * Return full path for the "include" file of the given "type",
+ * which may be found relative to the source file "file".
+ */
+static const char *
+find_full_inc_path(const char *file, const char *include, int type)
 {
 	static char		path[ BUFSIZ ];
 	register const char	**pp, *p;
-	register struct inclist	*ip;
 	struct stat		st;
-
-	/*
-	 * Check all previously found include files for a path that
-	 * has already been expanded.
-	 */
-	if ((type == INCLUDE) || (type == INCLUDEDOT))
-		inclistnext = inclist;
-	ip = inclistnext;
-
-	for (; ip->i_file; ip++) {
-		if ((strcmp(ip->i_incstring, include) == 0) &&
-		    !(ip->i_flags & INCLUDED_SYM)) {
-			/*
-			 * Same filename but same file ?
-			 */
-			char r_include[PATHMAX+1];
-			char r_saved_path[PATHMAX+1];
-			char* ptr;
-			ptr = realpath(include, r_include);
-			ptr = realpath(ip->i_file, r_saved_path);
-			if (!strcmp(r_include, r_saved_path)) {
-				inclistnext = ip + 1;
-				return ip;
-			}
-
-			/*
-			 * Check if we have a header in the same dir
-			 */
-			for (p=file+strlen(file); p>file; p--)
-				if (*p == '/')
-					break;
-			if (p == file) {
-				strcpy(path, include);
-			} else {
-				strncpy(path, file, (p-file) + 1);
-				path[ (p-file) + 1 ] = '\0';
-				strcpy(path + (p-file) + 1, include);
-			}
-			remove_dotdot(path);
-			ptr = realpath(path, r_include);
-			if (!strcmp(r_include, r_saved_path)) {
-				inclistnext = ip + 1;
-				return ip;
-			}
-		}
-	}
 
 	if (inclistnext == inclist) {
 		/*
@@ -285,7 +242,7 @@ inc_path(const char *file, const char *include, int type)
 		    (type == INCLUDENEXTDOT) ||
 		    (*include == '/')) {
 			if (stat(include, &st) == 0 && !S_ISDIR(st.st_mode))
-				return newinclude(include, include);
+				return include;
 			if (show_where_not)
 				warning1("\tnot in %s\n", include);
 		}
@@ -307,7 +264,7 @@ inc_path(const char *file, const char *include, int type)
 			}
 			remove_dotdot(path);
 			if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode))
-				return newinclude(path, include);
+				return path;
 			if (show_where_not)
 				warning1("\tnot in %s\n", path);
 		}
@@ -326,11 +283,51 @@ inc_path(const char *file, const char *include, int type)
 		remove_dotdot(path);
 		if (stat(path, &st) == 0 && !S_ISDIR(st.st_mode)) {
 			includedirsnext = pp + 1;
-			return newinclude(path, include);
+			return path;
 		}
 		if (show_where_not)
 			warning1("\tnot in %s\n", path);
 	}
 
 	return NULL;
+}
+
+struct inclist *
+inc_path(const char *file, const char *include, int type)
+{
+	const char	*fp;
+	struct inclist	*ip;
+	char r_include[PATHMAX+1];
+
+	/*
+	 * Check all previously found include files for a path that
+	 * has already been expanded.
+	 */
+	if ((type == INCLUDE) || (type == INCLUDEDOT))
+		inclistnext = inclist;
+	ip = inclistnext;
+
+	fp = find_full_inc_path(file, include, type);
+	if (fp == NULL)
+		return NULL;
+	if (realpath(fp, r_include) == NULL)
+		return NULL;
+
+	for (; ip->i_file; ip++) {
+		if ((strcmp(ip->i_incstring, include) == 0) &&
+		    !(ip->i_flags & INCLUDED_SYM)) {
+			/*
+			 * Same filename but same file ?
+			 */
+			char r_saved_path[PATHMAX+1];
+			if (realpath(ip->i_file, r_saved_path) == NULL)
+				continue;
+			if (!strcmp(r_include, r_saved_path)) {
+				inclistnext = ip + 1;
+				return ip;
+			}
+		}
+	}
+
+	return newinclude(fp, include);
 }
