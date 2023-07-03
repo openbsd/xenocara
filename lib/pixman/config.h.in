@@ -130,6 +130,9 @@
 /* Whether the tool chain supports __attribute__((constructor)) */
 #undef TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR
 
+/* use ARM A64_NEON assembly optimizations */
+#undef USE_ARM_A64_NEON
+
 /* use ARM IWMMXT compiler intrinsics */
 #undef USE_ARM_IWMMXT
 

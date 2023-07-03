@@ -263,6 +263,7 @@ SHELL = @SHELL@
 SSE2_CFLAGS = @SSE2_CFLAGS@
 SSE2_LDFLAGS = @SSE2_LDFLAGS@
 SSSE3_CFLAGS = @SSSE3_CFLAGS@
+SSSE3_LDFLAGS = @SSSE3_LDFLAGS@
 STRIP = @STRIP@
 TESTPROGS_EXTRA_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
 TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR = @TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR@
@@ -341,6 +342,7 @@ EXTRA_DIST = \
 	meson.build			\
 	meson_options.txt		\
 	neon-test.S			\
+	a64-neon-test.S			\
 	arm-simd-test.S			\
 	$(NULL)
 
@@ -927,7 +929,7 @@ release-remove-old:
 	$(RM) $(tar_gz) $(tar_xz) $(HASHFILES) $(gpg_file)
 
 ensure-prev:
-	@if [[ "$(PREV)" == "" ]]; then							\
+	@if [ "$(PREV)" = "" ]; then							\
 		echo ""							          &&	\
 		echo "You must set the PREV variable on the make command line to" &&	\
 		echo "the last version."				  	  &&	\

@@ -81,17 +81,21 @@ DIST_COMMON = $(libpixmaninclude_HEADERS) $(srcdir)/Makefile.am \
 # arm neon code
 @USE_ARM_NEON_TRUE@am__append_14 = libpixman-arm-neon.la
 @USE_ARM_NEON_TRUE@am__append_15 = libpixman-arm-neon.la
-@USE_ARM_IWMMXT_TRUE@am__append_16 = libpixman-iwmmxt.la
-@USE_ARM_IWMMXT_TRUE@am__append_17 = libpixman-iwmmxt.la
+
+# arm a64 neon code
+@USE_ARM_A64_NEON_TRUE@am__append_16 = libpixman-arma64-neon.la
+@USE_ARM_A64_NEON_TRUE@am__append_17 = libpixman-arma64-neon.la
+@USE_ARM_IWMMXT_TRUE@am__append_18 = libpixman-iwmmxt.la
+@USE_ARM_IWMMXT_TRUE@am__append_19 = libpixman-iwmmxt.la
 
 # mips dspr2 code
-@USE_MIPS_DSPR2_TRUE@am__append_18 = libpixman-mips-dspr2.la
-@USE_MIPS_DSPR2_TRUE@am__append_19 = libpixman-mips-dspr2.la
+@USE_MIPS_DSPR2_TRUE@am__append_20 = libpixman-mips-dspr2.la
+@USE_MIPS_DSPR2_TRUE@am__append_21 = libpixman-mips-dspr2.la
 
 # loongson code
-@USE_LOONGSON_MMI_TRUE@am__append_20 = libpixman-loongson-mmi.la
-@USE_LOONGSON_MMI_TRUE@am__append_21 = $(LS_LDFLAGS)
 @USE_LOONGSON_MMI_TRUE@am__append_22 = libpixman-loongson-mmi.la
+@USE_LOONGSON_MMI_TRUE@am__append_23 = $(LS_LDFLAGS)
+@USE_LOONGSON_MMI_TRUE@am__append_24 = libpixman-loongson-mmi.la
 subdir = pixman
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
@@ -134,7 +138,7 @@ LTLIBRARIES = $(lib_LTLIBRARIES) $(noinst_LTLIBRARIES)
 libpixman_1_la_DEPENDENCIES = $(am__append_3) $(am__append_5) \
 	$(am__append_8) $(am__append_11) $(am__append_13) \
 	$(am__append_15) $(am__append_17) $(am__append_19) \
-	$(am__append_22)
+	$(am__append_21) $(am__append_24)
 am__objects_1 = pixman.lo pixman-access.lo pixman-access-accessors.lo \
 	pixman-bits-image.lo pixman-combine32.lo \
 	pixman-combine-float.lo pixman-conical-gradient.lo \
@@ -177,6 +181,18 @@ am__libpixman_arm_simd_la_SOURCES_DIST = pixman-arm-simd.c \
 @USE_ARM_SIMD_TRUE@	pixman-arm-simd-asm-scaled.lo
 libpixman_arm_simd_la_OBJECTS = $(am_libpixman_arm_simd_la_OBJECTS)
 @USE_ARM_SIMD_TRUE@am_libpixman_arm_simd_la_rpath =
+libpixman_arma64_neon_la_LIBADD =
+am__libpixman_arma64_neon_la_SOURCES_DIST = pixman-arm-neon.c \
+	pixman-arm-common.h pixman-arma64-neon-asm.S \
+	pixman-arma64-neon-asm-bilinear.S pixman-arm-asm.h \
+	pixman-arma64-neon-asm.h
+@USE_ARM_A64_NEON_TRUE@am_libpixman_arma64_neon_la_OBJECTS =  \
+@USE_ARM_A64_NEON_TRUE@	pixman-arm-neon.lo \
+@USE_ARM_A64_NEON_TRUE@	pixman-arma64-neon-asm.lo \
+@USE_ARM_A64_NEON_TRUE@	pixman-arma64-neon-asm-bilinear.lo
+libpixman_arma64_neon_la_OBJECTS =  \
+	$(am_libpixman_arma64_neon_la_OBJECTS)
+@USE_ARM_A64_NEON_TRUE@am_libpixman_arma64_neon_la_rpath =
 libpixman_iwmmxt_la_LIBADD =
 am__libpixman_iwmmxt_la_SOURCES_DIST = pixman-mmx.c
 @USE_ARM_IWMMXT_TRUE@am_libpixman_iwmmxt_la_OBJECTS = pixman-mmx.lo
@@ -290,6 +306,7 @@ am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
 SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_arm_neon_la_SOURCES) \
 	$(libpixman_arm_simd_la_SOURCES) \
+	$(libpixman_arma64_neon_la_SOURCES) \
 	$(libpixman_iwmmxt_la_SOURCES) \
 	$(libpixman_loongson_mmi_la_SOURCES) \
 	$(libpixman_mips_dspr2_la_SOURCES) $(libpixman_mmx_la_SOURCES) \
@@ -298,6 +315,7 @@ SOURCES = $(libpixman_1_la_SOURCES) $(libpixman_arm_neon_la_SOURCES) \
 DIST_SOURCES = $(libpixman_1_la_SOURCES) \
 	$(am__libpixman_arm_neon_la_SOURCES_DIST) \
 	$(am__libpixman_arm_simd_la_SOURCES_DIST) \
+	$(am__libpixman_arma64_neon_la_SOURCES_DIST) \
 	$(am__libpixman_iwmmxt_la_SOURCES_DIST) \
 	$(am__libpixman_loongson_mmi_la_SOURCES_DIST) \
 	$(am__libpixman_mips_dspr2_la_SOURCES_DIST) \
@@ -404,6 +422,7 @@ SHELL = @SHELL@
 SSE2_CFLAGS = @SSE2_CFLAGS@
 SSE2_LDFLAGS = @SSE2_LDFLAGS@
 SSSE3_CFLAGS = @SSSE3_CFLAGS@
+SSSE3_LDFLAGS = @SSSE3_LDFLAGS@
 STRIP = @STRIP@
 TESTPROGS_EXTRA_LDFLAGS = @TESTPROGS_EXTRA_LDFLAGS@
 TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR = @TOOLCHAIN_SUPPORTS_ATTRIBUTE_CONSTRUCTOR@
@@ -510,17 +529,18 @@ libpixman_headers = \
 lib_LTLIBRARIES = libpixman-1.la
 libpixman_1_la_LDFLAGS = -version-info $(LT_VERSION_INFO) \
 	-no-undefined @PTHREAD_LDFLAGS@ $(am__append_2) \
-	$(am__append_7) $(am__append_10) $(am__append_21)
+	$(am__append_7) $(am__append_10) $(am__append_23)
 libpixman_1_la_LIBADD = @PTHREAD_LIBS@ -lm $(am__append_3) \
 	$(am__append_5) $(am__append_8) $(am__append_11) \
 	$(am__append_13) $(am__append_15) $(am__append_17) \
-	$(am__append_19) $(am__append_22)
+	$(am__append_19) $(am__append_21) $(am__append_24)
 libpixman_1_la_SOURCES = $(libpixman_sources) $(libpixman_headers)
 libpixmanincludedir = $(includedir)/pixman-1
 libpixmaninclude_HEADERS = pixman.h pixman-version.h
 noinst_LTLIBRARIES = $(am__append_1) $(am__append_4) $(am__append_6) \
 	$(am__append_9) $(am__append_12) $(am__append_14) \
-	$(am__append_16) $(am__append_18) $(am__append_20)
+	$(am__append_16) $(am__append_18) $(am__append_20) \
+	$(am__append_22)
 EXTRA_DIST = \
 	Makefile.win32			\
 	dither/make-blue-noise.c	\
@@ -567,7 +587,16 @@ EXTRA_DIST = \
 @USE_ARM_NEON_TRUE@        pixman-arm-asm.h	\
 @USE_ARM_NEON_TRUE@        pixman-arm-neon-asm.h
 
+@USE_ARM_A64_NEON_TRUE@ASM_CFLAGS_arm_neon = 
 @USE_ARM_NEON_TRUE@ASM_CFLAGS_arm_neon = 
+@USE_ARM_A64_NEON_TRUE@libpixman_arma64_neon_la_SOURCES = \
+@USE_ARM_A64_NEON_TRUE@        pixman-arm-neon.c        \
+@USE_ARM_A64_NEON_TRUE@        pixman-arm-common.h      \
+@USE_ARM_A64_NEON_TRUE@        pixman-arma64-neon-asm.S \
+@USE_ARM_A64_NEON_TRUE@        pixman-arma64-neon-asm-bilinear.S \
+@USE_ARM_A64_NEON_TRUE@        pixman-arm-asm.h         \
+@USE_ARM_A64_NEON_TRUE@        pixman-arma64-neon-asm.h
+
 
 # iwmmxt code
 @USE_ARM_IWMMXT_TRUE@libpixman_iwmmxt_la_SOURCES = pixman-mmx.c
@@ -675,6 +704,8 @@ libpixman-arm-neon.la: $(libpixman_arm_neon_la_OBJECTS) $(libpixman_arm_neon_la_
 	$(AM_V_CCLD)$(LINK) $(am_libpixman_arm_neon_la_rpath) $(libpixman_arm_neon_la_OBJECTS) $(libpixman_arm_neon_la_LIBADD) $(LIBS)
 libpixman-arm-simd.la: $(libpixman_arm_simd_la_OBJECTS) $(libpixman_arm_simd_la_DEPENDENCIES) $(EXTRA_libpixman_arm_simd_la_DEPENDENCIES) 
 	$(AM_V_CCLD)$(LINK) $(am_libpixman_arm_simd_la_rpath) $(libpixman_arm_simd_la_OBJECTS) $(libpixman_arm_simd_la_LIBADD) $(LIBS)
+libpixman-arma64-neon.la: $(libpixman_arma64_neon_la_OBJECTS) $(libpixman_arma64_neon_la_DEPENDENCIES) $(EXTRA_libpixman_arma64_neon_la_DEPENDENCIES) 
+	$(AM_V_CCLD)$(LINK) $(am_libpixman_arma64_neon_la_rpath) $(libpixman_arma64_neon_la_OBJECTS) $(libpixman_arma64_neon_la_LIBADD) $(LIBS)
 @USE_ARM_IWMMXT_FALSE@libpixman-iwmmxt.la: $(libpixman_iwmmxt_la_OBJECTS) $(libpixman_iwmmxt_la_DEPENDENCIES) $(EXTRA_libpixman_iwmmxt_la_DEPENDENCIES) 
 @USE_ARM_IWMMXT_FALSE@	$(AM_V_GEN)$(libpixman_iwmmxt_la_LINK) $(am_libpixman_iwmmxt_la_rpath) $(libpixman_iwmmxt_la_OBJECTS) $(libpixman_iwmmxt_la_LIBADD) $(LIBS)
 libpixman-loongson-mmi.la: $(libpixman_loongson_mmi_la_OBJECTS) $(libpixman_loongson_mmi_la_DEPENDENCIES) $(EXTRA_libpixman_loongson_mmi_la_DEPENDENCIES) 
@@ -710,6 +741,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-arm-simd-asm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-arm-simd.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-arm.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-arma64-neon-asm-bilinear.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-arma64-neon-asm.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-bits-image.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-combine-float.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pixman-combine32.Plo@am__quote@
