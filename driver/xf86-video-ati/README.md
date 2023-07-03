@@ -10,7 +10,7 @@ Please submit bug reports to the Xorg bugzilla:
 
   https://bugs.freedesktop.org/enter_bug.cgi?product=xorg&component=Driver/Radeon
 
-The master development code repository can be found at:
+The primary development code repository can be found at:
 
   https://gitlab.freedesktop.org/xorg/driver/xf86-video-ati
 

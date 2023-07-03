@@ -1,3 +1,220 @@
+commit 0c01893774031d8429f0a138048fda7957f15706
+Author: Matt Turner <mattst88@gmail.com>
+Date:   Tue Apr 25 14:40:08 2023 -0400
+
+    Bump version for 22.0.0 release
+    
+    Signed-off-by: Matt Turner <mattst88@gmail.com>
+
+commit 7a6a34af026f0bef8080b91baf97a729380bca01
+Author: Matthieu Herrb <matthieu.herrb@laas.fr>
+Date:   Sun Nov 14 17:38:24 2021 +0100
+
+    Don't set SourceValidate pointer to NULL
+    
+    inspired from similar code in amdgpu, fixes a crash when xrandr(1)
+    is invoqued with X server 21.1.1
+    
+    Signed-off-by: Matthieu Herrb <matthieu.herrb@laas.fr>
+
+commit 983a779b7a5b2153d995727a0ed3da09732e15d5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 18:39:20 2022 -0700
+
+    radeon_glamor_wrappers.c: Convert from ISO-8859-1 to UTF-8
+    
+    Allows Flawfinder to analyze source instead of erroring out on encoding
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a25ca015e6b46bcf6560abe273cfb529c4bdd287
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 18:35:08 2022 -0700
+
+    gitlab CI: enable gitlab's builtin static analysis
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7b940097545ea60e5089ae67f593311f136ae271
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 18:29:13 2022 -0700
+
+    gitlab CI: enable commit & merge request checks
+    
+    Uses ci-fairy from freedesktop/ci-templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8fc442d6a67a35b031be7e725a0999a7e0403b4f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 09:36:23 2022 -0800
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11d549d591c7a6f19d2b39d069e99febbd3113da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 22 09:24:46 2022 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5eba006e4129e8015b822f9e1d2f1e613e252cda
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Tue Feb 2 12:45:54 2021 +0100
+
+    Only include dri.h with older versions of xserver
+    
+    Not needed anymore with current versions.
+
+commit ecced3b3c6af501c4c90265f8404b6898f3cf037
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Mar 26 17:16:32 2021 +0100
+
+    Add GitLab CI pipeline
+    
+    Based on xf86-video-amdgpu, but applying experience gained in the
+    meantime in other projects and taking advantage of new features
+    available with current versions of GitLab.
+
+commit 77d9ab03ca20e683be4c40ccc879e201b538f7e5
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Mar 26 17:37:53 2021 +0100
+
+    Guard local variable info only used with glamor
+    
+    Fixes compiler warning with glamor disabled:
+    
+    radeon_dri2.c: In function 'radeon_dri2_exchange_buffers':
+    radeon_dri2.c:732:19: error: unused variable 'info' [-Werror=unused-variable]
+         RADEONInfoPtr info = RADEONPTR(xf86ScreenToScrn(screen));
+                       ^~~~
+
+commit 3c7c84ed49564907a148ae99b03200e0be350060
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Mar 26 17:42:10 2021 +0100
+
+    Guard local variable priv only used with glamor
+    
+    Fixes compile errors with glamor disabled:
+    
+    ../../src/radeon_present.c: In function ‘radeon_present_check_flip’:
+    ../../src/radeon_present.c:281:21: error: invalid use of undefined type ‘struct radeon_pixmap’
+      281 |     if (priv && priv->fb_failed)
+          |                     ^~
+    ../../src/radeon_present.c:288:19: error: invalid use of undefined type ‘struct radeon_pixmap’
+      288 |  if (priv && !priv->fb_failed) {
+          |                   ^~
+    ../../src/radeon_present.c:292:10: error: invalid use of undefined type ‘struct radeon_pixmap’
+      292 |      priv->fb_failed = TRUE;
+          |          ^~
+
+commit 8da3e4561ef82bb78c9a17b8cd8bf139b9cfd680
+Author: Dave Airlie <airlied@redhat.com>
+Date:   Mon Jul 13 09:11:28 2020 +1000
+
+    ati: cleanup terminology to use primary/secondary
+    
+    The X server changed some API/ABIs here.
+    
+    Based on amdgpu patch by Michel
+
+commit 3845392426e9798c1fb2a6fc5e97bf5dfd5c443d
+Author: Niclas Zeising <zeising@daemonic.se>
+Date:   Tue Apr 14 17:01:57 2020 +0200
+
+    Fix return value check of drmIoctl()
+    
+    When the drmModeSetCursor2() call was replaced with bare drmIoctl() call in
+    92df7097, a bug was introduced.  With the use of drmModeSetCursor2(),
+    the return value from drmIoctl() (which calls ioctl()) were mangled, if
+    they were negative, they were replaced by -errno by a wrapper function
+    in xf86drMode.c in libdrm.  After replacing drmModeSetCursor2() with the
+    call to drmIoctl(), this mangling no longer happens, and we need to
+    explicitly check if the call to drmIoctl() fails, which is indicated by
+    returning -1, and then why it failed, by checking errno.
+    If the error indicated by errno is EINVAL, then we can't use the
+    DRM_IOCTL_MODE_CURSOR2 ioctl(), and need to fall back to the
+    DRM_IOCTL_MODE_CURSOR ioctl().
+    
+    This bug can manifest itself by an invisible hw cursor on systems where the
+    DRM_IOCTL_MODE_CURSOR2 is not implemented by the graphics driver.
+    
+    Credit also to Alexey Dokuchaev for help with developing the fix and
+    testing.
+    
+    This fixes #190
+    
+    Signed-off-by: Niclas Zeising <zeising@daemonic.se>
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
+commit c0eb5dbd9c1db6b6d5b1574bcd8c584170d7ab54
+Author: Alexey Sheplyakov <asheplyakov@altlinux.org>
+Date:   Wed Nov 27 20:50:58 2019 +0400
+
+    Don't crash X server if GPU acceleration is not available
+    
+    Commit d1d8e3c8d0a0a0394d395eba171460501745209b causes X server
+    to fail on startup when GPU acceleration is not working (or is
+    disabled). The reason is that `radeon_get_pixmap_bo` function
+    gets called too early (before EXA has been initialized) and
+    fails with an assert:
+    
+     #0  __GI_raise (sig=<optimized out>) at ../sysdeps/unix/sysv/linux/raise.c:50
+     #1  0x76ab1c6c in __GI_abort () at abort.c:79
+     #2  0x76ac0b64 in __assert_fail_base (fmt=0x76bfbce4 "%s%s%s:%u: %s%sAssertion `%s' failed.\n%n", assertion=0x7658c80c "key->initialized", file=<optimized out>, line=121,
+         function=0x7658d040 <__PRETTY_FUNCTION__.10607> "dixGetPrivateAddr") at assert.c:92
+     #3  0x76ac0c0c in __GI___assert_fail (assertion=0x7658c80c "key->initialized", file=0x7658c9d0 "../include/privates.h", line=121,
+         function=0x7658d040 <__PRETTY_FUNCTION__.10607> "dixGetPrivateAddr") at assert.c:101
+     #4  0x76579e6c in dixGetPrivateAddr (key=<optimized out>, key=<optimized out>, privates=<optimized out>) at ../include/privates.h:121
+     #5  0x7657a954 in dixGetPrivateAddr (key=<optimized out>, key=<optimized out>, privates=<optimized out>) at exa.c:70
+     #6  dixGetPrivate (key=<optimized out>, privates=<optimized out>) at ../include/privates.h:136
+     #7  exaGetPixmapDriverPrivate (pPix=<optimized out>) at exa.c:68
+     #8  0x7623d460 in radeon_get_pixmap_bo (pPix=0x71c1b8) at radeon.h:804
+     #9  radeon_get_pixmap_handle (pixmap=0x71c1b8, handle=0x7fa22328) at radeon_bo_helper.c:357
+     #10 0x76244458 in radeon_pixmap_get_fb (pix=0x71c1b8) at radeon.h:886
+     #11 drmmode_set_mode_major (crtc=0x691860, mode=0x69191c, rotation=<optimized out>, x=<optimized out>, y=<optimized out>) at drmmode_display.c:918
+     #12 0x762467e8 in drmmode_set_desired_modes (pScrn=0x67c678, drmmode=<optimized out>, set_hw=1) at drmmode_display.c:3128
+     #13 0x0047bfa4 in MapWindow (client=0x669ec8, pWin=0x7206c0) at window.c:2722
+     #14 MapWindow (pWin=0x7206c0, client=0x669ec8) at window.c:2665
+     #15 0x00449650 in dix_main (argc=3, argv=0x7fa22604, envp=<optimized out>) at main.c:247
+     #16 0x76ab2198 in __libc_start_main (main=0x42db10 <main>, argc=3, argv=0x7fa22604, init=<optimized out>, fini=0x606434 <__libc_csu_fini>, rtld_fini=0x77229930 <_dl_fini>,
+         stack_end=0x7fa225e0) at libc-start.c:308
+     #17 0x0042db80 in __start () at ../sysdeps/mips/start.S:110
+    
+    Don't call `exaGetPixmapDriverPrivate` if the acceleration (EXA) is not
+    enabled [yet] to avoid the problem.
+    
+    Closes: https://gitlab.freedesktop.org/xorg/driver/xf86-video-ati/issues/188
+    Closes: https://bugzilla.altlinux.org/show_bug.cgi?id=37539
+
+commit 4d84cf438e7f1bebf0053035ef0292e9fed257d1
+Author: Michel Dänzer <mdaenzer@redhat.com>
+Date:   Fri Nov 29 16:37:32 2019 +0100
+
+    Handle NULL fb_ptr in pixmap_get_fb
+    
+    This can happen when HW acceleration is disabled.
+    
+    Fixes https://gitlab.freedesktop.org/xorg/driver/xf86-video-ati/issues/188
+
+commit f223035f4ffcff2a9296d1e907a5193f8e8845a3
+Author: Adam Jackson <ajax@redhat.com>
+Date:   Tue Feb 4 16:38:06 2020 -0500
+
+    Fix link failure with gcc 10
+    
+    Without the 'extern' this looks like a definition not just a
+    declaration, in every file that includes the header. gcc 10 is stricter
+    about this kind of multiple definition.
+    
+    Reviewed-by: Michel Dänzer <mdaenzer@redhat.com>
+
 commit b9bd8097e1d2c088b081f1b81799ea3892406214
 Author: Michel Dänzer <mdaenzer@redhat.com>
 Date:   Tue Oct 15 17:54:12 2019 +0200
@@ -8047,7 +8264,7 @@ Date:   Fri Jun 29 15:00:44 2012 +0100
     Signed-off-by: Dave Airlie <airlied@redhat.com>
 
 commit 50689ec8dbd4a68527b2ac16cecac298b8d441d0
-Merge: 6a60fcdf0 ae682a6a1
+Merge: 6a60fcdf ae682a6a
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Fri Jun 29 14:59:47 2012 +0100
 
@@ -10636,7 +10853,7 @@ Date:   Tue Jan 11 14:42:17 2011 -0500
     radeon: fix pitch align in pageflip code
 
 commit e5d0a400d08da2358fac9c2ad12042f125525736
-Merge: 0e432dff9 e27e9b4e5
+Merge: 0e432dff e27e9b4e
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Mon Jan 10 18:16:49 2011 -0500
 
@@ -11270,7 +11487,7 @@ Date:   Mon Oct 4 12:31:51 2010 -0400
     evergreen: port Karl's UTS/DFS changes to evergreen
 
 commit be8f45cbd313b68ad663f303c64edb4525b8f981
-Merge: e843faf35 ff5f466e6
+Merge: e843faf3 ff5f466e
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Mon Oct 4 12:36:56 2010 -0400
 
@@ -13497,7 +13714,7 @@ Date:   Wed Dec 2 01:36:37 2009 -0500
     The cause is that 2048 is hardcoded in RADEONQueryImageAttributes.
 
 commit efbc2c80ab02879edf3b7b3d65b16c45ddce5017
-Merge: 88a50a30d a612813c5
+Merge: 88a50a30 a612813c
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Wed Dec 2 14:30:36 2009 +1000
 
@@ -14683,7 +14900,7 @@ Date:   Tue Sep 8 13:21:07 2009 +1000
     radeon: fix dri2 struct zeroing
 
 commit 6990f2ac6478bf92929a4400ef84fb2142699204
-Merge: 917f2d7cd 853f4c3d1
+Merge: 917f2d7c 853f4c3d
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Sep 8 11:26:32 2009 +1000
 
@@ -17434,7 +17651,7 @@ Date:   Thu Feb 26 12:10:08 2009 -0500
     R6xx/R7xx: use shadowfb if DRI is disabled
 
 commit 000756e052a291230e5c95e48b69a5aa9c4fab0e
-Merge: 22d7746bf 8373f4399
+Merge: 22d7746b 8373f439
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Thu Feb 26 11:44:13 2009 -0500
 
@@ -18143,7 +18360,7 @@ Date:   Fri Jan 30 07:56:14 2009 +1000
     fixes it.
 
 commit bd8021d46e9066e4cd116c03a7b7adcfe2557aff
-Merge: 4f88dd83f 20d5dd387
+Merge: 4f88dd83 20d5dd38
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Jan 28 14:33:14 2009 -0500
 
@@ -18156,7 +18373,7 @@ Date:   Wed Jan 28 14:12:26 2009 -0500
     Move encoder specific data to encoder dev_priv
 
 commit 4f88dd83f290fb38e41256a7f1804008c0f28139
-Merge: 1c5678fc4 2ca970c7a
+Merge: 1c5678fc 2ca970c7
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Wed Jan 28 13:13:13 2009 -0500
 
@@ -18614,7 +18831,7 @@ Date:   Mon Dec 22 02:18:43 2008 -0500
                then use quad.
 
 commit 4d009d14c9c72f6e1bc8100ec8d9b8037ee4e514
-Merge: d52882d81 4e96278b5
+Merge: d52882d8 4e96278b
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Dec 22 16:00:01 2008 +1000
 
@@ -19013,7 +19230,7 @@ Date:   Thu Dec 4 12:28:12 2008 -0500
     Fix up US setup after r3xx bicubic merge
 
 commit e13fba853ba19e6b0f081b9b3d9fa76c38a0f82b
-Merge: d29633708 79bbdd984
+Merge: d2963370 79bbdd98
 Author: Alex Deucher <alexdeucher@gmail.com>
 Date:   Thu Dec 4 12:25:29 2008 -0500
 
@@ -20274,7 +20491,7 @@ Date:   Wed Jun 25 15:50:16 2008 -0400
     - Make sure 3D is idle too (after composite or textured video)
 
 commit 07be302f6dba61dd15918963fae66502230c74b7
-Merge: 8c9b8de03 52459745e
+Merge: 8c9b8de0 52459745
 Author: Jerome Glisse <glisse@freedesktop.org>
 Date:   Wed Jun 25 10:30:45 2008 +0200
 
@@ -20396,7 +20613,7 @@ Date:   Fri Jun 20 07:51:27 2008 +1000
     discovered on irc with wpwrak.
 
 commit 5b323a2cbbc412b6dd4e782438b64ee996558d05
-Merge: dd18caa4b eed241553
+Merge: dd18caa4 eed24155
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Jun 20 07:49:16 2008 +1000
 
@@ -21390,7 +21607,7 @@ Date:   Wed Mar 19 17:58:34 2008 -0400
     defines it.
 
 commit bed9754ad21d6c0a7f61067b04ba31c430a7cecb
-Merge: 55e446b5b f71ac0e40
+Merge: 55e446b5 f71ac0e4
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Mar 19 16:06:41 2008 -0400
 
@@ -21773,7 +21990,7 @@ Date:   Thu Mar 6 17:46:00 2008 -0500
     AVIVO: don't add outputs for invalid connectors
 
 commit 600dbe080997a01ceaf6be86723189d518bc1281
-Merge: 594743a99 5b7875d0c
+Merge: 594743a9 5b7875d0
 Author: Alex Deucher <alex@cube.(none)>
 Date:   Thu Mar 6 17:31:37 2008 -0500
 
@@ -21792,7 +22009,7 @@ Date:   Thu Mar 6 14:31:06 2008 -0500
     Bug #14826: Fix a bogus check around xf86SetOperatingState.
 
 commit 651fe23f4c650ed91843dec48db24e18e8b91219
-Merge: 3de2dc88c 766f464df
+Merge: 3de2dc88 766f464d
 Author: Adam Jackson <ajax@redhat.com>
 Date:   Thu Mar 6 14:28:27 2008 -0500
 
@@ -22159,7 +22376,7 @@ Date:   Mon Feb 25 07:10:48 2008 +1000
     fixup check for EXA composite pointed out by Alan Swanson
 
 commit 85e470e64f629de72e361c77770e2e29998d1bf4
-Merge: 27ddb39b1 1b84c76f2
+Merge: 27ddb39b 1b84c76f
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Sun Feb 24 05:37:22 2008 -0500
 
@@ -22857,7 +23074,7 @@ Date:   Mon Jan 14 16:11:09 2008 -0500
     Fixes bug 14001
 
 commit 729da30c80d6545b75c8faea44754634f477cc09
-Merge: 000741e25 625a885a9
+Merge: 000741e2 625a885a
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Jan 14 10:05:01 2008 -0500
 
@@ -23050,7 +23267,7 @@ Date:   Wed Jan 2 19:48:28 2008 -0500
     RADEON: various avivo tv-out related clean-ups
 
 commit ce34090c758ac91171cb6adb9b8a36e4adbf99cf
-Merge: 2180f04b6 30cab1dbe
+Merge: 2180f04b 30cab1db
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Jan 2 16:41:36 2008 -0500
 
@@ -23257,7 +23474,7 @@ Date:   Fri Dec 21 09:45:55 2007 +1000
     set ddc line correctly post-merge
 
 commit 3c31b96afa20913ad947e68fe0c3a662e5eafbdd
-Merge: eb99c3c5c f5e8c1850
+Merge: eb99c3c5 f5e8c185
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Dec 21 09:36:22 2007 +1000
 
@@ -23298,7 +23515,7 @@ Date:   Wed Dec 19 19:15:19 2007 -0500
     The correct thing to do is filter by the mode's effective memory bandwidth.
 
 commit c1b0b69cc50516c3b7e881b0eb46cb3cd2e9dce6
-Merge: 0e6634870 ce4fa1ced
+Merge: 0e663487 ce4fa1ce
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Dec 19 11:54:50 2007 -0500
 
@@ -23373,14 +23590,14 @@ Date:   Mon Dec 17 20:20:04 2007 -0500
     RADEON: fix typo from merge
 
 commit 19b9d3708852b7efe2b05249c8359dadb924dd94
-Merge: cf685f37e 29706ca58
+Merge: cf685f37 29706ca5
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Dec 17 20:07:32 2007 -0500
 
     Merge branch 'atombios-support' of git+ssh://agd5f@git.freedesktop.org/git/xorg/driver/xf86-video-ati into atombios-support
 
 commit cf685f37ec874f0aacd09e7c4eb0402c6daec1b0
-Merge: 2a134af01 44d07c4cc
+Merge: 2a134af0 44d07c4c
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Mon Dec 17 20:07:07 2007 -0500
 
@@ -23529,7 +23746,7 @@ Date:   Thu Dec 13 18:45:09 2007 -0500
     - Unify the PLL calculation between legacy and avivo chips
 
 commit f5ac34983411e4c4f41ab1817dce582830f398fd
-Merge: f2b2e0804 6ccf5b33d
+Merge: f2b2e080 6ccf5b33
 Author: Alex Deucher <alex@samba.(none)>
 Date:   Wed Dec 12 22:37:44 2007 -0500
 
@@ -23582,7 +23799,7 @@ Date:   Tue Dec 11 14:04:58 2007 -0500
     RADEON: handle HMDI properly (untested) and fix some merge leftovers
 
 commit 3c22ad977c25d5ca2811821fcac6bb8ecd79994a
-Merge: c9a0cee97 f3d2ec3a5
+Merge: c9a0cee9 f3d2ec3a
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Dec 11 13:11:15 2007 -0500
 
@@ -23638,7 +23855,7 @@ Date:   Mon Dec 10 15:25:56 2007 +1000
     add support for building against legacy servers similiar to Intel codepaths
 
 commit 9c278cb7fa7f18d13bde053fd75221cfba9da377
-Merge: 6451ea2dc cc167b9bb
+Merge: 6451ea2d cc167b9b
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Dec 10 15:18:03 2007 +1000
 
@@ -23652,7 +23869,7 @@ Date:   Mon Dec 10 15:18:03 2007 +1000
             src/radeon_output.c
 
 commit 6451ea2dcc4fac762442f699935864f4a8d445f7
-Merge: 0d89556bf 5896ca409
+Merge: 0d89556b 5896ca40
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Dec 10 15:08:42 2007 +1000
 
@@ -23712,7 +23929,7 @@ Date:   Thu Dec 6 19:23:06 2007 +1100
     powerpc: build fixes from last merge
 
 commit dbe3d2608ecc9896db9c23b3a347b50748c51e13
-Merge: 48e31cdaa 21ed43539
+Merge: 48e31cda 21ed4353
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Dec 6 14:22:03 2007 +1000
 
@@ -23813,7 +24030,7 @@ Date:   Fri Nov 30 20:11:42 2007 -0500
     mode or vesafb etc. after running the driver.
 
 commit af0196f7bf0d1d5d211391149c18935d64ed2b06
-Merge: d9858a2b3 0175b7998
+Merge: d9858a2b 0175b799
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 30 16:40:28 2007 -0500
 
@@ -23845,7 +24062,7 @@ Date:   Fri Nov 30 15:37:42 2007 -0500
     for now.
 
 commit e1945f1f25a34310bd58ce128c8ff27ecc985618
-Merge: b368b0f22 df7777bff
+Merge: b368b0f2 df7777bf
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 30 14:30:55 2007 -0500
 
@@ -24066,7 +24283,7 @@ Date:   Wed Nov 21 17:03:39 2007 -0500
     Thanks to AMD for the information
 
 commit a12390c832abe423def60e39cd5a9118e5910339
-Merge: d5317922f e74dca194
+Merge: d5317922 e74dca19
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Wed Nov 21 02:24:48 2007 -0500
 
@@ -24119,7 +24336,7 @@ Date:   Wed Nov 21 00:05:42 2007 -0500
     RADEON: store devices ids from bios for each driver output
 
 commit 3975da2ea8cb628f7f66c3f26c5dfa181cd1c532
-Merge: e283aa332 295ce277b
+Merge: e283aa33 295ce277
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Tue Nov 20 23:52:29 2007 -0500
 
@@ -24219,7 +24436,7 @@ Date:   Tue Nov 20 13:37:00 2007 +1000
     atombios: add all r5xx and r6xx pci ids
 
 commit 5d023e2c3c2ab44ea57ffadc9607025d602c376c
-Merge: 0d1e0c780 c88726034
+Merge: 0d1e0c78 c8872603
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 13:02:43 2007 +1000
 
@@ -24244,7 +24461,7 @@ Date:   Tue Nov 20 08:15:58 2007 +1000
     r5xx: cleanups after last merge
 
 commit fe2f7a09050fb7a345a1f52239f8f3c4f1053891
-Merge: 744c8cb6c 49055d8af
+Merge: 744c8cb6 49055d8a
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 08:04:32 2007 +1000
 
@@ -24256,7 +24473,7 @@ Date:   Tue Nov 20 08:04:32 2007 +1000
             src/radeon_output.c
 
 commit 744c8cb6c293fcaa687566f52901644e699baace
-Merge: e258fbe41 e530af79a
+Merge: e258fbe4 e530af79
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Tue Nov 20 07:56:33 2007 +1000
 
@@ -24269,14 +24486,14 @@ Date:   Mon Nov 19 16:35:05 2007 +1000
     makes 2-headed cursor work
 
 commit e530af79adf51b3e95a0eca676c915a34dcbf4a7
-Merge: 69e197f2c 52aba8d73
+Merge: 69e197f2 52aba8d7
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 19 00:59:30 2007 -0500
 
     Merge branch 'agd-atom' of /home/alex/git/airlied/xf86-video-ati2 into agd-atom
 
 commit 69e197f2c8002aacf2587754c8d3bd63c88f85b1
-Merge: 5e8940fa6 862dcabfe
+Merge: 5e8940fa 862dcabf
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Mon Nov 19 00:57:34 2007 -0500
 
@@ -24307,7 +24524,7 @@ Date:   Mon Nov 19 00:39:19 2007 -0500
     Don't assign a gpio for TV
 
 commit 52aba8d73189ba959f19c0437499d5e7a8829827
-Merge: 862dcabfe 5e8940fa6
+Merge: 862dcabf 5e8940fa
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Nov 19 15:30:46 2007 +1000
 
@@ -24344,7 +24561,7 @@ Date:   Sun Nov 18 23:43:06 2007 -0500
     fix typo in loop
 
 commit 384cd8f52c89d089c6559e2eedbae45641fcd14e
-Merge: f3f0e4ec9 234b60730
+Merge: f3f0e4ec 234b6073
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Mon Nov 19 14:02:55 2007 +1000
 
@@ -24413,7 +24630,7 @@ Date:   Sat Nov 17 00:34:56 2007 -0500
     WIP: more new ATOM integration work
 
 commit 67db114d97abed7a607467e5d67c7b4ffa2c347e
-Merge: 7d06a8791 ea1534659
+Merge: 7d06a879 ea153465
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Fri Nov 16 14:29:53 2007 -0500
 
@@ -24476,7 +24693,7 @@ Date:   Fri Nov 16 14:48:36 2007 +1000
     Add copyright headers
 
 commit 3cfcd2164b400bd0d1cb4ede8eeb01abba9d75c8
-Merge: efac14e66 718bfd3b6
+Merge: efac14e6 718bfd3b
 Author: Alex Deucher <alex@botch2.(none)>
 Date:   Thu Nov 15 23:25:39 2007 -0500
 
@@ -24997,7 +25214,7 @@ Date:   Thu Oct 4 11:32:48 2007 +0200
     Surprisingly easy, thanks to George's pci-rework changes.
 
 commit 7addf41885ec5658f531624a9c24ea5bd7d22d19
-Merge: 3a958ba13 78c6bd305
+Merge: 3a958ba1 78c6bd30
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Oct 4 11:06:08 2007 +0200
 
@@ -25456,7 +25673,7 @@ Date:   Tue Aug 28 15:37:11 2007 +0300
     It still uses the old probe method though, this is due to the ati wrapper.
 
 commit 7b38d9a1209f87255e5bb0aefe46a363ce4fb6ef
-Merge: 2e3d43af1 673f79972
+Merge: 2e3d43af 673f7997
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Tue Aug 28 16:01:12 2007 +0300
 
@@ -25720,14 +25937,14 @@ Date:   Thu Aug 23 19:56:21 2007 +1000
     updated release numbering for randr 1.2
 
 commit 81a8093f2ffdce59d4e8a44f65f3d5c771fd6425
-Merge: c08e6ec9e 53a67e319
+Merge: c08e6ec9 53a67e31
 Author: Dave Airlie <airlied@redhat.com>
 Date:   Thu Aug 23 19:51:47 2007 +1000
 
     Merge remote branch 'origin/randr-1.2'
 
 commit c08e6ec9e7ac06caee53689b0ec50ef6a7a0ba37
-Merge: 5793e8753 a0d0fcd3b
+Merge: 5793e875 a0d0fcd3
 Author: Dave Airlie <airlied@clockmaker.usersys.redhat.com>
 Date:   Thu Aug 23 19:42:19 2007 +1000
 
@@ -26600,7 +26817,7 @@ Date:   Wed May 30 17:49:01 2007 +1000
     we hang when moving the cursor into the second CRTC.
 
 commit 7fc02657c4d740941fbda5a8823cf45de3eca3f8
-Merge: 800bf5327 4c61c0ee9
+Merge: 800bf532 4c61c0ee
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Wed May 30 17:27:22 2007 +1000
 
@@ -26655,7 +26872,7 @@ Date:   Tue May 29 07:23:24 2007 +1000
     rs480: only has single dac
 
 commit c52322354fe64725733842b3356798c50e7735d5
-Merge: dd6a966e8 975da595f
+Merge: dd6a966e 975da595
 Author: Dave Airlie <airlied@nx6125b.(none)>
 Date:   Tue May 29 07:21:48 2007 +1000
 
@@ -27137,7 +27354,7 @@ Date:   Tue May 8 19:27:48 2007 +0200
     remove some old mergedfb cruft
 
 commit 76670f665ebec7cdf40a04bf9379cb3ad4417507
-Merge: 83f81ed5e a3ee42207
+Merge: 83f81ed5 a3ee4220
 Author: Alex Deucher <alex@t41p.hsd1.va.comcast.net>
 Date:   Tue May 8 18:41:25 2007 +0200
 
@@ -27588,7 +27805,7 @@ Date:   Sun Feb 25 23:29:09 2007 +1100
     fix typo
 
 commit 3cfe94d5438961b869766dacbcd13fde8b770ca2
-Merge: 31c018ca4 3b43788c4
+Merge: 31c018ca 3b43788c
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Sun Feb 25 23:27:19 2007 +1100
 
@@ -27781,7 +27998,7 @@ Date:   Sun Feb 4 11:28:54 2007 +0200
     case because pATI->PCIInfo is now set after ATIProcessOptions() is called.
 
 commit 9d77aabdff919360f0c9333105436c31f1f5749a
-Merge: ff8ea19fc 57822be75
+Merge: ff8ea19f 57822be7
 Author: George Sapountzis <gsap7@yahoo.gr>
 Date:   Mon Feb 5 19:16:51 2007 +0200
 
@@ -28954,7 +29171,7 @@ Date:   Mon Sep 25 11:35:32 2006 +1000
     radeon: cleanup some bits from superpatch
 
 commit 9827afaa40720a58e2fc029c0bf92ad2fe223d11
-Merge: 10b4b46c1 ad8259c81
+Merge: 10b4b46c ad8259c8
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Mon Sep 25 11:25:17 2006 +1000
 
@@ -29099,7 +29316,7 @@ Date:   Fri Sep 22 06:35:34 2006 +1000
     radeon: add enable display function
 
 commit 4a54886d510f26b29d27e5c9a73647554291b1a6
-Merge: 70264d645 9fa176c79
+Merge: 70264d64 9fa176c7
 Author: Dave Airlie <airlied@linux.ie>
 Date:   Fri Sep 22 06:00:04 2006 +1000
 
@@ -29715,7 +29932,7 @@ Date:   Thu Jun 15 15:35:05 2006 +0200
     Fix some more cosmetic warnings.
 
 commit ec93e08b24f7c0e583970d08bfe18ad142e6b047
-Merge: 051c49d0f 6ca986242
+Merge: 051c49d0 6ca98624
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 15:03:27 2006 +0200
 
@@ -29734,7 +29951,7 @@ Date:   Thu Jun 15 21:24:16 2006 +1000
     remove all printf specifier warnings on Linux
 
 commit 051c49d0f002c72d1d8f15f6df264d8b093d4e95
-Merge: a840afc75 dfac8191d
+Merge: a840afc7 dfac8191
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 13:10:44 2006 +0200
 
@@ -29759,7 +29976,7 @@ Date:   Thu Jun 15 20:59:33 2006 +1000
     some more unused variable cleanups
 
 commit a840afc75a0453b4694e3f987ebdbddc6844a169
-Merge: c90c49da3 d511ef486
+Merge: c90c49da d511ef48
 Author: Michel Dänzer <michel@tungstengraphics.com>
 Date:   Thu Jun 15 12:46:58 2006 +0200
 

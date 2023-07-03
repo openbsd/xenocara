@@ -1511,7 +1511,7 @@ static Bool R300PrepareComposite(int op, PicturePtr pSrcPicture,
      * DST_VEC_LOC is the slot in the PVS input vector memory when PVS/TCL is
      * enabled.  This memory provides the imputs to the vertex shader program
      * and ordering is not important.  When PVS/TCL is disabled, this field maps
-     * directly to the GA input memory and the order is signifigant.  In
+     * directly to the GA input memory and the order is significant.  In
      * PVS_BYPASS mode the order is as follows:
      * Position
      * Point Size

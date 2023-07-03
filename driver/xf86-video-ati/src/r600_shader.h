@@ -53,12 +53,12 @@
  * Special case: square() - i.e. same component in src0+src1 doesn't need read port -> ignores swizzle for src1.
  * No restrictions for constants or PV/PS.
  * t can load multiple components in a single cycle slot, but has to share cycles with xyzw.
- * t with single constant may not load GPRs or PV/PS in cycle 0 (carefull with ALU_TRANS_210).
+ * t with single constant may not load GPRs or PV/PS in cycle 0 (careful with ALU_TRANS_210).
  * t with two constants may only load GPRs or PV/PS in cycle 2.
  */
 
 
-/* Oder of instructions: All CF, All ALU, All Tex/Vtx fetches */
+/* Order of instructions: All CF, All ALU, All Tex/Vtx fetches */
 
 
 // CF insts
@@ -174,7 +174,7 @@
     cpu_to_le32((((array_base) << 0) | ((type) << 13) | ((rw_gpr) << 15) | ((rr) << 22) | ((index_gpr) << 23) | \
 		 ((es) << 30)))
 // R7xx apparently doesn't have the ELEM_LOOP entry any more
-// We still expose it, but ELEM_LOOP is explicitely R6xx now.
+// We still expose it, but ELEM_LOOP is explicitly R6xx now.
 // TODO: is this just forgotten in the docs, or really not available any more?
 #define CF_ALLOC_IMP_EXP_DWORD1_BUF(array_size, comp_mask, el, bc, eop, vpm, cf_inst, wqm, b) \
     cpu_to_le32((((array_size) << 0) | ((comp_mask) << 12) | ((el) << 16) | ((bc) << 17) | \

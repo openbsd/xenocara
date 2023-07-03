@@ -2,7 +2,7 @@
  * \file simple_list.h
  * Simple macros for type-safe, intrusive lists.
  *
- *  Intended to work with a list sentinal which is created as an empty
+ *  Intended to work with a list sentinel which is created as an empty
  *  list.  Insert & delete are O(1).
  *  
  * \author
@@ -108,12 +108,12 @@ do {						\
 /**
  * Make a empty list empty.
  *
- * \param sentinal list (sentinal element).
+ * \param sentinel list (sentinel element).
  */
-#define make_empty_list(sentinal)		\
+#define make_empty_list(sentinel)		\
 do {						\
-   (sentinal)->next = sentinal;			\
-   (sentinal)->prev = sentinal;			\
+   (sentinel)->next = sentinel;			\
+   (sentinel)->prev = sentinel;			\
 } while (0)
 
 /**

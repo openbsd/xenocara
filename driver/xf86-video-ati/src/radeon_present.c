@@ -254,7 +254,9 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
     xf86CrtcPtr xf86_crtc = crtc->devPrivate;
     ScreenPtr screen = window->drawable.pScreen;
     ScrnInfoPtr scrn = xf86_crtc->scrn;
+#ifdef USE_GLAMOR
     struct radeon_pixmap *priv = radeon_get_pixmap_private(pixmap);
+#endif
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
     RADEONInfoPtr info = RADEONPTR(scrn);
     PixmapPtr screen_pixmap = screen->GetScreenPixmap(screen);
@@ -278,10 +280,13 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
 	return FALSE;
 #endif
 
+#ifdef USE_GLAMOR
     if (priv && priv->fb_failed)
 	return FALSE;
+#endif
 
     if (!radeon_pixmap_get_fb(pixmap)) {
+#ifdef USE_GLAMOR
 	if (!priv)
 	    priv = radeon_get_pixmap_private(pixmap);
 
@@ -291,6 +296,7 @@ radeon_present_check_flip(RRCrtcPtr crtc, WindowPtr window, PixmapPtr pixmap,
 		       "normal if using PRIME render offloading)\n");
 	    priv->fb_failed = TRUE;
 	}
+#endif
 
 	return FALSE;
     }

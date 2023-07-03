@@ -45,7 +45,9 @@
 #include "radeon_glamor.h"
 #include "radeon_reg.h"
 
+#if XORG_VERSION_CURRENT < XORG_VERSION_NUMERIC(1,19,99,1,0)
 #include <dri.h>
+#endif
 
 #include "drmmode_display.h"
 
@@ -1275,7 +1277,7 @@ drmmode_show_cursor (xf86CrtcPtr crtc)
 	    arg.hot_y = yhot;
 
 	    ret = drmIoctl(pRADEONEnt->fd, DRM_IOCTL_MODE_CURSOR2, &arg);
-	    if (ret == -EINVAL)
+	    if (ret == -1 && errno == EINVAL)
 		use_set_cursor2 = FALSE;
 	    else
 		return;

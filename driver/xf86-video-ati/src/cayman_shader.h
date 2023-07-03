@@ -30,7 +30,7 @@
 
 #include "radeon.h"
 
-/* Oder of instructions: All CF, All ALU, All Tex/Vtx fetches */
+/* Order of instructions: All CF, All ALU, All Tex/Vtx fetches */
 
 
 // CF insts
