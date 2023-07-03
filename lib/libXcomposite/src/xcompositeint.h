@@ -46,6 +46,7 @@
 #define _XCOMPOSITEINT_H_
 
 #include <stdio.h>
+#include <X11/Xfuncproto.h>
 #include <X11/Xlib.h>
 #include <X11/Xlibint.h>
 #include <X11/Xutil.h>
@@ -76,9 +77,9 @@ XCompositeFindDisplay (Display *dpy);
 #define XCompositeHasExtension(i) ((i) && ((i)->codes))
 
 #define XCompositeCheckExtension(dpy,i,val) \
-  if (!XCompositeHasExtension(i)) { return val; }
+    do { if (!XCompositeHasExtension(i)) { return val; } } while (0)
 
 #define XCompositeSimpleCheckExtension(dpy,i) \
-  if (!XCompositeHasExtension(i)) { return; }
+    do { if (!XCompositeHasExtension(i)) { return; } } while (0)
 
 #endif /* _XCOMPOSITEINT_H_ */

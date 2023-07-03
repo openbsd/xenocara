@@ -1,3 +1,101 @@
+commit cecff847395deb553b6331f31776f9cbfc809add
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 14:04:06 2022 -0800
+
+    libXcomposite 0.4.6
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 352885a4ff166cd065da1944649a4f12801dd4d2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 21 11:54:58 2022 -0800
+
+    XCompositeCloseDisplay: Mark codes as unused
+    
+    Quiets clang warning:
+    
+    Xcomposite.c:91:50: warning: unused parameter 'codes' [-Wunused-parameter]
+    XCompositeCloseDisplay (Display *dpy, XExtCodes *codes)
+                                                     ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 544392051e5f566c4eb29fa2e40dbce748935728
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 21 11:50:04 2022 -0800
+
+    Handle implicit conversion warnings from clang
+    
+    Clears 13 -Wimplicit-int-conversion, 10 -Wshorten-64-to-32, and
+    2 -Wsign-conversion warnings.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 253561cfcc3b95d21046bf08467fa0f68be385da
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 21 11:33:26 2022 -0800
+
+    Wrap XComposite*CheckExtension() in do { ... } while(0)
+    
+    Makes macro expansion safer and eliminates -Wextra-semi-stmt warnings
+    from clang every time it is called due to semicolon after bracket.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 8a10ff647b795b778af58037a8cbc23a03289e9a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 21 11:29:44 2022 -0800
+
+    Remove unnecessary casts from malloc() and free() calls
+    
+    Not needed in C89 and later
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0c02375b5a319fffe98b8f80ac3c25a8ab3e362
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Nov 21 11:26:44 2022 -0800
+
+    Mark two dpy parameters const as suggested by cppcheck
+    
+    Xcomposite.c:56:66: style: Parameter 'dpy' can be declared with const
+      [constParameter]
+    XCompositeExtRemoveDisplay (XCompositeExtInfo *extinfo, Display *dpy)
+                                                                     ^
+    Xcomposite.c:175:22: style: Parameter 'dpy' can be declared with const
+      [constParameter]
+            Display     *dpy)
+                         ^
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit d2d1e38e5cd7027c4ebe73d6b420a516f3c99c9d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 11:21:47 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b134b362129f236f4f9221a393b57a9456fe3214
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 11:19:45 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,usage,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f173c3b9c809842768c52eb16fb9a83f0551e5f4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 11:19:10 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit fd7d02cc014ac9bf5bb7e68b66102ea36a76a59a
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Mar 10 17:25:19 2019 -0700
@@ -652,7 +750,7 @@ Date:   Mon Jul 11 22:28:03 2005 +0000
     Require modular X library. Unify dependency _CFLAGS/_LIBS
 
 commit 7098e81fd4d933ca922431280579049396466d23
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Thu Jul 7 18:25:28 2005 +0000
 
     Add build sytem for Xcomposite
@@ -669,7 +767,7 @@ Date:   Sun Jul 3 07:00:56 2005 +0000
         <X11/fonts/foo.h>.
 
 commit 6a5a9a284a8e0e76aed1302ccb5c423c12b66eac
-Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
 Date:   Tue May 17 16:47:58 2005 +0000
 
     Add Xdamage build system

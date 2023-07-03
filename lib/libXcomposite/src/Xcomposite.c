@@ -1,5 +1,5 @@
 /*
- * $Id: Xcomposite.c,v 1.5 2019/06/19 19:29:23 matthieu Exp $
+ * $Id: Xcomposite.c,v 1.6 2023/07/03 08:13:41 matthieu Exp $
  *
  * Copyright © 2006 Sun Microsystems
  *
@@ -53,7 +53,7 @@ const char XCompositeExtensionName[] = COMPOSITE_NAME;
  * extension object. (Replaces XextRemoveDisplay.)
  */
 static int
-XCompositeExtRemoveDisplay (XCompositeExtInfo *extinfo, Display *dpy)
+XCompositeExtRemoveDisplay (XCompositeExtInfo *extinfo, const Display *dpy)
 {
     XCompositeExtDisplayInfo *info, *prev;
 
@@ -83,12 +83,12 @@ XCompositeExtRemoveDisplay (XCompositeExtInfo *extinfo, Display *dpy)
     if (info == extinfo->cur) extinfo->cur = NULL;  /* flush cache */
     _XUnlockMutex(_Xglobal_lock);
 
-    Xfree ((char *) info);
+    Xfree (info);
     return 1;
 }
 
 static int
-XCompositeCloseDisplay (Display *dpy, XExtCodes *codes)
+XCompositeCloseDisplay (Display *dpy, _X_UNUSED XExtCodes *codes)
 {
     return XCompositeExtRemoveDisplay (&XCompositeExtensionInfo, dpy);
 }
@@ -104,7 +104,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
 {
     XCompositeExtDisplayInfo    *info;
 
-    info = (XCompositeExtDisplayInfo *) Xmalloc (sizeof (XCompositeExtDisplayInfo));
+    info = Xmalloc (sizeof (XCompositeExtDisplayInfo));
     if (!info) return NULL;
     info->display = dpy;
 
@@ -124,7 +124,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
 	 */
 	LockDisplay (dpy);
 	GetReq (CompositeQueryVersion, req);
-	req->reqType = info->codes->major_opcode;
+	req->reqType = (CARD8) info->codes->major_opcode;
 	req->compositeReqType = X_CompositeQueryVersion;
 	req->majorVersion = COMPOSITE_MAJOR;
 	req->minorVersion = COMPOSITE_MINOR;
@@ -135,8 +135,8 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
 	    Xfree(info);
 	    return NULL;
 	}
-	info->major_version = rep.majorVersion;
-	info->minor_version = rep.minorVersion;
+	info->major_version = (int) rep.majorVersion;
+	info->minor_version = (int) rep.minorVersion;
 	UnlockDisplay (dpy);
 	SyncHandle ();
     } else {
@@ -172,7 +172,7 @@ XCompositeExtAddDisplay (XCompositeExtInfo	*extinfo,
  */
 static XCompositeExtDisplayInfo *
 XCompositeExtFindDisplay (XCompositeExtInfo *extinfo,
-		      Display	    *dpy)
+			  const Display	    *dpy)
 {
     XCompositeExtDisplayInfo *info;
 
@@ -256,10 +256,10 @@ XCompositeRedirectWindow (Display *dpy, Window window, int update)
     XCompositeSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (CompositeRedirectWindow, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeRedirectWindow;
-    req->window = window;
-    req->update = update;
+    req->window = (CARD32) window;
+    req->update = (CARD8) update;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -273,10 +273,10 @@ XCompositeRedirectSubwindows (Display *dpy, Window window, int update)
     XCompositeSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (CompositeRedirectSubwindows, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeRedirectSubwindows;
-    req->window = window;
-    req->update = update;
+    req->window = (CARD32) window;
+    req->update = (CARD8) update;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -290,10 +290,10 @@ XCompositeUnredirectWindow (Display *dpy, Window window, int update)
     XCompositeSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (CompositeUnredirectWindow, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeUnredirectWindow;
-    req->window = window;
-    req->update = update;
+    req->window = (CARD32) window;
+    req->update = (CARD8) update;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -307,10 +307,10 @@ XCompositeUnredirectSubwindows (Display *dpy, Window window, int update)
     XCompositeSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (CompositeUnredirectSubwindows, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeUnredirectSubwindows;
-    req->window = window;
-    req->update = update;
+    req->window = (CARD32) window;
+    req->update = (CARD8) update;
     UnlockDisplay (dpy);
     SyncHandle ();
 }
@@ -325,10 +325,11 @@ XCompositeCreateRegionFromBorderClip (Display *dpy, Window window)
     XCompositeCheckExtension (dpy, info, 0);
     LockDisplay (dpy);
     GetReq (CompositeCreateRegionFromBorderClip, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeCreateRegionFromBorderClip;
-    req->window = window;
-    region = req->region = XAllocID (dpy);
+    req->window = (CARD32) window;
+    region = XAllocID (dpy);
+    req->region = (CARD32) region;
     UnlockDisplay (dpy);
     SyncHandle ();
     return region;
@@ -344,10 +345,11 @@ XCompositeNameWindowPixmap (Display *dpy, Window window)
     XCompositeCheckExtension (dpy, info, 0);
     LockDisplay (dpy);
     GetReq (CompositeNameWindowPixmap, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeNameWindowPixmap;
-    req->window = window;
-    pixmap = req->pixmap = XAllocID (dpy);
+    req->window = (CARD32) window;
+    pixmap = XAllocID (dpy);
+    req->pixmap = (CARD32) pixmap;
     UnlockDisplay (dpy);
     SyncHandle ();
     return pixmap;
@@ -363,9 +365,9 @@ XCompositeGetOverlayWindow (Display *dpy, Window window)
     XCompositeCheckExtension (dpy, info, 0);
     LockDisplay (dpy);
     GetReq (CompositeGetOverlayWindow, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeGetOverlayWindow;
-    req->window = window;
+    req->window = (CARD32) window;
     if (!_XReply (dpy, (xReply *) &rep, 0, xFalse))
     {
 	UnlockDisplay (dpy);
@@ -388,9 +390,9 @@ XCompositeReleaseOverlayWindow (Display *dpy, Window window)
     XCompositeSimpleCheckExtension (dpy, info);
     LockDisplay (dpy);
     GetReq (CompositeReleaseOverlayWindow, req);
-    req->reqType = info->codes->major_opcode;
+    req->reqType = (CARD8) info->codes->major_opcode;
     req->compositeReqType = X_CompositeReleaseOverlayWindow;
-    req->window = window;
+    req->window = (CARD32) window;
     UnlockDisplay (dpy);
     SyncHandle ();
 }

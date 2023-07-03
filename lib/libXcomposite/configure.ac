@@ -31,13 +31,14 @@ AC_PREREQ([2.60])
 # that 'revision' number appears in Xcomposite.h and has to be manually
 # synchronized.
 #
-AC_INIT(libXcomposite, [0.4.5],
-	[https://gitlab.freedesktop.org/xorg/lib/libXcomposite/issues], [libXcomposite])
+AC_INIT(libXcomposite, [0.4.6],
+	[https://gitlab.freedesktop.org/xorg/lib/libxcomposite/-/issues],
+	[libXcomposite])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Initialize libtool
 AC_PROG_LIBTOOL
@@ -62,8 +63,9 @@ fi
 COMPOSITEEXT_VERSION=[`echo $VERSION | sed 's/^\([0-9][0-9]*\.[0-9][0-9]*\).*$/\1/'`]
 AC_SUBST(COMPOSITEEXT_VERSION)
 
-# Obtain compiler/linker options for depedencies
-PKG_CHECK_MODULES(XCOMPOSITE, [compositeproto >= $COMPOSITEEXT_VERSION] x11)
+# Obtain compiler/linker options for dependencies
+PKG_CHECK_MODULES(XCOMPOSITE,
+        [compositeproto >= $COMPOSITEEXT_VERSION xproto >= 7.0.22 x11])
 PKG_CHECK_MODULES(XFIXES, xfixes)
 
 AC_CONFIG_FILES([Makefile
