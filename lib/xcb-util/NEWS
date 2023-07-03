@@ -1,3 +1,11 @@
+Release 0.4.1 (2022-12-19)
+==========================
+
+- Add standard X.Org package changes to autogen.sh
+- Build xz tarballs instead of bzip2
+- Clean up some compiler warnings from clang
+- Do updates for migration to gitlab
+
 Release 0.4.0 (2014-10-15)
 ==========================
 

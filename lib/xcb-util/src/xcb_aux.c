@@ -48,7 +48,7 @@ xcb_aux_get_depth (xcb_connection_t *c,
 {
   xcb_drawable_t            drawable;
   xcb_get_geometry_reply_t *geom;
-  int                       depth = 0;
+  uint8_t                   depth = 0;
 
   drawable = screen->root;
   geom = xcb_get_geometry_reply (c, xcb_get_geometry(c, drawable), 0);
@@ -340,9 +340,9 @@ xcb_aux_parse_color(const char *color_name,
     } while (*color_name != '\0');
     n <<= 2;
     n = 16 - n;
-    *red = r << n;
-    *green = g << n;
-    *blue = b << n;
+    *red = (uint16_t) (r << n);
+    *green = (uint16_t) (g << n);
+    *blue = (uint16_t) (b << n);
     return 1;
 }
 

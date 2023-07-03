@@ -13,27 +13,29 @@ you're using and why you aren't in a mental hospital yet. We'd welcome
 patches/suggestions for enhancement and new libraries; Please report any
 issues you find to the freedesktop.org bug tracker, at:
 
-  <https://bugs.freedesktop.org/enter_bug.cgi?product=XCB>
+  https://gitlab.freedesktop.org/xorg/lib/libxcb-util/-/issues
 
 Discussion about XCB occurs on the XCB mailing list:
 
-  <mailto:xcb at lists.freedesktop.org>
-  <http://lists.freedesktop.org/mailman/listinfo/xcb>
+  https://lists.freedesktop.org/mailman/listinfo/xcb
 
 About XCB util module
 =====================
 
-XCB util module provides the following library:
+XCB util module provides the following libraries:
 
   - aux: Convenient access to connection setup and some core requests.
   - atom: Standard core X atom constants and atom caching.
   - event: Some utilities that have little to do with events any more.
 
-You can obtain the latest development versions of XCB util using
-GIT. For anonymous checkouts, use:
+You can obtain the latest development versions of XCB util using GIT from:
 
-  git clone --recursive git://anongit.freedesktop.org/git/xcb/util
+  https://gitlab.freedesktop.org/xorg/lib/libxcb-util
 
-For developers, use:
+  For anonymous checkouts, use:
 
-  git clone --recursive git+ssh://git.freedesktop.org/git/xcb/util
+    git clone --recursive https://gitlab.freedesktop.org/xorg/lib/libxcb-util.git
+
+  For developers, use:
+
+    git clone --recursive git@gitlab.freedesktop.org:xorg/lib/libxcb-util.git

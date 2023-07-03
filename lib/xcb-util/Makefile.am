@@ -20,4 +20,4 @@ ChangeLog:
 
 dist-hook: ChangeLog INSTALL
 
-EXTRA_DIST = autogen.sh
+EXTRA_DIST = autogen.sh README.md

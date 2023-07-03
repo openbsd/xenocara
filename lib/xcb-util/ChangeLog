@@ -1,3 +1,153 @@
+commit 3a157762578a2e4253a7cb40d2854a3444d5a9df
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Dec 19 18:09:12 2022 -0800
+
+    xcb-util 0.4.1
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b966c72c422d2129435de7876f1681b2d710549
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 13:49:27 2022 -0800
+
+    xcb_aux: handle -Wimplicit-int-conversion warnings from clang
+    
+    xcb_aux.c:61:10: warning: implicit conversion loses integer precision:
+     'int' to 'uint8_t' (aka 'unsigned char') [-Wimplicit-int-conversion]
+      return depth;
+      ~~~~~~ ^~~~~
+    xcb_aux.c:343:14: warning: implicit conversion loses integer precision:
+     'int' to 'uint16_t' (aka 'unsigned short') [-Wimplicit-int-conversion]
+        *red = r << n;
+             ~ ~~^~~~
+    xcb_aux.c:344:16: warning: implicit conversion loses integer precision:
+     'int' to 'uint16_t' (aka 'unsigned short') [-Wimplicit-int-conversion]
+        *green = g << n;
+               ~ ~~^~~~
+    xcb_aux.c:345:15: warning: implicit conversion loses integer precision:
+     'int' to 'uint16_t' (aka 'unsigned short') [-Wimplicit-int-conversion]
+        *blue = b << n;
+              ~ ~~^~~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 50c931740b424e959b765aaf719278f5f025b329
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 13:43:02 2022 -0800
+
+    atoms: Fix type mismatch in xcb_atom_name_unique()
+    
+    Clears clang warnings of:
+    
+    atoms.c:84:36: warning: format specifies type 'unsigned long' but
+     the argument has type 'uint32_t' (aka 'unsigned int') [-Wformat]
+                    return makename("%s_U%lu", base, id);
+                                         ~~~         ^~
+                                         %u
+    atoms.c:86:27: warning: format specifies type 'unsigned long' but
+     the argument has type 'uint32_t' (aka 'unsigned int') [-Wformat]
+                    return makename("U%lu", id);
+                                      ~~~   ^~
+                                      %u
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1f2e533010513cc99435e8781226abec5cc53f6f
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Dec 4 13:39:22 2022 -0800
+
+    atoms: add format attribute to makenames() function
+    
+    Quiets clang warning:
+    atoms.c:53:22: warning: format string is not a string literal [-Wformat-nonliteral]
+            n = vasprintf(&ret, fmt, ap);
+                                ^~~
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 82e8eac6669a5e766f295685c973c0cd677d3cb9
+Author: Mihail Konev <k.mvc@ya.ru>
+Date:   Thu Jan 26 13:52:49 2017 +1000
+
+    autogen: add default patch prefix
+    
+    Signed-off-by: Mihail Konev <k.mvc@ya.ru>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 9f8dbe86f0b11300fec764957a16891af2edb456
+Author: Emil Velikov <emil.l.velikov@gmail.com>
+Date:   Mon Mar 9 12:00:52 2015 +0000
+
+    autogen.sh: use quoted string variables
+    
+    Place quotes around the $srcdir, $ORIGDIR and $0 variables to prevent
+    fall-outs, when they contain space.
+    
+    Signed-off-by: Emil Velikov <emil.l.velikov@gmail.com>
+    Reviewed-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c52eaa7fbb159ab283c2400772ae60cb8678756c
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Tue Jan 24 10:32:07 2017 +1000
+
+    autogen.sh: use exec instead of waiting for configure to finish
+    
+    Syncs the invocation of configure with the one from the server.
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+    Reviewed-by: Emil Velikov <emil.velikov@collabora.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b9b1e5a28211737ca4f0d541af5b40bc18777ede
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:35:56 2022 -0700
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 34b54a864797fbb7c50954ba0ed22fc886d17d7e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:34:24 2022 -0700
+
+    Update m4 to xorg/util/xcb-util-m4@c617eee22ae5c285e79e81
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit e7fcd702ef3923405010c4a960a07928652ac212
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Jul 20 15:34:19 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit dbfc1c65ce343b8d0d1d8691e32d7f8e4fc0fbb3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 12:03:48 2019 -0800
+
+    Add README.md to EXTRA_DIST
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 77b0521bd6d49c41cd6d0f3fd4ce504b3c18b556
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 12:02:23 2019 -0800
+
+    Update README for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c0654e909056516f1b61ee243e0f69c0140ee1c4
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 17 11:51:42 2019 -0800
+
+    Update configure.ac bug URL for gitlab migration
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit acf790d7752f36e450d476ad79807d4012ec863b
 Author: Arnaud Fontaine <arnau@debian.org>
 Date:   Wed Sep 24 19:48:33 2014 +0900
