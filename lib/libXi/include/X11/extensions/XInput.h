@@ -204,7 +204,7 @@ typedef struct
     Display        *display;     /* Display the event was read from */
     Window         window;       /* "event" window reported relative to */
     XID            deviceid;
-    Window         root;         /* root window event occured on */
+    Window         root;         /* root window event occurred on */
     Window         subwindow;    /* child window */
     Time           time;         /* milliseconds */
     int            x, y;         /* x, y coordinates in event window */
@@ -236,7 +236,7 @@ typedef struct {
     Display       *display;     /* Display the event was read from */
     Window        window;       /* "event" window reported relative to */
     XID           deviceid;
-    Window        root;         /* root window that the event occured on */
+    Window        root;         /* root window that the event occurred on */
     Window        subwindow;    /* child window */
     Time          time;         /* milliseconds */
     int           x, y;         /* x, y coordinates in event window */
@@ -269,7 +269,7 @@ typedef struct
     Display       *display;    /* Display the event was read from */
     Window        window;      /* "event" window reported relative to */
     XID           deviceid;
-    Window        root;        /* root window that the event occured on */
+    Window        root;        /* root window that the event occurred on */
     Window        subwindow;   /* child window */
     Time          time;        /* milliseconds */
     int           x, y;        /* x, y coordinates in event window */

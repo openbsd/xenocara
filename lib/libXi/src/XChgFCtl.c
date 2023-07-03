@@ -86,7 +86,7 @@ XChangeFeedbackControl(
 
     if (f->class == KbdFeedbackClass) {
 	XKbdFeedbackControl *K;
-	xKbdFeedbackCtl k;
+	xKbdFeedbackCtl k = {0};
 
 	K = (XKbdFeedbackControl *) f;
 	k.class = KbdFeedbackClass;
@@ -106,7 +106,7 @@ XChangeFeedbackControl(
 	Data(dpy, (char *)&k, length);
     } else if (f->class == PtrFeedbackClass) {
 	XPtrFeedbackControl *P;
-	xPtrFeedbackCtl p;
+	xPtrFeedbackCtl p = {0};
 
 	P = (XPtrFeedbackControl *) f;
 	p.class = PtrFeedbackClass;
@@ -121,7 +121,7 @@ XChangeFeedbackControl(
 	Data(dpy, (char *)&p, length);
     } else if (f->class == IntegerFeedbackClass) {
 	XIntegerFeedbackControl *I;
-	xIntegerFeedbackCtl i;
+	xIntegerFeedbackCtl i = {0};
 
 	I = (XIntegerFeedbackControl *) f;
 	i.class = IntegerFeedbackClass;
@@ -134,7 +134,7 @@ XChangeFeedbackControl(
 	Data(dpy, (char *)&i, length);
     } else if (f->class == StringFeedbackClass) {
 	XStringFeedbackControl *S;
-	xStringFeedbackCtl s;
+	xStringFeedbackCtl s = {0};
 
 	S = (XStringFeedbackControl *) f;
 	s.class = StringFeedbackClass;
@@ -149,7 +149,7 @@ XChangeFeedbackControl(
 	Data(dpy, (char *)S->syms_to_display, length);
     } else if (f->class == BellFeedbackClass) {
 	XBellFeedbackControl *B;
-	xBellFeedbackCtl b;
+	xBellFeedbackCtl b = {0};
 
 	B = (XBellFeedbackControl *) f;
 	b.class = BellFeedbackClass;
@@ -164,7 +164,7 @@ XChangeFeedbackControl(
 	Data(dpy, (char *)&b, length);
     } else if (f->class == LedFeedbackClass) {
 	XLedFeedbackControl *L;
-	xLedFeedbackCtl l;
+	xLedFeedbackCtl l = {0};
 
 	L = (XLedFeedbackControl *) f;
 	l.class = LedFeedbackClass;
@@ -177,7 +177,7 @@ XChangeFeedbackControl(
 	length <<= 2;
 	Data(dpy, (char *)&l, length);
     } else {
-	xFeedbackCtl u;
+	xFeedbackCtl u = {0};
 
 	u.class = f->class;
 	u.length = f->length - sizeof(int);

@@ -230,7 +230,7 @@ XExtDisplayInfo *XInput_find_display (Display *dpy)
                                 xinput_extension_name,
                                 &xinput_extension_hooks,
                                 nevents, NULL);
-      if (dpyinfo->codes) /* NULL if XI doesn't exist on the server */
+      if (XextHasExtension(dpyinfo)) /* skip if XI doesn't exist on the server */
       {
           XESetWireToEventCookie(dpy, dpyinfo->codes->major_opcode, XInputWireToCookie);
           XESetCopyEventCookie(dpy, dpyinfo->codes->major_opcode, XInputCopyCookie);

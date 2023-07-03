@@ -1,3 +1,96 @@
+commit 3a7503ec7703f10de17c622ea22b7bff736cea74
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Thu May 4 14:42:12 2023 +1000
+
+    libXi 1.8.1
+    
+    Signed-off-by: Peter Hutterer <peter.hutterer@who-t.net>
+
+commit 0f1541e1e5bd57686edf95c3532544556ed370bb
+Author: Peter Hutterer <peter.hutterer@who-t.net>
+Date:   Fri Apr 28 11:12:47 2023 +1000
+
+    Initialize a few stack vars to zero
+    
+    Modified version of the patch from #4
+    
+    Fixes #4
+    
+    Reviewed-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 826215af0cc46b19555063b8894de6781d4c5993
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Mar 4 10:44:45 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:13: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:13: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:13: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 08431d0684f9a1edf199f6c6060d2bef1ac78399
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Aug 25 15:39:36 2022 -0700
+
+    XInput_find_display: Don't dereference NULL dpyinfo
+    
+    Unlikely, but could happen if calloc fails in XextAddDisplay()
+    
+    Relies on XextHasExtension(i) macro from <X11/extensions/extutil.h>
+    which checks for ((i) && ((i)->codes))
+    
+    Fixes: #15
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit bca3474a8622fde5815260461784282f78a4efb5
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 15:29:23 2022 -0700
+
+    gitlab CI: enable gitlab's builtin static analysis
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 87202ce9851c5fb61038829abd5b1feb42334a35
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 15:28:42 2022 -0700
+
+    gitlab CI: enable commit & merge request checks
+    
+    Uses ci-fairy from freedesktop/ci-templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0fb16bad9c851c11d171ff601bf8adae9ffc6fdb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 13:39:34 2022 -0700
+
+    Fix spelling/wording issues
+    
+    Found by using:
+        codespell --builtin clear,rare,informal,code,names
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed12a34ed79d3751fc35194d93b7ad370a1a8b8a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Jul 17 13:34:52 2022 -0700
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit f24d7f43ab4d97203e60677a3d42e11dbc80c8b4
 Author: Povilas Kanapickas <povilas@radix.lt>
 Date:   Wed Sep 15 19:28:03 2021 +0300
