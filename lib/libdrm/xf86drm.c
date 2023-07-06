@@ -846,7 +846,7 @@ static int
 _priv_open_device(const char *path)
 {
 	drmMsg("_priv_open_device\n");
-	return open(path, O_RDWR, 0);
+	return open(path, O_RDWR);
 }
 
 drm_public int priv_open_device(const char *)
@@ -3539,6 +3539,10 @@ static char *drmGetMinorNameForFD(int fd, int type)
     const char *dev_name = drmGetDeviceName(type);
     unsigned int maj, min;
     int n;
+    int base = drmGetMinorBase(type);
+
+    if (base < 0)
+        return NULL;
 
     if (fstat(fd, &sbuf))
         return NULL;
@@ -3552,7 +3556,7 @@ static char *drmGetMinorNameForFD(int fd, int type)
     if (!dev_name)
         return NULL;
 
-    n = snprintf(buf, sizeof(buf), dev_name, DRM_DIR_NAME, min);
+    n = snprintf(buf, sizeof(buf), dev_name, DRM_DIR_NAME, base + min);
     if (n == -1 || n >= sizeof(buf))
         return NULL;
 
