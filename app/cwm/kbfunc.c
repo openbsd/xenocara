@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: kbfunc.c,v 1.173 2022/02/27 14:59:55 okan Exp $
+ * $OpenBSD: kbfunc.c,v 1.174 2023/07/20 14:39:34 okan Exp $
  */
 
 #include <sys/types.h>
@@ -430,7 +430,9 @@ kbfunc_client_cycle(void *ctx, struct cargs *cargs)
 		/* Only cycle visible and non-ignored windows. */
 		if ((newcc->flags & (CLIENT_SKIP_CYCLE)) ||
 		    ((flags & CWM_CYCLE_INGROUP) &&
-		    (newcc->gc != oldcc->gc)))
+		    (newcc->gc != oldcc->gc)) ||
+		    ((flags & CWM_CYCLE_INCLASS) &&
+		    strcmp(newcc->res_class, oldcc->res_class) != 0))
 			again = 1;
 
 		/* Is oldcc the only non-hidden window? */

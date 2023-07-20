@@ -15,7 +15,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
- * $OpenBSD: conf.c,v 1.255 2022/02/26 15:19:18 okan Exp $
+ * $OpenBSD: conf.c,v 1.256 2023/07/20 14:39:34 okan Exp $
  */
 
 #include <sys/types.h>
@@ -136,6 +136,10 @@ static const struct {
 		(CWM_CYCLE_FORWARD | CWM_CYCLE_INGROUP)) },
 	{ FUNC_SC(window-rcycle-ingroup, client_cycle,
 		(CWM_CYCLE_REVERSE | CWM_CYCLE_INGROUP)) },
+	{ FUNC_SC(window-cycle-inclass, client_cycle,
+		(CWM_CYCLE_FORWARD | CWM_CYCLE_INCLASS)) },
+	{ FUNC_SC(window-rcycle-inclass, client_cycle,
+		(CWM_CYCLE_REVERSE | CWM_CYCLE_INCLASS)) },
 
 	{ FUNC_SC(group-cycle, group_cycle, (CWM_CYCLE_FORWARD)) },
 	{ FUNC_SC(group-rcycle, group_cycle, (CWM_CYCLE_REVERSE)) },
@@ -220,6 +224,8 @@ static const struct {
 	{ "C-slash",	"menu-cmd" },
 	{ "M-Tab",	"window-cycle" },
 	{ "MS-Tab",	"window-rcycle" },
+	{ "M-grave",	"window-cycle-inclass" },
+	{ "MS-grave",	"window-rcycle-inclass" },
 	{ "CM-n",	"window-menu-label" },
 	{ "CM-x",	"window-close" },
 	{ "CM-a",	"group-toggle-all" },

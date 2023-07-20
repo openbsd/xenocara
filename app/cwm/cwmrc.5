@@ -1,4 +1,4 @@
-.\"	$OpenBSD: cwmrc.5,v 1.77 2022/01/27 18:45:10 op Exp $
+.\"	$OpenBSD: cwmrc.5,v 1.78 2023/07/20 14:39:34 okan Exp $
 .\"
 .\" Copyright (c) 2004,2005 Marius Aamodt Eriksen <marius@monkey.org>
 .\"
@@ -14,7 +14,7 @@
 .\" ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 .\" OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 .\"
-.Dd $Mdocdate: January 27 2022 $
+.Dd $Mdocdate: July 20 2023 $
 .Dt CWMRC 5
 .Os
 .Sh NAME
@@ -295,6 +295,10 @@ Reverse cycle through windows.
 Forward cycle through windows in current group.
 .It window-rcycle-ingroup
 Reverse cycle through windows in current group.
+.It window-cycle-inclass
+Forward cycle through windows of the current window class.
+.It window-rcycle-inclass
+Reverse cycle through windows of the current window class.
 .It window-close
 Close current window.
 .It window-hide
