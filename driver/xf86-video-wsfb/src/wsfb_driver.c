@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.43 2022/11/10 17:38:58 matthieu Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.44 2023/08/01 11:06:13 aoyama Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -891,14 +891,19 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 			   strerror(errno));
 		return FALSE;
 	}
-	fPtr->fbmem = wsfb_mmap(len + fPtr->info.offset, 0, fPtr->fd);
+
+	/* On LUNA, no need to add 'offset' bytes, it is included in len */
+	if (fPtr->wstype != WSDISPLAY_TYPE_LUNA)
+		len += fPtr->info.offset;
+
+	fPtr->fbmem = wsfb_mmap(len, 0, fPtr->fd);
 
 	if (fPtr->fbmem == NULL) {
 		xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 			   "wsfb_mmap: %s\n", strerror(errno));
 		return FALSE;
 	}
-	fPtr->fbmem_len = len + fPtr->info.offset;
+	fPtr->fbmem_len = len;
 
 	WsfbSave(pScrn);
 	pScrn->vtSema = TRUE;
