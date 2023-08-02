@@ -1428,16 +1428,18 @@ copyRawEvent(XGenericEventCookie *cookie_in,
     in = cookie_in->data;
 
     bits = count_bits(in->valuators.mask, in->valuators.mask_len);
-    len = sizeof(XIRawEvent) + in->valuators.mask_len;
+    len = pad_to_double(sizeof(XIRawEvent))
+        + pad_to_double(in->valuators.mask_len);
     len += bits * sizeof(double) * 2;
 
     ptr = cookie_out->data = malloc(len);
     if (!ptr)
         return False;
 
-    out = next_block(&ptr, sizeof(XIRawEvent));
+    out = next_block(&ptr, pad_to_double(sizeof(XIRawEvent)));
     *out = *in;
-    out->valuators.mask = next_block(&ptr, out->valuators.mask_len);
+    out->valuators.mask
+        = next_block(&ptr, pad_to_double(out->valuators.mask_len));
     memcpy(out->valuators.mask, in->valuators.mask, out->valuators.mask_len);
 
     out->valuators.values = next_block(&ptr, bits * sizeof(double));
@@ -1954,7 +1956,8 @@ wireToRawEvent(XExtDisplayInfo *info, xXIRawEvent *in, XGenericEventCookie *cook
     XIRawEvent *out;
     void *ptr;
 
-    len = sizeof(XIRawEvent) + in->valuators_len * 4;
+    len = pad_to_double(sizeof(XIRawEvent))
+        + pad_to_double(in->valuators_len * 4);
     bits = count_bits((unsigned char*)&in[1], in->valuators_len * 4);
     len += bits * sizeof(double) * 2; /* raw + normal */
 
@@ -1962,7 +1965,7 @@ wireToRawEvent(XExtDisplayInfo *info, xXIRawEvent *in, XGenericEventCookie *cook
     if (!ptr)
         return 0;
 
-    out = next_block(&ptr, sizeof(XIRawEvent));
+    out = next_block(&ptr, pad_to_double(sizeof(XIRawEvent)));
     out->type           = in->type;
     out->serial         = cookie->serial;
     out->display        = cookie->display;
@@ -1981,7 +1984,8 @@ wireToRawEvent(XExtDisplayInfo *info, xXIRawEvent *in, XGenericEventCookie *cook
         out->sourceid       = 0;
 
     out->valuators.mask_len = in->valuators_len * 4;
-    out->valuators.mask = next_block(&ptr, out->valuators.mask_len);
+    out->valuators.mask
+        = next_block(&ptr, pad_to_double(out->valuators.mask_len));
     memcpy(out->valuators.mask, &in[1], out->valuators.mask_len);
 
     out->valuators.values = next_block(&ptr, bits * sizeof(double));
