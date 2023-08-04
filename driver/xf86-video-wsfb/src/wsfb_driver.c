@@ -1,4 +1,4 @@
-/* $OpenBSD: wsfb_driver.c,v 1.44 2023/08/01 11:06:13 aoyama Exp $ */
+/* $OpenBSD: wsfb_driver.c,v 1.45 2023/08/04 23:49:45 aoyama Exp $ */
 /*
  * Copyright © 2001-2012 Matthieu Herrb
  * All rights reserved.
@@ -113,6 +113,8 @@ static Bool WsfbPreInit(ScrnInfoPtr, int);
 static Bool WsfbScreenInit(SCREEN_INIT_ARGS_DECL);
 static Bool WsfbCloseScreen(CLOSE_SCREEN_ARGS_DECL);
 static void *WsfbWindowLinear(ScreenPtr, CARD32, CARD32, int, CARD32 *,
+			      void *);
+static void *WsfbWindowAfb(ScreenPtr, CARD32, CARD32, int, CARD32 *,
 			      void *);
 static void WsfbPointerMoved(SCRN_ARG_TYPE, int, int);
 static Bool WsfbEnterVT(VT_FUNC_ARGS_DECL);
@@ -238,6 +240,7 @@ typedef struct {
 	size_t			fbmem_len;
 	int			rotate;
 	Bool			shadowFB;
+	Bool			planarAfb;
 	void *			shadow;
 	CloseScreenProcPtr	CloseScreen;
 	CreateScreenResourcesProcPtr CreateScreenResources;
@@ -534,18 +537,32 @@ WsfbPreInit(ScrnInfoPtr pScrn, int flags)
 		return FALSE;
 	}
 
-	/* Quirk for LUNA: now X supports 1bpp only, so force to set 1bpp */
+	/*
+	 * Quirk for LUNA: LUNA's video memory is organized in 'planar'.
+	 */
 	if (fPtr->wstype == WSDISPLAY_TYPE_LUNA) {
-		struct wsdisplay_gfx_mode gfxmode;
-		gfxmode.width  = fPtr->info.width;
-		gfxmode.height = fPtr->info.height;
-		gfxmode.depth  = fPtr->info.depth = 1;
-		
-		if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE, &gfxmode) == -1) {
-			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
-			    "ioctl WSDISPLAY_SETGFXMODE: %s\n",
-			    strerror(errno));
-			return FALSE;
+		if ((fPtr->info.depth == 8) && (pScrn->depth == 8)) {
+			/*
+			 * With 8bpp, use 'planar' conversion.
+			 */
+			fPtr->planarAfb = TRUE;
+		} else {
+			/*
+			 * Otherwise, force to set 1bpp mode to use
+			 * 1bpp Xserver.
+			 */
+			struct wsdisplay_gfx_mode gfxmode;
+			gfxmode.width  = fPtr->info.width;
+			gfxmode.height = fPtr->info.height;
+			gfxmode.depth  = fPtr->info.depth = 1;
+
+			if (ioctl(fPtr->fd, WSDISPLAYIO_SETGFXMODE,
+			    &gfxmode) == -1) {
+				xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
+				    "ioctl WSDISPLAY_SETGFXMODE: %s\n",
+				    strerror(errno));
+				return FALSE;
+			}
 		}
 	}
 
@@ -792,6 +809,12 @@ wsfbUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
     shadowUpdatePacked(pScreen, pBuf);
 }
 
+static void
+wsfbUpdateAfb8(ScreenPtr pScreen, shadowBufPtr pBuf)
+{
+    shadowUpdateAfb8(pScreen, pBuf);
+}
+
 static Bool
 WsfbCreateScreenResources(ScreenPtr pScreen)
 {
@@ -799,6 +822,8 @@ WsfbCreateScreenResources(ScreenPtr pScreen)
 	WsfbPtr fPtr = WSFBPTR(pScrn);
 	PixmapPtr pPixmap;
 	Bool ret;
+	void (*shadowproc)(ScreenPtr, shadowBufPtr);
+	ShadowWindowProc windowproc;
 
 	pScreen->CreateScreenResources = fPtr->CreateScreenResources;
 	ret = pScreen->CreateScreenResources(pScreen);
@@ -809,9 +834,17 @@ WsfbCreateScreenResources(ScreenPtr pScreen)
 
 	pPixmap = pScreen->GetScreenPixmap(pScreen);
 
-	if (!shadowAdd(pScreen, pPixmap, fPtr->rotate ?
-		wsfbUpdateRotatePacked : wsfbUpdatePacked,
-		WsfbWindowLinear, fPtr->rotate, NULL)) {
+	shadowproc =  fPtr->rotate ?
+	    wsfbUpdateRotatePacked : wsfbUpdatePacked ;
+	windowproc = WsfbWindowLinear;
+
+ 	if (fPtr->planarAfb) {
+		shadowproc = wsfbUpdateAfb8;
+		windowproc = WsfbWindowAfb;
+	}
+
+	if (!shadowAdd(pScreen, pPixmap, shadowproc,
+		windowproc, fPtr->rotate, NULL)) {
 		return FALSE;
 	}
 	return TRUE;
@@ -857,6 +890,9 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 	case 4:
 	case 8:
 		len = fPtr->linebytes*fPtr->info.height;
+		/* LUNA planar framebuffer needs some modification */
+		if ((fPtr->wstype == WSDISPLAY_TYPE_LUNA) && fPtr->planarAfb)
+			len *= fPtr->info.depth;
 		break;
 	case 16:
 		if (fPtr->linebytes == fPtr->info.width) {
@@ -937,8 +973,14 @@ WsfbScreenInit(SCREEN_INIT_ARGS_DECL)
 	fPtr->fbstart = fPtr->fbmem + fPtr->info.offset;
 
 	if (fPtr->shadowFB) {
-		fPtr->shadow = calloc(1, pScrn->virtualX * pScrn->virtualY *
-		    pScrn->bitsPerPixel/8);
+		len = pScrn->virtualX * pScrn->virtualY *
+		    pScrn->bitsPerPixel/8;
+
+		/* LUNA planar framebuffer needs some modification */
+		if ((fPtr->wstype == WSDISPLAY_TYPE_LUNA) && fPtr->planarAfb)
+			len = pScrn->displayWidth * pScrn->virtualY;
+
+		fPtr->shadow = calloc(1, len);
 
 		if (!fPtr->shadow) {
 			xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
@@ -1116,6 +1158,18 @@ WsfbWindowLinear(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
 		fPtr->linebytes = *size;
 	}
 	return ((CARD8 *)fPtr->fbstart + row *fPtr->linebytes + offset);
+}
+
+static void *
+WsfbWindowAfb(ScreenPtr pScreen, CARD32 row, CARD32 offset, int mode,
+		CARD32 *size, void *closure)
+{
+	ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
+	WsfbPtr fPtr = WSFBPTR(pScrn);
+
+	/* size is offset from start of bitplane to next bitplane */
+	*size = fPtr->linebytes * fPtr->info.height;
+	return ((CARD8 *)fPtr->fbstart + row * fPtr->linebytes + offset);
 }
 
 static void
@@ -1472,6 +1526,10 @@ WsfbDGAAddModes(ScrnInfoPtr pScrn)
 		pDGAMode->pixmapHeight = pDGAMode->imageHeight;
 		pDGAMode->maxViewportX = pScrn->virtualX -
 			pDGAMode->viewportWidth;
+		/* LUNA planar framebuffer needs some modification */
+		if ((fPtr->wstype == WSDISPLAY_TYPE_LUNA) && fPtr->planarAfb)
+			pDGAMode->maxViewportX = pScrn->displayWidth -
+			    pDGAMode->viewportWidth;
 		pDGAMode->maxViewportY = pScrn->virtualY -
 			pDGAMode->viewportHeight;
 
