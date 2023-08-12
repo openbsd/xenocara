@@ -627,9 +627,9 @@ xf86OpenWScons(void)
                 /* strip number, assuming 0 */
                 p = strchr(vtprefix, '0');
                 *p = '\0';
-		fd = -1;
 	    }
 	    close(fd);
+	    fd = -1;
 	}
     }
     if (VTnum != -1) {
