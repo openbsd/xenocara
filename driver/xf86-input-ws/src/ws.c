@@ -13,7 +13,7 @@
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-/* $OpenBSD: ws.c,v 1.69 2023/04/27 12:25:56 bentley Exp $ */
+/* $OpenBSD: ws.c,v 1.70 2023/08/12 16:48:44 matthieu Exp $ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -767,7 +767,8 @@ wsClose(InputInfoPtr pInfo)
 		TimerFree(priv->remove_timer);
 		priv->remove_timer = NULL;
 	}
-	xf86CloseSerial(pInfo->fd);
+	if (pInfo->fd >= 0)
+		xf86CloseSerial(pInfo->fd);
 	pInfo->fd = -1;
 }
 
