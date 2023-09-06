@@ -40,10 +40,7 @@ static const char sccsid[] = "@(#)logout.c	4.02 97/04/01 xlockmore";
 #if ( HAVE_SYSLOG_H && defined( USE_SYSLOG ))
 #include <syslog.h>
 #endif
-#if defined(__CYGWIN__) || defined(SOLARIS2)
 #include <signal.h>
-#endif
-#include <sys/signal.h>
 
 extern Bool inroot, inwindow, nolock, debug;
 extern char *logoutCmd;
