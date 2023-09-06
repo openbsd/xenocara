@@ -62,7 +62,7 @@ amdgpu_present_get_crtc(WindowPtr window)
 }
 
 static int
-amdgpu_present_get_ust_msc(RRCrtcPtr crtc, CARD64 *ust, CARD64 *msc)
+amdgpu_present_get_ust_msc(RRCrtcPtr crtc, uint64_t *ust, uint64_t *msc)
 {
 	xf86CrtcPtr xf86_crtc = crtc->devPrivate;
 	drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;

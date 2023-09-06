@@ -276,7 +276,7 @@ extern _X_EXPORT PixmapPtr glamor_pixmap_from_fds(ScreenPtr screen,
                                                   const CARD32 *offsets,
                                                   CARD8 depth,
                                                   CARD8 bpp,
-                                                  uint64_t modifier);
+                                                  CARD64 modifier);
 
 /* @glamor_pixmap_from_fd: Creates a pixmap to wrap a dma-buf fd.
  *

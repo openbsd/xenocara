@@ -552,7 +552,7 @@ glamor_pixmap_from_fds(ScreenPtr screen,
                        CARD16 width, CARD16 height,
                        const CARD32 *strides, const CARD32 *offsets,
                        CARD8 depth, CARD8 bpp,
-                       uint64_t modifier)
+                       CARD64 modifier)
 {
     PixmapPtr pixmap;
     struct glamor_egl_screen_private *glamor_egl;
