@@ -24,7 +24,7 @@
  * SUCH DAMAGE.
  */
 
-/* $OpenBSD: usbtablet.c,v 1.14 2012/09/08 13:16:09 matthieu Exp $ */
+/* $OpenBSD: usbtablet.c,v 1.15 2023/09/07 09:13:51 robert Exp $ */
 
 /*
  * Driver for USB HID tablet devices.
@@ -56,18 +56,6 @@
 
 #include <usbhid.h>
 
-#if GET_ABI_MAJOR(ABI_XINPUT_VERSION) > 10
-#undef xalloc
-#undef xcalloc
-
-#define xcalloc calloc
-#define xalloc malloc
-#define Xcalloc calloc
-#define Xalloc malloc
-#define Xfree free
-#define Xrealloc realloc
-#endif
-
 #define SYSCALL(call) while(((call) == -1) && (errno == EINTR))
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #define mils(res) (res * 1000 / 2.54) /* resolution */
@@ -86,7 +74,7 @@
 typedef struct USBTDevice USBTDevice, *USBTDevicePtr;
 
 typedef struct {
-	char		*devName;
+	const char	*devName;
 	int		nDevs;
 	InputInfoPtr	*devices;
 	double		factorX;
@@ -337,7 +325,7 @@ UsbTabletReadInput(InputInfoPtr pInfo)
 
 		if (len <= 0) {
 			if (errno != EAGAIN) {
-				Error("error reading USBT device");
+				ErrorF("error reading USBT device\n");
 			}
 			break;
 		}
@@ -553,7 +541,7 @@ UsbTabletOpen(InputInfoPtr pInfo)
 
 	rd = hid_get_report_desc(pInfo->fd);
 	if (rd == 0) {
-		Error(comm->devName);
+		ErrorF("%s\n", comm->devName);
 		SYSCALL(close(pInfo->fd));
 		return !Success;
 	}
@@ -760,14 +748,14 @@ UsbTabletAllocate(InputDriverPtr drv, InputInfoPtr pInfo, char *name, int flag)
 		return BadValue;
 	}
 
-	priv = (USBTDevicePtr)xalloc(sizeof(USBTDevice));
+	priv = (USBTDevicePtr)malloc(sizeof(USBTDevice));
 	if (priv == NULL) {
 		return BadAlloc;
 	}
 
-	comm = (USBTCommonPtr)xalloc(sizeof(USBTCommon));
+	comm = (USBTCommonPtr)malloc(sizeof(USBTCommon));
 	if (comm == NULL) {
-		xfree(priv);
+		free(priv);
 		return BadAlloc;
 	}
 	memset(priv, 0, sizeof *priv);
@@ -795,10 +783,10 @@ UsbTabletAllocate(InputDriverPtr drv, InputInfoPtr pInfo, char *name, int flag)
 	priv->thresCent = 5;
 
 	comm->nDevs = 1;
-	comm->devices = (InputInfoPtr*)xalloc(sizeof(InputInfoPtr));
+	comm->devices = (InputInfoPtr*)malloc(sizeof(InputInfoPtr));
 	if (comm->devices == NULL) {
-		xfree(comm);
-		xfree(priv);
+		free(comm);
+		free(priv);
 		return BadAlloc;
 	}
 	comm->devices[0] = pInfo;
@@ -827,7 +815,7 @@ UsbTabletPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 	USBTCommonPtr comm = NULL, c;
 	USBTDevicePtr priv = NULL, p;
 	InputInfoPtr localDevices;
-	char *s;
+	const char *s;
 	int i, rc = Success;
 
 #if GET_ABI_MAJOR(ABI_XINPUT_VERSION) < 12
@@ -881,12 +869,12 @@ UsbTabletPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 			DBG(2, ErrorF("UsbTabletPreInit port share between"
 				      " %s and %s\n",
 				      pInfo->name, localDevices->name));
-			xfree(comm->devices);
-			xfree(comm);
+			free(comm->devices);
+			free(comm);
 			comm = priv->comm = c;
 			comm->nDevs++;
 			comm->devices = (InputInfoPtr *)
-				xrealloc(comm->devices,
+				realloc(comm->devices,
 					 sizeof(InputInfoPtr)* comm->nDevs);
 			comm->devices[comm->nDevs - 1] = pInfo;
 			break;
@@ -941,13 +929,13 @@ UsbTabletPreInit(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
 PreInit_fail:
 	if (comm) {
-		xfree(comm);
+		free(comm);
 	}
 	if (priv) {
-		xfree(priv);
+		free(priv);
 	}
 	if (pInfo) {
-		xfree(pInfo);
+		free(pInfo);
 	}
 	return rc;
 }
