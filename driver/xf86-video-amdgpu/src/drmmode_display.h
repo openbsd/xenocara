@@ -284,7 +284,7 @@ Bool amdgpu_do_pageflip(ScrnInfoPtr scrn, ClientPtr client,
 			amdgpu_drm_abort_proc abort,
 			enum drmmode_flip_sync flip_sync,
 			uint32_t target_msc);
-int drmmode_crtc_get_ust_msc(xf86CrtcPtr crtc, uint64_t *ust, uint64_t *msc);
+int drmmode_crtc_get_ust_msc(xf86CrtcPtr crtc, CARD64 *ust, CARD64 *msc);
 int drmmode_get_current_ust(int drm_fd, CARD64 * ust);
 void drmmode_crtc_set_vrr(xf86CrtcPtr crtc, Bool enabled);
 
