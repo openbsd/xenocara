@@ -57,8 +57,6 @@ SOFTWARE.
 #  include <sys/isa_defs.h> /* Solaris: defines _LP64 if necessary */
 # endif
 
-#include <stdint.h>
-
 #if defined(__SIZEOF_LONG__)
 # if __SIZEOF_LONG__ == 8
 #  define LONG64				/* 32/64-bit architecture */
@@ -109,10 +107,15 @@ typedef short INT16;
 
 typedef signed char    INT8;
 
-typedef uint64_t CARD64;
-typedef uint32_t CARD32;
-typedef uint16_t CARD16;
-typedef uint8_t  CARD8;
+# ifdef LONG64
+typedef unsigned long CARD64;
+typedef unsigned int CARD32;
+# else
+typedef unsigned long long CARD64;
+typedef unsigned long CARD32;
+# endif
+typedef unsigned short CARD16;
+typedef unsigned char  CARD8;
 
 typedef CARD32		BITS32;
 typedef CARD16		BITS16;
