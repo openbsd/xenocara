@@ -291,10 +291,10 @@ glamor_xv_query_image_attributes(int id,
             pitches[0] = size;
         size *= *h;
         if (offsets)
-            offsets[1] = offsets[2] = size;
+            offsets[1] = size;
         tmp = ALIGN(*w, 4);
         if (pitches)
-            pitches[1] = pitches[2] = tmp;
+            pitches[1] = tmp;
         tmp *= (*h >> 1);
         size += tmp;
         break;
