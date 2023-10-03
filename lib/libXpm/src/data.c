@@ -108,7 +108,7 @@ ParseComment(xpmData *data)
 		n++;
 		s2++;
 	    } while (c == *s2 && *s2 != '\0' && c);
-	    if (*s2 == '\0') {
+	    if (*s2 == '\0' || c == '\0') {
 		/* this is the end of the comment */
 		notend = 0;
 		data->cptr--;
@@ -259,13 +259,13 @@ xpmNextWord(
     int c;
 
     if (!data->type || data->type == XPMBUFFER) {
-	while (isspace(c = *data->cptr) && c != data->Eos)
+	while ((c = *data->cptr) && isspace(c) && (c != data->Eos))
 	    data->cptr++;
 	do {
 	    c = *data->cptr++;
 	    *buf++ = c;
 	    n++;
-	} while (!isspace(c) && c != data->Eos && n < buflen);
+	} while (c && !isspace(c) && (c != data->Eos) && (n < buflen));
 	n--;
 	data->cptr--;
     } else {

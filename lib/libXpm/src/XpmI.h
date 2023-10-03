@@ -188,7 +188,7 @@ FUNC(xpmSetAttributes, void, (XpmAttributes *attributes, XpmImage *image,
 			      XpmInfo *info));
 
 #if !defined(FOR_MSW) && !defined(AMIGA)
-FUNC(xpmCreatePixmapFromImage, void, (Display *display, Drawable d,
+FUNC(xpmCreatePixmapFromImage, int, (Display *display, Drawable d,
 				      XImage *ximage, Pixmap *pixmap_return));
 
 FUNC(xpmCreateImageFromPixmap, void, (Display *display, Pixmap pixmap,

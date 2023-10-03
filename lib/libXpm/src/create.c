@@ -997,6 +997,11 @@ CreateXImage(
 	*image_return = NULL;
 	return XpmNoMemory;
     }
+    if (width != 0 && (*image_return)->bits_per_pixel >= INT_MAX / width) {
+	XDestroyImage(*image_return);
+	*image_return = NULL;
+	return XpmNoMemory;
+    }
     /* now that bytes_per_line must have been set properly alloc data */
     if((*image_return)->bytes_per_line == 0 ||  height == 0) {
 	XDestroyImage(*image_return);
@@ -1652,7 +1657,7 @@ XpmCreatePixmapFromXpmImage(
     Pixmap		*shapemask_return,
     XpmAttributes	*attributes)
 {
-    XImage *ximage, *shapeimage;
+    XImage *ximage = NULL, *shapeimage = NULL;
     int ErrorStatus;
 
     /* initialize return values */
@@ -1668,16 +1673,34 @@ XpmCreatePixmapFromXpmImage(
 					      &shapeimage : NULL),
 					     attributes);
     if (ErrorStatus < 0)
-	return (ErrorStatus);
+	goto cleanup;
 
     /* create the pixmaps and destroy images */
     if (pixmap_return && ximage) {
-	xpmCreatePixmapFromImage(display, d, ximage, pixmap_return);
-	XDestroyImage(ximage);
+	ErrorStatus =
+	    xpmCreatePixmapFromImage(display, d, ximage, pixmap_return);
+	if (ErrorStatus < 0)		/* fatal error */
+	    goto cleanup;
     }
     if (shapemask_return && shapeimage) {
-	xpmCreatePixmapFromImage(display, d, shapeimage, shapemask_return);
+	ErrorStatus =
+	    xpmCreatePixmapFromImage(display, d, shapeimage, shapemask_return);
+    }
+
+  cleanup:
+    if (ximage != NULL)
+	XDestroyImage(ximage);
+    if (shapeimage != NULL)
 	XDestroyImage(shapeimage);
+    if (ErrorStatus < 0) {
+	if (pixmap_return && *pixmap_return) {
+	    XFreePixmap(display, *pixmap_return);
+	    *pixmap_return = 0;
+	}
+	if (shapemask_return && *shapemask_return) {
+	    XFreePixmap(display, *shapemask_return);
+	    *shapemask_return = 0;
+	}
     }
     return (ErrorStatus);
 }
