@@ -225,10 +225,10 @@
 ./usr/X11R6/lib/libXau.la
 ./usr/X11R6/lib/libXau.so.10.0
 ./usr/X11R6/lib/libXaw.a
-./usr/X11R6/lib/libXaw.so.15.0
+./usr/X11R6/lib/libXaw.so.16.0
 ./usr/X11R6/lib/libXaw7.a
 ./usr/X11R6/lib/libXaw7.la
-./usr/X11R6/lib/libXaw7.so.15.0
+./usr/X11R6/lib/libXaw7.so.16.0
 ./usr/X11R6/lib/libXcomposite.a
 ./usr/X11R6/lib/libXcomposite.la
 ./usr/X11R6/lib/libXcomposite.so.4.0
@@ -267,7 +267,7 @@
 ./usr/X11R6/lib/libXmuu.so.6.0
 ./usr/X11R6/lib/libXpm.a
 ./usr/X11R6/lib/libXpm.la
-./usr/X11R6/lib/libXpm.so.9.0
+./usr/X11R6/lib/libXpm.so.10.0
 ./usr/X11R6/lib/libXpresent.a
 ./usr/X11R6/lib/libXpresent.la
 ./usr/X11R6/lib/libXpresent.so.1.0
