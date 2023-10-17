@@ -1,6 +1,6 @@
-# $OpenBSD: Makefile.bsd-wrapper,v 1.13 2016/10/02 19:11:16 matthieu Exp $
+# $OpenBSD: Makefile.bsd-wrapper,v 1.14 2023/10/17 13:08:08 matthieu Exp $
 
-SHARED_LIBS=	Xaw7 15.0
+SHARED_LIBS=	Xaw7 16.0
 
 CONFIGURE_ARGS= --disable-xaw6 --without-fop --without-xmlto
 
@@ -9,10 +9,10 @@ afterinstall:
 	(cd $(DESTDIR)$(LIBDIR) && ln -s libXaw7.a libXaw.a && \
 	 chown -h $(BINOWN):$(BINGRP) libXaw.a )
 	# redo link
-	-rm -f $(DESTDIR)$(LIBDIR)/libXaw.so.15.0
+	-rm -f $(DESTDIR)$(LIBDIR)/libXaw.so.16.0
 	-rm -f $(DESTDIR)$(LIBDIR)/libXaw.so.7
-	(cd $(DESTDIR)$(LIBDIR) && ln -s libXaw7.so.15.0 libXaw.so.15.0 && \
-	 chown -h $(BINOWN):$(BINGRP) libXaw.so.15.0)
+	(cd $(DESTDIR)$(LIBDIR) && ln -s libXaw7.so.16.0 libXaw.so.16.0 && \
+	 chown -h $(BINOWN):$(BINGRP) libXaw.so.16.0)
 
 .include <bsd.xorg.mk>
 .include <bsd.own.mk>
