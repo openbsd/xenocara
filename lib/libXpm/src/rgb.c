@@ -66,7 +66,7 @@ xpmReadRgbNames(
     xpmRgbName *rgb;
 
     /* Open the rgb text file.  Abort if error. */
-    if ((rgbf = fopen(rgb_fname, "r")) == NULL)
+    if ((rgbf = fopen(rgb_fname, "r" FOPEN_CLOEXEC)) == NULL)
 	return 0;
 
     /* Loop reading each line in the file. */

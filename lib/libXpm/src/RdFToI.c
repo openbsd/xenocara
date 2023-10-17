@@ -53,7 +53,7 @@
 LFUNC(OpenReadFile, int, (const char *filename, xpmData *mdata));
 LFUNC(xpmDataClose, void, (xpmData *mdata));
 
-FUNC(xpmPipeThrough, FILE*, (int fd,
+HFUNC(xpmPipeThrough, FILE*, (int fd,
 			     const char *cmd,
 			     const char *arg1,
 			     const char *mode));
@@ -212,7 +212,7 @@ OpenReadFile(
 	mdata->stream.file = (stdin);
 	mdata->type = XPMFILE;
     } else {
-	int fd = open(filename, O_RDONLY);
+	int fd = open(filename, O_RDONLY | O_CLOEXEC);
 #if defined(NO_ZPIPE)
 	if ( fd < 0 )
 	    return XpmOpenFailed;
@@ -229,11 +229,11 @@ OpenReadFile(
 		return (XpmNoMemory);
 	    strcpy(compressfile, filename);
 	    strcpy(compressfile + len, ext = ".Z");
-	    fd = open(compressfile, O_RDONLY);
+	    fd = open(compressfile, O_RDONLY | O_CLOEXEC);
 	    if ( fd < 0 )
 	    {
 		strcpy(compressfile + len, ext = ".gz");
-		fd = open(compressfile, O_RDONLY);
+		fd = open(compressfile, O_RDONLY | O_CLOEXEC);
 		if ( fd < 0 )
 		{
 		    XpmFree(compressfile);

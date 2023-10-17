@@ -72,7 +72,7 @@ XpmReadFileToBuffer(
     *buffer_return = NULL;
 
 #ifndef VAX11C
-    fd = open(filename, O_RDONLY);
+    fd = open(filename, O_RDONLY | O_CLOEXEC);
 #else
     fd = open(filename, O_RDONLY, NULL);
 #endif

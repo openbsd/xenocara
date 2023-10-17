@@ -23,7 +23,7 @@
 
 #include "config.h"
 
-#include "../src/XpmI.h"
+#include "../src/rgb.c"
 #include <glib.h>
 
 /*

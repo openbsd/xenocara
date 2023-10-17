@@ -1,7 +1,7 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([libXpm], [3.5.16],
+AC_INIT([libXpm], [3.5.17],
         [https://gitlab.freedesktop.org/xorg/lib/libxpm/-/issues/], [libXpm])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -103,6 +103,9 @@ fi
 AC_REQUIRE_AUX_FILE([tap-driver.sh])
 XORG_ENABLE_UNIT_TESTS
 XORG_WITH_GLIB([2.46])
+if test "x$have_glib" = x"yes"; then
+       AC_CHECK_FUNCS([g_pattern_spec_match_string])
+fi
 XORG_MEMORY_CHECK_FLAGS
 
 AC_CONFIG_FILES([Makefile
