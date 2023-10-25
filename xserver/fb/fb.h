@@ -410,6 +410,7 @@ typedef struct {
 #endif
     DevPrivateKeyRec    gcPrivateKeyRec;
     DevPrivateKeyRec    winPrivateKeyRec;
+    CloseScreenProcPtr  CloseScreen;
 } FbScreenPrivRec, *FbScreenPrivPtr;
 
 #define fbGetScreenPrivate(pScreen) ((FbScreenPrivPtr) \

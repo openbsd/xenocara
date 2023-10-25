@@ -29,6 +29,7 @@
 Bool
 fbCloseScreen(ScreenPtr pScreen)
 {
+    FbScreenPrivPtr screen_priv = fbGetScreenPrivate(pScreen);
     int d;
     DepthPtr depths = pScreen->allowedDepths;
 
@@ -37,9 +38,10 @@ fbCloseScreen(ScreenPtr pScreen)
         free(depths[d].vids);
     free(depths);
     free(pScreen->visuals);
-    if (pScreen->devPrivate)
-        FreePixmap((PixmapPtr)pScreen->devPrivate);
-    return TRUE;
+
+    pScreen->CloseScreen = screen_priv->CloseScreen;
+
+    return pScreen->CloseScreen(pScreen);
 }
 
 Bool
@@ -144,6 +146,7 @@ fbFinishScreenInit(ScreenPtr pScreen, void *pbits, int xsize, int ysize,
                    int dpix, int dpiy, int width, int bpp)
 #endif
 {
+    FbScreenPrivPtr screen_priv;
     VisualPtr visuals;
     DepthPtr depths;
     int nvisuals;
@@ -177,8 +180,11 @@ fbFinishScreenInit(ScreenPtr pScreen, void *pbits, int xsize, int ysize,
                       rootdepth, ndepths, depths,
                       defaultVisual, nvisuals, visuals))
         return FALSE;
-    /* overwrite miCloseScreen with our own */
+
+    screen_priv = fbGetScreenPrivate(pScreen);
+    screen_priv->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = fbCloseScreen;
+
     return TRUE;
 }
 
