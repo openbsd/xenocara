@@ -1,4 +1,3 @@
-if APPLEWM
 SED = sed
 
 XORGRELSTRING = @PACKAGE_STRING@
@@ -20,6 +19,9 @@ SUFFIXES = .$(MISC_MAN_SUFFIX) .man
 	$(MKDIR_P) man
 	$(AM_V_GEN)$(SED) $(MAN_SUBSTS) < $< > $@
 
+dist_doc_DATA =
+
+if APPLEWM
 applewmdir = $(includedir)/X11/extensions
 applewm_HEADERS = \
         include/X11/extensions/applewmconst.h \
@@ -45,6 +47,8 @@ composite_HEADERS = \
 compositeprotopkgconfigdir = $(datadir)/pkgconfig
 compositeprotopkgconfig_DATA = compositeproto.pc
 
+dist_doc_DATA += compositeproto.txt
+
 damagedir = $(includedir)/X11/extensions
 damage_HEADERS = \
 	include/X11/extensions/damageproto.h \
@@ -52,6 +56,8 @@ damage_HEADERS = \
 
 damageprotopkgconfigdir = $(datadir)/pkgconfig
 damageprotopkgconfig_DATA = damageproto.pc
+
+dist_doc_DATA += damageproto.txt
 
 dmxdir = $(includedir)/X11/extensions
 dmx_HEADERS = \
@@ -72,12 +78,16 @@ dri2_HEADERS = \
 dri2protopkgconfigdir = $(datadir)/pkgconfig
 dri2protopkgconfig_DATA = dri2proto.pc
 
+dist_doc_DATA += dri2proto.txt
+
 dri3dir = $(includedir)/X11/extensions
 dri3_HEADERS = \
 	include/X11/extensions/dri3proto.h
 
 dri3protopkgconfigdir = $(datadir)/pkgconfig
 dri3protopkgconfig_DATA = dri3proto.pc
+
+dist_doc_DATA += dri3proto.txt
 
 fixesdir = $(includedir)/X11/extensions
 fixes_HEADERS = \
@@ -86,6 +96,8 @@ fixes_HEADERS = \
 
 fixesprotopkgconfigdir = $(datadir)/pkgconfig
 fixesprotopkgconfig_DATA = fixesproto.pc
+
+dist_doc_DATA += fixesproto.txt
 
 fontsdir = $(includedir)/X11/fonts
 fonts_HEADERS = \
@@ -144,6 +156,8 @@ present_HEADERS = \
 presentprotopkgconfigdir = $(datadir)/pkgconfig
 presentprotopkgconfig_DATA = presentproto.pc
 
+dist_doc_DATA += presentproto.txt
+
 randrdir = $(includedir)/X11/extensions
 randr_HEADERS = \
 	include/X11/extensions/randr.h \
@@ -151,6 +165,8 @@ randr_HEADERS = \
 
 randrprotopkgconfigdir = $(datadir)/pkgconfig
 randrprotopkgconfig_DATA = randrproto.pc
+
+dist_doc_DATA += randrproto.txt
 
 recorddir = $(includedir)/X11/extensions
 record_HEADERS = \
@@ -169,12 +185,16 @@ render_HEADERS = \
 renderprotopkgconfigdir = $(datadir)/pkgconfig
 renderprotopkgconfig_DATA = renderproto.pc
 
+dist_doc_DATA += renderproto.txt
+
 resourcedir = $(includedir)/X11/extensions
 resource_HEADERS = \
 	include/X11/extensions/XResproto.h
 
 resourceprotopkgconfigdir = $(datadir)/pkgconfig
 resourceprotopkgconfig_DATA = resourceproto.pc
+
+dist_doc_DATA += resproto.txt
 
 scrnsaverdir = $(includedir)/X11/extensions
 scrnsaver_HEADERS = \
@@ -196,6 +216,8 @@ endif
 
 videoprotopkgconfigdir = $(datadir)/pkgconfig
 videoprotopkgconfig_DATA = videoproto.pc
+
+dist_doc_DATA += xv-protocol-v2.txt
 
 xprotodir = $(includedir)/X11
 xproto_HEADERS = \
@@ -337,6 +359,8 @@ xwaylandproto_HEADERS = \
 xwaylandprotopkgconfigdir = $(datadir)/pkgconfig
 xwaylandprotopkgconfig_DATA = xwaylandproto.pc
 
+dist_doc_DATA += xwaylandproto.txt
+
 if LEGACY
 XCalibrateincludedir = $(includedir)/X11/extensions
 XCalibrateinclude_HEADERS = \
@@ -377,6 +401,8 @@ xproxymng_HEADERS = \
 
 pmprotopkgconfigdir = $(datadir)/pkgconfig
 pmprotopkgconfig_DATA = xproxymngproto.pc
+
+dist_doc_DATA += PM_spec
 
 printdir = $(includedir)/X11/extensions
 print_HEADERS = \
@@ -429,20 +455,6 @@ xf86rushprotopkgconfig_DATA = xf86rushproto.pc
 endif
 
 # SUBDIRS=specs
-
-dist_doc_DATA = \
-	compositeproto.txt \
-	damageproto.txt \
-	dri2proto.txt \
-	dri3proto.txt \
-	fixesproto.txt \
-	PM_spec \
-	presentproto.txt \
-	randrproto.txt \
-	renderproto.txt \
-	resproto.txt \
-	xv-protocol-v2.txt \
-	xwaylandproto.txt
 
 EXTRA_DIST = \
     COPYING-applewmproto \

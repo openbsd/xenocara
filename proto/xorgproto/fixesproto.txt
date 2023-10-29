@@ -1,5 +1,5 @@
                         The XFIXES Extension
-			    Version 5.0
+			    Version 6.1
 			 Document Revision 1
 			     2010-11-15
 			    Keith Packard
@@ -666,14 +666,40 @@ when the relevant X11 clients have quit.
 
 		XFixesClientDisconnectFlagDefault:	    0
 		XFixesClientDisconnectFlagTerminate:	    1 << 0
+		XFixesClientDisconnectFlagForceTerminate:   1 << 1
 
 	XFixesClientDisconnectFlagDefault is the default behavior for
-	regular clients, i.e. the X11 server won't terminate as long as such
-	clients are still connected.
+	regular clients: the X11 server won't terminate as long as such
+	clients are still connected and no other clients trigger
+	termination.
 
 	XFixesClientDisconnectFlagTerminate indicates to the X11 server that
 	it can ignore the client and terminate itself even though the client
 	is still connected to the X11 server.
+
+	If XFixesClientDisconnectFlagForceTerminate is set at the time the
+	client disconnects, the X11 server MUST terminate and/or reset without
+	delivering further events to clients, even if other clients that have
+	not set XFixesClientDisconnectFlagTerminate are still connected.
+	Screen lockers SHOULD use this flag to ensure that the screen does not
+	unlock if they exit, which would create a security vulnerability.
+	Programs SHOULD NOT use this flag unless unexpected termination would
+	create a security vulnerability or other severe problem.
+
+	Because XFixesClientDisconnectFlagForceTerminate allows the client to
+	cause the server to terminate, it is subject to security checks to
+	prevent unauthorized use.  Servers that support the X Access Control
+	Extension (XACE) MUST deny attempts to set
+	XFixesClientDisconnectFlagForceTerminate, unless the client has
+	DixManageAccess to the server.  Servers that support the SECURITY
+	extension MUST forbid untrusted clients from setting
+	XFixesClientDisconnectFlagForceTerminate. Servers MAY refuse to allow
+	clients to set this flag for other reasons. For instance, a server
+	might only allow the flag to be set by local clients.  If the server
+	refuses to allow the client to set this flag, an Access error results.
+
+	XFixesClientDisconnectFlagForceTerminate is only available in XFixes
+	versions 6.1 and better.
 
 13.2 Requests
 

@@ -623,7 +623,7 @@ A.2 Protocol Requests
 ┌───
     DRI3GetSupportedModifiers
 	1	CARD8			major opcode
-	1	7			DRI3 opcode
+	1	6			DRI3 opcode
 	2	3			length
 	4	Window			window
 	1	CARD8			depth
@@ -645,7 +645,7 @@ A.2 Protocol Requests
 ┌───
     DRI3PixmapFromBuffers
 	1	CARD8			major opcode
-	1	8			DRI3 opcode
+	1	7			DRI3 opcode
 	2	8			length
 	4	Pixmap			pixmap
 	4	Window			window
@@ -672,7 +672,7 @@ A.2 Protocol Requests
 ┌───
     DRI3BuffersFromPixmap
 	1	CARD8			major opcode
-	1	9			DRI3 opcode
+	1	8			DRI3 opcode
 	2	2			length
 	4	Pixmap			pixmap
       ▶
@@ -696,7 +696,7 @@ A.2 Protocol Requests
 ┌───
     DRI3SetDRMDeviceInUse
 	1	CARD8			major opcode
-	1	10			DRI3 opcode
+	1	9			DRI3 opcode
 	2	4			length
 	4	Window			window
 	4	CARD32			drmMajor

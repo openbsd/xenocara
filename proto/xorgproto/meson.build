@@ -19,7 +19,8 @@
 # SOFTWARE.
 
 # keep version in sync with configure.ac
-project('xorgproto', 'c', license : 'MIT', version : '2022.2')
+project('xorgproto', 'c', license : 'MIT', version : '2023.2',
+        meson_version : '>=0.56.0')
 cc = meson.get_compiler('c')
 
 pcs = [
@@ -74,7 +75,6 @@ docs = files('compositeproto.txt',
              'dri2proto.txt',
              'dri3proto.txt',
              'fixesproto.txt',
-             'PM_spec',
              'presentproto.txt',
              'randrproto.txt',
              'renderproto.txt',
@@ -106,6 +106,9 @@ if get_option('legacy') == true
             configuration : pc_data,
         )
     endforeach
+    legacy_docs = files('PM_spec')
+    install_data(legacy_docs,
+                 install_dir: get_option('datadir') / 'doc' / 'xorgproto')
 endif
 
 ext_xorgproto = declare_dependency(
@@ -114,7 +117,7 @@ ext_xorgproto = declare_dependency(
 
 subdir('include')
 
-keysymfile = join_paths(meson.source_root(), 'include', 'X11', 'XF86keysym.h')
+keysymfile = meson.project_source_root() / 'include' / 'X11' / 'XF86keysym.h'
 test('evdev-keysym-check',
      find_program('scripts/keysym-generator.py'),
      args: ['-v', '--header', keysymfile, 'verify'])

@@ -1693,10 +1693,11 @@ dynamic changes in the display environment.
 	If 'name' matches an existing Monitor on the screen, the
 	existing one will be deleted as if RRDeleteMonitor were called.
 
-	For each output in 'info.outputs, each one is removed from all
-	pre-existing Monitors. If removing the output causes the list of
-	outputs for that Monitor to become empty, then that Monitor will
-	be deleted as if RRDeleteMonitor were called.
+	If an 'info.output' contains only the automatically generated default
+	monitor, this is replaced by the new monitor. If the 'info.output' already
+	contains a user-defined monitor, the new monitor will be added.
+	This allows to have more than one monitor on an output (e.g. to split an
+	output into multiple virtual monitors).
 
 	Only one monitor per screen may be primary. If 'info.primary'
 	is true, then the primary value will be set to false on all
@@ -1718,6 +1719,10 @@ dynamic changes in the display environment.
 
 	'name' must match the name of a Monitor on the screen, or a
 	Value error results.
+
+	If the last user-defined monitor is removed from an 'info.output',
+	the automatically generated default monitor will be restored. It is not
+	possible to delete the automatically generated default monitor.
 
 	RRDeleteMonitor generates a ConfigureNotify event on the root
 	window of the screen.
