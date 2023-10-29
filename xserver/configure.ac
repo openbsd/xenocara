@@ -26,8 +26,8 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 21.1.8, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
-RELEASE_DATE="2023-03-29"
+AC_INIT([xorg-server], 21.1.9, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
+RELEASE_DATE="2023-10-25"
 RELEASE_NAME="Caramel Ice Cream"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
@@ -164,7 +164,16 @@ AC_REPLACE_FUNCS([reallocarray strcasecmp strcasestr strlcat strlcpy strndup\
 	timingsafe_memcmp])
 AM_CONDITIONAL(POLL, [test "x$ac_cv_func_poll" = "xyes"])
 
-AC_CHECK_LIB([bsd], [arc4random_buf])
+# Checks for non-standard functions and fallback to libbsd if we can
+# We only check for arc4random_buf, because if we have that, we don't
+# need/use getentropy.
+AC_LINK_IFELSE([AC_LANG_CALL([], [arc4random_buf])],
+               [TRY_LIBBSD="no"], [TRY_LIBBSD="yes"])
+AS_IF([test "x$TRY_LIBBSD" = "xyes"],
+      [PKG_CHECK_MODULES([LIBBSD], [libbsd-overlay], [
+	CFLAGS="$CFLAGS $LIBBSD_CFLAGS"
+	LIBS="$LIBS $LIBBSD_LIBS"
+], [:])])
 AC_CHECK_FUNCS([arc4random_buf])
 
 AC_CHECK_DECLS([program_invocation_short_name], [], [], [[#include <errno.h>]])

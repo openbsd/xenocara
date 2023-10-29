@@ -3,10 +3,10 @@ project('xserver', 'c',
             'buildtype=debugoptimized',
             'c_std=gnu99',
         ],
-        version: '21.1.8',
+        version: '21.1.9',
         meson_version: '>= 0.47.0',
 )
-release_date = '2023-03-29'
+release_date = '2023-10-25'
 
 add_project_arguments('-DHAVE_DIX_CONFIG_H', language: ['c', 'objc'])
 cc = meson.get_compiler('c')
@@ -96,7 +96,7 @@ applewmproto_dep = dependency('applewmproto', version: '>= 1.4', fallback: ['xor
 xshmfence_dep = dependency('xshmfence', version: '>= 1.1', required: false)
 
 pixman_dep = dependency('pixman-1')
-libbsd_dep = dependency('libbsd', required: false)
+libbsd_dep = dependency('libbsd-overlay', required: false)
 xkbcomp_dep = dependency('xkbcomp', required: false)
 xkbfile_dep = dependency('xkbfile')
 xfont2_dep = dependency('xfont2', version: '>= 2.0')
