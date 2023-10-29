@@ -1,3 +1,56 @@
+commit 512bf0b15b5597c721ff8c61083616ca9040fa72
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Oct 4 15:58:32 2023 -0700
+
+    libXrandr 1.5.4
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 17581a1364ae11060a9c9531882d1be9634d4365
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Mon Sep 18 15:06:30 2023 -0700
+
+    XRRGetMonitors(): free correct pointer in error path
+    
+    If we are dumping an invalid response from the server, make sure
+    to free the pointer returned by malloc, not our pointer to somewhere
+    later in that buffer.
+    
+    Fixes: a0df3e1 ("Avoid out of boundary accesses on illegal responses")
+    Reported-by: Gregory James DUCK <gjduck@gmail.com>
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5b96863cf2a34ee9e72ffc4ec6415bc59b6121fc
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Mar 7 09:49:14 2023 -0800
+
+    configure: Use LT_INIT from libtool 2 instead of deprecated AC_PROG_LIBTOOL
+    
+    AC_PROG_LIBTOOL was replaced by LT_INIT in libtool 2 in 2008,
+    so it's time to rely on it.
+    
+    Clears autoconf warnings:
+    
+    configure.ac:42: warning: The macro `AC_PROG_LIBTOOL' is obsolete.
+    configure.ac:42: You should run autoupdate.
+    aclocal.m4:3465: AC_PROG_LIBTOOL is expanded from...
+    configure.ac:42: the top level
+    
+    libtoolize: Consider adding 'AC_CONFIG_MACRO_DIRS([m4])' to configure.ac,
+    libtoolize: and rerunning libtoolize and aclocal.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 1ef3ad373c796897f770bba6fb16befddc3146a3
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Feb 25 09:29:25 2023 -0800
+
+    Remove "All rights reserved" from Oracle copyright notices
+    
+    Oracle no longer includes this term in our copyright & license notices.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit 3387129532899eaeee3477a2d92fa662d7292a84
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Nov 20 08:54:24 2022 -0800
@@ -1179,7 +1232,7 @@ Date:   Sun Mar 4 20:03:59 2007 -0800
     Set version to 1.2.1 for release.
 
 commit c279b64ccca18b14974e413b0b1d55ac81abceda
-Author: Fredrik Höglund  <fredrik@kde.org>
+Author: Fredrik Höglund <fredrik@kde.org>
 Date:   Tue Feb 20 22:30:00 2007 +0100
 
     Fix the use of a C++ keyword as a parameter name in Xrandr.h
@@ -1543,21 +1596,21 @@ Date:   Thu Jun 9 12:52:44 2005 +0000
     Require renderproto instead of render for pkgconfig
 
 commit 9c36643810a7e837f325970ddd5964bbff4971b6
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 20:22:47 2005 +0000
 
     - Don't search for non-autoconf'ed X libs in Xrandr
     - Rename man page Xrandr.3
 
 commit 73b3dff9d12d417716c19a33a95eac5f73e5da13
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 19:19:31 2005 +0000
 
     Add Xcursor
     conditionally include config.h
 
 commit 32107cdd57b4796c3f41ac56c9ba683be3d894af
-Author: Søren Sandmann Pedersen  <sandmann@daimi.au.dk>
+Author: Søren Sandmann Pedersen <sandmann@daimi.au.dk>
 Date:   Wed Jun 8 17:48:03 2005 +0000
 
     Check in build system for Xrandr

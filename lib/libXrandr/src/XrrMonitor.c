@@ -122,7 +122,7 @@ XRRGetMonitors(Display *dpy, Window window, Bool get_active, int *nmonitors)
 	    buf += SIZEOF (xRRMonitorInfo);
 	    xoutput = (CARD32 *) buf;
 	    if (xmon->noutput > rep.noutputs) {
-	        Xfree(buf);
+	        Xfree(buf_head);
 	        Xfree(mon);
 	        UnlockDisplay (dpy);
 	        SyncHandle ();
