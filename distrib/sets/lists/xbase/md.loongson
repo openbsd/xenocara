@@ -242,7 +242,7 @@
 ./usr/X11R6/lib/libEGL.so.2.0
 ./usr/X11R6/lib/libEGL_p.a
 ./usr/X11R6/lib/libGL.a
-./usr/X11R6/lib/libGL.so.18.0
+./usr/X11R6/lib/libGL.so.19.0
 ./usr/X11R6/lib/libGLESv1_CM.a
 ./usr/X11R6/lib/libGLESv1_CM.so.3.0
 ./usr/X11R6/lib/libGLESv1_CM_p.a
