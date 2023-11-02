@@ -116,29 +116,70 @@ tc_clear_driver_thread(struct threaded_context *tc)
 #endif
 }
 
+struct tc_batch_rp_info {
+   /* this is what drivers can see */
+   struct tc_renderpass_info info;
+   /* determines whether the info can be "safely" read by drivers or if it may still be in use */
+   struct util_queue_fence ready;
+   /* when a batch is full, the rp info rollsover onto 'next' */
+   struct tc_batch_rp_info *next;
+   /* when rp info has rolled over onto this struct, 'prev' is used to update pointers for realloc */
+   struct tc_batch_rp_info *prev;
+};
+
+static struct tc_batch_rp_info *
+tc_batch_rp_info(struct tc_renderpass_info *info)
+{
+   return (struct tc_batch_rp_info *)info;
+}
+
+static void
+tc_sanitize_renderpass_info(struct threaded_context *tc)
+{
+   tc->renderpass_info_recording->cbuf_invalidate = 0;
+   tc->renderpass_info_recording->zsbuf_invalidate = false;
+   tc->renderpass_info_recording->cbuf_load |= (~tc->renderpass_info_recording->cbuf_clear) & BITFIELD_MASK(PIPE_MAX_COLOR_BUFS);
+   if (tc->fb_resources[PIPE_MAX_COLOR_BUFS] && !tc_renderpass_info_is_zsbuf_used(tc->renderpass_info_recording))
+      /* this should be a "safe" way to indicate to the driver that both loads and stores are required;
+      * driver can always detect invalidation
+      */
+      tc->renderpass_info_recording->zsbuf_clear_partial = true;
+   if (tc->num_queries_active)
+      tc->renderpass_info_recording->has_query_ends = true;
+}
+
 /* ensure the batch's array of renderpass data is large enough for the current index */
 static void
-tc_batch_renderpass_infos_resize(struct tc_batch *batch)
+tc_batch_renderpass_infos_resize(struct threaded_context *tc, struct tc_batch *batch)
 {
    unsigned size = batch->renderpass_infos.capacity;
-   unsigned cur_num = batch->renderpass_info_idx;
+   unsigned cur_num = MAX2(batch->renderpass_info_idx, 0);
 
-   if (size / sizeof(struct tc_renderpass_info) > cur_num)
+   if (size / sizeof(struct tc_batch_rp_info) > cur_num)
       return;
 
-   if (!util_dynarray_resize(&batch->renderpass_infos, struct tc_renderpass_info, cur_num + 10))
+   struct tc_batch_rp_info *infos = batch->renderpass_infos.data;
+   unsigned old_idx = batch->renderpass_info_idx - 1;
+   bool redo = tc->renderpass_info_recording &&
+               tc->renderpass_info_recording == &infos[old_idx].info;
+   if (!util_dynarray_resize(&batch->renderpass_infos, struct tc_batch_rp_info, cur_num + 10))
       mesa_loge("tc: memory alloc fail!");
 
    if (size != batch->renderpass_infos.capacity) {
       /* zero new allocation region */
       uint8_t *data = batch->renderpass_infos.data;
       memset(data + size, 0, batch->renderpass_infos.capacity - size);
-      unsigned start = size / sizeof(struct tc_renderpass_info);
+      unsigned start = size / sizeof(struct tc_batch_rp_info);
       unsigned count = (batch->renderpass_infos.capacity - size) /
-                       sizeof(struct tc_renderpass_info);
-      struct tc_renderpass_info *infos = batch->renderpass_infos.data;
+                       sizeof(struct tc_batch_rp_info);
+      infos = batch->renderpass_infos.data;
+      if (infos->prev)
+         infos->prev->next = infos;
       for (unsigned i = 0; i < count; i++)
          util_queue_fence_init(&infos[start + i].ready);
+      /* re-set current recording info on resize */
+      if (redo)
+         tc->renderpass_info_recording = &infos[old_idx].info;
    }
 }
 
@@ -147,43 +188,75 @@ static void
 tc_signal_renderpass_info_ready(struct threaded_context *tc)
 {
    if (tc->renderpass_info_recording &&
-       !util_queue_fence_is_signalled(&tc->renderpass_info_recording->ready))
-      util_queue_fence_signal(&tc->renderpass_info_recording->ready);
+       !util_queue_fence_is_signalled(&tc_batch_rp_info(tc->renderpass_info_recording)->ready))
+      util_queue_fence_signal(&tc_batch_rp_info(tc->renderpass_info_recording)->ready);
 }
 
 /* increment the current renderpass info struct for recording
  * 'full_copy' is used for preserving data across non-blocking tc batch flushes
  */
 static void
-tc_batch_increment_renderpass_info(struct threaded_context *tc, bool full_copy)
+tc_batch_increment_renderpass_info(struct threaded_context *tc, unsigned batch_idx, bool full_copy)
 {
-   struct tc_batch *batch = &tc->batch_slots[tc->next];
-   struct tc_renderpass_info *tc_info = batch->renderpass_infos.data;
+   struct tc_batch *batch = &tc->batch_slots[batch_idx];
+   struct tc_batch_rp_info *tc_info = batch->renderpass_infos.data;
 
-   /* signal existing info since it will not be used anymore */
-   tc_signal_renderpass_info_ready(tc);
+   if (tc_info[0].next || batch->num_total_slots) {
+      /* deadlock condition detected: all batches are in flight, renderpass hasn't ended
+       * (probably a cts case)
+       */
+      struct tc_batch_rp_info *info = tc_batch_rp_info(tc->renderpass_info_recording);
+      if (!util_queue_fence_is_signalled(&info->ready)) {
+         /* this batch is actively executing and the driver is waiting on the recording fence to signal */
+         /* force all buffer usage to avoid data loss */
+         info->info.cbuf_load = ~(BITFIELD_MASK(8) & info->info.cbuf_clear);
+         info->info.zsbuf_clear_partial = true;
+         info->info.has_query_ends = tc->num_queries_active > 0;
+         /* ensure threaded_context_get_renderpass_info() won't deadlock */
+         info->next = NULL;
+         util_queue_fence_signal(&info->ready);
+      }
+      /* always wait on the batch to finish since this will otherwise overwrite thread data */
+      util_queue_fence_wait(&batch->fence);
+   }
    /* increment rp info and initialize it */
    batch->renderpass_info_idx++;
-   tc_batch_renderpass_infos_resize(batch);
+   tc_batch_renderpass_infos_resize(tc, batch);
    tc_info = batch->renderpass_infos.data;
 
    if (full_copy) {
+      /* this should only be called when changing batches */
+      assert(batch->renderpass_info_idx == 0);
       /* copy the previous data in its entirety: this is still the same renderpass */
-      if (tc->renderpass_info_recording)
-         tc_info[batch->renderpass_info_idx].data = tc->renderpass_info_recording->data;
-      else
-         tc_info[batch->renderpass_info_idx].data = 0;
+      if (tc->renderpass_info_recording) {
+         tc_info[batch->renderpass_info_idx].info.data = tc->renderpass_info_recording->data;
+         tc_batch_rp_info(tc->renderpass_info_recording)->next = &tc_info[batch->renderpass_info_idx];
+         tc_info[batch->renderpass_info_idx].prev = tc_batch_rp_info(tc->renderpass_info_recording);
+         /* guard against deadlock scenario */
+         assert(&tc_batch_rp_info(tc->renderpass_info_recording)->next->info != tc->renderpass_info_recording);
+      } else {
+         tc_info[batch->renderpass_info_idx].info.data = 0;
+         tc_info[batch->renderpass_info_idx].prev = NULL;
+      }
    } else {
       /* selectively copy: only the CSO metadata is copied, and a new framebuffer state will be added later */
-      tc_info[batch->renderpass_info_idx].data = 0;
-      if (tc->renderpass_info_recording)
-         tc_info[batch->renderpass_info_idx].data16[2] = tc->renderpass_info_recording->data16[2];
+      tc_info[batch->renderpass_info_idx].info.data = 0;
+      if (tc->renderpass_info_recording) {
+         tc_info[batch->renderpass_info_idx].info.data16[2] = tc->renderpass_info_recording->data16[2];
+         tc_batch_rp_info(tc->renderpass_info_recording)->next = NULL;
+         tc_info[batch->renderpass_info_idx].prev = NULL;
+      }
    }
 
+   assert(!full_copy || !tc->renderpass_info_recording || tc_batch_rp_info(tc->renderpass_info_recording)->next);
+   /* signal existing info since it will not be used anymore */
+   tc_signal_renderpass_info_ready(tc);
    util_queue_fence_reset(&tc_info[batch->renderpass_info_idx].ready);
-   assert(tc->renderpass_info_recording != &tc_info[batch->renderpass_info_idx]);
+   /* guard against deadlock scenario */
+   assert(tc->renderpass_info_recording != &tc_info[batch->renderpass_info_idx].info);
    /* this is now the current recording renderpass info */
-   tc->renderpass_info_recording = &tc_info[batch->renderpass_info_idx];
+   tc->renderpass_info_recording = &tc_info[batch->renderpass_info_idx].info;
+   batch->max_renderpass_info_idx = batch->renderpass_info_idx;
 }
 
 static ALWAYS_INLINE struct tc_renderpass_info *
@@ -207,10 +280,12 @@ tc_parse_draw(struct threaded_context *tc)
       info->cbuf_invalidate = 0;
       info->zsbuf_invalidate = false;
       info->has_draw = true;
+      info->has_query_ends |= tc->query_ended;
    }
 
    tc->in_renderpass = true;
    tc->seen_fb_state = true;
+   tc->query_ended = false;
 }
 
 static void *
@@ -291,6 +366,13 @@ tc_drop_vertex_state_references(struct pipe_vertex_state *dst, int num_refs)
 #define DRAW_INFO_SIZE_WITHOUT_MIN_MAX_INDEX \
    offsetof(struct pipe_draw_info, min_index)
 
+ALWAYS_INLINE static struct tc_renderpass_info *
+incr_rp_info(struct tc_renderpass_info *tc_info)
+{
+   struct tc_batch_rp_info *info = tc_batch_rp_info(tc_info);
+   return &info[1].info;
+}
+
 ALWAYS_INLINE static void
 batch_execute(struct tc_batch *batch, struct pipe_context *pipe, uint64_t *last, bool parsing)
 {
@@ -314,7 +396,7 @@ batch_execute(struct tc_batch *batch, struct pipe_context *pipe, uint64_t *last,
       if (parsing) {
          if (call->call_id == TC_CALL_flush) {
             /* always increment renderpass info for non-deferred flushes */
-            batch->tc->renderpass_info++;
+            batch->tc->renderpass_info = incr_rp_info(batch->tc->renderpass_info);
             /* if a flush happens, renderpass info is always incremented after */
             first = false;
          } else if (call->call_id == TC_CALL_set_framebuffer_state) {
@@ -322,7 +404,7 @@ batch_execute(struct tc_batch *batch, struct pipe_context *pipe, uint64_t *last,
              * so don't increment on the first set_framebuffer_state call
              */
             if (!first)
-               batch->tc->renderpass_info++;
+               batch->tc->renderpass_info = incr_rp_info(batch->tc->renderpass_info);
             first = false;
          } else if (call->call_id >= TC_CALL_draw_single &&
                     call->call_id <= TC_CALL_draw_vstate_multi) {
@@ -350,10 +432,18 @@ tc_batch_execute(void *job, UNUSED void *gdata, int thread_index)
    /* setup renderpass info */
    batch->tc->renderpass_info = batch->renderpass_infos.data;
 
-   if (batch->tc->options.parse_renderpass_info)
+   if (batch->tc->options.parse_renderpass_info) {
       batch_execute(batch, pipe, last, true);
-   else
+
+      struct tc_batch_rp_info *info = batch->renderpass_infos.data;
+      for (unsigned i = 0; i < batch->max_renderpass_info_idx + 1; i++) {
+         if (info[i].next)
+            info[i].next->prev = NULL;
+         info[i].next = NULL;
+      }
+   } else {
       batch_execute(batch, pipe, last, false);
+   }
 
    /* Add the fence to the list of fences for the driver to signal at the next
     * flush, which we use for tracking which buffers are referenced by
@@ -383,6 +473,7 @@ tc_batch_execute(void *job, UNUSED void *gdata, int thread_index)
    batch->num_total_slots = 0;
    batch->last_mergeable_call = NULL;
    batch->first_set_fb = false;
+   batch->max_renderpass_info_idx = 0;
 }
 
 static void
@@ -406,6 +497,7 @@ static void
 tc_batch_flush(struct threaded_context *tc, bool full_copy)
 {
    struct tc_batch *next = &tc->batch_slots[tc->next];
+   unsigned next_id = (tc->next + 1) % TC_MAX_BATCHES;
 
    tc_assert(next->num_total_slots != 0);
    tc_batch_check(next);
@@ -420,19 +512,20 @@ tc_batch_flush(struct threaded_context *tc, bool full_copy)
    /* reset renderpass info index for subsequent use */
    next->renderpass_info_idx = -1;
 
-   util_queue_add_job(&tc->queue, next, &next->fence, tc_batch_execute,
-                      NULL, 0);
-   tc->last = tc->next;
-   tc->next = (tc->next + 1) % TC_MAX_BATCHES;
-   tc_begin_next_buffer_list(tc);
-
    /* always increment renderpass info on batch flush;
     * renderpass info can only be accessed by its owner batch during execution
     */
    if (tc->renderpass_info_recording) {
-      tc->batch_slots[tc->next].first_set_fb = full_copy;
-      tc_batch_increment_renderpass_info(tc, full_copy);
+      tc->batch_slots[next_id].first_set_fb = full_copy;
+      tc_batch_increment_renderpass_info(tc, next_id, full_copy);
    }
+
+   util_queue_add_job(&tc->queue, next, &next->fence, tc_batch_execute,
+                      NULL, 0);
+   tc->last = tc->next;
+   tc->next = next_id;
+   tc_begin_next_buffer_list(tc);
+
 }
 
 /* This is the function that adds variable-sized calls into the current
@@ -553,6 +646,18 @@ _tc_sync(struct threaded_context *tc, UNUSED const char *info, UNUSED const char
 
    tc_debug_check(tc);
 
+   if (tc->options.parse_renderpass_info && tc->in_renderpass && !tc->flushing) {
+      /* corner case: if tc syncs for any reason but a driver flush during a renderpass,
+       * then the current renderpass info MUST be signaled to avoid deadlocking the driver
+       *
+       * this is not a "complete" signal operation, however, as it's unknown what calls may
+       * come after this one, which means that framebuffer attachment data is unreliable
+       * 
+       * to avoid erroneously passing bad state to the driver (e.g., allowing zsbuf elimination),
+       * force all attachments active and assume the app was going to get bad perf here anyway
+       */
+      tc_sanitize_renderpass_info(tc);
+   }
    tc_signal_renderpass_info_ready(tc);
 
    /* Only wait for queued calls... */
@@ -590,12 +695,18 @@ _tc_sync(struct threaded_context *tc, UNUSED const char *info, UNUSED const char
    if (tc->options.parse_renderpass_info) {
       int renderpass_info_idx = next->renderpass_info_idx;
       if (renderpass_info_idx > 0) {
+         /* don't reset if fb state is unflushed */
+         bool fb_no_draw = tc->seen_fb_state && !tc->renderpass_info_recording->has_draw;
+         uint32_t fb_info = tc->renderpass_info_recording->data32[0];
          next->renderpass_info_idx = -1;
-         tc_batch_increment_renderpass_info(tc, false);
+         tc_batch_increment_renderpass_info(tc, tc->next, false);
+         if (fb_no_draw)
+            tc->renderpass_info_recording->data32[0] = fb_info;
       } else if (tc->renderpass_info_recording->has_draw) {
          tc->renderpass_info_recording->data32[0] = 0;
       }
       tc->seen_fb_state = false;
+      tc->query_ended = false;
    }
 
    MESA_TRACE_END();
@@ -632,40 +743,10 @@ threaded_context_flush(struct pipe_context *_pipe,
    }
 }
 
-/* Must be called before TC binds, maps, invalidates, or adds a buffer to a buffer list. */
-static void tc_touch_buffer(struct threaded_context *tc, struct threaded_resource *buf)
-{
-   const struct threaded_context *first_user = buf->first_user;
-
-   /* Fast path exit to avoid additional branches */
-   if (likely(first_user == tc))
-      return;
-
-   if (!first_user)
-      first_user = p_atomic_cmpxchg_ptr(&buf->first_user, NULL, tc);
-
-   /* The NULL check might seem unnecessary here but it's actually critical:
-    * p_atomic_cmpxchg will return NULL if it succeeds, meaning that NULL is
-    * equivalent to "we're the first user" here. (It's equally important not
-    * to ignore the result of the cmpxchg above, since it might fail.)
-    * Without the NULL check, we'd set the flag unconditionally, which is bad.
-    */
-   if (first_user && first_user != tc && !buf->used_by_multiple_contexts)
-      buf->used_by_multiple_contexts = true;
-}
-
-static bool tc_is_buffer_shared(struct threaded_resource *buf)
-{
-   return buf->is_shared || buf->used_by_multiple_contexts;
-}
-
 static void
 tc_add_to_buffer_list(struct threaded_context *tc, struct tc_buffer_list *next, struct pipe_resource *buf)
 {
-   struct threaded_resource *tbuf = threaded_resource(buf);
-   tc_touch_buffer(tc, tbuf);
-
-   uint32_t id = tbuf->buffer_id_unique;
+   uint32_t id = threaded_resource(buf)->buffer_id_unique;
    BITSET_SET(next->buffer_list, id & TC_BUFFER_ID_MASK);
 }
 
@@ -673,10 +754,7 @@ tc_add_to_buffer_list(struct threaded_context *tc, struct tc_buffer_list *next, 
 static void
 tc_bind_buffer(struct threaded_context *tc, uint32_t *binding, struct tc_buffer_list *next, struct pipe_resource *buf)
 {
-   struct threaded_resource *tbuf = threaded_resource(buf);
-   tc_touch_buffer(tc, tbuf);
-
-   uint32_t id = tbuf->buffer_id_unique;
+   uint32_t id = threaded_resource(buf)->buffer_id_unique;
    *binding = id;
    BITSET_SET(next->buffer_list, id & TC_BUFFER_ID_MASK);
 }
@@ -934,8 +1012,6 @@ threaded_resource_init(struct pipe_resource *res, bool allow_cpu_storage)
 {
    struct threaded_resource *tres = threaded_resource(res);
 
-   tres->first_user = NULL;
-   tres->used_by_multiple_contexts = false;
    tres->latest = &tres->b;
    tres->cpu_storage = NULL;
    util_range_init(&tres->valid_buffer_range);
@@ -1084,6 +1160,7 @@ static bool
 tc_begin_query(struct pipe_context *_pipe, struct pipe_query *query)
 {
    struct threaded_context *tc = threaded_context(_pipe);
+   tc->num_queries_active++;
 
    tc_add_call(tc, TC_CALL_begin_query, tc_query_call)->query = query;
    return true; /* we don't care about the return value for this call */
@@ -1115,11 +1192,13 @@ tc_end_query(struct pipe_context *_pipe, struct pipe_query *query)
    struct threaded_query *tq = threaded_query(query);
    struct tc_end_query_call *call =
       tc_add_call(tc, TC_CALL_end_query, tc_end_query_call);
+   tc->num_queries_active--;
 
    call->tc = tc;
    call->query = query;
 
    tq->flushed = false;
+   tc->query_ended = true;
 
    return true; /* we don't care about the return value for this call */
 }
@@ -1363,6 +1442,7 @@ tc_call_set_framebuffer_state(struct pipe_context *pipe, void *call, uint64_t *l
    for (unsigned i = 0; i < nr_cbufs; i++)
       tc_drop_surface_reference(p->cbufs[i]);
    tc_drop_surface_reference(p->zsbuf);
+   tc_drop_resource_reference(p->resolve);
    return call_size(tc_framebuffer);
 }
 
@@ -1383,6 +1463,13 @@ tc_set_framebuffer_state(struct pipe_context *_pipe,
 
 
    if (tc->options.parse_renderpass_info) {
+      /* ensure this is treated as the first fb set if no fb activity has occurred */
+      if (!tc->renderpass_info_recording->has_draw &&
+          !tc->renderpass_info_recording->cbuf_clear &&
+          !tc->renderpass_info_recording->cbuf_load &&
+          !tc->renderpass_info_recording->zsbuf_load &&
+          !tc->renderpass_info_recording->zsbuf_clear_partial)
+         tc->batch_slots[tc->next].first_set_fb = false;
       /* store existing zsbuf data for possible persistence */
       uint8_t zsbuf = tc->renderpass_info_recording->has_draw ?
                       0 :
@@ -1400,9 +1487,10 @@ tc_set_framebuffer_state(struct pipe_context *_pipe,
              sizeof(void*) * (PIPE_MAX_COLOR_BUFS - nr_cbufs));
 
       tc->fb_resources[PIPE_MAX_COLOR_BUFS] = fb->zsbuf ? fb->zsbuf->texture : NULL;
+      tc->fb_resolve = fb->resolve;
       if (tc->seen_fb_state) {
          /* this is the end of a renderpass, so increment the renderpass info */
-         tc_batch_increment_renderpass_info(tc, false);
+         tc_batch_increment_renderpass_info(tc, tc->next, false);
          /* if zsbuf hasn't changed (i.e., possibly just adding a color buffer):
           * keep zsbuf usage data
           */
@@ -1425,6 +1513,8 @@ tc_set_framebuffer_state(struct pipe_context *_pipe,
    tc->in_renderpass = false;
    p->state.zsbuf = NULL;
    pipe_surface_reference(&p->state.zsbuf, fb->zsbuf);
+   p->state.resolve = NULL;
+   pipe_resource_reference(&p->state.resolve, fb->resolve);
 }
 
 struct tc_tess_state {
@@ -2323,9 +2413,7 @@ tc_call_replace_buffer_storage(struct pipe_context *pipe, void *call, uint64_t *
    return call_size(tc_replace_buffer_storage);
 }
 
-/* Return true if the buffer has been invalidated or is idle.
- * Note that callers must've called tc_touch_buffer before calling
- * this function. */
+/* Return true if the buffer has been invalidated or is idle. */
 static bool
 tc_invalidate_buffer(struct threaded_context *tc,
                      struct threaded_resource *tbuf)
@@ -2346,7 +2434,7 @@ tc_invalidate_buffer(struct threaded_context *tc,
    struct pipe_resource *new_buf;
 
    /* Shared, pinned, and sparse buffers can't be reallocated. */
-   if (tc_is_buffer_shared(tbuf) ||
+   if (tbuf->is_shared ||
        tbuf->is_user_ptr ||
        tbuf->b.flags & (PIPE_RESOURCE_FLAG_SPARSE | PIPE_RESOURCE_FLAG_UNMAPPABLE))
       return false;
@@ -2391,8 +2479,6 @@ tc_invalidate_buffer(struct threaded_context *tc,
    return true;
 }
 
-/* Note that callers must've called tc_touch_buffer first before
- * calling tc_improve_map_buffer_flags. */
 static unsigned
 tc_improve_map_buffer_flags(struct threaded_context *tc,
                             struct threaded_resource *tres, unsigned usage,
@@ -2505,14 +2591,6 @@ tc_buffer_map(struct pipe_context *_pipe,
     * this shouldn't normally be necessary because glthread only uses large buffers.
     */
    if (usage & PIPE_MAP_THREAD_SAFE)
-      tc_buffer_disable_cpu_storage(resource);
-
-   tc_touch_buffer(tc, tres);
-
-   /* CPU storage relies on buffer invalidation never failing. With shared buffers,
-    * invalidation might not always be possible, so CPU storage can't be used.
-    */
-   if (tc_is_buffer_shared(tres))
       tc_buffer_disable_cpu_storage(resource);
 
    usage = tc_improve_map_buffer_flags(tc, tres, usage, box->x, box->width);
@@ -2817,10 +2895,7 @@ tc_buffer_unmap(struct pipe_context *_pipe, struct pipe_transfer *transfer)
       assert(tres->cpu_storage);
 
       if (tres->cpu_storage) {
-         /* Invalidations shouldn't fail as long as CPU storage is allowed. */
-         ASSERTED bool invalidated = tc_invalidate_buffer(tc, tres);
-         assert(invalidated);
-
+         tc_invalidate_buffer(tc, tres);
          tc_buffer_subdata(&tc->base, &tres->b,
                            PIPE_MAP_UNSYNCHRONIZED |
                            TC_TRANSFER_MAP_UPLOAD_CPU_STORAGE,
@@ -2947,8 +3022,6 @@ tc_buffer_subdata(struct pipe_context *_pipe,
 
    if (!size)
       return;
-
-   tc_touch_buffer(tc, tres);
 
    usage |= PIPE_MAP_WRITE;
 
@@ -3084,11 +3157,68 @@ tc_texture_subdata(struct pipe_context *_pipe,
    } else {
       struct pipe_context *pipe = tc->pipe;
 
-      tc_sync(tc);
-      tc_set_driver_thread(tc);
-      pipe->texture_subdata(pipe, resource, level, usage, box, data,
-                            stride, layer_stride);
-      tc_clear_driver_thread(tc);
+      if (resource->usage != PIPE_USAGE_STAGING &&
+          tc->options.parse_renderpass_info && tc->in_renderpass) {
+         enum pipe_format format = resource->format;
+         if (usage & PIPE_MAP_DEPTH_ONLY)
+            format = util_format_get_depth_only(format);
+         else if (usage & PIPE_MAP_STENCIL_ONLY)
+            format = PIPE_FORMAT_S8_UINT;
+         unsigned fmt_stride = util_format_get_stride(format, box->width);
+         unsigned fmt_layer_stride = util_format_get_2d_size(format, stride, box->height);
+
+         struct pipe_resource *pres = pipe_buffer_create(pipe->screen, 0, PIPE_USAGE_STREAM, layer_stride * box->depth);
+         pipe->buffer_subdata(pipe, pres, PIPE_MAP_WRITE | TC_TRANSFER_MAP_THREADED_UNSYNC, 0, layer_stride * box->depth, data);
+         struct pipe_box src_box = *box;
+         src_box.x = src_box.y = src_box.z = 0;
+
+         if (fmt_stride == stride && fmt_layer_stride == layer_stride) {
+            /* if stride matches, single copy is fine*/
+            tc->base.resource_copy_region(&tc->base, resource, level, box->x, box->y, box->z, pres, 0, &src_box);
+         } else {
+            /* if stride doesn't match, inline util_copy_box on the GPU and assume the driver will optimize */
+            src_box.depth = 1;
+            for (unsigned z = 0; z < box->depth; ++z, src_box.x = z * layer_stride) {
+               unsigned dst_x = box->x, dst_y = box->y, width = box->width, height = box->height, dst_z = box->z + z;
+               int blocksize = util_format_get_blocksize(format);
+               int blockwidth = util_format_get_blockwidth(format);
+               int blockheight = util_format_get_blockheight(format);
+
+               assert(blocksize > 0);
+               assert(blockwidth > 0);
+               assert(blockheight > 0);
+
+               dst_x /= blockwidth;
+               dst_y /= blockheight;
+               width = DIV_ROUND_UP(width, blockwidth);
+               height = DIV_ROUND_UP(height, blockheight);
+
+               width *= blocksize;
+
+               if (width == fmt_stride && width == (unsigned)stride) {
+                  ASSERTED uint64_t size = (uint64_t)height * width;
+
+                  assert(size <= SIZE_MAX);
+                  assert(dst_x + src_box.width < u_minify(pres->width0, level));
+                  assert(dst_y + src_box.height < u_minify(pres->height0, level));
+                  assert(pres->target != PIPE_TEXTURE_3D ||  z + src_box.depth < u_minify(pres->depth0, level));
+                  tc->base.resource_copy_region(&tc->base, resource, level, dst_x, dst_y, dst_z, pres, 0, &src_box);
+               } else {
+                  src_box.height = 1;
+                  for (unsigned i = 0; i < height; i++, dst_y++, src_box.x += stride)
+                     tc->base.resource_copy_region(&tc->base, resource, level, dst_x, dst_y, dst_z, pres, 0, &src_box);
+               }
+            }
+         }
+
+         pipe_resource_reference(&pres, NULL);
+      } else {
+         tc_sync(tc);
+         tc_set_driver_thread(tc);
+         pipe->texture_subdata(pipe, resource, level, usage, box, data,
+                              stride, layer_stride);
+         tc_clear_driver_thread(tc);
+      }
    }
 }
 
@@ -3117,7 +3247,6 @@ tc_get_sample_position(struct pipe_context *_pipe,
    struct threaded_context *tc = threaded_context(_pipe);
    struct pipe_context *pipe = tc->pipe;
 
-   tc_sync(tc);
    pipe->get_sample_position(pipe, sample_count, sample_index,
                              out_value);
 }
@@ -3404,8 +3533,10 @@ tc_flush(struct pipe_context *_pipe, struct pipe_fence_handle **fence,
    struct pipe_context *pipe = tc->pipe;
    struct pipe_screen *screen = pipe->screen;
    bool async = flags & (PIPE_FLUSH_DEFERRED | PIPE_FLUSH_ASYNC);
+   bool deferred = (flags & PIPE_FLUSH_DEFERRED) > 0;
 
-   tc->in_renderpass = false;
+   if (!deferred || !fence)
+      tc->in_renderpass = false;
 
    if (async && tc->options.create_fence) {
       if (fence) {
@@ -3427,7 +3558,7 @@ tc_flush(struct pipe_context *_pipe, struct pipe_fence_handle **fence,
       }
 
       struct tc_flush_call *p;
-      if (flags & PIPE_FLUSH_DEFERRED) {
+      if (deferred) {
          /* these have identical fields */
          p = (struct tc_flush_call *)tc_add_call(tc, TC_CALL_flush_deferred, tc_flush_deferred_call);
       } else {
@@ -3437,7 +3568,7 @@ tc_flush(struct pipe_context *_pipe, struct pipe_fence_handle **fence,
       p->fence = fence ? *fence : NULL;
       p->flags = flags | TC_FLUSH_ASYNC;
 
-      if (!(flags & PIPE_FLUSH_DEFERRED)) {
+      if (!deferred) {
          /* non-deferred async flushes indicate completion of existing renderpass info */
          tc_signal_renderpass_info_ready(tc);
          tc_batch_flush(tc, false);
@@ -3448,17 +3579,20 @@ tc_flush(struct pipe_context *_pipe, struct pipe_fence_handle **fence,
    }
 
 out_of_memory:
+   tc->flushing = true;
    /* renderpass info is signaled during sync */
    tc_sync_msg(tc, flags & PIPE_FLUSH_END_OF_FRAME ? "end of frame" :
                    flags & PIPE_FLUSH_DEFERRED ? "deferred fence" : "normal");
 
-   if (!(flags & PIPE_FLUSH_DEFERRED)) {
+   if (!deferred) {
       tc_flush_queries(tc);
       tc->seen_fb_state = false;
+      tc->query_ended = false;
    }
    tc_set_driver_thread(tc);
    pipe->flush(pipe, fence, flags);
    tc_clear_driver_thread(tc);
+   tc->flushing = false;
 }
 
 struct tc_draw_single {
@@ -3670,7 +3804,8 @@ tc_draw_vbo(struct pipe_context *_pipe, const struct pipe_draw_info *info,
    struct threaded_context *tc = threaded_context(_pipe);
    unsigned index_size = info->index_size;
    bool has_user_indices = info->has_user_indices;
-   tc_parse_draw(tc);
+   if (tc->options.parse_renderpass_info)
+      tc_parse_draw(tc);
 
    if (unlikely(indirect)) {
       assert(!has_user_indices);
@@ -3990,7 +4125,8 @@ tc_draw_vertex_state(struct pipe_context *_pipe,
                      unsigned num_draws)
 {
    struct threaded_context *tc = threaded_context(_pipe);
-   tc_parse_draw(tc);
+   if (tc->options.parse_renderpass_info)
+      tc_parse_draw(tc);
 
    if (num_draws == 1) {
       /* Single draw. */
@@ -4171,6 +4307,11 @@ tc_blit(struct pipe_context *_pipe, const struct pipe_blit_info *info)
    tc_set_resource_reference(&blit->info.dst.resource, info->dst.resource);
    tc_set_resource_reference(&blit->info.src.resource, info->src.resource);
    memcpy(&blit->info, info, sizeof(*info));
+   if (tc->options.parse_renderpass_info) {
+      tc->renderpass_info_recording->has_resolve = info->src.resource->nr_samples > 1 &&
+                                                   info->dst.resource->nr_samples <= 1 &&
+                                                   tc->fb_resolve == info->dst.resource;
+   }
 }
 
 struct tc_generate_mipmap {
@@ -4275,10 +4416,7 @@ tc_invalidate_resource(struct pipe_context *_pipe,
    struct threaded_context *tc = threaded_context(_pipe);
 
    if (resource->target == PIPE_BUFFER) {
-      /* This can fail, in which case we simply ignore the invalidation request. */
-      struct threaded_resource *tbuf = threaded_resource(resource);
-      tc_touch_buffer(tc, tbuf);
-      tc_invalidate_buffer(tc, tbuf);
+      tc_invalidate_buffer(tc, threaded_resource(resource));
       return;
    }
 
@@ -4340,8 +4478,13 @@ tc_clear(struct pipe_context *_pipe, unsigned buffers, const struct pipe_scissor
       if (info) {
          /* full clears use a different load operation, but are only valid if draws haven't occurred yet */
          info->cbuf_clear |= (buffers >> 2) & ~info->cbuf_load;
-         if (buffers & PIPE_CLEAR_DEPTHSTENCIL && !info->zsbuf_load && !info->zsbuf_clear_partial)
-            info->zsbuf_clear = true;
+         if (buffers & PIPE_CLEAR_DEPTHSTENCIL) {
+            if (!info->zsbuf_load && !info->zsbuf_clear_partial)
+               info->zsbuf_clear = true;
+            else if (!info->zsbuf_clear)
+               /* this is a clear that occurred after a draw: flag as partial to ensure it isn't ignored */
+               info->zsbuf_clear_partial = true;
+         }
       }
    }
    p->scissor_state_set = !!scissor_state;
@@ -4812,8 +4955,11 @@ threaded_context_create(struct pipe_context *pipe,
       return NULL;
    }
 
-   if (options)
+   if (options) {
+      /* this is unimplementable */
+      assert(!(options->parse_renderpass_info && options->driver_calls_flush_notify));
       tc->options = *options;
+   }
 
    pipe = trace_context_create_threaded(pipe->screen, pipe, &replace_buffer, &tc->options);
 
@@ -4858,7 +5004,7 @@ threaded_context_create(struct pipe_context *pipe,
       tc->batch_slots[i].renderpass_info_idx = -1;
       if (tc->options.parse_renderpass_info) {
          util_dynarray_init(&tc->batch_slots[i].renderpass_infos, NULL);
-         tc_batch_renderpass_infos_resize(&tc->batch_slots[i]);
+         tc_batch_renderpass_infos_resize(tc, &tc->batch_slots[i]);
       }
    }
    for (unsigned i = 0; i < TC_MAX_BUFFER_LISTS; i++)
@@ -5022,7 +5168,7 @@ threaded_context_create(struct pipe_context *pipe,
 
    tc_begin_next_buffer_list(tc);
    if (tc->options.parse_renderpass_info)
-      tc_batch_increment_renderpass_info(tc, false);
+      tc_batch_increment_renderpass_info(tc, tc->next, false);
    return &tc->base;
 
 fail:
@@ -5042,9 +5188,14 @@ threaded_context_init_bytes_mapped_limit(struct threaded_context *tc, unsigned d
 }
 
 const struct tc_renderpass_info *
-threaded_context_get_renderpass_info(struct threaded_context *tc, bool wait)
+threaded_context_get_renderpass_info(struct threaded_context *tc)
 {
-   if (tc->renderpass_info && wait)
-      util_queue_fence_wait(&tc->renderpass_info->ready);
-   return tc->renderpass_info;
+   assert(tc->renderpass_info && tc->options.parse_renderpass_info);
+   struct tc_batch_rp_info *info = tc_batch_rp_info(tc->renderpass_info);
+   while (1) {
+      util_queue_fence_wait(&info->ready);
+      if (!info->next)
+         return &info->info;
+      info = info->next;
+   }
 }

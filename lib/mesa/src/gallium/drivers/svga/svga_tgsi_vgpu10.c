@@ -514,11 +514,15 @@ emit_vgpu10_instruction(struct svga_shader_emitter_v10 *emit,
 
 static void
 emit_input_declaration(struct svga_shader_emitter_v10 *emit,
-                       unsigned opcodeType, unsigned operandType,
-                       unsigned dim, unsigned index, unsigned size,
-                       unsigned name, unsigned numComp,
-                       unsigned selMode, unsigned usageMask,
-                       unsigned interpMode,
+                       VGPU10_OPCODE_TYPE opcodeType,
+                       VGPU10_OPERAND_TYPE operandType,
+                       VGPU10_OPERAND_INDEX_DIMENSION dim,
+                       unsigned index, unsigned size,
+                       VGPU10_SYSTEM_NAME name,
+                       VGPU10_OPERAND_NUM_COMPONENTS numComp,
+                       VGPU10_OPERAND_4_COMPONENT_SELECTION_MODE selMode,
+                       unsigned usageMask,
+                       VGPU10_INTERPOLATION_MODE interpMode,
                        boolean addSignature,
                        SVGA3dDXSignatureSemanticName sgnName);
 
@@ -5196,7 +5200,7 @@ emit_tcs_input_declarations(struct svga_shader_emitter_v10 *emit)
 {
    unsigned i;
    unsigned size = emit->key.tcs.vertices_per_patch;
-   unsigned indicesMask = 0;
+   UNUSED unsigned indicesMask = 0;
    boolean addSignature = TRUE;
 
    if (!emit->tcs.control_point_phase)
@@ -9258,7 +9262,6 @@ opcode_has_dbl_src(unsigned opcode)
    case TGSI_OPCODE_DSQRT:
    case TGSI_OPCODE_DMAD:
    case TGSI_OPCODE_DLDEXP:
-   case TGSI_OPCODE_DFRACEXP:
    case TGSI_OPCODE_DRSQ:
    case TGSI_OPCODE_DTRUNC:
    case TGSI_OPCODE_DCEIL:
@@ -11116,12 +11119,10 @@ emit_instruction(struct svga_shader_emitter_v10 *emit,
       return emit_dtrunc(emit, inst);
 
    /* The following opcodes should never be seen here.  We return zero
-    * for all the PIPE_CAP_TGSI_DROUND_SUPPORTED, DFRACEXP_DLDEXP_SUPPORTED,
-    * LDEXP_SUPPORTED queries.
+    * for PIPE_CAP_TGSI_DROUND_SUPPORTED.
     */
    case TGSI_OPCODE_LDEXP:
    case TGSI_OPCODE_DSSG:
-   case TGSI_OPCODE_DFRACEXP:
    case TGSI_OPCODE_DLDEXP:
    case TGSI_OPCODE_DCEIL:
    case TGSI_OPCODE_DFLR:

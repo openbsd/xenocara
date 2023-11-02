@@ -170,8 +170,6 @@ static inline void
 lp_mem_type_from_format_desc(const struct util_format_description *format_desc,
                              struct lp_type* type)
 {
-   unsigned i;
-
    if (format_expands_to_float_soa(format_desc)) {
       /* just make this a uint with width of block */
       type->floating = false;
@@ -183,11 +181,7 @@ lp_mem_type_from_format_desc(const struct util_format_description *format_desc,
       return;
    }
 
-   for (i = 0; i < 4; i++) {
-      if (format_desc->channel[i].type != UTIL_FORMAT_TYPE_VOID)
-         break;
-   }
-   unsigned chan = i;
+   int chan = util_format_get_first_non_void_channel(format_desc->format);
 
    memset(type, 0, sizeof(struct lp_type));
    type->floating = format_desc->channel[chan].type == UTIL_FORMAT_TYPE_FLOAT;
@@ -946,6 +940,12 @@ generate_fs_loop(struct gallivm_state *gallivm,
          lp_build_pointer_set(builder, z_fb_store, sample_loop_state.counter, z_fb);
          lp_build_pointer_set(builder, s_fb_store, sample_loop_state.counter, s_fb);
       }
+      if (key->occlusion_count && !(depth_mode & EARLY_DEPTH_TEST_INFERRED)) {
+         LLVMValueRef counter = lp_jit_thread_data_vis_counter(gallivm, thread_data_type, thread_data_ptr);
+         lp_build_name(counter, "counter");
+         lp_build_occlusion_count(gallivm, type,
+                                 key->multisample ? s_mask : lp_build_mask_value(&mask), counter);
+      }
    }
 
    if (key->multisample) {
@@ -1187,8 +1187,7 @@ generate_fs_loop(struct gallivm_state *gallivm,
       if ((shader->info.base.output_semantic_name[attrib]
            == TGSI_SEMANTIC_COLOR) &&
            ((cbuf < key->nr_cbufs) || (cbuf == 1 && dual_source_blend))) {
-         if (cbuf == 0 &&
-             shader->info.base.properties[TGSI_PROPERTY_FS_COLOR0_WRITES_ALL_CBUFS]) {
+         if (cbuf == 0) {
             /* XXX: there is an edge case with FB fetch where gl_FragColor and
              * gl_LastFragData[0] are used together. This creates both
              * FRAG_RESULT_COLOR and FRAG_RESULT_DATA* output variables. This
@@ -1352,8 +1351,8 @@ generate_fs_loop(struct gallivm_state *gallivm,
                                             z_value, s_value);
    }
 
-   if (key->occlusion_count) {
-      LLVMValueRef counter = lp_jit_thread_data_counter(gallivm, thread_data_type, thread_data_ptr);
+   if (key->occlusion_count && (!(depth_mode & EARLY_DEPTH_TEST) || (depth_mode & EARLY_DEPTH_TEST_INFERRED))) {
+      LLVMValueRef counter = lp_jit_thread_data_vis_counter(gallivm, thread_data_type, thread_data_ptr);
       lp_build_name(counter, "counter");
 
       lp_build_occlusion_count(gallivm, type,
@@ -1730,11 +1729,7 @@ lp_blend_type_from_format_desc(const struct util_format_description *format_desc
       return;
    }
 
-   unsigned i;
-   for (i = 0; i < 4; i++)
-      if (format_desc->channel[i].type != UTIL_FORMAT_TYPE_VOID)
-         break;
-   const unsigned chan = i;
+   const int chan = util_format_get_first_non_void_channel(format_desc->format);
 
    memset(type, 0, sizeof(struct lp_type));
    type->floating = format_desc->channel[chan].type == UTIL_FORMAT_TYPE_FLOAT;
@@ -2435,7 +2430,7 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
 
    const boolean is_1d = variant->key.resource_1d;
    const unsigned num_fullblock_fs = is_1d ? 2 * num_fs : num_fs;
-   LLVMValueRef fpstate = 0;
+   LLVMValueRef fpstate = NULL;
 
    LLVMTypeRef fs_vec_type = lp_build_vec_type(gallivm, fs_type);
 
@@ -3080,12 +3075,12 @@ generate_unswizzled_blend(struct gallivm_state *gallivm,
                              dst, dst_type, dst_count, dst_alignment);
    }
 
-   if (have_smallfloat_format(dst_type, out_format)) {
-      lp_build_fpstate_set(gallivm, fpstate);
-   }
-
    if (do_branch) {
       lp_build_mask_end(&mask_ctx);
+   }
+
+   if (fpstate) {
+      lp_build_fpstate_set(gallivm, fpstate);
    }
 }
 
@@ -3278,7 +3273,7 @@ generate_fragment(struct llvmpipe_context *lp,
    if (shader->info.base.num_instructions > 1) {
       LLVMValueRef invocs, val;
       LLVMTypeRef invocs_type = LLVMInt64TypeInContext(gallivm->context);
-      invocs = lp_jit_thread_data_invocations(gallivm, variant->jit_thread_data_type, thread_data_ptr);
+      invocs = lp_jit_thread_data_ps_invocations(gallivm, variant->jit_thread_data_type, thread_data_ptr);
       val = LLVMBuildLoad2(builder, invocs_type, invocs, "");
       val = LLVMBuildAdd(builder, val,
                          LLVMConstInt(LLVMInt64TypeInContext(gallivm->context),
@@ -3476,7 +3471,9 @@ generate_fragment(struct llvmpipe_context *lp,
 
    /* Loop over color outputs / color buffers to do blending */
    for (unsigned cbuf = 0; cbuf < key->nr_cbufs; cbuf++) {
-      if (key->cbuf_format[cbuf] != PIPE_FORMAT_NONE) {
+      if (key->cbuf_format[cbuf] != PIPE_FORMAT_NONE &&
+          (key->blend.rt[cbuf].blend_enable || key->blend.logicop_enable ||
+           find_output_by_semantic(&shader->info.base, TGSI_SEMANTIC_COLOR, cbuf) != -1)) {
          LLVMValueRef color_ptr;
          LLVMValueRef stride;
          LLVMValueRef sample_stride = NULL;
@@ -3981,7 +3978,12 @@ llvmpipe_create_fs_state(struct pipe_context *pipe,
       shader->base.tokens = tgsi_dup_tokens(templ->tokens);
    } else {
       shader->base.ir.nir = templ->ir.nir;
-      nir_tgsi_scan_shader(templ->ir.nir, &shader->info.base, true);
+
+      /* lower FRAG_RESULT_COLOR -> DATA[0-7] to correctly handle unused attachments */
+      nir_shader *nir = shader->base.ir.nir;
+      NIR_PASS_V(nir, nir_lower_fragcolor, nir->info.fs.color_is_dual_source ? 1 : 8);
+
+      nir_tgsi_scan_shader(nir, &shader->info.base, true);
    }
 
    shader->draw_data = draw_create_fragment_shader(llvmpipe->draw, templ);

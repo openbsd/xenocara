@@ -67,7 +67,9 @@
  * MinGW 7.3.0 (in Ubuntu 18.04) does not have this bug.  Assume versions before 7.3.x are buggy
  */
 
-#if defined(__MINGW32__) && ((__GNUC__ * 100) + __GNUC_MINOR < 703)
+#include "util/detect_cc.h"
+
+#if defined(__MINGW32__) && (DETECT_CC_GCC_VERSION < 703)
 #warning "disabling optimizations for this file to work around compiler bug"
 #pragma GCC optimize("O1")
 #endif
@@ -75,6 +77,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include "util/simple_mtx.h"
 #include "main/consts_exts.h"
 #include "main/shader_types.h"
 #include "main/shaderobj.h"
@@ -97,7 +100,7 @@
 
 using namespace ir_builder;
 
-static mtx_t builtins_lock = _MTX_INITIALIZER_NP;
+static simple_mtx_t builtins_lock = SIMPLE_MTX_INITIALIZER;
 
 /**
  * Availability predicates:
@@ -1014,7 +1017,12 @@ private:
     * member available.
     */
    ir_variable *in_var(const glsl_type *type, const char *name);
+   ir_variable *in_mediump_var(const glsl_type *type, const char *name);
+   ir_variable *in_highp_var(const glsl_type *type, const char *name);
    ir_variable *out_var(const glsl_type *type, const char *name);
+   ir_variable *out_lowp_var(const glsl_type *type, const char *name);
+   ir_variable *out_highp_var(const glsl_type *type, const char *name);
+   ir_variable *as_highp(ir_factory &body, ir_variable *var);
    ir_constant *imm(float f, unsigned vector_elements=1);
    ir_constant *imm(bool b, unsigned vector_elements=1);
    ir_constant *imm(int i, unsigned vector_elements=1);
@@ -1076,6 +1084,10 @@ private:
                                ir_expression_operation opcode,
                                const glsl_type *return_type,
                                const glsl_type *param_type);
+   ir_function_signature *unop_precision(builtin_available_predicate avail,
+                                         ir_expression_operation opcode,
+                                         const glsl_type *return_type,
+                                         const glsl_type *param_type, uint32_t precision);
    ir_function_signature *binop(builtin_available_predicate avail,
                                 ir_expression_operation opcode,
                                 const glsl_type *return_type,
@@ -1388,7 +1400,7 @@ builtin_builder::builtin_builder()
 
 builtin_builder::~builtin_builder()
 {
-   mtx_lock(&builtins_lock);
+   simple_mtx_lock(&builtins_lock);
 
    ralloc_free(mem_ctx);
    mem_ctx = NULL;
@@ -1396,7 +1408,7 @@ builtin_builder::~builtin_builder()
    ralloc_free(shader);
    shader = NULL;
 
-   mtx_unlock(&builtins_lock);
+   simple_mtx_unlock(&builtins_lock);
 }
 
 ir_function_signature *
@@ -4741,10 +4753,10 @@ builtin_builder::create_builtins()
                 _frexp(glsl_type::vec2_type,  glsl_type::ivec2_type),
                 _frexp(glsl_type::vec3_type,  glsl_type::ivec3_type),
                 _frexp(glsl_type::vec4_type,  glsl_type::ivec4_type),
-                _dfrexp(glsl_type::double_type, glsl_type::int_type),
-                _dfrexp(glsl_type::dvec2_type,  glsl_type::ivec2_type),
-                _dfrexp(glsl_type::dvec3_type,  glsl_type::ivec3_type),
-                _dfrexp(glsl_type::dvec4_type,  glsl_type::ivec4_type),
+                _frexp(glsl_type::double_type, glsl_type::int_type),
+                _frexp(glsl_type::dvec2_type,  glsl_type::ivec2_type),
+                _frexp(glsl_type::dvec3_type,  glsl_type::ivec3_type),
+                _frexp(glsl_type::dvec4_type,  glsl_type::ivec4_type),
                 NULL);
    add_function("uaddCarry",
                 _uaddCarry(glsl_type::uint_type),
@@ -5648,9 +5660,49 @@ builtin_builder::in_var(const glsl_type *type, const char *name)
 }
 
 ir_variable *
+builtin_builder::in_highp_var(const glsl_type *type, const char *name)
+{
+   ir_variable *var = in_var(type, name);
+   var->data.precision = GLSL_PRECISION_HIGH;
+   return var;
+}
+
+ir_variable *
+builtin_builder::in_mediump_var(const glsl_type *type, const char *name)
+{
+   ir_variable *var = in_var(type, name);
+   var->data.precision = GLSL_PRECISION_MEDIUM;
+   return var;
+}
+
+ir_variable *
 builtin_builder::out_var(const glsl_type *type, const char *name)
 {
    return new(mem_ctx) ir_variable(type, name, ir_var_function_out);
+}
+
+ir_variable *
+builtin_builder::out_lowp_var(const glsl_type *type, const char *name)
+{
+   ir_variable *var = out_var(type, name);
+   var->data.precision = GLSL_PRECISION_LOW;
+   return var;
+}
+
+ir_variable *
+builtin_builder::out_highp_var(const glsl_type *type, const char *name)
+{
+   ir_variable *var = out_var(type, name);
+   var->data.precision = GLSL_PRECISION_HIGH;
+   return var;
+}
+
+ir_variable *
+builtin_builder::as_highp(ir_factory &body, ir_variable *var)
+{
+   ir_variable *t = body.make_temp(var->type, "highp_tmp");
+   body.emit(assign(t, var));
+   return t;
 }
 
 ir_constant *
@@ -6217,7 +6269,7 @@ builtin_builder::_floatBitsToInt(const glsl_type *type)
 {
    ir_variable *x = in_var(type, "x");
    MAKE_SIG(glsl_type::ivec(type->vector_elements), shader_bit_encoding, 1, x);
-   body.emit(ret(bitcast_f2i(x)));
+   body.emit(ret(bitcast_f2i(as_highp(body, x))));
    return sig;
 }
 
@@ -6226,7 +6278,7 @@ builtin_builder::_floatBitsToUint(const glsl_type *type)
 {
    ir_variable *x = in_var(type, "x");
    MAKE_SIG(glsl_type::uvec(type->vector_elements), shader_bit_encoding, 1, x);
-   body.emit(ret(bitcast_f2u(x)));
+   body.emit(ret(bitcast_f2u(as_highp(body, x))));
    return sig;
 }
 
@@ -6235,7 +6287,7 @@ builtin_builder::_intBitsToFloat(const glsl_type *type)
 {
    ir_variable *x = in_var(type, "x");
    MAKE_SIG(glsl_type::vec(type->vector_elements), shader_bit_encoding, 1, x);
-   body.emit(ret(bitcast_i2f(x)));
+   body.emit(ret(bitcast_i2f(as_highp(body, x))));
    return sig;
 }
 
@@ -6244,7 +6296,7 @@ builtin_builder::_uintBitsToFloat(const glsl_type *type)
 {
    ir_variable *x = in_var(type, "x");
    MAKE_SIG(glsl_type::vec(type->vector_elements), shader_bit_encoding, 1, x);
-   body.emit(ret(bitcast_u2f(x)));
+   body.emit(ret(bitcast_u2f(as_highp(body, x))));
    return sig;
 }
 
@@ -6287,8 +6339,9 @@ builtin_builder::_uint64BitsToDouble(builtin_available_predicate avail, const gl
 ir_function_signature *
 builtin_builder::_packUnorm2x16(builtin_available_predicate avail)
 {
-   ir_variable *v = in_var(glsl_type::vec2_type, "v");
+   ir_variable *v = in_highp_var(glsl_type::vec2_type, "v");
    MAKE_SIG(glsl_type::uint_type, avail, 1, v);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_pack_unorm_2x16, v)));
    return sig;
 }
@@ -6298,6 +6351,7 @@ builtin_builder::_packSnorm2x16(builtin_available_predicate avail)
 {
    ir_variable *v = in_var(glsl_type::vec2_type, "v");
    MAKE_SIG(glsl_type::uint_type, avail, 1, v);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_pack_snorm_2x16, v)));
    return sig;
 }
@@ -6305,8 +6359,9 @@ builtin_builder::_packSnorm2x16(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_packUnorm4x8(builtin_available_predicate avail)
 {
-   ir_variable *v = in_var(glsl_type::vec4_type, "v");
+   ir_variable *v = in_mediump_var(glsl_type::vec4_type, "v");
    MAKE_SIG(glsl_type::uint_type, avail, 1, v);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_pack_unorm_4x8, v)));
    return sig;
 }
@@ -6314,8 +6369,9 @@ builtin_builder::_packUnorm4x8(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_packSnorm4x8(builtin_available_predicate avail)
 {
-   ir_variable *v = in_var(glsl_type::vec4_type, "v");
+   ir_variable *v = in_mediump_var(glsl_type::vec4_type, "v");
    MAKE_SIG(glsl_type::uint_type, avail, 1, v);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_pack_snorm_4x8, v)));
    return sig;
 }
@@ -6323,8 +6379,9 @@ builtin_builder::_packSnorm4x8(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_unpackUnorm2x16(builtin_available_predicate avail)
 {
-   ir_variable *p = in_var(glsl_type::uint_type, "p");
+   ir_variable *p = in_highp_var(glsl_type::uint_type, "p");
    MAKE_SIG(glsl_type::vec2_type, avail, 1, p);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_unpack_unorm_2x16, p)));
    return sig;
 }
@@ -6332,8 +6389,9 @@ builtin_builder::_unpackUnorm2x16(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_unpackSnorm2x16(builtin_available_predicate avail)
 {
-   ir_variable *p = in_var(glsl_type::uint_type, "p");
+   ir_variable *p = in_highp_var(glsl_type::uint_type, "p");
    MAKE_SIG(glsl_type::vec2_type, avail, 1, p);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_unpack_snorm_2x16, p)));
    return sig;
 }
@@ -6342,8 +6400,9 @@ builtin_builder::_unpackSnorm2x16(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_unpackUnorm4x8(builtin_available_predicate avail)
 {
-   ir_variable *p = in_var(glsl_type::uint_type, "p");
+   ir_variable *p = in_highp_var(glsl_type::uint_type, "p");
    MAKE_SIG(glsl_type::vec4_type, avail, 1, p);
+   sig->return_precision = GLSL_PRECISION_MEDIUM;
    body.emit(ret(expr(ir_unop_unpack_unorm_4x8, p)));
    return sig;
 }
@@ -6351,8 +6410,9 @@ builtin_builder::_unpackUnorm4x8(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_unpackSnorm4x8(builtin_available_predicate avail)
 {
-   ir_variable *p = in_var(glsl_type::uint_type, "p");
+   ir_variable *p = in_highp_var(glsl_type::uint_type, "p");
    MAKE_SIG(glsl_type::vec4_type, avail, 1, p);
+   sig->return_precision = GLSL_PRECISION_MEDIUM;
    body.emit(ret(expr(ir_unop_unpack_snorm_4x8, p)));
    return sig;
 }
@@ -6360,8 +6420,9 @@ builtin_builder::_unpackSnorm4x8(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_packHalf2x16(builtin_available_predicate avail)
 {
-   ir_variable *v = in_var(glsl_type::vec2_type, "v");
+   ir_variable *v = in_mediump_var(glsl_type::vec2_type, "v");
    MAKE_SIG(glsl_type::uint_type, avail, 1, v);
+   sig->return_precision = GLSL_PRECISION_HIGH;
    body.emit(ret(expr(ir_unop_pack_half_2x16, v)));
    return sig;
 }
@@ -6369,8 +6430,9 @@ builtin_builder::_packHalf2x16(builtin_available_predicate avail)
 ir_function_signature *
 builtin_builder::_unpackHalf2x16(builtin_available_predicate avail)
 {
-   ir_variable *p = in_var(glsl_type::uint_type, "p");
+   ir_variable *p = in_highp_var(glsl_type::uint_type, "p");
    MAKE_SIG(glsl_type::vec2_type, avail, 1, p);
+   sig->return_precision = GLSL_PRECISION_MEDIUM;
    body.emit(ret(expr(ir_unop_unpack_half_2x16, p)));
    return sig;
 }
@@ -7069,6 +7131,7 @@ builtin_builder::_textureSize(builtin_available_predicate avail,
    ir_variable *s = in_var(sampler_type, "sampler");
    /* The sampler always exists; add optional lod later. */
    MAKE_SIG(return_type, avail, 1, s);
+   sig->return_precision = GLSL_PRECISION_HIGH;
 
    ir_texture *tex = new(mem_ctx) ir_texture(ir_txs);
    tex->set_sampler(new(mem_ctx) ir_dereference_variable(s), return_type);
@@ -7618,27 +7681,44 @@ builtin_builder::_bitfieldInsert(const glsl_type *type)
    return sig;
 }
 
-UNOP(bitfieldReverse, ir_unop_bitfield_reverse, gpu_shader5_or_es31_or_integer_functions)
+ir_function_signature *
+builtin_builder::_bitfieldReverse(const glsl_type *type)
+{
+   ir_variable *x = in_highp_var(type, "x");
+   MAKE_SIG(type, gpu_shader5_or_es31_or_integer_functions, 1, x);
+   sig->return_precision = GLSL_PRECISION_HIGH;
+   body.emit(ret(expr(ir_unop_bitfield_reverse, x)));
+   return sig;
+}
 
 ir_function_signature *
 builtin_builder::_bitCount(const glsl_type *type)
 {
-   return unop(gpu_shader5_or_es31_or_integer_functions, ir_unop_bit_count,
-               glsl_type::ivec(type->vector_elements), type);
+   ir_variable *x = in_var(type, "x");
+   MAKE_SIG(glsl_type::ivec(type->vector_elements), gpu_shader5_or_es31_or_integer_functions, 1, x);
+   sig->return_precision = GLSL_PRECISION_LOW;
+   body.emit(ret(expr(ir_unop_bit_count, x)));
+   return sig;
 }
 
 ir_function_signature *
 builtin_builder::_findLSB(const glsl_type *type)
 {
-   return unop(gpu_shader5_or_es31_or_integer_functions, ir_unop_find_lsb,
-               glsl_type::ivec(type->vector_elements), type);
+   ir_variable *x = in_highp_var(type, "x");
+   MAKE_SIG(glsl_type::ivec(type->vector_elements), gpu_shader5_or_es31_or_integer_functions, 1, x);
+   sig->return_precision = GLSL_PRECISION_LOW;
+   body.emit(ret(expr(ir_unop_find_lsb, x)));
+   return sig;
 }
 
 ir_function_signature *
 builtin_builder::_findMSB(const glsl_type *type)
 {
-   return unop(gpu_shader5_or_es31_or_integer_functions, ir_unop_find_msb,
-               glsl_type::ivec(type->vector_elements), type);
+   ir_variable *x = in_highp_var(type, "x");
+   MAKE_SIG(glsl_type::ivec(type->vector_elements), gpu_shader5_or_es31_or_integer_functions, 1, x);
+   sig->return_precision = GLSL_PRECISION_LOW;
+   body.emit(ret(expr(ir_unop_find_msb, x)));
+   return sig;
 }
 
 ir_function_signature *
@@ -7679,16 +7759,22 @@ builtin_builder::_fma(builtin_available_predicate avail, const glsl_type *type)
 ir_function_signature *
 builtin_builder::_ldexp(const glsl_type *x_type, const glsl_type *exp_type)
 {
-   return binop(x_type->is_double() ? fp64 : gpu_shader5_or_es31_or_integer_functions,
-                ir_binop_ldexp, x_type, x_type, exp_type);
+   ir_variable *x = in_highp_var(x_type, "x");
+   ir_variable *y = in_highp_var(exp_type, "y");
+   MAKE_SIG(x_type, x_type->is_double() ? fp64 : gpu_shader5_or_es31_or_integer_functions, 2, x, y);
+   sig->return_precision = GLSL_PRECISION_HIGH;
+   body.emit(ret(expr(ir_binop_ldexp, x, y)));
+   return sig;
 }
 
 ir_function_signature *
-builtin_builder::_dfrexp(const glsl_type *x_type, const glsl_type *exp_type)
+builtin_builder::_frexp(const glsl_type *x_type, const glsl_type *exp_type)
 {
-   ir_variable *x = in_var(x_type, "x");
+   ir_variable *x = in_highp_var(x_type, "x");
    ir_variable *exponent = out_var(exp_type, "exp");
-   MAKE_SIG(x_type, fp64, 2, x, exponent);
+   MAKE_SIG(x_type, x_type->is_double() ? fp64 : gpu_shader5_or_es31_or_integer_functions,
+            2, x, exponent);
+   sig->return_precision = GLSL_PRECISION_HIGH;
 
    body.emit(assign(exponent, expr(ir_unop_frexp_exp, x)));
 
@@ -7697,60 +7783,13 @@ builtin_builder::_dfrexp(const glsl_type *x_type, const glsl_type *exp_type)
 }
 
 ir_function_signature *
-builtin_builder::_frexp(const glsl_type *x_type, const glsl_type *exp_type)
-{
-   ir_variable *x = in_var(x_type, "x");
-   ir_variable *exponent = out_var(exp_type, "exp");
-   MAKE_SIG(x_type, gpu_shader5_or_es31_or_integer_functions, 2, x, exponent);
-
-   const unsigned vec_elem = x_type->vector_elements;
-   const glsl_type *bvec = glsl_type::get_instance(GLSL_TYPE_BOOL, vec_elem, 1);
-   const glsl_type *uvec = glsl_type::get_instance(GLSL_TYPE_UINT, vec_elem, 1);
-
-   /* Single-precision floating-point values are stored as
-    *   1 sign bit;
-    *   8 exponent bits;
-    *   23 mantissa bits.
-    *
-    * An exponent shift of 23 will shift the mantissa out, leaving only the
-    * exponent and sign bit (which itself may be zero, if the absolute value
-    * was taken before the bitcast and shift.
-    */
-   ir_constant *exponent_shift = imm(23);
-   ir_constant *exponent_bias = imm(-126, vec_elem);
-
-   ir_constant *sign_mantissa_mask = imm(0x807fffffu, vec_elem);
-
-   /* Exponent of floating-point values in the range [0.5, 1.0). */
-   ir_constant *exponent_value = imm(0x3f000000u, vec_elem);
-
-   ir_variable *is_not_zero = body.make_temp(bvec, "is_not_zero");
-   body.emit(assign(is_not_zero, nequal(abs(x), imm(0.0f, vec_elem))));
-
-   /* Since abs(x) ensures that the sign bit is zero, we don't need to bitcast
-    * to unsigned integers to ensure that 1 bits aren't shifted in.
-    */
-   body.emit(assign(exponent, rshift(bitcast_f2i(abs(x)), exponent_shift)));
-   body.emit(assign(exponent, add(exponent, csel(is_not_zero, exponent_bias,
-                                                     imm(0, vec_elem)))));
-
-   ir_variable *bits = body.make_temp(uvec, "bits");
-   body.emit(assign(bits, bitcast_f2u(x)));
-   body.emit(assign(bits, bit_and(bits, sign_mantissa_mask)));
-   body.emit(assign(bits, bit_or(bits, csel(is_not_zero, exponent_value,
-                                                imm(0u, vec_elem)))));
-   body.emit(ret(bitcast_u2f(bits)));
-
-   return sig;
-}
-
-ir_function_signature *
 builtin_builder::_uaddCarry(const glsl_type *type)
 {
-   ir_variable *x = in_var(type, "x");
-   ir_variable *y = in_var(type, "y");
-   ir_variable *carry = out_var(type, "carry");
+   ir_variable *x = in_highp_var(type, "x");
+   ir_variable *y = in_highp_var(type, "y");
+   ir_variable *carry = out_lowp_var(type, "carry");
    MAKE_SIG(type, gpu_shader5_or_es31_or_integer_functions, 3, x, y, carry);
+   sig->return_precision = GLSL_PRECISION_HIGH;
 
    body.emit(assign(carry, ir_builder::carry(x, y)));
    body.emit(ret(add(x, y)));
@@ -7768,10 +7807,11 @@ builtin_builder::_addSaturate(builtin_available_predicate avail,
 ir_function_signature *
 builtin_builder::_usubBorrow(const glsl_type *type)
 {
-   ir_variable *x = in_var(type, "x");
-   ir_variable *y = in_var(type, "y");
-   ir_variable *borrow = out_var(type, "borrow");
+   ir_variable *x = in_highp_var(type, "x");
+   ir_variable *y = in_highp_var(type, "y");
+   ir_variable *borrow = out_lowp_var(type, "borrow");
    MAKE_SIG(type, gpu_shader5_or_es31_or_integer_functions, 3, x, y, borrow);
+   sig->return_precision = GLSL_PRECISION_HIGH;
 
    body.emit(assign(borrow, ir_builder::borrow(x, y)));
    body.emit(ret(sub(x, y)));
@@ -7832,10 +7872,10 @@ builtin_builder::_mulExtended(const glsl_type *type)
       unpack_type = glsl_type::uvec2_type;
    }
 
-   ir_variable *x = in_var(type, "x");
-   ir_variable *y = in_var(type, "y");
-   ir_variable *msb = out_var(type, "msb");
-   ir_variable *lsb = out_var(type, "lsb");
+   ir_variable *x = in_highp_var(type, "x");
+   ir_variable *y = in_highp_var(type, "y");
+   ir_variable *msb = out_highp_var(type, "msb");
+   ir_variable *lsb = out_highp_var(type, "lsb");
    MAKE_SIG(glsl_type::void_type, gpu_shader5_or_es31_or_integer_functions, 4, x, y, msb, lsb);
 
    ir_variable *unpack_val = body.make_temp(unpack_type, "_unpack_val");
@@ -7904,11 +7944,16 @@ builtin_builder::_interpolateAtSample(const glsl_type *type)
    return sig;
 }
 
+/* The highp isn't specified in the built-in function descriptions, but in the
+ * atomic counter description: "The default precision of all atomic types is
+ * highp. It is an error to declare an atomic type with a different precision or
+ * to specify the default precision for an atomic type to be lowp or mediump."
+ */
 ir_function_signature *
 builtin_builder::_atomic_counter_intrinsic(builtin_available_predicate avail,
                                            enum ir_intrinsic_id id)
 {
-   ir_variable *counter = in_var(glsl_type::atomic_uint_type, "counter");
+   ir_variable *counter = in_highp_var(glsl_type::atomic_uint_type, "counter");
    MAKE_INTRINSIC(glsl_type::uint_type, id, avail, 1, counter);
    return sig;
 }
@@ -7917,7 +7962,7 @@ ir_function_signature *
 builtin_builder::_atomic_counter_intrinsic1(builtin_available_predicate avail,
                                             enum ir_intrinsic_id id)
 {
-   ir_variable *counter = in_var(glsl_type::atomic_uint_type, "counter");
+   ir_variable *counter = in_highp_var(glsl_type::atomic_uint_type, "counter");
    ir_variable *data = in_var(glsl_type::uint_type, "data");
    MAKE_INTRINSIC(glsl_type::uint_type, id, avail, 2, counter, data);
    return sig;
@@ -7927,7 +7972,7 @@ ir_function_signature *
 builtin_builder::_atomic_counter_intrinsic2(builtin_available_predicate avail,
                                             enum ir_intrinsic_id id)
 {
-   ir_variable *counter = in_var(glsl_type::atomic_uint_type, "counter");
+   ir_variable *counter = in_highp_var(glsl_type::atomic_uint_type, "counter");
    ir_variable *compare = in_var(glsl_type::uint_type, "compare");
    ir_variable *data = in_var(glsl_type::uint_type, "data");
    MAKE_INTRINSIC(glsl_type::uint_type, id, avail, 3, counter, compare, data);
@@ -7961,7 +8006,7 @@ ir_function_signature *
 builtin_builder::_atomic_counter_op(const char *intrinsic,
                                     builtin_available_predicate avail)
 {
-   ir_variable *counter = in_var(glsl_type::atomic_uint_type, "atomic_counter");
+   ir_variable *counter = in_highp_var(glsl_type::atomic_uint_type, "atomic_counter");
    MAKE_SIG(glsl_type::uint_type, avail, 1, counter);
 
    ir_variable *retval = body.make_temp(glsl_type::uint_type, "atomic_retval");
@@ -7975,7 +8020,7 @@ ir_function_signature *
 builtin_builder::_atomic_counter_op1(const char *intrinsic,
                                      builtin_available_predicate avail)
 {
-   ir_variable *counter = in_var(glsl_type::atomic_uint_type, "atomic_counter");
+   ir_variable *counter = in_highp_var(glsl_type::atomic_uint_type, "atomic_counter");
    ir_variable *data = in_var(glsl_type::uint_type, "data");
    MAKE_SIG(glsl_type::uint_type, avail, 2, counter, data);
 
@@ -8016,7 +8061,7 @@ ir_function_signature *
 builtin_builder::_atomic_counter_op2(const char *intrinsic,
                                     builtin_available_predicate avail)
 {
-   ir_variable *counter = in_var(glsl_type::atomic_uint_type, "atomic_counter");
+   ir_variable *counter = in_highp_var(glsl_type::atomic_uint_type, "atomic_counter");
    ir_variable *compare = in_var(glsl_type::uint_type, "compare");
    ir_variable *data = in_var(glsl_type::uint_type, "data");
    MAKE_SIG(glsl_type::uint_type, avail, 3, counter, compare, data);
@@ -8300,6 +8345,10 @@ builtin_builder::_image(image_prototype_ctr prototype,
       } else {
          ir_variable *ret_val =
             body.make_temp(sig->return_type, "_ret_val");
+         /* all non-void image functions return highp, so make our temporary and return
+          * value in the signature highp.
+          */
+         ret_val->data.precision = GLSL_PRECISION_HIGH;
          body.emit(call(f, ret_val, sig->parameters));
          body.emit(ret(ret_val));
       }
@@ -8309,6 +8358,7 @@ builtin_builder::_image(image_prototype_ctr prototype,
    } else {
       sig->intrinsic_id = id;
    }
+   sig->return_precision = GLSL_PRECISION_HIGH;
 
    return sig;
 }
@@ -8510,20 +8560,20 @@ static uint32_t builtin_users = 0;
 extern "C" void
 _mesa_glsl_builtin_functions_init_or_ref()
 {
-   mtx_lock(&builtins_lock);
+   simple_mtx_lock(&builtins_lock);
    if (builtin_users++ == 0)
       builtins.initialize();
-   mtx_unlock(&builtins_lock);
+   simple_mtx_unlock(&builtins_lock);
 }
 
 extern "C" void
 _mesa_glsl_builtin_functions_decref()
 {
-   mtx_lock(&builtins_lock);
+   simple_mtx_lock(&builtins_lock);
    assert(builtin_users != 0);
    if (--builtin_users == 0)
       builtins.release();
-   mtx_unlock(&builtins_lock);
+   simple_mtx_unlock(&builtins_lock);
 }
 
 ir_function_signature *
@@ -8531,9 +8581,9 @@ _mesa_glsl_find_builtin_function(_mesa_glsl_parse_state *state,
                                  const char *name, exec_list *actual_parameters)
 {
    ir_function_signature *s;
-   mtx_lock(&builtins_lock);
+   simple_mtx_lock(&builtins_lock);
    s = builtins.find(state, name, actual_parameters);
-   mtx_unlock(&builtins_lock);
+   simple_mtx_unlock(&builtins_lock);
 
    return s;
 }
@@ -8543,7 +8593,7 @@ _mesa_glsl_has_builtin_function(_mesa_glsl_parse_state *state, const char *name)
 {
    ir_function *f;
    bool ret = false;
-   mtx_lock(&builtins_lock);
+   simple_mtx_lock(&builtins_lock);
    f = builtins.shader->symbols->get_function(name);
    if (f != NULL) {
       foreach_in_list(ir_function_signature, sig, &f->signatures) {
@@ -8553,7 +8603,7 @@ _mesa_glsl_has_builtin_function(_mesa_glsl_parse_state *state, const char *name)
          }
       }
    }
-   mtx_unlock(&builtins_lock);
+   simple_mtx_unlock(&builtins_lock);
 
    return ret;
 }

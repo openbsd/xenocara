@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX75_PACK_H
-#define GFX75_PACK_H
+#ifndef GFX75_HSW_PACK_H
+#define GFX75_HSW_PACK_H
 
 #include <stdio.h>
 
@@ -7644,8 +7644,8 @@ struct GFX75_MFX_AVC_IMG_STATE {
 #define EXPLICIT                                 1
 #define IMPLICIT                                 2
    bool                                 WeightedPredictionEnable;
-   uint32_t                             FirstChromaQPOffset;
-   uint32_t                             SecondChromaQPOffset;
+   int32_t                              FirstChromaQPOffset;
+   int32_t                              SecondChromaQPOffset;
    bool                                 FieldPicture;
    bool                                 MBAFFMode;
    bool                                 FrameMBOnly;
@@ -7753,8 +7753,8 @@ GFX75_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ImageStructure, 8, 9) |
       util_bitpack_uint(values->WeightedBiPredictionIDC, 10, 11) |
       util_bitpack_uint(values->WeightedPredictionEnable, 12, 12) |
-      util_bitpack_uint(values->FirstChromaQPOffset, 16, 20) |
-      util_bitpack_uint(values->SecondChromaQPOffset, 24, 28);
+      util_bitpack_sint(values->FirstChromaQPOffset, 16, 20) |
+      util_bitpack_sint(values->SecondChromaQPOffset, 24, 28);
 
    dw[4] =
       util_bitpack_uint(values->FieldPicture, 0, 0) |
@@ -14660,4 +14660,4 @@ GFX75_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#endif /* GFX75_PACK_H */
+#endif /* GFX75_HSW_PACK_H */

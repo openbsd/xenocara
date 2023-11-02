@@ -134,10 +134,10 @@ class PrintGlOffsets(gl_XML.gl_print_base):
  *   #define KEYWORD2
  *   #define NAME(func)  gl##func
  *   #define DISPATCH(func, args, msg)                             \\
- *          struct _glapi_table *dispatch = CurrentClientDispatch; \\
+ *          struct _glapi_table *dispatch = GLApi; \\
  *          (*dispatch->func) args
  *   #define RETURN DISPATCH(func, args, msg)                      \\
- *          struct _glapi_table *dispatch = CurrentClientDispatch; \\
+ *          struct _glapi_table *dispatch = GLApi; \\
  *          return (*dispatch->func) args
  *
  */
@@ -164,8 +164,8 @@ class PrintGlOffsets(gl_XML.gl_print_base):
 #error RETURN_DISPATCH must be defined
 #endif
 
-#ifdef MemoryBarrier
-#undef MemoryBarrier
+#if defined(_WIN32) && defined(_WINDOWS_)
+#error "Should not include <windows.h> here"
 #endif
 
 """)

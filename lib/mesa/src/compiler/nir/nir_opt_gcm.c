@@ -19,10 +19,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- *
- * Authors:
- *    Jason Ekstrand (jason@jlekstrand.net)
- *
  */
 
 #include "nir.h"
@@ -117,6 +113,7 @@ get_loop_instr_count(struct exec_list *cf_list)
       }
       case nir_cf_node_loop: {
          nir_loop *loop = nir_cf_node_as_loop(node);
+         assert(!nir_loop_has_continue_construct(loop));
          loop_instr_count += get_loop_instr_count(&loop->body);
          break;
       }
@@ -154,6 +151,7 @@ gcm_build_block_info(struct exec_list *cf_list, struct gcm_state *state,
       }
       case nir_cf_node_loop: {
          nir_loop *loop = nir_cf_node_as_loop(node);
+         assert(!nir_loop_has_continue_construct(loop));
          gcm_build_block_info(&loop->body, state, loop, loop_depth + 1, if_depth,
                               get_loop_instr_count(&loop->body));
          break;
@@ -503,6 +501,7 @@ set_block_for_loop_instr(struct gcm_state *state, nir_instr *instr,
    if (loop == NULL)
       return true;
 
+   assert(!nir_loop_has_continue_construct(loop));
    if (nir_block_dominates(instr->block, block))
       return true;
 
@@ -791,6 +790,17 @@ gcm_place_instr(nir_instr *instr, struct gcm_state *state)
    block_info->last_instr = instr;
 }
 
+/**
+ * Are instructions a and b both contained in the same if/else block?
+ */
+static bool
+weak_gvn(const nir_instr *a, const nir_instr *b)
+{
+   const struct nir_cf_node *ap = a->block->cf_node.parent;
+   const struct nir_cf_node *bp = b->block->cf_node.parent;
+   return ap && ap == bp && ap->type == nir_cf_node_if;
+}
+
 static bool
 opt_gcm_impl(nir_shader *shader, nir_function_impl *impl, bool value_number)
 {
@@ -820,17 +830,26 @@ opt_gcm_impl(nir_shader *shader, nir_function_impl *impl, bool value_number)
    state.instr_infos =
       rzalloc_array(NULL, struct gcm_instr_info, state.num_instrs);
 
-   if (value_number) {
-      struct set *gvn_set = nir_instr_set_create(NULL);
-      foreach_list_typed_safe(nir_instr, instr, node, &state.instrs) {
-         if (instr->pass_flags & GCM_INSTR_PINNED)
-            continue;
+   /* Perform (at least some) Global Value Numbering (GVN).
+    *
+    * We perform full GVN when `value_number' is true.  This can be too
+    * aggressive, moving values far away and extending their live ranges,
+    * so we don't always want to do it.
+    *
+    * Otherwise, we perform 'weaker' GVN: if identical ALU instructions appear
+    * on both sides of the same if/else block, we allow them to be moved.
+    * This cleans up a lot of mess without being -too- aggressive.
+    */
+   struct set *gvn_set = nir_instr_set_create(NULL);
+   foreach_list_typed_safe(nir_instr, instr, node, &state.instrs) {
+      if (instr->pass_flags & GCM_INSTR_PINNED)
+         continue;
 
-         if (nir_instr_set_add_or_rewrite(gvn_set, instr, NULL))
-            state.progress = true;
-      }
-      nir_instr_set_destroy(gvn_set);
+      if (nir_instr_set_add_or_rewrite(gvn_set, instr,
+                                       value_number ? NULL : weak_gvn))
+         state.progress = true;
    }
+   nir_instr_set_destroy(gvn_set);
 
    foreach_list_typed(nir_instr, instr, node, &state.instrs)
       gcm_schedule_early_instr(instr, &state);

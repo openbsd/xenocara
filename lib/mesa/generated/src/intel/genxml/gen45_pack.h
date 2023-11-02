@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX45_PACK_H
-#define GFX45_PACK_H
+#ifndef GFX45_CTG_PACK_H
+#define GFX45_CTG_PACK_H
 
 #include <stdio.h>
 
@@ -2828,4 +2828,4 @@ GFX45_XY_TEXT_IMMEDIATE_BLT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_sint(values->DestinationY2Coordinate, 16, 31);
 }
 
-#endif /* GFX45_PACK_H */
+#endif /* GFX45_CTG_PACK_H */

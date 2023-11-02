@@ -566,8 +566,8 @@ VkResult anv_CreateDescriptorSetLayout(
          /* Inline uniform blocks are specified to use the descriptor array
           * size as the size in bytes of the block.
           */
-         descriptor_buffer_size = align_u32(descriptor_buffer_size,
-                                            ANV_UBO_ALIGNMENT);
+         descriptor_buffer_size = align(descriptor_buffer_size,
+                                        ANV_UBO_ALIGNMENT);
          set_layout->binding[b].descriptor_offset = descriptor_buffer_size;
          descriptor_buffer_size += binding->descriptorCount;
       } else {
@@ -696,8 +696,7 @@ sha1_update_immutable_sampler(struct mesa_sha1 *ctx,
       return;
 
    /* The only thing that affects the shader is ycbcr conversion */
-   _mesa_sha1_update(ctx, sampler->conversion,
-                     sizeof(*sampler->conversion));
+   SHA1_UPDATE_VALUE(ctx, sampler->conversion->state);
 }
 
 static void
@@ -806,13 +805,13 @@ void anv_DestroyPipelineLayout(
 /*
  * Descriptor pools.
  *
- * These are implemented using a big pool of memory and a free-list for the
+ * These are implemented using a big pool of memory and a vma heap for the
  * host memory allocations and a state_stream and a free list for the buffer
  * view surface state. The spec allows us to fail to allocate due to
  * fragmentation in all cases but two: 1) after pool reset, allocating up
  * until the pool size with no freeing must succeed and 2) allocating and
  * freeing only descriptor sets with the same layout. Case 1) is easy enough,
- * and the free lists lets us recycle blocks for case 2).
+ * and the vma heap ensures case 2).
  */
 
 /* The vma heap reserves 0 to mean NULL; we have to offset by some amount to
@@ -897,43 +896,51 @@ VkResult anv_CreateDescriptorPool(
 
    const bool host_only =
       pCreateInfo->flags & VK_DESCRIPTOR_POOL_CREATE_HOST_ONLY_BIT_EXT;
+
    /* For host_only pools, allocate some memory to hold the written surface
     * states of the internal anv_buffer_view. With normal pools, the memory
     * holding surface state is allocated from the device surface_state_pool.
     */
-   const size_t pool_size =
+   const size_t host_mem_size =
       pCreateInfo->maxSets * sizeof(struct anv_descriptor_set) +
       descriptor_count * sizeof(struct anv_descriptor) +
       buffer_view_count * sizeof(struct anv_buffer_view) +
       (host_only ? buffer_view_count * ANV_SURFACE_STATE_SIZE : 0);
-   const size_t total_size = sizeof(*pool) + pool_size;
 
-   pool = vk_object_alloc(&device->vk, pAllocator, total_size,
-                          VK_OBJECT_TYPE_DESCRIPTOR_POOL);
+   pool = vk_object_zalloc(&device->vk, pAllocator,
+                           sizeof(*pool) + host_mem_size,
+                           VK_OBJECT_TYPE_DESCRIPTOR_POOL);
    if (!pool)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
 
-   pool->size = pool_size;
-   pool->next = 0;
-   pool->free_list = EMPTY;
+   pool->bo_mem_size = descriptor_bo_size;
+   pool->host_mem_size = host_mem_size;
+   util_vma_heap_init(&pool->host_heap, POOL_HEAP_OFFSET, host_mem_size);
+
    pool->host_only = host_only;
 
-   if (descriptor_bo_size > 0) {
-      VkResult result = anv_device_alloc_bo(device,
-                                            "descriptors",
-                                            descriptor_bo_size,
-                                            ANV_BO_ALLOC_MAPPED |
-                                            ANV_BO_ALLOC_SNOOPED,
-                                            0 /* explicit_address */,
-                                            &pool->bo);
-      if (result != VK_SUCCESS) {
-         vk_object_free(&device->vk, pAllocator, pool);
-         return vk_error(device, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+   if (pool->bo_mem_size > 0) {
+      if (pool->host_only) {
+         pool->host_bo = vk_zalloc(&device->vk.alloc, pool->bo_mem_size, 8,
+                                   VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
+         if (pool->host_bo == NULL) {
+            vk_object_free(&device->vk, pAllocator, pool);
+            return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
+         }
+      } else {
+         VkResult result = anv_device_alloc_bo(device,
+                                               "descriptors",
+                                               descriptor_bo_size,
+                                               ANV_BO_ALLOC_MAPPED |
+                                               ANV_BO_ALLOC_SNOOPED,
+                                               0 /* explicit_address */,
+                                               &pool->bo);
+         if (result != VK_SUCCESS) {
+            vk_object_free(&device->vk, pAllocator, pool);
+            return vk_error(device, VK_ERROR_OUT_OF_DEVICE_MEMORY);
+         }
       }
-
-      util_vma_heap_init(&pool->bo_heap, POOL_HEAP_OFFSET, descriptor_bo_size);
-   } else {
-      pool->bo = NULL;
+      util_vma_heap_init(&pool->bo_heap, POOL_HEAP_OFFSET, pool->bo_mem_size);
    }
 
    /* All the surface states allocated by the descriptor pool are internal. We
@@ -967,9 +974,14 @@ void anv_DestroyDescriptorPool(
       anv_descriptor_set_layout_unref(device, set->layout);
    }
 
-   if (pool->bo) {
+   util_vma_heap_finish(&pool->host_heap);
+
+   if (pool->bo_mem_size) {
+      if (pool->host_bo)
+         vk_free(&device->vk.alloc, pool->host_bo);
+      if (pool->bo)
+         anv_device_release_bo(device, pool->bo);
       util_vma_heap_finish(&pool->bo_heap);
-      anv_device_release_bo(device, pool->bo);
    }
    anv_state_stream_finish(&pool->surface_state_stream);
 
@@ -990,12 +1002,12 @@ VkResult anv_ResetDescriptorPool(
    }
    list_inithead(&pool->desc_sets);
 
-   pool->next = 0;
-   pool->free_list = EMPTY;
+   util_vma_heap_finish(&pool->host_heap);
+   util_vma_heap_init(&pool->host_heap, POOL_HEAP_OFFSET, pool->host_mem_size);
 
-   if (pool->bo) {
+   if (pool->bo_mem_size) {
       util_vma_heap_finish(&pool->bo_heap);
-      util_vma_heap_init(&pool->bo_heap, POOL_HEAP_OFFSET, pool->bo->size);
+      util_vma_heap_init(&pool->bo_heap, POOL_HEAP_OFFSET, pool->bo_mem_size);
    }
 
    anv_state_stream_finish(&pool->surface_state_stream);
@@ -1006,57 +1018,37 @@ VkResult anv_ResetDescriptorPool(
    return VK_SUCCESS;
 }
 
-struct pool_free_list_entry {
-   uint32_t next;
-   uint32_t size;
-};
-
 static VkResult
 anv_descriptor_pool_alloc_set(struct anv_descriptor_pool *pool,
                               uint32_t size,
                               struct anv_descriptor_set **set)
 {
-   if (size <= pool->size - pool->next) {
-      *set = (struct anv_descriptor_set *) (pool->data + pool->next);
-      (*set)->size = size;
-      pool->next += size;
-      return VK_SUCCESS;
-   } else {
-      struct pool_free_list_entry *entry;
-      uint32_t *link = &pool->free_list;
-      for (uint32_t f = pool->free_list; f != EMPTY; f = entry->next) {
-         entry = (struct pool_free_list_entry *) (pool->data + f);
-         if (size <= entry->size) {
-            *link = entry->next;
-            *set = (struct anv_descriptor_set *) entry;
-            (*set)->size = entry->size;
-            return VK_SUCCESS;
-         }
-         link = &entry->next;
-      }
+   uint64_t vma_offset = util_vma_heap_alloc(&pool->host_heap, size, 1);
 
-      if (pool->free_list != EMPTY) {
+   if (vma_offset == 0) {
+      if (size <= pool->host_heap.free_size) {
          return VK_ERROR_FRAGMENTED_POOL;
       } else {
          return VK_ERROR_OUT_OF_POOL_MEMORY;
       }
    }
+
+   assert(vma_offset >= POOL_HEAP_OFFSET);
+   uint64_t host_mem_offset = vma_offset - POOL_HEAP_OFFSET;
+
+   *set = (struct anv_descriptor_set *) (pool->host_mem + host_mem_offset);
+   (*set)->size = size;
+
+   return VK_SUCCESS;
 }
 
 static void
 anv_descriptor_pool_free_set(struct anv_descriptor_pool *pool,
                              struct anv_descriptor_set *set)
 {
-   /* Put the descriptor set allocation back on the free list. */
-   const uint32_t index = (char *) set - pool->data;
-   if (index + set->size == pool->next) {
-      pool->next = index;
-   } else {
-      struct pool_free_list_entry *entry = (struct pool_free_list_entry *) set;
-      entry->next = pool->free_list;
-      entry->size = set->size;
-      pool->free_list = (char *) entry - pool->data;
-   }
+   util_vma_heap_free(&pool->host_heap,
+                      ((char *) set - pool->host_mem) + POOL_HEAP_OFFSET,
+                      set->size);
 }
 
 struct surface_state_free_list_entry {
@@ -1146,7 +1138,11 @@ anv_descriptor_set_create(struct anv_device *device,
              pool_vma_offset - POOL_HEAP_OFFSET <= INT32_MAX);
       set->desc_mem.offset = pool_vma_offset - POOL_HEAP_OFFSET;
       set->desc_mem.alloc_size = descriptor_buffer_size;
-      set->desc_mem.map = pool->bo->map + set->desc_mem.offset;
+
+      if (pool->host_only)
+         set->desc_mem.map = pool->host_bo + set->desc_mem.offset;
+      else
+         set->desc_mem.map = pool->bo->map + set->desc_mem.offset;
 
       set->desc_addr = (struct anv_address) {
          .bo = pool->bo,
@@ -1408,6 +1404,10 @@ anv_descriptor_set_write_image_view(struct anv_device *device,
    void *desc_map = set->desc_mem.map + bind_layout->descriptor_offset +
                     element * bind_layout->descriptor_stride;
    memset(desc_map, 0, bind_layout->descriptor_stride);
+
+   if (image_view == NULL && sampler == NULL)
+      return;
+
    enum anv_descriptor_data data =
       bind_layout->type == VK_DESCRIPTOR_TYPE_MUTABLE_EXT ?
       anv_descriptor_data_for_type(device->physical, type) :
@@ -1577,7 +1577,7 @@ anv_descriptor_set_write_buffer(struct anv_device *device,
     */
    if (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
        type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC)
-      bind_range = align_u64(bind_range, ANV_UBO_ALIGNMENT);
+      bind_range = align64(bind_range, ANV_UBO_ALIGNMENT);
 
    if (data & ANV_DESCRIPTOR_ADDRESS_RANGE) {
       struct anv_address_range_descriptor desc_data = {
@@ -1627,7 +1627,7 @@ anv_descriptor_set_write_inline_uniform_data(struct anv_device *device,
 void
 anv_descriptor_set_write_acceleration_structure(struct anv_device *device,
                                                 struct anv_descriptor_set *set,
-                                                struct anv_acceleration_structure *accel,
+                                                struct vk_acceleration_structure *accel,
                                                 uint32_t binding,
                                                 uint32_t element)
 {
@@ -1644,7 +1644,7 @@ anv_descriptor_set_write_acceleration_structure(struct anv_device *device,
 
    struct anv_address_range_descriptor desc_data = { };
    if (accel != NULL) {
-      desc_data.address = anv_address_physical(accel->address);
+      desc_data.address = vk_acceleration_structure_get_va(accel);
       desc_data.range = accel->size;
    }
    assert(sizeof(desc_data) <= bind_layout->descriptor_stride);
@@ -1732,7 +1732,7 @@ void anv_UpdateDescriptorSets(
          assert(accel_write->accelerationStructureCount ==
                 write->descriptorCount);
          for (uint32_t j = 0; j < write->descriptorCount; j++) {
-            ANV_FROM_HANDLE(anv_acceleration_structure, accel,
+            ANV_FROM_HANDLE(vk_acceleration_structure, accel,
                             accel_write->pAccelerationStructures[j]);
             anv_descriptor_set_write_acceleration_structure(device, set, accel,
                                                             write->dstBinding,
@@ -1895,7 +1895,7 @@ anv_descriptor_set_write_template(struct anv_device *device,
          for (uint32_t j = 0; j < entry->array_count; j++) {
             VkAccelerationStructureKHR *accel_obj =
                (VkAccelerationStructureKHR *)(data + entry->offset + j * entry->stride);
-            ANV_FROM_HANDLE(anv_acceleration_structure, accel, *accel_obj);
+            ANV_FROM_HANDLE(vk_acceleration_structure, accel, *accel_obj);
 
             anv_descriptor_set_write_acceleration_structure(device, set,
                                                             accel,

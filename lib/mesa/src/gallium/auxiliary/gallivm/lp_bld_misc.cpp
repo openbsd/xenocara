@@ -56,16 +56,22 @@
 #include <llvm-c/ExecutionEngine.h>
 #include <llvm/Target/TargetOptions.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/ADT/Triple.h>
 #include <llvm/Analysis/TargetLibraryInfo.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
 #include <llvm/Support/CommandLine.h>
-#include <llvm/Support/Host.h>
 #include <llvm/Support/PrettyStackTrace.h>
 #include <llvm/ExecutionEngine/ObjectCache.h>
 #include <llvm/Support/TargetSelect.h>
 #if LLVM_VERSION_MAJOR >= 15
 #include <llvm/Support/MemoryBuffer.h>
+#endif
+
+#if LLVM_VERSION_MAJOR >= 17
+#include <llvm/TargetParser/Host.h>
+#include <llvm/TargetParser/Triple.h>
+#else
+#include <llvm/Support/Host.h>
+#include <llvm/ADT/Triple.h>
 #endif
 
 #if LLVM_VERSION_MAJOR < 11
@@ -86,8 +92,8 @@
 #endif
 
 #include "c11/threads.h"
-#include "os/os_thread.h"
-#include "pipe/p_config.h"
+#include "util/u_thread.h"
+#include "util/detect.h"
 #include "util/u_debug.h"
 #include "util/u_cpu_detect.h"
 
@@ -353,7 +359,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * friends for configuring code generation options, like stack alignment.
     */
    TargetOptions options;
-#if defined(PIPE_ARCH_X86) && LLVM_VERSION_MAJOR < 13
+#if DETECT_ARCH_X86 && LLVM_VERSION_MAJOR < 13
    options.StackAlignmentOverride = 4;
 #endif
 
@@ -362,7 +368,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
           .setTargetOptions(options)
           .setOptLevel((CodeGenOpt::Level)OptLevel);
 
-#ifdef _WIN32
+#if DETECT_OS_WINDOWS
     /*
      * MCJIT works on Windows, but currently only through ELF object format.
      *
@@ -370,16 +376,20 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
      * different strings for MinGW/MSVC, so better play it safe and be
      * explicit.
      */
-#  ifdef _WIN64
+#  if DETECT_ARCH_X86_64
     LLVMSetTarget(M, "x86_64-pc-win32-elf");
-#  else
+#  elif DETECT_ARCH_X86
     LLVMSetTarget(M, "i686-pc-win32-elf");
+#  elif DETECT_ARCH_AARCH64
+    LLVMSetTarget(M, "aarch64-pc-win32-elf");
+#  else
+#    error Unsupported architecture for MCJIT on Windows.
 #  endif
 #endif
 
    llvm::SmallVector<std::string, 16> MAttrs;
 
-#if defined(PIPE_ARCH_ARM)
+#if DETECT_ARCH_ARM
    /* llvm-3.3+ implements sys::getHostCPUFeatures for Arm,
     * which allows us to enable/disable code generation based
     * on the results of cpuid on these architectures.
@@ -392,7 +402,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
         ++f) {
       MAttrs.push_back(((*f).second ? "+" : "-") + (*f).first().str());
    }
-#elif defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
+#elif DETECT_ARCH_X86 || DETECT_ARCH_X86_64
    /*
     * Because we can override cpu caps with environment variables,
     * so we do not use llvm::sys::getHostCPUFeatures to detect cpu features
@@ -424,7 +434,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    MAttrs.push_back(util_get_cpu_caps()->has_avx512dq ? "+avx512dq"  : "-avx512dq");
    MAttrs.push_back(util_get_cpu_caps()->has_avx512vl ? "+avx512vl"  : "-avx512vl");
 #endif
-#if defined(PIPE_ARCH_ARM)
+#if DETECT_ARCH_ARM
    if (!util_get_cpu_caps()->has_neon) {
       MAttrs.push_back("-neon");
       MAttrs.push_back("-crypto");
@@ -432,7 +442,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    }
 #endif
 
-#if defined(PIPE_ARCH_PPC)
+#if DETECT_ARCH_PPC
    MAttrs.push_back(util_get_cpu_caps()->has_altivec ? "+altivec" : "-altivec");
    /*
     * Bug 25503 is fixed, by the same fix that fixed
@@ -449,7 +459,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
    }
 #endif
 
-#if defined(PIPE_ARCH_MIPS64)
+#if DETECT_ARCH_MIPS64
    MAttrs.push_back(util_get_cpu_caps()->has_msa ? "+msa" : "-msa");
    /* MSA requires a 64-bit FPU register file */
    MAttrs.push_back("+fp64");
@@ -481,7 +491,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
     * can't handle. Not entirely sure if we really need to do anything yet.
     */
 
-#ifdef PIPE_ARCH_PPC_64
+#if DETECT_ARCH_PPC_64
    /*
     * Large programs, e.g. gnome-shell and firefox, may tax the addressability
     * of the Medium code model once dynamically generated JIT-compiled shader
@@ -508,7 +518,7 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
 #endif
 #endif
 
-#if defined(PIPE_ARCH_MIPS64)
+#if DETECT_ARCH_MIPS64
       /*
        * ls3a4000 CPU and ls2k1000 SoC is a mips64r5 compatible with MSA SIMD
        * instruction set implemented, while ls3a3000 is mips64r2 compatible

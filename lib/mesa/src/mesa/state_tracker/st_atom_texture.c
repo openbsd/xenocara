@@ -104,9 +104,8 @@ st_get_sampler_views(struct st_context *st,
       return 0;
 
    unsigned num_textures = util_last_bit(samplers_used);
-
-   /* prog->sh.data is NULL if it's ARB_fragment_program */
-   bool glsl130 = (prog->sh.data ? prog->sh.data->Version : 0) >= 130;
+   const bool glsl130 =
+      (prog->shader_program ? prog->shader_program->GLSL_Version : 0) >= 130;
 
    /* loop over sampler units (aka tex image units) */
    for (unit = 0; unit < num_textures; unit++) {
@@ -190,6 +189,7 @@ st_get_sampler_views(struct st_context *st,
       case PIPE_FORMAT_P010:
       case PIPE_FORMAT_P012:
       case PIPE_FORMAT_P016:
+      case PIPE_FORMAT_P030:
          /* we need one additional R16G16 view: */
          tmpl.format = PIPE_FORMAT_RG1616_UNORM;
          tmpl.swizzle_g = PIPE_SWIZZLE_Y;   /* tmpl from Y plane is R16 */

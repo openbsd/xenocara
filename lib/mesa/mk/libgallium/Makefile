@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:31 jsg Exp $
 
 .include "../Makefile.inc"
 
@@ -64,7 +64,6 @@ SRCS=	cso_cache.c \
 	hud_driver_query.c \
 	hud_fps.c \
 	u_primconvert.c \
-	os_process.c \
 	pb_buffer_fenced.c \
 	pb_bufmgr_cache.c \
 	pb_bufmgr_debug.c \
@@ -122,7 +121,6 @@ SRCS=	cso_cache.c \
 	u_handle_table.c \
 	u_helpers.c \
 	u_index_modify.c \
-	u_linear.c \
 	u_live_shader_cache.c \
 	u_log.c \
 	u_prim.c \
@@ -147,8 +145,7 @@ SRCS=	cso_cache.c \
 	u_vertex_state_cache.c \
 	tgsi_to_nir.c \
 	nir_to_tgsi.c \
-	nir_draw_helpers.c \
-	nir_helpers.c
+	nir_draw_helpers.c
 
 SRCS+=	renderonly.c \
 	tr_util.c \
@@ -206,7 +203,7 @@ SRCS+=	lp_bld_arit.c \
 	p_tessellator.cpp \
 	nir_to_tgsi_info.c
 
-LLVM_CXXFLAGS!=	llvm-config --cxxflags
+LLVM_CXXFLAGS!=	llvm-config --cxxflags | sed 's/-std=[^ ]*//'
 CXXFLAGS+= ${LLVM_CXXFLAGS}
 
 .endif

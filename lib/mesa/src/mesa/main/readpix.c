@@ -22,7 +22,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "glheader.h"
+#include "util/glheader.h"
 
 #include "blend.h"
 #include "bufferobj.h"
@@ -1087,7 +1087,7 @@ read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
        * combination is, and Mesa can handle anything valid.  Just work instead.
        */
       if (_mesa_is_gles(ctx)) {
-         if (ctx->API == API_OPENGLES2 &&
+         if (_mesa_is_gles2(ctx) &&
              _mesa_is_color_format(format) &&
              _mesa_get_color_read_format(ctx, NULL, "glReadPixels") == format &&
              _mesa_get_color_read_type(ctx, NULL, "glReadPixels") == type) {
@@ -1119,8 +1119,25 @@ read_pixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
          return;
       }
 
+      /**
+       * From the GL_EXT_multisampled_render_to_texture spec:
+       *
+       * Similarly, for ReadPixels:
+       * "An INVALID_OPERATION error is generated if the value of READ_-
+       *  FRAMEBUFFER_BINDING (see section 9) is non-zero, the read framebuffer
+       *  is framebuffer complete, and the value of SAMPLE_BUFFERS for the read
+       *  framebuffer is one."
+       *
+       * These errors do not apply to textures and renderbuffers that have
+       * associated multisample data specified by the mechanisms described in
+       * this extension, i.e., the above operations are allowed even when
+       * SAMPLE_BUFFERS is non-zero for renderbuffers created via Renderbuffer-
+       * StorageMultisampleEXT or textures attached via FramebufferTexture2D-
+       * MultisampleEXT.
+       */
       if (_mesa_is_user_fbo(ctx->ReadBuffer) &&
-          ctx->ReadBuffer->Visual.samples > 0) {
+          ctx->ReadBuffer->Visual.samples > 0 &&
+          !_mesa_has_rtt_samples(ctx->ReadBuffer)) {
          _mesa_error(ctx, GL_INVALID_OPERATION, "glReadPixels(multisample FBO)");
          return;
       }

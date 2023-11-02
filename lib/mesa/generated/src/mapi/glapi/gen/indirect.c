@@ -26,7 +26,7 @@
  */
 
 
-#include <GL/gl.h>
+#include "util/glheader.h"
 #include "indirect.h"
 #include "glxclient.h"
 #include "indirect_size.h"
@@ -346,7 +346,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_CallLists 2
-void __indirect_glCallLists(GLsizei n, GLenum type, const GLvoid * lists)
+void __indirect_glCallLists(GLsizei n, GLenum type, const GLvoid *lists)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glCallLists_size(type);
@@ -456,7 +456,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Bitmap 5
-void __indirect_glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte * bitmap)
+void __indirect_glBitmap(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (bitmap != NULL) ? __glImageSize(width, height, 1, GL_COLOR_INDEX, GL_BITMAP, 0) : 0;
@@ -516,7 +516,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3bv 6
-void __indirect_glColor3bv(const GLbyte * v)
+void __indirect_glColor3bv(const GLbyte *v)
 {
     generic_3_byte( X_GLrop_Color3bv, v );
 }
@@ -535,7 +535,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3dv 7
-void __indirect_glColor3dv(const GLdouble * v)
+void __indirect_glColor3dv(const GLdouble *v)
 {
     generic_24_byte( X_GLrop_Color3dv, v );
 }
@@ -554,7 +554,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3fv 8
-void __indirect_glColor3fv(const GLfloat * v)
+void __indirect_glColor3fv(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_Color3fv, v );
 }
@@ -573,7 +573,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3iv 9
-void __indirect_glColor3iv(const GLint * v)
+void __indirect_glColor3iv(const GLint *v)
 {
     generic_12_byte( X_GLrop_Color3iv, v );
 }
@@ -592,7 +592,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3sv 10
-void __indirect_glColor3sv(const GLshort * v)
+void __indirect_glColor3sv(const GLshort *v)
 {
     generic_6_byte( X_GLrop_Color3sv, v );
 }
@@ -611,7 +611,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3ubv 11
-void __indirect_glColor3ubv(const GLubyte * v)
+void __indirect_glColor3ubv(const GLubyte *v)
 {
     generic_3_byte( X_GLrop_Color3ubv, v );
 }
@@ -630,7 +630,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3uiv 12
-void __indirect_glColor3uiv(const GLuint * v)
+void __indirect_glColor3uiv(const GLuint *v)
 {
     generic_12_byte( X_GLrop_Color3uiv, v );
 }
@@ -649,7 +649,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color3usv 13
-void __indirect_glColor3usv(const GLushort * v)
+void __indirect_glColor3usv(const GLushort *v)
 {
     generic_6_byte( X_GLrop_Color3usv, v );
 }
@@ -669,7 +669,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4bv 14
-void __indirect_glColor4bv(const GLbyte * v)
+void __indirect_glColor4bv(const GLbyte *v)
 {
     generic_4_byte( X_GLrop_Color4bv, v );
 }
@@ -689,7 +689,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4dv 15
-void __indirect_glColor4dv(const GLdouble * v)
+void __indirect_glColor4dv(const GLdouble *v)
 {
     generic_32_byte( X_GLrop_Color4dv, v );
 }
@@ -709,7 +709,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4fv 16
-void __indirect_glColor4fv(const GLfloat * v)
+void __indirect_glColor4fv(const GLfloat *v)
 {
     generic_16_byte( X_GLrop_Color4fv, v );
 }
@@ -729,7 +729,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4iv 17
-void __indirect_glColor4iv(const GLint * v)
+void __indirect_glColor4iv(const GLint *v)
 {
     generic_16_byte( X_GLrop_Color4iv, v );
 }
@@ -749,7 +749,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4sv 18
-void __indirect_glColor4sv(const GLshort * v)
+void __indirect_glColor4sv(const GLshort *v)
 {
     generic_8_byte( X_GLrop_Color4sv, v );
 }
@@ -769,7 +769,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4ubv 19
-void __indirect_glColor4ubv(const GLubyte * v)
+void __indirect_glColor4ubv(const GLubyte *v)
 {
     generic_4_byte( X_GLrop_Color4ubv, v );
 }
@@ -789,7 +789,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4uiv 20
-void __indirect_glColor4uiv(const GLuint * v)
+void __indirect_glColor4uiv(const GLuint *v)
 {
     generic_16_byte( X_GLrop_Color4uiv, v );
 }
@@ -809,7 +809,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Color4usv 21
-void __indirect_glColor4usv(const GLushort * v)
+void __indirect_glColor4usv(const GLushort *v)
 {
     generic_8_byte( X_GLrop_Color4usv, v );
 }
@@ -826,7 +826,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_EdgeFlagv 22
-void __indirect_glEdgeFlagv(const GLboolean * flag)
+void __indirect_glEdgeFlagv(const GLboolean *flag)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8;
@@ -858,7 +858,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Indexdv 24
-void __indirect_glIndexdv(const GLdouble * c)
+void __indirect_glIndexdv(const GLdouble *c)
 {
     generic_8_byte( X_GLrop_Indexdv, c );
 }
@@ -875,7 +875,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Indexfv 25
-void __indirect_glIndexfv(const GLfloat * c)
+void __indirect_glIndexfv(const GLfloat *c)
 {
     generic_4_byte( X_GLrop_Indexfv, c );
 }
@@ -892,7 +892,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Indexiv 26
-void __indirect_glIndexiv(const GLint * c)
+void __indirect_glIndexiv(const GLint *c)
 {
     generic_4_byte( X_GLrop_Indexiv, c );
 }
@@ -909,7 +909,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Indexsv 27
-void __indirect_glIndexsv(const GLshort * c)
+void __indirect_glIndexsv(const GLshort *c)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8;
@@ -933,7 +933,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Normal3bv 28
-void __indirect_glNormal3bv(const GLbyte * v)
+void __indirect_glNormal3bv(const GLbyte *v)
 {
     generic_3_byte( X_GLrop_Normal3bv, v );
 }
@@ -952,7 +952,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Normal3dv 29
-void __indirect_glNormal3dv(const GLdouble * v)
+void __indirect_glNormal3dv(const GLdouble *v)
 {
     generic_24_byte( X_GLrop_Normal3dv, v );
 }
@@ -971,7 +971,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Normal3fv 30
-void __indirect_glNormal3fv(const GLfloat * v)
+void __indirect_glNormal3fv(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_Normal3fv, v );
 }
@@ -990,7 +990,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Normal3iv 31
-void __indirect_glNormal3iv(const GLint * v)
+void __indirect_glNormal3iv(const GLint *v)
 {
     generic_12_byte( X_GLrop_Normal3iv, v );
 }
@@ -1009,7 +1009,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Normal3sv 32
-void __indirect_glNormal3sv(const GLshort * v)
+void __indirect_glNormal3sv(const GLshort *v)
 {
     generic_6_byte( X_GLrop_Normal3sv, v );
 }
@@ -1027,7 +1027,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos2dv 33
-void __indirect_glRasterPos2dv(const GLdouble * v)
+void __indirect_glRasterPos2dv(const GLdouble *v)
 {
     generic_16_byte( X_GLrop_RasterPos2dv, v );
 }
@@ -1045,7 +1045,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos2fv 34
-void __indirect_glRasterPos2fv(const GLfloat * v)
+void __indirect_glRasterPos2fv(const GLfloat *v)
 {
     generic_8_byte( X_GLrop_RasterPos2fv, v );
 }
@@ -1063,7 +1063,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos2iv 35
-void __indirect_glRasterPos2iv(const GLint * v)
+void __indirect_glRasterPos2iv(const GLint *v)
 {
     generic_8_byte( X_GLrop_RasterPos2iv, v );
 }
@@ -1081,7 +1081,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos2sv 36
-void __indirect_glRasterPos2sv(const GLshort * v)
+void __indirect_glRasterPos2sv(const GLshort *v)
 {
     generic_4_byte( X_GLrop_RasterPos2sv, v );
 }
@@ -1100,7 +1100,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos3dv 37
-void __indirect_glRasterPos3dv(const GLdouble * v)
+void __indirect_glRasterPos3dv(const GLdouble *v)
 {
     generic_24_byte( X_GLrop_RasterPos3dv, v );
 }
@@ -1119,7 +1119,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos3fv 38
-void __indirect_glRasterPos3fv(const GLfloat * v)
+void __indirect_glRasterPos3fv(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_RasterPos3fv, v );
 }
@@ -1138,7 +1138,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos3iv 39
-void __indirect_glRasterPos3iv(const GLint * v)
+void __indirect_glRasterPos3iv(const GLint *v)
 {
     generic_12_byte( X_GLrop_RasterPos3iv, v );
 }
@@ -1157,7 +1157,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos3sv 40
-void __indirect_glRasterPos3sv(const GLshort * v)
+void __indirect_glRasterPos3sv(const GLshort *v)
 {
     generic_6_byte( X_GLrop_RasterPos3sv, v );
 }
@@ -1177,7 +1177,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos4dv 41
-void __indirect_glRasterPos4dv(const GLdouble * v)
+void __indirect_glRasterPos4dv(const GLdouble *v)
 {
     generic_32_byte( X_GLrop_RasterPos4dv, v );
 }
@@ -1197,7 +1197,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos4fv 42
-void __indirect_glRasterPos4fv(const GLfloat * v)
+void __indirect_glRasterPos4fv(const GLfloat *v)
 {
     generic_16_byte( X_GLrop_RasterPos4fv, v );
 }
@@ -1217,7 +1217,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos4iv 43
-void __indirect_glRasterPos4iv(const GLint * v)
+void __indirect_glRasterPos4iv(const GLint *v)
 {
     generic_16_byte( X_GLrop_RasterPos4iv, v );
 }
@@ -1237,7 +1237,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RasterPos4sv 44
-void __indirect_glRasterPos4sv(const GLshort * v)
+void __indirect_glRasterPos4sv(const GLshort *v)
 {
     generic_8_byte( X_GLrop_RasterPos4sv, v );
 }
@@ -1257,7 +1257,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Rectdv 45
-void __indirect_glRectdv(const GLdouble * v1, const GLdouble * v2)
+void __indirect_glRectdv(const GLdouble *v1, const GLdouble *v2)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 36;
@@ -1283,7 +1283,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Rectfv 46
-void __indirect_glRectfv(const GLfloat * v1, const GLfloat * v2)
+void __indirect_glRectfv(const GLfloat *v1, const GLfloat *v2)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 20;
@@ -1309,7 +1309,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Rectiv 47
-void __indirect_glRectiv(const GLint * v1, const GLint * v2)
+void __indirect_glRectiv(const GLint *v1, const GLint *v2)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 20;
@@ -1335,7 +1335,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Rectsv 48
-void __indirect_glRectsv(const GLshort * v1, const GLshort * v2)
+void __indirect_glRectsv(const GLshort *v1, const GLshort *v2)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -1358,7 +1358,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord1dv 49
-void __indirect_glTexCoord1dv(const GLdouble * v)
+void __indirect_glTexCoord1dv(const GLdouble *v)
 {
     generic_8_byte( X_GLrop_TexCoord1dv, v );
 }
@@ -1375,7 +1375,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord1fv 50
-void __indirect_glTexCoord1fv(const GLfloat * v)
+void __indirect_glTexCoord1fv(const GLfloat *v)
 {
     generic_4_byte( X_GLrop_TexCoord1fv, v );
 }
@@ -1392,7 +1392,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord1iv 51
-void __indirect_glTexCoord1iv(const GLint * v)
+void __indirect_glTexCoord1iv(const GLint *v)
 {
     generic_4_byte( X_GLrop_TexCoord1iv, v );
 }
@@ -1409,7 +1409,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord1sv 52
-void __indirect_glTexCoord1sv(const GLshort * v)
+void __indirect_glTexCoord1sv(const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8;
@@ -1432,7 +1432,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord2dv 53
-void __indirect_glTexCoord2dv(const GLdouble * v)
+void __indirect_glTexCoord2dv(const GLdouble *v)
 {
     generic_16_byte( X_GLrop_TexCoord2dv, v );
 }
@@ -1450,7 +1450,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord2fv 54
-void __indirect_glTexCoord2fv(const GLfloat * v)
+void __indirect_glTexCoord2fv(const GLfloat *v)
 {
     generic_8_byte( X_GLrop_TexCoord2fv, v );
 }
@@ -1468,7 +1468,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord2iv 55
-void __indirect_glTexCoord2iv(const GLint * v)
+void __indirect_glTexCoord2iv(const GLint *v)
 {
     generic_8_byte( X_GLrop_TexCoord2iv, v );
 }
@@ -1486,7 +1486,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord2sv 56
-void __indirect_glTexCoord2sv(const GLshort * v)
+void __indirect_glTexCoord2sv(const GLshort *v)
 {
     generic_4_byte( X_GLrop_TexCoord2sv, v );
 }
@@ -1505,7 +1505,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord3dv 57
-void __indirect_glTexCoord3dv(const GLdouble * v)
+void __indirect_glTexCoord3dv(const GLdouble *v)
 {
     generic_24_byte( X_GLrop_TexCoord3dv, v );
 }
@@ -1524,7 +1524,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord3fv 58
-void __indirect_glTexCoord3fv(const GLfloat * v)
+void __indirect_glTexCoord3fv(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_TexCoord3fv, v );
 }
@@ -1543,7 +1543,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord3iv 59
-void __indirect_glTexCoord3iv(const GLint * v)
+void __indirect_glTexCoord3iv(const GLint *v)
 {
     generic_12_byte( X_GLrop_TexCoord3iv, v );
 }
@@ -1562,7 +1562,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord3sv 60
-void __indirect_glTexCoord3sv(const GLshort * v)
+void __indirect_glTexCoord3sv(const GLshort *v)
 {
     generic_6_byte( X_GLrop_TexCoord3sv, v );
 }
@@ -1582,7 +1582,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord4dv 61
-void __indirect_glTexCoord4dv(const GLdouble * v)
+void __indirect_glTexCoord4dv(const GLdouble *v)
 {
     generic_32_byte( X_GLrop_TexCoord4dv, v );
 }
@@ -1602,7 +1602,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord4fv 62
-void __indirect_glTexCoord4fv(const GLfloat * v)
+void __indirect_glTexCoord4fv(const GLfloat *v)
 {
     generic_16_byte( X_GLrop_TexCoord4fv, v );
 }
@@ -1622,7 +1622,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord4iv 63
-void __indirect_glTexCoord4iv(const GLint * v)
+void __indirect_glTexCoord4iv(const GLint *v)
 {
     generic_16_byte( X_GLrop_TexCoord4iv, v );
 }
@@ -1642,7 +1642,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexCoord4sv 64
-void __indirect_glTexCoord4sv(const GLshort * v)
+void __indirect_glTexCoord4sv(const GLshort *v)
 {
     generic_8_byte( X_GLrop_TexCoord4sv, v );
 }
@@ -1660,7 +1660,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex2dv 65
-void __indirect_glVertex2dv(const GLdouble * v)
+void __indirect_glVertex2dv(const GLdouble *v)
 {
     generic_16_byte( X_GLrop_Vertex2dv, v );
 }
@@ -1678,7 +1678,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex2fv 66
-void __indirect_glVertex2fv(const GLfloat * v)
+void __indirect_glVertex2fv(const GLfloat *v)
 {
     generic_8_byte( X_GLrop_Vertex2fv, v );
 }
@@ -1696,7 +1696,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex2iv 67
-void __indirect_glVertex2iv(const GLint * v)
+void __indirect_glVertex2iv(const GLint *v)
 {
     generic_8_byte( X_GLrop_Vertex2iv, v );
 }
@@ -1714,7 +1714,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex2sv 68
-void __indirect_glVertex2sv(const GLshort * v)
+void __indirect_glVertex2sv(const GLshort *v)
 {
     generic_4_byte( X_GLrop_Vertex2sv, v );
 }
@@ -1733,7 +1733,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex3dv 69
-void __indirect_glVertex3dv(const GLdouble * v)
+void __indirect_glVertex3dv(const GLdouble *v)
 {
     generic_24_byte( X_GLrop_Vertex3dv, v );
 }
@@ -1752,7 +1752,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex3fv 70
-void __indirect_glVertex3fv(const GLfloat * v)
+void __indirect_glVertex3fv(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_Vertex3fv, v );
 }
@@ -1771,7 +1771,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex3iv 71
-void __indirect_glVertex3iv(const GLint * v)
+void __indirect_glVertex3iv(const GLint *v)
 {
     generic_12_byte( X_GLrop_Vertex3iv, v );
 }
@@ -1790,7 +1790,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex3sv 72
-void __indirect_glVertex3sv(const GLshort * v)
+void __indirect_glVertex3sv(const GLshort *v)
 {
     generic_6_byte( X_GLrop_Vertex3sv, v );
 }
@@ -1810,7 +1810,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex4dv 73
-void __indirect_glVertex4dv(const GLdouble * v)
+void __indirect_glVertex4dv(const GLdouble *v)
 {
     generic_32_byte( X_GLrop_Vertex4dv, v );
 }
@@ -1830,7 +1830,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex4fv 74
-void __indirect_glVertex4fv(const GLfloat * v)
+void __indirect_glVertex4fv(const GLfloat *v)
 {
     generic_16_byte( X_GLrop_Vertex4fv, v );
 }
@@ -1850,7 +1850,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex4iv 75
-void __indirect_glVertex4iv(const GLint * v)
+void __indirect_glVertex4iv(const GLint *v)
 {
     generic_16_byte( X_GLrop_Vertex4iv, v );
 }
@@ -1870,13 +1870,13 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Vertex4sv 76
-void __indirect_glVertex4sv(const GLshort * v)
+void __indirect_glVertex4sv(const GLshort *v)
 {
     generic_8_byte( X_GLrop_Vertex4sv, v );
 }
 
 #define X_GLrop_ClipPlane 77
-void __indirect_glClipPlane(GLenum plane, const GLdouble * equation)
+void __indirect_glClipPlane(GLenum plane, const GLdouble *equation)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 40;
@@ -1923,7 +1923,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Fogfv 81
-void __indirect_glFogfv(GLenum pname, const GLfloat * params)
+void __indirect_glFogfv(GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glFogfv_size(pname);
@@ -1952,7 +1952,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Fogiv 83
-void __indirect_glFogiv(GLenum pname, const GLint * params)
+void __indirect_glFogiv(GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glFogiv_size(pname);
@@ -2005,7 +2005,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Lightfv 87
-void __indirect_glLightfv(GLenum light, GLenum pname, const GLfloat * params)
+void __indirect_glLightfv(GLenum light, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightfv_size(pname);
@@ -2036,7 +2036,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Lightiv 89
-void __indirect_glLightiv(GLenum light, GLenum pname, const GLint * params)
+void __indirect_glLightiv(GLenum light, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightiv_size(pname);
@@ -2066,7 +2066,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_LightModelfv 91
-void __indirect_glLightModelfv(GLenum pname, const GLfloat * params)
+void __indirect_glLightModelfv(GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightModelfv_size(pname);
@@ -2095,7 +2095,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_LightModeliv 93
-void __indirect_glLightModeliv(GLenum pname, const GLint * params)
+void __indirect_glLightModeliv(GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glLightModeliv_size(pname);
@@ -2148,7 +2148,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Materialfv 97
-void __indirect_glMaterialfv(GLenum face, GLenum pname, const GLfloat * params)
+void __indirect_glMaterialfv(GLenum face, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glMaterialfv_size(pname);
@@ -2179,7 +2179,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Materialiv 99
-void __indirect_glMaterialiv(GLenum face, GLenum pname, const GLint * params)
+void __indirect_glMaterialiv(GLenum face, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glMaterialiv_size(pname);
@@ -2220,7 +2220,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_PolygonStipple 102
-void __indirect_glPolygonStipple(const GLubyte * mask)
+void __indirect_glPolygonStipple(const GLubyte *mask)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (mask != NULL) ? __glImageSize(32, 32, 1, GL_COLOR_INDEX, GL_BITMAP, 0) : 0;
@@ -2278,7 +2278,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexParameterfv 106
-void __indirect_glTexParameterfv(GLenum target, GLenum pname, const GLfloat * params)
+void __indirect_glTexParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexParameterfv_size(pname);
@@ -2309,7 +2309,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexParameteriv 108
-void __indirect_glTexParameteriv(GLenum target, GLenum pname, const GLint * params)
+void __indirect_glTexParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexParameteriv_size(pname);
@@ -2327,7 +2327,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 static void
-__glx_TexImage_1D2D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels )
+__glx_TexImage_1D2D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels )
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glImageSize(width, height, 1, format, type, target);
@@ -2378,13 +2378,13 @@ __glXSendLargeImage(gc, compsize, dim, width, height, 1, format, type, pixels, p
 }
 
 #define X_GLrop_TexImage1D 109
-void __indirect_glTexImage1D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glTexImage1D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
 {
     __glx_TexImage_1D2D(X_GLrop_TexImage1D, 1, target, level, internalformat, width, 1, border, format, type, pixels );
 }
 
 #define X_GLrop_TexImage2D 110
-void __indirect_glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
 {
     __glx_TexImage_1D2D(X_GLrop_TexImage2D, 2, target, level, internalformat, width, height, border, format, type, pixels );
 }
@@ -2403,7 +2403,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexEnvfv 112
-void __indirect_glTexEnvfv(GLenum target, GLenum pname, const GLfloat * params)
+void __indirect_glTexEnvfv(GLenum target, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexEnvfv_size(pname);
@@ -2434,7 +2434,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexEnviv 114
-void __indirect_glTexEnviv(GLenum target, GLenum pname, const GLint * params)
+void __indirect_glTexEnviv(GLenum target, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexEnviv_size(pname);
@@ -2465,7 +2465,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexGendv 116
-void __indirect_glTexGendv(GLenum coord, GLenum pname, const GLdouble * params)
+void __indirect_glTexGendv(GLenum coord, GLenum pname, const GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexGendv_size(pname);
@@ -2496,7 +2496,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexGenfv 118
-void __indirect_glTexGenfv(GLenum coord, GLenum pname, const GLfloat * params)
+void __indirect_glTexGenfv(GLenum coord, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexGenfv_size(pname);
@@ -2527,7 +2527,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_TexGeniv 120
-void __indirect_glTexGeniv(GLenum coord, GLenum pname, const GLint * params)
+void __indirect_glTexGeniv(GLenum coord, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glTexGeniv_size(pname);
@@ -2830,7 +2830,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_EvalCoord1dv 151
-void __indirect_glEvalCoord1dv(const GLdouble * u)
+void __indirect_glEvalCoord1dv(const GLdouble *u)
 {
     generic_8_byte( X_GLrop_EvalCoord1dv, u );
 }
@@ -2847,7 +2847,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_EvalCoord1fv 152
-void __indirect_glEvalCoord1fv(const GLfloat * u)
+void __indirect_glEvalCoord1fv(const GLfloat *u)
 {
     generic_4_byte( X_GLrop_EvalCoord1fv, u );
 }
@@ -2865,7 +2865,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_EvalCoord2dv 153
-void __indirect_glEvalCoord2dv(const GLdouble * u)
+void __indirect_glEvalCoord2dv(const GLdouble *u)
 {
     generic_16_byte( X_GLrop_EvalCoord2dv, u );
 }
@@ -2883,7 +2883,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_EvalCoord2fv 154
-void __indirect_glEvalCoord2fv(const GLfloat * u)
+void __indirect_glEvalCoord2fv(const GLfloat *u)
 {
     generic_8_byte( X_GLrop_EvalCoord2fv, u );
 }
@@ -3048,7 +3048,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_PixelMapfv 168
-void __indirect_glPixelMapfv(GLenum map, GLsizei mapsize, const GLfloat * values)
+void __indirect_glPixelMapfv(GLenum map, GLsizei mapsize, const GLfloat *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(mapsize, 1 * sizeof(GLfloat)));
@@ -3086,7 +3086,7 @@ GLubyte * const pc = __glXFlushRenderBuffer(gc, gc->pc);
 }
 
 #define X_GLrop_PixelMapuiv 169
-void __indirect_glPixelMapuiv(GLenum map, GLsizei mapsize, const GLuint * values)
+void __indirect_glPixelMapuiv(GLenum map, GLsizei mapsize, const GLuint *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(mapsize, 1 * sizeof(GLuint)));
@@ -3124,7 +3124,7 @@ GLubyte * const pc = __glXFlushRenderBuffer(gc, gc->pc);
 }
 
 #define X_GLrop_PixelMapusv 170
-void __indirect_glPixelMapusv(GLenum map, GLsizei mapsize, const GLushort * values)
+void __indirect_glPixelMapusv(GLenum map, GLsizei mapsize, const GLushort *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(mapsize, 1 * sizeof(GLushort)));
@@ -3188,7 +3188,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLsop_ReadPixels 111
-void __indirect_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid * pixels)
+void __indirect_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid *pixels)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const __GLXattribute * const state = gc->client_state_private;
@@ -3221,7 +3221,7 @@ void __indirect_glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GL
 }
 
 #define X_GLrop_DrawPixels 173
-void __indirect_glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glDrawPixels(GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (pixels != NULL) ? __glImageSize(width, height, 1, format, type, 0) : 0;
@@ -3264,7 +3264,7 @@ __glXSendLargeImage(gc, compsize, 2, width, height, 1, format, type, pixels, pc 
 }
 
 #define X_GLsop_GetClipPlane 113
-void __indirect_glGetClipPlane(GLenum plane, GLdouble * equation)
+void __indirect_glGetClipPlane(GLenum plane, GLdouble *equation)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3289,7 +3289,7 @@ void __indirect_glGetClipPlane(GLenum plane, GLdouble * equation)
 }
 
 #define X_GLsop_GetLightfv 118
-void __indirect_glGetLightfv(GLenum light, GLenum pname, GLfloat * params)
+void __indirect_glGetLightfv(GLenum light, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3320,7 +3320,7 @@ void __indirect_glGetLightfv(GLenum light, GLenum pname, GLfloat * params)
 }
 
 #define X_GLsop_GetLightiv 119
-void __indirect_glGetLightiv(GLenum light, GLenum pname, GLint * params)
+void __indirect_glGetLightiv(GLenum light, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3351,7 +3351,7 @@ void __indirect_glGetLightiv(GLenum light, GLenum pname, GLint * params)
 }
 
 #define X_GLsop_GetMapdv 120
-void __indirect_glGetMapdv(GLenum target, GLenum query, GLdouble * v)
+void __indirect_glGetMapdv(GLenum target, GLenum query, GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3382,7 +3382,7 @@ void __indirect_glGetMapdv(GLenum target, GLenum query, GLdouble * v)
 }
 
 #define X_GLsop_GetMapfv 121
-void __indirect_glGetMapfv(GLenum target, GLenum query, GLfloat * v)
+void __indirect_glGetMapfv(GLenum target, GLenum query, GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3413,7 +3413,7 @@ void __indirect_glGetMapfv(GLenum target, GLenum query, GLfloat * v)
 }
 
 #define X_GLsop_GetMapiv 122
-void __indirect_glGetMapiv(GLenum target, GLenum query, GLint * v)
+void __indirect_glGetMapiv(GLenum target, GLenum query, GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3444,7 +3444,7 @@ void __indirect_glGetMapiv(GLenum target, GLenum query, GLint * v)
 }
 
 #define X_GLsop_GetMaterialfv 123
-void __indirect_glGetMaterialfv(GLenum face, GLenum pname, GLfloat * params)
+void __indirect_glGetMaterialfv(GLenum face, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3475,7 +3475,7 @@ void __indirect_glGetMaterialfv(GLenum face, GLenum pname, GLfloat * params)
 }
 
 #define X_GLsop_GetMaterialiv 124
-void __indirect_glGetMaterialiv(GLenum face, GLenum pname, GLint * params)
+void __indirect_glGetMaterialiv(GLenum face, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3506,7 +3506,7 @@ void __indirect_glGetMaterialiv(GLenum face, GLenum pname, GLint * params)
 }
 
 #define X_GLsop_GetPixelMapfv 125
-void __indirect_glGetPixelMapfv(GLenum map, GLfloat * values)
+void __indirect_glGetPixelMapfv(GLenum map, GLfloat *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3536,7 +3536,7 @@ void __indirect_glGetPixelMapfv(GLenum map, GLfloat * values)
 }
 
 #define X_GLsop_GetPixelMapuiv 126
-void __indirect_glGetPixelMapuiv(GLenum map, GLuint * values)
+void __indirect_glGetPixelMapuiv(GLenum map, GLuint *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3566,7 +3566,7 @@ void __indirect_glGetPixelMapuiv(GLenum map, GLuint * values)
 }
 
 #define X_GLsop_GetPixelMapusv 127
-void __indirect_glGetPixelMapusv(GLenum map, GLushort * values)
+void __indirect_glGetPixelMapusv(GLenum map, GLushort *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3596,7 +3596,7 @@ void __indirect_glGetPixelMapusv(GLenum map, GLushort * values)
 }
 
 #define X_GLsop_GetPolygonStipple 128
-void __indirect_glGetPolygonStipple(GLubyte * mask)
+void __indirect_glGetPolygonStipple(GLubyte *mask)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3621,7 +3621,7 @@ void __indirect_glGetPolygonStipple(GLubyte * mask)
 }
 
 #define X_GLsop_GetTexEnvfv 130
-void __indirect_glGetTexEnvfv(GLenum target, GLenum pname, GLfloat * params)
+void __indirect_glGetTexEnvfv(GLenum target, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3652,7 +3652,7 @@ void __indirect_glGetTexEnvfv(GLenum target, GLenum pname, GLfloat * params)
 }
 
 #define X_GLsop_GetTexEnviv 131
-void __indirect_glGetTexEnviv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetTexEnviv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3683,7 +3683,7 @@ void __indirect_glGetTexEnviv(GLenum target, GLenum pname, GLint * params)
 }
 
 #define X_GLsop_GetTexGendv 132
-void __indirect_glGetTexGendv(GLenum coord, GLenum pname, GLdouble * params)
+void __indirect_glGetTexGendv(GLenum coord, GLenum pname, GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3714,7 +3714,7 @@ void __indirect_glGetTexGendv(GLenum coord, GLenum pname, GLdouble * params)
 }
 
 #define X_GLsop_GetTexGenfv 133
-void __indirect_glGetTexGenfv(GLenum coord, GLenum pname, GLfloat * params)
+void __indirect_glGetTexGenfv(GLenum coord, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3745,7 +3745,7 @@ void __indirect_glGetTexGenfv(GLenum coord, GLenum pname, GLfloat * params)
 }
 
 #define X_GLsop_GetTexGeniv 134
-void __indirect_glGetTexGeniv(GLenum coord, GLenum pname, GLint * params)
+void __indirect_glGetTexGeniv(GLenum coord, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3776,7 +3776,7 @@ void __indirect_glGetTexGeniv(GLenum coord, GLenum pname, GLint * params)
 }
 
 #define X_GLsop_GetTexImage 135
-void __indirect_glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid * pixels)
+void __indirect_glGetTexImage(GLenum target, GLint level, GLenum format, GLenum type, GLvoid *pixels)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const __GLXattribute * const state = gc->client_state_private;
@@ -3809,7 +3809,7 @@ void __indirect_glGetTexImage(GLenum target, GLint level, GLenum format, GLenum 
 }
 
 #define X_GLsop_GetTexParameterfv 136
-void __indirect_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat * params)
+void __indirect_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3840,7 +3840,7 @@ void __indirect_glGetTexParameterfv(GLenum target, GLenum pname, GLfloat * param
 }
 
 #define X_GLsop_GetTexParameteriv 137
-void __indirect_glGetTexParameteriv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetTexParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3871,7 +3871,7 @@ void __indirect_glGetTexParameteriv(GLenum target, GLenum pname, GLint * params)
 }
 
 #define X_GLsop_GetTexLevelParameterfv 138
-void __indirect_glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat * params)
+void __indirect_glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3903,7 +3903,7 @@ void __indirect_glGetTexLevelParameterfv(GLenum target, GLint level, GLenum pnam
 }
 
 #define X_GLsop_GetTexLevelParameteriv 139
-void __indirect_glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint * params)
+void __indirect_glGetTexLevelParameteriv(GLenum target, GLint level, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -3999,7 +3999,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_LoadMatrixf 177
-void __indirect_glLoadMatrixf(const GLfloat * m)
+void __indirect_glLoadMatrixf(const GLfloat *m)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 68;
@@ -4010,7 +4010,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_LoadMatrixd 178
-void __indirect_glLoadMatrixd(const GLdouble * m)
+void __indirect_glLoadMatrixd(const GLdouble *m)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 132;
@@ -4032,7 +4032,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultMatrixf 180
-void __indirect_glMultMatrixf(const GLfloat * m)
+void __indirect_glMultMatrixf(const GLfloat *m)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 68;
@@ -4043,7 +4043,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultMatrixd 181
-void __indirect_glMultMatrixd(const GLdouble * m)
+void __indirect_glMultMatrixd(const GLdouble *m)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 132;
@@ -4207,7 +4207,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_Indexubv 194
-void __indirect_glIndexubv(const GLubyte * c)
+void __indirect_glIndexubv(const GLubyte *c)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8;
@@ -4299,7 +4299,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLsop_DeleteTextures 144
-void __indirect_glDeleteTextures(GLsizei n, const GLuint * textures)
+void __indirect_glDeleteTextures(GLsizei n, const GLuint *textures)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -4330,7 +4330,7 @@ void __indirect_glDeleteTextures(GLsizei n, const GLuint * textures)
 }
 
 #define X_GLvop_DeleteTexturesEXT 12
-void glDeleteTexturesEXT(GLsizei n, const GLuint * textures)
+void glDeleteTexturesEXT(GLsizei n, const GLuint *textures)
 {
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
     if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
@@ -4363,7 +4363,7 @@ void glDeleteTexturesEXT(GLsizei n, const GLuint * textures)
 }
 
 #define X_GLsop_GenTextures 145
-void __indirect_glGenTextures(GLsizei n, GLuint * textures)
+void __indirect_glGenTextures(GLsizei n, GLuint *textures)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -4392,7 +4392,7 @@ void __indirect_glGenTextures(GLsizei n, GLuint * textures)
 }
 
 #define X_GLvop_GenTexturesEXT 13
-void glGenTexturesEXT(GLsizei n, GLuint * textures)
+void glGenTexturesEXT(GLsizei n, GLuint *textures)
 {
 #if defined(GLX_DIRECT_RENDERING) && !defined(GLX_USE_APPLEGL)
     if (((struct glx_context *)__glXGetCurrentContext())->isDirect) {
@@ -4473,7 +4473,7 @@ GLboolean glIsTextureEXT(GLuint texture)
 }
 
 #define X_GLrop_PrioritizeTextures 4118
-void __indirect_glPrioritizeTextures(GLsizei n, const GLuint * textures, const GLclampf * priorities)
+void __indirect_glPrioritizeTextures(GLsizei n, const GLuint *textures, const GLclampf *priorities)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8 + safe_pad(safe_mul(n, 1 * sizeof(GLuint))) + safe_pad(safe_mul(n, 1 * sizeof(GLclampf)));
@@ -4496,7 +4496,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 static void
-__glx_TexSubImage_1D2D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * pixels )
+__glx_TexSubImage_1D2D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels )
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (pixels != NULL) ? __glImageSize(width, height, 1, format, type, target) : 0;
@@ -4549,13 +4549,13 @@ __glXSendLargeImage(gc, compsize, dim, width, height, 1, format, type, pixels, p
 }
 
 #define X_GLrop_TexSubImage1D 4099
-void __indirect_glTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glTexSubImage1D(GLenum target, GLint level, GLint xoffset, GLsizei width, GLenum format, GLenum type, const GLvoid *pixels)
 {
     __glx_TexSubImage_1D2D(X_GLrop_TexSubImage1D, 1, target, level, xoffset, 1, width, 1, format, type, pixels );
 }
 
 #define X_GLrop_TexSubImage2D 4100
-void __indirect_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels)
 {
     __glx_TexSubImage_1D2D(X_GLrop_TexSubImage2D, 2, target, level, xoffset, yoffset, width, height, format, type, pixels );
 }
@@ -4586,7 +4586,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ColorTable 2053
-void __indirect_glColorTable(GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid * table)
+void __indirect_glColorTable(GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid *table)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (table != NULL) ? __glImageSize(width, 1, 1, format, type, target) : 0;
@@ -4631,7 +4631,7 @@ __glXSendLargeImage(gc, compsize, 1, width, 1, 1, format, type, table, pc + 48, 
 }
 
 #define X_GLrop_ColorTableParameterfv 2054
-void __indirect_glColorTableParameterfv(GLenum target, GLenum pname, const GLfloat * params)
+void __indirect_glColorTableParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glColorTableParameterfv_size(pname);
@@ -4649,7 +4649,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ColorTableParameteriv 2055
-void __indirect_glColorTableParameteriv(GLenum target, GLenum pname, const GLint * params)
+void __indirect_glColorTableParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glColorTableParameteriv_size(pname);
@@ -4682,7 +4682,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLsop_GetColorTable 147
-void __indirect_glGetColorTable(GLenum target, GLenum format, GLenum type, GLvoid * table)
+void __indirect_glGetColorTable(GLenum target, GLenum format, GLenum type, GLvoid *table)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const __GLXattribute * const state = gc->client_state_private;
@@ -4712,7 +4712,7 @@ void __indirect_glGetColorTable(GLenum target, GLenum format, GLenum type, GLvoi
 }
 
 #define X_GLsop_GetColorTableParameterfv 148
-void __indirect_glGetColorTableParameterfv(GLenum target, GLenum pname, GLfloat * params)
+void __indirect_glGetColorTableParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -4743,7 +4743,7 @@ void __indirect_glGetColorTableParameterfv(GLenum target, GLenum pname, GLfloat 
 }
 
 #define X_GLsop_GetColorTableParameteriv 149
-void __indirect_glGetColorTableParameteriv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetColorTableParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -4774,7 +4774,7 @@ void __indirect_glGetColorTableParameteriv(GLenum target, GLenum pname, GLint * 
 }
 
 #define X_GLrop_ColorSubTable 195
-void __indirect_glColorSubTable(GLenum target, GLsizei start, GLsizei count, GLenum format, GLenum type, const GLvoid * data)
+void __indirect_glColorSubTable(GLenum target, GLsizei start, GLsizei count, GLenum format, GLenum type, const GLvoid *data)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (data != NULL) ? __glImageSize(count, 1, 1, format, type, target) : 0;
@@ -4834,7 +4834,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 static void
-__glx_ConvolutionFilter_1D2D( unsigned opcode, unsigned dim, GLenum target, GLenum internalformat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * image )
+__glx_ConvolutionFilter_1D2D( unsigned opcode, unsigned dim, GLenum target, GLenum internalformat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *image )
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (image != NULL) ? __glImageSize(width, height, 1, format, type, target) : 0;
@@ -4881,13 +4881,13 @@ __glXSendLargeImage(gc, compsize, dim, width, height, 1, format, type, image, pc
 }
 
 #define X_GLrop_ConvolutionFilter1D 4101
-void __indirect_glConvolutionFilter1D(GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid * image)
+void __indirect_glConvolutionFilter1D(GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid *image)
 {
     __glx_ConvolutionFilter_1D2D(X_GLrop_ConvolutionFilter1D, 1, target, internalformat, width, 1, format, type, image );
 }
 
 #define X_GLrop_ConvolutionFilter2D 4102
-void __indirect_glConvolutionFilter2D(GLenum target, GLenum internalformat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid * image)
+void __indirect_glConvolutionFilter2D(GLenum target, GLenum internalformat, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *image)
 {
     __glx_ConvolutionFilter_1D2D(X_GLrop_ConvolutionFilter2D, 2, target, internalformat, width, height, format, type, image );
 }
@@ -4906,7 +4906,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ConvolutionParameterfv 4104
-void __indirect_glConvolutionParameterfv(GLenum target, GLenum pname, const GLfloat * params)
+void __indirect_glConvolutionParameterfv(GLenum target, GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glConvolutionParameterfv_size(pname);
@@ -4937,7 +4937,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ConvolutionParameteriv 4106
-void __indirect_glConvolutionParameteriv(GLenum target, GLenum pname, const GLint * params)
+void __indirect_glConvolutionParameteriv(GLenum target, GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glConvolutionParameteriv_size(pname);
@@ -4986,7 +4986,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLsop_GetConvolutionFilter 150
-void __indirect_glGetConvolutionFilter(GLenum target, GLenum format, GLenum type, GLvoid * image)
+void __indirect_glGetConvolutionFilter(GLenum target, GLenum format, GLenum type, GLvoid *image)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const __GLXattribute * const state = gc->client_state_private;
@@ -5017,7 +5017,7 @@ void __indirect_glGetConvolutionFilter(GLenum target, GLenum format, GLenum type
 }
 
 #define X_GLsop_GetConvolutionParameterfv 151
-void __indirect_glGetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat * params)
+void __indirect_glGetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -5048,7 +5048,7 @@ void __indirect_glGetConvolutionParameterfv(GLenum target, GLenum pname, GLfloat
 }
 
 #define X_GLsop_GetConvolutionParameteriv 152
-void __indirect_glGetConvolutionParameteriv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetConvolutionParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -5079,7 +5079,7 @@ void __indirect_glGetConvolutionParameteriv(GLenum target, GLenum pname, GLint *
 }
 
 #define X_GLsop_GetHistogram 154
-void __indirect_glGetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
+void __indirect_glGetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const __GLXattribute * const state = gc->client_state_private;
@@ -5110,7 +5110,7 @@ void __indirect_glGetHistogram(GLenum target, GLboolean reset, GLenum format, GL
 }
 
 #define X_GLsop_GetHistogramParameterfv 155
-void __indirect_glGetHistogramParameterfv(GLenum target, GLenum pname, GLfloat * params)
+void __indirect_glGetHistogramParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -5141,7 +5141,7 @@ void __indirect_glGetHistogramParameterfv(GLenum target, GLenum pname, GLfloat *
 }
 
 #define X_GLsop_GetHistogramParameteriv 156
-void __indirect_glGetHistogramParameteriv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetHistogramParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -5172,7 +5172,7 @@ void __indirect_glGetHistogramParameteriv(GLenum target, GLenum pname, GLint * p
 }
 
 #define X_GLsop_GetMinmax 157
-void __indirect_glGetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid * values)
+void __indirect_glGetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid *values)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const __GLXattribute * const state = gc->client_state_private;
@@ -5203,7 +5203,7 @@ void __indirect_glGetMinmax(GLenum target, GLboolean reset, GLenum format, GLenu
 }
 
 #define X_GLsop_GetMinmaxParameterfv 158
-void __indirect_glGetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat * params)
+void __indirect_glGetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -5234,7 +5234,7 @@ void __indirect_glGetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat * pa
 }
 
 #define X_GLsop_GetMinmaxParameteriv 159
-void __indirect_glGetMinmaxParameteriv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetMinmaxParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -5314,7 +5314,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 static void
-__glx_TexImage_3D4D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLsizei extent, GLint border, GLenum format, GLenum type, const GLvoid * pixels )
+__glx_TexImage_3D4D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLsizei extent, GLint border, GLenum format, GLenum type, const GLvoid *pixels )
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (pixels != NULL) ? __glImageSize(width, height, depth, format, type, target) : 0;
@@ -5371,13 +5371,13 @@ __glXSendLargeImage(gc, compsize, dim, width, height, depth, format, type, pixel
 }
 
 #define X_GLrop_TexImage3D 4114
-void __indirect_glTexImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glTexImage3D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
 {
     __glx_TexImage_3D4D(X_GLrop_TexImage3D, 3, target, level, internalformat, width, height, depth, 1, border, format, type, pixels );
 }
 
 static void
-__glx_TexSubImage_3D4D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint woffset, GLsizei width, GLsizei height, GLsizei depth, GLsizei extent, GLenum format, GLenum type, const GLvoid * pixels )
+__glx_TexSubImage_3D4D( unsigned opcode, unsigned dim, GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLint woffset, GLsizei width, GLsizei height, GLsizei depth, GLsizei extent, GLenum format, GLenum type, const GLvoid *pixels )
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = (pixels != NULL) ? __glImageSize(width, height, depth, format, type, target) : 0;
@@ -5438,7 +5438,7 @@ __glXSendLargeImage(gc, compsize, dim, width, height, depth, format, type, pixel
 }
 
 #define X_GLrop_TexSubImage3D 4115
-void __indirect_glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid * pixels)
+void __indirect_glTexSubImage3D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels)
 {
     __glx_TexSubImage_3D4D(X_GLrop_TexSubImage3D, 3, target, level, xoffset, yoffset, zoffset, 1, width, height, depth, 1, format, type, pixels );
 }
@@ -5486,7 +5486,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord1dv 198
-void __indirect_glMultiTexCoord1dv(GLenum target, const GLdouble * v)
+void __indirect_glMultiTexCoord1dv(GLenum target, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -5510,7 +5510,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord1fvARB 199
-void __indirect_glMultiTexCoord1fvARB(GLenum target, const GLfloat * v)
+void __indirect_glMultiTexCoord1fvARB(GLenum target, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -5534,7 +5534,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord1iv 200
-void __indirect_glMultiTexCoord1iv(GLenum target, const GLint * v)
+void __indirect_glMultiTexCoord1iv(GLenum target, const GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -5558,7 +5558,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord1sv 201
-void __indirect_glMultiTexCoord1sv(GLenum target, const GLshort * v)
+void __indirect_glMultiTexCoord1sv(GLenum target, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -5583,7 +5583,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord2dv 202
-void __indirect_glMultiTexCoord2dv(GLenum target, const GLdouble * v)
+void __indirect_glMultiTexCoord2dv(GLenum target, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -5608,7 +5608,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord2fvARB 203
-void __indirect_glMultiTexCoord2fvARB(GLenum target, const GLfloat * v)
+void __indirect_glMultiTexCoord2fvARB(GLenum target, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -5633,7 +5633,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord2iv 204
-void __indirect_glMultiTexCoord2iv(GLenum target, const GLint * v)
+void __indirect_glMultiTexCoord2iv(GLenum target, const GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -5658,7 +5658,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord2sv 205
-void __indirect_glMultiTexCoord2sv(GLenum target, const GLshort * v)
+void __indirect_glMultiTexCoord2sv(GLenum target, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -5684,7 +5684,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord3dv 206
-void __indirect_glMultiTexCoord3dv(GLenum target, const GLdouble * v)
+void __indirect_glMultiTexCoord3dv(GLenum target, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 32;
@@ -5710,7 +5710,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord3fvARB 207
-void __indirect_glMultiTexCoord3fvARB(GLenum target, const GLfloat * v)
+void __indirect_glMultiTexCoord3fvARB(GLenum target, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 20;
@@ -5736,7 +5736,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord3iv 208
-void __indirect_glMultiTexCoord3iv(GLenum target, const GLint * v)
+void __indirect_glMultiTexCoord3iv(GLenum target, const GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 20;
@@ -5762,7 +5762,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord3sv 209
-void __indirect_glMultiTexCoord3sv(GLenum target, const GLshort * v)
+void __indirect_glMultiTexCoord3sv(GLenum target, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -5789,7 +5789,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord4dv 210
-void __indirect_glMultiTexCoord4dv(GLenum target, const GLdouble * v)
+void __indirect_glMultiTexCoord4dv(GLenum target, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 40;
@@ -5816,7 +5816,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord4fvARB 211
-void __indirect_glMultiTexCoord4fvARB(GLenum target, const GLfloat * v)
+void __indirect_glMultiTexCoord4fvARB(GLenum target, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -5843,7 +5843,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord4iv 212
-void __indirect_glMultiTexCoord4iv(GLenum target, const GLint * v)
+void __indirect_glMultiTexCoord4iv(GLenum target, const GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -5870,7 +5870,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_MultiTexCoord4sv 213
-void __indirect_glMultiTexCoord4sv(GLenum target, const GLshort * v)
+void __indirect_glMultiTexCoord4sv(GLenum target, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -5919,7 +5919,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_FogCoorddv 4125
-void __indirect_glFogCoorddv(const GLdouble * coord)
+void __indirect_glFogCoorddv(const GLdouble *coord)
 {
     generic_8_byte( X_GLrop_FogCoorddv, coord );
 }
@@ -5937,7 +5937,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_PointParameterfv 2066
-void __indirect_glPointParameterfv(GLenum pname, const GLfloat * params)
+void __indirect_glPointParameterfv(GLenum pname, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glPointParameterfv_size(pname);
@@ -5966,7 +5966,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_PointParameteriv 4222
-void __indirect_glPointParameteriv(GLenum pname, const GLint * params)
+void __indirect_glPointParameteriv(GLenum pname, const GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint compsize = __glPointParameteriv_size(pname);
@@ -5996,7 +5996,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3bv 4126
-void __indirect_glSecondaryColor3bv(const GLbyte * v)
+void __indirect_glSecondaryColor3bv(const GLbyte *v)
 {
     generic_3_byte( X_GLrop_SecondaryColor3bv, v );
 }
@@ -6015,7 +6015,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3dv 4130
-void __indirect_glSecondaryColor3dv(const GLdouble * v)
+void __indirect_glSecondaryColor3dv(const GLdouble *v)
 {
     generic_24_byte( X_GLrop_SecondaryColor3dv, v );
 }
@@ -6034,7 +6034,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3iv 4128
-void __indirect_glSecondaryColor3iv(const GLint * v)
+void __indirect_glSecondaryColor3iv(const GLint *v)
 {
     generic_12_byte( X_GLrop_SecondaryColor3iv, v );
 }
@@ -6053,7 +6053,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3sv 4127
-void __indirect_glSecondaryColor3sv(const GLshort * v)
+void __indirect_glSecondaryColor3sv(const GLshort *v)
 {
     generic_6_byte( X_GLrop_SecondaryColor3sv, v );
 }
@@ -6072,7 +6072,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3ubv 4131
-void __indirect_glSecondaryColor3ubv(const GLubyte * v)
+void __indirect_glSecondaryColor3ubv(const GLubyte *v)
 {
     generic_3_byte( X_GLrop_SecondaryColor3ubv, v );
 }
@@ -6091,7 +6091,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3uiv 4133
-void __indirect_glSecondaryColor3uiv(const GLuint * v)
+void __indirect_glSecondaryColor3uiv(const GLuint *v)
 {
     generic_12_byte( X_GLrop_SecondaryColor3uiv, v );
 }
@@ -6110,7 +6110,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3usv 4132
-void __indirect_glSecondaryColor3usv(const GLushort * v)
+void __indirect_glSecondaryColor3usv(const GLushort *v)
 {
     generic_6_byte( X_GLrop_SecondaryColor3usv, v );
 }
@@ -6129,7 +6129,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_WindowPos3fv 230
-void __indirect_glWindowPos3fv(const GLfloat * v)
+void __indirect_glWindowPos3fv(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_WindowPos3fv, v );
 }
@@ -6147,7 +6147,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLsop_DeleteQueries 161
-void __indirect_glDeleteQueries(GLsizei n, const GLuint * ids)
+void __indirect_glDeleteQueries(GLsizei n, const GLuint *ids)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6189,7 +6189,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLsop_GenQueries 162
-void __indirect_glGenQueries(GLsizei n, GLuint * ids)
+void __indirect_glGenQueries(GLsizei n, GLuint *ids)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6218,7 +6218,7 @@ void __indirect_glGenQueries(GLsizei n, GLuint * ids)
 }
 
 #define X_GLsop_GetQueryObjectiv 165
-void __indirect_glGetQueryObjectiv(GLuint id, GLenum pname, GLint * params)
+void __indirect_glGetQueryObjectiv(GLuint id, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6249,7 +6249,7 @@ void __indirect_glGetQueryObjectiv(GLuint id, GLenum pname, GLint * params)
 }
 
 #define X_GLsop_GetQueryObjectuiv 166
-void __indirect_glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint * params)
+void __indirect_glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6280,7 +6280,7 @@ void __indirect_glGetQueryObjectuiv(GLuint id, GLenum pname, GLuint * params)
 }
 
 #define X_GLsop_GetQueryiv 164
-void __indirect_glGetQueryiv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetQueryiv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6349,7 +6349,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_DrawBuffers 233
-void __indirect_glDrawBuffers(GLsizei n, const GLenum * bufs)
+void __indirect_glDrawBuffers(GLsizei n, const GLenum *bufs)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8 + safe_pad(safe_mul(n, 1 * sizeof(GLenum)));
@@ -6397,7 +6397,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib1dv 4197
-void __indirect_glVertexAttrib1dv(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib1dv(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -6421,7 +6421,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib1sv 4189
-void __indirect_glVertexAttrib1sv(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib1sv(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -6446,7 +6446,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib2dv 4198
-void __indirect_glVertexAttrib2dv(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib2dv(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -6471,7 +6471,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib2sv 4190
-void __indirect_glVertexAttrib2sv(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib2sv(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -6497,7 +6497,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib3dv 4199
-void __indirect_glVertexAttrib3dv(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib3dv(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 32;
@@ -6523,7 +6523,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib3sv 4191
-void __indirect_glVertexAttrib3sv(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib3sv(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -6535,7 +6535,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4Nbv 4235
-void __indirect_glVertexAttrib4Nbv(GLuint index, const GLbyte * v)
+void __indirect_glVertexAttrib4Nbv(GLuint index, const GLbyte *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -6547,7 +6547,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4Niv 4237
-void __indirect_glVertexAttrib4Niv(GLuint index, const GLint * v)
+void __indirect_glVertexAttrib4Niv(GLuint index, const GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -6559,7 +6559,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4Nsv 4236
-void __indirect_glVertexAttrib4Nsv(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib4Nsv(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -6586,7 +6586,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4Nubv 4201
-void __indirect_glVertexAttrib4Nubv(GLuint index, const GLubyte * v)
+void __indirect_glVertexAttrib4Nubv(GLuint index, const GLubyte *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -6598,7 +6598,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4Nuiv 4239
-void __indirect_glVertexAttrib4Nuiv(GLuint index, const GLuint * v)
+void __indirect_glVertexAttrib4Nuiv(GLuint index, const GLuint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -6610,7 +6610,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4Nusv 4238
-void __indirect_glVertexAttrib4Nusv(GLuint index, const GLushort * v)
+void __indirect_glVertexAttrib4Nusv(GLuint index, const GLushort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -6622,7 +6622,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4bv 4230
-void __indirect_glVertexAttrib4bv(GLuint index, const GLbyte * v)
+void __indirect_glVertexAttrib4bv(GLuint index, const GLbyte *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -6649,7 +6649,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4dv 4200
-void __indirect_glVertexAttrib4dv(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib4dv(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 40;
@@ -6661,7 +6661,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4iv 4231
-void __indirect_glVertexAttrib4iv(GLuint index, const GLint * v)
+void __indirect_glVertexAttrib4iv(GLuint index, const GLint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -6688,7 +6688,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4sv 4192
-void __indirect_glVertexAttrib4sv(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib4sv(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -6700,7 +6700,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4ubv 4232
-void __indirect_glVertexAttrib4ubv(GLuint index, const GLubyte * v)
+void __indirect_glVertexAttrib4ubv(GLuint index, const GLubyte *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -6712,7 +6712,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4uiv 4234
-void __indirect_glVertexAttrib4uiv(GLuint index, const GLuint * v)
+void __indirect_glVertexAttrib4uiv(GLuint index, const GLuint *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -6724,7 +6724,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4usv 4233
-void __indirect_glVertexAttrib4usv(GLuint index, const GLushort * v)
+void __indirect_glVertexAttrib4usv(GLuint index, const GLushort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -6760,7 +6760,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLvop_DeleteProgramsARB 1294
-void __indirect_glDeleteProgramsARB(GLsizei n, const GLuint * programs)
+void __indirect_glDeleteProgramsARB(GLsizei n, const GLuint *programs)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6783,7 +6783,7 @@ void __indirect_glDeleteProgramsARB(GLsizei n, const GLuint * programs)
 }
 
 #define X_GLvop_GenProgramsARB 1295
-void __indirect_glGenProgramsARB(GLsizei n, GLuint * programs)
+void __indirect_glGenProgramsARB(GLsizei n, GLuint *programs)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6802,7 +6802,7 @@ void __indirect_glGenProgramsARB(GLsizei n, GLuint * programs)
 }
 
 #define X_GLvop_GetProgramStringARB 1308
-void __indirect_glGetProgramStringARB(GLenum target, GLenum pname, GLvoid * string)
+void __indirect_glGetProgramStringARB(GLenum target, GLenum pname, GLvoid *string)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6818,7 +6818,7 @@ void __indirect_glGetProgramStringARB(GLenum target, GLenum pname, GLvoid * stri
 }
 
 #define X_GLvop_GetProgramivARB 1307
-void __indirect_glGetProgramivARB(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetProgramivARB(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -6866,7 +6866,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramEnvParameter4dvARB 4185
-void __indirect_glProgramEnvParameter4dvARB(GLenum target, GLuint index, const GLdouble * params)
+void __indirect_glProgramEnvParameter4dvARB(GLenum target, GLuint index, const GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 44;
@@ -6895,7 +6895,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramEnvParameter4fvARB 4184
-void __indirect_glProgramEnvParameter4fvARB(GLenum target, GLuint index, const GLfloat * params)
+void __indirect_glProgramEnvParameter4fvARB(GLenum target, GLuint index, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 28;
@@ -6924,7 +6924,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramLocalParameter4dvARB 4216
-void __indirect_glProgramLocalParameter4dvARB(GLenum target, GLuint index, const GLdouble * params)
+void __indirect_glProgramLocalParameter4dvARB(GLenum target, GLuint index, const GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 44;
@@ -6953,7 +6953,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramLocalParameter4fvARB 4215
-void __indirect_glProgramLocalParameter4fvARB(GLenum target, GLuint index, const GLfloat * params)
+void __indirect_glProgramLocalParameter4fvARB(GLenum target, GLuint index, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 28;
@@ -6966,7 +6966,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramStringARB 4217
-void __indirect_glProgramStringARB(GLenum target, GLenum format, GLsizei len, const GLvoid * string)
+void __indirect_glProgramStringARB(GLenum target, GLenum format, GLsizei len, const GLvoid *string)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16 + safe_pad(len);
@@ -7018,7 +7018,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib1fvARB 4193
-void __indirect_glVertexAttrib1fvARB(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib1fvARB(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -7043,7 +7043,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib2fvARB 4194
-void __indirect_glVertexAttrib2fvARB(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib2fvARB(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -7069,7 +7069,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib3fvARB 4195
-void __indirect_glVertexAttrib3fvARB(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib3fvARB(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 20;
@@ -7096,7 +7096,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4fvARB 4196
-void __indirect_glVertexAttrib4fvARB(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib4fvARB(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -7168,7 +7168,7 @@ GLenum __indirect_glCheckFramebufferStatus(GLenum target)
 }
 
 #define X_GLrop_DeleteFramebuffers 4320
-void __indirect_glDeleteFramebuffers(GLsizei n, const GLuint * framebuffers)
+void __indirect_glDeleteFramebuffers(GLsizei n, const GLuint *framebuffers)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8 + safe_pad(safe_mul(n, 1 * sizeof(GLuint)));
@@ -7190,7 +7190,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_DeleteRenderbuffers 4317
-void __indirect_glDeleteRenderbuffers(GLsizei n, const GLuint * renderbuffers)
+void __indirect_glDeleteRenderbuffers(GLsizei n, const GLuint *renderbuffers)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8 + safe_pad(safe_mul(n, 1 * sizeof(GLuint)));
@@ -7287,7 +7287,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLvop_GenFramebuffers 1426
-void __indirect_glGenFramebuffers(GLsizei n, GLuint * framebuffers)
+void __indirect_glGenFramebuffers(GLsizei n, GLuint *framebuffers)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7306,7 +7306,7 @@ void __indirect_glGenFramebuffers(GLsizei n, GLuint * framebuffers)
 }
 
 #define X_GLvop_GenRenderbuffers 1423
-void __indirect_glGenRenderbuffers(GLsizei n, GLuint * renderbuffers)
+void __indirect_glGenRenderbuffers(GLsizei n, GLuint *renderbuffers)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7336,7 +7336,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLvop_GetFramebufferAttachmentParameteriv 1428
-void __indirect_glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint * params)
+void __indirect_glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7353,7 +7353,7 @@ void __indirect_glGetFramebufferAttachmentParameteriv(GLenum target, GLenum atta
 }
 
 #define X_GLvop_GetRenderbufferParameteriv 1424
-void __indirect_glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint * params)
+void __indirect_glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7466,7 +7466,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_SecondaryColor3fvEXT 4129
-void __indirect_glSecondaryColor3fvEXT(const GLfloat * v)
+void __indirect_glSecondaryColor3fvEXT(const GLfloat *v)
 {
     generic_12_byte( X_GLrop_SecondaryColor3fvEXT, v );
 }
@@ -7483,13 +7483,13 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_FogCoordfvEXT 4124
-void __indirect_glFogCoordfvEXT(const GLfloat * coord)
+void __indirect_glFogCoordfvEXT(const GLfloat *coord)
 {
     generic_4_byte( X_GLrop_FogCoordfvEXT, coord );
 }
 
 #define X_GLvop_AreProgramsResidentNV 1293
-GLboolean __indirect_glAreProgramsResidentNV(GLsizei n, const GLuint * ids, GLboolean * residences)
+GLboolean __indirect_glAreProgramsResidentNV(GLsizei n, const GLuint *ids, GLboolean *residences)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7514,7 +7514,7 @@ GLboolean __indirect_glAreProgramsResidentNV(GLsizei n, const GLuint * ids, GLbo
 }
 
 #define X_GLrop_ExecuteProgramNV 4181
-void __indirect_glExecuteProgramNV(GLenum target, GLuint id, const GLfloat * params)
+void __indirect_glExecuteProgramNV(GLenum target, GLuint id, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 28;
@@ -7527,7 +7527,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLvop_GetProgramParameterdvNV 1297
-void __indirect_glGetProgramParameterdvNV(GLenum target, GLuint index, GLenum pname, GLdouble * params)
+void __indirect_glGetProgramParameterdvNV(GLenum target, GLuint index, GLenum pname, GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7544,7 +7544,7 @@ void __indirect_glGetProgramParameterdvNV(GLenum target, GLuint index, GLenum pn
 }
 
 #define X_GLvop_GetProgramParameterfvNV 1296
-void __indirect_glGetProgramParameterfvNV(GLenum target, GLuint index, GLenum pname, GLfloat * params)
+void __indirect_glGetProgramParameterfvNV(GLenum target, GLuint index, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7561,7 +7561,7 @@ void __indirect_glGetProgramParameterfvNV(GLenum target, GLuint index, GLenum pn
 }
 
 #define X_GLvop_GetProgramStringNV 1299
-void __indirect_glGetProgramStringNV(GLuint id, GLenum pname, GLubyte * program)
+void __indirect_glGetProgramStringNV(GLuint id, GLenum pname, GLubyte *program)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7577,7 +7577,7 @@ void __indirect_glGetProgramStringNV(GLuint id, GLenum pname, GLubyte * program)
 }
 
 #define X_GLvop_GetProgramivNV 1298
-void __indirect_glGetProgramivNV(GLuint id, GLenum pname, GLint * params)
+void __indirect_glGetProgramivNV(GLuint id, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7593,7 +7593,7 @@ void __indirect_glGetProgramivNV(GLuint id, GLenum pname, GLint * params)
 }
 
 #define X_GLvop_GetTrackMatrixivNV 1300
-void __indirect_glGetTrackMatrixivNV(GLenum target, GLuint address, GLenum pname, GLint * params)
+void __indirect_glGetTrackMatrixivNV(GLenum target, GLuint address, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7610,7 +7610,7 @@ void __indirect_glGetTrackMatrixivNV(GLenum target, GLuint address, GLenum pname
 }
 
 #define X_GLvop_GetVertexAttribdvNV 1301
-void __indirect_glGetVertexAttribdvNV(GLuint index, GLenum pname, GLdouble * params)
+void __indirect_glGetVertexAttribdvNV(GLuint index, GLenum pname, GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7626,7 +7626,7 @@ void __indirect_glGetVertexAttribdvNV(GLuint index, GLenum pname, GLdouble * par
 }
 
 #define X_GLvop_GetVertexAttribfvNV 1302
-void __indirect_glGetVertexAttribfvNV(GLuint index, GLenum pname, GLfloat * params)
+void __indirect_glGetVertexAttribfvNV(GLuint index, GLenum pname, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7642,7 +7642,7 @@ void __indirect_glGetVertexAttribfvNV(GLuint index, GLenum pname, GLfloat * para
 }
 
 #define X_GLvop_GetVertexAttribivNV 1303
-void __indirect_glGetVertexAttribivNV(GLuint index, GLenum pname, GLint * params)
+void __indirect_glGetVertexAttribivNV(GLuint index, GLenum pname, GLint *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -7658,7 +7658,7 @@ void __indirect_glGetVertexAttribivNV(GLuint index, GLenum pname, GLint * params
 }
 
 #define X_GLrop_LoadProgramNV 4183
-void __indirect_glLoadProgramNV(GLenum target, GLuint id, GLsizei len, const GLubyte * program)
+void __indirect_glLoadProgramNV(GLenum target, GLuint id, GLsizei len, const GLubyte *program)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16 + safe_pad(len);
@@ -7682,7 +7682,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramParameters4dvNV 4187
-void __indirect_glProgramParameters4dvNV(GLenum target, GLuint index, GLsizei num, const GLdouble * params)
+void __indirect_glProgramParameters4dvNV(GLenum target, GLuint index, GLsizei num, const GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16 + safe_pad(safe_mul(num, 4 * sizeof(GLdouble)));
@@ -7706,7 +7706,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramParameters4fvNV 4186
-void __indirect_glProgramParameters4fvNV(GLenum target, GLuint index, GLsizei num, const GLfloat * params)
+void __indirect_glProgramParameters4fvNV(GLenum target, GLuint index, GLsizei num, const GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16 + safe_pad(safe_mul(num, 4 * sizeof(GLfloat)));
@@ -7730,7 +7730,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_RequestResidentProgramsNV 4182
-void __indirect_glRequestResidentProgramsNV(GLsizei n, const GLuint * ids)
+void __indirect_glRequestResidentProgramsNV(GLsizei n, const GLuint *ids)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 8 + safe_pad(safe_mul(n, 1 * sizeof(GLuint)));
@@ -7778,7 +7778,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib1dvNV 4273
-void __indirect_glVertexAttrib1dvNV(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib1dvNV(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -7802,7 +7802,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib1fvNV 4269
-void __indirect_glVertexAttrib1fvNV(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib1fvNV(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -7826,7 +7826,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib1svNV 4265
-void __indirect_glVertexAttrib1svNV(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib1svNV(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -7851,7 +7851,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib2dvNV 4274
-void __indirect_glVertexAttrib2dvNV(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib2dvNV(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -7876,7 +7876,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib2fvNV 4270
-void __indirect_glVertexAttrib2fvNV(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib2fvNV(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -7901,7 +7901,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib2svNV 4266
-void __indirect_glVertexAttrib2svNV(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib2svNV(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -7927,7 +7927,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib3dvNV 4275
-void __indirect_glVertexAttrib3dvNV(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib3dvNV(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 32;
@@ -7953,7 +7953,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib3fvNV 4271
-void __indirect_glVertexAttrib3fvNV(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib3fvNV(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 20;
@@ -7979,7 +7979,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib3svNV 4267
-void __indirect_glVertexAttrib3svNV(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib3svNV(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -8006,7 +8006,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4dvNV 4276
-void __indirect_glVertexAttrib4dvNV(GLuint index, const GLdouble * v)
+void __indirect_glVertexAttrib4dvNV(GLuint index, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 40;
@@ -8033,7 +8033,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4fvNV 4272
-void __indirect_glVertexAttrib4fvNV(GLuint index, const GLfloat * v)
+void __indirect_glVertexAttrib4fvNV(GLuint index, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 24;
@@ -8060,7 +8060,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4svNV 4268
-void __indirect_glVertexAttrib4svNV(GLuint index, const GLshort * v)
+void __indirect_glVertexAttrib4svNV(GLuint index, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 16;
@@ -8087,7 +8087,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttrib4ubvNV 4277
-void __indirect_glVertexAttrib4ubvNV(GLuint index, const GLubyte * v)
+void __indirect_glVertexAttrib4ubvNV(GLuint index, const GLubyte *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12;
@@ -8099,7 +8099,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs1dvNV 4210
-void __indirect_glVertexAttribs1dvNV(GLuint index, GLsizei n, const GLdouble * v)
+void __indirect_glVertexAttribs1dvNV(GLuint index, GLsizei n, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 1 * sizeof(GLdouble)));
@@ -8122,7 +8122,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs1fvNV 4206
-void __indirect_glVertexAttribs1fvNV(GLuint index, GLsizei n, const GLfloat * v)
+void __indirect_glVertexAttribs1fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 1 * sizeof(GLfloat)));
@@ -8145,7 +8145,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs1svNV 4202
-void __indirect_glVertexAttribs1svNV(GLuint index, GLsizei n, const GLshort * v)
+void __indirect_glVertexAttribs1svNV(GLuint index, GLsizei n, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 1 * sizeof(GLshort)));
@@ -8168,7 +8168,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs2dvNV 4211
-void __indirect_glVertexAttribs2dvNV(GLuint index, GLsizei n, const GLdouble * v)
+void __indirect_glVertexAttribs2dvNV(GLuint index, GLsizei n, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 2 * sizeof(GLdouble)));
@@ -8191,7 +8191,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs2fvNV 4207
-void __indirect_glVertexAttribs2fvNV(GLuint index, GLsizei n, const GLfloat * v)
+void __indirect_glVertexAttribs2fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 2 * sizeof(GLfloat)));
@@ -8214,7 +8214,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs2svNV 4203
-void __indirect_glVertexAttribs2svNV(GLuint index, GLsizei n, const GLshort * v)
+void __indirect_glVertexAttribs2svNV(GLuint index, GLsizei n, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 2 * sizeof(GLshort)));
@@ -8237,7 +8237,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs3dvNV 4212
-void __indirect_glVertexAttribs3dvNV(GLuint index, GLsizei n, const GLdouble * v)
+void __indirect_glVertexAttribs3dvNV(GLuint index, GLsizei n, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 3 * sizeof(GLdouble)));
@@ -8260,7 +8260,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs3fvNV 4208
-void __indirect_glVertexAttribs3fvNV(GLuint index, GLsizei n, const GLfloat * v)
+void __indirect_glVertexAttribs3fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 3 * sizeof(GLfloat)));
@@ -8283,7 +8283,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs3svNV 4204
-void __indirect_glVertexAttribs3svNV(GLuint index, GLsizei n, const GLshort * v)
+void __indirect_glVertexAttribs3svNV(GLuint index, GLsizei n, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 3 * sizeof(GLshort)));
@@ -8306,7 +8306,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs4dvNV 4213
-void __indirect_glVertexAttribs4dvNV(GLuint index, GLsizei n, const GLdouble * v)
+void __indirect_glVertexAttribs4dvNV(GLuint index, GLsizei n, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 4 * sizeof(GLdouble)));
@@ -8329,7 +8329,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs4fvNV 4209
-void __indirect_glVertexAttribs4fvNV(GLuint index, GLsizei n, const GLfloat * v)
+void __indirect_glVertexAttribs4fvNV(GLuint index, GLsizei n, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 4 * sizeof(GLfloat)));
@@ -8352,7 +8352,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs4svNV 4205
-void __indirect_glVertexAttribs4svNV(GLuint index, GLsizei n, const GLshort * v)
+void __indirect_glVertexAttribs4svNV(GLuint index, GLsizei n, const GLshort *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 4 * sizeof(GLshort)));
@@ -8375,7 +8375,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_VertexAttribs4ubvNV 4214
-void __indirect_glVertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte * v)
+void __indirect_glVertexAttribs4ubvNV(GLuint index, GLsizei n, const GLubyte *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 12 + safe_pad(safe_mul(n, 4 * sizeof(GLubyte)));
@@ -8409,7 +8409,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLvop_GetProgramNamedParameterdvNV 1311
-void __indirect_glGetProgramNamedParameterdvNV(GLuint id, GLsizei len, const GLubyte * name, GLdouble * params)
+void __indirect_glGetProgramNamedParameterdvNV(GLuint id, GLsizei len, const GLubyte *name, GLdouble *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -8434,7 +8434,7 @@ void __indirect_glGetProgramNamedParameterdvNV(GLuint id, GLsizei len, const GLu
 }
 
 #define X_GLvop_GetProgramNamedParameterfvNV 1310
-void __indirect_glGetProgramNamedParameterfvNV(GLuint id, GLsizei len, const GLubyte * name, GLfloat * params)
+void __indirect_glGetProgramNamedParameterfvNV(GLuint id, GLsizei len, const GLubyte *name, GLfloat *params)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     Display * const dpy = gc->currentDpy;
@@ -8459,7 +8459,7 @@ void __indirect_glGetProgramNamedParameterfvNV(GLuint id, GLsizei len, const GLu
 }
 
 #define X_GLrop_ProgramNamedParameter4dvNV 4219
-void __indirect_glProgramNamedParameter4dNV(GLuint id, GLsizei len, const GLubyte * name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
+void __indirect_glProgramNamedParameter4dNV(GLuint id, GLsizei len, const GLubyte *name, GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 44 + safe_pad(len);
@@ -8486,7 +8486,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramNamedParameter4dvNV 4219
-void __indirect_glProgramNamedParameter4dvNV(GLuint id, GLsizei len, const GLubyte * name, const GLdouble * v)
+void __indirect_glProgramNamedParameter4dvNV(GLuint id, GLsizei len, const GLubyte *name, const GLdouble *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 44 + safe_pad(len);
@@ -8510,7 +8510,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramNamedParameter4fvNV 4218
-void __indirect_glProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte * name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+void __indirect_glProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte *name, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 28 + safe_pad(len);
@@ -8537,7 +8537,7 @@ if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc,
 }
 
 #define X_GLrop_ProgramNamedParameter4fvNV 4218
-void __indirect_glProgramNamedParameter4fvNV(GLuint id, GLsizei len, const GLubyte * name, const GLfloat * v)
+void __indirect_glProgramNamedParameter4fvNV(GLuint id, GLsizei len, const GLubyte *name, const GLfloat *v)
 {
     struct glx_context * const gc = __glXGetCurrentContext();
     const GLuint cmdlen = 28 + safe_pad(len);
@@ -8583,44 +8583,6 @@ emit_header(gc->pc, X_GLrop_BindRenderbufferEXT, cmdlen);
 gc->pc += cmdlen;
 if (__builtin_expect(gc->pc > gc->limit, 0)) { (void) __glXFlushRenderBuffer(gc, gc->pc); }
 }
-
-
-#ifdef GLX_INDIRECT_RENDERING
-
-static const struct proc_pair
-{
-   const char *name;
-   _glapi_proc proc;
-} proc_pairs[4] = {
-   { "AreTexturesResidentEXT", (_glapi_proc) glAreTexturesResidentEXT },
-   { "DeleteTexturesEXT", (_glapi_proc) glDeleteTexturesEXT },
-   { "GenTexturesEXT", (_glapi_proc) glGenTexturesEXT },
-   { "IsTextureEXT", (_glapi_proc) glIsTextureEXT }
-};
-
-static int
-__indirect_get_proc_compare(const void *key, const void *memb)
-{
-   const struct proc_pair *pair = (const struct proc_pair *) memb;
-   return strcmp((const char *) key, pair->name);
-}
-
-_glapi_proc
-__indirect_get_proc_address(const char *name)
-{
-   const struct proc_pair *pair;
-   
-   /* skip "gl" */
-   name += 2;
-
-   pair = (const struct proc_pair *) bsearch((const void *) name,
-      (const void *) proc_pairs, ARRAY_SIZE(proc_pairs), sizeof(proc_pairs[0]),
-      __indirect_get_proc_compare);
-
-   return (pair) ? pair->proc : NULL;
-}
-
-#endif /* GLX_INDIRECT_RENDERING */
 
 
 #  undef FASTCALL

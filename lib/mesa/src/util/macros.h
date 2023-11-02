@@ -25,9 +25,19 @@
 #define UTIL_MACROS_H
 
 #include <assert.h>
+#if defined(__HAIKU__)  && !defined(__cplusplus)
+#define static_assert _Static_assert
+#endif
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+
+#ifdef _GAMING_XBOX
+#define strdup _strdup
+#define stricmp _stricmp
+#define unlink _unlink
+#define access(a, b) _access(a, b)
+#endif
 
 /* Compute the size of an array */
 #ifndef ARRAY_SIZE
@@ -65,6 +75,15 @@
  */
 #if defined(__cplusplus) || !defined(HAVE___BUILTIN_TYPES_COMPATIBLE_P)
 #  define __builtin_types_compatible_p(type1, type2) (1)
+#endif
+
+/* This should match linux gcc cdecl semantics everywhere, so that we
+ * just codegen one calling convention on all platforms.
+ */
+#ifdef _MSC_VER
+#define UTIL_CDECL __cdecl
+#else
+#define UTIL_CDECL
 #endif
 
 /**
@@ -215,12 +234,6 @@ do {                       \
 #  endif
 #endif
 
-#ifdef _MSC_VER
-#define ALIGN16 __declspec(align(16))
-#else
-#define ALIGN16 __attribute__((aligned(16)))
-#endif
-
 #ifdef __cplusplus
 /**
  * Macro function that evaluates to true if T is a trivially
@@ -283,7 +296,7 @@ do {                       \
 #ifdef HAVE_FUNC_ATTRIBUTE_UNUSED
 #define UNUSED __attribute__((unused))
 #elif defined (_MSC_VER)
-#define UNUSED __pragma(warning(suppress:4100 4101))
+#define UNUSED __pragma(warning(suppress:4100 4101 4189))
 #else
 #define UNUSED
 #endif
@@ -311,14 +324,6 @@ do {                       \
 #else
 #define ATTRIBUTE_NOINLINE
 #endif
-
-/* Use as: enum name { X, Y } ENUM_PACKED; */
-#if defined(__GNUC__)
-#define ENUM_PACKED __attribute__((packed))
-#else
-#define ENUM_PACKED
-#endif
-
 
 /**
  * Check that STRUCT::FIELD can hold MAXVAL.  We use a lot of bitfields
@@ -360,16 +365,6 @@ do {                       \
 
 /** Checks is a value is a power of two. Does not handle zero. */
 #define IS_POT(v) (((v) & ((v) - 1)) == 0)
-
-/**
- * Macro for declaring an explicit conversion operator.  Defaults to an
- * implicit conversion if C++11 is not supported.
- */
-#if __cplusplus >= 201103L
-#define EXPLICIT_CONVERSION explicit
-#elif defined(__cplusplus)
-#define EXPLICIT_CONVERSION
-#endif
 
 /** Set a single bit */
 #define BITFIELD_BIT(b)      (1u << (b))
@@ -413,6 +408,24 @@ u_uintN_max(unsigned bit_size)
    return UINT64_MAX >> (64 - bit_size);
 }
 
+/* alignas usage
+ * For struct or union, use alignas(align_size) on any member
+ * of it will make it aligned to align_size.
+ * See https://en.cppreference.com/w/c/language/_Alignas for
+ * details. We can use static_assert and alignof to check if
+ * the alignment result of alignas(align_size) on struct or
+ * union is valid.
+ * For example:
+ *   static_assert(alignof(struct tgsi_exec_machine) == 16, "")
+ * Also, we can use special code to see the size of the aligned
+ * struct or union at the compile time with GCC, Clang or MSVC.
+ * So we can see if the size of union or struct are as expected
+ * when using alignas(align_size) on its member.
+ * For example:
+ *   char (*__kaboom)[sizeof(struct tgsi_exec_machine)] = 1;
+ * can show us the size of struct tgsi_exec_machine at compile
+ * time.
+ */
 #ifndef __cplusplus
 #ifdef _MSC_VER
 #define alignof _Alignof
@@ -450,9 +463,6 @@ typedef int lock_cap_t;
 
 #endif
 
-/* TODO: this could be different on non-x86 architectures. */
-#define CACHE_LINE_SIZE 64
-
 #define DO_PRAGMA(X) _Pragma (#X)
 
 #if defined(__clang__)
@@ -473,6 +483,22 @@ typedef int lock_cap_t;
 #define PRAGMA_DIAGNOSTIC_ERROR(X)
 #define PRAGMA_DIAGNOSTIC_WARNING(X)
 #define PRAGMA_DIAGNOSTIC_IGNORED(X)
+#endif
+
+#define PASTE2(a, b) a ## b
+#define PASTE3(a, b, c) a ## b ## c
+#define PASTE4(a, b, c, d) a ## b ## c ## d
+
+#define CONCAT2(a, b) PASTE2(a, b)
+#define CONCAT3(a, b, c) PASTE3(a, b, c)
+#define CONCAT4(a, b, c, d) PASTE4(a, b, c, d)
+
+#if defined(__GNUC__)
+#define PRAGMA_POISON(X) DO_PRAGMA( GCC poison X )
+#elif defined(__clang__)
+#define PRAGMA_POISON(X) DO_PRAGMA( clang poison X )
+#else
+#define PRAGMA_POISON
 #endif
 
 #endif /* UTIL_MACROS_H */

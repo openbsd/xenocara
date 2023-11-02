@@ -140,8 +140,99 @@ void util_barrier_destroy(util_barrier *barrier);
 
 bool util_barrier_wait(util_barrier *barrier);
 
+/*
+ * Semaphores
+ */
+
+typedef struct
+{
+   mtx_t mutex;
+   cnd_t cond;
+   int counter;
+} util_semaphore;
+
+
+static inline void
+util_semaphore_init(util_semaphore *sema, int init_val)
+{
+   (void) mtx_init(&sema->mutex, mtx_plain);
+   cnd_init(&sema->cond);
+   sema->counter = init_val;
+}
+
+static inline void
+util_semaphore_destroy(util_semaphore *sema)
+{
+   mtx_destroy(&sema->mutex);
+   cnd_destroy(&sema->cond);
+}
+
+/** Signal/increment semaphore counter */
+static inline void
+util_semaphore_signal(util_semaphore *sema)
+{
+   mtx_lock(&sema->mutex);
+   sema->counter++;
+   cnd_signal(&sema->cond);
+   mtx_unlock(&sema->mutex);
+}
+
+/** Wait for semaphore counter to be greater than zero */
+static inline void
+util_semaphore_wait(util_semaphore *sema)
+{
+   mtx_lock(&sema->mutex);
+   while (sema->counter <= 0) {
+      cnd_wait(&sema->cond, &sema->mutex);
+   }
+   sema->counter--;
+   mtx_unlock(&sema->mutex);
+}
+
 #ifdef __cplusplus
 }
 #endif
+
+/*
+ * Thread-specific data.
+ */
+
+typedef struct {
+   tss_t key;
+   int initMagic;
+} pipe_tsd;
+
+
+#define PIPE_TSD_INIT_MAGIC 0xff8adc98
+
+
+static inline void
+pipe_tsd_init(pipe_tsd *tsd)
+{
+   if (tss_create(&tsd->key, NULL/*free*/) != 0) {
+      exit(-1);
+   }
+   tsd->initMagic = PIPE_TSD_INIT_MAGIC;
+}
+
+static inline void *
+pipe_tsd_get(pipe_tsd *tsd)
+{
+   if (tsd->initMagic != (int) PIPE_TSD_INIT_MAGIC) {
+      pipe_tsd_init(tsd);
+   }
+   return tss_get(tsd->key);
+}
+
+static inline void
+pipe_tsd_set(pipe_tsd *tsd, void *value)
+{
+   if (tsd->initMagic != (int) PIPE_TSD_INIT_MAGIC) {
+      pipe_tsd_init(tsd);
+   }
+   if (tss_set(tsd->key, value) != 0) {
+      exit(-1);
+   }
+}
 
 #endif /* U_THREAD_H_ */

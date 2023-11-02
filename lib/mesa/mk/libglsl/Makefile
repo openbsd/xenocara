@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:31 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -74,15 +74,9 @@ SRCS=	ast_array_index.cpp \
 	lower_packing_builtins.cpp \
 	lower_precision.cpp \
 	lower_subroutine.cpp \
-	lower_tess_level.cpp \
 	lower_vec_index_to_cond_assign.cpp \
 	lower_vector_derefs.cpp \
-	lower_vector_insert.cpp \
 	opt_algebraic.cpp \
-	opt_constant_folding.cpp \
-	opt_constant_propagation.cpp \
-	opt_constant_variable.cpp \
-	opt_copy_propagation_elements.cpp \
 	opt_dead_builtin_variables.cpp \
 	opt_dead_code.cpp \
 	opt_dead_code_local.cpp \

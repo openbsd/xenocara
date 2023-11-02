@@ -44,16 +44,16 @@
 #ifndef PIPE_STATE_H
 #define PIPE_STATE_H
 
+#include "util/u_memory.h"
+
 #include "p_compiler.h"
 #include "p_defines.h"
-#include "p_format.h"
+#include "util/format/u_formats.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-struct gl_buffer_object;
 
 /**
  * Implementation limits
@@ -376,6 +376,7 @@ struct pipe_blend_state
    unsigned alpha_to_one:1;
    unsigned max_rt:3;            /* index of max rt, Ie. # of cbufs minus 1 */
    unsigned advanced_blend_func:4;
+   unsigned blend_coherent:1;
    struct pipe_rt_blend_state rt[PIPE_MAX_COLOR_BUFS];
 };
 
@@ -409,6 +410,8 @@ struct pipe_framebuffer_state
    struct pipe_surface *cbufs[PIPE_MAX_COLOR_BUFS];
 
    struct pipe_surface *zsbuf;      /**< Z/stencil buffer */
+
+   struct pipe_resource *resolve;
 };
 
 
@@ -484,7 +487,8 @@ struct pipe_sampler_view
    /* Put the refcount on its own cache line to prevent "False sharing". */
    EXCLUSIVE_CACHELINE(struct pipe_reference reference);
 
-   enum pipe_format format:15;      /**< typed PIPE_FORMAT_x */
+   enum pipe_format format:14;      /**< typed PIPE_FORMAT_x */
+   bool is_tex2d_from_buf:1;       /**< true if union is tex2d_from_buf */
    enum pipe_texture_target target:5; /**< PIPE_TEXTURE_x */
    unsigned swizzle_r:3;         /**< PIPE_SWIZZLE_x for red component */
    unsigned swizzle_g:3;         /**< PIPE_SWIZZLE_x for green component */
@@ -503,6 +507,12 @@ struct pipe_sampler_view
          unsigned offset;   /**< offset in bytes */
          unsigned size;     /**< size of the readable sub-range in bytes */
       } buf;
+      struct {
+         unsigned offset;  /**< offset in pixels */
+         uint16_t row_stride; /**< size of the image row_stride in pixels */
+         uint16_t width;      /**< width of image provided by application */
+         uint16_t height;     /**< height of image provided by application */
+      } tex2d_from_buf;      /**< used in cl extension cl_khr_image2d_from_buffer */
    } u;
 };
 
@@ -510,6 +520,10 @@ struct pipe_sampler_view
 /**
  * A description of a buffer or texture image that can be bound to a shader
  * stage.
+ *
+ * Note that pipe_image_view::access comes from the frontend API, while
+ * shader_access comes from the shader and may contain additional information
+ * (ie. coherent/volatile may be set on shader_access but not on access)
  */
 struct pipe_image_view
 {
@@ -517,7 +531,6 @@ struct pipe_image_view
    enum pipe_format format;      /**< typed PIPE_FORMAT_x */
    uint16_t access;              /**< PIPE_IMAGE_ACCESS_x */
    uint16_t shader_access;       /**< PIPE_IMAGE_ACCESS_x */
-
    union {
       struct {
          unsigned first_layer:16;     /**< first layer to use for array textures */
@@ -528,6 +541,12 @@ struct pipe_image_view
          unsigned offset;   /**< offset in bytes */
          unsigned size;     /**< size of the accessible sub-range in bytes */
       } buf;
+      struct {
+         unsigned offset;   /**< offset in pixels */
+         uint16_t row_stride;     /**< size of the image row_stride in pixels */
+         uint16_t width;     /**< width of image provided by application */
+         uint16_t height;     /**< height of image provided by application */
+      } tex2d_from_buf;      /**< used in cl extension cl_khr_image2d_from_buffer */
    } u;
 };
 
@@ -877,7 +896,6 @@ struct pipe_draw_info
     */
    union {
       struct pipe_resource *resource;  /**< real buffer */
-      struct gl_buffer_object *gl_bo; /**< for the GL frontend, not passed to drivers */
       const void *user;  /**< pointer to a user buffer */
    } index;
 
@@ -935,6 +953,13 @@ struct pipe_grid_info
     * buffer of at least pipe_compute_state::req_input_mem bytes.
     */
    const void *input;
+
+   /**
+    * Variable shared memory used by this invocation.
+    *
+    * This comes on top of shader declared shared memory.
+    */
+   uint32_t variable_shared_mem;
 
    /**
     * Grid number of dimensions, 1-3, e.g. the work_dim parameter passed to
@@ -1005,9 +1030,29 @@ struct pipe_compute_state
 {
    enum pipe_shader_ir ir_type; /**< IR type contained in prog. */
    const void *prog; /**< Compute program to be executed. */
-   unsigned req_local_mem; /**< Required size of the LOCAL resource. */
-   unsigned req_private_mem; /**< Required size of the PRIVATE resource. */
+   unsigned static_shared_mem; /**< equal to info.shared_size, used for shaders passed as TGSI */
    unsigned req_input_mem; /**< Required size of the INPUT resource. */
+};
+
+struct pipe_compute_state_object_info
+{
+   /**
+    * Max number of threads per block supported for the given cso.
+    */
+   unsigned max_threads;
+
+   /**
+    * Which multiple should the block size be of for best performance.
+    *
+    * E.g. for 8 a block with n * 8 threads would result in optimal utilization
+    * of the hardware.
+    */
+   unsigned preferred_simd_size;
+
+   /**
+    * How much private memory does this CSO require per thread (a.k.a. NIR scratch memory).
+    */
+   unsigned private_memory;
 };
 
 /**

@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX8_PACK_H
-#define GFX8_PACK_H
+#ifndef GFX8_BDW_PACK_H
+#define GFX8_BDW_PACK_H
 
 #include <stdio.h>
 
@@ -3925,7 +3925,6 @@ struct GFX8_3DSTATE_PS_EXTRA {
 #define PSCDEPTH_ON_LE                           3
    bool                                 PixelShaderKillsPixel;
    bool                                 oMaskPresenttoRenderTarget;
-   bool                                 PixelShaderDoesnotwritetoRT;
    bool                                 PixelShaderValid;
 };
 
@@ -3955,7 +3954,6 @@ GFX8_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->PixelShaderComputedDepthMode, 26, 27) |
       util_bitpack_uint(values->PixelShaderKillsPixel, 28, 28) |
       util_bitpack_uint(values->oMaskPresenttoRenderTarget, 29, 29) |
-      util_bitpack_uint(values->PixelShaderDoesnotwritetoRT, 30, 30) |
       util_bitpack_uint(values->PixelShaderValid, 31, 31);
 }
 
@@ -8434,8 +8432,8 @@ struct GFX8_MFX_AVC_IMG_STATE {
 #define EXPLICIT                                 1
 #define IMPLICIT                                 2
    bool                                 WeightedPredictionEnable;
-   uint32_t                             FirstChromaQPOffset;
-   uint32_t                             SecondChromaQPOffset;
+   int32_t                              FirstChromaQPOffset;
+   int32_t                              SecondChromaQPOffset;
    bool                                 FieldPicture;
    bool                                 MBAFFMode;
    bool                                 FrameMBOnly;
@@ -8542,8 +8540,8 @@ GFX8_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ImageStructure, 8, 9) |
       util_bitpack_uint(values->WeightedBiPredictionIDC, 10, 11) |
       util_bitpack_uint(values->WeightedPredictionEnable, 12, 12) |
-      util_bitpack_uint(values->FirstChromaQPOffset, 16, 20) |
-      util_bitpack_uint(values->SecondChromaQPOffset, 24, 28);
+      util_bitpack_sint(values->FirstChromaQPOffset, 16, 20) |
+      util_bitpack_sint(values->SecondChromaQPOffset, 24, 28);
 
    dw[4] =
       util_bitpack_uint(values->FieldPicture, 0, 0) |
@@ -15853,4 +15851,4 @@ GFX8_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#endif /* GFX8_PACK_H */
+#endif /* GFX8_BDW_PACK_H */

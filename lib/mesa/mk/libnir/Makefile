@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	nir
 
@@ -43,6 +43,7 @@ SRCS=	nir.c \
 	nir_lower_clip_disable.c \
 	nir_lower_clip_halfz.c \
 	nir_lower_const_arrays_to_uniforms.c \
+	nir_lower_continue_constructs.c \
 	nir_lower_convert_alu_types.c \
 	nir_lower_variable_initializers.c \
 	nir_lower_discard_if.c \
@@ -59,6 +60,7 @@ SRCS=	nir.c \
 	nir_lower_global_vars_to_local.c \
 	nir_lower_goto_ifs.c \
 	nir_lower_gs_intrinsics.c \
+	nir_lower_helper_writes.c \
 	nir_lower_load_const_to_scalar.c \
 	nir_lower_locals_to_regs.c \
 	nir_lower_idiv.c \
@@ -76,6 +78,7 @@ SRCS=	nir.c \
 	nir_lower_is_helper_invocation.c \
 	nir_lower_multiview.c \
 	nir_lower_mediump.c \
+	nir_lower_mem_access_bit_sizes.c \
 	nir_lower_memcpy.c \
 	nir_lower_memory_model.c \
 	nir_lower_non_uniform_access.c \
@@ -103,6 +106,7 @@ SRCS=	nir.c \
 	nir_lower_tex_shadow.c \
 	nir_lower_tex.c \
 	nir_lower_texcoord_replace.c \
+	nir_lower_texcoord_replace_late.c \
 	nir_lower_to_source_mods.c \
 	nir_lower_two_sided_color.c \
 	nir_lower_undef_to_zero.c \
@@ -119,6 +123,7 @@ SRCS=	nir.c \
 	nir_lower_uniforms_to_ubo.c \
 	nir_lower_sysvals_to_varyings.c \
 	nir_metadata.c \
+	nir_mod_analysis.c \
 	nir_move_vec_src_uses_to_dest.c \
 	nir_normalize_cubemap_coords.c \
 	nir_opt_access.c \
@@ -160,6 +165,7 @@ SRCS=	nir.c \
 	nir_opt_undef.c \
 	nir_opt_uniform_atomics.c \
 	nir_opt_vectorize.c \
+	nir_passthrough_gs.c \
 	nir_passthrough_tcs.c \
 	nir_phi_builder.c \
 	nir_print.c \

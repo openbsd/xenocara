@@ -48,12 +48,12 @@
 void
 _mesa_init_dispatch(struct gl_context *ctx)
 {
-   struct _glapi_table *table = ctx->OutsideBeginEnd;
+   struct _glapi_table *table = ctx->Dispatch.OutsideBeginEnd;
 
    assert(table != NULL);
    assert(ctx->Version > 0);
 
-   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30))) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30))) {
       SET_BeginTransformFeedback(table, _mesa_BeginTransformFeedback);
       SET_BindBufferRange(table, _mesa_BindBufferRange);
       SET_BindFragDataLocation(table, _mesa_BindFragDataLocation);
@@ -87,11 +87,10 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexStorage3D(table, _mesa_TexStorage3D);
       SET_TransformFeedbackVaryings(table, _mesa_TransformFeedbackVaryings);
       SET_UniformBlockBinding(table, _mesa_UniformBlockBinding);
-      SET_VertexAttribDivisor(table, _mesa_VertexAttribDivisor);
       SET_VertexAttribIPointer(table, _mesa_VertexAttribIPointer);
       SET_WaitSync(table, _mesa_WaitSync);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31))) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31))) {
       SET_BindImageTexture(table, _mesa_BindImageTexture);
       SET_BindVertexBuffer(table, _mesa_BindVertexBuffer);
       SET_BufferStorage(table, _mesa_BufferStorage);
@@ -107,11 +106,11 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_VertexBindingDivisor(table, _mesa_VertexBindingDivisor);
       SET_ViewportSwizzleNV(table, _mesa_ViewportSwizzleNV);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32))) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 32))) {
       SET_BufferStorageMemEXT(table, _mesa_BufferStorageMemEXT);
       SET_NamedBufferStorageMemEXT(table, _mesa_NamedBufferStorageMemEXT);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2)) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx) || _mesa_is_gles2(ctx))) {
       SET_ActiveTexture(table, _mesa_ActiveTexture);
       SET_BindBuffer(table, _mesa_BindBuffer);
       SET_BindTexture(table, _mesa_BindTexture);
@@ -154,11 +153,11 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_UnmapBuffer(table, _mesa_UnmapBuffer);
       SET_Viewport(table, _mesa_Viewport);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES)) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx))) {
       SET_LogicOp(table, _mesa_LogicOp);
       SET_PointSize(table, _mesa_PointSize);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES2)) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles2(ctx))) {
       SET_ActiveShaderProgram(table, _mesa_ActiveShaderProgram);
       SET_AttachShader(table, _mesa_AttachShader);
       SET_BeginConditionalRender(table, _mesa_BeginConditionalRender);
@@ -192,6 +191,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexSubImage3D(table, _mesa_TexSubImage3D);
       SET_UseProgram(table, _mesa_UseProgram);
       SET_UseProgramStages(table, _mesa_UseProgramStages);
+      SET_VertexAttribDivisor(table, _mesa_VertexAttribDivisor);
       SET_VertexAttribPointer(table, _mesa_VertexAttribPointer);
    }
    if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx))) {
@@ -236,16 +236,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexSubImage1D(table, _mesa_TexSubImage1D);
       SET_UnmapNamedBufferEXT(table, _mesa_UnmapNamedBufferEXT);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGLES)) {
-      SET_PointSizePointerOES(table, _mesa_PointSizePointerOES);
-   }
-   if (!_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES)) {
-      SET_ColorPointer(table, _mesa_ColorPointer);
-      SET_NormalPointer(table, _mesa_NormalPointer);
-      SET_TexCoordPointer(table, _mesa_TexCoordPointer);
-      SET_VertexPointer(table, _mesa_VertexPointer);
-   }
-   if (!_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 31))) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31))) {
       SET_FramebufferTexture(table, _mesa_FramebufferTexture);
       SET_ScissorArrayv(table, _mesa_ScissorArrayv);
       SET_ScissorIndexed(table, _mesa_ScissorIndexed);
@@ -254,7 +245,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_ViewportIndexedf(table, _mesa_ViewportIndexedf);
       SET_ViewportIndexedfv(table, _mesa_ViewportIndexedfv);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE)) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx))) {
       SET_BindTextureUnit(table, _mesa_BindTextureUnit);
       SET_BlitNamedFramebuffer(table, _mesa_BlitNamedFramebuffer);
       SET_ClearNamedBufferData(table, _mesa_ClearNamedBufferData);
@@ -302,13 +293,22 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_VertexArrayVertexBuffers(table, _mesa_VertexArrayVertexBuffers);
       SET_VertexAttribLPointer(table, _mesa_VertexAttribLPointer);
    }
-   if (!_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT)) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_gles1(ctx))) {
+      SET_ColorPointer(table, _mesa_ColorPointer);
+      SET_NormalPointer(table, _mesa_NormalPointer);
+      SET_TexCoordPointer(table, _mesa_TexCoordPointer);
+      SET_VertexPointer(table, _mesa_VertexPointer);
+   }
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx))) {
       SET_EdgeFlagPointer(table, _mesa_EdgeFlagPointer);
       SET_FogCoordPointer(table, _mesa_FogCoordPointer);
       SET_IndexPointer(table, _mesa_IndexPointer);
       SET_SecondaryColorPointer(table, _mesa_SecondaryColorPointer);
    }
-   if ((ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
+   if (!_mesa_is_no_error_enabled(ctx) && (_mesa_is_gles1(ctx))) {
+      SET_PointSizePointerOES(table, _mesa_PointSizePointerOES);
+   }
+   if ((_mesa_is_gles2(ctx) && ctx->Version >= 31)) {
       SET_DepthRangeArrayfvOES(table, _mesa_DepthRangeArrayfvOES);
       SET_DepthRangeIndexedfOES(table, _mesa_DepthRangeIndexedfOES);
    }
@@ -591,13 +591,12 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_VertexArrayVertexOffsetEXT(table, _mesa_VertexArrayVertexOffsetEXT);
       SET_VertexAttribLFormat(table, _mesa_VertexAttribLFormat);
    }
-   if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
+   if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30)) {
       SET_BindBufferBase(table, _mesa_BindBufferBase);
       SET_ColorMaski(table, _mesa_ColorMaski);
       SET_DeleteTransformFeedbacks(table, _mesa_DeleteTransformFeedbacks);
       SET_Disablei(table, _mesa_Disablei);
       SET_DrawElementsInstancedBaseInstance(table, _mesa_DrawElementsInstancedBaseInstance);
-      SET_DrawElementsInstancedBaseVertex(table, _mesa_DrawElementsInstancedBaseVertex);
       SET_DrawRangeElements(table, _mesa_DrawRangeElements);
       SET_EGLImageTargetTexStorageEXT(table, _mesa_EGLImageTargetTexStorageEXT);
       SET_Enablei(table, _mesa_Enablei);
@@ -626,6 +625,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_GetUniformuiv(table, _mesa_GetUniformuiv);
       SET_GetVertexAttribIiv(table, _mesa_GetVertexAttribIiv);
       SET_GetVertexAttribIuiv(table, _mesa_GetVertexAttribIuiv);
+      SET_InternalInvalidateFramebufferAncillaryMESA(table, _mesa_InternalInvalidateFramebufferAncillaryMESA);
       SET_IsEnabledi(table, _mesa_IsEnabledi);
       SET_IsSampler(table, _mesa_IsSampler);
       SET_IsSync(table, _mesa_IsSync);
@@ -664,7 +664,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_UniformMatrix4x3fv(table, _mesa_UniformMatrix4x3fv);
       SET_WindowRectanglesEXT(table, _mesa_WindowRectanglesEXT);
    }
-   if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
+   if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31)) {
       SET_ClearTexImage(table, _mesa_ClearTexImage);
       SET_ClearTexSubImage(table, _mesa_ClearTexSubImage);
       SET_DrawArraysIndirect(table, _mesa_DrawArraysIndirect);
@@ -688,7 +688,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_VertexAttribFormat(table, _mesa_VertexAttribFormat);
       SET_VertexAttribIFormat(table, _mesa_VertexAttribIFormat);
    }
-   if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32)) {
+   if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 32)) {
       SET_CreateMemoryObjectsEXT(table, _mesa_CreateMemoryObjectsEXT);
       SET_DeleteMemoryObjectsEXT(table, _mesa_DeleteMemoryObjectsEXT);
       SET_DeleteSemaphoresEXT(table, _mesa_DeleteSemaphoresEXT);
@@ -718,16 +718,16 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TextureStorageMem3DMultisampleEXT(table, _mesa_TextureStorageMem3DMultisampleEXT);
       SET_WaitSemaphoreEXT(table, _mesa_WaitSemaphoreEXT);
    }
-   if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES) {
+   if (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx)) {
       SET_PointParameterf(table, _mesa_PointParameterf);
       SET_PointParameterfv(table, _mesa_PointParameterfv);
    }
-   if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
+   if (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30)) {
       SET_DrawArraysInstancedBaseInstance(table, _mesa_DrawArraysInstancedBaseInstance);
       SET_DrawElementsInstancedBaseVertexBaseInstance(table, _mesa_DrawElementsInstancedBaseVertexBaseInstance);
       SET_DrawRangeElementsBaseVertex(table, _mesa_DrawRangeElementsBaseVertex);
    }
-   if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2) {
+   if (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx) || _mesa_is_gles2(ctx)) {
       SET_BindFramebuffer(table, _mesa_BindFramebuffer);
       SET_BindRenderbuffer(table, _mesa_BindRenderbuffer);
       SET_BlendEquation(table, _mesa_BlendEquation);
@@ -744,8 +744,10 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_DepthRangef(table, _mesa_DepthRangef);
       SET_Disable(table, _mesa_Disable);
       SET_DrawArrays(table, _mesa_DrawArrays);
+      SET_DrawArraysInstancedBaseInstanceDrawID(table, _mesa_DrawArraysInstancedBaseInstanceDrawID);
       SET_DrawArraysUserBuf(table, _mesa_DrawArraysUserBuf);
       SET_DrawElements(table, _mesa_DrawElements);
+      SET_DrawElementsInstancedBaseVertexBaseInstanceDrawID(table, _mesa_DrawElementsInstancedBaseVertexBaseInstanceDrawID);
       SET_DrawElementsUserBuf(table, _mesa_DrawElementsUserBuf);
       SET_EGLImageTargetRenderbufferStorageOES(table, _mesa_EGLImageTargetRenderbufferStorageOES);
       SET_EGLImageTargetTexture2DOES(table, _mesa_EGLImageTargetTexture2DOES);
@@ -796,7 +798,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_TexParameteri(table, _mesa_TexParameteri);
       SET_TexParameteriv(table, _mesa_TexParameteriv);
    }
-   if (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES2) {
+   if (_mesa_is_desktop_gl(ctx) || _mesa_is_gles2(ctx)) {
       SET_BeginPerfMonitorAMD(table, _mesa_BeginPerfMonitorAMD);
       SET_BeginPerfQueryINTEL(table, _mesa_BeginPerfQueryINTEL);
       SET_BeginQuery(table, _mesa_BeginQuery);
@@ -815,6 +817,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_DrawArraysInstanced(table, _mesa_DrawArraysInstanced);
       SET_DrawElementsBaseVertex(table, _mesa_DrawElementsBaseVertex);
       SET_DrawElementsInstanced(table, _mesa_DrawElementsInstanced);
+      SET_DrawElementsInstancedBaseVertex(table, _mesa_DrawElementsInstancedBaseVertex);
       SET_EndPerfMonitorAMD(table, _mesa_EndPerfMonitorAMD);
       SET_EndPerfQueryINTEL(table, _mesa_EndPerfQueryINTEL);
       SET_EndQuery(table, _mesa_EndQuery);
@@ -921,284 +924,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_ValidateProgram(table, _mesa_ValidateProgram);
       SET_ValidateProgramPipeline(table, _mesa_ValidateProgramPipeline);
    }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30))) {
-      SET_BeginTransformFeedback(table, _mesa_BeginTransformFeedback_no_error);
-      SET_BindBufferRange(table, _mesa_BindBufferRange_no_error);
-      SET_BindFragDataLocation(table, _mesa_BindFragDataLocation_no_error);
-      SET_BindFragDataLocationIndexed(table, _mesa_BindFragDataLocationIndexed_no_error);
-      SET_BindSampler(table, _mesa_BindSampler_no_error);
-      SET_BindTransformFeedback(table, _mesa_BindTransformFeedback_no_error);
-      SET_BlendEquationSeparateiARB(table, _mesa_BlendEquationSeparateiARB_no_error);
-      SET_BlendEquationiARB(table, _mesa_BlendEquationiARB_no_error);
-      SET_BlendFuncSeparateiARB(table, _mesa_BlendFuncSeparateiARB_no_error);
-      SET_BlendFunciARB(table, _mesa_BlendFunciARB_no_error);
-      SET_BlitFramebuffer(table, _mesa_BlitFramebuffer_no_error);
-      SET_ClearBufferfi(table, _mesa_ClearBufferfi_no_error);
-      SET_ClearBufferfv(table, _mesa_ClearBufferfv_no_error);
-      SET_ClearBufferiv(table, _mesa_ClearBufferiv_no_error);
-      SET_ClearBufferuiv(table, _mesa_ClearBufferuiv_no_error);
-      SET_ClientWaitSync(table, _mesa_ClientWaitSync_no_error);
-      SET_CopyBufferSubData(table, _mesa_CopyBufferSubData_no_error);
-      SET_CopyImageSubData(table, _mesa_CopyImageSubData_no_error);
-      SET_DeleteSamplers(table, _mesa_DeleteSamplers_no_error);
-      SET_DeleteSync(table, _mesa_DeleteSync_no_error);
-      SET_EndTransformFeedback(table, _mesa_EndTransformFeedback_no_error);
-      SET_FenceSync(table, _mesa_FenceSync_no_error);
-      SET_FramebufferTextureLayer(table, _mesa_FramebufferTextureLayer_no_error);
-      SET_GenSamplers(table, _mesa_GenSamplers_no_error);
-      SET_InvalidateFramebuffer(table, _mesa_InvalidateFramebuffer_no_error);
-      SET_InvalidateSubFramebuffer(table, _mesa_InvalidateSubFramebuffer_no_error);
-      SET_MinSampleShading(table, _mesa_MinSampleShading_no_error);
-      SET_PauseTransformFeedback(table, _mesa_PauseTransformFeedback_no_error);
-      SET_ResumeTransformFeedback(table, _mesa_ResumeTransformFeedback_no_error);
-      SET_TexStorage2D(table, _mesa_TexStorage2D_no_error);
-      SET_TexStorage3D(table, _mesa_TexStorage3D_no_error);
-      SET_TransformFeedbackVaryings(table, _mesa_TransformFeedbackVaryings_no_error);
-      SET_UniformBlockBinding(table, _mesa_UniformBlockBinding_no_error);
-      SET_VertexAttribDivisor(table, _mesa_VertexAttribDivisor_no_error);
-      SET_VertexAttribIPointer(table, _mesa_VertexAttribIPointer_no_error);
-      SET_WaitSync(table, _mesa_WaitSync_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 31))) {
-      SET_BindImageTexture(table, _mesa_BindImageTexture_no_error);
-      SET_BindVertexBuffer(table, _mesa_BindVertexBuffer_no_error);
-      SET_BufferStorage(table, _mesa_BufferStorage_no_error);
-      SET_DispatchCompute(table, _mesa_DispatchCompute_no_error);
-      SET_DispatchComputeIndirect(table, _mesa_DispatchComputeIndirect_no_error);
-      SET_FramebufferSampleLocationsfvARB(table, _mesa_FramebufferSampleLocationsfvARB_no_error);
-      SET_MemoryBarrierByRegion(table, _mesa_MemoryBarrierByRegion_no_error);
-      SET_NamedFramebufferSampleLocationsfvARB(table, _mesa_NamedFramebufferSampleLocationsfvARB_no_error);
-      SET_PatchParameteri(table, _mesa_PatchParameteri_no_error);
-      SET_SampleMaski(table, _mesa_SampleMaski_no_error);
-      SET_TextureView(table, _mesa_TextureView_no_error);
-      SET_VertexAttribBinding(table, _mesa_VertexAttribBinding_no_error);
-      SET_VertexBindingDivisor(table, _mesa_VertexBindingDivisor_no_error);
-      SET_ViewportSwizzleNV(table, _mesa_ViewportSwizzleNV_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 32))) {
-      SET_BufferStorageMemEXT(table, _mesa_BufferStorageMemEXT_no_error);
-      SET_NamedBufferStorageMemEXT(table, _mesa_NamedBufferStorageMemEXT_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2)) {
-      SET_ActiveTexture(table, _mesa_ActiveTexture_no_error);
-      SET_BindBuffer(table, _mesa_BindBuffer_no_error);
-      SET_BindTexture(table, _mesa_BindTexture_no_error);
-      SET_BlendEquationSeparate(table, _mesa_BlendEquationSeparate_no_error);
-      SET_BlendFunc(table, _mesa_BlendFunc_no_error);
-      SET_BlendFuncSeparate(table, _mesa_BlendFuncSeparate_no_error);
-      SET_BufferData(table, _mesa_BufferData_no_error);
-      SET_BufferSubData(table, _mesa_BufferSubData_no_error);
-      SET_CheckFramebufferStatus(table, _mesa_CheckFramebufferStatus_no_error);
-      SET_Clear(table, _mesa_Clear_no_error);
-      SET_CompressedTexImage2D(table, _mesa_CompressedTexImage2D_no_error);
-      SET_CompressedTexSubImage2D(table, _mesa_CompressedTexSubImage2D_no_error);
-      SET_ConservativeRasterParameterfNV(table, _mesa_ConservativeRasterParameterfNV_no_error);
-      SET_ConservativeRasterParameteriNV(table, _mesa_ConservativeRasterParameteriNV_no_error);
-      SET_CopyTexImage2D(table, _mesa_CopyTexImage2D_no_error);
-      SET_CopyTexSubImage2D(table, _mesa_CopyTexSubImage2D_no_error);
-      SET_CullFace(table, _mesa_CullFace_no_error);
-      SET_DeleteBuffers(table, _mesa_DeleteBuffers_no_error);
-      SET_DeleteTextures(table, _mesa_DeleteTextures_no_error);
-      SET_DepthFunc(table, _mesa_DepthFunc_no_error);
-      SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange_no_error);
-      SET_FramebufferRenderbuffer(table, _mesa_FramebufferRenderbuffer_no_error);
-      SET_FramebufferTexture2D(table, _mesa_FramebufferTexture2D_no_error);
-      SET_FrontFace(table, _mesa_FrontFace_no_error);
-      SET_GenBuffers(table, _mesa_GenBuffers_no_error);
-      SET_GenRenderbuffers(table, _mesa_GenRenderbuffers_no_error);
-      SET_GenTextures(table, _mesa_GenTextures_no_error);
-      SET_GenerateMipmap(table, _mesa_GenerateMipmap_no_error);
-      SET_LineWidth(table, _mesa_LineWidth_no_error);
-      SET_MapBuffer(table, _mesa_MapBuffer_no_error);
-      SET_MapBufferRange(table, _mesa_MapBufferRange_no_error);
-      SET_PixelStorei(table, _mesa_PixelStorei_no_error);
-      SET_ReadPixels(table, _mesa_ReadPixels_no_error);
-      SET_Scissor(table, _mesa_Scissor_no_error);
-      SET_StencilFunc(table, _mesa_StencilFunc_no_error);
-      SET_StencilOp(table, _mesa_StencilOp_no_error);
-      SET_SubpixelPrecisionBiasNV(table, _mesa_SubpixelPrecisionBiasNV_no_error);
-      SET_TexImage2D(table, _mesa_TexImage2D_no_error);
-      SET_TexSubImage2D(table, _mesa_TexSubImage2D_no_error);
-      SET_UnmapBuffer(table, _mesa_UnmapBuffer_no_error);
-      SET_Viewport(table, _mesa_Viewport_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES)) {
-      SET_LogicOp(table, _mesa_LogicOp_no_error);
-      SET_PointSize(table, _mesa_PointSize_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || ctx->API == API_OPENGLES2)) {
-      SET_ActiveShaderProgram(table, _mesa_ActiveShaderProgram_no_error);
-      SET_AttachShader(table, _mesa_AttachShader_no_error);
-      SET_BeginConditionalRender(table, _mesa_BeginConditionalRender_no_error);
-      SET_BindAttribLocation(table, _mesa_BindAttribLocation_no_error);
-      SET_BindProgramPipeline(table, _mesa_BindProgramPipeline_no_error);
-      SET_BindVertexArray(table, _mesa_BindVertexArray_no_error);
-      SET_ClipControl(table, _mesa_ClipControl_no_error);
-      SET_CompressedTexImage3D(table, _mesa_CompressedTexImage3D_no_error);
-      SET_CompressedTexSubImage3D(table, _mesa_CompressedTexSubImage3D_no_error);
-      SET_CopyTexSubImage3D(table, _mesa_CopyTexSubImage3D_no_error);
-      SET_CreateShader(table, _mesa_CreateShader_no_error);
-      SET_DeleteVertexArrays(table, _mesa_DeleteVertexArrays_no_error);
-      SET_DetachShader(table, _mesa_DetachShader_no_error);
-      SET_DisableVertexAttribArray(table, _mesa_DisableVertexAttribArray_no_error);
-      SET_DrawBuffers(table, _mesa_DrawBuffers_no_error);
-      SET_EnableVertexAttribArray(table, _mesa_EnableVertexAttribArray_no_error);
-      SET_EndConditionalRender(table, _mesa_EndConditionalRender_no_error);
-      SET_FramebufferTexture3D(table, _mesa_FramebufferTexture3D_no_error);
-      SET_GenProgramPipelines(table, _mesa_GenProgramPipelines_no_error);
-      SET_GenVertexArrays(table, _mesa_GenVertexArrays_no_error);
-      SET_GetUniformLocation(table, _mesa_GetUniformLocation_no_error);
-      SET_LinkProgram(table, _mesa_LinkProgram_no_error);
-      SET_ProgramParameteri(table, _mesa_ProgramParameteri_no_error);
-      SET_ReadBuffer(table, _mesa_ReadBuffer_no_error);
-      SET_ReadnPixelsARB(table, _mesa_ReadnPixelsARB_no_error);
-      SET_ShaderSource(table, _mesa_ShaderSource_no_error);
-      SET_StencilFuncSeparate(table, _mesa_StencilFuncSeparate_no_error);
-      SET_StencilMaskSeparate(table, _mesa_StencilMaskSeparate_no_error);
-      SET_StencilOpSeparate(table, _mesa_StencilOpSeparate_no_error);
-      SET_TexImage3D(table, _mesa_TexImage3D_no_error);
-      SET_TexSubImage3D(table, _mesa_TexSubImage3D_no_error);
-      SET_UseProgram(table, _mesa_UseProgram_no_error);
-      SET_UseProgramStages(table, _mesa_UseProgramStages_no_error);
-      SET_VertexAttribPointer(table, _mesa_VertexAttribPointer_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx))) {
-      SET_AlphaToCoverageDitherControlNV(table, _mesa_AlphaToCoverageDitherControlNV_no_error);
-      SET_AttachObjectARB(table, _mesa_AttachObjectARB_no_error);
-      SET_BindBufferOffsetEXT(table, _mesa_BindBufferOffsetEXT_no_error);
-      SET_BindImageTextures(table, _mesa_BindImageTextures_no_error);
-      SET_BindSamplers(table, _mesa_BindSamplers_no_error);
-      SET_BindTextures(table, _mesa_BindTextures_no_error);
-      SET_BindVertexBuffers(table, _mesa_BindVertexBuffers_no_error);
-      SET_ClearBufferData(table, _mesa_ClearBufferData_no_error);
-      SET_ClearBufferSubData(table, _mesa_ClearBufferSubData_no_error);
-      SET_CompressedTexImage1D(table, _mesa_CompressedTexImage1D_no_error);
-      SET_CompressedTexSubImage1D(table, _mesa_CompressedTexSubImage1D_no_error);
-      SET_CopyImageSubDataNV(table, _mesa_CopyImageSubDataNV_no_error);
-      SET_CopyTexImage1D(table, _mesa_CopyTexImage1D_no_error);
-      SET_CopyTexSubImage1D(table, _mesa_CopyTexSubImage1D_no_error);
-      SET_CreateShaderObjectARB(table, _mesa_CreateShaderObjectARB_no_error);
-      SET_DetachObjectARB(table, _mesa_DetachObjectARB_no_error);
-      SET_DispatchComputeGroupSizeARB(table, _mesa_DispatchComputeGroupSizeARB_no_error);
-      SET_DrawBuffer(table, _mesa_DrawBuffer_no_error);
-      SET_FramebufferTexture1D(table, _mesa_FramebufferTexture1D_no_error);
-      SET_GetImageHandleARB(table, _mesa_GetImageHandleARB_no_error);
-      SET_GetTextureHandleARB(table, _mesa_GetTextureHandleARB_no_error);
-      SET_GetTextureSamplerHandleARB(table, _mesa_GetTextureSamplerHandleARB_no_error);
-      SET_InvalidateBufferData(table, _mesa_InvalidateBufferData_no_error);
-      SET_InvalidateBufferSubData(table, _mesa_InvalidateBufferSubData_no_error);
-      SET_InvalidateTexImage(table, _mesa_InvalidateTexImage_no_error);
-      SET_InvalidateTexSubImage(table, _mesa_InvalidateTexSubImage_no_error);
-      SET_IsImageHandleResidentARB(table, _mesa_IsImageHandleResidentARB_no_error);
-      SET_IsTextureHandleResidentARB(table, _mesa_IsTextureHandleResidentARB_no_error);
-      SET_MakeImageHandleNonResidentARB(table, _mesa_MakeImageHandleNonResidentARB_no_error);
-      SET_MakeImageHandleResidentARB(table, _mesa_MakeImageHandleResidentARB_no_error);
-      SET_MakeTextureHandleNonResidentARB(table, _mesa_MakeTextureHandleNonResidentARB_no_error);
-      SET_MakeTextureHandleResidentARB(table, _mesa_MakeTextureHandleResidentARB_no_error);
-      SET_PixelStoref(table, _mesa_PixelStoref_no_error);
-      SET_PolygonMode(table, _mesa_PolygonMode_no_error);
-      SET_PrimitiveRestartIndex(table, _mesa_PrimitiveRestartIndex_no_error);
-      SET_ShaderStorageBlockBinding(table, _mesa_ShaderStorageBlockBinding_no_error);
-      SET_TexImage1D(table, _mesa_TexImage1D_no_error);
-      SET_TexStorage1D(table, _mesa_TexStorage1D_no_error);
-      SET_TexSubImage1D(table, _mesa_TexSubImage1D_no_error);
-      SET_UnmapNamedBufferEXT(table, _mesa_UnmapNamedBufferEXT_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGLES)) {
-      SET_PointSizePointerOES(table, _mesa_PointSizePointerOES_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES)) {
-      SET_ColorPointer(table, _mesa_ColorPointer_no_error);
-      SET_NormalPointer(table, _mesa_NormalPointer_no_error);
-      SET_TexCoordPointer(table, _mesa_TexCoordPointer_no_error);
-      SET_VertexPointer(table, _mesa_VertexPointer_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 31))) {
-      SET_FramebufferTexture(table, _mesa_FramebufferTexture_no_error);
-      SET_ScissorArrayv(table, _mesa_ScissorArrayv_no_error);
-      SET_ScissorIndexed(table, _mesa_ScissorIndexed_no_error);
-      SET_ScissorIndexedv(table, _mesa_ScissorIndexedv_no_error);
-      SET_ViewportArrayv(table, _mesa_ViewportArrayv_no_error);
-      SET_ViewportIndexedf(table, _mesa_ViewportIndexedf_no_error);
-      SET_ViewportIndexedfv(table, _mesa_ViewportIndexedfv_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE)) {
-      SET_BindTextureUnit(table, _mesa_BindTextureUnit_no_error);
-      SET_BlitNamedFramebuffer(table, _mesa_BlitNamedFramebuffer_no_error);
-      SET_ClearNamedBufferData(table, _mesa_ClearNamedBufferData_no_error);
-      SET_ClearNamedBufferSubData(table, _mesa_ClearNamedBufferSubData_no_error);
-      SET_CompressedTextureSubImage1D(table, _mesa_CompressedTextureSubImage1D_no_error);
-      SET_CompressedTextureSubImage2D(table, _mesa_CompressedTextureSubImage2D_no_error);
-      SET_CompressedTextureSubImage3D(table, _mesa_CompressedTextureSubImage3D_no_error);
-      SET_CopyNamedBufferSubData(table, _mesa_CopyNamedBufferSubData_no_error);
-      SET_CopyTextureSubImage1D(table, _mesa_CopyTextureSubImage1D_no_error);
-      SET_CopyTextureSubImage2D(table, _mesa_CopyTextureSubImage2D_no_error);
-      SET_CopyTextureSubImage3D(table, _mesa_CopyTextureSubImage3D_no_error);
-      SET_CreateBuffers(table, _mesa_CreateBuffers_no_error);
-      SET_CreateProgramPipelines(table, _mesa_CreateProgramPipelines_no_error);
-      SET_CreateRenderbuffers(table, _mesa_CreateRenderbuffers_no_error);
-      SET_CreateSamplers(table, _mesa_CreateSamplers_no_error);
-      SET_CreateTextures(table, _mesa_CreateTextures_no_error);
-      SET_CreateVertexArrays(table, _mesa_CreateVertexArrays_no_error);
-      SET_DepthRangeArrayv(table, _mesa_DepthRangeArrayv_no_error);
-      SET_DepthRangeIndexed(table, _mesa_DepthRangeIndexed_no_error);
-      SET_DisableVertexArrayAttrib(table, _mesa_DisableVertexArrayAttrib_no_error);
-      SET_EnableVertexArrayAttrib(table, _mesa_EnableVertexArrayAttrib_no_error);
-      SET_FlushMappedNamedBufferRange(table, _mesa_FlushMappedNamedBufferRange_no_error);
-      SET_GenerateTextureMipmap(table, _mesa_GenerateTextureMipmap_no_error);
-      SET_MapNamedBuffer(table, _mesa_MapNamedBuffer_no_error);
-      SET_MapNamedBufferRange(table, _mesa_MapNamedBufferRange_no_error);
-      SET_NamedBufferData(table, _mesa_NamedBufferData_no_error);
-      SET_NamedBufferStorage(table, _mesa_NamedBufferStorage_no_error);
-      SET_NamedBufferSubData(table, _mesa_NamedBufferSubData_no_error);
-      SET_NamedFramebufferDrawBuffer(table, _mesa_NamedFramebufferDrawBuffer_no_error);
-      SET_NamedFramebufferDrawBuffers(table, _mesa_NamedFramebufferDrawBuffers_no_error);
-      SET_NamedFramebufferReadBuffer(table, _mesa_NamedFramebufferReadBuffer_no_error);
-      SET_NamedFramebufferRenderbuffer(table, _mesa_NamedFramebufferRenderbuffer_no_error);
-      SET_NamedFramebufferTexture(table, _mesa_NamedFramebufferTexture_no_error);
-      SET_NamedFramebufferTextureLayer(table, _mesa_NamedFramebufferTextureLayer_no_error);
-      SET_TextureStorage1D(table, _mesa_TextureStorage1D_no_error);
-      SET_TextureStorage2D(table, _mesa_TextureStorage2D_no_error);
-      SET_TextureStorage3D(table, _mesa_TextureStorage3D_no_error);
-      SET_TextureSubImage1D(table, _mesa_TextureSubImage1D_no_error);
-      SET_TextureSubImage2D(table, _mesa_TextureSubImage2D_no_error);
-      SET_TextureSubImage3D(table, _mesa_TextureSubImage3D_no_error);
-      SET_VertexArrayAttribBinding(table, _mesa_VertexArrayAttribBinding_no_error);
-      SET_VertexArrayBindingDivisor(table, _mesa_VertexArrayBindingDivisor_no_error);
-      SET_VertexArrayElementBuffer(table, _mesa_VertexArrayElementBuffer_no_error);
-      SET_VertexArrayVertexBuffer(table, _mesa_VertexArrayVertexBuffer_no_error);
-      SET_VertexArrayVertexBuffers(table, _mesa_VertexArrayVertexBuffers_no_error);
-      SET_VertexAttribLPointer(table, _mesa_VertexAttribLPointer_no_error);
-   }
-   if (_mesa_is_no_error_enabled(ctx) && (ctx->API == API_OPENGL_COMPAT)) {
-      SET_EdgeFlagPointer(table, _mesa_EdgeFlagPointer_no_error);
-      SET_FogCoordPointer(table, _mesa_FogCoordPointer_no_error);
-      SET_IndexPointer(table, _mesa_IndexPointer_no_error);
-      SET_SecondaryColorPointer(table, _mesa_SecondaryColorPointer_no_error);
-   }
-   if (ctx->API == API_OPENGLES) {
-      SET_DrawTexfOES(table, _mesa_DrawTexfOES);
-      SET_DrawTexfvOES(table, _mesa_DrawTexfvOES);
-      SET_DrawTexiOES(table, _mesa_DrawTexiOES);
-      SET_DrawTexivOES(table, _mesa_DrawTexivOES);
-      SET_DrawTexsOES(table, _mesa_DrawTexsOES);
-      SET_DrawTexsvOES(table, _mesa_DrawTexsvOES);
-      SET_DrawTexxOES(table, _mesa_DrawTexxOES);
-      SET_DrawTexxvOES(table, _mesa_DrawTexxvOES);
-      SET_GetClipPlanef(table, _mesa_GetClipPlanef);
-      SET_GetClipPlanex(table, _mesa_GetClipPlanex);
-      SET_GetTexGenxvOES(table, _mesa_GetTexGenxvOES);
-      SET_QueryMatrixxOES(table, _mesa_QueryMatrixxOES);
-      SET_TexGenxOES(table, _mesa_TexGenxOES);
-      SET_TexGenxvOES(table, _mesa_TexGenxvOES);
-   }
-   if (ctx->API == API_OPENGLES || ctx->API == API_OPENGLES2) {
-      SET_DiscardFramebufferEXT(table, _mesa_DiscardFramebufferEXT);
-   }
-   if (ctx->API == API_OPENGLES2) {
-      SET_FramebufferTexture2DMultisampleEXT(table, _mesa_FramebufferTexture2DMultisampleEXT);
-   }
-   if (ctx->API == API_OPENGL_COMPAT) {
+   if (_mesa_is_desktop_gl_compat(ctx)) {
       SET_Accum(table, _mesa_Accum);
       SET_ActiveStencilFaceEXT(table, _mesa_ActiveStencilFaceEXT);
       SET_AlphaFragmentOp1ATI(table, _mesa_AlphaFragmentOp1ATI);
@@ -1385,84 +1111,7 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_WindowPos4sMESA(table, _mesa_WindowPos4sMESA);
       SET_WindowPos4svMESA(table, _mesa_WindowPos4svMESA);
    }
-   if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES) {
-      SET_AlphaFunc(table, _mesa_AlphaFunc);
-      SET_AlphaFuncx(table, _mesa_AlphaFuncx);
-      SET_ClearColorx(table, _mesa_ClearColorx);
-      SET_ClearDepthx(table, _mesa_ClearDepthx);
-      SET_ClientActiveTexture(table, _mesa_ClientActiveTexture);
-      SET_ClipPlanef(table, _mesa_ClipPlanef);
-      SET_ClipPlanex(table, _mesa_ClipPlanex);
-      SET_Color4x(table, _mesa_Color4x);
-      SET_DepthRangex(table, _mesa_DepthRangex);
-      SET_DisableClientState(table, _mesa_DisableClientState);
-      SET_EnableClientState(table, _mesa_EnableClientState);
-      SET_Fogf(table, _mesa_Fogf);
-      SET_Fogfv(table, _mesa_Fogfv);
-      SET_Fogx(table, _mesa_Fogx);
-      SET_Fogxv(table, _mesa_Fogxv);
-      SET_Frustumf(table, _mesa_Frustumf);
-      SET_Frustumx(table, _mesa_Frustumx);
-      SET_GetFixedv(table, _mesa_GetFixedv);
-      SET_GetLightfv(table, _mesa_GetLightfv);
-      SET_GetLightxv(table, _mesa_GetLightxv);
-      SET_GetMaterialfv(table, _mesa_GetMaterialfv);
-      SET_GetMaterialxv(table, _mesa_GetMaterialxv);
-      SET_GetTexEnvfv(table, _mesa_GetTexEnvfv);
-      SET_GetTexEnviv(table, _mesa_GetTexEnviv);
-      SET_GetTexEnvxv(table, _mesa_GetTexEnvxv);
-      SET_GetTexGenfv(table, _mesa_GetTexGenfv);
-      SET_GetTexGeniv(table, _mesa_GetTexGeniv);
-      SET_GetTexParameterxv(table, _mesa_GetTexParameterxv);
-      SET_LightModelf(table, _mesa_LightModelf);
-      SET_LightModelfv(table, _mesa_LightModelfv);
-      SET_LightModelx(table, _mesa_LightModelx);
-      SET_LightModelxv(table, _mesa_LightModelxv);
-      SET_Lightf(table, _mesa_Lightf);
-      SET_Lightfv(table, _mesa_Lightfv);
-      SET_Lightx(table, _mesa_Lightx);
-      SET_Lightxv(table, _mesa_Lightxv);
-      SET_LineWidthx(table, _mesa_LineWidthx);
-      SET_LoadIdentity(table, _mesa_LoadIdentity);
-      SET_LoadMatrixf(table, _mesa_LoadMatrixf);
-      SET_LoadMatrixx(table, _mesa_LoadMatrixx);
-      SET_Materialx(table, _mesa_Materialx);
-      SET_Materialxv(table, _mesa_Materialxv);
-      SET_MatrixMode(table, _mesa_MatrixMode);
-      SET_MultMatrixf(table, _mesa_MultMatrixf);
-      SET_MultMatrixx(table, _mesa_MultMatrixx);
-      SET_MultiTexCoord4x(table, _mesa_MultiTexCoord4x);
-      SET_Normal3x(table, _mesa_Normal3x);
-      SET_Orthof(table, _mesa_Orthof);
-      SET_Orthox(table, _mesa_Orthox);
-      SET_PointParameterx(table, _mesa_PointParameterx);
-      SET_PointParameterxv(table, _mesa_PointParameterxv);
-      SET_PointSizex(table, _mesa_PointSizex);
-      SET_PolygonOffsetx(table, _mesa_PolygonOffsetx);
-      SET_PopMatrix(table, _mesa_PopMatrix);
-      SET_PushMatrix(table, _mesa_PushMatrix);
-      SET_Rotatef(table, _mesa_Rotatef);
-      SET_Rotatex(table, _mesa_Rotatex);
-      SET_SampleCoveragex(table, _mesa_SampleCoveragex);
-      SET_Scalef(table, _mesa_Scalef);
-      SET_Scalex(table, _mesa_Scalex);
-      SET_ShadeModel(table, _mesa_ShadeModel);
-      SET_TexEnvf(table, _mesa_TexEnvf);
-      SET_TexEnvfv(table, _mesa_TexEnvfv);
-      SET_TexEnvi(table, _mesa_TexEnvi);
-      SET_TexEnviv(table, _mesa_TexEnviv);
-      SET_TexEnvx(table, _mesa_TexEnvx);
-      SET_TexEnvxv(table, _mesa_TexEnvxv);
-      SET_TexGenf(table, _mesa_TexGenf);
-      SET_TexGenfv(table, _mesa_TexGenfv);
-      SET_TexGeni(table, _mesa_TexGeni);
-      SET_TexGeniv(table, _mesa_TexGeniv);
-      SET_TexParameterx(table, _mesa_TexParameterx);
-      SET_TexParameterxv(table, _mesa_TexParameterxv);
-      SET_Translatef(table, _mesa_Translatef);
-      SET_Translatex(table, _mesa_Translatex);
-   }
-   if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE) {
+   if (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx)) {
       SET_CheckNamedFramebufferStatus(table, _mesa_CheckNamedFramebufferStatus);
       SET_ClearNamedFramebufferfi(table, _mesa_ClearNamedFramebufferfi);
       SET_ClearNamedFramebufferfv(table, _mesa_ClearNamedFramebufferfv);
@@ -1581,15 +1230,369 @@ _mesa_init_dispatch(struct gl_context *ctx)
       SET_VertexArrayAttribIFormat(table, _mesa_VertexArrayAttribIFormat);
       SET_VertexArrayAttribLFormat(table, _mesa_VertexArrayAttribLFormat);
    }
-   if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 31)) {
+   if (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31)) {
       SET_FramebufferParameteri(table, _mesa_FramebufferParameteri);
       SET_GetFramebufferParameteriv(table, _mesa_GetFramebufferParameteriv);
       SET_TexBuffer(table, _mesa_TexBuffer);
       SET_TexBufferRange(table, _mesa_TexBufferRange);
    }
-   if (ctx->API == API_OPENGL_CORE || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
+   if (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_gles1(ctx)) {
+      SET_AlphaFunc(table, _mesa_AlphaFunc);
+      SET_AlphaFuncx(table, _mesa_AlphaFuncx);
+      SET_ClearColorx(table, _mesa_ClearColorx);
+      SET_ClearDepthx(table, _mesa_ClearDepthx);
+      SET_ClientActiveTexture(table, _mesa_ClientActiveTexture);
+      SET_ClipPlanef(table, _mesa_ClipPlanef);
+      SET_ClipPlanex(table, _mesa_ClipPlanex);
+      SET_Color4x(table, _mesa_Color4x);
+      SET_DepthRangex(table, _mesa_DepthRangex);
+      SET_DisableClientState(table, _mesa_DisableClientState);
+      SET_EnableClientState(table, _mesa_EnableClientState);
+      SET_Fogf(table, _mesa_Fogf);
+      SET_Fogfv(table, _mesa_Fogfv);
+      SET_Fogx(table, _mesa_Fogx);
+      SET_Fogxv(table, _mesa_Fogxv);
+      SET_Frustumf(table, _mesa_Frustumf);
+      SET_Frustumx(table, _mesa_Frustumx);
+      SET_GetFixedv(table, _mesa_GetFixedv);
+      SET_GetLightfv(table, _mesa_GetLightfv);
+      SET_GetLightxv(table, _mesa_GetLightxv);
+      SET_GetMaterialfv(table, _mesa_GetMaterialfv);
+      SET_GetMaterialxv(table, _mesa_GetMaterialxv);
+      SET_GetTexEnvfv(table, _mesa_GetTexEnvfv);
+      SET_GetTexEnviv(table, _mesa_GetTexEnviv);
+      SET_GetTexEnvxv(table, _mesa_GetTexEnvxv);
+      SET_GetTexGenfv(table, _mesa_GetTexGenfv);
+      SET_GetTexGeniv(table, _mesa_GetTexGeniv);
+      SET_GetTexParameterxv(table, _mesa_GetTexParameterxv);
+      SET_LightModelf(table, _mesa_LightModelf);
+      SET_LightModelfv(table, _mesa_LightModelfv);
+      SET_LightModelx(table, _mesa_LightModelx);
+      SET_LightModelxv(table, _mesa_LightModelxv);
+      SET_Lightf(table, _mesa_Lightf);
+      SET_Lightfv(table, _mesa_Lightfv);
+      SET_Lightx(table, _mesa_Lightx);
+      SET_Lightxv(table, _mesa_Lightxv);
+      SET_LineWidthx(table, _mesa_LineWidthx);
+      SET_LoadIdentity(table, _mesa_LoadIdentity);
+      SET_LoadMatrixf(table, _mesa_LoadMatrixf);
+      SET_LoadMatrixx(table, _mesa_LoadMatrixx);
+      SET_Materialx(table, _mesa_Materialx);
+      SET_Materialxv(table, _mesa_Materialxv);
+      SET_MatrixMode(table, _mesa_MatrixMode);
+      SET_MultMatrixf(table, _mesa_MultMatrixf);
+      SET_MultMatrixx(table, _mesa_MultMatrixx);
+      SET_MultiTexCoord4x(table, _mesa_MultiTexCoord4x);
+      SET_Normal3x(table, _mesa_Normal3x);
+      SET_Orthof(table, _mesa_Orthof);
+      SET_Orthox(table, _mesa_Orthox);
+      SET_PointParameterx(table, _mesa_PointParameterx);
+      SET_PointParameterxv(table, _mesa_PointParameterxv);
+      SET_PointSizex(table, _mesa_PointSizex);
+      SET_PolygonOffsetx(table, _mesa_PolygonOffsetx);
+      SET_PopMatrix(table, _mesa_PopMatrix);
+      SET_PushMatrix(table, _mesa_PushMatrix);
+      SET_Rotatef(table, _mesa_Rotatef);
+      SET_Rotatex(table, _mesa_Rotatex);
+      SET_SampleCoveragex(table, _mesa_SampleCoveragex);
+      SET_Scalef(table, _mesa_Scalef);
+      SET_Scalex(table, _mesa_Scalex);
+      SET_ShadeModel(table, _mesa_ShadeModel);
+      SET_TexEnvf(table, _mesa_TexEnvf);
+      SET_TexEnvfv(table, _mesa_TexEnvfv);
+      SET_TexEnvi(table, _mesa_TexEnvi);
+      SET_TexEnviv(table, _mesa_TexEnviv);
+      SET_TexEnvx(table, _mesa_TexEnvx);
+      SET_TexEnvxv(table, _mesa_TexEnvxv);
+      SET_TexGenf(table, _mesa_TexGenf);
+      SET_TexGenfv(table, _mesa_TexGenfv);
+      SET_TexGeni(table, _mesa_TexGeni);
+      SET_TexGeniv(table, _mesa_TexGeniv);
+      SET_TexParameterx(table, _mesa_TexParameterx);
+      SET_TexParameterxv(table, _mesa_TexParameterxv);
+      SET_Translatef(table, _mesa_Translatef);
+      SET_Translatex(table, _mesa_Translatex);
+   }
+   if (_mesa_is_desktop_gl_core(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30)) {
       SET_FramebufferParameteriMESA(table, _mesa_FramebufferParameteriMESA);
       SET_GetFramebufferParameterivMESA(table, _mesa_GetFramebufferParameterivMESA);
+   }
+   if (_mesa_is_gles1(ctx)) {
+      SET_DrawTexfOES(table, _mesa_DrawTexfOES);
+      SET_DrawTexfvOES(table, _mesa_DrawTexfvOES);
+      SET_DrawTexiOES(table, _mesa_DrawTexiOES);
+      SET_DrawTexivOES(table, _mesa_DrawTexivOES);
+      SET_DrawTexsOES(table, _mesa_DrawTexsOES);
+      SET_DrawTexsvOES(table, _mesa_DrawTexsvOES);
+      SET_DrawTexxOES(table, _mesa_DrawTexxOES);
+      SET_DrawTexxvOES(table, _mesa_DrawTexxvOES);
+      SET_GetClipPlanef(table, _mesa_GetClipPlanef);
+      SET_GetClipPlanex(table, _mesa_GetClipPlanex);
+      SET_GetTexGenxvOES(table, _mesa_GetTexGenxvOES);
+      SET_QueryMatrixxOES(table, _mesa_QueryMatrixxOES);
+      SET_TexGenxOES(table, _mesa_TexGenxOES);
+      SET_TexGenxvOES(table, _mesa_TexGenxvOES);
+   }
+   if (_mesa_is_gles1(ctx) || _mesa_is_gles2(ctx)) {
+      SET_DiscardFramebufferEXT(table, _mesa_DiscardFramebufferEXT);
+   }
+   if (_mesa_is_gles2(ctx)) {
+      SET_FramebufferTexture2DMultisampleEXT(table, _mesa_FramebufferTexture2DMultisampleEXT);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30))) {
+      SET_BeginTransformFeedback(table, _mesa_BeginTransformFeedback_no_error);
+      SET_BindBufferRange(table, _mesa_BindBufferRange_no_error);
+      SET_BindFragDataLocation(table, _mesa_BindFragDataLocation_no_error);
+      SET_BindFragDataLocationIndexed(table, _mesa_BindFragDataLocationIndexed_no_error);
+      SET_BindSampler(table, _mesa_BindSampler_no_error);
+      SET_BindTransformFeedback(table, _mesa_BindTransformFeedback_no_error);
+      SET_BlendEquationSeparateiARB(table, _mesa_BlendEquationSeparateiARB_no_error);
+      SET_BlendEquationiARB(table, _mesa_BlendEquationiARB_no_error);
+      SET_BlendFuncSeparateiARB(table, _mesa_BlendFuncSeparateiARB_no_error);
+      SET_BlendFunciARB(table, _mesa_BlendFunciARB_no_error);
+      SET_BlitFramebuffer(table, _mesa_BlitFramebuffer_no_error);
+      SET_ClearBufferfi(table, _mesa_ClearBufferfi_no_error);
+      SET_ClearBufferfv(table, _mesa_ClearBufferfv_no_error);
+      SET_ClearBufferiv(table, _mesa_ClearBufferiv_no_error);
+      SET_ClearBufferuiv(table, _mesa_ClearBufferuiv_no_error);
+      SET_ClientWaitSync(table, _mesa_ClientWaitSync_no_error);
+      SET_CopyBufferSubData(table, _mesa_CopyBufferSubData_no_error);
+      SET_CopyImageSubData(table, _mesa_CopyImageSubData_no_error);
+      SET_DeleteSamplers(table, _mesa_DeleteSamplers_no_error);
+      SET_DeleteSync(table, _mesa_DeleteSync_no_error);
+      SET_EndTransformFeedback(table, _mesa_EndTransformFeedback_no_error);
+      SET_FenceSync(table, _mesa_FenceSync_no_error);
+      SET_FramebufferTextureLayer(table, _mesa_FramebufferTextureLayer_no_error);
+      SET_GenSamplers(table, _mesa_GenSamplers_no_error);
+      SET_InvalidateFramebuffer(table, _mesa_InvalidateFramebuffer_no_error);
+      SET_InvalidateSubFramebuffer(table, _mesa_InvalidateSubFramebuffer_no_error);
+      SET_MinSampleShading(table, _mesa_MinSampleShading_no_error);
+      SET_PauseTransformFeedback(table, _mesa_PauseTransformFeedback_no_error);
+      SET_ResumeTransformFeedback(table, _mesa_ResumeTransformFeedback_no_error);
+      SET_TexStorage2D(table, _mesa_TexStorage2D_no_error);
+      SET_TexStorage3D(table, _mesa_TexStorage3D_no_error);
+      SET_TransformFeedbackVaryings(table, _mesa_TransformFeedbackVaryings_no_error);
+      SET_UniformBlockBinding(table, _mesa_UniformBlockBinding_no_error);
+      SET_VertexAttribIPointer(table, _mesa_VertexAttribIPointer_no_error);
+      SET_WaitSync(table, _mesa_WaitSync_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31))) {
+      SET_BindImageTexture(table, _mesa_BindImageTexture_no_error);
+      SET_BindVertexBuffer(table, _mesa_BindVertexBuffer_no_error);
+      SET_BufferStorage(table, _mesa_BufferStorage_no_error);
+      SET_DispatchCompute(table, _mesa_DispatchCompute_no_error);
+      SET_DispatchComputeIndirect(table, _mesa_DispatchComputeIndirect_no_error);
+      SET_FramebufferSampleLocationsfvARB(table, _mesa_FramebufferSampleLocationsfvARB_no_error);
+      SET_MemoryBarrierByRegion(table, _mesa_MemoryBarrierByRegion_no_error);
+      SET_NamedFramebufferSampleLocationsfvARB(table, _mesa_NamedFramebufferSampleLocationsfvARB_no_error);
+      SET_PatchParameteri(table, _mesa_PatchParameteri_no_error);
+      SET_SampleMaski(table, _mesa_SampleMaski_no_error);
+      SET_TextureView(table, _mesa_TextureView_no_error);
+      SET_VertexAttribBinding(table, _mesa_VertexAttribBinding_no_error);
+      SET_VertexBindingDivisor(table, _mesa_VertexBindingDivisor_no_error);
+      SET_ViewportSwizzleNV(table, _mesa_ViewportSwizzleNV_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 32))) {
+      SET_BufferStorageMemEXT(table, _mesa_BufferStorageMemEXT_no_error);
+      SET_NamedBufferStorageMemEXT(table, _mesa_NamedBufferStorageMemEXT_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx) || _mesa_is_gles2(ctx))) {
+      SET_ActiveTexture(table, _mesa_ActiveTexture_no_error);
+      SET_BindBuffer(table, _mesa_BindBuffer_no_error);
+      SET_BindTexture(table, _mesa_BindTexture_no_error);
+      SET_BlendEquationSeparate(table, _mesa_BlendEquationSeparate_no_error);
+      SET_BlendFunc(table, _mesa_BlendFunc_no_error);
+      SET_BlendFuncSeparate(table, _mesa_BlendFuncSeparate_no_error);
+      SET_BufferData(table, _mesa_BufferData_no_error);
+      SET_BufferSubData(table, _mesa_BufferSubData_no_error);
+      SET_CheckFramebufferStatus(table, _mesa_CheckFramebufferStatus_no_error);
+      SET_Clear(table, _mesa_Clear_no_error);
+      SET_CompressedTexImage2D(table, _mesa_CompressedTexImage2D_no_error);
+      SET_CompressedTexSubImage2D(table, _mesa_CompressedTexSubImage2D_no_error);
+      SET_ConservativeRasterParameterfNV(table, _mesa_ConservativeRasterParameterfNV_no_error);
+      SET_ConservativeRasterParameteriNV(table, _mesa_ConservativeRasterParameteriNV_no_error);
+      SET_CopyTexImage2D(table, _mesa_CopyTexImage2D_no_error);
+      SET_CopyTexSubImage2D(table, _mesa_CopyTexSubImage2D_no_error);
+      SET_CullFace(table, _mesa_CullFace_no_error);
+      SET_DeleteBuffers(table, _mesa_DeleteBuffers_no_error);
+      SET_DeleteTextures(table, _mesa_DeleteTextures_no_error);
+      SET_DepthFunc(table, _mesa_DepthFunc_no_error);
+      SET_FlushMappedBufferRange(table, _mesa_FlushMappedBufferRange_no_error);
+      SET_FramebufferRenderbuffer(table, _mesa_FramebufferRenderbuffer_no_error);
+      SET_FramebufferTexture2D(table, _mesa_FramebufferTexture2D_no_error);
+      SET_FrontFace(table, _mesa_FrontFace_no_error);
+      SET_GenBuffers(table, _mesa_GenBuffers_no_error);
+      SET_GenRenderbuffers(table, _mesa_GenRenderbuffers_no_error);
+      SET_GenTextures(table, _mesa_GenTextures_no_error);
+      SET_GenerateMipmap(table, _mesa_GenerateMipmap_no_error);
+      SET_LineWidth(table, _mesa_LineWidth_no_error);
+      SET_MapBuffer(table, _mesa_MapBuffer_no_error);
+      SET_MapBufferRange(table, _mesa_MapBufferRange_no_error);
+      SET_PixelStorei(table, _mesa_PixelStorei_no_error);
+      SET_ReadPixels(table, _mesa_ReadPixels_no_error);
+      SET_Scissor(table, _mesa_Scissor_no_error);
+      SET_StencilFunc(table, _mesa_StencilFunc_no_error);
+      SET_StencilOp(table, _mesa_StencilOp_no_error);
+      SET_SubpixelPrecisionBiasNV(table, _mesa_SubpixelPrecisionBiasNV_no_error);
+      SET_TexImage2D(table, _mesa_TexImage2D_no_error);
+      SET_TexSubImage2D(table, _mesa_TexSubImage2D_no_error);
+      SET_UnmapBuffer(table, _mesa_UnmapBuffer_no_error);
+      SET_Viewport(table, _mesa_Viewport_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles1(ctx))) {
+      SET_LogicOp(table, _mesa_LogicOp_no_error);
+      SET_PointSize(table, _mesa_PointSize_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx) || _mesa_is_gles2(ctx))) {
+      SET_ActiveShaderProgram(table, _mesa_ActiveShaderProgram_no_error);
+      SET_AttachShader(table, _mesa_AttachShader_no_error);
+      SET_BeginConditionalRender(table, _mesa_BeginConditionalRender_no_error);
+      SET_BindAttribLocation(table, _mesa_BindAttribLocation_no_error);
+      SET_BindProgramPipeline(table, _mesa_BindProgramPipeline_no_error);
+      SET_BindVertexArray(table, _mesa_BindVertexArray_no_error);
+      SET_ClipControl(table, _mesa_ClipControl_no_error);
+      SET_CompressedTexImage3D(table, _mesa_CompressedTexImage3D_no_error);
+      SET_CompressedTexSubImage3D(table, _mesa_CompressedTexSubImage3D_no_error);
+      SET_CopyTexSubImage3D(table, _mesa_CopyTexSubImage3D_no_error);
+      SET_CreateShader(table, _mesa_CreateShader_no_error);
+      SET_DeleteVertexArrays(table, _mesa_DeleteVertexArrays_no_error);
+      SET_DetachShader(table, _mesa_DetachShader_no_error);
+      SET_DisableVertexAttribArray(table, _mesa_DisableVertexAttribArray_no_error);
+      SET_DrawBuffers(table, _mesa_DrawBuffers_no_error);
+      SET_EnableVertexAttribArray(table, _mesa_EnableVertexAttribArray_no_error);
+      SET_EndConditionalRender(table, _mesa_EndConditionalRender_no_error);
+      SET_FramebufferTexture3D(table, _mesa_FramebufferTexture3D_no_error);
+      SET_GenProgramPipelines(table, _mesa_GenProgramPipelines_no_error);
+      SET_GenVertexArrays(table, _mesa_GenVertexArrays_no_error);
+      SET_GetUniformLocation(table, _mesa_GetUniformLocation_no_error);
+      SET_LinkProgram(table, _mesa_LinkProgram_no_error);
+      SET_ProgramParameteri(table, _mesa_ProgramParameteri_no_error);
+      SET_ReadBuffer(table, _mesa_ReadBuffer_no_error);
+      SET_ReadnPixelsARB(table, _mesa_ReadnPixelsARB_no_error);
+      SET_ShaderSource(table, _mesa_ShaderSource_no_error);
+      SET_StencilFuncSeparate(table, _mesa_StencilFuncSeparate_no_error);
+      SET_StencilMaskSeparate(table, _mesa_StencilMaskSeparate_no_error);
+      SET_StencilOpSeparate(table, _mesa_StencilOpSeparate_no_error);
+      SET_TexImage3D(table, _mesa_TexImage3D_no_error);
+      SET_TexSubImage3D(table, _mesa_TexSubImage3D_no_error);
+      SET_UseProgram(table, _mesa_UseProgram_no_error);
+      SET_UseProgramStages(table, _mesa_UseProgramStages_no_error);
+      SET_VertexAttribDivisor(table, _mesa_VertexAttribDivisor_no_error);
+      SET_VertexAttribPointer(table, _mesa_VertexAttribPointer_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl(ctx))) {
+      SET_AlphaToCoverageDitherControlNV(table, _mesa_AlphaToCoverageDitherControlNV_no_error);
+      SET_AttachObjectARB(table, _mesa_AttachObjectARB_no_error);
+      SET_BindBufferOffsetEXT(table, _mesa_BindBufferOffsetEXT_no_error);
+      SET_BindImageTextures(table, _mesa_BindImageTextures_no_error);
+      SET_BindSamplers(table, _mesa_BindSamplers_no_error);
+      SET_BindTextures(table, _mesa_BindTextures_no_error);
+      SET_BindVertexBuffers(table, _mesa_BindVertexBuffers_no_error);
+      SET_ClearBufferData(table, _mesa_ClearBufferData_no_error);
+      SET_ClearBufferSubData(table, _mesa_ClearBufferSubData_no_error);
+      SET_CompressedTexImage1D(table, _mesa_CompressedTexImage1D_no_error);
+      SET_CompressedTexSubImage1D(table, _mesa_CompressedTexSubImage1D_no_error);
+      SET_CopyImageSubDataNV(table, _mesa_CopyImageSubDataNV_no_error);
+      SET_CopyTexImage1D(table, _mesa_CopyTexImage1D_no_error);
+      SET_CopyTexSubImage1D(table, _mesa_CopyTexSubImage1D_no_error);
+      SET_CreateShaderObjectARB(table, _mesa_CreateShaderObjectARB_no_error);
+      SET_DetachObjectARB(table, _mesa_DetachObjectARB_no_error);
+      SET_DispatchComputeGroupSizeARB(table, _mesa_DispatchComputeGroupSizeARB_no_error);
+      SET_DrawBuffer(table, _mesa_DrawBuffer_no_error);
+      SET_FramebufferTexture1D(table, _mesa_FramebufferTexture1D_no_error);
+      SET_GetImageHandleARB(table, _mesa_GetImageHandleARB_no_error);
+      SET_GetTextureHandleARB(table, _mesa_GetTextureHandleARB_no_error);
+      SET_GetTextureSamplerHandleARB(table, _mesa_GetTextureSamplerHandleARB_no_error);
+      SET_InvalidateBufferData(table, _mesa_InvalidateBufferData_no_error);
+      SET_InvalidateBufferSubData(table, _mesa_InvalidateBufferSubData_no_error);
+      SET_InvalidateTexImage(table, _mesa_InvalidateTexImage_no_error);
+      SET_InvalidateTexSubImage(table, _mesa_InvalidateTexSubImage_no_error);
+      SET_IsImageHandleResidentARB(table, _mesa_IsImageHandleResidentARB_no_error);
+      SET_IsTextureHandleResidentARB(table, _mesa_IsTextureHandleResidentARB_no_error);
+      SET_MakeImageHandleNonResidentARB(table, _mesa_MakeImageHandleNonResidentARB_no_error);
+      SET_MakeImageHandleResidentARB(table, _mesa_MakeImageHandleResidentARB_no_error);
+      SET_MakeTextureHandleNonResidentARB(table, _mesa_MakeTextureHandleNonResidentARB_no_error);
+      SET_MakeTextureHandleResidentARB(table, _mesa_MakeTextureHandleResidentARB_no_error);
+      SET_PixelStoref(table, _mesa_PixelStoref_no_error);
+      SET_PolygonMode(table, _mesa_PolygonMode_no_error);
+      SET_PrimitiveRestartIndex(table, _mesa_PrimitiveRestartIndex_no_error);
+      SET_ShaderStorageBlockBinding(table, _mesa_ShaderStorageBlockBinding_no_error);
+      SET_TexImage1D(table, _mesa_TexImage1D_no_error);
+      SET_TexStorage1D(table, _mesa_TexStorage1D_no_error);
+      SET_TexSubImage1D(table, _mesa_TexSubImage1D_no_error);
+      SET_UnmapNamedBufferEXT(table, _mesa_UnmapNamedBufferEXT_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 31))) {
+      SET_FramebufferTexture(table, _mesa_FramebufferTexture_no_error);
+      SET_ScissorArrayv(table, _mesa_ScissorArrayv_no_error);
+      SET_ScissorIndexed(table, _mesa_ScissorIndexed_no_error);
+      SET_ScissorIndexedv(table, _mesa_ScissorIndexedv_no_error);
+      SET_ViewportArrayv(table, _mesa_ViewportArrayv_no_error);
+      SET_ViewportIndexedf(table, _mesa_ViewportIndexedf_no_error);
+      SET_ViewportIndexedfv(table, _mesa_ViewportIndexedfv_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx))) {
+      SET_BindTextureUnit(table, _mesa_BindTextureUnit_no_error);
+      SET_BlitNamedFramebuffer(table, _mesa_BlitNamedFramebuffer_no_error);
+      SET_ClearNamedBufferData(table, _mesa_ClearNamedBufferData_no_error);
+      SET_ClearNamedBufferSubData(table, _mesa_ClearNamedBufferSubData_no_error);
+      SET_CompressedTextureSubImage1D(table, _mesa_CompressedTextureSubImage1D_no_error);
+      SET_CompressedTextureSubImage2D(table, _mesa_CompressedTextureSubImage2D_no_error);
+      SET_CompressedTextureSubImage3D(table, _mesa_CompressedTextureSubImage3D_no_error);
+      SET_CopyNamedBufferSubData(table, _mesa_CopyNamedBufferSubData_no_error);
+      SET_CopyTextureSubImage1D(table, _mesa_CopyTextureSubImage1D_no_error);
+      SET_CopyTextureSubImage2D(table, _mesa_CopyTextureSubImage2D_no_error);
+      SET_CopyTextureSubImage3D(table, _mesa_CopyTextureSubImage3D_no_error);
+      SET_CreateBuffers(table, _mesa_CreateBuffers_no_error);
+      SET_CreateProgramPipelines(table, _mesa_CreateProgramPipelines_no_error);
+      SET_CreateRenderbuffers(table, _mesa_CreateRenderbuffers_no_error);
+      SET_CreateSamplers(table, _mesa_CreateSamplers_no_error);
+      SET_CreateTextures(table, _mesa_CreateTextures_no_error);
+      SET_CreateVertexArrays(table, _mesa_CreateVertexArrays_no_error);
+      SET_DepthRangeArrayv(table, _mesa_DepthRangeArrayv_no_error);
+      SET_DepthRangeIndexed(table, _mesa_DepthRangeIndexed_no_error);
+      SET_DisableVertexArrayAttrib(table, _mesa_DisableVertexArrayAttrib_no_error);
+      SET_EnableVertexArrayAttrib(table, _mesa_EnableVertexArrayAttrib_no_error);
+      SET_FlushMappedNamedBufferRange(table, _mesa_FlushMappedNamedBufferRange_no_error);
+      SET_GenerateTextureMipmap(table, _mesa_GenerateTextureMipmap_no_error);
+      SET_MapNamedBuffer(table, _mesa_MapNamedBuffer_no_error);
+      SET_MapNamedBufferRange(table, _mesa_MapNamedBufferRange_no_error);
+      SET_NamedBufferData(table, _mesa_NamedBufferData_no_error);
+      SET_NamedBufferStorage(table, _mesa_NamedBufferStorage_no_error);
+      SET_NamedBufferSubData(table, _mesa_NamedBufferSubData_no_error);
+      SET_NamedFramebufferDrawBuffer(table, _mesa_NamedFramebufferDrawBuffer_no_error);
+      SET_NamedFramebufferDrawBuffers(table, _mesa_NamedFramebufferDrawBuffers_no_error);
+      SET_NamedFramebufferReadBuffer(table, _mesa_NamedFramebufferReadBuffer_no_error);
+      SET_NamedFramebufferRenderbuffer(table, _mesa_NamedFramebufferRenderbuffer_no_error);
+      SET_NamedFramebufferTexture(table, _mesa_NamedFramebufferTexture_no_error);
+      SET_NamedFramebufferTextureLayer(table, _mesa_NamedFramebufferTextureLayer_no_error);
+      SET_TextureStorage1D(table, _mesa_TextureStorage1D_no_error);
+      SET_TextureStorage2D(table, _mesa_TextureStorage2D_no_error);
+      SET_TextureStorage3D(table, _mesa_TextureStorage3D_no_error);
+      SET_TextureSubImage1D(table, _mesa_TextureSubImage1D_no_error);
+      SET_TextureSubImage2D(table, _mesa_TextureSubImage2D_no_error);
+      SET_TextureSubImage3D(table, _mesa_TextureSubImage3D_no_error);
+      SET_VertexArrayAttribBinding(table, _mesa_VertexArrayAttribBinding_no_error);
+      SET_VertexArrayBindingDivisor(table, _mesa_VertexArrayBindingDivisor_no_error);
+      SET_VertexArrayElementBuffer(table, _mesa_VertexArrayElementBuffer_no_error);
+      SET_VertexArrayVertexBuffer(table, _mesa_VertexArrayVertexBuffer_no_error);
+      SET_VertexArrayVertexBuffers(table, _mesa_VertexArrayVertexBuffers_no_error);
+      SET_VertexAttribLPointer(table, _mesa_VertexAttribLPointer_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_gles1(ctx))) {
+      SET_ColorPointer(table, _mesa_ColorPointer_no_error);
+      SET_NormalPointer(table, _mesa_NormalPointer_no_error);
+      SET_TexCoordPointer(table, _mesa_TexCoordPointer_no_error);
+      SET_VertexPointer(table, _mesa_VertexPointer_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_desktop_gl_compat(ctx))) {
+      SET_EdgeFlagPointer(table, _mesa_EdgeFlagPointer_no_error);
+      SET_FogCoordPointer(table, _mesa_FogCoordPointer_no_error);
+      SET_IndexPointer(table, _mesa_IndexPointer_no_error);
+      SET_SecondaryColorPointer(table, _mesa_SecondaryColorPointer_no_error);
+   }
+   if (_mesa_is_no_error_enabled(ctx) && (_mesa_is_gles1(ctx))) {
+      SET_PointSizePointerOES(table, _mesa_PointSizePointerOES_no_error);
    }
 
 }

@@ -120,7 +120,7 @@ llvm_middle_end_prepare_gs(struct llvm_middle_end *fpme)
          }
       }
 
-      variant = draw_gs_llvm_create_variant(llvm, gs->info.num_outputs, key);
+      variant = draw_gs_llvm_create_variant(llvm, draw_total_gs_outputs(draw), key);
 
       if (variant) {
          list_add(&variant->list_item_local.list, &shader->variants.list);
@@ -406,7 +406,7 @@ llvm_middle_end_prepare(struct draw_pt_middle_end *middle,
 static unsigned
 get_num_consts_robust(struct draw_context *draw, unsigned *sizes, unsigned idx)
 {
-   unsigned const_bytes = sizes[idx];
+   uint64_t const_bytes = sizes[idx];
 
    if (const_bytes < sizeof(float))
       return 0;
@@ -829,7 +829,7 @@ llvm_middle_end_linear_run(struct draw_pt_middle_end *middle,
    fetch_info.elts = NULL;
 
    prim_info.linear = TRUE;
-   prim_info.start = 0;
+   prim_info.start = start;
    prim_info.count = count;
    prim_info.elts = NULL;
    prim_info.prim = prim_type(fpme->input_prim, prim_flags);

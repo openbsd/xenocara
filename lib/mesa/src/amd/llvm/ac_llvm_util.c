@@ -31,9 +31,6 @@
 #include "util/u_math.h"
 #include <llvm-c/Core.h>
 #include <llvm-c/Support.h>
-#include <llvm-c/Transforms/IPO.h>
-#include <llvm-c/Transforms/Scalar.h>
-#include <llvm-c/Transforms/Utils.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -64,6 +61,8 @@ static void ac_init_llvm_target(void)
 
    ac_reset_llvm_all_options_occurences();
    LLVMParseCommandLineOptions(ARRAY_SIZE(argv), argv, NULL);
+
+   ac_llvm_run_atexit_for_destructors();
 }
 
 PUBLIC void ac_init_shared_llvm_once(void)
@@ -153,10 +152,12 @@ const char *ac_get_llvm_processor_name(enum radeon_family family)
    case CHIP_RAVEN2:
    case CHIP_RENOIR:
       return "gfx909";
-   case CHIP_ARCTURUS:
+   case CHIP_MI100:
       return "gfx908";
-   case CHIP_ALDEBARAN:
+   case CHIP_MI200:
       return "gfx90a";
+   case CHIP_GFX940:
+      return "gfx940";
    case CHIP_NAVI10:
       return "gfx1010";
    case CHIP_NAVI12:
@@ -175,8 +176,8 @@ const char *ac_get_llvm_processor_name(enum radeon_family family)
       return LLVM_VERSION_MAJOR >= 13 ? "gfx1034" : "gfx1030";
    case CHIP_REMBRANDT:
       return LLVM_VERSION_MAJOR >= 13 ? "gfx1035" : "gfx1030";
-   case CHIP_GFX1036: /* TODO: LLVM 15 doesn't support this yet */
-      return "gfx1030";
+   case CHIP_RAPHAEL_MENDOCINO:
+      return LLVM_VERSION_MAJOR >= 15 ? "gfx1036" : "gfx1030";
    case CHIP_GFX1100:
       return "gfx1100";
    case CHIP_GFX1101:
@@ -217,87 +218,16 @@ static LLVMTargetMachineRef ac_create_target_machine(enum radeon_family family,
    return tm;
 }
 
-static LLVMPassManagerRef ac_create_passmgr(LLVMTargetLibraryInfoRef target_library_info,
-                                            bool check_ir)
+LLVMAttributeRef ac_get_llvm_attribute(LLVMContextRef ctx, const char *str)
 {
-   LLVMPassManagerRef passmgr = LLVMCreatePassManager();
-   if (!passmgr)
-      return NULL;
-
-   if (target_library_info)
-      LLVMAddTargetLibraryInfo(target_library_info, passmgr);
-
-   if (check_ir)
-      LLVMAddVerifierPass(passmgr);
-   LLVMAddAlwaysInlinerPass(passmgr);
-   /* Normally, the pass manager runs all passes on one function before
-    * moving onto another. Adding a barrier no-op pass forces the pass
-    * manager to run the inliner on all functions first, which makes sure
-    * that the following passes are only run on the remaining non-inline
-    * function, so it removes useless work done on dead inline functions.
-    */
-   ac_llvm_add_barrier_noop_pass(passmgr);
-   /* This pass should eliminate all the load and store instructions. */
-   LLVMAddPromoteMemoryToRegisterPass(passmgr);
-   LLVMAddScalarReplAggregatesPass(passmgr);
-   LLVMAddLICMPass(passmgr);
-   LLVMAddAggressiveDCEPass(passmgr);
-   LLVMAddCFGSimplificationPass(passmgr);
-   /* This is recommended by the instruction combining pass. */
-   LLVMAddEarlyCSEMemSSAPass(passmgr);
-   LLVMAddInstructionCombiningPass(passmgr);
-   return passmgr;
-}
-
-static const char *attr_to_str(enum ac_func_attr attr)
-{
-   switch (attr) {
-   case AC_FUNC_ATTR_ALWAYSINLINE:
-      return "alwaysinline";
-   case AC_FUNC_ATTR_INREG:
-      return "inreg";
-   case AC_FUNC_ATTR_NOALIAS:
-      return "noalias";
-   case AC_FUNC_ATTR_NOUNWIND:
-      return "nounwind";
-   case AC_FUNC_ATTR_READNONE:
-      return "readnone";
-   case AC_FUNC_ATTR_READONLY:
-      return "readonly";
-   case AC_FUNC_ATTR_WRITEONLY:
-      return "writeonly";
-   case AC_FUNC_ATTR_INACCESSIBLE_MEM_ONLY:
-      return "inaccessiblememonly";
-   case AC_FUNC_ATTR_CONVERGENT:
-      return "convergent";
-   default:
-      fprintf(stderr, "Unhandled function attribute: %x\n", attr);
-      return 0;
-   }
+   return LLVMCreateEnumAttribute(ctx, LLVMGetEnumAttributeKindForName(str, strlen(str)), 0);
 }
 
 void ac_add_function_attr(LLVMContextRef ctx, LLVMValueRef function, int attr_idx,
-                          enum ac_func_attr attr)
+                          const char *attr)
 {
-   const char *attr_name = attr_to_str(attr);
-   unsigned kind_id = LLVMGetEnumAttributeKindForName(attr_name, strlen(attr_name));
-   LLVMAttributeRef llvm_attr = LLVMCreateEnumAttribute(ctx, kind_id, 0);
-
-   if (LLVMIsAFunction(function))
-      LLVMAddAttributeAtIndex(function, attr_idx, llvm_attr);
-   else
-      LLVMAddCallSiteAttribute(function, attr_idx, llvm_attr);
-}
-
-void ac_add_func_attributes(LLVMContextRef ctx, LLVMValueRef function, unsigned attrib_mask)
-{
-   attrib_mask |= AC_FUNC_ATTR_NOUNWIND;
-   attrib_mask &= ~AC_FUNC_ATTR_LEGACY;
-
-   while (attrib_mask) {
-      enum ac_func_attr attr = 1u << u_bit_scan(&attrib_mask);
-      ac_add_function_attr(ctx, function, -1, attr);
-   }
+   assert(LLVMIsAFunction(function));
+   LLVMAddAttributeAtIndex(function, attr_idx, ac_get_llvm_attribute(ctx, attr));
 }
 
 void ac_dump_module(LLVMModuleRef module)

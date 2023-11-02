@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:32 jsg Exp $
 
 GFX=	80
 LIB=	isl_gfx${GFX}
@@ -15,6 +15,7 @@ SRCS=	isl_emit_cpb.c \
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS}
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
 		-DGFX_VERx10=${GFX}
 

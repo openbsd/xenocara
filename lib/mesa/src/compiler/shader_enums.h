@@ -108,6 +108,12 @@ gl_shader_stage_is_callable(gl_shader_stage stage)
 }
 
 static inline bool
+gl_shader_stage_is_rt(gl_shader_stage stage)
+{
+   return stage == MESA_SHADER_RAYGEN || gl_shader_stage_is_callable(stage);
+}
+
+static inline bool
 gl_shader_stage_can_set_fragment_shading_rate(gl_shader_stage stage)
 {
    /* According to EXT_fragment_shading_rate :
@@ -863,6 +869,19 @@ typedef enum
     */
    SYSTEM_VALUE_FRAG_SHADING_RATE,
 
+   /*
+    * Rasterized fragment is fully covered by the generating primitive
+    * (SPV_EXT_fragment_fully_covered).
+    */
+   SYSTEM_VALUE_FULLY_COVERED,
+
+   /*
+    * Fragment size and invocation count used for
+    * EXT_fragment_invocation_density (Vulkan).
+    */
+   SYSTEM_VALUE_FRAG_SIZE,
+   SYSTEM_VALUE_FRAG_INVOCATION_COUNT,
+
    SYSTEM_VALUE_MAX             /**< Number of values */
 } gl_system_value;
 
@@ -946,6 +965,18 @@ enum gl_frag_depth_layout
 };
 
 /**
+ * \brief Layout qualifiers for AMD_shader_early_and_late_fragment_tests.
+ */
+enum gl_frag_stencil_layout
+{
+   FRAG_STENCIL_LAYOUT_NONE, /**< No layout is specified. */
+   FRAG_STENCIL_LAYOUT_ANY,
+   FRAG_STENCIL_LAYOUT_GREATER,
+   FRAG_STENCIL_LAYOUT_LESS,
+   FRAG_STENCIL_LAYOUT_UNCHANGED
+};
+
+/**
  * \brief Buffer access qualifiers
  */
 enum gl_access_qualifier
@@ -1000,6 +1031,30 @@ enum gl_access_qualifier
 
    /** Execute instruction also in helpers. */
    ACCESS_INCLUDE_HELPERS = (1 << 8),
+
+   /**
+    * Whether the address bits are swizzled by the hw. This practically means
+    * that loads can't be vectorized and must be exactly 32 bits on some chips.
+    * The swizzle amount is determined by the descriptor.
+    */
+   ACCESS_IS_SWIZZLED_AMD = (1 << 9),
+
+   /**
+    * Whether an AMD-specific buffer intrinsic uses a format conversion.
+    *
+    * If unset, the intrinsic will access raw memory without any conversion.
+    *
+    * If set, the memory opcode performs a format conversion according to
+    * the format determined by the descriptor (in a manner identical to image
+    * buffers and sampler buffers).
+    */
+   ACCESS_USES_FORMAT_AMD = (1 << 10),
+
+   /**
+    * Whether a multi sample image load intrinsic uses sample index extracted
+    * from fragment mask buffer.
+    */
+   ACCESS_FMASK_LOWERED_AMD = (1 << 11),
 };
 
 /**

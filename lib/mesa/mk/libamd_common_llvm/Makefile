@@ -1,11 +1,10 @@
-#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:37 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:30 jsg Exp $
 
 LIB=	amd_common_llvm
 
 NOPROFILE=
 
 SRCS=	ac_llvm_build.c \
-	ac_llvm_cull.c \
 	ac_llvm_helper.cpp \
 	ac_llvm_util.c \
 	ac_nir_to_llvm.c
@@ -25,7 +24,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/generated/src/compiler/nir \
 		-I${MESA_SRC}/generated/src/amd/common
 
-LLVM_CXXFLAGS!= llvm-config --cxxflags
+LLVM_CXXFLAGS!= llvm-config --cxxflags | sed 's/-std=[^ ]*//'
 CXXFLAGS+= ${LLVM_CXXFLAGS}
 
 install:

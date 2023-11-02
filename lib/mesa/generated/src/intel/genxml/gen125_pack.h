@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX125_PACK_H
-#define GFX125_PACK_H
+#ifndef GFX125_GFX125_PACK_H
+#define GFX125_GFX125_PACK_H
 
 #include <stdio.h>
 
@@ -290,6 +290,17 @@ enum GFX125_COMPONENT_ENABLES {
    CE_XZW                               =     13,
    CE_YZW                               =     14,
    CE_XYZW                              =     15,
+};
+
+enum GFX125_PREF_SLM_ALLOCATION_SIZE {
+   SLM_ENCODES_0K                       =      8,
+   SLM_ENCODES_16K                      =      9,
+   SLM_ENCODES_32K                      =     10,
+   SLM_ENCODES_64K                      =     11,
+   SLM_ENCODES_96K                      =     12,
+   SLM_ENCODES_128K                     =     13,
+   SLM_ENCODES_192K                     =     14,
+   SLM_ENCODES_256K                     =     15,
 };
 
 enum GFX125_ShaderChannelSelect {
@@ -1311,6 +1322,7 @@ struct GFX125_INTERFACE_DESCRIPTOR_DATA {
 #define BARRIER_SIZE_B24                         6
 #define BARRIER_SIZE_B32                         7
    uint32_t                             BTDMode;
+   uint32_t                             PreferredSLMAllocationSize;
 };
 
 static inline __attribute__((always_inline)) void
@@ -1351,7 +1363,8 @@ GFX125_INTERFACE_DESCRIPTOR_DATA_pack(__attribute__((unused)) __gen_user_data *d
       util_bitpack_uint(values->NumberOfBarriers, 28, 30) |
       util_bitpack_uint(values->BTDMode, 31, 31);
 
-   dw[6] = 0;
+   dw[6] =
+      util_bitpack_uint(values->PreferredSLMAllocationSize, 0, 3);
 
    dw[7] = 0;
 }
@@ -1663,6 +1676,7 @@ struct GFX125_RENDER_SURFACE_STATE {
 #define _90DEG                                   1
 #define _180DEG                                  2
 #define _270DEG                                  3
+   bool                                 DecompressInL3;
    uint32_t                             MIPCountLOD;
    uint32_t                             SurfaceMinLOD;
    uint32_t                             MipTailStartLOD;
@@ -1768,7 +1782,8 @@ GFX125_RENDER_SURFACE_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->MultisampledSurfaceStorageFormat, 6, 6) |
       util_bitpack_uint(values->RenderTargetViewExtent, 7, 17) |
       util_bitpack_uint(values->MinimumArrayElement, 18, 28) |
-      util_bitpack_uint(values->RenderTargetAndSampleUnormRotation, 29, 30);
+      util_bitpack_uint(values->RenderTargetAndSampleUnormRotation, 29, 30) |
+      util_bitpack_uint(values->DecompressInL3, 31, 31);
 
    dw[5] =
       util_bitpack_uint(values->MIPCountLOD, 0, 3) |
@@ -1849,522 +1864,6 @@ GFX125_ROUNDINGPRECISIONTABLE_3_BITS_pack(__attribute__((unused)) __gen_user_dat
 
    dw[0] =
       util_bitpack_uint(values->RoundingPrecision, 0, 2);
-}
-
-#define GFX125_RT_BVH_VEC3_length              3
-struct GFX125_RT_BVH_VEC3 {
-   float                                X;
-   float                                Y;
-   float                                Z;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_VEC3_pack(__attribute__((unused)) __gen_user_data *data,
-                        __attribute__((unused)) void * restrict dst,
-                        __attribute__((unused)) const struct GFX125_RT_BVH_VEC3 * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_float(values->X);
-
-   dw[1] =
-      util_bitpack_float(values->Y);
-
-   dw[2] =
-      util_bitpack_float(values->Z);
-}
-
-#define GFX125_RT_BVH_METADATA_length         16
-struct GFX125_RT_BVH_METADATA {
-   struct GFX125_RT_BVH_VEC3            BoundsMin;
-   struct GFX125_RT_BVH_VEC3            BoundsMax;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_METADATA_pack(__attribute__((unused)) __gen_user_data *data,
-                            __attribute__((unused)) void * restrict dst,
-                            __attribute__((unused)) const struct GFX125_RT_BVH_METADATA * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[0], &values->BoundsMin);
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[3], &values->BoundsMax);
-
-   dw[6] = 0;
-
-   dw[7] = 0;
-
-   dw[8] = 0;
-
-   dw[9] = 0;
-
-   dw[10] = 0;
-
-   dw[11] = 0;
-
-   dw[12] = 0;
-
-   dw[13] = 0;
-
-   dw[14] = 0;
-
-   dw[15] = 0;
-}
-
-#define GFX125_RT_BVH_length                  32
-struct GFX125_RT_BVH {
-   uint64_t                             RootNodeOffset;
-   struct GFX125_RT_BVH_METADATA        Meta;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_pack(__attribute__((unused)) __gen_user_data *data,
-                   __attribute__((unused)) void * restrict dst,
-                   __attribute__((unused)) const struct GFX125_RT_BVH * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   const uint64_t v0 =
-      __gen_offset(values->RootNodeOffset, 0, 63);
-   dw[0] = v0;
-   dw[1] = v0 >> 32;
-
-   dw[2] = 0;
-
-   dw[3] = 0;
-
-   dw[4] = 0;
-
-   dw[5] = 0;
-
-   dw[6] = 0;
-
-   dw[7] = 0;
-
-   dw[8] = 0;
-
-   dw[9] = 0;
-
-   dw[10] = 0;
-
-   dw[11] = 0;
-
-   dw[12] = 0;
-
-   dw[13] = 0;
-
-   dw[14] = 0;
-
-   dw[15] = 0;
-
-   GFX125_RT_BVH_METADATA_pack(data, &dw[16], &values->Meta);
-}
-
-#define GFX125_RT_BVH_INSTANCE_LEAF_length     32
-struct GFX125_RT_BVH_INSTANCE_LEAF {
-   uint32_t                             ShaderIndex;
-   uint32_t                             GeometryRayMask;
-   uint32_t                             InstanceContributionToHitGroupIndex;
-   uint32_t                             LeafType;
-#define TYPE_OPAQUE_CULLING_ENABLED              0
-#define TYPE_OPAQUE_CULLING_DISABLED             1
-   uint32_t                             GeometryFlags;
-#define GEOMETRY_OPAQUE                          1
-   __gen_address_type                   StartNodeAddress;
-   uint32_t                             InstanceFlags;
-#define TRIANGLE_CULL_DISABLE                    1
-#define TRIANGLE_FRONT_COUNTERCLOCKWISE          2
-#define FORCE_OPAQUE                             4
-#define FORCE_NON_OPAQUE                         8
-   float                                WorldToObjectm00;
-   float                                WorldToObjectm01;
-   float                                WorldToObjectm02;
-   float                                WorldToObjectm10;
-   float                                WorldToObjectm11;
-   float                                WorldToObjectm12;
-   float                                WorldToObjectm20;
-   float                                WorldToObjectm21;
-   float                                WorldToObjectm22;
-   float                                ObjectToWorldm30;
-   float                                ObjectToWorldm31;
-   float                                ObjectToWorldm32;
-   __gen_address_type                   BVHAddress;
-   uint32_t                             InstanceID;
-   uint32_t                             InstanceIndex;
-   float                                ObjectToWorldm00;
-   float                                ObjectToWorldm01;
-   float                                ObjectToWorldm02;
-   float                                ObjectToWorldm10;
-   float                                ObjectToWorldm11;
-   float                                ObjectToWorldm12;
-   float                                ObjectToWorldm20;
-   float                                ObjectToWorldm21;
-   float                                ObjectToWorldm22;
-   float                                WorldToObjectm30;
-   float                                WorldToObjectm31;
-   float                                WorldToObjectm32;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_INSTANCE_LEAF_pack(__attribute__((unused)) __gen_user_data *data,
-                                 __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GFX125_RT_BVH_INSTANCE_LEAF * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_uint(values->ShaderIndex, 0, 23) |
-      util_bitpack_uint(values->GeometryRayMask, 24, 31);
-
-   dw[1] =
-      util_bitpack_uint(values->InstanceContributionToHitGroupIndex, 0, 23) |
-      util_bitpack_uint(values->LeafType, 29, 29) |
-      util_bitpack_uint(values->GeometryFlags, 30, 31);
-
-   const uint64_t v2 =
-      util_bitpack_uint(values->InstanceFlags, 48, 55);
-   const uint64_t v2_address =
-      __gen_address(data, &dw[2], values->StartNodeAddress, v2, 0, 47);
-   dw[2] = v2_address;
-   dw[3] = (v2_address >> 32) | (v2 >> 32);
-
-   dw[4] =
-      util_bitpack_float(values->WorldToObjectm00);
-
-   dw[5] =
-      util_bitpack_float(values->WorldToObjectm01);
-
-   dw[6] =
-      util_bitpack_float(values->WorldToObjectm02);
-
-   dw[7] =
-      util_bitpack_float(values->WorldToObjectm10);
-
-   dw[8] =
-      util_bitpack_float(values->WorldToObjectm11);
-
-   dw[9] =
-      util_bitpack_float(values->WorldToObjectm12);
-
-   dw[10] =
-      util_bitpack_float(values->WorldToObjectm20);
-
-   dw[11] =
-      util_bitpack_float(values->WorldToObjectm21);
-
-   dw[12] =
-      util_bitpack_float(values->WorldToObjectm22);
-
-   dw[13] =
-      util_bitpack_float(values->ObjectToWorldm30);
-
-   dw[14] =
-      util_bitpack_float(values->ObjectToWorldm31);
-
-   dw[15] =
-      util_bitpack_float(values->ObjectToWorldm32);
-
-   const uint64_t v16_address =
-      __gen_address(data, &dw[16], values->BVHAddress, 0, 0, 47);
-   dw[16] = v16_address;
-   dw[17] = v16_address >> 32;
-
-   dw[18] =
-      util_bitpack_uint(values->InstanceID, 0, 31);
-
-   dw[19] =
-      util_bitpack_uint(values->InstanceIndex, 0, 31);
-
-   dw[20] =
-      util_bitpack_float(values->ObjectToWorldm00);
-
-   dw[21] =
-      util_bitpack_float(values->ObjectToWorldm01);
-
-   dw[22] =
-      util_bitpack_float(values->ObjectToWorldm02);
-
-   dw[23] =
-      util_bitpack_float(values->ObjectToWorldm10);
-
-   dw[24] =
-      util_bitpack_float(values->ObjectToWorldm11);
-
-   dw[25] =
-      util_bitpack_float(values->ObjectToWorldm12);
-
-   dw[26] =
-      util_bitpack_float(values->ObjectToWorldm20);
-
-   dw[27] =
-      util_bitpack_float(values->ObjectToWorldm21);
-
-   dw[28] =
-      util_bitpack_float(values->ObjectToWorldm22);
-
-   dw[29] =
-      util_bitpack_float(values->WorldToObjectm30);
-
-   dw[30] =
-      util_bitpack_float(values->WorldToObjectm31);
-
-   dw[31] =
-      util_bitpack_float(values->WorldToObjectm32);
-}
-
-#define GFX125_RT_BVH_INTERNAL_NODE_length     16
-struct GFX125_RT_BVH_INTERNAL_NODE {
-   struct GFX125_RT_BVH_VEC3            Origin;
-   int32_t                              ChildOffset;
-   uint32_t                             NodeType;
-#define NODE_TYPE_INTERNAL                       0
-#define NODE_TYPE_INSTANCE                       1
-#define NODE_TYPE_PROCEDURAL                     3
-#define NODE_TYPE_QUAD                           4
-#define NODE_TYPE_INVALID                        7
-   int32_t                              ChildBoundsExponentX;
-   int32_t                              ChildBoundsExponentY;
-   int32_t                              ChildBoundsExponentZ;
-   uint32_t                             NodeRayMask;
-   uint32_t                             ChildSize[6];
-   uint32_t                             ChildType[6];
-   uint32_t                             StartPrimitive[6];
-   uint32_t                             ChildLowerXBound[6];
-   uint32_t                             ChildUpperXBound[6];
-   uint32_t                             ChildLowerYBound[6];
-   uint32_t                             ChildUpperYBound[6];
-   uint32_t                             ChildLowerZBound[6];
-   uint32_t                             ChildUpperZBound[6];
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_INTERNAL_NODE_pack(__attribute__((unused)) __gen_user_data *data,
-                                 __attribute__((unused)) void * restrict dst,
-                                 __attribute__((unused)) const struct GFX125_RT_BVH_INTERNAL_NODE * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[0], &values->Origin);
-
-   dw[3] =
-      util_bitpack_sint(values->ChildOffset, 0, 31);
-
-   dw[4] =
-      util_bitpack_uint(values->NodeType, 0, 7) |
-      util_bitpack_sint(values->ChildBoundsExponentX, 16, 23) |
-      util_bitpack_sint(values->ChildBoundsExponentY, 24, 31);
-
-   dw[5] =
-      util_bitpack_sint(values->ChildBoundsExponentZ, 0, 8) |
-      util_bitpack_uint(values->NodeRayMask, 8, 15) |
-      util_bitpack_uint(values->ChildSize[0], 16, 17) |
-      util_bitpack_uint(values->ChildType[0], 18, 21) |
-      util_bitpack_uint(values->StartPrimitive[0], 18, 21) |
-      util_bitpack_uint(values->ChildSize[1], 24, 25) |
-      util_bitpack_uint(values->ChildType[1], 26, 29) |
-      util_bitpack_uint(values->StartPrimitive[1], 26, 29);
-
-   dw[6] =
-      util_bitpack_uint(values->ChildSize[2], 0, 1) |
-      util_bitpack_uint(values->ChildType[2], 2, 5) |
-      util_bitpack_uint(values->StartPrimitive[2], 2, 5) |
-      util_bitpack_uint(values->ChildSize[3], 8, 9) |
-      util_bitpack_uint(values->ChildType[3], 10, 13) |
-      util_bitpack_uint(values->StartPrimitive[3], 10, 13) |
-      util_bitpack_uint(values->ChildSize[4], 16, 17) |
-      util_bitpack_uint(values->ChildType[4], 18, 21) |
-      util_bitpack_uint(values->StartPrimitive[4], 18, 21) |
-      util_bitpack_uint(values->ChildSize[5], 24, 25) |
-      util_bitpack_uint(values->ChildType[5], 26, 29) |
-      util_bitpack_uint(values->StartPrimitive[5], 26, 29);
-
-   dw[7] =
-      util_bitpack_uint(values->ChildLowerXBound[0], 0, 7) |
-      util_bitpack_uint(values->ChildLowerXBound[1], 8, 15) |
-      util_bitpack_uint(values->ChildLowerXBound[2], 16, 23) |
-      util_bitpack_uint(values->ChildLowerXBound[3], 24, 31);
-
-   dw[8] =
-      util_bitpack_uint(values->ChildLowerXBound[4], 0, 7) |
-      util_bitpack_uint(values->ChildLowerXBound[5], 8, 15) |
-      util_bitpack_uint(values->ChildUpperXBound[0], 16, 23) |
-      util_bitpack_uint(values->ChildUpperXBound[1], 24, 31);
-
-   dw[9] =
-      util_bitpack_uint(values->ChildUpperXBound[2], 0, 7) |
-      util_bitpack_uint(values->ChildUpperXBound[3], 8, 15) |
-      util_bitpack_uint(values->ChildUpperXBound[4], 16, 23) |
-      util_bitpack_uint(values->ChildUpperXBound[5], 24, 31);
-
-   dw[10] =
-      util_bitpack_uint(values->ChildLowerYBound[0], 0, 7) |
-      util_bitpack_uint(values->ChildLowerYBound[1], 8, 15) |
-      util_bitpack_uint(values->ChildLowerYBound[2], 16, 23) |
-      util_bitpack_uint(values->ChildLowerYBound[3], 24, 31);
-
-   dw[11] =
-      util_bitpack_uint(values->ChildLowerYBound[4], 0, 7) |
-      util_bitpack_uint(values->ChildLowerYBound[5], 8, 15) |
-      util_bitpack_uint(values->ChildUpperYBound[0], 16, 23) |
-      util_bitpack_uint(values->ChildUpperYBound[1], 24, 31);
-
-   dw[12] =
-      util_bitpack_uint(values->ChildUpperYBound[2], 0, 7) |
-      util_bitpack_uint(values->ChildUpperYBound[3], 8, 15) |
-      util_bitpack_uint(values->ChildUpperYBound[4], 16, 23) |
-      util_bitpack_uint(values->ChildUpperYBound[5], 24, 31);
-
-   dw[13] =
-      util_bitpack_uint(values->ChildLowerZBound[0], 0, 7) |
-      util_bitpack_uint(values->ChildLowerZBound[1], 8, 15) |
-      util_bitpack_uint(values->ChildLowerZBound[2], 16, 23) |
-      util_bitpack_uint(values->ChildLowerZBound[3], 24, 31);
-
-   dw[14] =
-      util_bitpack_uint(values->ChildLowerZBound[4], 0, 7) |
-      util_bitpack_uint(values->ChildLowerZBound[5], 8, 15) |
-      util_bitpack_uint(values->ChildUpperZBound[0], 16, 23) |
-      util_bitpack_uint(values->ChildUpperZBound[1], 24, 31);
-
-   dw[15] =
-      util_bitpack_uint(values->ChildUpperZBound[2], 0, 7) |
-      util_bitpack_uint(values->ChildUpperZBound[3], 8, 15) |
-      util_bitpack_uint(values->ChildUpperZBound[4], 16, 23) |
-      util_bitpack_uint(values->ChildUpperZBound[5], 24, 31);
-}
-
-#define GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR_length      2
-struct GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR {
-   uint32_t                             ShaderIndex;
-   uint32_t                             GeometryRayMask;
-   uint32_t                             GeometryIndex;
-   uint32_t                             LeafType;
-#define TYPE_QUAD                                0
-#define TYPE_OPAQUE_CULLING_ENABLED              0
-#define TYPE_OPAQUE_CULLING_DISABLED             1
-   uint32_t                             GeometryFlags;
-#define GEOMETRY_OPAQUE                          1
-#define GEOMETRY_NO_DUPLICATE_ANYHIT_INVOCATION  2
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR_pack(__attribute__((unused)) __gen_user_data *data,
-                                             __attribute__((unused)) void * restrict dst,
-                                             __attribute__((unused)) const struct GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_uint(values->ShaderIndex, 0, 23) |
-      util_bitpack_uint(values->GeometryRayMask, 24, 31);
-
-   dw[1] =
-      util_bitpack_uint(values->GeometryIndex, 0, 28) |
-      util_bitpack_uint(values->LeafType, 29, 29) |
-      util_bitpack_uint(values->GeometryFlags, 30, 31);
-}
-
-#define GFX125_RT_BVH_PROCEDURAL_LEAF_length     16
-struct GFX125_RT_BVH_PROCEDURAL_LEAF {
-   struct GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR LeafDescriptor;
-   uint32_t                             NumPrimitives;
-   uint32_t                             LastPrimitive;
-   uint32_t                             PrimitiveIndex[13];
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_PROCEDURAL_LEAF_pack(__attribute__((unused)) __gen_user_data *data,
-                                   __attribute__((unused)) void * restrict dst,
-                                   __attribute__((unused)) const struct GFX125_RT_BVH_PROCEDURAL_LEAF * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR_pack(data, &dw[0], &values->LeafDescriptor);
-
-   dw[2] =
-      util_bitpack_uint(values->NumPrimitives, 0, 3) |
-      util_bitpack_uint(values->LastPrimitive, 19, 31);
-
-   dw[3] =
-      util_bitpack_uint(values->PrimitiveIndex[0], 0, 31);
-
-   dw[4] =
-      util_bitpack_uint(values->PrimitiveIndex[1], 0, 31);
-
-   dw[5] =
-      util_bitpack_uint(values->PrimitiveIndex[2], 0, 31);
-
-   dw[6] =
-      util_bitpack_uint(values->PrimitiveIndex[3], 0, 31);
-
-   dw[7] =
-      util_bitpack_uint(values->PrimitiveIndex[4], 0, 31);
-
-   dw[8] =
-      util_bitpack_uint(values->PrimitiveIndex[5], 0, 31);
-
-   dw[9] =
-      util_bitpack_uint(values->PrimitiveIndex[6], 0, 31);
-
-   dw[10] =
-      util_bitpack_uint(values->PrimitiveIndex[7], 0, 31);
-
-   dw[11] =
-      util_bitpack_uint(values->PrimitiveIndex[8], 0, 31);
-
-   dw[12] =
-      util_bitpack_uint(values->PrimitiveIndex[9], 0, 31);
-
-   dw[13] =
-      util_bitpack_uint(values->PrimitiveIndex[10], 0, 31);
-
-   dw[14] =
-      util_bitpack_uint(values->PrimitiveIndex[11], 0, 31);
-
-   dw[15] =
-      util_bitpack_uint(values->PrimitiveIndex[12], 0, 31);
-}
-
-#define GFX125_RT_BVH_QUAD_LEAF_length        16
-struct GFX125_RT_BVH_QUAD_LEAF {
-   struct GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR LeafDescriptor;
-   uint32_t                             PrimitiveIndex0;
-   uint32_t                             PrimitiveIndex1Delta;
-   uint32_t                             j0;
-   uint32_t                             j1;
-   uint32_t                             j2;
-   bool                                 LastQuad;
-   struct GFX125_RT_BVH_VEC3            QuadVertex[4];
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_RT_BVH_QUAD_LEAF_pack(__attribute__((unused)) __gen_user_data *data,
-                             __attribute__((unused)) void * restrict dst,
-                             __attribute__((unused)) const struct GFX125_RT_BVH_QUAD_LEAF * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   GFX125_RT_BVH_PRIMITIVE_LEAF_DESCRIPTOR_pack(data, &dw[0], &values->LeafDescriptor);
-
-   dw[2] =
-      util_bitpack_uint(values->PrimitiveIndex0, 0, 31);
-
-   dw[3] =
-      util_bitpack_uint(values->PrimitiveIndex1Delta, 0, 16) |
-      util_bitpack_uint(values->j0, 16, 17) |
-      util_bitpack_uint(values->j1, 18, 19) |
-      util_bitpack_uint(values->j2, 20, 21) |
-      util_bitpack_uint(values->LastQuad, 22, 22);
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[4], &values->QuadVertex[0]);
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[7], &values->QuadVertex[1]);
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[10], &values->QuadVertex[2]);
-
-   GFX125_RT_BVH_VEC3_pack(data, &dw[13], &values->QuadVertex[3]);
 }
 
 #define GFX125_SAMPLER_BORDER_COLOR_STATE_length      4
@@ -5928,6 +5427,89 @@ GFX125_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_sint(values->BaseVertexLocation, 0, 31);
 }
 
+#define GFX125_3DPRIMITIVE_EXTENDED_length     10
+#define GFX125_3DPRIMITIVE_EXTENDED_length_bias      2
+#define GFX125_3DPRIMITIVE_EXTENDED_header      \
+   .DWordLength                         =      8,  \
+   .ExtendedParametersPresent           =      1,  \
+   ._3DCommandSubOpcode                 =      0,  \
+   ._3DCommandOpcode                    =      3,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX125_3DPRIMITIVE_EXTENDED {
+   uint32_t                             DWordLength;
+   bool                                 PredicateEnable;
+   bool                                 UAVCoherencyRequired;
+   bool                                 IndirectParameterEnable;
+   bool                                 ExtendedParametersPresent;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   enum GFX125_3D_Prim_Topo_Type        PrimitiveTopologyType;
+   uint32_t                             VertexAccessType;
+#define SEQUENTIAL                               0
+#define RANDOM                                   1
+   bool                                 EndOffsetEnable;
+   uint32_t                             VertexCountPerInstance;
+   uint32_t                             StartVertexLocation;
+   uint32_t                             InstanceCount;
+   uint32_t                             StartInstanceLocation;
+   int32_t                              BaseVertexLocation;
+   uint32_t                             ExtendedParameter0;
+   uint32_t                             ExtendedParameter1;
+   uint32_t                             ExtendedParameter2;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_3DPRIMITIVE_EXTENDED_pack(__attribute__((unused)) __gen_user_data *data,
+                                 __attribute__((unused)) void * restrict dst,
+                                 __attribute__((unused)) const struct GFX125_3DPRIMITIVE_EXTENDED * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint(values->UAVCoherencyRequired, 9, 9) |
+      util_bitpack_uint(values->IndirectParameterEnable, 10, 10) |
+      util_bitpack_uint(values->ExtendedParametersPresent, 11, 11) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->PrimitiveTopologyType, 0, 5) |
+      util_bitpack_uint(values->VertexAccessType, 8, 8) |
+      util_bitpack_uint(values->EndOffsetEnable, 9, 9);
+
+   dw[2] =
+      util_bitpack_uint(values->VertexCountPerInstance, 0, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->StartVertexLocation, 0, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->InstanceCount, 0, 31);
+
+   dw[5] =
+      util_bitpack_uint(values->StartInstanceLocation, 0, 31);
+
+   dw[6] =
+      util_bitpack_sint(values->BaseVertexLocation, 0, 31);
+
+   dw[7] =
+      util_bitpack_uint(values->ExtendedParameter0, 0, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->ExtendedParameter1, 0, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->ExtendedParameter2, 0, 31);
+}
+
 #define GFX125_3DSTATE_3D_MODE_length          2
 #define GFX125_3DSTATE_3D_MODE_length_bias      2
 #define GFX125_3DSTATE_3D_MODE_header           \
@@ -8328,7 +7910,7 @@ struct GFX125_3DSTATE_MESH_SHADER {
 #define RU                                       1
 #define RD                                       2
 #define RTZ                                      3
-   uint32_t                             PreferredSLMAllocationSize;
+   enum GFX125_PREF_SLM_ALLOCATION_SIZE PreferredSLMAllocationSize;
    uint32_t                             NumberofBarriers;
    uint32_t                             IndirectDataLength;
    bool                                 L3PrefetchDisable;
@@ -9032,7 +8614,6 @@ struct GFX125_3DSTATE_PS_EXTRA {
 #define PSCDEPTH_ON_LE                           3
    bool                                 PixelShaderKillsPixel;
    bool                                 oMaskPresenttoRenderTarget;
-   bool                                 PixelShaderDoesnotwritetoRT;
    bool                                 PixelShaderValid;
 };
 
@@ -9072,7 +8653,6 @@ GFX125_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->PixelShaderComputedDepthMode, 26, 27) |
       util_bitpack_uint(values->PixelShaderKillsPixel, 28, 28) |
       util_bitpack_uint(values->oMaskPresenttoRenderTarget, 29, 29) |
-      util_bitpack_uint(values->PixelShaderDoesnotwritetoRT, 30, 30) |
       util_bitpack_uint(values->PixelShaderValid, 31, 31);
 }
 
@@ -12429,7 +12009,9 @@ GFX125_3DSTATE_VS_pack(__attribute__((unused)) __gen_user_data *data,
    ._3DCommandSubOpcode                 =     20,  \
    ._3DCommandOpcode                    =      0,  \
    .CommandSubType                      =      3,  \
-   .CommandType                         =      3
+   .CommandType                         =      3,  \
+   .WalkerDirection                     =      0,  \
+   .WalkingGranularity                  =      2
 
 struct GFX125_3DSTATE_WM {
    uint32_t                             DWordLength;
@@ -12473,6 +12055,13 @@ struct GFX125_3DSTATE_WM {
 #define EDSC_NORMAL                              0
 #define EDSC_PSEXEC                              1
 #define EDSC_PREPS                               2
+   uint32_t                             WalkerDirection;
+#define SnakeWalk                                0
+#define ZWalk                                    1
+   uint32_t                             WalkingGranularity;
+#define _16x16granularity                        0
+#define _32x32granularity                        1
+#define _64x64granularity                        2
    bool                                 LegacyDiamondLineRasterization;
    bool                                 LegacyHierarchicalDepthBufferResolveEnable;
    bool                                 LegacyDepthBufferResolveEnable;
@@ -12505,6 +12094,8 @@ GFX125_3DSTATE_WM_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->PositionZWInterpolationMode, 17, 18) |
       util_bitpack_uint(values->ForceThreadDispatchEnable, 19, 20) |
       util_bitpack_uint(values->EarlyDepthStencilControl, 21, 22) |
+      util_bitpack_uint(values->WalkerDirection, 23, 23) |
+      util_bitpack_uint(values->WalkingGranularity, 24, 25) |
       util_bitpack_uint(values->LegacyDiamondLineRasterization, 26, 26) |
       util_bitpack_uint(values->LegacyHierarchicalDepthBufferResolveEnable, 27, 27) |
       util_bitpack_uint(values->LegacyDepthBufferResolveEnable, 28, 28) |
@@ -16108,7 +15699,7 @@ struct GFX125_MFD_AVC_BSD_OBJECT {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             IndirectBSDDataLength;
-   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint64_t                             IndirectBSDDataStartAddress;
    struct GFX125_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT InlineData;
 };
 
@@ -16130,7 +15721,8 @@ GFX125_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
-   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 
    GFX125_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(data, &dw[3], &values->InlineData);
 
@@ -16140,7 +15732,7 @@ GFX125_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX125_MFD_AVC_DPB_STATE_length       27
 #define GFX125_MFD_AVC_DPB_STATE_length_bias      2
 #define GFX125_MFD_AVC_DPB_STATE_header         \
-   .DWordLength                         =      9,  \
+   .DWordLength                         =     25,  \
    .SubOpcodeB                          =      6,  \
    .SubOpcodeA                          =      1,  \
    .MediaCommandOpcode                  =      1,  \
@@ -16164,8 +15756,6 @@ struct GFX125_MFD_AVC_DPB_STATE {
 #define BOTTOM_FIELD                             2
 #define FRAME                                    3
    uint32_t                             LTSTFrameNumberList[16];
-#define LTST_LongTermFrame                       1
-#define LTST_ShortTermFrame                      0
    uint32_t                             ViewID[16];
    uint32_t                             L0ViewOrder[16];
    uint32_t                             L1ViewOrder[16];
@@ -16443,7 +16033,7 @@ struct GFX125_MFD_AVC_SLICEADDR {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             IndirectBSDDataLength;
-   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint64_t                             IndirectBSDDataStartAddress;
    uint32_t                             DriverProvidedNALTypeValue;
    uint32_t                             AVCNALTypeFirstByteOverride;
 #define UseBitstreamDecodedNALType               0
@@ -16468,7 +16058,8 @@ GFX125_MFD_AVC_SLICEADDR_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
-   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 
    dw[3] =
       util_bitpack_uint(values->DriverProvidedNALTypeValue, 0, 7) |
@@ -17358,10 +16949,10 @@ GFX125_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *da
       util_bitpack_uint(values->POCList[33], 0, 31);
 }
 
-#define GFX125_MFX_AVC_IMG_STATE_length       14
+#define GFX125_MFX_AVC_IMG_STATE_length       21
 #define GFX125_MFX_AVC_IMG_STATE_length_bias      2
 #define GFX125_MFX_AVC_IMG_STATE_header         \
-   .DWordLength                         =     12,  \
+   .DWordLength                         =     19,  \
    .SubOpcodeB                          =      0,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -17389,8 +16980,8 @@ struct GFX125_MFX_AVC_IMG_STATE {
 #define IMPLICIT                                 2
    bool                                 WeightedPredictionEnable;
    bool                                 RhoDomainRateControlEnable;
-   uint32_t                             FirstChromaQPOffset;
-   uint32_t                             SecondChromaQPOffset;
+   int32_t                              FirstChromaQPOffset;
+   int32_t                              SecondChromaQPOffset;
    bool                                 FieldPicture;
    bool                                 MBAFFMode;
    bool                                 FrameMBOnly;
@@ -17504,8 +17095,8 @@ GFX125_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->WeightedBiPredictionIDC, 10, 11) |
       util_bitpack_uint(values->WeightedPredictionEnable, 12, 12) |
       util_bitpack_uint(values->RhoDomainRateControlEnable, 13, 13) |
-      util_bitpack_uint(values->FirstChromaQPOffset, 16, 20) |
-      util_bitpack_uint(values->SecondChromaQPOffset, 24, 28);
+      util_bitpack_sint(values->FirstChromaQPOffset, 16, 20) |
+      util_bitpack_sint(values->SecondChromaQPOffset, 24, 28);
 
    dw[4] =
       util_bitpack_uint(values->FieldPicture, 0, 0) |
@@ -17575,6 +17166,41 @@ GFX125_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->NumberofActiveReferencePicturesfromL1, 16, 21) |
       util_bitpack_uint(values->NumberofReferenceFrames, 24, 28) |
       util_bitpack_uint(values->CurrentPictureHasPerformedMMCO5, 29, 29);
+
+   dw[14] =
+      util_bitpack_uint(values->PicOrderPresent, 0, 0) |
+      util_bitpack_uint(values->DeltaPicOrderAlwaysZero, 1, 1) |
+      util_bitpack_uint(values->PicOrderCountType, 2, 3) |
+      util_bitpack_uint(values->SliceGroupMapType, 8, 10) |
+      util_bitpack_uint(values->RedundantPicCountPresent, 11, 11) |
+      util_bitpack_uint(values->NumberofSliceGroups, 12, 14) |
+      util_bitpack_uint(values->DeblockingFilterControlPresent, 15, 15) |
+      util_bitpack_uint(values->Log2MaxFrameNumber, 16, 23) |
+      util_bitpack_uint(values->Log2MaxPicOrderCountLSB, 24, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->SliceGroupChangeRate, 0, 15) |
+      util_bitpack_uint(values->CurrentPictureFrameNumber, 16, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->CurrentFrameViewID, 0, 9) |
+      util_bitpack_uint(values->MaxViewIDXL0, 12, 15) |
+      util_bitpack_uint(values->MaxViewIDXL1, 18, 21) |
+      util_bitpack_uint(values->InterViewOrderDisable, 31, 31);
+
+   dw[17] =
+      util_bitpack_uint(values->FractionalQPInput, 0, 2) |
+      util_bitpack_uint(values->FractionalQPOffset, 3, 5) |
+      util_bitpack_uint(values->ExtendedRhoDomainStatisticsEnable, 8, 8) |
+      util_bitpack_uint(values->RhoDomainAverageMBQP, 16, 21);
+
+   dw[18] = 0;
+
+   dw[19] =
+      util_bitpack_uint(values->ThresholdSize, 0, 31);
+
+   dw[20] =
+      util_bitpack_uint(values->TargetSliceSize, 0, 31);
 }
 
 #define GFX125_MFX_AVC_REF_IDX_STATE_length     10
@@ -22138,6 +21764,8 @@ GFX125_MFX_WAIT_pack(__attribute__((unused)) __gen_user_data *data,
    .CommandType                         =      0
 
 struct GFX125_MI_ARB_CHECK {
+   bool                                 PreParserDisable;
+   bool                                 PreParserDisableMask;
    uint32_t                             MICommandOpcode;
    uint32_t                             CommandType;
 };
@@ -22150,6 +21778,8 @@ GFX125_MI_ARB_CHECK_pack(__attribute__((unused)) __gen_user_data *data,
    uint32_t * restrict dw = (uint32_t * restrict) dst;
 
    dw[0] =
+      util_bitpack_uint(values->PreParserDisable, 0, 0) |
+      util_bitpack_uint(values->PreParserDisableMask, 8, 8) |
       util_bitpack_uint(values->MICommandOpcode, 23, 28) |
       util_bitpack_uint(values->CommandType, 29, 31);
 }
@@ -22590,6 +22220,8 @@ struct GFX125_MI_FORCE_WAKEUP {
    uint32_t                             ForceMediaSlice1Awake;
    uint32_t                             ForceMediaSlice2Awake;
    uint32_t                             ForceMediaSlice3Awake;
+   bool                                 HEVCPowerWellControl;
+   bool                                 MFXPowerWellControl;
    uint32_t                             MaskBits;
 };
 
@@ -22611,6 +22243,8 @@ GFX125_MI_FORCE_WAKEUP_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ForceMediaSlice1Awake, 2, 2) |
       util_bitpack_uint(values->ForceMediaSlice2Awake, 3, 3) |
       util_bitpack_uint(values->ForceMediaSlice3Awake, 4, 4) |
+      util_bitpack_uint(values->HEVCPowerWellControl, 8, 8) |
+      util_bitpack_uint(values->MFXPowerWellControl, 9, 9) |
       util_bitpack_uint(values->MaskBits, 16, 31);
 }
 
@@ -23633,7 +23267,6 @@ struct GFX125_PIPE_CONTROL {
    bool                                 GenericMediaStateClear;
    bool                                 PSSStallSyncEnable;
    bool                                 TLBInvalidate;
-   bool                                 GlobalSnapshotCountReset;
    bool                                 CommandStreamerStallEnable;
    uint32_t                             StoreDataIndex;
    bool                                 ProtectedMemoryEnable;
@@ -23686,7 +23319,6 @@ GFX125_PIPE_CONTROL_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->GenericMediaStateClear, 16, 16) |
       util_bitpack_uint(values->PSSStallSyncEnable, 17, 17) |
       util_bitpack_uint(values->TLBInvalidate, 18, 18) |
-      util_bitpack_uint(values->GlobalSnapshotCountReset, 19, 19) |
       util_bitpack_uint(values->CommandStreamerStallEnable, 20, 20) |
       util_bitpack_uint(values->StoreDataIndex, 21, 21) |
       util_bitpack_uint(values->ProtectedMemoryEnable, 22, 22) |
@@ -24316,6 +23948,8 @@ GFX125_STATE_BASE_ADDRESS_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v1_address;
    dw[2] = (v1_address >> 32) | (v1 >> 32);
 
+   assert(values->L1CacheControl != L1CC_WBP);
+   assert(values->L1CacheControl != L1CC_UC);
    dw[3] =
       util_bitpack_uint_nonzero(values->StatelessDataPortAccessMOCS, 16, 22) |
       util_bitpack_uint(values->L1CacheControl, 23, 25);
@@ -25867,37 +25501,6 @@ GFX125_CACHE_MODE_1_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ColorCompressionDisableMask, 31, 31);
 }
 
-#define GFX125_CACHE_MODE_SS_num          0xe420
-#define GFX125_CACHE_MODE_SS_length            1
-struct GFX125_CACHE_MODE_SS {
-   bool                                 InstructionLevel1CacheDisable;
-   bool                                 InstructionLevel1CacheandInFlightQueueDisable;
-   bool                                 FloatBlendOptimizationEnable;
-   bool                                 PerSampleBlendOptDisable;
-   bool                                 InstructionLevel1CacheDisableMask;
-   bool                                 InstructionLevel1CacheandInFlightQueueDisableMask;
-   bool                                 FloatBlendOptimizationEnableMask;
-   bool                                 PerSampleBlendOptDisableMask;
-};
-
-static inline __attribute__((always_inline)) void
-GFX125_CACHE_MODE_SS_pack(__attribute__((unused)) __gen_user_data *data,
-                          __attribute__((unused)) void * restrict dst,
-                          __attribute__((unused)) const struct GFX125_CACHE_MODE_SS * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_uint(values->InstructionLevel1CacheDisable, 0, 0) |
-      util_bitpack_uint(values->InstructionLevel1CacheandInFlightQueueDisable, 1, 1) |
-      util_bitpack_uint(values->FloatBlendOptimizationEnable, 4, 4) |
-      util_bitpack_uint(values->PerSampleBlendOptDisable, 11, 11) |
-      util_bitpack_uint(values->InstructionLevel1CacheDisableMask, 16, 16) |
-      util_bitpack_uint(values->InstructionLevel1CacheandInFlightQueueDisableMask, 17, 17) |
-      util_bitpack_uint(values->FloatBlendOptimizationEnableMask, 20, 20) |
-      util_bitpack_uint(values->PerSampleBlendOptDisableMask, 27, 27);
-}
-
 #define GFX125_CHICKEN_RASTER_1_num       0x6204
 #define GFX125_CHICKEN_RASTER_1_length         1
 struct GFX125_CHICKEN_RASTER_1 {
@@ -26018,7 +25621,9 @@ struct GFX125_CS_CHICKEN1 {
    uint32_t                             ReplayMode;
 #define MidcmdbufferPreemption                   0
 #define ObjectLevelPreemption                    1
+   bool                                 DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommand;
    bool                                 ReplayModeMask;
+   bool                                 DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommandMask;
 };
 
 static inline __attribute__((always_inline)) void
@@ -26030,7 +25635,9 @@ GFX125_CS_CHICKEN1_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[0] =
       util_bitpack_uint(values->ReplayMode, 0, 0) |
-      util_bitpack_uint(values->ReplayModeMask, 16, 16);
+      util_bitpack_uint(values->DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommand, 10, 10) |
+      util_bitpack_uint(values->ReplayModeMask, 16, 16) |
+      util_bitpack_uint(values->DisablePreemptionandHighPriorityPausingdueto3DPRIMITIVECommandMask, 26, 26);
 }
 
 #define GFX125_CS_DEBUG_MODE2_num         0x20d8
@@ -26096,6 +25703,29 @@ GFX125_DS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->DSInvocationCountReport, 0, 63);
    dw[0] = v0;
    dw[1] = v0 >> 32;
+}
+
+#define GFX125_FF_MODE2_num               0x6604
+#define GFX125_FF_MODE2_length                 1
+struct GFX125_FF_MODE2 {
+   uint32_t                             VSTimerValue;
+   uint32_t                             HSTimerValue;
+   uint32_t                             TDSTimerValue;
+   uint32_t                             GSTimerValue;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_FF_MODE2_pack(__attribute__((unused)) __gen_user_data *data,
+                     __attribute__((unused)) void * restrict dst,
+                     __attribute__((unused)) const struct GFX125_FF_MODE2 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->VSTimerValue, 0, 7) |
+      util_bitpack_uint(values->HSTimerValue, 8, 15) |
+      util_bitpack_uint(values->TDSTimerValue, 16, 23) |
+      util_bitpack_uint(values->GSTimerValue, 24, 31);
 }
 
 #define GFX125_GFX_AUX_TABLE_BASE_ADDR_num 0x4200
@@ -26398,6 +26028,29 @@ GFX125_L3ALLOC_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ROAllocation, 11, 17) |
       util_bitpack_uint(values->DCAllocation, 18, 24) |
       util_bitpack_uint(values->AllAllocation, 25, 31);
+}
+
+#define GFX125_L3SQCREG5_num              0xb158
+#define GFX125_L3SQCREG5_length                1
+struct GFX125_L3SQCREG5 {
+   uint32_t                             L3CachePartialWriteMergeTimerInitialValue;
+   uint32_t                             CompressiblePartialWriteMergeEnable;
+   uint32_t                             CoherentPartialWriteMergeEnable;
+   uint32_t                             CrossTilePartialWriteMergeEnable;
+};
+
+static inline __attribute__((always_inline)) void
+GFX125_L3SQCREG5_pack(__attribute__((unused)) __gen_user_data *data,
+                      __attribute__((unused)) void * restrict dst,
+                      __attribute__((unused)) const struct GFX125_L3SQCREG5 * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->L3CachePartialWriteMergeTimerInitialValue, 0, 9) |
+      util_bitpack_uint(values->CompressiblePartialWriteMergeEnable, 21, 21) |
+      util_bitpack_uint(values->CoherentPartialWriteMergeEnable, 22, 22) |
+      util_bitpack_uint(values->CrossTilePartialWriteMergeEnable, 23, 23);
 }
 
 #define GFX125_PS_INVOCATION_COUNT_num    0x2348
@@ -27052,4 +26705,4 @@ GFX125_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#endif /* GFX125_PACK_H */
+#endif /* GFX125_GFX125_PACK_H */

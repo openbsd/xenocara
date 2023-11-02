@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/31 03:29:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	vulkan_intel
 
@@ -19,6 +19,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/intel/vulkan \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/vulkan/runtime \
 		-I${MESA_SRC}/generated/src/vulkan/util \
 		-I${MESA_SRC}/generated/src/intel/vulkan \
@@ -99,6 +100,7 @@ LDADD+=		-L${X11BASE}/lib -ldrm \
 		-lxcb-randr -lxcb-shm -lxshmfence
 
 LDADD+=		${BUILD_ID_SHA1} -Wl,-Bsymbolic -Wl,--gc-sections \
+		-Wl,--version-script ${MESA_SRC}/src/vulkan/vulkan.sym \
 		-Wl,--end-group
 
 all:	lib${LIB}.so

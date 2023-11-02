@@ -30,6 +30,7 @@
  */
 
 #include <vulkan/vk_layer.h>
+#include <vulkan/vulkan.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -38,9 +39,9 @@
 #include <unistd.h>
 
 #include "device_select.h"
-#include "hash_table.h"
+#include "util/hash_table.h"
 #include "vk_util.h"
-#include "c11/threads.h"
+#include "util/simple_mtx.h"
 
 struct instance_info {
    PFN_vkDestroyInstance DestroyInstance;
@@ -55,46 +56,38 @@ struct instance_info {
 };
 
 static struct hash_table *device_select_instance_ht = NULL;
-static mtx_t device_select_mutex;
-
-static once_flag device_select_is_init = ONCE_FLAG_INIT;
-
-static void device_select_once_init(void) {
-   mtx_init(&device_select_mutex, mtx_plain);
-}
+static simple_mtx_t device_select_mutex = SIMPLE_MTX_INITIALIZER;
 
 static void
 device_select_init_instances(void)
 {
-   call_once(&device_select_is_init, device_select_once_init);
-
-   mtx_lock(&device_select_mutex);
+   simple_mtx_lock(&device_select_mutex);
    if (!device_select_instance_ht)
       device_select_instance_ht = _mesa_hash_table_create(NULL, _mesa_hash_pointer,
 							  _mesa_key_pointer_equal);
-   mtx_unlock(&device_select_mutex);
+   simple_mtx_unlock(&device_select_mutex);
 }
 
 static void
 device_select_try_free_ht(void)
 {
-   mtx_lock(&device_select_mutex);
+   simple_mtx_lock(&device_select_mutex);
    if (device_select_instance_ht) {
       if (_mesa_hash_table_num_entries(device_select_instance_ht) == 0) {
 	 _mesa_hash_table_destroy(device_select_instance_ht, NULL);
 	 device_select_instance_ht = NULL;
       }
    }
-   mtx_unlock(&device_select_mutex);
+   simple_mtx_unlock(&device_select_mutex);
 }
 
 static void
 device_select_layer_add_instance(VkInstance instance, struct instance_info *info)
 {
    device_select_init_instances();
-   mtx_lock(&device_select_mutex);
+   simple_mtx_lock(&device_select_mutex);
    _mesa_hash_table_insert(device_select_instance_ht, instance, info);
-   mtx_unlock(&device_select_mutex);
+   simple_mtx_unlock(&device_select_mutex);
 }
 
 static struct instance_info *
@@ -102,20 +95,20 @@ device_select_layer_get_instance(VkInstance instance)
 {
    struct hash_entry *entry;
    struct instance_info *info = NULL;
-   mtx_lock(&device_select_mutex);
+   simple_mtx_lock(&device_select_mutex);
    entry = _mesa_hash_table_search(device_select_instance_ht, (void *)instance);
    if (entry)
       info = (struct instance_info *)entry->data;
-   mtx_unlock(&device_select_mutex);
+   simple_mtx_unlock(&device_select_mutex);
    return info;
 }
 
 static void
 device_select_layer_remove_instance(VkInstance instance)
 {
-   mtx_lock(&device_select_mutex);
+   simple_mtx_lock(&device_select_mutex);
    _mesa_hash_table_remove_key(device_select_instance_ht, instance);
-   mtx_unlock(&device_select_mutex);
+   simple_mtx_unlock(&device_select_mutex);
    device_select_try_free_ht();
 }
 
@@ -297,7 +290,7 @@ static int device_select_find_dri_prime_tag_default(struct device_pci_info *pci_
                    pci_infos[i].bus_info.bus,
                    pci_infos[i].bus_info.dev,
                    pci_infos[i].bus_info.func) >= 0) {
-         if (strcmp(dri_prime, tag))
+         if (strcmp(dri_prime, tag) == 0)
             default_idx = i;
       }
       free(tag);
@@ -460,12 +453,20 @@ static uint32_t get_default_device(const struct instance_info *info,
       else
          default_idx = device_select_find_boot_vga_vid_did(pci_infos, physical_device_count);
    }
-   if (default_idx == -1 && cpu_count)
+   /* If no GPU has been selected so far, select the first non-CPU device. If none are available,
+    * pick the first CPU device.
+    */
+   if (default_idx == -1) {
       default_idx = device_select_find_non_cpu(pci_infos, physical_device_count);
+      if (default_idx != -1) {
+         /* device_select_find_non_cpu picked a default, do nothing */
+      } else if (cpu_count) {
+         default_idx = 0;
+      }
+   }
    /* DRI_PRIME=1 handling - pick any other device than default. */
    if (default_idx != -1 && dri_prime_is_one && physical_device_count > (cpu_count + 1)) {
-      if (default_idx == 0 || default_idx == 1)
-         default_idx = find_non_cpu_skip(pci_infos, physical_device_count, default_idx);
+      default_idx = find_non_cpu_skip(pci_infos, physical_device_count, default_idx);
    }
    free(pci_infos);
    return default_idx == -1 ? 0 : default_idx;
@@ -632,7 +633,7 @@ static void  (*get_instance_proc_addr(VkInstance instance, const char* name))()
    return info->GetInstanceProcAddr(instance, name);
 }
 
-VK_LAYER_EXPORT VkResult vkNegotiateLoaderLayerInterfaceVersion(VkNegotiateLayerInterface *pVersionStruct)
+PUBLIC VkResult vkNegotiateLoaderLayerInterfaceVersion(VkNegotiateLayerInterface *pVersionStruct)
 {
    if (pVersionStruct->loaderLayerInterfaceVersion < 2)
       return VK_ERROR_INITIALIZATION_FAILED;

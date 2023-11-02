@@ -1,10 +1,13 @@
-#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	vulkan_runtime
 
 NOPROFILE=
 
-SRCS=	vk_buffer.c \
+SRCS=	vk_rmv_common.c \
+	vk_rmv_exporter.c \
+	vk_acceleration_structure.c \
+	vk_buffer.c \
 	vk_cmd_copy.c \
 	vk_cmd_enqueue.c \
 	vk_command_buffer.c \
@@ -16,6 +19,7 @@ SRCS=	vk_buffer.c \
 	vk_descriptors.c \
 	vk_descriptor_update_template.c \
 	vk_device.c \
+	vk_device_memory.c \
 	vk_fence.c \
 	vk_framebuffer.c \
 	vk_graphics_state.c \
@@ -38,14 +42,17 @@ SRCS=	vk_buffer.c \
 	vk_sync_binary.c \
 	vk_sync_dummy.c \
 	vk_sync_timeline.c \
-	vk_synchronization2.c
+	vk_synchronization2.c \
+	vk_video.c \
+	vk_ycbcr_conversion.c
 
 SRCS+=	vk_drm_syncobj.c \
 	vk_common_entrypoints.c \
 	vk_cmd_queue.c \
 	vk_cmd_enqueue_entrypoints.c \
 	vk_dispatch_trampolines.c \
-	vk_physical_device_features.c
+	vk_physical_device_features.c \
+	vk_format_info.c
 
 .include "../Makefile.inc"
 
@@ -68,4 +75,5 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/vulkan/runtime
+.PATH: ${MESA_SRC}/src/vulkan/runtime/rmv
 .PATH: ${MESA_SRC}/generated/src/vulkan/runtime

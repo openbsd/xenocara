@@ -31,22 +31,20 @@ static bool
 src_is_invocation_id(const nir_src *src)
 {
    assert(src->is_ssa);
-   if (src->ssa->parent_instr->type != nir_instr_type_intrinsic)
-      return false;
-
-   return nir_instr_as_intrinsic(src->ssa->parent_instr)->intrinsic ==
-             nir_intrinsic_load_invocation_id;
+   nir_ssa_scalar s = nir_ssa_scalar_resolved(src->ssa, 0);
+   return s.def->parent_instr->type == nir_instr_type_intrinsic &&
+          nir_instr_as_intrinsic(s.def->parent_instr)->intrinsic ==
+              nir_intrinsic_load_invocation_id;
 }
 
 static bool
 src_is_local_invocation_index(const nir_src *src)
 {
    assert(src->is_ssa);
-   if (src->ssa->parent_instr->type != nir_instr_type_intrinsic)
-      return false;
-
-   return nir_instr_as_intrinsic(src->ssa->parent_instr)->intrinsic ==
-             nir_intrinsic_load_local_invocation_index;
+   nir_ssa_scalar s = nir_ssa_scalar_resolved(src->ssa, 0);
+   return s.def->parent_instr->type == nir_instr_type_intrinsic &&
+          nir_instr_as_intrinsic(s.def->parent_instr)->intrinsic ==
+              nir_intrinsic_load_local_invocation_index;
 }
 
 static void
@@ -175,8 +173,10 @@ set_io_mask(nir_shader *shader, nir_variable *var, int offset, int len,
 
          if (var->data.fb_fetch_output) {
             shader->info.outputs_read |= bitfield;
-            if (shader->info.stage == MESA_SHADER_FRAGMENT)
+            if (shader->info.stage == MESA_SHADER_FRAGMENT) {
                shader->info.fs.uses_fbfetch_output = true;
+               shader->info.fs.fbfetch_coherent = var->data.access & ACCESS_COHERENT;
+            }
          }
 
          if (shader->info.stage == MESA_SHADER_FRAGMENT &&
@@ -211,7 +211,7 @@ mark_whole_variable(nir_shader *shader, nir_variable *var,
    }
 
    const unsigned slots =
-      var->data.compact ? DIV_ROUND_UP(glsl_get_length(type), 4)
+      var->data.compact ? DIV_ROUND_UP(var->data.location_frac + glsl_get_length(type), 4)
                         : glsl_count_attribute_slots(type, false);
 
    set_io_mask(shader, var, 0, slots, deref, is_output_read);
@@ -288,7 +288,7 @@ try_mask_partial_io(nir_shader *shader, nir_variable *var,
       return false;
 
    const unsigned slots =
-      var->data.compact ? DIV_ROUND_UP(glsl_get_length(type), 4)
+      var->data.compact ? DIV_ROUND_UP(var->data.location_frac + glsl_get_length(type), 4)
                         : glsl_count_attribute_slots(type, false);
 
    if (offset >= slots) {
@@ -542,17 +542,14 @@ gather_intrinsic_info(nir_intrinsic_instr *instr, nir_shader *shader,
       FALLTHROUGH; /* quads with helper lanes only might be discarded entirely */
    case nir_intrinsic_discard:
    case nir_intrinsic_discard_if:
-      /* Freedreno uses the discard_if intrinsic to end GS invocations that
-       * don't produce a vertex, so we only set uses_discard if executing on
-       * a fragment shader. */
-      if (shader->info.stage == MESA_SHADER_FRAGMENT)
-         shader->info.fs.uses_discard = true;
-      break;
-
    case nir_intrinsic_terminate:
    case nir_intrinsic_terminate_if:
-      assert(shader->info.stage == MESA_SHADER_FRAGMENT);
-      shader->info.fs.uses_discard = true;
+      /* Freedreno uses discard_if() to end GS invocations that don't produce
+       * a vertex and RADV uses terminate() to end ray-tracing shaders,
+       * so only set uses_discard for fragment shaders.
+       */
+      if (shader->info.stage == MESA_SHADER_FRAGMENT)
+         shader->info.fs.uses_discard = true;
       break;
 
    case nir_intrinsic_interp_deref_at_centroid:
@@ -714,6 +711,7 @@ gather_intrinsic_info(nir_intrinsic_instr *instr, nir_shader *shader,
    case nir_intrinsic_load_invocation_id:
    case nir_intrinsic_load_frag_coord:
    case nir_intrinsic_load_frag_shading_rate:
+   case nir_intrinsic_load_fully_covered:
    case nir_intrinsic_load_point_coord:
    case nir_intrinsic_load_line_coord:
    case nir_intrinsic_load_front_face:
@@ -872,6 +870,22 @@ gather_intrinsic_info(nir_intrinsic_instr *instr, nir_shader *shader,
       shader->info.uses_memory_barrier = true;
       break;
 
+   case nir_intrinsic_store_zs_agx:
+      shader->info.outputs_written |= BITFIELD64_BIT(FRAG_RESULT_DEPTH) |
+                                      BITFIELD64_BIT(FRAG_RESULT_STENCIL);
+      break;
+
+   case nir_intrinsic_launch_mesh_workgroups:
+   case nir_intrinsic_launch_mesh_workgroups_with_payload_deref: {
+      for (unsigned i = 0; i < 3; ++i) {
+         nir_ssa_scalar dim = nir_ssa_scalar_resolved(instr->src[0].ssa, i);
+         if (nir_ssa_scalar_is_const(dim))
+            shader->info.mesh.ts_mesh_dispatch_dimensions[i] =
+               nir_ssa_scalar_as_uint(dim);
+      }
+      break;
+   }
+
    default:
       shader->info.uses_bindless |= intrinsic_is_bindless(instr);
       if (nir_intrinsic_writes_external_memory(instr))
@@ -1001,7 +1015,8 @@ nir_shader_gather_info(nir_shader *shader, nir_function_impl *entrypoint)
       if (var->data.bindless || var->interface_type)
          continue;
 
-      shader->info.num_textures += glsl_type_get_sampler_count(var->type);
+      shader->info.num_textures += glsl_type_get_sampler_count(var->type) +
+                                   glsl_type_get_texture_count(var->type);
       shader->info.num_images += glsl_type_get_image_count(var->type);
    }
 
@@ -1049,6 +1064,11 @@ nir_shader_gather_info(nir_shader *shader, nir_function_impl *entrypoint)
    }
    if (shader->info.stage == MESA_SHADER_MESH) {
       shader->info.mesh.ms_cross_invocation_output_access = 0;
+   }
+   if (shader->info.stage == MESA_SHADER_TASK) {
+      shader->info.mesh.ts_mesh_dispatch_dimensions[0] = 0;
+      shader->info.mesh.ts_mesh_dispatch_dimensions[1] = 0;
+      shader->info.mesh.ts_mesh_dispatch_dimensions[2] = 0;
    }
 
    if (shader->info.stage != MESA_SHADER_FRAGMENT)

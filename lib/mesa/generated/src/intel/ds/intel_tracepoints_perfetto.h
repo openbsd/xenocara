@@ -29,6 +29,56 @@
 
 
 static void UNUSED
+trace_payload_as_extra_intel_begin_frame(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_frame *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_frame(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_frame *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("frame");
+
+      sprintf(buf, "%u", payload->frame);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_queue_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_queue_annotation *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_queue_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_queue_annotation *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("dummy");
+
+      sprintf(buf, "%hhu", payload->dummy);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("str");
+
+      sprintf(buf, "%s", payload->str);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
 trace_payload_as_extra_intel_begin_batch(perfetto::protos::pbzero::GpuRenderStageEvent *event,
                                      const struct trace_intel_begin_batch *payload)
 {
@@ -65,6 +115,35 @@ trace_payload_as_extra_intel_end_cmd_buffer(perfetto::protos::pbzero::GpuRenderS
       data->set_name("level");
 
       sprintf(buf, "%hhu", payload->level);
+
+      data->set_value(buf);
+   }
+
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_cmd_buffer_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_cmd_buffer_annotation *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_cmd_buffer_annotation(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_cmd_buffer_annotation *payload)
+{
+   char buf[128];
+
+   {
+      auto data = event->add_extra_data();
+      data->set_name("dummy");
+
+      sprintf(buf, "%hhu", payload->dummy);
+
+      data->set_value(buf);
+   }
+   {
+      auto data = event->add_extra_data();
+      data->set_name("str");
+
+      sprintf(buf, "%s", payload->str);
 
       data->set_value(buf);
    }
@@ -120,67 +199,6 @@ trace_payload_as_extra_intel_end_render_pass(perfetto::protos::pbzero::GpuRender
       data->set_name("msaa");
 
       sprintf(buf, "%hhu", payload->msaa);
-
-      data->set_value(buf);
-   }
-
-}
-static void UNUSED
-trace_payload_as_extra_intel_begin_dyn_render_pass(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_begin_dyn_render_pass *payload)
-{
-}
-static void UNUSED
-trace_payload_as_extra_intel_end_dyn_render_pass(perfetto::protos::pbzero::GpuRenderStageEvent *event,
-                                     const struct trace_intel_end_dyn_render_pass *payload)
-{
-   char buf[128];
-
-   {
-      auto data = event->add_extra_data();
-      data->set_name("width");
-
-      sprintf(buf, "%hu", payload->width);
-
-      data->set_value(buf);
-   }
-   {
-      auto data = event->add_extra_data();
-      data->set_name("height");
-
-      sprintf(buf, "%hu", payload->height);
-
-      data->set_value(buf);
-   }
-   {
-      auto data = event->add_extra_data();
-      data->set_name("att_count");
-
-      sprintf(buf, "%hhu", payload->att_count);
-
-      data->set_value(buf);
-   }
-   {
-      auto data = event->add_extra_data();
-      data->set_name("msaa");
-
-      sprintf(buf, "%hhu", payload->msaa);
-
-      data->set_value(buf);
-   }
-   {
-      auto data = event->add_extra_data();
-      data->set_name("suspend");
-
-      sprintf(buf, "%hhu", payload->suspend);
-
-      data->set_value(buf);
-   }
-   {
-      auto data = event->add_extra_data();
-      data->set_name("resume");
-
-      sprintf(buf, "%hhu", payload->resume);
 
       data->set_value(buf);
    }
@@ -254,6 +272,16 @@ trace_payload_as_extra_intel_end_blorp(perfetto::protos::pbzero::GpuRenderStageE
       data->set_value(buf);
    }
 
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_generate_draws(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_generate_draws *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_generate_draws(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_generate_draws *payload)
+{
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_draw(perfetto::protos::pbzero::GpuRenderStageEvent *event,
@@ -559,6 +587,16 @@ trace_payload_as_extra_intel_end_compute(perfetto::protos::pbzero::GpuRenderStag
       data->set_value(buf);
    }
 
+}
+static void UNUSED
+trace_payload_as_extra_intel_begin_trace_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_begin_trace_copy *payload)
+{
+}
+static void UNUSED
+trace_payload_as_extra_intel_end_trace_copy(perfetto::protos::pbzero::GpuRenderStageEvent *event,
+                                     const struct trace_intel_end_trace_copy *payload)
+{
 }
 static void UNUSED
 trace_payload_as_extra_intel_begin_stall(perfetto::protos::pbzero::GpuRenderStageEvent *event,

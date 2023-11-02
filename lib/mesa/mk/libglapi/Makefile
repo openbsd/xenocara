@@ -1,19 +1,20 @@
-#	$OpenBSD: Makefile,v 1.4 2023/01/31 03:29:36 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	glapi
 
 SRCS=	entry.c \
-	mapi_glapi.c \
+	u_current.c \
+	u_execmem.c \
+	glapi.c \
 	stub.c \
 	table.c
-
-SRCS+=	u_current.c \
-	u_execmem.c
 
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS}
-CPPFLAGS+=	-DMAPI_MODE_GLAPI \
+CPPFLAGS+=	-I${MESA_SRC}/src/mapi/shared-glapi \
+		-I${MESA_SRC}/src/mapi \
+		-DMAPI_MODE_GLAPI \
 		-DMAPI_ABI_HEADER=\"${MESA_SRC}/generated/src/mapi/shared-glapi/glapi_mapi_tmp.h\"
 
 LDADD+=	-Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group \
@@ -30,3 +31,4 @@ beforeinstall:
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/mapi
+.PATH: ${MESA_SRC}/src/mapi/shared-glapi

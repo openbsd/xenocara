@@ -28,6 +28,234 @@
 #include "util/u_debug.h"
 #include "util/perf/u_trace_priv.h"
 
+static const struct debug_control config_control[] = {
+   { "frame", INTEL_GPU_TRACEPOINT_FRAME, },
+   { "queue_annotation", INTEL_GPU_TRACEPOINT_QUEUE_ANNOTATION, },
+   { "batch", INTEL_GPU_TRACEPOINT_BATCH, },
+   { "cmd_buffer", INTEL_GPU_TRACEPOINT_CMD_BUFFER, },
+   { "cmd_buffer_annotation", INTEL_GPU_TRACEPOINT_CMD_BUFFER_ANNOTATION, },
+   { "xfb", INTEL_GPU_TRACEPOINT_XFB, },
+   { "render_pass", INTEL_GPU_TRACEPOINT_RENDER_PASS, },
+   { "blorp", INTEL_GPU_TRACEPOINT_BLORP, },
+   { "generate_draws", INTEL_GPU_TRACEPOINT_GENERATE_DRAWS, },
+   { "draw", INTEL_GPU_TRACEPOINT_DRAW, },
+   { "draw_multi", INTEL_GPU_TRACEPOINT_DRAW_MULTI, },
+   { "draw_indexed", INTEL_GPU_TRACEPOINT_DRAW_INDEXED, },
+   { "draw_indexed_multi", INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI, },
+   { "draw_indirect_byte_count", INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT, },
+   { "draw_indirect", INTEL_GPU_TRACEPOINT_DRAW_INDIRECT, },
+   { "draw_indexed_indirect", INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT, },
+   { "draw_indirect_count", INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT, },
+   { "draw_indexed_indirect_count", INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT, },
+   { "draw_mesh", INTEL_GPU_TRACEPOINT_DRAW_MESH, },
+   { "draw_mesh_indirect", INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT, },
+   { "draw_mesh_indirect_count", INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT, },
+   { "compute", INTEL_GPU_TRACEPOINT_COMPUTE, },
+   { "trace_copy", INTEL_GPU_TRACEPOINT_TRACE_COPY, },
+   { "stall", INTEL_GPU_TRACEPOINT_STALL, },
+   { NULL, 0, },
+};
+uint64_t intel_gpu_tracepoint = 0;
+
+static void
+intel_gpu_tracepoint_variable_once(void)
+{
+   uint64_t default_value = 0
+     | INTEL_GPU_TRACEPOINT_FRAME
+     | INTEL_GPU_TRACEPOINT_QUEUE_ANNOTATION
+     | INTEL_GPU_TRACEPOINT_BATCH
+     | INTEL_GPU_TRACEPOINT_CMD_BUFFER
+     | INTEL_GPU_TRACEPOINT_CMD_BUFFER_ANNOTATION
+     | INTEL_GPU_TRACEPOINT_XFB
+     | INTEL_GPU_TRACEPOINT_RENDER_PASS
+     | INTEL_GPU_TRACEPOINT_BLORP
+     | INTEL_GPU_TRACEPOINT_GENERATE_DRAWS
+     | INTEL_GPU_TRACEPOINT_DRAW
+     | INTEL_GPU_TRACEPOINT_DRAW_MULTI
+     | INTEL_GPU_TRACEPOINT_DRAW_INDEXED
+     | INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI
+     | INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT
+     | INTEL_GPU_TRACEPOINT_DRAW_INDIRECT
+     | INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT
+     | INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT
+     | INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT
+     | INTEL_GPU_TRACEPOINT_DRAW_MESH
+     | INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT
+     | INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT
+     | INTEL_GPU_TRACEPOINT_COMPUTE
+     | INTEL_GPU_TRACEPOINT_TRACE_COPY
+     ;
+
+   intel_gpu_tracepoint =
+      parse_enable_string(getenv("INTEL_GPU_TRACEPOINT"),
+                          default_value,
+                          config_control);
+}
+
+void
+intel_gpu_tracepoint_config_variable(void)
+{
+   static once_flag process_intel_gpu_tracepoint_variable_flag = ONCE_FLAG_INIT;
+
+   call_once(&process_intel_gpu_tracepoint_variable_flag,
+             intel_gpu_tracepoint_variable_once);
+}
+
+/*
+ * intel_begin_frame
+ */
+#define __print_intel_begin_frame NULL
+#define __print_json_intel_begin_frame NULL
+static const struct u_tracepoint __tp_intel_begin_frame = {
+    ALIGN_POT(sizeof(struct trace_intel_begin_frame), 8),   /* keep size 64b aligned */
+    "intel_begin_frame",
+    false,
+    __print_intel_begin_frame,
+    __print_json_intel_begin_frame,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_begin_frame,
+#endif
+};
+void __trace_intel_begin_frame(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+   , void *cs
+) {
+   struct trace_intel_begin_frame entry;
+   UNUSED struct trace_intel_begin_frame *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_frame *)u_trace_append(ut, cs, &__tp_intel_begin_frame) :
+      &entry;
+}
+
+/*
+ * intel_end_frame
+ */
+static void __print_intel_end_frame(FILE *out, const void *arg) {
+   const struct trace_intel_end_frame *__entry =
+      (const struct trace_intel_end_frame *)arg;
+   fprintf(out, ""
+      "frame=%u, "
+         "\n"
+   ,__entry->frame
+   );
+}
+
+static void __print_json_intel_end_frame(FILE *out, const void *arg) {
+   const struct trace_intel_end_frame *__entry =
+      (const struct trace_intel_end_frame *)arg;
+   fprintf(out, ""
+      "\"frame\": \"%u\""
+   ,__entry->frame
+   );
+}
+
+static const struct u_tracepoint __tp_intel_end_frame = {
+    ALIGN_POT(sizeof(struct trace_intel_end_frame), 8),   /* keep size 64b aligned */
+    "intel_end_frame",
+    false,
+    __print_intel_end_frame,
+    __print_json_intel_end_frame,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_end_frame,
+#endif
+};
+void __trace_intel_end_frame(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+   , void *cs
+   , uint32_t frame
+) {
+   struct trace_intel_end_frame entry;
+   UNUSED struct trace_intel_end_frame *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_frame *)u_trace_append(ut, cs, &__tp_intel_end_frame) :
+      &entry;
+   __entry->frame = frame;
+}
+
+/*
+ * intel_begin_queue_annotation
+ */
+#define __print_intel_begin_queue_annotation NULL
+#define __print_json_intel_begin_queue_annotation NULL
+static const struct u_tracepoint __tp_intel_begin_queue_annotation = {
+    ALIGN_POT(sizeof(struct trace_intel_begin_queue_annotation), 8),   /* keep size 64b aligned */
+    "intel_begin_queue_annotation",
+    false,
+    __print_intel_begin_queue_annotation,
+    __print_json_intel_begin_queue_annotation,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_begin_queue_annotation,
+#endif
+};
+void __trace_intel_begin_queue_annotation(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+   , void *cs
+) {
+   struct trace_intel_begin_queue_annotation entry;
+   UNUSED struct trace_intel_begin_queue_annotation *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_queue_annotation *)u_trace_append(ut, cs, &__tp_intel_begin_queue_annotation) :
+      &entry;
+}
+
+/*
+ * intel_end_queue_annotation
+ */
+static void __print_intel_end_queue_annotation(FILE *out, const void *arg) {
+   const struct trace_intel_end_queue_annotation *__entry =
+      (const struct trace_intel_end_queue_annotation *)arg;
+   fprintf(out, ""
+      "dummy=%hhu, "
+      "str=%s, "
+         "\n"
+   ,__entry->dummy
+   ,__entry->str
+   );
+}
+
+static void __print_json_intel_end_queue_annotation(FILE *out, const void *arg) {
+   const struct trace_intel_end_queue_annotation *__entry =
+      (const struct trace_intel_end_queue_annotation *)arg;
+   fprintf(out, ""
+      "\"dummy\": \"%hhu\""
+         ", "
+      "\"str\": \"%s\""
+   ,__entry->dummy
+   ,__entry->str
+   );
+}
+
+static const struct u_tracepoint __tp_intel_end_queue_annotation = {
+    ALIGN_POT(sizeof(struct trace_intel_end_queue_annotation), 8),   /* keep size 64b aligned */
+    "intel_end_queue_annotation",
+    false,
+    __print_intel_end_queue_annotation,
+    __print_json_intel_end_queue_annotation,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_end_queue_annotation,
+#endif
+};
+void __trace_intel_end_queue_annotation(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+   , void *cs
+   , unsigned len
+   , const char * str
+) {
+   struct trace_intel_end_queue_annotation entry;
+   UNUSED struct trace_intel_end_queue_annotation *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_queue_annotation *)u_trace_appendv(ut, cs, &__tp_intel_end_queue_annotation,
+                                                    0
+                                                    + len + 1
+                                                    ) :
+      &entry;
+   __entry->dummy = 0;
+   strncpy(__entry->str, str, len + 1);
+}
 
 /*
  * intel_begin_batch
@@ -46,10 +274,13 @@ static const struct u_tracepoint __tp_intel_begin_batch = {
 };
 void __trace_intel_begin_batch(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_batch *__entry =
-      (struct trace_intel_begin_batch *)u_trace_append(ut, NULL, &__tp_intel_begin_batch);
-   (void)__entry;
+   struct trace_intel_begin_batch entry;
+   UNUSED struct trace_intel_begin_batch *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_batch *)u_trace_append(ut, NULL, &__tp_intel_begin_batch) :
+      &entry;
 }
 
 /*
@@ -86,10 +317,14 @@ static const struct u_tracepoint __tp_intel_end_batch = {
 };
 void __trace_intel_end_batch(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint8_t name
 ) {
-   struct trace_intel_end_batch *__entry =
-      (struct trace_intel_end_batch *)u_trace_append(ut, NULL, &__tp_intel_end_batch);
+   struct trace_intel_end_batch entry;
+   UNUSED struct trace_intel_end_batch *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_batch *)u_trace_append(ut, NULL, &__tp_intel_end_batch) :
+      &entry;
    __entry->name = name;
 }
 
@@ -110,10 +345,13 @@ static const struct u_tracepoint __tp_intel_begin_cmd_buffer = {
 };
 void __trace_intel_begin_cmd_buffer(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_cmd_buffer *__entry =
-      (struct trace_intel_begin_cmd_buffer *)u_trace_append(ut, NULL, &__tp_intel_begin_cmd_buffer);
-   (void)__entry;
+   struct trace_intel_begin_cmd_buffer entry;
+   UNUSED struct trace_intel_begin_cmd_buffer *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_cmd_buffer *)u_trace_append(ut, NULL, &__tp_intel_begin_cmd_buffer) :
+      &entry;
 }
 
 /*
@@ -150,11 +388,96 @@ static const struct u_tracepoint __tp_intel_end_cmd_buffer = {
 };
 void __trace_intel_end_cmd_buffer(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint8_t level
 ) {
-   struct trace_intel_end_cmd_buffer *__entry =
-      (struct trace_intel_end_cmd_buffer *)u_trace_append(ut, NULL, &__tp_intel_end_cmd_buffer);
+   struct trace_intel_end_cmd_buffer entry;
+   UNUSED struct trace_intel_end_cmd_buffer *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_cmd_buffer *)u_trace_append(ut, NULL, &__tp_intel_end_cmd_buffer) :
+      &entry;
    __entry->level = level;
+}
+
+/*
+ * intel_begin_cmd_buffer_annotation
+ */
+#define __print_intel_begin_cmd_buffer_annotation NULL
+#define __print_json_intel_begin_cmd_buffer_annotation NULL
+static const struct u_tracepoint __tp_intel_begin_cmd_buffer_annotation = {
+    ALIGN_POT(sizeof(struct trace_intel_begin_cmd_buffer_annotation), 8),   /* keep size 64b aligned */
+    "intel_begin_cmd_buffer_annotation",
+    false,
+    __print_intel_begin_cmd_buffer_annotation,
+    __print_json_intel_begin_cmd_buffer_annotation,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_begin_cmd_buffer_annotation,
+#endif
+};
+void __trace_intel_begin_cmd_buffer_annotation(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+) {
+   struct trace_intel_begin_cmd_buffer_annotation entry;
+   UNUSED struct trace_intel_begin_cmd_buffer_annotation *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_cmd_buffer_annotation *)u_trace_append(ut, NULL, &__tp_intel_begin_cmd_buffer_annotation) :
+      &entry;
+}
+
+/*
+ * intel_end_cmd_buffer_annotation
+ */
+static void __print_intel_end_cmd_buffer_annotation(FILE *out, const void *arg) {
+   const struct trace_intel_end_cmd_buffer_annotation *__entry =
+      (const struct trace_intel_end_cmd_buffer_annotation *)arg;
+   fprintf(out, ""
+      "dummy=%hhu, "
+      "str=%s, "
+         "\n"
+   ,__entry->dummy
+   ,__entry->str
+   );
+}
+
+static void __print_json_intel_end_cmd_buffer_annotation(FILE *out, const void *arg) {
+   const struct trace_intel_end_cmd_buffer_annotation *__entry =
+      (const struct trace_intel_end_cmd_buffer_annotation *)arg;
+   fprintf(out, ""
+      "\"dummy\": \"%hhu\""
+         ", "
+      "\"str\": \"%s\""
+   ,__entry->dummy
+   ,__entry->str
+   );
+}
+
+static const struct u_tracepoint __tp_intel_end_cmd_buffer_annotation = {
+    ALIGN_POT(sizeof(struct trace_intel_end_cmd_buffer_annotation), 8),   /* keep size 64b aligned */
+    "intel_end_cmd_buffer_annotation",
+    true,
+    __print_intel_end_cmd_buffer_annotation,
+    __print_json_intel_end_cmd_buffer_annotation,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_end_cmd_buffer_annotation,
+#endif
+};
+void __trace_intel_end_cmd_buffer_annotation(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+   , unsigned len
+   , const char * str
+) {
+   struct trace_intel_end_cmd_buffer_annotation entry;
+   UNUSED struct trace_intel_end_cmd_buffer_annotation *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_cmd_buffer_annotation *)u_trace_appendv(ut, NULL, &__tp_intel_end_cmd_buffer_annotation,
+                                                    0
+                                                    + len + 1
+                                                    ) :
+      &entry;
+   __entry->dummy = 0;
+   strncpy(__entry->str, str, len + 1);
 }
 
 /*
@@ -174,10 +497,13 @@ static const struct u_tracepoint __tp_intel_begin_xfb = {
 };
 void __trace_intel_begin_xfb(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_xfb *__entry =
-      (struct trace_intel_begin_xfb *)u_trace_append(ut, NULL, &__tp_intel_begin_xfb);
-   (void)__entry;
+   struct trace_intel_begin_xfb entry;
+   UNUSED struct trace_intel_begin_xfb *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_xfb *)u_trace_append(ut, NULL, &__tp_intel_begin_xfb) :
+      &entry;
 }
 
 /*
@@ -197,10 +523,13 @@ static const struct u_tracepoint __tp_intel_end_xfb = {
 };
 void __trace_intel_end_xfb(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_end_xfb *__entry =
-      (struct trace_intel_end_xfb *)u_trace_append(ut, NULL, &__tp_intel_end_xfb);
-   (void)__entry;
+   struct trace_intel_end_xfb entry;
+   UNUSED struct trace_intel_end_xfb *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_xfb *)u_trace_append(ut, NULL, &__tp_intel_end_xfb) :
+      &entry;
 }
 
 /*
@@ -220,10 +549,13 @@ static const struct u_tracepoint __tp_intel_begin_render_pass = {
 };
 void __trace_intel_begin_render_pass(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_render_pass *__entry =
-      (struct trace_intel_begin_render_pass *)u_trace_append(ut, NULL, &__tp_intel_begin_render_pass);
-   (void)__entry;
+   struct trace_intel_begin_render_pass entry;
+   UNUSED struct trace_intel_begin_render_pass *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_render_pass *)u_trace_append(ut, NULL, &__tp_intel_begin_render_pass) :
+      &entry;
 }
 
 /*
@@ -275,116 +607,21 @@ static const struct u_tracepoint __tp_intel_end_render_pass = {
 };
 void __trace_intel_end_render_pass(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint16_t width
    , uint16_t height
    , uint8_t att_count
    , uint8_t msaa
 ) {
-   struct trace_intel_end_render_pass *__entry =
-      (struct trace_intel_end_render_pass *)u_trace_append(ut, NULL, &__tp_intel_end_render_pass);
+   struct trace_intel_end_render_pass entry;
+   UNUSED struct trace_intel_end_render_pass *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_render_pass *)u_trace_append(ut, NULL, &__tp_intel_end_render_pass) :
+      &entry;
    __entry->width = width;
    __entry->height = height;
    __entry->att_count = att_count;
    __entry->msaa = msaa;
-}
-
-/*
- * intel_begin_dyn_render_pass
- */
-#define __print_intel_begin_dyn_render_pass NULL
-#define __print_json_intel_begin_dyn_render_pass NULL
-static const struct u_tracepoint __tp_intel_begin_dyn_render_pass = {
-    ALIGN_POT(sizeof(struct trace_intel_begin_dyn_render_pass), 8),   /* keep size 64b aligned */
-    "intel_begin_dyn_render_pass",
-    false,
-    __print_intel_begin_dyn_render_pass,
-    __print_json_intel_begin_dyn_render_pass,
-#ifdef HAVE_PERFETTO
-    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_begin_dyn_render_pass,
-#endif
-};
-void __trace_intel_begin_dyn_render_pass(
-     struct u_trace *ut
-) {
-   struct trace_intel_begin_dyn_render_pass *__entry =
-      (struct trace_intel_begin_dyn_render_pass *)u_trace_append(ut, NULL, &__tp_intel_begin_dyn_render_pass);
-   (void)__entry;
-}
-
-/*
- * intel_end_dyn_render_pass
- */
-static void __print_intel_end_dyn_render_pass(FILE *out, const void *arg) {
-   const struct trace_intel_end_dyn_render_pass *__entry =
-      (const struct trace_intel_end_dyn_render_pass *)arg;
-   fprintf(out, ""
-      "width=%hu, "
-      "height=%hu, "
-      "att_count=%hhu, "
-      "msaa=%hhu, "
-      "suspend=%hhu, "
-      "resume=%hhu, "
-         "\n"
-   ,__entry->width
-   ,__entry->height
-   ,__entry->att_count
-   ,__entry->msaa
-   ,__entry->suspend
-   ,__entry->resume
-   );
-}
-
-static void __print_json_intel_end_dyn_render_pass(FILE *out, const void *arg) {
-   const struct trace_intel_end_dyn_render_pass *__entry =
-      (const struct trace_intel_end_dyn_render_pass *)arg;
-   fprintf(out, ""
-      "\"width\": \"%hu\""
-         ", "
-      "\"height\": \"%hu\""
-         ", "
-      "\"att_count\": \"%hhu\""
-         ", "
-      "\"msaa\": \"%hhu\""
-         ", "
-      "\"suspend\": \"%hhu\""
-         ", "
-      "\"resume\": \"%hhu\""
-   ,__entry->width
-   ,__entry->height
-   ,__entry->att_count
-   ,__entry->msaa
-   ,__entry->suspend
-   ,__entry->resume
-   );
-}
-
-static const struct u_tracepoint __tp_intel_end_dyn_render_pass = {
-    ALIGN_POT(sizeof(struct trace_intel_end_dyn_render_pass), 8),   /* keep size 64b aligned */
-    "intel_end_dyn_render_pass",
-    true,
-    __print_intel_end_dyn_render_pass,
-    __print_json_intel_end_dyn_render_pass,
-#ifdef HAVE_PERFETTO
-    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_end_dyn_render_pass,
-#endif
-};
-void __trace_intel_end_dyn_render_pass(
-     struct u_trace *ut
-   , uint16_t width
-   , uint16_t height
-   , uint8_t att_count
-   , uint8_t msaa
-   , uint8_t suspend
-   , uint8_t resume
-) {
-   struct trace_intel_end_dyn_render_pass *__entry =
-      (struct trace_intel_end_dyn_render_pass *)u_trace_append(ut, NULL, &__tp_intel_end_dyn_render_pass);
-   __entry->width = width;
-   __entry->height = height;
-   __entry->att_count = att_count;
-   __entry->msaa = msaa;
-   __entry->suspend = suspend;
-   __entry->resume = resume;
 }
 
 /*
@@ -404,10 +641,13 @@ static const struct u_tracepoint __tp_intel_begin_blorp = {
 };
 void __trace_intel_begin_blorp(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_blorp *__entry =
-      (struct trace_intel_begin_blorp *)u_trace_append(ut, NULL, &__tp_intel_begin_blorp);
-   (void)__entry;
+   struct trace_intel_begin_blorp entry;
+   UNUSED struct trace_intel_begin_blorp *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_blorp *)u_trace_append(ut, NULL, &__tp_intel_begin_blorp) :
+      &entry;
 }
 
 /*
@@ -474,6 +714,7 @@ static const struct u_tracepoint __tp_intel_end_blorp = {
 };
 void __trace_intel_end_blorp(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , enum blorp_op op
    , uint32_t width
    , uint32_t height
@@ -482,8 +723,11 @@ void __trace_intel_end_blorp(
    , enum isl_format dst_fmt
    , enum isl_format src_fmt
 ) {
-   struct trace_intel_end_blorp *__entry =
-      (struct trace_intel_end_blorp *)u_trace_append(ut, NULL, &__tp_intel_end_blorp);
+   struct trace_intel_end_blorp entry;
+   UNUSED struct trace_intel_end_blorp *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_blorp *)u_trace_append(ut, NULL, &__tp_intel_end_blorp) :
+      &entry;
    __entry->op = op;
    __entry->width = width;
    __entry->height = height;
@@ -491,6 +735,58 @@ void __trace_intel_end_blorp(
    __entry->blorp_pipe = shader_pipe;
    __entry->dst_fmt = dst_fmt;
    __entry->src_fmt = src_fmt;
+}
+
+/*
+ * intel_begin_generate_draws
+ */
+#define __print_intel_begin_generate_draws NULL
+#define __print_json_intel_begin_generate_draws NULL
+static const struct u_tracepoint __tp_intel_begin_generate_draws = {
+    ALIGN_POT(sizeof(struct trace_intel_begin_generate_draws), 8),   /* keep size 64b aligned */
+    "intel_begin_generate_draws",
+    false,
+    __print_intel_begin_generate_draws,
+    __print_json_intel_begin_generate_draws,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_begin_generate_draws,
+#endif
+};
+void __trace_intel_begin_generate_draws(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+) {
+   struct trace_intel_begin_generate_draws entry;
+   UNUSED struct trace_intel_begin_generate_draws *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_generate_draws *)u_trace_append(ut, NULL, &__tp_intel_begin_generate_draws) :
+      &entry;
+}
+
+/*
+ * intel_end_generate_draws
+ */
+#define __print_intel_end_generate_draws NULL
+#define __print_json_intel_end_generate_draws NULL
+static const struct u_tracepoint __tp_intel_end_generate_draws = {
+    ALIGN_POT(sizeof(struct trace_intel_end_generate_draws), 8),   /* keep size 64b aligned */
+    "intel_end_generate_draws",
+    true,
+    __print_intel_end_generate_draws,
+    __print_json_intel_end_generate_draws,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_end_generate_draws,
+#endif
+};
+void __trace_intel_end_generate_draws(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+) {
+   struct trace_intel_end_generate_draws entry;
+   UNUSED struct trace_intel_end_generate_draws *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_generate_draws *)u_trace_append(ut, NULL, &__tp_intel_end_generate_draws) :
+      &entry;
 }
 
 /*
@@ -510,10 +806,13 @@ static const struct u_tracepoint __tp_intel_begin_draw = {
 };
 void __trace_intel_begin_draw(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw *__entry =
-      (struct trace_intel_begin_draw *)u_trace_append(ut, NULL, &__tp_intel_begin_draw);
-   (void)__entry;
+   struct trace_intel_begin_draw entry;
+   UNUSED struct trace_intel_begin_draw *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw *)u_trace_append(ut, NULL, &__tp_intel_begin_draw) :
+      &entry;
 }
 
 /*
@@ -550,10 +849,14 @@ static const struct u_tracepoint __tp_intel_end_draw = {
 };
 void __trace_intel_end_draw(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t count
 ) {
-   struct trace_intel_end_draw *__entry =
-      (struct trace_intel_end_draw *)u_trace_append(ut, NULL, &__tp_intel_end_draw);
+   struct trace_intel_end_draw entry;
+   UNUSED struct trace_intel_end_draw *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw *)u_trace_append(ut, NULL, &__tp_intel_end_draw) :
+      &entry;
    __entry->count = count;
 }
 
@@ -574,10 +877,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_multi = {
 };
 void __trace_intel_begin_draw_multi(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_multi *__entry =
-      (struct trace_intel_begin_draw_multi *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_multi);
-   (void)__entry;
+   struct trace_intel_begin_draw_multi entry;
+   UNUSED struct trace_intel_begin_draw_multi *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_multi *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_multi) :
+      &entry;
 }
 
 /*
@@ -614,10 +920,14 @@ static const struct u_tracepoint __tp_intel_end_draw_multi = {
 };
 void __trace_intel_end_draw_multi(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t count
 ) {
-   struct trace_intel_end_draw_multi *__entry =
-      (struct trace_intel_end_draw_multi *)u_trace_append(ut, NULL, &__tp_intel_end_draw_multi);
+   struct trace_intel_end_draw_multi entry;
+   UNUSED struct trace_intel_end_draw_multi *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_multi *)u_trace_append(ut, NULL, &__tp_intel_end_draw_multi) :
+      &entry;
    __entry->count = count;
 }
 
@@ -638,10 +948,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indexed = {
 };
 void __trace_intel_begin_draw_indexed(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indexed *__entry =
-      (struct trace_intel_begin_draw_indexed *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed);
-   (void)__entry;
+   struct trace_intel_begin_draw_indexed entry;
+   UNUSED struct trace_intel_begin_draw_indexed *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indexed *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed) :
+      &entry;
 }
 
 /*
@@ -678,10 +991,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indexed = {
 };
 void __trace_intel_end_draw_indexed(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t count
 ) {
-   struct trace_intel_end_draw_indexed *__entry =
-      (struct trace_intel_end_draw_indexed *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed);
+   struct trace_intel_end_draw_indexed entry;
+   UNUSED struct trace_intel_end_draw_indexed *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indexed *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed) :
+      &entry;
    __entry->count = count;
 }
 
@@ -702,10 +1019,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indexed_multi = {
 };
 void __trace_intel_begin_draw_indexed_multi(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indexed_multi *__entry =
-      (struct trace_intel_begin_draw_indexed_multi *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed_multi);
-   (void)__entry;
+   struct trace_intel_begin_draw_indexed_multi entry;
+   UNUSED struct trace_intel_begin_draw_indexed_multi *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indexed_multi *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed_multi) :
+      &entry;
 }
 
 /*
@@ -742,10 +1062,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indexed_multi = {
 };
 void __trace_intel_end_draw_indexed_multi(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t count
 ) {
-   struct trace_intel_end_draw_indexed_multi *__entry =
-      (struct trace_intel_end_draw_indexed_multi *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed_multi);
+   struct trace_intel_end_draw_indexed_multi entry;
+   UNUSED struct trace_intel_end_draw_indexed_multi *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indexed_multi *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed_multi) :
+      &entry;
    __entry->count = count;
 }
 
@@ -766,10 +1090,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indirect_byte_count = {
 };
 void __trace_intel_begin_draw_indirect_byte_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indirect_byte_count *__entry =
-      (struct trace_intel_begin_draw_indirect_byte_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indirect_byte_count);
-   (void)__entry;
+   struct trace_intel_begin_draw_indirect_byte_count entry;
+   UNUSED struct trace_intel_begin_draw_indirect_byte_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indirect_byte_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indirect_byte_count) :
+      &entry;
 }
 
 /*
@@ -806,10 +1133,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indirect_byte_count = {
 };
 void __trace_intel_end_draw_indirect_byte_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t instance_count
 ) {
-   struct trace_intel_end_draw_indirect_byte_count *__entry =
-      (struct trace_intel_end_draw_indirect_byte_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indirect_byte_count);
+   struct trace_intel_end_draw_indirect_byte_count entry;
+   UNUSED struct trace_intel_end_draw_indirect_byte_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indirect_byte_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indirect_byte_count) :
+      &entry;
    __entry->instance_count = instance_count;
 }
 
@@ -830,10 +1161,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indirect = {
 };
 void __trace_intel_begin_draw_indirect(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indirect *__entry =
-      (struct trace_intel_begin_draw_indirect *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indirect);
-   (void)__entry;
+   struct trace_intel_begin_draw_indirect entry;
+   UNUSED struct trace_intel_begin_draw_indirect *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indirect *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indirect) :
+      &entry;
 }
 
 /*
@@ -870,10 +1204,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indirect = {
 };
 void __trace_intel_end_draw_indirect(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t draw_count
 ) {
-   struct trace_intel_end_draw_indirect *__entry =
-      (struct trace_intel_end_draw_indirect *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indirect);
+   struct trace_intel_end_draw_indirect entry;
+   UNUSED struct trace_intel_end_draw_indirect *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indirect *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indirect) :
+      &entry;
    __entry->draw_count = draw_count;
 }
 
@@ -894,10 +1232,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indexed_indirect = {
 };
 void __trace_intel_begin_draw_indexed_indirect(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indexed_indirect *__entry =
-      (struct trace_intel_begin_draw_indexed_indirect *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed_indirect);
-   (void)__entry;
+   struct trace_intel_begin_draw_indexed_indirect entry;
+   UNUSED struct trace_intel_begin_draw_indexed_indirect *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indexed_indirect *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed_indirect) :
+      &entry;
 }
 
 /*
@@ -934,10 +1275,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indexed_indirect = {
 };
 void __trace_intel_end_draw_indexed_indirect(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t draw_count
 ) {
-   struct trace_intel_end_draw_indexed_indirect *__entry =
-      (struct trace_intel_end_draw_indexed_indirect *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed_indirect);
+   struct trace_intel_end_draw_indexed_indirect entry;
+   UNUSED struct trace_intel_end_draw_indexed_indirect *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indexed_indirect *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed_indirect) :
+      &entry;
    __entry->draw_count = draw_count;
 }
 
@@ -958,10 +1303,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indirect_count = {
 };
 void __trace_intel_begin_draw_indirect_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indirect_count *__entry =
-      (struct trace_intel_begin_draw_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indirect_count);
-   (void)__entry;
+   struct trace_intel_begin_draw_indirect_count entry;
+   UNUSED struct trace_intel_begin_draw_indirect_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indirect_count) :
+      &entry;
 }
 
 /*
@@ -998,10 +1346,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indirect_count = {
 };
 void __trace_intel_end_draw_indirect_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t max_draw_count
 ) {
-   struct trace_intel_end_draw_indirect_count *__entry =
-      (struct trace_intel_end_draw_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indirect_count);
+   struct trace_intel_end_draw_indirect_count entry;
+   UNUSED struct trace_intel_end_draw_indirect_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indirect_count) :
+      &entry;
    __entry->max_draw_count = max_draw_count;
 }
 
@@ -1022,10 +1374,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_indexed_indirect_count = 
 };
 void __trace_intel_begin_draw_indexed_indirect_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_indexed_indirect_count *__entry =
-      (struct trace_intel_begin_draw_indexed_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed_indirect_count);
-   (void)__entry;
+   struct trace_intel_begin_draw_indexed_indirect_count entry;
+   UNUSED struct trace_intel_begin_draw_indexed_indirect_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_indexed_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_indexed_indirect_count) :
+      &entry;
 }
 
 /*
@@ -1062,10 +1417,14 @@ static const struct u_tracepoint __tp_intel_end_draw_indexed_indirect_count = {
 };
 void __trace_intel_end_draw_indexed_indirect_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t max_draw_count
 ) {
-   struct trace_intel_end_draw_indexed_indirect_count *__entry =
-      (struct trace_intel_end_draw_indexed_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed_indirect_count);
+   struct trace_intel_end_draw_indexed_indirect_count entry;
+   UNUSED struct trace_intel_end_draw_indexed_indirect_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_indexed_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_indexed_indirect_count) :
+      &entry;
    __entry->max_draw_count = max_draw_count;
 }
 
@@ -1086,10 +1445,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_mesh = {
 };
 void __trace_intel_begin_draw_mesh(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_mesh *__entry =
-      (struct trace_intel_begin_draw_mesh *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_mesh);
-   (void)__entry;
+   struct trace_intel_begin_draw_mesh entry;
+   UNUSED struct trace_intel_begin_draw_mesh *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_mesh *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_mesh) :
+      &entry;
 }
 
 /*
@@ -1127,12 +1489,16 @@ static const struct u_tracepoint __tp_intel_end_draw_mesh = {
 };
 void __trace_intel_end_draw_mesh(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t group_x
    , uint32_t group_y
    , uint32_t group_z
 ) {
-   struct trace_intel_end_draw_mesh *__entry =
-      (struct trace_intel_end_draw_mesh *)u_trace_append(ut, NULL, &__tp_intel_end_draw_mesh);
+   struct trace_intel_end_draw_mesh entry;
+   UNUSED struct trace_intel_end_draw_mesh *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_mesh *)u_trace_append(ut, NULL, &__tp_intel_end_draw_mesh) :
+      &entry;
    __entry->group_x = group_x;
    __entry->group_y = group_y;
    __entry->group_z = group_z;
@@ -1155,10 +1521,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_mesh_indirect = {
 };
 void __trace_intel_begin_draw_mesh_indirect(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_mesh_indirect *__entry =
-      (struct trace_intel_begin_draw_mesh_indirect *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_mesh_indirect);
-   (void)__entry;
+   struct trace_intel_begin_draw_mesh_indirect entry;
+   UNUSED struct trace_intel_begin_draw_mesh_indirect *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_mesh_indirect *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_mesh_indirect) :
+      &entry;
 }
 
 /*
@@ -1195,10 +1564,14 @@ static const struct u_tracepoint __tp_intel_end_draw_mesh_indirect = {
 };
 void __trace_intel_end_draw_mesh_indirect(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t draw_count
 ) {
-   struct trace_intel_end_draw_mesh_indirect *__entry =
-      (struct trace_intel_end_draw_mesh_indirect *)u_trace_append(ut, NULL, &__tp_intel_end_draw_mesh_indirect);
+   struct trace_intel_end_draw_mesh_indirect entry;
+   UNUSED struct trace_intel_end_draw_mesh_indirect *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_mesh_indirect *)u_trace_append(ut, NULL, &__tp_intel_end_draw_mesh_indirect) :
+      &entry;
    __entry->draw_count = draw_count;
 }
 
@@ -1219,10 +1592,13 @@ static const struct u_tracepoint __tp_intel_begin_draw_mesh_indirect_count = {
 };
 void __trace_intel_begin_draw_mesh_indirect_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_draw_mesh_indirect_count *__entry =
-      (struct trace_intel_begin_draw_mesh_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_mesh_indirect_count);
-   (void)__entry;
+   struct trace_intel_begin_draw_mesh_indirect_count entry;
+   UNUSED struct trace_intel_begin_draw_mesh_indirect_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_draw_mesh_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_begin_draw_mesh_indirect_count) :
+      &entry;
 }
 
 /*
@@ -1259,10 +1635,14 @@ static const struct u_tracepoint __tp_intel_end_draw_mesh_indirect_count = {
 };
 void __trace_intel_end_draw_mesh_indirect_count(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t max_draw_count
 ) {
-   struct trace_intel_end_draw_mesh_indirect_count *__entry =
-      (struct trace_intel_end_draw_mesh_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_mesh_indirect_count);
+   struct trace_intel_end_draw_mesh_indirect_count entry;
+   UNUSED struct trace_intel_end_draw_mesh_indirect_count *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_draw_mesh_indirect_count *)u_trace_append(ut, NULL, &__tp_intel_end_draw_mesh_indirect_count) :
+      &entry;
    __entry->max_draw_count = max_draw_count;
 }
 
@@ -1283,10 +1663,13 @@ static const struct u_tracepoint __tp_intel_begin_compute = {
 };
 void __trace_intel_begin_compute(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_compute *__entry =
-      (struct trace_intel_begin_compute *)u_trace_append(ut, NULL, &__tp_intel_begin_compute);
-   (void)__entry;
+   struct trace_intel_begin_compute entry;
+   UNUSED struct trace_intel_begin_compute *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_compute *)u_trace_append(ut, NULL, &__tp_intel_begin_compute) :
+      &entry;
 }
 
 /*
@@ -1324,15 +1707,71 @@ static const struct u_tracepoint __tp_intel_end_compute = {
 };
 void __trace_intel_end_compute(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t group_x
    , uint32_t group_y
    , uint32_t group_z
 ) {
-   struct trace_intel_end_compute *__entry =
-      (struct trace_intel_end_compute *)u_trace_append(ut, NULL, &__tp_intel_end_compute);
+   struct trace_intel_end_compute entry;
+   UNUSED struct trace_intel_end_compute *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_compute *)u_trace_append(ut, NULL, &__tp_intel_end_compute) :
+      &entry;
    __entry->group_x = group_x;
    __entry->group_y = group_y;
    __entry->group_z = group_z;
+}
+
+/*
+ * intel_begin_trace_copy
+ */
+#define __print_intel_begin_trace_copy NULL
+#define __print_json_intel_begin_trace_copy NULL
+static const struct u_tracepoint __tp_intel_begin_trace_copy = {
+    ALIGN_POT(sizeof(struct trace_intel_begin_trace_copy), 8),   /* keep size 64b aligned */
+    "intel_begin_trace_copy",
+    false,
+    __print_intel_begin_trace_copy,
+    __print_json_intel_begin_trace_copy,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_begin_trace_copy,
+#endif
+};
+void __trace_intel_begin_trace_copy(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+) {
+   struct trace_intel_begin_trace_copy entry;
+   UNUSED struct trace_intel_begin_trace_copy *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_trace_copy *)u_trace_append(ut, NULL, &__tp_intel_begin_trace_copy) :
+      &entry;
+}
+
+/*
+ * intel_end_trace_copy
+ */
+#define __print_intel_end_trace_copy NULL
+#define __print_json_intel_end_trace_copy NULL
+static const struct u_tracepoint __tp_intel_end_trace_copy = {
+    ALIGN_POT(sizeof(struct trace_intel_end_trace_copy), 8),   /* keep size 64b aligned */
+    "intel_end_trace_copy",
+    true,
+    __print_intel_end_trace_copy,
+    __print_json_intel_end_trace_copy,
+#ifdef HAVE_PERFETTO
+    (void (*)(void *pctx, uint64_t, const void *, const void *))intel_ds_end_trace_copy,
+#endif
+};
+void __trace_intel_end_trace_copy(
+     struct u_trace *ut
+   , enum u_trace_type enabled_traces
+) {
+   struct trace_intel_end_trace_copy entry;
+   UNUSED struct trace_intel_end_trace_copy *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_trace_copy *)u_trace_append(ut, NULL, &__tp_intel_end_trace_copy) :
+      &entry;
 }
 
 /*
@@ -1352,10 +1791,13 @@ static const struct u_tracepoint __tp_intel_begin_stall = {
 };
 void __trace_intel_begin_stall(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
 ) {
-   struct trace_intel_begin_stall *__entry =
-      (struct trace_intel_begin_stall *)u_trace_append(ut, NULL, &__tp_intel_begin_stall);
-   (void)__entry;
+   struct trace_intel_begin_stall entry;
+   UNUSED struct trace_intel_begin_stall *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_begin_stall *)u_trace_append(ut, NULL, &__tp_intel_begin_stall) :
+      &entry;
 }
 
 /*
@@ -1364,7 +1806,7 @@ void __trace_intel_begin_stall(
 static void __print_intel_end_stall(FILE *out, const void *arg) {
    const struct trace_intel_end_stall *__entry =
       (const struct trace_intel_end_stall *)arg;
-   fprintf(out, "%s%s%s%s%s%s%s%s%s%s%s%s%s : %s\n"
+   fprintf(out, "%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s : %s\n"
            , (__entry->flags & INTEL_DS_DEPTH_CACHE_FLUSH_BIT) ? "+depth_flush" : ""
            , (__entry->flags & INTEL_DS_DATA_CACHE_FLUSH_BIT) ? "+dc_flush" : ""
            , (__entry->flags & INTEL_DS_HDC_PIPELINE_FLUSH_BIT) ? "+hdc_flush" : ""
@@ -1378,6 +1820,9 @@ static void __print_intel_end_stall(FILE *out, const void *arg) {
            , (__entry->flags & INTEL_DS_STALL_AT_SCOREBOARD_BIT) ? "+pb_stall" : ""
            , (__entry->flags & INTEL_DS_DEPTH_STALL_BIT) ? "+depth_stall" : ""
            , (__entry->flags & INTEL_DS_CS_STALL_BIT) ? "+cs_stall" : ""
+           , (__entry->flags & INTEL_DS_UNTYPED_DATAPORT_CACHE_FLUSH_BIT) ? "+udp_flush" : ""
+           , (__entry->flags & INTEL_DS_PSS_STALL_SYNC_BIT) ? "+pss_stall" : ""
+           , (__entry->flags & INTEL_DS_END_OF_PIPE_BIT) ? "+eop" : ""
            , __entry->reason ? __entry->reason : "unknown"
    );
 }
@@ -1385,7 +1830,7 @@ static void __print_intel_end_stall(FILE *out, const void *arg) {
 static void __print_json_intel_end_stall(FILE *out, const void *arg) {
    const struct trace_intel_end_stall *__entry =
       (const struct trace_intel_end_stall *)arg;
-   fprintf(out, "\"unstructured\": \"%s%s%s%s%s%s%s%s%s%s%s%s%s : %s\""
+   fprintf(out, "\"unstructured\": \"%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s%s : %s\""
            , (__entry->flags & INTEL_DS_DEPTH_CACHE_FLUSH_BIT) ? "+depth_flush" : ""
            , (__entry->flags & INTEL_DS_DATA_CACHE_FLUSH_BIT) ? "+dc_flush" : ""
            , (__entry->flags & INTEL_DS_HDC_PIPELINE_FLUSH_BIT) ? "+hdc_flush" : ""
@@ -1399,6 +1844,9 @@ static void __print_json_intel_end_stall(FILE *out, const void *arg) {
            , (__entry->flags & INTEL_DS_STALL_AT_SCOREBOARD_BIT) ? "+pb_stall" : ""
            , (__entry->flags & INTEL_DS_DEPTH_STALL_BIT) ? "+depth_stall" : ""
            , (__entry->flags & INTEL_DS_CS_STALL_BIT) ? "+cs_stall" : ""
+           , (__entry->flags & INTEL_DS_UNTYPED_DATAPORT_CACHE_FLUSH_BIT) ? "+udp_flush" : ""
+           , (__entry->flags & INTEL_DS_PSS_STALL_SYNC_BIT) ? "+pss_stall" : ""
+           , (__entry->flags & INTEL_DS_END_OF_PIPE_BIT) ? "+eop" : ""
            , __entry->reason ? __entry->reason : "unknown"
    );
 }
@@ -1415,12 +1863,16 @@ static const struct u_tracepoint __tp_intel_end_stall = {
 };
 void __trace_intel_end_stall(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , uint32_t flags
    , intel_ds_stall_cb_t decode_cb
    , const char * reason
 ) {
-   struct trace_intel_end_stall *__entry =
-      (struct trace_intel_end_stall *)u_trace_append(ut, NULL, &__tp_intel_end_stall);
+   struct trace_intel_end_stall entry;
+   UNUSED struct trace_intel_end_stall *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_intel_end_stall *)u_trace_append(ut, NULL, &__tp_intel_end_stall) :
+      &entry;
    __entry->flags = decode_cb(flags);
    __entry->reason = reason;
 }

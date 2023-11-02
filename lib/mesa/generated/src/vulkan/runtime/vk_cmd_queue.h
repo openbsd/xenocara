@@ -28,7 +28,7 @@
 #include "util/list.h"
 
 #define VK_PROTOTYPES
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,11 +64,15 @@ enum vk_cmd_type {
    VK_CMD_DISPATCH,
    VK_CMD_DISPATCH_INDIRECT,
    VK_CMD_SUBPASS_SHADING_HUAWEI,
+   VK_CMD_DRAW_CLUSTER_HUAWEI,
+   VK_CMD_DRAW_CLUSTER_INDIRECT_HUAWEI,
    VK_CMD_COPY_BUFFER,
    VK_CMD_COPY_IMAGE,
    VK_CMD_BLIT_IMAGE,
    VK_CMD_COPY_BUFFER_TO_IMAGE,
    VK_CMD_COPY_IMAGE_TO_BUFFER,
+   VK_CMD_COPY_MEMORY_INDIRECT_NV,
+   VK_CMD_COPY_MEMORY_TO_IMAGE_INDIRECT_NV,
    VK_CMD_UPDATE_BUFFER,
    VK_CMD_FILL_BUFFER,
    VK_CMD_CLEAR_COLOR_IMAGE,
@@ -103,6 +107,8 @@ enum vk_cmd_type {
    VK_CMD_PUSH_DESCRIPTOR_SET_WITH_TEMPLATE_KHR,
    VK_CMD_SET_VIEWPORT_WSCALING_NV,
    VK_CMD_SET_DISCARD_RECTANGLE_EXT,
+   VK_CMD_SET_DISCARD_RECTANGLE_ENABLE_EXT,
+   VK_CMD_SET_DISCARD_RECTANGLE_MODE_EXT,
    VK_CMD_SET_SAMPLE_LOCATIONS_EXT,
    VK_CMD_BEGIN_DEBUG_UTILS_LABEL_EXT,
    VK_CMD_END_DEBUG_UTILS_LABEL_EXT,
@@ -121,6 +127,7 @@ enum vk_cmd_type {
    VK_CMD_END_QUERY_INDEXED_EXT,
    VK_CMD_DRAW_INDIRECT_BYTE_COUNT_EXT,
    VK_CMD_SET_EXCLUSIVE_SCISSOR_NV,
+   VK_CMD_SET_EXCLUSIVE_SCISSOR_ENABLE_NV,
    VK_CMD_BIND_SHADING_RATE_IMAGE_NV,
    VK_CMD_SET_VIEWPORT_SHADING_RATE_PALETTE_NV,
    VK_CMD_SET_COARSE_SAMPLE_ORDER_NV,
@@ -213,22 +220,16 @@ enum vk_cmd_type {
    VK_CMD_PIPELINE_BARRIER2,
    VK_CMD_WRITE_TIMESTAMP2,
    VK_CMD_WRITE_BUFFER_MARKER2_AMD,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
    VK_CMD_DECODE_VIDEO_KHR,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
    VK_CMD_BEGIN_VIDEO_CODING_KHR,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
    VK_CMD_CONTROL_VIDEO_CODING_KHR,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
    VK_CMD_END_VIDEO_CODING_KHR,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-   VK_CMD_ENCODE_VIDEO_KHR,
-#endif // VK_ENABLE_BETA_EXTENSIONS
+   VK_CMD_DECOMPRESS_MEMORY_NV,
+   VK_CMD_DECOMPRESS_MEMORY_INDIRECT_COUNT_NV,
    VK_CMD_CU_LAUNCH_KERNEL_NVX,
+   VK_CMD_BIND_DESCRIPTOR_BUFFERS_EXT,
+   VK_CMD_SET_DESCRIPTOR_BUFFER_OFFSETS_EXT,
+   VK_CMD_BIND_DESCRIPTOR_BUFFER_EMBEDDED_SAMPLERS_EXT,
    VK_CMD_BEGIN_RENDERING,
    VK_CMD_END_RENDERING,
    VK_CMD_BUILD_MICROMAPS_EXT,
@@ -237,6 +238,7 @@ enum vk_cmd_type {
    VK_CMD_COPY_MEMORY_TO_MICROMAP_EXT,
    VK_CMD_WRITE_MICROMAPS_PROPERTIES_EXT,
    VK_CMD_OPTICAL_FLOW_EXECUTE_NV,
+   VK_CMD_BIND_SHADERS_EXT,
 };
 
 extern const char *vk_cmd_queue_type_names[];
@@ -351,6 +353,15 @@ struct vk_cmd_dispatch_indirect {
    VkBuffer buffer;
    VkDeviceSize offset;
 };
+struct vk_cmd_draw_cluster_huawei {
+   uint32_t group_count_x;
+   uint32_t group_count_y;
+   uint32_t group_count_z;
+};
+struct vk_cmd_draw_cluster_indirect_huawei {
+   VkBuffer buffer;
+   VkDeviceSize offset;
+};
 struct vk_cmd_copy_buffer {
    VkBuffer src_buffer;
    VkBuffer dst_buffer;
@@ -387,6 +398,19 @@ struct vk_cmd_copy_image_to_buffer {
    VkBuffer dst_buffer;
    uint32_t region_count;
    VkBufferImageCopy* regions;
+};
+struct vk_cmd_copy_memory_indirect_nv {
+   VkDeviceAddress copy_buffer_address;
+   uint32_t copy_count;
+   uint32_t stride;
+};
+struct vk_cmd_copy_memory_to_image_indirect_nv {
+   VkDeviceAddress copy_buffer_address;
+   uint32_t copy_count;
+   uint32_t stride;
+   VkImage dst_image;
+   VkImageLayout dst_image_layout;
+   VkImageSubresourceLayers* image_subresources;
 };
 struct vk_cmd_update_buffer {
    VkBuffer dst_buffer;
@@ -560,6 +584,12 @@ struct vk_cmd_set_discard_rectangle_ext {
    uint32_t discard_rectangle_count;
    VkRect2D* discard_rectangles;
 };
+struct vk_cmd_set_discard_rectangle_enable_ext {
+   VkBool32 discard_rectangle_enable;
+};
+struct vk_cmd_set_discard_rectangle_mode_ext {
+   VkDiscardRectangleModeEXT discard_rectangle_mode;
+};
 struct vk_cmd_set_sample_locations_ext {
    VkSampleLocationsInfoEXT* sample_locations_info;
 };
@@ -647,6 +677,11 @@ struct vk_cmd_set_exclusive_scissor_nv {
    uint32_t first_exclusive_scissor;
    uint32_t exclusive_scissor_count;
    VkRect2D* exclusive_scissors;
+};
+struct vk_cmd_set_exclusive_scissor_enable_nv {
+   uint32_t first_exclusive_scissor;
+   uint32_t exclusive_scissor_count;
+   VkBool32* exclusive_scissor_enables;
 };
 struct vk_cmd_bind_shading_rate_image_nv {
    VkImageView image_view;
@@ -1034,33 +1069,46 @@ struct vk_cmd_write_buffer_marker2_amd {
    VkDeviceSize                                        dst_offset;
    uint32_t                                            marker;
 };
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 struct vk_cmd_decode_video_khr {
    VkVideoDecodeInfoKHR* decode_info;
 };
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 struct vk_cmd_begin_video_coding_khr {
    VkVideoBeginCodingInfoKHR* begin_info;
 };
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 struct vk_cmd_control_video_coding_khr {
    VkVideoCodingControlInfoKHR* coding_control_info;
 };
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 struct vk_cmd_end_video_coding_khr {
    VkVideoEndCodingInfoKHR* end_coding_info;
 };
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-struct vk_cmd_encode_video_khr {
-   VkVideoEncodeInfoKHR* encode_info;
+struct vk_cmd_decompress_memory_nv {
+   uint32_t decompress_region_count;
+   VkDecompressMemoryRegionNV* decompress_memory_regions;
 };
-#endif // VK_ENABLE_BETA_EXTENSIONS
+struct vk_cmd_decompress_memory_indirect_count_nv {
+   VkDeviceAddress indirect_commands_address;
+   VkDeviceAddress indirect_commands_count_address;
+   uint32_t stride;
+};
 struct vk_cmd_cu_launch_kernel_nvx {
    VkCuLaunchInfoNVX* launch_info;
+};
+struct vk_cmd_bind_descriptor_buffers_ext {
+   uint32_t buffer_count;
+   VkDescriptorBufferBindingInfoEXT* binding_infos;
+};
+struct vk_cmd_set_descriptor_buffer_offsets_ext {
+   VkPipelineBindPoint pipeline_bind_point;
+   VkPipelineLayout layout;
+   uint32_t first_set;
+   uint32_t set_count;
+   uint32_t* buffer_indices;
+   VkDeviceSize* offsets;
+};
+struct vk_cmd_bind_descriptor_buffer_embedded_samplers_ext {
+   VkPipelineBindPoint pipeline_bind_point;
+   VkPipelineLayout layout;
+   uint32_t set;
 };
 struct vk_cmd_begin_rendering {
    VkRenderingInfo*                              rendering_info;
@@ -1089,6 +1137,11 @@ struct vk_cmd_optical_flow_execute_nv {
    VkOpticalFlowSessionNV session;
    VkOpticalFlowExecuteInfoNV* execute_info;
 };
+struct vk_cmd_bind_shaders_ext {
+   uint32_t stage_count;
+   VkShaderStageFlagBits* stages;
+   VkShaderEXT* shaders;
+};
 
 struct vk_cmd_queue_entry {
    struct list_head cmd_link;
@@ -1115,11 +1168,15 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_draw_indexed_indirect draw_indexed_indirect;
       struct vk_cmd_dispatch dispatch;
       struct vk_cmd_dispatch_indirect dispatch_indirect;
+      struct vk_cmd_draw_cluster_huawei draw_cluster_huawei;
+      struct vk_cmd_draw_cluster_indirect_huawei draw_cluster_indirect_huawei;
       struct vk_cmd_copy_buffer copy_buffer;
       struct vk_cmd_copy_image copy_image;
       struct vk_cmd_blit_image blit_image;
       struct vk_cmd_copy_buffer_to_image copy_buffer_to_image;
       struct vk_cmd_copy_image_to_buffer copy_image_to_buffer;
+      struct vk_cmd_copy_memory_indirect_nv copy_memory_indirect_nv;
+      struct vk_cmd_copy_memory_to_image_indirect_nv copy_memory_to_image_indirect_nv;
       struct vk_cmd_update_buffer update_buffer;
       struct vk_cmd_fill_buffer fill_buffer;
       struct vk_cmd_clear_color_image clear_color_image;
@@ -1151,6 +1208,8 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_push_descriptor_set_with_template_khr push_descriptor_set_with_template_khr;
       struct vk_cmd_set_viewport_wscaling_nv set_viewport_wscaling_nv;
       struct vk_cmd_set_discard_rectangle_ext set_discard_rectangle_ext;
+      struct vk_cmd_set_discard_rectangle_enable_ext set_discard_rectangle_enable_ext;
+      struct vk_cmd_set_discard_rectangle_mode_ext set_discard_rectangle_mode_ext;
       struct vk_cmd_set_sample_locations_ext set_sample_locations_ext;
       struct vk_cmd_begin_debug_utils_label_ext begin_debug_utils_label_ext;
       struct vk_cmd_insert_debug_utils_label_ext insert_debug_utils_label_ext;
@@ -1168,6 +1227,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_end_query_indexed_ext end_query_indexed_ext;
       struct vk_cmd_draw_indirect_byte_count_ext draw_indirect_byte_count_ext;
       struct vk_cmd_set_exclusive_scissor_nv set_exclusive_scissor_nv;
+      struct vk_cmd_set_exclusive_scissor_enable_nv set_exclusive_scissor_enable_nv;
       struct vk_cmd_bind_shading_rate_image_nv bind_shading_rate_image_nv;
       struct vk_cmd_set_viewport_shading_rate_palette_nv set_viewport_shading_rate_palette_nv;
       struct vk_cmd_set_coarse_sample_order_nv set_coarse_sample_order_nv;
@@ -1260,22 +1320,16 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_pipeline_barrier2 pipeline_barrier2;
       struct vk_cmd_write_timestamp2 write_timestamp2;
       struct vk_cmd_write_buffer_marker2_amd write_buffer_marker2_amd;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
       struct vk_cmd_decode_video_khr decode_video_khr;
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
       struct vk_cmd_begin_video_coding_khr begin_video_coding_khr;
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
       struct vk_cmd_control_video_coding_khr control_video_coding_khr;
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
       struct vk_cmd_end_video_coding_khr end_video_coding_khr;
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-      struct vk_cmd_encode_video_khr encode_video_khr;
-#endif // VK_ENABLE_BETA_EXTENSIONS
+      struct vk_cmd_decompress_memory_nv decompress_memory_nv;
+      struct vk_cmd_decompress_memory_indirect_count_nv decompress_memory_indirect_count_nv;
       struct vk_cmd_cu_launch_kernel_nvx cu_launch_kernel_nvx;
+      struct vk_cmd_bind_descriptor_buffers_ext bind_descriptor_buffers_ext;
+      struct vk_cmd_set_descriptor_buffer_offsets_ext set_descriptor_buffer_offsets_ext;
+      struct vk_cmd_bind_descriptor_buffer_embedded_samplers_ext bind_descriptor_buffer_embedded_samplers_ext;
       struct vk_cmd_begin_rendering begin_rendering;
       struct vk_cmd_build_micromaps_ext build_micromaps_ext;
       struct vk_cmd_copy_micromap_ext copy_micromap_ext;
@@ -1283,6 +1337,7 @@ struct vk_cmd_queue_entry {
       struct vk_cmd_copy_memory_to_micromap_ext copy_memory_to_micromap_ext;
       struct vk_cmd_write_micromaps_properties_ext write_micromaps_properties_ext;
       struct vk_cmd_optical_flow_execute_nv optical_flow_execute_nv;
+      struct vk_cmd_bind_shaders_ext bind_shaders_ext;
    } u;
    void *driver_data;
    void (*driver_free_cb)(struct vk_cmd_queue *queue,
@@ -1396,6 +1451,17 @@ struct vk_cmd_queue_entry {
   VkResult vk_enqueue_cmd_subpass_shading_huawei(struct vk_cmd_queue *queue
   );
 
+  VkResult vk_enqueue_cmd_draw_cluster_huawei(struct vk_cmd_queue *queue
+   , uint32_t groupCountX
+   , uint32_t groupCountY
+   , uint32_t groupCountZ
+  );
+
+  VkResult vk_enqueue_cmd_draw_cluster_indirect_huawei(struct vk_cmd_queue *queue
+   , VkBuffer buffer
+   , VkDeviceSize offset
+  );
+
   VkResult vk_enqueue_cmd_copy_buffer(struct vk_cmd_queue *queue
    , VkBuffer srcBuffer
    , VkBuffer dstBuffer
@@ -1436,6 +1502,21 @@ struct vk_cmd_queue_entry {
    , VkBuffer dstBuffer
    , uint32_t regionCount
    , const VkBufferImageCopy* pRegions
+  );
+
+  VkResult vk_enqueue_cmd_copy_memory_indirect_nv(struct vk_cmd_queue *queue
+   , VkDeviceAddress copyBufferAddress
+   , uint32_t copyCount
+   , uint32_t stride
+  );
+
+  VkResult vk_enqueue_cmd_copy_memory_to_image_indirect_nv(struct vk_cmd_queue *queue
+   , VkDeviceAddress copyBufferAddress
+   , uint32_t copyCount
+   , uint32_t stride
+   , VkImage dstImage
+   , VkImageLayout dstImageLayout
+   , const VkImageSubresourceLayers* pImageSubresources
   );
 
   VkResult vk_enqueue_cmd_update_buffer(struct vk_cmd_queue *queue
@@ -1635,6 +1716,14 @@ struct vk_cmd_queue_entry {
    , const VkRect2D* pDiscardRectangles
   );
 
+  VkResult vk_enqueue_cmd_set_discard_rectangle_enable_ext(struct vk_cmd_queue *queue
+   , VkBool32 discardRectangleEnable
+  );
+
+  VkResult vk_enqueue_cmd_set_discard_rectangle_mode_ext(struct vk_cmd_queue *queue
+   , VkDiscardRectangleModeEXT discardRectangleMode
+  );
+
   VkResult vk_enqueue_cmd_set_sample_locations_ext(struct vk_cmd_queue *queue
    , const VkSampleLocationsInfoEXT* pSampleLocationsInfo
   );
@@ -1741,6 +1830,12 @@ struct vk_cmd_queue_entry {
    , uint32_t firstExclusiveScissor
    , uint32_t exclusiveScissorCount
    , const VkRect2D* pExclusiveScissors
+  );
+
+  VkResult vk_enqueue_cmd_set_exclusive_scissor_enable_nv(struct vk_cmd_queue *queue
+   , uint32_t firstExclusiveScissor
+   , uint32_t exclusiveScissorCount
+   , const VkBool32* pExclusiveScissorEnables
   );
 
   VkResult vk_enqueue_cmd_bind_shading_rate_image_nv(struct vk_cmd_queue *queue
@@ -2209,38 +2304,55 @@ struct vk_cmd_queue_entry {
    , uint32_t                                            marker
   );
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
   VkResult vk_enqueue_cmd_decode_video_khr(struct vk_cmd_queue *queue
    , const VkVideoDecodeInfoKHR* pDecodeInfo
   );
-#endif // VK_ENABLE_BETA_EXTENSIONS
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
   VkResult vk_enqueue_cmd_begin_video_coding_khr(struct vk_cmd_queue *queue
    , const VkVideoBeginCodingInfoKHR* pBeginInfo
   );
-#endif // VK_ENABLE_BETA_EXTENSIONS
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
   VkResult vk_enqueue_cmd_control_video_coding_khr(struct vk_cmd_queue *queue
    , const VkVideoCodingControlInfoKHR* pCodingControlInfo
   );
-#endif // VK_ENABLE_BETA_EXTENSIONS
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
   VkResult vk_enqueue_cmd_end_video_coding_khr(struct vk_cmd_queue *queue
    , const VkVideoEndCodingInfoKHR* pEndCodingInfo
   );
-#endif // VK_ENABLE_BETA_EXTENSIONS
 
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-  VkResult vk_enqueue_cmd_encode_video_khr(struct vk_cmd_queue *queue
-   , const VkVideoEncodeInfoKHR* pEncodeInfo
+  VkResult vk_enqueue_cmd_decompress_memory_nv(struct vk_cmd_queue *queue
+   , uint32_t decompressRegionCount
+   , const VkDecompressMemoryRegionNV* pDecompressMemoryRegions
   );
-#endif // VK_ENABLE_BETA_EXTENSIONS
+
+  VkResult vk_enqueue_cmd_decompress_memory_indirect_count_nv(struct vk_cmd_queue *queue
+   , VkDeviceAddress indirectCommandsAddress
+   , VkDeviceAddress indirectCommandsCountAddress
+   , uint32_t stride
+  );
 
   VkResult vk_enqueue_cmd_cu_launch_kernel_nvx(struct vk_cmd_queue *queue
    , const VkCuLaunchInfoNVX* pLaunchInfo
+  );
+
+  VkResult vk_enqueue_cmd_bind_descriptor_buffers_ext(struct vk_cmd_queue *queue
+   , uint32_t bufferCount
+   , const VkDescriptorBufferBindingInfoEXT* pBindingInfos
+  );
+
+  VkResult vk_enqueue_cmd_set_descriptor_buffer_offsets_ext(struct vk_cmd_queue *queue
+   , VkPipelineBindPoint pipelineBindPoint
+   , VkPipelineLayout layout
+   , uint32_t firstSet
+   , uint32_t setCount
+   , const uint32_t* pBufferIndices
+   , const VkDeviceSize* pOffsets
+  );
+
+  VkResult vk_enqueue_cmd_bind_descriptor_buffer_embedded_samplers_ext(struct vk_cmd_queue *queue
+   , VkPipelineBindPoint pipelineBindPoint
+   , VkPipelineLayout layout
+   , uint32_t set
   );
 
   VkResult vk_enqueue_cmd_begin_rendering(struct vk_cmd_queue *queue
@@ -2278,6 +2390,12 @@ struct vk_cmd_queue_entry {
   VkResult vk_enqueue_cmd_optical_flow_execute_nv(struct vk_cmd_queue *queue
    , VkOpticalFlowSessionNV session
    , const VkOpticalFlowExecuteInfoNV* pExecuteInfo
+  );
+
+  VkResult vk_enqueue_cmd_bind_shaders_ext(struct vk_cmd_queue *queue
+   , uint32_t stageCount
+   , const VkShaderStageFlagBits* pStages
+   , const VkShaderEXT* pShaders
   );
 
 

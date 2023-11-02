@@ -1660,22 +1660,57 @@
       for (unsigned c = 0, c0 = 0, c1 = 0;
            c < components;
            c0 += c0_inc, c1 += c1_inc, c++) {
-
-         switch (op[0]->type->base_type) {
-         case GLSL_TYPE_UINT:
+         
+         if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+             op[1]->type->base_type == GLSL_TYPE_UINT) {
             data.u[c] = op[0]->value.u[c0] << op[1]->value.u[c1];
-            break;
-         case GLSL_TYPE_INT:
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
+            data.u[c] = op[0]->value.u[c0] << op[1]->value.i[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
+            data.u[c] = op[0]->value.u[c0] << op[1]->value.u64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
+            data.u[c] = op[0]->value.u[c0] << op[1]->value.i64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT) {
+            data.i[c] = op[0]->value.i[c0] << op[1]->value.u[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
             data.i[c] = op[0]->value.i[c0] << op[1]->value.i[c1];
-            break;
-         case GLSL_TYPE_UINT64:
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
+            data.i[c] = op[0]->value.i[c0] << op[1]->value.u64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
+            data.i[c] = op[0]->value.i[c0] << op[1]->value.i64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT) {
+            data.u64[c] = op[0]->value.u64[c0] << op[1]->value.u[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
+            data.u64[c] = op[0]->value.u64[c0] << op[1]->value.i[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
             data.u64[c] = op[0]->value.u64[c0] << op[1]->value.u64[c1];
-            break;
-         case GLSL_TYPE_INT64:
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
+            data.u64[c] = op[0]->value.u64[c0] << op[1]->value.i64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT) {
+            data.i64[c] = op[0]->value.i64[c0] << op[1]->value.u[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
+            data.i64[c] = op[0]->value.i64[c0] << op[1]->value.i[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
+            data.i64[c] = op[0]->value.i64[c0] << op[1]->value.u64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
             data.i64[c] = op[0]->value.i64[c0] << op[1]->value.i64[c1];
-            break;
-         default:
-            unreachable("invalid type");
+         } else {
+            unreachable("invalid types");
          }
       }
       break;
@@ -1692,22 +1727,57 @@
       for (unsigned c = 0, c0 = 0, c1 = 0;
            c < components;
            c0 += c0_inc, c1 += c1_inc, c++) {
-
-         switch (op[0]->type->base_type) {
-         case GLSL_TYPE_UINT:
+         
+         if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+             op[1]->type->base_type == GLSL_TYPE_UINT) {
             data.u[c] = op[0]->value.u[c0] >> op[1]->value.u[c1];
-            break;
-         case GLSL_TYPE_INT:
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
+            data.u[c] = op[0]->value.u[c0] >> op[1]->value.i[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
+            data.u[c] = op[0]->value.u[c0] >> op[1]->value.u64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
+            data.u[c] = op[0]->value.u[c0] >> op[1]->value.i64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT) {
+            data.i[c] = op[0]->value.i[c0] >> op[1]->value.u[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
             data.i[c] = op[0]->value.i[c0] >> op[1]->value.i[c1];
-            break;
-         case GLSL_TYPE_UINT64:
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
+            data.i[c] = op[0]->value.i[c0] >> op[1]->value.u64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
+            data.i[c] = op[0]->value.i[c0] >> op[1]->value.i64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT) {
+            data.u64[c] = op[0]->value.u64[c0] >> op[1]->value.u[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
+            data.u64[c] = op[0]->value.u64[c0] >> op[1]->value.i[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
             data.u64[c] = op[0]->value.u64[c0] >> op[1]->value.u64[c1];
-            break;
-         case GLSL_TYPE_INT64:
+         } else if (op[0]->type->base_type == GLSL_TYPE_UINT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
+            data.u64[c] = op[0]->value.u64[c0] >> op[1]->value.i64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT) {
+            data.i64[c] = op[0]->value.i64[c0] >> op[1]->value.u[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT) {
+            data.i64[c] = op[0]->value.i64[c0] >> op[1]->value.i[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_UINT64) {
+            data.i64[c] = op[0]->value.i64[c0] >> op[1]->value.u64[c1];
+         } else if (op[0]->type->base_type == GLSL_TYPE_INT64 &&
+                    op[1]->type->base_type == GLSL_TYPE_INT64) {
             data.i64[c] = op[0]->value.i64[c0] >> op[1]->value.i64[c1];
-            break;
-         default:
-            unreachable("invalid type");
+         } else {
+            unreachable("invalid types");
          }
       }
       break;

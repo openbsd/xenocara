@@ -90,23 +90,13 @@ if (_mesa_is_desktop_gl(ctx)) {
    SET_VertexAttribP4ui(tab, NAME(VertexAttribP4ui));
    SET_VertexAttribP4uiv(tab, NAME(VertexAttribP4uiv));
 }
-if (_mesa_is_desktop_gl(ctx) || (ctx->API == API_OPENGLES2 && ctx->Version >= 30)) {
+if (_mesa_is_desktop_gl(ctx) || (_mesa_is_gles2(ctx) && ctx->Version >= 30)) {
    SET_VertexAttribI4iEXT(tab, NAME(VertexAttribI4iEXT));
    SET_VertexAttribI4ivEXT(tab, NAME(VertexAttribI4ivEXT));
    SET_VertexAttribI4uiEXT(tab, NAME(VertexAttribI4uiEXT));
    SET_VertexAttribI4uivEXT(tab, NAME(VertexAttribI4uivEXT));
 }
-if (ctx->API == API_OPENGLES2) {
-   SET_VertexAttrib1fARB(tab, NAME_ES(VertexAttrib1fARB));
-   SET_VertexAttrib1fvARB(tab, NAME_ES(VertexAttrib1fvARB));
-   SET_VertexAttrib2fARB(tab, NAME_ES(VertexAttrib2fARB));
-   SET_VertexAttrib2fvARB(tab, NAME_ES(VertexAttrib2fvARB));
-   SET_VertexAttrib3fARB(tab, NAME_ES(VertexAttrib3fARB));
-   SET_VertexAttrib3fvARB(tab, NAME_ES(VertexAttrib3fvARB));
-   SET_VertexAttrib4fARB(tab, NAME_ES(VertexAttrib4fARB));
-   SET_VertexAttrib4fvARB(tab, NAME_ES(VertexAttrib4fvARB));
-}
-if (ctx->API == API_OPENGL_COMPAT) {
+if (_mesa_is_desktop_gl_compat(ctx)) {
    SET_ArrayElement(tab, NAME_AE(ArrayElement));
    SET_Begin(tab, NAME(Begin));
    SET_CallList(tab, NAME_CALLLIST(CallList));
@@ -397,15 +387,7 @@ if (ctx->API == API_OPENGL_COMPAT) {
    SET_VertexP4ui(tab, NAME(VertexP4ui));
    SET_VertexP4uiv(tab, NAME(VertexP4uiv));
 }
-if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGLES) {
-   SET_Color4f(tab, NAME(Color4f));
-   SET_Color4ub(tab, NAME(Color4ub));
-   SET_Materialf(tab, NAME(Materialf));
-   SET_Materialfv(tab, NAME(Materialfv));
-   SET_MultiTexCoord4fARB(tab, NAME(MultiTexCoord4fARB));
-   SET_Normal3f(tab, NAME(Normal3f));
-}
-if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE) {
+if (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_desktop_gl_core(ctx)) {
    SET_VertexAttribL1d(tab, NAME(VertexAttribL1d));
    SET_VertexAttribL1dv(tab, NAME(VertexAttribL1dv));
    SET_VertexAttribL2d(tab, NAME(VertexAttribL2d));
@@ -414,4 +396,22 @@ if (ctx->API == API_OPENGL_COMPAT || ctx->API == API_OPENGL_CORE) {
    SET_VertexAttribL3dv(tab, NAME(VertexAttribL3dv));
    SET_VertexAttribL4d(tab, NAME(VertexAttribL4d));
    SET_VertexAttribL4dv(tab, NAME(VertexAttribL4dv));
+}
+if (_mesa_is_desktop_gl_compat(ctx) || _mesa_is_gles1(ctx)) {
+   SET_Color4f(tab, NAME(Color4f));
+   SET_Color4ub(tab, NAME(Color4ub));
+   SET_Materialf(tab, NAME(Materialf));
+   SET_Materialfv(tab, NAME(Materialfv));
+   SET_MultiTexCoord4fARB(tab, NAME(MultiTexCoord4fARB));
+   SET_Normal3f(tab, NAME(Normal3f));
+}
+if (_mesa_is_gles2(ctx)) {
+   SET_VertexAttrib1fARB(tab, NAME_ES(VertexAttrib1fARB));
+   SET_VertexAttrib1fvARB(tab, NAME_ES(VertexAttrib1fvARB));
+   SET_VertexAttrib2fARB(tab, NAME_ES(VertexAttrib2fARB));
+   SET_VertexAttrib2fvARB(tab, NAME_ES(VertexAttrib2fvARB));
+   SET_VertexAttrib3fARB(tab, NAME_ES(VertexAttrib3fARB));
+   SET_VertexAttrib3fvARB(tab, NAME_ES(VertexAttrib3fvARB));
+   SET_VertexAttrib4fARB(tab, NAME_ES(VertexAttrib4fARB));
+   SET_VertexAttrib4fvARB(tab, NAME_ES(VertexAttrib4fvARB));
 }

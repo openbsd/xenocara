@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:33 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:30 jsg Exp $
 
 LIB=	aco
 
@@ -40,7 +40,7 @@ SRCS+=	aco_opcodes.cpp
 CFLAGS+=	${C_VIS_ARGS}
 CXXFLAGS+=	${CXX_VIS_ARGS} ${PICFLAG} -fno-exceptions -fno-rtti
 
-LLVM_CXXFLAGS!= llvm-config --cxxflags
+LLVM_CXXFLAGS!= llvm-config --cxxflags | sed 's/-std=[^ ]*//'
 CXXFLAGS+=	${LLVM_CXXFLAGS}
 
 CPPFLAGS+=	-I${MESA_SRC}/src/gallium/include \

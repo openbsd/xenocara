@@ -189,8 +189,9 @@ brw_blorp_surface_info_init(struct blorp_batch *batch,
       .swizzle = ISL_SWIZZLE_IDENTITY,
    };
 
-   info->view.array_len = MAX2(info->surf.logical_level0_px.depth,
-                               info->surf.logical_level0_px.array_len);
+   info->view.array_len =
+      MAX2(u_minify(info->surf.logical_level0_px.depth, level),
+           info->surf.logical_level0_px.array_len);
 
    if (!is_dest &&
        (info->surf.dim == ISL_SURF_DIM_3D ||
@@ -348,6 +349,22 @@ blorp_compile_vs(struct blorp_context *blorp, void *mem_ctx,
    return brw_compile_vs(compiler, mem_ctx, &params);
 }
 
+static bool
+lower_base_workgroup_id(nir_builder *b, nir_instr *instr, UNUSED void *data)
+{
+   if (instr->type != nir_instr_type_intrinsic)
+      return false;
+
+   nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+
+   if (intrin->intrinsic != nir_intrinsic_load_base_workgroup_id)
+      return false;
+
+   b->cursor = nir_instr_remove(&intrin->instr);
+   nir_ssa_def_rewrite_uses(&intrin->dest.ssa, nir_imm_zero(b, 3, 32));
+   return true;
+}
+
 const unsigned *
 blorp_compile_cs(struct blorp_context *blorp, void *mem_ctx,
                  struct nir_shader *nir,
@@ -375,6 +392,8 @@ blorp_compile_cs(struct blorp_context *blorp, void *mem_ctx,
    cs_prog_data->base.param = rzalloc_array(NULL, uint32_t, nr_params);
 
    NIR_PASS_V(nir, brw_nir_lower_cs_intrinsics);
+   NIR_PASS_V(nir, nir_shader_instructions_pass, lower_base_workgroup_id,
+              nir_metadata_block_index | nir_metadata_dominance, NULL);
 
    struct brw_compile_cs_params params = {
       .nir = nir,

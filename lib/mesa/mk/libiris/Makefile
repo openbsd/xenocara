@@ -1,10 +1,15 @@
-#	$OpenBSD: Makefile,v 1.4 2022/09/02 05:46:39 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	iris
 
 NOPROFILE=
 
-SRCS=	iris_batch.c \
+SRCS=	i915_iris_batch.c \
+	i915_iris_bufmgr.c \
+	i915_iris_kmd_backend.c \
+	xe_iris_bufmgr.c \
+	xe_iris_kmd_backend.c \
+	iris_batch.c \
 	iris_binder.c \
 	iris_blit.c \
 	iris_border_color.c \
@@ -15,6 +20,7 @@ SRCS=	iris_batch.c \
 	iris_fence.c \
 	iris_fine_fence.c \
 	iris_formats.c \
+	iris_kmd_backend.c \
 	iris_measure.c \
 	iris_monitor.c \
 	iris_perf.c \
@@ -27,6 +33,17 @@ SRCS=	iris_batch.c \
 	iris_screen.c \
 	iris_disk_cache.c \
 	iris_utrace.c
+
+i915_iris_batch.c:
+	ln -s ${MESA_SRC}/src/gallium/drivers/iris/i915/iris_batch.c $@
+i915_iris_bufmgr.c:
+	ln -s ${MESA_SRC}//src/gallium/drivers/iris/i915/iris_bufmgr.c $@
+i915_iris_kmd_backend.c:
+	ln -s ${MESA_SRC}/src/gallium/drivers/iris/i915/iris_kmd_backend.c $@
+xe_iris_bufmgr.c:
+	ln -s ${MESA_SRC}/src/gallium/drivers/iris/xe/iris_bufmgr.c $@
+xe_iris_kmd_backend.c:
+	ln -s ${MESA_SRC}/src/gallium/drivers/iris/xe/iris_kmd_backend.c $@
 
 .include "../Makefile.inc"
 
@@ -52,3 +69,9 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/gallium/drivers/iris
+
+CLEANFILES+=	i915_iris_batch.c \
+		i915_iris_bufmgr.c \
+		i915_iris_kmd_backend.c \
+		xe_iris_bufmgr.c \
+		xe_iris_kmd_backend.c

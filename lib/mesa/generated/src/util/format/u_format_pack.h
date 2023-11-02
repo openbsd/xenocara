@@ -28,6 +28,10 @@
  **************************************************************************/
 
 #include "util/format/u_format.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void util_format_none_unpack_rgba_float(void *restrict dst_row, const uint8_t *restrict src, unsigned width);
 void util_format_none_pack_rgba_float(uint8_t *restrict dst_row, unsigned dst_stride, const float *restrict src_row, unsigned src_stride, unsigned width, unsigned height);
 void util_format_none_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j);
@@ -1346,3 +1350,6 @@ void util_format_x8b8g8r8_sint_unpack_signed(void *restrict dst_row, const uint8
 void util_format_x8b8g8r8_sint_pack_signed(uint8_t *restrict dst_row, unsigned dst_stride, const int *restrict src_row, unsigned src_stride, unsigned width, unsigned height);
 void util_format_x8b8g8r8_sint_fetch_rgba(void *restrict in_dst, const uint8_t *restrict src, UNUSED unsigned i, UNUSED unsigned j);
 void util_format_x8b8g8r8_sint_pack_unsigned(uint8_t *restrict dst_row, unsigned dst_stride, const unsigned *restrict src_row, unsigned src_stride, unsigned width, unsigned height);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

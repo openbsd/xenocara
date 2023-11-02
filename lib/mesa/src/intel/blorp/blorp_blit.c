@@ -217,8 +217,7 @@ blorp_nir_txf_ms(nir_builder *b, struct brw_blorp_blit_vars *v,
                  nir_ssa_def *pos, nir_ssa_def *mcs, nir_alu_type dst_type)
 {
    nir_tex_instr *tex =
-      blorp_create_nir_tex_instr(b, v, nir_texop_txf_ms, pos,
-                                 mcs != NULL ? 3 : 2, dst_type);
+      blorp_create_nir_tex_instr(b, v, nir_texop_txf_ms, pos, 3, dst_type);
 
    tex->sampler_dim = GLSL_SAMPLER_DIM_MS;
 
@@ -230,10 +229,11 @@ blorp_nir_txf_ms(nir_builder *b, struct brw_blorp_blit_vars *v,
       tex->src[1].src = nir_src_for_ssa(nir_channel(b, pos, 2));
    }
 
-   if (mcs) {
-      tex->src[2].src_type = nir_tex_src_ms_mcs_intel;
-      tex->src[2].src = nir_src_for_ssa(mcs);
-   }
+   if (!mcs)
+      mcs = nir_imm_zero(b, 4, 32);
+
+   tex->src[2].src_type = nir_tex_src_ms_mcs_intel;
+   tex->src[2].src = nir_src_for_ssa(mcs);
 
    nir_builder_instr_insert(b, &tex->instr);
 
@@ -1252,7 +1252,7 @@ brw_blorp_build_nir_shader(struct blorp_context *blorp,
        */
       assert(dst_pos->num_components == 2);
       nir_ssa_def *dst_x = nir_channel(&b, dst_pos, 0);
-      comp = nir_umod(&b, dst_x, nir_imm_int(&b, 3));
+      comp = nir_umod_imm(&b, dst_x, 3);
       dst_pos = nir_vec2(&b, nir_idiv(&b, dst_x, nir_imm_int(&b, 3)),
                              nir_channel(&b, dst_pos, 1));
    }
@@ -1527,10 +1527,7 @@ brw_blorp_get_blit_kernel_fs(struct blorp_batch *batch,
 
    struct brw_wm_prog_key wm_key;
    brw_blorp_init_wm_prog_key(&wm_key);
-   wm_key.base.tex.compressed_multisample_layout_mask =
-      isl_aux_usage_has_mcs(key->tex_aux_usage);
-   wm_key.base.tex.msaa_16 = key->tex_samples == 16;
-   wm_key.multisample_fbo = key->rt_samples > 1;
+   wm_key.multisample_fbo = key->rt_samples > 1 ? BRW_ALWAYS : BRW_NEVER;
 
    program = blorp_compile_fs(blorp, mem_ctx, nir, &wm_key, false,
                               &prog_data);
@@ -1569,9 +1566,6 @@ brw_blorp_get_blit_kernel_cs(struct blorp_batch *batch,
 
    struct brw_cs_prog_key cs_key;
    brw_blorp_init_cs_prog_key(&cs_key);
-   cs_key.base.tex.compressed_multisample_layout_mask =
-      prog_key->tex_aux_usage == ISL_AUX_USAGE_MCS;
-   cs_key.base.tex.msaa_16 = prog_key->tex_samples == 16;
    assert(prog_key->rt_samples == 1);
 
    program = blorp_compile_cs(blorp, mem_ctx, nir, &cs_key, &prog_data);
@@ -2730,6 +2724,9 @@ get_ccs_compatible_copy_format(const struct isl_format_layout *fmtl)
    case ISL_FORMAT_R32_SNORM:
       return ISL_FORMAT_R32_UINT;
 
+   case ISL_FORMAT_R11G11B10_FLOAT:
+      return ISL_FORMAT_R8G8B8A8_UINT;
+
    case ISL_FORMAT_B10G10R10A2_UNORM:
    case ISL_FORMAT_B10G10R10A2_UNORM_SRGB:
    case ISL_FORMAT_R10G10B10A2_UNORM:
@@ -2951,6 +2948,28 @@ blorp_copy(struct blorp_batch *batch,
    } else {
       params.dst.view.format = get_copy_format_for_bpb(isl_dev, dst_fmtl->bpb);
       params.src.view.format = get_copy_format_for_bpb(isl_dev, src_fmtl->bpb);
+   }
+
+   if (isl_aux_usage_has_fast_clears(params.src.aux_usage) &&
+       isl_dev->ss.clear_color_state_size > 0) {
+      /* For 32bpc formats, the sampler fetches the raw clear color dwords
+       * used for rendering instead of the converted pixel dwords typically
+       * used for sampling. The CLEAR_COLOR struct page documents this for
+       * 128bpp formats, but not for 32bpp and 64bpp formats.
+       *
+       * Note that although the sampler doesn't use the converted clear color
+       * field with 32bpc formats, the Clear Color Conversion hardware feature
+       * still occurs when the format sizes are less than 128bpp.
+       *
+       * The sampler changing its clear color fetching location can be a
+       * problem in some cases, but we won't run into them here. When using an
+       * indirect clear color, we won't create 32bpc views of non-32bpc
+       * surfaces (and vice-versa).
+       */
+      const struct isl_format_layout *src_view_fmtl =
+         isl_format_get_layout(params.src.view.format);
+      assert((src_fmtl->channels.r.bits == 32) ==
+             (src_view_fmtl->channels.r.bits == 32));
    }
 
    if (params.src.view.format != params.dst.view.format) {

@@ -1262,6 +1262,25 @@ nir_lower_txs_cube_array(nir_builder *b, nir_tex_instr *tex)
    nir_ssa_def_rewrite_uses_after(&tex->dest.ssa, size, size->parent_instr);
 }
 
+/* Adjust the sample index according to AMD FMASK (fragment mask).
+ *
+ * For uncompressed MSAA surfaces, FMASK should return 0x76543210,
+ * which is the identity mapping. Each nibble says which physical sample
+ * should be fetched to get that sample.
+ *
+ * For example, 0x11111100 means there are only 2 samples stored and
+ * the second sample covers 3/4 of the pixel. When reading samples 0
+ * and 1, return physical sample 0 (determined by the first two 0s
+ * in FMASK), otherwise return physical sample 1.
+ *
+ * The sample index should be adjusted as follows:
+ *   sample_index = ubfe(fmask, sample_index * 4, 3);
+ *
+ * Only extract 3 bits because EQAA can generate number 8 in FMASK, which
+ * means the physical sample index is unknown. We can map 8 to any valid
+ * sample index, and extracting only 3 bits will map it to 0, which works
+ * with all MSAA modes.
+ */
 static void
 nir_lower_ms_txf_to_fragment_fetch(nir_builder *b, nir_tex_instr *tex)
 {
@@ -1295,16 +1314,8 @@ nir_lower_ms_txf_to_fragment_fetch(nir_builder *b, nir_tex_instr *tex)
    int ms_index = nir_tex_instr_src_index(tex, nir_tex_src_ms_index);
    assert(ms_index >= 0);
    nir_src sample = tex->src[ms_index].src;
-   nir_ssa_def *new_sample = NULL;
-   if (nir_src_is_const(sample) && (nir_src_as_uint(sample) == 0 || nir_src_as_uint(sample) == 7)) {
-      if (nir_src_as_uint(sample) == 7)
-         new_sample = nir_ushr(b, &fmask_fetch->dest.ssa, nir_imm_int(b, 28));
-      else
-         new_sample = nir_iand_imm(b, &fmask_fetch->dest.ssa, 0xf);
-   } else {
-      new_sample = nir_ubitfield_extract(b, &fmask_fetch->dest.ssa,
-                                         nir_imul_imm(b, sample.ssa, 4), nir_imm_int(b, 4));
-   }
+   nir_ssa_def *new_sample = nir_ubfe(b, &fmask_fetch->dest.ssa,
+                                      nir_ishl_imm(b, sample.ssa, 2), nir_imm_int(b, 3));
 
    /* Update instruction. */
    tex->op = nir_texop_fragment_fetch_amd;
@@ -1359,6 +1370,40 @@ nir_lower_lod_zero_width(nir_builder *b, nir_tex_instr *tex)
 }
 
 static bool
+lower_index_to_offset(nir_builder *b, nir_tex_instr *tex)
+{
+   bool progress = false;
+   b->cursor = nir_before_instr(&tex->instr);
+
+   for (unsigned i = 0; i < tex->num_srcs; i++) {
+      unsigned *index;
+      switch (tex->src[i].src_type) {
+      case nir_tex_src_texture_offset:
+         index = &tex->texture_index;
+         break;
+      case nir_tex_src_sampler_offset:
+         index = &tex->sampler_index;
+         break;
+      default:
+         continue;
+      }
+
+      /* If there's no base index, there's nothing to lower */
+      if ((*index) == 0)
+         continue;
+
+      assert(tex->src[i].src.is_ssa);
+      nir_ssa_def *sum = nir_iadd_imm(b, tex->src[i].src.ssa, *index);
+      nir_instr_rewrite_src(&tex->instr, &tex->src[i].src,
+                            nir_src_for_ssa(sum));
+      *index = 0;
+      progress = true;
+   }
+
+   return progress;
+}
+
+static bool
 nir_lower_tex_block(nir_block *block, nir_builder *b,
                     const nir_lower_tex_options *options,
                     const struct nir_shader_compiler_options *compiler_options)
@@ -1374,13 +1419,18 @@ nir_lower_tex_block(nir_block *block, nir_builder *b,
 
       /* mask of src coords to saturate (clamp): */
       unsigned sat_mask = 0;
+      /* ignore saturate for txf ops: these don't use samplers and can't GL_CLAMP */
+      if (nir_tex_instr_need_sampler(tex)) {
+         if ((1 << tex->sampler_index) & options->saturate_r)
+            sat_mask |= (1 << 2);    /* .z */
+         if ((1 << tex->sampler_index) & options->saturate_t)
+            sat_mask |= (1 << 1);    /* .y */
+         if ((1 << tex->sampler_index) & options->saturate_s)
+            sat_mask |= (1 << 0);    /* .x */
+      }
 
-      if ((1 << tex->sampler_index) & options->saturate_r)
-         sat_mask |= (1 << 2);    /* .z */
-      if ((1 << tex->sampler_index) & options->saturate_t)
-         sat_mask |= (1 << 1);    /* .y */
-      if ((1 << tex->sampler_index) & options->saturate_s)
-         sat_mask |= (1 << 0);    /* .x */
+      if (options->lower_index_to_offset)
+         progress |= lower_index_to_offset(b, tex);
 
       /* If we are clamping any coords, we must lower projector first
        * as clamping happens *after* projection:

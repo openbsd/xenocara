@@ -42,6 +42,7 @@
 #endif
 
 #include "vk_util.h"
+#include "vk_format.h"
 
 static void
 genX(emit_slice_hashing_state)(struct anv_device *device,
@@ -178,10 +179,39 @@ init_common_queue_state(struct anv_queue *queue, struct anv_batch *batch)
    device->l3_config = cfg;
 #endif
 
+#if GFX_VERx10 == 125
+   /* Even though L3 partial write merging is supposed to be enabled
+    * by default on Gfx12.5 according to the hardware spec, i915
+    * appears to accidentally clear the enables during context
+    * initialization, so make sure to enable them here since partial
+    * write merging has a large impact on rendering performance.
+    */
+   anv_batch_write_reg(batch, GENX(L3SQCREG5), reg) {
+      reg.L3CachePartialWriteMergeTimerInitialValue = 0x7f;
+      reg.CompressiblePartialWriteMergeEnable = true;
+      reg.CoherentPartialWriteMergeEnable = true;
+      reg.CrossTilePartialWriteMergeEnable = true;
+   }
+#endif
+
    /* Emit STATE_BASE_ADDRESS on Gfx12+ because we set a default CPS_STATE and
     * those are relative to STATE_BASE_ADDRESS::DynamicStateBaseAddress.
     */
 #if GFX_VER >= 12
+
+#if GFX_VERx10 >= 125
+   anv_batch_emit(batch, GENX(PIPE_CONTROL), pc) {
+      /* Wa_14016407139:
+       *
+       * "On Surface state base address modification, for 3D workloads, SW must
+       *  always program PIPE_CONTROL either with CS Stall or PS sync stall. In
+       *  both the cases set Render Target Cache Flush Enable".
+       */
+      pc.RenderTargetCacheFlushEnable = true;
+      pc.CommandStreamerStallEnable = true;
+   }
+#endif
+
    /* GEN:BUG:1607854226:
     *
     *  Non-pipelined state has issues with not applying in MEDIA/GPGPU mode.
@@ -274,11 +304,16 @@ init_render_queue_state(struct anv_queue *queue)
       .end = (void *) cmds + sizeof(cmds),
    };
 
-   anv_batch_emit(&batch, GENX(PIPELINE_SELECT), ps) {
-      ps.MaskBits = GFX_VER >= 12 ? 0x13 : 3;
-      ps.MediaSamplerDOPClockGateEnable = GFX_VER >= 12;
-      ps.PipelineSelection = _3D;
-   }
+   struct GENX(VERTEX_ELEMENT_STATE) empty_ve = {
+      .Valid = true,
+      .Component0Control = VFCOMP_STORE_0,
+      .Component1Control = VFCOMP_STORE_0,
+      .Component2Control = VFCOMP_STORE_0,
+      .Component3Control = VFCOMP_STORE_0,
+   };
+   GENX(VERTEX_ELEMENT_STATE_pack)(NULL, device->empty_vs_input, &empty_ve);
+
+   genX(emit_pipeline_select)(&batch, _3D);
 
 #if GFX_VER == 9
    anv_batch_write_reg(&batch, GENX(CACHE_MODE_1), cm1) {
@@ -311,7 +346,9 @@ init_render_queue_state(struct anv_queue *queue)
     *
     * Emit this before 3DSTATE_WM_HZ_OP below.
     */
-   anv_batch_emit(&batch, GENX(3DSTATE_RASTER), rast);
+   anv_batch_emit(&batch, GENX(3DSTATE_RASTER), rast) {
+      rast.APIMode = DX101;
+   }
 
    /* SKL PRMs, Volume 2a: Command Reference: Instructions: 3DSTATE_WM_HZ_OP:
     *
@@ -399,6 +436,35 @@ init_render_queue_state(struct anv_queue *queue)
       reg.HZDepthTestLEGEOptimizationDisableMask = true;
    }
 
+#if GFX_VER == 12
+   anv_batch_write_reg(&batch, GENX(FF_MODE2), reg) {
+      /* On Alchemist, the FF_MODE2 docs for the GS timer say:
+       *
+       *    "The timer value must be set to 224."
+       *
+       * and Wa_16011163337 indicates this is the case for all Gfx12 parts,
+       * and that this is necessary to avoid hanging the HS/DS units.  It
+       * also clarifies that 224 is literally 0xE0 in the bits, not 7*32=224.
+       *
+       * The HS timer docs also have the same quote for Alchemist.  I am
+       * unaware of a reason it needs to be set to 224 on Tigerlake, but
+       * we do so for consistency if nothing else.
+       *
+       * For the TDS timer value, the docs say:
+       *
+       *    "For best performance, a value of 4 should be programmed."
+       *
+       * i915 also sets it this way on Tigerlake due to workarounds.
+       *
+       * The default VS timer appears to be 0, so we leave it at that.
+       */
+      reg.GSTimerValue  = 224;
+      reg.HSTimerValue  = 224;
+      reg.TDSTimerValue = 4;
+      reg.VSTimerValue  = 0;
+   }
+#endif
+
    /* Wa_1508744258
     *
     *    Disable RHWO by setting 0x7010[14] by default except during resolve
@@ -448,7 +514,7 @@ init_render_queue_state(struct anv_queue *queue)
     *
     * This is only safe on kernels with context isolation support.
     */
-   if (device->physical->has_context_isolation) {
+   if (device->physical->info.has_context_isolation) {
       anv_batch_write_reg(&batch, GENX(CS_DEBUG_MODE2), csdm2) {
          csdm2.CONSTANT_BUFFERAddressOffsetDisable = true;
          csdm2.CONSTANT_BUFFERAddressOffsetDisableMask = true;
@@ -488,14 +554,7 @@ init_compute_queue_state(struct anv_queue *queue)
    batch.start = batch.next = cmds;
    batch.end = (void *) cmds + sizeof(cmds);
 
-   anv_batch_emit(&batch, GENX(PIPELINE_SELECT), ps) {
-      ps.MaskBits = 3;
-#if GFX_VER >= 11
-      ps.MaskBits |= 0x10;
-      ps.MediaSamplerDOPClockGateEnable = true;
-#endif
-      ps.PipelineSelection = GPGPU;
-   }
+   genX(emit_pipeline_select)(&batch, GPGPU);
 
    init_common_queue_state(queue, &batch);
 
@@ -512,6 +571,7 @@ genX(init_physical_device_state)(ASSERTED struct anv_physical_device *pdevice)
    assert(pdevice->info.verx10 == GFX_VERx10);
 #if GFX_VERx10 >= 125 && ANV_SUPPORT_RT
    genX(grl_load_rt_uuid)(pdevice->rt_uuid);
+   pdevice->max_grl_scratch_size = genX(grl_max_scratch_size)();
 #endif
 }
 
@@ -529,6 +589,9 @@ genX(init_device_state)(struct anv_device *device)
          break;
       case INTEL_ENGINE_CLASS_COMPUTE:
          res = init_compute_queue_state(queue);
+         break;
+      case INTEL_ENGINE_CLASS_VIDEO:
+         res = VK_SUCCESS;
          break;
       default:
          res = vk_error(device, VK_ERROR_INITIALIZATION_FAILED);
@@ -765,7 +828,7 @@ vk_to_intel_tex_filter(VkFilter filter, bool anisotropyEnable)
 static uint32_t
 vk_to_intel_max_anisotropy(float ratio)
 {
-   return (anv_clamp_f(ratio, 2, 16) - 2) / 2;
+   return (CLAMP(ratio, 2, 16) - 2) / 2;
 }
 
 static const uint32_t vk_to_intel_mipmap_mode[] = {
@@ -843,23 +906,28 @@ VkResult genX(CreateSampler)(
    unsigned sampler_reduction_mode = STD_FILTER;
    bool enable_sampler_reduction = false;
 
+   const struct vk_format_ycbcr_info *ycbcr_info = NULL;
    vk_foreach_struct_const(ext, pCreateInfo->pNext) {
       switch (ext->sType) {
       case VK_STRUCTURE_TYPE_SAMPLER_YCBCR_CONVERSION_INFO: {
          VkSamplerYcbcrConversionInfo *pSamplerConversion =
             (VkSamplerYcbcrConversionInfo *) ext;
-         ANV_FROM_HANDLE(anv_ycbcr_conversion, conversion,
-                         pSamplerConversion->conversion);
+         VK_FROM_HANDLE(vk_ycbcr_conversion, conversion,
+                        pSamplerConversion->conversion);
 
          /* Ignore conversion for non-YUV formats. This fulfills a requirement
           * for clients that want to utilize same code path for images with
           * external formats (VK_FORMAT_UNDEFINED) and "regular" RGBA images
           * where format is known.
           */
-         if (conversion == NULL || !conversion->format->can_ycbcr)
+         if (conversion == NULL)
             break;
 
-         sampler->n_planes = conversion->format->n_planes;
+         ycbcr_info = vk_format_get_ycbcr_info(conversion->state.format);
+         if (ycbcr_info == NULL)
+            break;
+
+         sampler->n_planes = ycbcr_info->n_planes;
          sampler->conversion = conversion;
          break;
       }
@@ -927,19 +995,23 @@ VkResult genX(CreateSampler)(
 
    for (unsigned p = 0; p < sampler->n_planes; p++) {
       const bool plane_has_chroma =
-         sampler->conversion && sampler->conversion->format->planes[p].has_chroma;
+         ycbcr_info && ycbcr_info->planes[p].has_chroma;
       const VkFilter min_filter =
-         plane_has_chroma ? sampler->conversion->chroma_filter : pCreateInfo->minFilter;
+         plane_has_chroma ? sampler->conversion->state.chroma_filter : pCreateInfo->minFilter;
       const VkFilter mag_filter =
-         plane_has_chroma ? sampler->conversion->chroma_filter : pCreateInfo->magFilter;
+         plane_has_chroma ? sampler->conversion->state.chroma_filter : pCreateInfo->magFilter;
       const bool enable_min_filter_addr_rounding = min_filter != VK_FILTER_NEAREST;
       const bool enable_mag_filter_addr_rounding = mag_filter != VK_FILTER_NEAREST;
       /* From Broadwell PRM, SAMPLER_STATE:
        *   "Mip Mode Filter must be set to MIPFILTER_NONE for Planar YUV surfaces."
        */
-      const bool isl_format_is_planar_yuv = sampler->conversion &&
-         isl_format_is_yuv(sampler->conversion->format->planes[0].isl_format) &&
-         isl_format_is_planar(sampler->conversion->format->planes[0].isl_format);
+      enum isl_format plane0_isl_format = sampler->conversion ?
+         anv_get_format(sampler->conversion->state.format)->planes[0].isl_format :
+         ISL_FORMAT_UNSUPPORTED;
+      const bool isl_format_is_planar_yuv =
+         plane0_isl_format != ISL_FORMAT_UNSUPPORTED &&
+         isl_format_is_yuv(plane0_isl_format) &&
+         isl_format_is_planar(plane0_isl_format);
 
       const uint32_t mip_filter_mode =
          isl_format_is_planar_yuv ?
@@ -958,11 +1030,11 @@ VkResult genX(CreateSampler)(
          .MipModeFilter = mip_filter_mode,
          .MagModeFilter = vk_to_intel_tex_filter(mag_filter, pCreateInfo->anisotropyEnable),
          .MinModeFilter = vk_to_intel_tex_filter(min_filter, pCreateInfo->anisotropyEnable),
-         .TextureLODBias = anv_clamp_f(pCreateInfo->mipLodBias, -16, 15.996),
+         .TextureLODBias = CLAMP(pCreateInfo->mipLodBias, -16, 15.996),
          .AnisotropicAlgorithm =
             pCreateInfo->anisotropyEnable ? EWAApproximation : LEGACY,
-         .MinLOD = anv_clamp_f(pCreateInfo->minLod, 0, 14),
-         .MaxLOD = anv_clamp_f(pCreateInfo->maxLod, 0, 14),
+         .MinLOD = CLAMP(pCreateInfo->minLod, 0, 14),
+         .MaxLOD = CLAMP(pCreateInfo->maxLod, 0, 14),
          .ChromaKeyEnable = 0,
          .ChromaKeyIndex = 0,
          .ChromaKeyMode = 0,
@@ -1003,4 +1075,45 @@ VkResult genX(CreateSampler)(
    *pSampler = anv_sampler_to_handle(sampler);
 
    return VK_SUCCESS;
+}
+
+/* Wa_14015814527
+ *
+ * Check if task shader was utilized within cmd_buffer, if so
+ * commit empty URB states and null prim.
+ */
+void
+genX(apply_task_urb_workaround)(struct anv_cmd_buffer *cmd_buffer)
+{
+#if GFX_VERx10 != 125
+   return;
+#else
+   if (cmd_buffer->state.current_pipeline != _3D ||
+       !cmd_buffer->state.gfx.used_task_shader)
+      return;
+
+   cmd_buffer->state.gfx.used_task_shader = false;
+
+   /* Wa_14015821291 mentions that WA below is not required if we have
+    * a pipeline flush going on. It will get flushed during
+    * cmd_buffer_flush_state before draw.
+    */
+   if ((cmd_buffer->state.pending_pipe_bits & ANV_PIPE_CS_STALL_BIT))
+      return;
+
+   for (int i = 0; i <= MESA_SHADER_GEOMETRY; i++) {
+      anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_URB_VS), urb) {
+         urb._3DCommandSubOpcode += i;
+      }
+   }
+
+   anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_URB_ALLOC_MESH), zero);
+   anv_batch_emit(&cmd_buffer->batch, GENX(3DSTATE_URB_ALLOC_TASK), zero);
+
+   /* Issue 'nullprim' to commit the state. */
+   anv_batch_emit(&cmd_buffer->batch, GENX(PIPE_CONTROL), pc) {
+      pc.PostSyncOperation = WriteImmediateData;
+      pc.Address = cmd_buffer->device->workaround_address;
+   }
+#endif
 }

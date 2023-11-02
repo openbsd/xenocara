@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.6 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.7 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	intel_compiler
 
@@ -52,18 +52,19 @@ SRCS=	brw_cfg.cpp \
 	brw_nir_analyze_boolean_resolves.c \
 	brw_nir_analyze_ubo_ranges.c \
 	brw_nir_attribute_workarounds.c \
+	brw_nir_blockify_uniform_loads.c \
+	brw_nir_clamp_per_vertex_loads.c \
 	brw_nir_lower_conversions.c \
 	brw_nir_lower_cs_intrinsics.c \
 	brw_nir_lower_alpha_to_coverage.c \
 	brw_nir_lower_intersection_shader.c \
-	brw_nir_lower_mem_access_bit_sizes.c \
 	brw_nir_lower_ray_queries.c \
 	brw_nir_lower_rt_intrinsics.c \
-	brw_nir_lower_scoped_barriers.c \
 	brw_nir_lower_shader_calls.c \
 	brw_nir_lower_shading_rate_output.c \
 	brw_nir_lower_storage_image.c \
 	brw_nir_opt_peephole_ffma.c \
+	brw_nir_opt_peephole_imul32x16.c \
 	brw_nir_rt.c \
 	brw_nir_tcs_workarounds.c \
 	brw_nir_clamp_image_1d_2d_array_sizes.c \
@@ -72,7 +73,7 @@ SRCS=	brw_cfg.cpp \
 	brw_reg_type.c \
 	brw_schedule_instructions.cpp \
 	brw_shader.cpp \
-	brw_simd_selection.c \
+	brw_simd_selection.cpp \
 	brw_vec4_cmod_propagation.cpp \
 	brw_vec4_copy_propagation.cpp \
 	brw_vec4.cpp \
@@ -104,6 +105,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
 		-I${MESA_SRC}/src/compiler/nir \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel \
 		-I${MESA_SRC}/generated/src/compiler \
 		-I${MESA_SRC}/generated/src/compiler/nir

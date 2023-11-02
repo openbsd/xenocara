@@ -28,6 +28,12 @@ const char *
 tr_util_pipe_resource_param_name(enum pipe_resource_param value);
 const char *
 tr_util_pipe_fd_type_name(enum pipe_fd_type value);
+const char *
+tr_util_pipe_blendfactor_name(enum pipe_blendfactor value);
+const char *
+tr_util_pipe_blend_func_name(enum pipe_blend_func value);
+const char *
+tr_util_pipe_logicop_name(enum pipe_logicop value);
 
 
 #ifdef __cplusplus

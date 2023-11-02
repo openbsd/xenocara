@@ -130,6 +130,16 @@ static void r600_destroy_context(struct pipe_context *context)
 	r600_resource_reference(&rctx->last_trace_buf, NULL);
 	radeon_clear_saved_cs(&rctx->last_gfx);
 
+	switch (rctx->b.gfx_level) {
+	case EVERGREEN:
+	case CAYMAN:
+		for (i = 0; i < EG_MAX_ATOMIC_BUFFERS; ++i)
+			pipe_resource_reference(&rctx->atomic_buffer_state.buffer[i].buffer, NULL);
+		break;
+	default:
+		break;
+	}
+
 	FREE(rctx);
 }
 
@@ -295,6 +305,7 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_VS_WINDOW_SPACE_POSITION:
 	case PIPE_CAP_VS_LAYER_VIEWPORT:
 	case PIPE_CAP_SAMPLE_SHADING:
+        case PIPE_CAP_MEMOBJ:
 	case PIPE_CAP_CLIP_HALFZ:
 	case PIPE_CAP_POLYGON_OFFSET_CLAMP:
 	case PIPE_CAP_CONDITIONAL_RENDER_INVERTED:
@@ -312,9 +323,10 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_CAN_BIND_CONST_BUFFER_AS_VERTEX:
 	case PIPE_CAP_ALLOW_MAPPED_BUFFERS_DURING_EXECUTION:
 	case PIPE_CAP_ROBUST_BUFFER_ACCESS_BEHAVIOR:
-		return 1;
+      return 1;
 
-        case PIPE_CAP_NIR_ATOMICS_AS_DEREF:
+	case PIPE_CAP_NIR_ATOMICS_AS_DEREF:
+	case PIPE_CAP_GL_SPIRV:
 		return is_nir_enabled(&rscreen->b);
 
 	case PIPE_CAP_TEXTURE_TRANSFER_MODES:
@@ -381,6 +393,7 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_SHADER_ARRAY_COMPONENTS:
 	case PIPE_CAP_QUERY_BUFFER_OBJECT:
 	case PIPE_CAP_IMAGE_STORE_FORMATTED:
+	case PIPE_CAP_ALPHA_TO_COVERAGE_DITHER_CONTROL:
 		return family >= CHIP_CEDAR ? 1 : 0;
 	case PIPE_CAP_MAX_TEXTURE_GATHER_COMPONENTS:
 		return family >= CHIP_CEDAR ? 4 : 0;
@@ -520,13 +533,13 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 	case PIPE_CAP_MULTISAMPLE_Z_RESOLVE:
 		return rscreen->b.gfx_level >= R700;
 	case PIPE_CAP_PCI_GROUP:
-		return rscreen->b.info.pci_domain;
+		return rscreen->b.info.pci.domain;
 	case PIPE_CAP_PCI_BUS:
-		return rscreen->b.info.pci_bus;
+		return rscreen->b.info.pci.bus;
 	case PIPE_CAP_PCI_DEVICE:
-		return rscreen->b.info.pci_dev;
+		return rscreen->b.info.pci.dev;
 	case PIPE_CAP_PCI_FUNCTION:
-		return rscreen->b.info.pci_func;
+		return rscreen->b.info.pci.func;
 
 	case PIPE_CAP_MAX_COMBINED_HW_ATOMIC_COUNTERS:
 		if (rscreen->b.family >= CHIP_CEDAR && rscreen->has_atomics)
@@ -536,6 +549,9 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
 		if (rscreen->b.family >= CHIP_CEDAR && rscreen->has_atomics)
 			return EG_MAX_ATOMIC_BUFFERS;
 		return 0;
+
+	case PIPE_CAP_VALIDATE_ALL_DIRTY_STATES:
+		return 1;
 
 	default:
 		return u_pipe_screen_get_param_defaults(pscreen, param);
@@ -632,8 +648,6 @@ static int r600_get_shader_param(struct pipe_screen* pscreen,
 		return ir;
 	}
 	case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-	case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-	case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
 		return 0;
 	case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
 	case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
@@ -683,6 +697,9 @@ static struct pipe_resource *r600_resource_create(struct pipe_screen *screen,
 	return r600_resource_create_common(screen, templ);
 }
 
+char *
+r600_finalize_nir(struct pipe_screen *screen, void *shader);
+
 struct pipe_screen *r600_screen_create(struct radeon_winsys *ws,
 				       const struct pipe_screen_config *config)
 {
@@ -723,6 +740,9 @@ struct pipe_screen *r600_screen_create(struct radeon_winsys *ws,
 		FREE(rscreen);
 		return NULL;
 	}
+
+   if (is_nir_enabled(&rscreen->b))
+       rscreen->b.b.finalize_nir = r600_finalize_nir;
 
 	rscreen->b.has_streamout = true;
 

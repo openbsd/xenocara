@@ -110,7 +110,6 @@ struct backend_instruction : public exec_node {
    void remove(bblock_t *block, bool defer_later_block_ip_updates = false);
    void insert_after(bblock_t *block, backend_instruction *inst);
    void insert_before(bblock_t *block, backend_instruction *inst);
-   void insert_before(bblock_t *block, exec_list *list);
 
    /**
     * True if the instruction has side effects other than writing to
@@ -178,6 +177,12 @@ struct backend_instruction {
                                  *   the scratch surface offset to build
                                  *   extended descriptor
                                  */
+   bool predicate_trivial:1; /**< The predication mask applied to this
+                              *   instruction is guaranteed to be uniform and
+                              *   a superset of the execution mask of the
+                              *   present block, no currently enabled channels
+                              *   will be disabled by the predicate.
+                              */
    bool eot:1;
 
    /* Chooses which flag subregister (f0.0 to f1.1) is used for conditional

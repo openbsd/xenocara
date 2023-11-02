@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  *
  * Authors:
- *    Jason Ekstrand (jason@jlekstrand.net)
+ *    Faith Ekstrand (faith@gfxstrand.net)
  *
  */
 
@@ -35,10 +35,19 @@
 #include "util/format/u_format.h"
 #include "util/u_math.h"
 #include "util/u_string.h"
+#include "util/u_debug.h"
 
 #include <stdio.h>
 
 #ifndef NDEBUG
+uint32_t mesa_spirv_debug = 0;
+
+static const struct debug_named_value mesa_spirv_debug_control[] = {
+   DEBUG_NAMED_VALUE_END,
+};
+
+DEBUG_GET_ONCE_FLAGS_OPTION(mesa_spirv_debug, "MESA_SPIRV_DEBUG", mesa_spirv_debug_control, 0)
+
 static enum nir_spirv_debug_level
 vtn_default_log_level(void)
 {
@@ -192,6 +201,11 @@ _vtn_fail(struct vtn_builder *b, const char *file, unsigned line,
    const char *dump_path = getenv("MESA_SPIRV_FAIL_DUMP_PATH");
    if (dump_path)
       vtn_dump_shader(b, dump_path, "fail");
+
+#ifndef NDEBUG
+   if (!b->options->skip_os_break_in_debug_build)
+      os_break();
+#endif
 
    vtn_longjmp(b->fail_jump, 1);
 }
@@ -1842,7 +1856,11 @@ vtn_handle_type(struct vtn_builder *b, SpvOp opcode,
 
    case SpvOpTypeEvent:
       val->type->base_type = vtn_base_type_event;
-      val->type->type = glsl_int_type();
+      /*
+       * this makes the event type compatible with pointer size due to LLVM 16.
+       * llvm 17 fixes this properly, but with 16 and opaque ptrs it's still wrong.
+       */
+      val->type->type = b->shader->info.cs.ptr_size == 64 ? glsl_int64_t_type() : glsl_int_type();
       break;
 
    case SpvOpTypeDeviceEvent:
@@ -2449,12 +2467,8 @@ vtn_mem_semantics_to_nir_var_modes(struct vtn_builder *b,
    }
 
    nir_variable_mode modes = 0;
-   if (semantics & SpvMemorySemanticsUniformMemoryMask) {
-      modes |= nir_var_uniform |
-               nir_var_mem_ubo |
-               nir_var_mem_ssbo |
-               nir_var_mem_global;
-   }
+   if (semantics & SpvMemorySemanticsUniformMemoryMask)
+      modes |= nir_var_mem_ssbo | nir_var_mem_global;
    if (semantics & SpvMemorySemanticsImageMemoryMask)
       modes |= nir_var_image;
    if (semantics & SpvMemorySemanticsWorkgroupMemoryMask)
@@ -2471,7 +2485,7 @@ vtn_mem_semantics_to_nir_var_modes(struct vtn_builder *b,
    return modes;
 }
 
-static nir_scope
+nir_scope
 vtn_scope_to_nir_scope(struct vtn_builder *b, SpvScope scope)
 {
    nir_scope nir_scope;
@@ -2831,7 +2845,11 @@ vtn_handle_texture(struct vtn_builder *b, SpvOp opcode,
       vtn_fail("unexpected nir_texop_tex_prefetch");
       break;
    case nir_texop_descriptor_amd:
-      vtn_fail("unexpected nir_texop_descriptor_amd");
+   case nir_texop_sampler_descriptor_amd:
+      vtn_fail("unexpected nir_texop_*descriptor_amd");
+      break;
+   case nir_texop_lod_bias_agx:
+      vtn_fail("unexpected nir_texop_lod_bias_agx");
       break;
    }
 
@@ -3090,6 +3108,9 @@ vtn_handle_texture(struct vtn_builder *b, SpvOp opcode,
 
    if (operands & SpvImageOperandsNontemporalMask)
       access |= ACCESS_STREAM_CACHE_POLICY;
+
+   if (sampler && b->options->force_tex_non_uniform)
+      access |= ACCESS_NON_UNIFORM;
 
    if (sampled_val->propagated_non_uniform)
       access |= ACCESS_NON_UNIFORM;
@@ -3580,7 +3601,7 @@ vtn_handle_image(struct vtn_builder *b, SpvOp opcode,
 
       if (opcode == SpvOpImageQuerySize ||
           opcode == SpvOpImageQuerySizeLod)
-         result = nir_u2u(&b->nb, result, glsl_get_bit_size(type->type));
+         result = nir_u2uN(&b->nb, result, glsl_get_bit_size(type->type));
 
       if (opcode == SpvOpImageSparseRead) {
          struct vtn_ssa_value *dest = vtn_create_ssa_value(b, struct_type->type);
@@ -3847,7 +3868,7 @@ vtn_handle_atomics(struct vtn_builder *b, SpvOp opcode,
    nir_builder_instr_insert(&b->nb, &atomic->instr);
 
    if (opcode == SpvOpAtomicFlagTestAndSet) {
-      vtn_push_nir_ssa(b, w[2], nir_i2b1(&b->nb, &atomic->dest.ssa));
+      vtn_push_nir_ssa(b, w[2], nir_i2b(&b->nb, &atomic->dest.ssa));
    }
    if (after_semantics)
       vtn_emit_memory_barrier(b, scope, after_semantics);
@@ -4435,28 +4456,13 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
                                 const uint32_t *w, unsigned count)
 {
    switch (opcode) {
-   case SpvOpSource: {
-      const char *lang;
-      switch (w[1]) {
-      default:
-      case SpvSourceLanguageUnknown:      lang = "unknown";    break;
-      case SpvSourceLanguageESSL:         lang = "ESSL";       break;
-      case SpvSourceLanguageGLSL:         lang = "GLSL";       break;
-      case SpvSourceLanguageOpenCL_C:     lang = "OpenCL C";   break;
-      case SpvSourceLanguageOpenCL_CPP:   lang = "OpenCL C++"; break;
-      case SpvSourceLanguageHLSL:         lang = "HLSL";       break;
-      }
-
-      uint32_t version = w[2];
-
-      const char *file =
-         (count > 3) ? vtn_value(b, w[3], vtn_value_type_string)->str : "";
-
-      vtn_info("Parsing SPIR-V from %s %u source file %s", lang, version, file);
-
-      b->source_lang = w[1];
+   case SpvOpString:
+   case SpvOpSource:
+   case SpvOpSourceExtension:
+   case SpvOpSourceContinued:
+   case SpvOpModuleProcessed:
+      vtn_handle_debug_text(b, opcode, w, count);
       break;
-   }
 
    case SpvOpExtension: {
       /* Implementing both NV_mesh_shader and EXT_mesh_shader
@@ -4468,11 +4474,6 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
          b->shader->info.mesh.nv = true;
       break;
    }
-   case SpvOpSourceExtension:
-   case SpvOpSourceContinued:
-   case SpvOpModuleProcessed:
-      /* Unhandled, but these are for debug so that's ok. */
-      break;
 
    case SpvOpCapability: {
       SpvCapability cap = w[1];
@@ -4868,6 +4869,18 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
          spv_check_supported(shader_viewport_mask_nv, cap);
          break;
 
+      case SpvCapabilityGroupNonUniformRotateKHR:
+         spv_check_supported(subgroup_rotate, cap);
+         break;
+
+      case SpvCapabilityFragmentFullyCoveredEXT:
+         spv_check_supported(fragment_fully_covered, cap);
+         break;
+
+      case SpvCapabilityFragmentDensityEXT:
+         spv_check_supported(fragment_density, cap);
+         break;
+
       default:
          vtn_fail("Unhandled capability: %s (%u)",
                   spirv_capability_to_string(cap), cap);
@@ -4942,11 +4955,6 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
       vtn_handle_entry_point(b, w, count);
       break;
 
-   case SpvOpString:
-      vtn_push_value(b, w[1], vtn_value_type_string)->str =
-         vtn_string_literal(b, &w[2], count - 2, NULL);
-      break;
-
    case SpvOpName:
       b->values[w[1]].name = vtn_string_literal(b, &w[2], count - 2, NULL);
       break;
@@ -4981,6 +4989,50 @@ vtn_handle_preamble_instruction(struct vtn_builder *b, SpvOp opcode,
    }
 
    return true;
+}
+
+void
+vtn_handle_debug_text(struct vtn_builder *b, SpvOp opcode,
+                      const uint32_t *w, unsigned count)
+{
+   switch (opcode) {
+   case SpvOpString:
+      vtn_push_value(b, w[1], vtn_value_type_string)->str =
+         vtn_string_literal(b, &w[2], count - 2, NULL);
+      break;
+
+   case SpvOpSource: {
+      const char *lang;
+      switch (w[1]) {
+      default:
+      case SpvSourceLanguageUnknown:      lang = "unknown";    break;
+      case SpvSourceLanguageESSL:         lang = "ESSL";       break;
+      case SpvSourceLanguageGLSL:         lang = "GLSL";       break;
+      case SpvSourceLanguageOpenCL_C:     lang = "OpenCL C";   break;
+      case SpvSourceLanguageOpenCL_CPP:   lang = "OpenCL C++"; break;
+      case SpvSourceLanguageHLSL:         lang = "HLSL";       break;
+      }
+
+      uint32_t version = w[2];
+
+      const char *file =
+         (count > 3) ? vtn_value(b, w[3], vtn_value_type_string)->str : "";
+
+      vtn_info("Parsing SPIR-V from %s %u source file %s", lang, version, file);
+
+      b->source_lang = w[1];
+      break;
+   }
+
+   case SpvOpSourceExtension:
+   case SpvOpSourceContinued:
+   case SpvOpModuleProcessed:
+      /* Unhandled, but these are for debug so that's ok. */
+      break;
+
+   default:
+      unreachable("Unhandled opcode");
+   }
 }
 
 static void
@@ -5290,6 +5342,41 @@ vtn_handle_execution_mode(struct vtn_builder *b, struct vtn_value *entry_point,
                   "SpvExecutionModeSubgroupUniformControlFlowKHR not supported.");
       break;
 
+   case SpvExecutionModeEarlyAndLateFragmentTestsAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.early_and_late_fragment_tests = true;
+      break;
+
+   case SpvExecutionModeStencilRefGreaterFrontAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.stencil_front_layout = FRAG_STENCIL_LAYOUT_GREATER;
+      break;
+
+   case SpvExecutionModeStencilRefLessFrontAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.stencil_front_layout = FRAG_STENCIL_LAYOUT_LESS;
+      break;
+
+   case SpvExecutionModeStencilRefUnchangedFrontAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.stencil_front_layout = FRAG_STENCIL_LAYOUT_UNCHANGED;
+      break;
+
+   case SpvExecutionModeStencilRefGreaterBackAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.stencil_back_layout = FRAG_STENCIL_LAYOUT_GREATER;
+      break;
+
+   case SpvExecutionModeStencilRefLessBackAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.stencil_back_layout = FRAG_STENCIL_LAYOUT_LESS;
+      break;
+
+   case SpvExecutionModeStencilRefUnchangedBackAMD:
+      vtn_assert(b->shader->info.stage == MESA_SHADER_FRAGMENT);
+      b->shader->info.fs.stencil_back_layout = FRAG_STENCIL_LAYOUT_UNCHANGED;
+      break;
+
    default:
       vtn_fail("Unhandled execution mode: %s (%u)",
                spirv_executionmode_to_string(mode->exec_mode),
@@ -5527,7 +5614,7 @@ vtn_handle_ptr(struct vtn_builder *b, SpvOp opcode,
                                 vtn_get_nir_ssa(b, w[4]),
                                 addr_format);
       def = nir_idiv(&b->nb, def, nir_imm_intN_t(&b->nb, elem_size, def->bit_size));
-      def = nir_i2i(&b->nb, def, glsl_get_bit_size(type));
+      def = nir_i2iN(&b->nb, def, glsl_get_bit_size(type));
       break;
    }
 
@@ -5739,7 +5826,7 @@ ray_query_load_intrinsic_create(struct vtn_builder *b, SpvOp opcode,
                               glsl_get_vector_elements(elem_type),
                               glsl_get_bit_size(elem_type),
                               src0, src1,
-                              .base = value.nir_value,
+                              .ray_query_value = value.nir_value,
                               .column = i);
       }
 
@@ -5752,7 +5839,7 @@ ray_query_load_intrinsic_create(struct vtn_builder *b, SpvOp opcode,
                                    glsl_get_vector_elements(value.glsl_type),
                                    glsl_get_bit_size(value.glsl_type),
                                    src0, src1,
-                                   .base = value.nir_value));
+                                   .ray_query_value = value.nir_value));
    }
 }
 
@@ -5806,7 +5893,7 @@ vtn_handle_ray_query_intrinsic(struct vtn_builder *b, SpvOp opcode,
    case SpvOpRayQueryGetIntersectionWorldToObjectKHR:
       ray_query_load_intrinsic_create(b, opcode, w,
                                       vtn_ssa_value(b, w[3])->def,
-                                      nir_i2b1(&b->nb, vtn_ssa_value(b, w[4])->def));
+                                      nir_i2b(&b->nb, vtn_ssa_value(b, w[4])->def));
       break;
 
    case SpvOpRayQueryGetRayTMinKHR:
@@ -6182,6 +6269,7 @@ vtn_handle_body_instruction(struct vtn_builder *b, SpvOp opcode,
    case SpvOpSubgroupShuffleDownINTEL:
    case SpvOpSubgroupShuffleUpINTEL:
    case SpvOpSubgroupShuffleXorINTEL:
+   case SpvOpGroupNonUniformRotateKHR:
       vtn_handle_subgroup(b, opcode, w, count);
       break;
 
@@ -6438,6 +6526,9 @@ vtn_emit_kernel_entry_point_wrapper(struct vtn_builder *b,
    for (unsigned i = 0; i < entry_point->num_params; ++i) {
       struct vtn_type *param_type = b->entry_point->func->type->params[i];
 
+      b->shader->info.cs.has_variable_shared_mem |=
+         param_type->storage_class == SpvStorageClassWorkgroup;
+
       /* consider all pointers to function memory to be parameters passed
        * by value
        */
@@ -6497,6 +6588,14 @@ can_remove(nir_variable *var, void *data)
    return !_mesa_set_search(vars_used_indirectly, var);
 }
 
+#ifndef NDEBUG
+static void
+initialize_mesa_spirv_debug(void)
+{
+   mesa_spirv_debug = debug_get_option_mesa_spirv_debug();
+}
+#endif
+
 nir_shader *
 spirv_to_nir(const uint32_t *words, size_t word_count,
              struct nir_spirv_specialization *spec, unsigned num_spec,
@@ -6505,6 +6604,11 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
              const nir_shader_compiler_options *nir_options)
 
 {
+#ifndef NDEBUG
+   static once_flag initialized_debug_flag = ONCE_FLAG_INIT;
+   call_once(&initialized_debug_flag, initialize_mesa_spirv_debug);
+#endif
+
    const uint32_t *word_end = words + word_count;
 
    struct vtn_builder *b = vtn_create_builder(words, word_count,
@@ -6520,12 +6624,13 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
       return NULL;
    }
 
-   /* Skip the SPIR-V header, handled at vtn_create_builder */
-   words+= 5;
-
    b->shader = nir_shader_create(b, stage, nir_options, NULL);
    b->shader->info.subgroup_size = options->subgroup_size;
    b->shader->info.float_controls_execution_mode = options->float_controls_execution_mode;
+   _mesa_sha1_compute(words, word_count * sizeof(uint32_t), b->shader->info.source_sha1);
+
+   /* Skip the SPIR-V header, handled at vtn_create_builder */
+   words+= 5;
 
    /* Handle all the preamble instructions */
    words = vtn_foreach_instruction(b, words, word_end,
@@ -6628,6 +6733,7 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
 
    /* structurize the CFG */
    nir_lower_goto_ifs(b->shader);
+   nir_lower_continue_constructs(b->shader);
 
    /* A SPIR-V module can have multiple shaders stages and also multiple
     * shaders of the same stage.  Global variables are declared per-module.
@@ -6730,6 +6836,15 @@ spirv_to_nir(const uint32_t *words, size_t word_count,
          }
       }
    }
+
+   /* Work around applications that declare shader_call_data variables inside
+    * ray generation shaders.
+    *
+    * https://gitlab.freedesktop.org/mesa/mesa/-/issues/5326
+    */
+   if (stage == MESA_SHADER_RAYGEN)
+      NIR_PASS(_, b->shader, nir_remove_dead_variables, nir_var_shader_call_data,
+               NULL);
 
    /* Unparent the shader from the vtn_builder before we delete the builder */
    ralloc_steal(NULL, b->shader);

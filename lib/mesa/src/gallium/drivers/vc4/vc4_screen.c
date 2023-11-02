@@ -69,7 +69,7 @@ static const struct debug_named_value vc4_debug_options[] = {
         { "dump", VC4_DEBUG_DUMP,
           "Write a GPU command stream trace file" },
 #endif
-        { NULL }
+        DEBUG_NAMED_VALUE_END
 };
 
 DEBUG_GET_ONCE_FLAGS_OPTION(vc4_debug, "VC4_DEBUG", vc4_debug_options, 0)
@@ -294,8 +294,6 @@ vc4_screen_get_shader_param(struct pipe_screen *pscreen,
         case PIPE_SHADER_CAP_INT16:
         case PIPE_SHADER_CAP_GLSL_16BIT_CONSTS:
         case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-        case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-        case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
                 return 0;
         case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
@@ -537,8 +535,17 @@ vc4_get_chip_info(struct vc4_screen *screen)
         return true;
 }
 
+static int
+vc4_screen_get_fd(struct pipe_screen *pscreen)
+{
+        struct vc4_screen *screen = vc4_screen(pscreen);
+
+        return screen->fd;
+}
+
 struct pipe_screen *
-vc4_screen_create(int fd, struct renderonly *ro)
+vc4_screen_create(int fd, const struct pipe_screen_config *config,
+                  struct renderonly *ro)
 {
         struct vc4_screen *screen = rzalloc(NULL, struct vc4_screen);
         uint64_t syncobj_cap = 0;
@@ -548,6 +555,7 @@ vc4_screen_create(int fd, struct renderonly *ro)
         pscreen = &screen->base;
 
         pscreen->destroy = vc4_screen_destroy;
+        pscreen->get_screen_fd = vc4_screen_get_fd;
         pscreen->get_param = vc4_screen_get_param;
         pscreen->get_paramf = vc4_screen_get_paramf;
         pscreen->get_shader_param = vc4_screen_get_shader_param;

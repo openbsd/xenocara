@@ -29,7 +29,7 @@
 #define PIPE_CONTEXT_H
 
 #include "p_compiler.h"
-#include "p_format.h"
+#include "util/format/u_formats.h"
 #include "p_video_enums.h"
 #include "p_defines.h"
 #include "util/u_debug.h"
@@ -46,6 +46,7 @@ struct pipe_blend_state;
 struct pipe_blit_info;
 struct pipe_box;
 struct pipe_clip_state;
+struct pipe_compute_state_object_info;
 struct pipe_constant_buffer;
 struct pipe_depth_stencil_alpha_state;
 struct pipe_device_reset_callback;
@@ -83,6 +84,7 @@ union pipe_query_result;
 struct u_log_context;
 struct u_upload_mgr;
 struct util_debug_callback;
+struct u_vbuf;
 
 /**
  * Gallium rendering context.  Basically:
@@ -95,6 +97,7 @@ struct pipe_context {
 
    void *priv;  /**< context private data (for DRI for example) */
    void *draw;  /**< private, for draw module (temporary?) */
+   struct u_vbuf *vbuf; /**< for cso_context, don't use in drivers */
 
    /**
     * Stream uploaders created by the driver. All drivers, gallium frontends, and
@@ -930,6 +933,9 @@ struct pipe_context {
                                  const struct pipe_compute_state *);
    void (*bind_compute_state)(struct pipe_context *, void *);
    void (*delete_compute_state)(struct pipe_context *, void *);
+
+   void (*get_compute_state_info)(struct pipe_context *, void *,
+                                  struct pipe_compute_state_object_info *);
 
    /**
     * Bind an array of shader resources that will be used by the

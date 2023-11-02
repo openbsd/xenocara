@@ -2185,6 +2185,335 @@ RENDER_SURFACE_STATE_SurfacePitch_start(const struct intel_device_info *devinfo)
 }
 
 
+/* RT_DISPATCH_GLOBALS */
+
+
+#ifndef GFX125_RT_DISPATCH_GLOBALS_length
+#define GFX125_RT_DISPATCH_GLOBALS_length  20
+#endif
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_length(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 20;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+/* RT_DISPATCH_GLOBALS::Callable Group Table */
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_CallableGroupTable_bits  64
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_CallableGroupTable_bits(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 64;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_CallableGroupTable_start  512
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_CallableGroupTable_start(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 512;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+/* RT_DISPATCH_GLOBALS::Hit Group Table */
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_HitGroupTable_bits  64
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_HitGroupTable_bits(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 64;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_HitGroupTable_start  256
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_HitGroupTable_start(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 256;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+/* RT_DISPATCH_GLOBALS::Launch Depth */
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_LaunchDepth_bits  32
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_LaunchDepth_bits(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 32;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_LaunchDepth_start  480
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_LaunchDepth_start(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 480;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+/* RT_DISPATCH_GLOBALS::Launch Height */
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_LaunchHeight_bits  32
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_LaunchHeight_bits(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 32;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_LaunchHeight_start  448
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_LaunchHeight_start(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 448;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+/* RT_DISPATCH_GLOBALS::Launch Width */
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_LaunchWidth_bits  32
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_LaunchWidth_bits(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 32;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_LaunchWidth_start  416
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_LaunchWidth_start(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 416;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+/* RT_DISPATCH_GLOBALS::Miss Group Table */
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_MissGroupTable_bits  64
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_MissGroupTable_bits(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 64;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
+
+#define GFX125_RT_DISPATCH_GLOBALS_MissGroupTable_start  320
+
+static inline uint32_t ATTRIBUTE_PURE
+RT_DISPATCH_GLOBALS_MissGroupTable_start(const struct intel_device_info *devinfo)
+{
+   switch (devinfo->verx10) {
+   case 125: return 320;
+   case 120: return 0;
+   case 110: return 0;
+   case 90: return 0;
+   case 80: return 0;
+   case 75: return 0;
+   case 70: return 0;
+   case 60: return 0;
+   case 50: return 0;
+   case 45: return 0;
+   case 40: return 0;
+   default:
+      unreachable("Invalid hardware generation");
+   }
+}
+
+
 /* VERTEX_BUFFER_STATE */
 
 

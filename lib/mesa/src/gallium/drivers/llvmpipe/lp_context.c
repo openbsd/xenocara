@@ -49,12 +49,6 @@
 #include "lp_screen.h"
 #include "lp_fence.h"
 
-/* This is only safe if there's just one concurrent context */
-#ifdef EMBEDDED_DEVICE
-#define USE_GLOBAL_LLVM_CONTEXT
-#endif
-
-
 static void
 llvmpipe_destroy(struct pipe_context *pipe)
 {
@@ -82,11 +76,7 @@ llvmpipe_destroy(struct pipe_context *pipe)
    if (llvmpipe->draw)
       draw_destroy(llvmpipe->draw);
 
-   for (i = 0; i < PIPE_MAX_COLOR_BUFS; i++) {
-      pipe_surface_reference(&llvmpipe->framebuffer.cbufs[i], NULL);
-   }
-
-   pipe_surface_reference(&llvmpipe->framebuffer.zsbuf, NULL);
+   util_unreference_framebuffer_state(&llvmpipe->framebuffer);
 
    for (enum pipe_shader_type s = PIPE_SHADER_VERTEX; s < PIPE_SHADER_TYPES; s++) {
       for (i = 0; i < ARRAY_SIZE(llvmpipe->sampler_views[0]); i++) {
@@ -123,7 +113,7 @@ do_flush(struct pipe_context *pipe,
          struct pipe_fence_handle **fence,
          unsigned flags)
 {
-   llvmpipe_flush(pipe, fence, __FUNCTION__);
+   llvmpipe_flush(pipe, fence, __func__);
 }
 
 
@@ -263,7 +253,7 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
    if (!llvmpipe->context)
       goto fail;
 
-#if LLVM_VERSION_MAJOR >= 15
+#if LLVM_VERSION_MAJOR == 15
    LLVMContextSetOpaquePointers(llvmpipe->context, false);
 #endif
 
@@ -309,7 +299,7 @@ llvmpipe_create_context(struct pipe_screen *screen, void *priv,
 
    /* plug in AA line/point stages */
    draw_install_aaline_stage(llvmpipe->draw, &llvmpipe->pipe);
-   draw_install_aapoint_stage(llvmpipe->draw, &llvmpipe->pipe);
+   draw_install_aapoint_stage(llvmpipe->draw, &llvmpipe->pipe, nir_type_bool32);
    draw_install_pstipple_stage(llvmpipe->draw, &llvmpipe->pipe);
 
    /* convert points and lines into triangles:

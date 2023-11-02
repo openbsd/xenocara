@@ -48,14 +48,6 @@ lower_b2i64(nir_builder *b, nir_ssa_def *x)
 }
 
 static nir_ssa_def *
-lower_i2b(nir_builder *b, nir_ssa_def *x)
-{
-   return nir_ine(b, nir_ior(b, nir_unpack_64_2x32_split_x(b, x),
-                                nir_unpack_64_2x32_split_y(b, x)),
-                     nir_imm_int(b, 0));
-}
-
-static nir_ssa_def *
 lower_i2i8(nir_builder *b, nir_ssa_def *x)
 {
    return nir_i2i8(b, nir_unpack_64_2x32_split_x(b, x));
@@ -688,9 +680,39 @@ lower_ufind_msb64(nir_builder *b, nir_ssa_def *x)
    nir_ssa_def *x_hi = nir_unpack_64_2x32_split_y(b, x);
    nir_ssa_def *lo_count = nir_ufind_msb(b, x_lo);
    nir_ssa_def *hi_count = nir_ufind_msb(b, x_hi);
-   nir_ssa_def *valid_hi_bits = nir_ine(b, x_hi, nir_imm_int(b, 0));
-   nir_ssa_def *hi_res = nir_iadd(b, nir_imm_intN_t(b, 32, 32), hi_count);
-   return nir_bcsel(b, valid_hi_bits, hi_res, lo_count);
+
+   if (b->shader->options->lower_uadd_sat) {
+      nir_ssa_def *valid_hi_bits = nir_ine(b, x_hi, nir_imm_int(b, 0));
+      nir_ssa_def *hi_res = nir_iadd(b, nir_imm_intN_t(b, 32, 32), hi_count);
+      return nir_bcsel(b, valid_hi_bits, hi_res, lo_count);
+   } else {
+      /* If hi_count was -1, it will still be -1 after this uadd_sat. As a
+       * result, hi_count is either -1 or the correct return value for 64-bit
+       * ufind_msb.
+       */
+      nir_ssa_def *hi_res = nir_uadd_sat(b, nir_imm_intN_t(b, 32, 32), hi_count);
+
+      /* hi_res is either -1 or a value in the range [63, 32]. lo_count is
+       * either -1 or a value in the range [31, 0]. The imax will pick
+       * lo_count only when hi_res is -1. In those cases, lo_count is
+       * guaranteed to be the correct answer.
+       */
+      return nir_imax(b, hi_res, lo_count);
+   }
+}
+
+static nir_ssa_def *
+lower_find_lsb64(nir_builder *b, nir_ssa_def *x)
+{
+   nir_ssa_def *x_lo = nir_unpack_64_2x32_split_x(b, x);
+   nir_ssa_def *x_hi = nir_unpack_64_2x32_split_y(b, x);
+   nir_ssa_def *lo_lsb = nir_find_lsb(b, x_lo);
+   nir_ssa_def *hi_lsb = nir_find_lsb(b, x_hi);
+
+   /* Use umin so that -1 (no bits found) becomes larger (0xFFFFFFFF)
+    * than any actual bit position, so we return a found bit instead.
+    */
+   return nir_umin(b, lo_lsb, nir_iadd(b, hi_lsb, nir_imm_int(b, 32)));
 }
 
 static nir_ssa_def *
@@ -871,7 +893,6 @@ nir_lower_int64_op_to_options_mask(nir_op opcode)
    case nir_op_irem:
       return nir_lower_divmod64;
    case nir_op_b2i64:
-   case nir_op_i2b1:
    case nir_op_i2i8:
    case nir_op_i2i16:
    case nir_op_i2i32:
@@ -925,6 +946,8 @@ nir_lower_int64_op_to_options_mask(nir_op opcode)
       return nir_lower_extract64;
    case nir_op_ufind_msb:
       return nir_lower_ufind_msb64;
+   case nir_op_find_lsb:
+      return nir_lower_find_lsb64;
    case nir_op_bit_count:
       return nir_lower_bit_count64;
    default:
@@ -965,8 +988,6 @@ lower_int64_alu_instr(nir_builder *b, nir_alu_instr *alu)
       return lower_irem64(b, src[0], src[1]);
    case nir_op_b2i64:
       return lower_b2i64(b, src[0]);
-   case nir_op_i2b1:
-      return lower_i2b(b, src[0]);
    case nir_op_i2i8:
       return lower_i2i8(b, src[0]);
    case nir_op_i2i16:
@@ -1029,6 +1050,8 @@ lower_int64_alu_instr(nir_builder *b, nir_alu_instr *alu)
       return lower_extract(b, alu->op, src[0], src[1]);
    case nir_op_ufind_msb:
       return lower_ufind_msb64(b, src[0]);
+   case nir_op_find_lsb:
+      return lower_find_lsb64(b, src[0]);
    case nir_op_bit_count:
       return lower_bit_count64(b, src[0]);
    case nir_op_i2f64:
@@ -1052,7 +1075,6 @@ should_lower_int64_alu_instr(const nir_alu_instr *alu,
                              const nir_shader_compiler_options *options)
 {
    switch (alu->op) {
-   case nir_op_i2b1:
    case nir_op_i2i8:
    case nir_op_i2i16:
    case nir_op_i2i32:
@@ -1085,6 +1107,7 @@ should_lower_int64_alu_instr(const nir_alu_instr *alu,
          return false;
       break;
    case nir_op_ufind_msb:
+   case nir_op_find_lsb:
    case nir_op_bit_count:
       assert(alu->src[0].src.is_ssa);
       if (alu->src[0].src.ssa->bit_size != 64)

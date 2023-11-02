@@ -1,10 +1,14 @@
-#	$OpenBSD: Makefile,v 1.3 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	intel_common
 
 NOPROFILE=
 
-SRCS=	intel_aux_map.c \
+SRCS=	i915_intel_engine.c \
+	i915_intel_gem.c \
+	xe_intel_engine.c \
+	xe_intel_gem.c \
+	intel_aux_map.c \
 	intel_batch_decoder.c \
 	intel_decoder.c \
 	intel_disasm.c \
@@ -16,6 +20,15 @@ SRCS=	intel_aux_map.c \
 	intel_urb_config.c \
 	intel_uuid.c
 
+i915_intel_engine.c:
+	ln -s ${MESA_SRC}/src/intel/common/i915/intel_engine.c $@
+i915_intel_gem.c:
+	ln -s ${MESA_SRC}/src/intel/common/i915/intel_gem.c $@
+xe_intel_engine.c:
+	ln -s ${MESA_SRC}/src/intel/common/xe/intel_engine.c $@
+xe_intel_gem.c:
+	ln -s ${MESA_SRC}/src/intel/common/xe/intel_gem.c $@
+
 .include "../Makefile.inc"
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS}
@@ -23,6 +36,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/intel/common \
 		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel
 
@@ -34,3 +48,8 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/intel/common
+
+CLEANFILES+=	i915_intel_engine.c \
+		i915_intel_gem.c \
+		xe_intel_engine.c \
+		xe_intel_gem.c

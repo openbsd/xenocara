@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX11_PACK_H
-#define GFX11_PACK_H
+#ifndef GFX11_ICL_PACK_H
+#define GFX11_ICL_PACK_H
 
 #include <stdio.h>
 
@@ -3125,7 +3125,7 @@ struct GFX11_3DPRIMITIVE {
    bool                                 PredicateEnable;
    bool                                 UAVCoherencyRequired;
    bool                                 IndirectParameterEnable;
-   uint32_t                             ExtendedParametersPresent;
+   bool                                 ExtendedParametersPresent;
    uint32_t                             _3DCommandSubOpcode;
    uint32_t                             _3DCommandOpcode;
    uint32_t                             CommandSubType;
@@ -3140,9 +3140,6 @@ struct GFX11_3DPRIMITIVE {
    uint32_t                             InstanceCount;
    uint32_t                             StartInstanceLocation;
    int32_t                              BaseVertexLocation;
-   uint32_t                             ExtendedParameter0;
-   uint32_t                             ExtendedParameter1;
-   uint32_t                             ExtendedParameter2;
 };
 
 static inline __attribute__((always_inline)) void
@@ -3182,6 +3179,89 @@ GFX11_3DPRIMITIVE_pack(__attribute__((unused)) __gen_user_data *data,
 
    dw[6] =
       util_bitpack_sint(values->BaseVertexLocation, 0, 31);
+}
+
+#define GFX11_3DPRIMITIVE_EXTENDED_length     10
+#define GFX11_3DPRIMITIVE_EXTENDED_length_bias      2
+#define GFX11_3DPRIMITIVE_EXTENDED_header       \
+   .DWordLength                         =      8,  \
+   .ExtendedParametersPresent           =      1,  \
+   ._3DCommandSubOpcode                 =      0,  \
+   ._3DCommandOpcode                    =      3,  \
+   .CommandSubType                      =      3,  \
+   .CommandType                         =      3
+
+struct GFX11_3DPRIMITIVE_EXTENDED {
+   uint32_t                             DWordLength;
+   bool                                 PredicateEnable;
+   bool                                 UAVCoherencyRequired;
+   bool                                 IndirectParameterEnable;
+   bool                                 ExtendedParametersPresent;
+   uint32_t                             _3DCommandSubOpcode;
+   uint32_t                             _3DCommandOpcode;
+   uint32_t                             CommandSubType;
+   uint32_t                             CommandType;
+   enum GFX11_3D_Prim_Topo_Type         PrimitiveTopologyType;
+   uint32_t                             VertexAccessType;
+#define SEQUENTIAL                               0
+#define RANDOM                                   1
+   bool                                 EndOffsetEnable;
+   uint32_t                             VertexCountPerInstance;
+   uint32_t                             StartVertexLocation;
+   uint32_t                             InstanceCount;
+   uint32_t                             StartInstanceLocation;
+   int32_t                              BaseVertexLocation;
+   uint32_t                             ExtendedParameter0;
+   uint32_t                             ExtendedParameter1;
+   uint32_t                             ExtendedParameter2;
+};
+
+static inline __attribute__((always_inline)) void
+GFX11_3DPRIMITIVE_EXTENDED_pack(__attribute__((unused)) __gen_user_data *data,
+                                __attribute__((unused)) void * restrict dst,
+                                __attribute__((unused)) const struct GFX11_3DPRIMITIVE_EXTENDED * restrict values)
+{
+   uint32_t * restrict dw = (uint32_t * restrict) dst;
+
+   dw[0] =
+      util_bitpack_uint(values->DWordLength, 0, 7) |
+      util_bitpack_uint(values->PredicateEnable, 8, 8) |
+      util_bitpack_uint(values->UAVCoherencyRequired, 9, 9) |
+      util_bitpack_uint(values->IndirectParameterEnable, 10, 10) |
+      util_bitpack_uint(values->ExtendedParametersPresent, 11, 11) |
+      util_bitpack_uint(values->_3DCommandSubOpcode, 16, 23) |
+      util_bitpack_uint(values->_3DCommandOpcode, 24, 26) |
+      util_bitpack_uint(values->CommandSubType, 27, 28) |
+      util_bitpack_uint(values->CommandType, 29, 31);
+
+   dw[1] =
+      util_bitpack_uint(values->PrimitiveTopologyType, 0, 5) |
+      util_bitpack_uint(values->VertexAccessType, 8, 8) |
+      util_bitpack_uint(values->EndOffsetEnable, 9, 9);
+
+   dw[2] =
+      util_bitpack_uint(values->VertexCountPerInstance, 0, 31);
+
+   dw[3] =
+      util_bitpack_uint(values->StartVertexLocation, 0, 31);
+
+   dw[4] =
+      util_bitpack_uint(values->InstanceCount, 0, 31);
+
+   dw[5] =
+      util_bitpack_uint(values->StartInstanceLocation, 0, 31);
+
+   dw[6] =
+      util_bitpack_sint(values->BaseVertexLocation, 0, 31);
+
+   dw[7] =
+      util_bitpack_uint(values->ExtendedParameter0, 0, 31);
+
+   dw[8] =
+      util_bitpack_uint(values->ExtendedParameter1, 0, 31);
+
+   dw[9] =
+      util_bitpack_uint(values->ExtendedParameter2, 0, 31);
 }
 
 #define GFX11_3DSTATE_3D_MODE_length           2
@@ -5677,7 +5757,6 @@ struct GFX11_3DSTATE_PS_EXTRA {
 #define PSCDEPTH_ON_LE                           3
    bool                                 PixelShaderKillsPixel;
    bool                                 oMaskPresenttoRenderTarget;
-   bool                                 PixelShaderDoesnotwritetoRT;
    bool                                 PixelShaderValid;
 };
 
@@ -5716,7 +5795,6 @@ GFX11_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->PixelShaderComputedDepthMode, 26, 27) |
       util_bitpack_uint(values->PixelShaderKillsPixel, 28, 28) |
       util_bitpack_uint(values->oMaskPresenttoRenderTarget, 29, 29) |
-      util_bitpack_uint(values->PixelShaderDoesnotwritetoRT, 30, 30) |
       util_bitpack_uint(values->PixelShaderValid, 31, 31);
 }
 
@@ -7747,7 +7825,7 @@ struct GFX11_3DSTATE_VF_SGVS_2 {
 #define COMP_1                                   1
 #define COMP_2                                   2
 #define COMP_3                                   3
-   uint32_t                             XP0Enable;
+   bool                                 XP0Enable;
    uint32_t                             XP1ElementOffset;
    uint32_t                             XP1SourceSelect;
 #define StartingInstanceLocation                 1
@@ -7757,14 +7835,14 @@ struct GFX11_3DSTATE_VF_SGVS_2 {
 #define COMP_1                                   1
 #define COMP_2                                   2
 #define COMP_3                                   3
-   uint32_t                             XP1Enable;
+   bool                                 XP1Enable;
    uint32_t                             XP2ElementOffset;
    uint32_t                             XP2ComponentNumber;
 #define COMP_0                                   0
 #define COMP_1                                   1
 #define COMP_2                                   2
 #define COMP_3                                   3
-   uint32_t                             XP2Enable;
+   bool                                 XP2Enable;
 };
 
 static inline __attribute__((always_inline)) void
@@ -12103,7 +12181,7 @@ struct GFX11_MFD_AVC_BSD_OBJECT {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             IndirectBSDDataLength;
-   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint64_t                             IndirectBSDDataStartAddress;
    struct GFX11_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT InlineData;
 };
 
@@ -12125,7 +12203,8 @@ GFX11_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
-   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 
    GFX11_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(data, &dw[3], &values->InlineData);
 
@@ -12135,7 +12214,7 @@ GFX11_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX11_MFD_AVC_DPB_STATE_length        27
 #define GFX11_MFD_AVC_DPB_STATE_length_bias      2
 #define GFX11_MFD_AVC_DPB_STATE_header          \
-   .DWordLength                         =      9,  \
+   .DWordLength                         =     25,  \
    .SubOpcodeB                          =      6,  \
    .SubOpcodeA                          =      1,  \
    .MediaCommandOpcode                  =      1,  \
@@ -12159,8 +12238,6 @@ struct GFX11_MFD_AVC_DPB_STATE {
 #define BOTTOM_FIELD                             2
 #define FRAME                                    3
    uint32_t                             LTSTFrameNumberList[16];
-#define LTST_LongTermFrame                       1
-#define LTST_ShortTermFrame                      0
    uint32_t                             ViewID[16];
    uint32_t                             L0ViewOrder[16];
    uint32_t                             L1ViewOrder[16];
@@ -12438,7 +12515,7 @@ struct GFX11_MFD_AVC_SLICEADDR {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             IndirectBSDDataLength;
-   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint64_t                             IndirectBSDDataStartAddress;
    uint32_t                             DriverProvidedNALTypeValue;
    uint32_t                             AVCNALTypeFirstByteOverride;
 #define UseBitstreamDecodedNALType               0
@@ -12463,7 +12540,8 @@ GFX11_MFD_AVC_SLICEADDR_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
-   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 
    dw[3] =
       util_bitpack_uint(values->DriverProvidedNALTypeValue, 0, 7) |
@@ -13353,10 +13431,10 @@ GFX11_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *dat
       util_bitpack_uint(values->POCList[33], 0, 31);
 }
 
-#define GFX11_MFX_AVC_IMG_STATE_length        14
+#define GFX11_MFX_AVC_IMG_STATE_length        21
 #define GFX11_MFX_AVC_IMG_STATE_length_bias      2
 #define GFX11_MFX_AVC_IMG_STATE_header          \
-   .DWordLength                         =     12,  \
+   .DWordLength                         =     19,  \
    .SubOpcodeB                          =      0,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -13384,8 +13462,8 @@ struct GFX11_MFX_AVC_IMG_STATE {
 #define IMPLICIT                                 2
    bool                                 WeightedPredictionEnable;
    bool                                 RhoDomainRateControlEnable;
-   uint32_t                             FirstChromaQPOffset;
-   uint32_t                             SecondChromaQPOffset;
+   int32_t                              FirstChromaQPOffset;
+   int32_t                              SecondChromaQPOffset;
    bool                                 FieldPicture;
    bool                                 MBAFFMode;
    bool                                 FrameMBOnly;
@@ -13499,8 +13577,8 @@ GFX11_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->WeightedBiPredictionIDC, 10, 11) |
       util_bitpack_uint(values->WeightedPredictionEnable, 12, 12) |
       util_bitpack_uint(values->RhoDomainRateControlEnable, 13, 13) |
-      util_bitpack_uint(values->FirstChromaQPOffset, 16, 20) |
-      util_bitpack_uint(values->SecondChromaQPOffset, 24, 28);
+      util_bitpack_sint(values->FirstChromaQPOffset, 16, 20) |
+      util_bitpack_sint(values->SecondChromaQPOffset, 24, 28);
 
    dw[4] =
       util_bitpack_uint(values->FieldPicture, 0, 0) |
@@ -13570,6 +13648,41 @@ GFX11_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->NumberofActiveReferencePicturesfromL1, 16, 21) |
       util_bitpack_uint(values->NumberofReferenceFrames, 24, 28) |
       util_bitpack_uint(values->CurrentPictureHasPerformedMMCO5, 29, 29);
+
+   dw[14] =
+      util_bitpack_uint(values->PicOrderPresent, 0, 0) |
+      util_bitpack_uint(values->DeltaPicOrderAlwaysZero, 1, 1) |
+      util_bitpack_uint(values->PicOrderCountType, 2, 3) |
+      util_bitpack_uint(values->SliceGroupMapType, 8, 10) |
+      util_bitpack_uint(values->RedundantPicCountPresent, 11, 11) |
+      util_bitpack_uint(values->NumberofSliceGroups, 12, 14) |
+      util_bitpack_uint(values->DeblockingFilterControlPresent, 15, 15) |
+      util_bitpack_uint(values->Log2MaxFrameNumber, 16, 23) |
+      util_bitpack_uint(values->Log2MaxPicOrderCountLSB, 24, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->SliceGroupChangeRate, 0, 15) |
+      util_bitpack_uint(values->CurrentPictureFrameNumber, 16, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->CurrentFrameViewID, 0, 9) |
+      util_bitpack_uint(values->MaxViewIDXL0, 12, 15) |
+      util_bitpack_uint(values->MaxViewIDXL1, 18, 21) |
+      util_bitpack_uint(values->InterViewOrderDisable, 31, 31);
+
+   dw[17] =
+      util_bitpack_uint(values->FractionalQPInput, 0, 2) |
+      util_bitpack_uint(values->FractionalQPOffset, 3, 5) |
+      util_bitpack_uint(values->ExtendedRhoDomainStatisticsEnable, 8, 8) |
+      util_bitpack_uint(values->RhoDomainAverageMBQP, 16, 21);
+
+   dw[18] = 0;
+
+   dw[19] =
+      util_bitpack_uint(values->ThresholdSize, 0, 31);
+
+   dw[20] =
+      util_bitpack_uint(values->TargetSliceSize, 0, 31);
 }
 
 #define GFX11_MFX_AVC_REF_IDX_STATE_length     10
@@ -21452,37 +21565,6 @@ GFX11_CACHE_MODE_1_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->ColorCompressionDisableMask, 31, 31);
 }
 
-#define GFX11_CACHE_MODE_SS_num           0xe420
-#define GFX11_CACHE_MODE_SS_length             1
-struct GFX11_CACHE_MODE_SS {
-   bool                                 InstructionLevel1CacheDisable;
-   bool                                 InstructionLevel1CacheandInFlightQueueDisable;
-   bool                                 FloatBlendOptimizationEnable;
-   bool                                 PerSampleBlendOptDisable;
-   bool                                 InstructionLevel1CacheDisableMask;
-   bool                                 InstructionLevel1CacheandInFlightQueueDisableMask;
-   bool                                 FloatBlendOptimizationEnableMask;
-   bool                                 PerSampleBlendOptDisableMask;
-};
-
-static inline __attribute__((always_inline)) void
-GFX11_CACHE_MODE_SS_pack(__attribute__((unused)) __gen_user_data *data,
-                         __attribute__((unused)) void * restrict dst,
-                         __attribute__((unused)) const struct GFX11_CACHE_MODE_SS * restrict values)
-{
-   uint32_t * restrict dw = (uint32_t * restrict) dst;
-
-   dw[0] =
-      util_bitpack_uint(values->InstructionLevel1CacheDisable, 0, 0) |
-      util_bitpack_uint(values->InstructionLevel1CacheandInFlightQueueDisable, 1, 1) |
-      util_bitpack_uint(values->FloatBlendOptimizationEnable, 4, 4) |
-      util_bitpack_uint(values->PerSampleBlendOptDisable, 11, 11) |
-      util_bitpack_uint(values->InstructionLevel1CacheDisableMask, 16, 16) |
-      util_bitpack_uint(values->InstructionLevel1CacheandInFlightQueueDisableMask, 17, 17) |
-      util_bitpack_uint(values->FloatBlendOptimizationEnableMask, 20, 20) |
-      util_bitpack_uint(values->PerSampleBlendOptDisableMask, 27, 27);
-}
-
 #define GFX11_CL_INVOCATION_COUNT_num     0x2338
 #define GFX11_CL_INVOCATION_COUNT_length       2
 struct GFX11_CL_INVOCATION_COUNT {
@@ -22510,4 +22592,4 @@ GFX11_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#endif /* GFX11_PACK_H */
+#endif /* GFX11_ICL_PACK_H */

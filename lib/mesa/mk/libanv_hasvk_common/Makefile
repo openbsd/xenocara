@@ -1,10 +1,11 @@
-#	$OpenBSD: Makefile,v 1.1 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/11/02 04:53:30 jsg Exp $
 
 LIB=	anv_hasvk_common
 
 NOPROFILE=
 
-SRCS=	anv_allocator.c \
+SRCS=	anv_doom64.c \
+	anv_allocator.c \
 	anv_android.h \
 	anv_batch_chain.c \
 	anv_blorp.c \
@@ -18,7 +19,6 @@ SRCS=	anv_allocator.c \
 	anv_measure.c \
 	anv_measure.h \
 	anv_nir.h \
-	anv_nir_add_base_work_group_id.c \
 	anv_nir_apply_pipeline_layout.c \
 	anv_nir_compute_push_layout.c \
 	anv_nir_lower_multiview.c \
@@ -70,4 +70,5 @@ obj: _xenocara_obj
 .include <bsd.xorg.mk>
 
 .PATH: ${MESA_SRC}/src/intel/vulkan_hasvk
+.PATH: ${MESA_SRC}/src/intel/vulkan_hasvk/layers
 .PATH: ${MESA_SRC}/generated/src/intel/vulkan_hasvk

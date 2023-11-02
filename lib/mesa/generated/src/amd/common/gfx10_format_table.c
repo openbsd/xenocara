@@ -292,6 +292,7 @@ const struct gfx10_format gfx10_format_table[PIPE_FORMAT_COUNT] = {
 /* PIPE_FORMAT_P010 is not supported */
 /* PIPE_FORMAT_P012 is not supported */
 /* PIPE_FORMAT_P016 is not supported */
+/* PIPE_FORMAT_P030 is not supported */
 /* PIPE_FORMAT_Y210 is not supported */
 /* PIPE_FORMAT_Y212 is not supported */
 /* PIPE_FORMAT_Y216 is not supported */
@@ -719,6 +720,7 @@ const struct gfx10_format gfx11_format_table[PIPE_FORMAT_COUNT] = {
 /* PIPE_FORMAT_P010 is not supported */
 /* PIPE_FORMAT_P012 is not supported */
 /* PIPE_FORMAT_P016 is not supported */
+/* PIPE_FORMAT_P030 is not supported */
 /* PIPE_FORMAT_Y210 is not supported */
 /* PIPE_FORMAT_Y212 is not supported */
 /* PIPE_FORMAT_Y216 is not supported */

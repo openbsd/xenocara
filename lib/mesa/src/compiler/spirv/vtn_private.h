@@ -19,10 +19,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- *
- * Authors:
- *    Jason Ekstrand (jason@jlekstrand.net)
- *
  */
 
 #ifndef _VTN_PRIVATE_H_
@@ -36,6 +32,14 @@
 #include "nir_spirv.h"
 #include "spirv.h"
 #include "vtn_generator_ids.h"
+
+extern uint32_t mesa_spirv_debug;
+
+#ifndef NDEBUG
+#define MESA_SPIRV_DEBUG(flag) unlikely(mesa_spirv_debug & (MESA_SPIRV_DEBUG_ ## flag))
+#else
+#define MESA_SPIRV_DEBUG(flag) false
+#endif
 
 struct vtn_builder;
 struct vtn_decoration;
@@ -592,6 +596,9 @@ const struct glsl_type *
 vtn_type_get_nir_type(struct vtn_builder *b, struct vtn_type *type,
                       enum vtn_variable_mode mode);
 
+nir_scope
+vtn_scope_to_nir_scope(struct vtn_builder *b, SpvScope scope);
+
 struct vtn_image_pointer {
    nir_deref_instr *image;
    nir_ssa_def *coord;
@@ -1007,6 +1014,9 @@ struct vtn_builder* vtn_create_builder(const uint32_t *words, size_t word_count,
 
 void vtn_handle_entry_point(struct vtn_builder *b, const uint32_t *w,
                             unsigned count);
+
+void vtn_handle_debug_text(struct vtn_builder *b, SpvOp opcode,
+                           const uint32_t *w, unsigned count);
 
 void vtn_handle_decoration(struct vtn_builder *b, SpvOp opcode,
                            const uint32_t *w, unsigned count);

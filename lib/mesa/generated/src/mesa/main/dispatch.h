@@ -40,9 +40,8 @@
  * named function in the specified dispatch table.
  */
 
-#include "main/glheader.h"
+#include "util/glheader.h"
 
-#include "main/glheader.h"
 #define CALL_by_offset(disp, cast, offset, parameters) \
     (*(cast (GET_by_offset(disp, offset)))) parameters
 #define GET_by_offset(disp, offset) \
@@ -60,7 +59,7 @@
     } while(0)
 
 /* total number of offsets below */
-#define _gloffset_COUNT 1668
+#define _gloffset_COUNT 1671
 
 #define _gloffset_NewList 0
 #define _gloffset_EndList 1
@@ -470,7 +469,7 @@
 #define _gloffset_MultiTexCoord4iv 405
 #define _gloffset_MultiTexCoord4s 406
 #define _gloffset_MultiTexCoord4sv 407
-#define driDispatchRemapTable_size 1260
+#define driDispatchRemapTable_size 1263
 extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 
 #define CompressedTexImage1D_remap_index 0
@@ -1733,6 +1732,9 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define DrawElementsUserBuf_remap_index 1257
 #define MultiDrawArraysUserBuf_remap_index 1258
 #define MultiDrawElementsUserBuf_remap_index 1259
+#define DrawArraysInstancedBaseInstanceDrawID_remap_index 1260
+#define DrawElementsInstancedBaseVertexBaseInstanceDrawID_remap_index 1261
+#define InternalInvalidateFramebufferAncillaryMESA_remap_index 1262
 
 #define _gloffset_CompressedTexImage1D driDispatchRemapTable[CompressedTexImage1D_remap_index]
 #define _gloffset_CompressedTexImage2D driDispatchRemapTable[CompressedTexImage2D_remap_index]
@@ -2994,6 +2996,9 @@ extern int driDispatchRemapTable[ driDispatchRemapTable_size ];
 #define _gloffset_DrawElementsUserBuf driDispatchRemapTable[DrawElementsUserBuf_remap_index]
 #define _gloffset_MultiDrawArraysUserBuf driDispatchRemapTable[MultiDrawArraysUserBuf_remap_index]
 #define _gloffset_MultiDrawElementsUserBuf driDispatchRemapTable[MultiDrawElementsUserBuf_remap_index]
+#define _gloffset_DrawArraysInstancedBaseInstanceDrawID driDispatchRemapTable[DrawArraysInstancedBaseInstanceDrawID_remap_index]
+#define _gloffset_DrawElementsInstancedBaseVertexBaseInstanceDrawID driDispatchRemapTable[DrawElementsInstancedBaseVertexBaseInstanceDrawID_remap_index]
+#define _gloffset_InternalInvalidateFramebufferAncillaryMESA driDispatchRemapTable[InternalInvalidateFramebufferAncillaryMESA_remap_index]
 
 typedef void (GLAPIENTRYP _glptr_NewList)(GLuint, GLenum);
 #define CALL_NewList(disp, parameters) (* GET_NewList(disp)) parameters
@@ -16315,11 +16320,11 @@ typedef void (GLAPIENTRYP _glptr_DrawArraysUserBuf)(void);
    SET_by_offset(disp, _gloffset_DrawArraysUserBuf, fn); \
 } while (0)
 
-typedef void (GLAPIENTRYP _glptr_DrawElementsUserBuf)(void);
+typedef void (GLAPIENTRYP _glptr_DrawElementsUserBuf)(GLintptr, GLenum, GLsizei, GLenum, const GLvoid *, GLsizei, GLint, GLuint);
 #define CALL_DrawElementsUserBuf(disp, parameters) (* GET_DrawElementsUserBuf(disp)) parameters
 #define GET_DrawElementsUserBuf(disp) ((_glptr_DrawElementsUserBuf)(GET_by_offset((disp), _gloffset_DrawElementsUserBuf)))
 #define SET_DrawElementsUserBuf(disp, func) do { \
-   void (GLAPIENTRYP fn)(void) = func; \
+   void (GLAPIENTRYP fn)(GLintptr, GLenum, GLsizei, GLenum, const GLvoid *, GLsizei, GLint, GLuint) = func; \
    SET_by_offset(disp, _gloffset_DrawElementsUserBuf, fn); \
 } while (0)
 
@@ -16331,12 +16336,36 @@ typedef void (GLAPIENTRYP _glptr_MultiDrawArraysUserBuf)(void);
    SET_by_offset(disp, _gloffset_MultiDrawArraysUserBuf, fn); \
 } while (0)
 
-typedef void (GLAPIENTRYP _glptr_MultiDrawElementsUserBuf)(void);
+typedef void (GLAPIENTRYP _glptr_MultiDrawElementsUserBuf)(GLintptr, GLenum, const GLsizei *, GLenum, const GLvoid * const *, GLsizei, const GLint *);
 #define CALL_MultiDrawElementsUserBuf(disp, parameters) (* GET_MultiDrawElementsUserBuf(disp)) parameters
 #define GET_MultiDrawElementsUserBuf(disp) ((_glptr_MultiDrawElementsUserBuf)(GET_by_offset((disp), _gloffset_MultiDrawElementsUserBuf)))
 #define SET_MultiDrawElementsUserBuf(disp, func) do { \
-   void (GLAPIENTRYP fn)(void) = func; \
+   void (GLAPIENTRYP fn)(GLintptr, GLenum, const GLsizei *, GLenum, const GLvoid * const *, GLsizei, const GLint *) = func; \
    SET_by_offset(disp, _gloffset_MultiDrawElementsUserBuf, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_DrawArraysInstancedBaseInstanceDrawID)(void);
+#define CALL_DrawArraysInstancedBaseInstanceDrawID(disp, parameters) (* GET_DrawArraysInstancedBaseInstanceDrawID(disp)) parameters
+#define GET_DrawArraysInstancedBaseInstanceDrawID(disp) ((_glptr_DrawArraysInstancedBaseInstanceDrawID)(GET_by_offset((disp), _gloffset_DrawArraysInstancedBaseInstanceDrawID)))
+#define SET_DrawArraysInstancedBaseInstanceDrawID(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_DrawArraysInstancedBaseInstanceDrawID, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_DrawElementsInstancedBaseVertexBaseInstanceDrawID)(void);
+#define CALL_DrawElementsInstancedBaseVertexBaseInstanceDrawID(disp, parameters) (* GET_DrawElementsInstancedBaseVertexBaseInstanceDrawID(disp)) parameters
+#define GET_DrawElementsInstancedBaseVertexBaseInstanceDrawID(disp) ((_glptr_DrawElementsInstancedBaseVertexBaseInstanceDrawID)(GET_by_offset((disp), _gloffset_DrawElementsInstancedBaseVertexBaseInstanceDrawID)))
+#define SET_DrawElementsInstancedBaseVertexBaseInstanceDrawID(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_DrawElementsInstancedBaseVertexBaseInstanceDrawID, fn); \
+} while (0)
+
+typedef void (GLAPIENTRYP _glptr_InternalInvalidateFramebufferAncillaryMESA)(void);
+#define CALL_InternalInvalidateFramebufferAncillaryMESA(disp, parameters) (* GET_InternalInvalidateFramebufferAncillaryMESA(disp)) parameters
+#define GET_InternalInvalidateFramebufferAncillaryMESA(disp) ((_glptr_InternalInvalidateFramebufferAncillaryMESA)(GET_by_offset((disp), _gloffset_InternalInvalidateFramebufferAncillaryMESA)))
+#define SET_InternalInvalidateFramebufferAncillaryMESA(disp, func) do { \
+   void (GLAPIENTRYP fn)(void) = func; \
+   SET_by_offset(disp, _gloffset_InternalInvalidateFramebufferAncillaryMESA, fn); \
 } while (0)
 
 

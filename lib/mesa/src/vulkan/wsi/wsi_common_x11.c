@@ -45,7 +45,9 @@
 #include "util/u_debug.h"
 #include "util/u_thread.h"
 #include "util/xmlconfig.h"
+#include "util/timespec.h"
 
+#include "vk_format.h"
 #include "vk_instance.h"
 #include "vk_physical_device.h"
 #include "vk_util.h"
@@ -414,15 +416,11 @@ wsi_x11_get_connection(struct wsi_device *wsi_dev,
    return entry->data;
 }
 
-struct surface_format {
-   VkFormat format;
-   unsigned bits_per_rgb;
-};
-
-static const struct surface_format formats[] = {
-   { VK_FORMAT_B8G8R8A8_SRGB,             8 },
-   { VK_FORMAT_B8G8R8A8_UNORM,            8 },
-   { VK_FORMAT_A2R10G10B10_UNORM_PACK32, 10 },
+static const VkFormat formats[] = {
+   VK_FORMAT_R5G6B5_UNORM_PACK16,
+   VK_FORMAT_B8G8R8A8_SRGB,
+   VK_FORMAT_B8G8R8A8_UNORM,
+   VK_FORMAT_A2R10G10B10_UNORM_PACK32,
 };
 
 static const VkPresentModeKHR present_modes[] = {
@@ -490,7 +488,7 @@ connection_get_visualtype(xcb_connection_t *conn, xcb_visualid_t visual_id)
 
 static xcb_visualtype_t *
 get_visualtype_for_window(xcb_connection_t *conn, xcb_window_t window,
-                          unsigned *depth)
+                          unsigned *depth, xcb_visualtype_t **rootvis)
 {
    xcb_query_tree_cookie_t tree_cookie;
    xcb_get_window_attributes_cookie_t attrib_cookie;
@@ -517,6 +515,8 @@ get_visualtype_for_window(xcb_connection_t *conn, xcb_window_t window,
    if (screen == NULL)
       return NULL;
 
+   if (rootvis)
+      *rootvis = screen_get_visualtype(screen, screen->root_visual, depth);
    return screen_get_visualtype(screen, visual_id, depth);
 }
 
@@ -619,7 +619,7 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
       }
    }
 
-   if (!visual_supported(get_visualtype_for_window(conn, window, NULL))) {
+   if (!visual_supported(get_visualtype_for_window(conn, window, NULL, NULL))) {
       *pSupported = false;
       return VK_SUCCESS;
    }
@@ -629,7 +629,7 @@ x11_surface_get_support(VkIcdSurfaceBase *icd_surface,
 }
 
 static uint32_t
-x11_get_min_image_count(const struct wsi_device *wsi_device)
+x11_get_min_image_count(const struct wsi_device *wsi_device, bool is_xwayland)
 {
    if (wsi_device->x11.override_minImageCount)
       return wsi_device->x11.override_minImageCount;
@@ -651,17 +651,28 @@ x11_get_min_image_count(const struct wsi_device *wsi_device)
     *
     * This is a tradeoff as it uses more memory than needed for non-fullscreen
     * and non-performance intensive applications.
+    *
+    * For Xwayland Venus reports four images as described in
+    *   wsi_wl_surface_get_capabilities
     */
-   return 3;
+   return is_xwayland && wsi_device->x11.extra_xwayland_image ? 4 : 3;
 }
+
+static unsigned
+x11_get_min_image_count_for_present_mode(struct wsi_device *wsi_device,
+                                         struct wsi_x11_connection *wsi_conn,
+                                         VkPresentModeKHR present_mode);
 
 static VkResult
 x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                              struct wsi_device *wsi_device,
+                             const VkSurfacePresentModeEXT *present_mode,
                              VkSurfaceCapabilitiesKHR *caps)
 {
    xcb_connection_t *conn = x11_surface_get_connection(icd_surface);
    xcb_window_t window = x11_surface_get_window(icd_surface);
+   struct wsi_x11_connection *wsi_conn =
+      wsi_x11_get_connection(wsi_device, conn);
    xcb_get_geometry_cookie_t geom_cookie;
    xcb_generic_error_t *err;
    xcb_get_geometry_reply_t *geom;
@@ -673,7 +684,7 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
     * wait to read the reply until after we have a visual.
     */
    xcb_visualtype_t *visual =
-      get_visualtype_for_window(conn, window, &visual_depth);
+      get_visualtype_for_window(conn, window, &visual_depth, NULL);
 
    if (!visual)
       return VK_ERROR_SURFACE_LOST_KHR;
@@ -698,7 +709,12 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
                                       VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
    }
 
-   caps->minImageCount = x11_get_min_image_count(wsi_device);
+   if (present_mode) {
+      caps->minImageCount = x11_get_min_image_count_for_present_mode(wsi_device, wsi_conn, present_mode->presentMode);
+   } else {
+      caps->minImageCount = x11_get_min_image_count(wsi_device, wsi_conn->is_xwayland);
+   }
+
    /* There is no real maximum */
    caps->maxImageCount = 0;
 
@@ -713,6 +729,10 @@ x11_surface_get_capabilities(VkIcdSurfaceBase *icd_surface,
       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
       VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
+   VK_FROM_HANDLE(vk_physical_device, pdevice, wsi_device->pdevice);
+   if (pdevice->supported_extensions.EXT_attachment_feedback_loop_layout)
+      caps->supportedUsageFlags |= VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT;
+
    return VK_SUCCESS;
 }
 
@@ -724,8 +744,10 @@ x11_surface_get_capabilities2(VkIcdSurfaceBase *icd_surface,
 {
    assert(caps->sType == VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR);
 
+   const VkSurfacePresentModeEXT *present_mode = vk_find_struct_const(info_next, SURFACE_PRESENT_MODE_EXT);
+
    VkResult result =
-      x11_surface_get_capabilities(icd_surface, wsi_device,
+      x11_surface_get_capabilities(icd_surface, wsi_device, present_mode,
                                    &caps->surfaceCapabilities);
 
    if (result != VK_SUCCESS)
@@ -739,6 +761,33 @@ x11_surface_get_capabilities2(VkIcdSurfaceBase *icd_surface,
          break;
       }
 
+      case VK_STRUCTURE_TYPE_SURFACE_PRESENT_SCALING_CAPABILITIES_EXT: {
+         /* Unsupported. */
+         VkSurfacePresentScalingCapabilitiesEXT *scaling = (void *)ext;
+         scaling->supportedPresentScaling = 0;
+         scaling->supportedPresentGravityX = 0;
+         scaling->supportedPresentGravityY = 0;
+         scaling->minScaledImageExtent = caps->surfaceCapabilities.minImageExtent;
+         scaling->maxScaledImageExtent = caps->surfaceCapabilities.maxImageExtent;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_SURFACE_PRESENT_MODE_COMPATIBILITY_EXT: {
+         /* To be able to toggle between FIFO and non-FIFO, we would need a rewrite to always use FIFO thread
+          * mechanism. For now, only return the input, making this effectively unsupported. */
+         VkSurfacePresentModeCompatibilityEXT *compat = (void *)ext;
+         if (compat->pPresentModes) {
+            if (compat->presentModeCount) {
+               assert(present_mode);
+               compat->pPresentModes[0] = present_mode->presentMode;
+               compat->presentModeCount = 1;
+            }
+         } else {
+            compat->presentModeCount = 1;
+         }
+         break;
+      }
+
       default:
          /* Ignored */
          break;
@@ -748,22 +797,46 @@ x11_surface_get_capabilities2(VkIcdSurfaceBase *icd_surface,
    return result;
 }
 
+static int
+format_get_component_bits(VkFormat format, int comp)
+{
+   return vk_format_get_component_bits(format, UTIL_FORMAT_COLORSPACE_RGB, comp);
+}
+
+static bool
+rgb_component_bits_are_equal(VkFormat format, const xcb_visualtype_t* type)
+{
+   return format_get_component_bits(format, 0) == util_bitcount(type->red_mask) &&
+          format_get_component_bits(format, 1) == util_bitcount(type->green_mask) &&
+          format_get_component_bits(format, 2) == util_bitcount(type->blue_mask);
+}
+
 static bool
 get_sorted_vk_formats(VkIcdSurfaceBase *surface, struct wsi_device *wsi_device,
                       VkFormat *sorted_formats, unsigned *count)
 {
    xcb_connection_t *conn = x11_surface_get_connection(surface);
    xcb_window_t window = x11_surface_get_window(surface);
-   xcb_visualtype_t *visual = get_visualtype_for_window(conn, window, NULL);
+   xcb_visualtype_t *rootvis = NULL;
+   xcb_visualtype_t *visual = get_visualtype_for_window(conn, window, NULL, &rootvis);
+
    if (!visual)
       return false;
 
+   /* use the root window's visual to set the default */
    *count = 0;
    for (unsigned i = 0; i < ARRAY_SIZE(formats); i++) {
-      if (formats[i].bits_per_rgb == util_bitcount(visual->red_mask) &&
-          formats[i].bits_per_rgb == util_bitcount(visual->green_mask) &&
-          formats[i].bits_per_rgb == util_bitcount(visual->blue_mask))
-         sorted_formats[(*count)++] = formats[i].format;
+      if (rgb_component_bits_are_equal(formats[i], rootvis))
+         sorted_formats[(*count)++] = formats[i];
+   }
+
+   for (unsigned i = 0; i < ARRAY_SIZE(formats); i++) {
+      for (unsigned j = 0; j < *count; j++)
+         if (formats[i] == sorted_formats[j])
+            goto next_format;
+      if (rgb_component_bits_are_equal(formats[i], visual))
+         sorted_formats[(*count)++] = formats[i];
+next_format:;
    }
 
    if (wsi_device->force_bgra8_unorm_first) {
@@ -831,6 +904,7 @@ x11_surface_get_formats2(VkIcdSurfaceBase *surface,
 
 static VkResult
 x11_surface_get_present_modes(VkIcdSurfaceBase *surface,
+                              struct wsi_device *wsi_device,
                               uint32_t *pPresentModeCount,
                               VkPresentModeKHR *pPresentModes)
 {
@@ -929,7 +1003,7 @@ struct x11_image {
    xcb_pixmap_t                              pixmap;
    xcb_xfixes_region_t                       update_region; /* long lived XID */
    xcb_xfixes_region_t                       update_area;   /* the above or None */
-   bool                                      busy;
+   atomic_bool                               busy;
    bool                                      present_queued;
    struct xshmfence *                        shm_fence;
    uint32_t                                  sync_fence;
@@ -937,6 +1011,8 @@ struct x11_image {
    xcb_shm_seg_t                             shmseg;
    int                                       shmid;
    uint8_t *                                 shmaddr;
+   uint64_t                                  present_id;
+   uint64_t                                  signal_present_id;
 };
 
 struct x11_swapchain {
@@ -966,10 +1042,89 @@ struct x11_swapchain {
    struct wsi_queue                             acquire_queue;
    pthread_t                                    queue_manager;
 
+   /* Lock and condition variable that lets callers monitor forward progress in the swapchain.
+    * This includes:
+    * - Present ID completion updates (present_id).
+    * - Pending ID pending updates (present_id_pending).
+    * - Any errors happening while blocking on present progress updates (present_progress_error).
+    * - present_submitted_count.
+    */
+   pthread_mutex_t                              present_progress_mutex;
+   pthread_cond_t                               present_progress_cond;
+
+   /* Lock needs to be taken when waiting for and reading presentation events.
+    * Only relevant in non-FIFO modes where AcquireNextImage or WaitForPresentKHR may
+    * have to pump the XCB connection on its own. */
+   pthread_mutex_t                              present_poll_mutex;
+
+   /* For VK_KHR_present_wait. */
+   uint64_t                                     present_id;
+   uint64_t                                     present_id_pending;
+
+   /* When blocking on present progress, this can be set and progress_cond is signalled to unblock waiters. */
+   VkResult                                     present_progress_error;
+
+   /* For handling wait_ready scenario where two different threads can pump the connection. */
+
+   /* Updated by presentation thread. Incremented when a present is submitted to X.
+    * Signals progress_cond when this happens. */
+   uint64_t                                     present_submitted_count;
+   /* Total number of images ever pushed to a present queue. */
+   uint64_t                                     present_queue_push_count;
+   /* Total number of images returned to application in AcquireNextImage. */
+   uint64_t                                     present_poll_acquire_count;
+
    struct x11_image                             images[0];
 };
 VK_DEFINE_NONDISP_HANDLE_CASTS(x11_swapchain, base.base, VkSwapchainKHR,
                                VK_OBJECT_TYPE_SWAPCHAIN_KHR)
+
+static void x11_present_complete(struct x11_swapchain *swapchain,
+                                 struct x11_image *image)
+{
+   if (image->present_id) {
+      pthread_mutex_lock(&swapchain->present_progress_mutex);
+      if (image->signal_present_id > swapchain->present_id) {
+         swapchain->present_id = image->signal_present_id;
+         pthread_cond_broadcast(&swapchain->present_progress_cond);
+      }
+      pthread_mutex_unlock(&swapchain->present_progress_mutex);
+   }
+}
+
+static void x11_notify_pending_present(struct x11_swapchain *swapchain,
+                                       struct x11_image *image)
+{
+   if (image->present_id || !swapchain->has_acquire_queue) {
+      pthread_mutex_lock(&swapchain->present_progress_mutex);
+      if (image->present_id > swapchain->present_id_pending) {
+         /* Unblock any thread waiting for a presentID out of order. */
+         swapchain->present_id_pending = image->present_id;
+      }
+
+      /* If we don't have an acquire queue, we might need to let
+       * vkAcquireNextImageKHR call know that it is safe to poll for presentation events. */
+      swapchain->present_submitted_count++;
+
+      pthread_cond_broadcast(&swapchain->present_progress_cond);
+      pthread_mutex_unlock(&swapchain->present_progress_mutex);
+   }
+
+   /* It is possible that an IDLE is observed before PRESENT_COMPLETE when
+    * not flipping. In this case, reading image->present_id might be a race
+    * in the FIFO management thread. */
+   image->signal_present_id = image->present_id;
+}
+
+static void x11_swapchain_notify_error(struct x11_swapchain *swapchain, VkResult result)
+{
+   pthread_mutex_lock(&swapchain->present_progress_mutex);
+   swapchain->present_id = UINT64_MAX;
+   swapchain->present_id_pending = UINT64_MAX;
+   swapchain->present_progress_error = result;
+   pthread_cond_broadcast(&swapchain->present_progress_cond);
+   pthread_mutex_unlock(&swapchain->present_progress_mutex);
+}
 
 /**
  * Update the swapchain status with the result of an operation, and return
@@ -984,6 +1139,9 @@ static VkResult
 _x11_swapchain_result(struct x11_swapchain *chain, VkResult result,
                       const char *file, int line)
 {
+   if (result < 0)
+      x11_swapchain_notify_error(chain, result);
+
    /* Prioritise returning existing errors for consistency. */
    if (chain->status < 0)
       return chain->status;
@@ -1076,8 +1234,10 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
          unsigned i;
          for (i = 0; i < chain->base.image_count; i++) {
             struct x11_image *image = &chain->images[i];
-            if (image->present_queued && image->serial == complete->serial)
+            if (image->present_queued && image->serial == complete->serial) {
+               x11_present_complete(chain, &chain->images[i]);
                image->present_queued = false;
+            }
          }
          chain->last_present_msc = complete->msc;
       }
@@ -1117,14 +1277,124 @@ x11_handle_dri3_present_event(struct x11_swapchain *chain,
    return VK_SUCCESS;
 }
 
-
-static uint64_t wsi_get_absolute_timeout(uint64_t timeout)
+static VkResult
+x11_poll_for_special_event(struct x11_swapchain *chain, uint64_t abs_timeout, xcb_generic_event_t **out_event)
 {
-   uint64_t current_time = os_time_get_nano();
+   /* Start out with 1 ms intervals since that's what poll() supports. */
+   uint64_t poll_busywait_ns = 1000 * 1000;
+   xcb_generic_event_t *event;
+   uint64_t rel_timeout;
+   struct pollfd pfds;
 
-   timeout = MIN2(UINT64_MAX - current_time, timeout);
+   assert(abs_timeout != UINT64_MAX);
 
-   return current_time + timeout;
+   /* abs_timeout is assumed to be in timebase of os_time_get_absolute_timeout(). */
+
+   /* See comments in x11_manage_fifo_queues about problems with xcb_poll followed by poll().
+    * This path is suboptimal for scenarios where we're doing:
+    * - IMMEDIATE / MAILBOX (no acquire queue) and
+    * - Timeout that is neither 0 nor UINT64_MAX (very rare).
+    * The only real solution is a busy-poll scheme to ensure we don't sleep for too long.
+    * In a forward progress scenario, the XCB FD will be written at least once per frame,
+    * so we expect frequent wake-ups either way.
+    * This is a best-effort pragmatic solution until we have a proper solution in XCB.
+    */
+
+   rel_timeout = abs_timeout;
+   *out_event = NULL;
+   event = NULL;
+
+   while (1) {
+      event = xcb_poll_for_special_event(chain->conn, chain->special_event);
+
+      if (event || rel_timeout == 0)
+         break;
+
+      /* If a non-special event happens, the fd will still
+       * poll. So recalculate the timeout now just in case.
+       */
+      uint64_t current_time = os_time_get_nano();
+      if (abs_timeout > current_time)
+         rel_timeout = MIN2(poll_busywait_ns, abs_timeout - current_time);
+      else
+         rel_timeout = 0;
+
+      if (rel_timeout) {
+         pfds.fd = xcb_get_file_descriptor(chain->conn);
+         pfds.events = POLLIN;
+         int ret = poll(&pfds, 1, MAX2(rel_timeout / 1000 / 1000, 1u));
+         if (ret == -1)
+            return VK_ERROR_OUT_OF_DATE_KHR;
+
+         /* Gradually increase the poll duration if it takes a very long time to receive a poll event,
+          * since at that point, stutter isn't really the main concern anymore.
+          * We generally expect a special event to be received once every refresh duration. */
+         poll_busywait_ns += poll_busywait_ns / 2;
+         poll_busywait_ns = MIN2(10ull * 1000ull * 1000ull, poll_busywait_ns);
+      }
+   }
+
+   *out_event = event;
+   return event ? VK_SUCCESS : VK_TIMEOUT;
+}
+
+static bool
+x11_acquire_next_image_poll_has_forward_progress(struct x11_swapchain *chain)
+{
+   /* We have forward progress in the sense that we just error out. */
+   if (chain->present_progress_error != VK_SUCCESS)
+      return true;
+
+   /* If we got here, there are no available images.
+    * Some images might be acquired, but not submitted.
+    * Some images might be submitted to FIFO thread, but not submitted to X yet. */
+
+   /* If application holds on to images without presenting, it affects forward progress.
+    * If application holds on to too many images, forward progress may be impossible.
+    * Application is allowed to call acquire with timeout in these scenarios, but not UINT64_MAX, since it may deadlock. */
+   assert(chain->present_poll_acquire_count >= chain->present_queue_push_count);
+   unsigned application_owned_images = chain->present_poll_acquire_count - chain->present_queue_push_count;
+   assert(application_owned_images <= chain->base.image_count);
+
+   const unsigned minimum_images = 2;
+
+   /* To observe an IDLE event, we must have submitted at least 2 present requests to X.
+    * The first present may replace another swapchain's image, but it cannot IDLE one of our own.
+    * Refuse forward progress until we have observed two completed present requests.
+    * If we are in a steady state, we only need one present to be able to idle the current image.
+    * In a blit style composition (windowed mode), images may be idled immediately, so this requirement is relaxed,
+    * but we have to assume the worst case of FLIP model where the front buffer holds on to one of the swapchain images. */
+   if (chain->present_submitted_count < minimum_images)
+      return false;
+
+   /* Since there are no available images, all images not owned by application have been pushed to FIFO thread.
+    * There must be at least 2 presents queued up. */
+   unsigned present_queued_images = chain->base.image_count - application_owned_images;
+   if (present_queued_images < minimum_images)
+      return false;
+
+   /* Present queue must have caught up. */
+   return (chain->present_queue_push_count - chain->present_submitted_count) <=
+          (present_queued_images - minimum_images);
+}
+
+static VkResult
+x11_acquire_next_image_poll_find_index(struct x11_swapchain *chain, uint32_t *image_index)
+{
+   /* We don't need a lock here. AcquireNextImageKHR cannot be called concurrently,
+   * and busy flag is atomic. */
+   for (uint32_t i = 0; i < chain->base.image_count; i++) {
+      if (!chain->images[i].busy) {
+         /* We found a non-busy image */
+         xshmfence_await(chain->images[i].shm_fence);
+         *image_index = i;
+         chain->images[i].busy = true;
+         chain->present_poll_acquire_count++;
+         return x11_swapchain_result(chain, VK_SUCCESS);
+      }
+   }
+
+   return x11_swapchain_result(chain, VK_NOT_READY);
 }
 
 /**
@@ -1135,65 +1405,117 @@ static VkResult
 x11_acquire_next_image_poll_x11(struct x11_swapchain *chain,
                                 uint32_t *image_index, uint64_t timeout)
 {
+   struct timespec rel_timeout, abs_timespec_realtime, start_time;
    xcb_generic_event_t *event;
-   struct pollfd pfds;
+   VkResult result;
+
+   /* If another thread is pumping the event queue, and we're polling with timeout == 0,
+    * try a quick poll before we try to take any locks. */
+   result = x11_acquire_next_image_poll_find_index(chain, image_index);
+   if (result != VK_NOT_READY)
+      return result;
+
    uint64_t atimeout;
-   while (1) {
-      for (uint32_t i = 0; i < chain->base.image_count; i++) {
-         if (!chain->images[i].busy) {
-            /* We found a non-busy image */
-            xshmfence_await(chain->images[i].shm_fence);
-            *image_index = i;
-            chain->images[i].busy = true;
-            return x11_swapchain_result(chain, VK_SUCCESS);
+   if (timeout == 0 || timeout == UINT64_MAX)
+      atimeout = timeout;
+   else
+      atimeout = os_time_get_absolute_timeout(timeout);
+
+   /* Mutex abs_timeout is in REALTIME timebase. */
+   timespec_from_nsec(&rel_timeout, timeout);
+   clock_gettime(CLOCK_REALTIME, &start_time);
+   timespec_add(&abs_timespec_realtime, &rel_timeout, &start_time);
+
+   if (chain->has_present_queue) {
+      /* If we have a present queue (but no acquire queue),
+       * we might need the present queue to complete
+       * a request before we can guarantee forward progress in the poll loop below.
+       * We take the poll_mutex, but so does the present queue. */
+      pthread_mutex_lock(&chain->present_progress_mutex);
+
+      /* There must be at least one present in-flight that has been committed to X,
+       * otherwise we can never satisfy the acquire operation if all images are busy,
+       * since we would be waiting on an event that will never happen. */
+      struct timespec abs_timespec;
+      timespec_from_nsec(&abs_timespec, atimeout);
+      result = VK_SUCCESS;
+
+      while (!x11_acquire_next_image_poll_has_forward_progress(chain)) {
+         int ret = pthread_cond_timedwait(&chain->present_progress_cond, &chain->present_progress_mutex, &abs_timespec);
+
+         if (ret == ETIMEDOUT) {
+            result = x11_swapchain_result(chain, timeout == 0 ? VK_NOT_READY : VK_TIMEOUT);
+            break;
+         }
+
+         if (ret) {
+            result = VK_ERROR_DEVICE_LOST;
+            break;
          }
       }
+
+      if (result == VK_SUCCESS && chain->present_progress_error != VK_SUCCESS)
+         result = chain->present_progress_error;
+
+      pthread_mutex_unlock(&chain->present_progress_mutex);
+
+      if (result != VK_SUCCESS)
+         return result;
+   }
+
+   int ret;
+   if (timeout == UINT64_MAX)
+      ret = pthread_mutex_lock(&chain->present_poll_mutex);
+   else
+      ret = pthread_mutex_timedlock(&chain->present_poll_mutex, &abs_timespec_realtime);
+
+   if (ret) {
+      if (ret == ETIMEDOUT)
+         return timeout == 0 ? VK_NOT_READY : VK_TIMEOUT;
+      else
+         return VK_ERROR_DEVICE_LOST;
+   }
+
+   while (1) {
+      result = x11_acquire_next_image_poll_find_index(chain, image_index);
+      if (result != VK_NOT_READY)
+         goto out_unlock;
 
       xcb_flush(chain->conn);
 
       if (timeout == UINT64_MAX) {
+         /* See comments in x11_manage_fifo_queues about problem scenarios with this call. */
          event = xcb_wait_for_special_event(chain->conn, chain->special_event);
-         if (!event)
-            return x11_swapchain_result(chain, VK_ERROR_SURFACE_LOST_KHR);
-      } else {
-         event = xcb_poll_for_special_event(chain->conn, chain->special_event);
          if (!event) {
-            int ret;
-            if (timeout == 0)
-               return x11_swapchain_result(chain, VK_NOT_READY);
-
-            atimeout = wsi_get_absolute_timeout(timeout);
-
-            pfds.fd = xcb_get_file_descriptor(chain->conn);
-            pfds.events = POLLIN;
-            ret = poll(&pfds, 1, timeout / 1000 / 1000);
-            if (ret == 0)
-               return x11_swapchain_result(chain, VK_TIMEOUT);
-            if (ret == -1)
-               return x11_swapchain_result(chain, VK_ERROR_OUT_OF_DATE_KHR);
-
-            /* If a non-special event happens, the fd will still
-             * poll. So recalculate the timeout now just in case.
-             */
-            uint64_t current_time = os_time_get_nano();
-            if (atimeout > current_time)
-               timeout = atimeout - current_time;
-            else
-               timeout = 0;
-            continue;
+            result = x11_swapchain_result(chain, VK_ERROR_SURFACE_LOST_KHR);
+            goto out_unlock;
+         }
+      } else {
+         result = x11_poll_for_special_event(chain, atimeout, &event);
+         if (result == VK_TIMEOUT) {
+            /* AcquireNextImageKHR reserves a special return value for 0 timeouts. */
+            result = x11_swapchain_result(chain, timeout == 0 ? VK_NOT_READY : VK_TIMEOUT);
+            goto out_unlock;
+         } else if (result != VK_SUCCESS) {
+            result = x11_swapchain_result(chain, result);
+            goto out_unlock;
          }
       }
 
       /* Update the swapchain status here. We may catch non-fatal errors here,
        * in which case we need to update the status and continue.
        */
-      VkResult result = x11_handle_dri3_present_event(chain, (void *)event);
+      result = x11_handle_dri3_present_event(chain, (void *)event);
       /* Ensure that VK_SUBOPTIMAL_KHR is reported to the application */
       result = x11_swapchain_result(chain, result);
       free(event);
       if (result < 0)
-         return result;
+         goto out_unlock;
    }
+
+out_unlock:
+   pthread_mutex_unlock(&chain->present_poll_mutex);
+   return result;
 }
 
 /**
@@ -1365,9 +1687,46 @@ static VkResult
 x11_present_to_x11(struct x11_swapchain *chain, uint32_t image_index,
                    uint64_t target_msc)
 {
+   VkResult result;
    if (chain->base.wsi->sw && !chain->has_mit_shm)
-      return x11_present_to_x11_sw(chain, image_index, target_msc);
-   return x11_present_to_x11_dri3(chain, image_index, target_msc);
+      result = x11_present_to_x11_sw(chain, image_index, target_msc);
+   else
+      result = x11_present_to_x11_dri3(chain, image_index, target_msc);
+
+   if (result < 0)
+      x11_swapchain_notify_error(chain, result);
+   else
+      x11_notify_pending_present(chain, &chain->images[image_index]);
+
+   return result;
+}
+
+static VkResult
+x11_release_images(struct wsi_swapchain *wsi_chain,
+                   uint32_t count, const uint32_t *indices)
+{
+   struct x11_swapchain *chain = (struct x11_swapchain *)wsi_chain;
+   if (chain->status == VK_ERROR_SURFACE_LOST_KHR)
+      return chain->status;
+
+   for (uint32_t i = 0; i < count; i++) {
+      uint32_t index = indices[i];
+      assert(index < chain->base.image_count);
+
+      if (chain->has_acquire_queue) {
+         wsi_queue_push(&chain->acquire_queue, index);
+      } else {
+         assert(chain->images[index].busy);
+         chain->images[index].busy = false;
+      }
+   }
+
+   if (!chain->has_acquire_queue) {
+      assert(chain->present_poll_acquire_count >= count);
+      chain->present_poll_acquire_count -= count;
+   }
+
+   return VK_SUCCESS;
 }
 
 /**
@@ -1393,6 +1752,7 @@ x11_acquire_next_image(struct wsi_swapchain *anv_chain,
          if (!chain->images[i].busy) {
             *image_index = i;
             chain->images[i].busy = true;
+            chain->present_poll_acquire_count++;
             xcb_generic_error_t *err;
 
             xcb_get_geometry_cookie_t geom_cookie = xcb_get_geometry(chain->conn, chain->window);
@@ -1432,6 +1792,7 @@ x11_acquire_next_image(struct wsi_swapchain *anv_chain,
 static VkResult
 x11_queue_present(struct wsi_swapchain *anv_chain,
                   uint32_t image_index,
+                  uint64_t present_id,
                   const VkPresentRegionKHR *damage)
 {
    struct x11_swapchain *chain = (struct x11_swapchain *)anv_chain;
@@ -1457,14 +1818,19 @@ x11_queue_present(struct wsi_swapchain *anv_chain,
       xcb_xfixes_set_region(chain->conn, update_area, damage->rectangleCount, rects);
    }
    chain->images[image_index].update_area = update_area;
+   chain->images[image_index].present_id = present_id;
 
    chain->images[image_index].busy = true;
    if (chain->has_present_queue) {
       wsi_queue_push(&chain->present_queue, image_index);
+      chain->present_queue_push_count++;
       return chain->status;
    } else {
       /* No present queue means immedate mode, so we present immediately. */
-      return x11_present_to_x11(chain, image_index, 0);
+      pthread_mutex_lock(&chain->present_poll_mutex);
+      VkResult result = x11_present_to_x11(chain, image_index, 0);
+      pthread_mutex_unlock(&chain->present_poll_mutex);
+      return result;
    }
 }
 
@@ -1576,7 +1942,15 @@ x11_manage_fifo_queues(void *state)
       if (chain->has_acquire_queue)
          target_msc = chain->last_present_msc + 1;
 
+      /* Locking here is only relevant if we don't have an acquire queue.
+       * WaitForPresentKHR will pump the message queue on its own unless
+       * has_acquire_queue and has_present_queue are both true. */
+      if (!chain->has_acquire_queue)
+         pthread_mutex_lock(&chain->present_poll_mutex);
       result = x11_present_to_x11(chain, image_index, target_msc);
+      if (!chain->has_acquire_queue)
+         pthread_mutex_unlock(&chain->present_poll_mutex);
+
       if (result < 0)
          goto fail;
 
@@ -1586,7 +1960,7 @@ x11_manage_fifo_queues(void *state)
          /* Assume this isn't a swapchain where we force 5 images, because those
           * don't end up with an acquire queue at the moment.
           */
-         unsigned min_image_count = x11_get_min_image_count(chain->base.wsi);
+         unsigned min_image_count = x11_get_min_image_count(chain->base.wsi, wsi_conn->is_xwayland);
 
          /* With drirc overrides some games have swapchain with less than
           * minimum number of images. */
@@ -1614,6 +1988,22 @@ x11_manage_fifo_queues(void *state)
                  * VUID-vkAcquireNextImageKHR-swapchain-01802 */
                 x11_driver_owned_images(chain) < forward_progress_guaranteed_acquired_images) {
 
+            /* Calls to xcb_wait_for_special_event are broken by design due to a XCB flaw.
+             * This call may hang indefinitely if the X window is destroyed before the swapchain.
+             * An X window destruction does not trigger a special event here, unfortunately.
+             *
+             * A workaround was attempted in
+             * https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/13564#note_1121977, but
+             * was reverted due to its high CPU usage.
+             * No pragmatic solution exists that solves CPU usage and stutter problems.
+             *
+             * A xcb_poll call followed by poll() is a race condition if other threads read from the XCB connection FD
+             * between the xcb poll and fd poll(), even if it's completely unrelated to this event queue.
+             * poll() may end up waiting indefinitely even if the XCB event has been moved from the FD
+             * to chain->special_event queue.
+             * The proper fix is a wait_for_special_event_with_timeout, but it does not exist.
+             * See https://gitlab.freedesktop.org/xorg/lib/libxcb/-/merge_requests/9.
+             * For now, keep this approach. Applications are generally well-behaved. */
             xcb_generic_event_t *event =
                xcb_wait_for_special_event(chain->conn, chain->special_event);
             if (!event) {
@@ -1928,6 +2318,10 @@ x11_swapchain_destroy(struct wsi_swapchain *anv_chain,
                                              XCB_PRESENT_EVENT_MASK_NO_EVENT);
    xcb_discard_reply(chain->conn, cookie.sequence);
 
+   pthread_mutex_destroy(&chain->present_poll_mutex);
+   pthread_mutex_destroy(&chain->present_progress_mutex);
+   pthread_cond_destroy(&chain->present_progress_cond);
+
    wsi_swapchain_finish(&chain->base);
 
    vk_free(pAllocator, chain);
@@ -1959,6 +2353,187 @@ wsi_x11_set_adaptive_sync_property(xcb_connection_t *conn,
 
    xcb_discard_reply(conn, check.sequence);
    free(reply);
+}
+
+static VkResult x11_wait_for_present_queued(
+      struct x11_swapchain *chain,
+      uint64_t waitValue, uint64_t timeout)
+{
+   struct timespec abs_timespec;
+   uint64_t abs_timeout = 0;
+   if (timeout != 0)
+      abs_timeout = os_time_get_absolute_timeout(timeout);
+
+   /* Need to observe that the swapchain semaphore has been unsignalled,
+    * as this is guaranteed when a present is complete. */
+   VkResult result = wsi_swapchain_wait_for_present_semaphore(
+      &chain->base, waitValue, timeout);
+   if (result != VK_SUCCESS)
+      return result;
+
+   timespec_from_nsec(&abs_timespec, abs_timeout);
+
+   pthread_mutex_lock(&chain->present_progress_mutex);
+   while (chain->present_id < waitValue) {
+      int ret = pthread_cond_timedwait(&chain->present_progress_cond,
+                                       &chain->present_progress_mutex,
+                                       &abs_timespec);
+      if (ret == ETIMEDOUT) {
+         result = VK_TIMEOUT;
+         break;
+      }
+      if (ret) {
+         result = VK_ERROR_DEVICE_LOST;
+         break;
+      }
+   }
+   if (result == VK_SUCCESS && chain->present_progress_error)
+      result = chain->present_progress_error;
+   pthread_mutex_unlock(&chain->present_progress_mutex);
+   return result;
+}
+
+static VkResult x11_wait_for_present_polled(
+      struct x11_swapchain *chain,
+      uint64_t waitValue, uint64_t timeout)
+{
+   struct timespec rel_timeout, abs_timespec_realtime, start_time;
+   struct timespec abs_timespec_monotonic;
+   uint64_t abs_timeout_monotonic = 0;
+
+   if (timeout != 0)
+      abs_timeout_monotonic = os_time_get_absolute_timeout(timeout);
+
+   /* Mutex abs_timeout is in REALTIME timebase. */
+   timespec_from_nsec(&rel_timeout, timeout);
+   clock_gettime(CLOCK_REALTIME, &start_time);
+   timespec_add(&abs_timespec_realtime, &rel_timeout, &start_time);
+
+   /* Need to observe that the swapchain semaphore has been unsignalled,
+    * as this is guaranteed when a present is complete. */
+   VkResult result = wsi_swapchain_wait_for_present_semaphore(
+      &chain->base, waitValue, timeout);
+   if (result != VK_SUCCESS)
+      return result;
+
+   /* If we have satisfied the present ID right away, just return early. */
+   pthread_mutex_lock(&chain->present_progress_mutex);
+   if (chain->present_id >= waitValue) {
+      result = chain->present_progress_error;
+   } else {
+      result = VK_TIMEOUT;
+   }
+
+   if (result != VK_TIMEOUT) {
+      pthread_mutex_unlock(&chain->present_progress_mutex);
+      return result;
+   }
+
+   timespec_from_nsec(&abs_timespec_monotonic, abs_timeout_monotonic);
+
+   /* In a situation of wait-before-signal, we need to ensure that a presentID of at least
+    * waitValue has been submitted before we're allowed to lock the XCB connection.
+    * Even if the user does not use wait-before-signal we can still hit this scenario on Xwayland
+    * where we have a present queue, but no acquire queue. We need to observe that the present queue
+    * has actually submitted the present to XCB before we're guaranteed forward progress. */
+   while (chain->present_id_pending < waitValue) {
+      int ret = pthread_cond_timedwait(&chain->present_progress_cond,
+                                       &chain->present_progress_mutex,
+                                       &abs_timespec_monotonic);
+      if (chain->present_progress_error || ret == ETIMEDOUT || ret) {
+         pthread_mutex_unlock(&chain->present_progress_mutex);
+
+         if (chain->present_progress_error)
+            return chain->present_progress_error;
+         else if (ret == ETIMEDOUT)
+            return VK_TIMEOUT;
+         else
+            return VK_ERROR_DEVICE_LOST;
+      }
+   }
+   pthread_mutex_unlock(&chain->present_progress_mutex);
+
+   /* This scheme of taking the message queue lock is not optimal,
+    * but it is only problematic in meaningless situations.
+    * - This path can only be hit by IMMEDIATE or MAILBOX mode.
+    *   Using present wait for IMMEDIATE and MAILBOX is not particularly useful except
+    *   for safe teardown purposes and recycling semaphores.
+    * - There is contention with multiple threads waiting for PresentWait,
+    *   where the first thread to wait is blocking with no timeout and hogs the message queue until
+    *   that present is processed. */
+   int ret;
+   if (timeout == UINT64_MAX)
+      ret = pthread_mutex_lock(&chain->present_poll_mutex);
+   else
+      ret = pthread_mutex_timedlock(&chain->present_poll_mutex, &abs_timespec_realtime);
+
+   if (ret) {
+      if (ret == ETIMEDOUT)
+         return VK_TIMEOUT;
+      else
+         return VK_ERROR_DEVICE_LOST;
+   }
+
+   result = chain->present_progress_error;
+
+   while (result == VK_SUCCESS && chain->present_id < waitValue) {
+      xcb_generic_event_t *event;
+      xcb_flush(chain->conn);
+
+      if (timeout == UINT64_MAX) {
+         /* See comments in x11_manage_fifo_queues about problem scenarios with this call. */
+         event = xcb_wait_for_special_event(chain->conn, chain->special_event);
+         if (!event) {
+            result = x11_swapchain_result(chain, VK_ERROR_SURFACE_LOST_KHR);
+            goto fail;
+         }
+      } else {
+         result = x11_poll_for_special_event(chain, abs_timeout_monotonic, &event);
+         if (result != VK_SUCCESS)
+            goto fail;
+      }
+
+      result = x11_handle_dri3_present_event(chain, (void *)event);
+      /* Ensure that VK_SUBOPTIMAL_KHR is reported to the application */
+      result = x11_swapchain_result(chain, result);
+      free(event);
+   }
+
+fail:
+   pthread_mutex_unlock(&chain->present_poll_mutex);
+   return result;
+}
+
+static VkResult x11_wait_for_present(struct wsi_swapchain *wsi_chain,
+                                     uint64_t waitValue,
+                                     uint64_t timeout)
+{
+   struct x11_swapchain *chain = (struct x11_swapchain *)wsi_chain;
+   VkResult result;
+
+   if (chain->has_present_queue && chain->has_acquire_queue) {
+      /* In this style we have guaranteed forward progress in the present queue thread,
+       * so we don't need to do anything.
+       * This path is hit for FIFO presentation modes. */
+      result = x11_wait_for_present_queued(chain, waitValue, timeout);
+   } else {
+      /* In this style we don't necessarily have forward progress, so we need to pump the message queue ourselves.
+       * This blocks the message queue for other threads that want to present.
+       * In practice, we'll only end up blocking on swapchain teardown, so this isn't a big deal. */
+      result = x11_wait_for_present_polled(chain, waitValue, timeout);
+   }
+   return result;
+}
+
+static unsigned
+x11_get_min_image_count_for_present_mode(struct wsi_device *wsi_device,
+                                         struct wsi_x11_connection *wsi_conn,
+                                         VkPresentModeKHR present_mode)
+{
+   if (x11_needs_wait_for_fences(wsi_device, wsi_conn, present_mode))
+      return 5;
+   else
+      return x11_get_min_image_count(wsi_device, wsi_conn->is_xwayland);
 }
 
 /**
@@ -2002,7 +2577,7 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    else if (x11_needs_wait_for_fences(wsi_device, wsi_conn, present_mode))
       num_images = MAX2(num_images, 5);
    else if (wsi_device->x11.ensure_minImageCount)
-      num_images = MAX2(num_images, x11_get_min_image_count(wsi_device));
+      num_images = MAX2(num_images, x11_get_min_image_count(wsi_device, wsi_conn->is_xwayland));
 
    /* Check that we have a window up-front. It is an error to not have one. */
    xcb_window_t window = x11_surface_get_window(icd_surface);
@@ -2025,6 +2600,27 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
                       VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (chain == NULL)
       return VK_ERROR_OUT_OF_HOST_MEMORY;
+
+   int ret = pthread_mutex_init(&chain->present_progress_mutex, NULL);
+   if (ret != 0) {
+      vk_free(pAllocator, chain);
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
+
+   ret = pthread_mutex_init(&chain->present_poll_mutex, NULL);
+   if (ret != 0) {
+      pthread_mutex_destroy(&chain->present_progress_mutex);
+      vk_free(pAllocator, chain);
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
+
+   bool bret = wsi_init_pthread_cond_monotonic(&chain->present_progress_cond);
+   if (!bret) {
+      pthread_mutex_destroy(&chain->present_progress_mutex);
+      pthread_mutex_destroy(&chain->present_poll_mutex);
+      vk_free(pAllocator, chain);
+      return VK_ERROR_OUT_OF_HOST_MEMORY;
+   }
 
    struct wsi_base_image_params *image_params = NULL;
    struct wsi_cpu_image_params cpu_image_params;
@@ -2067,6 +2663,8 @@ x11_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->base.get_wsi_image = x11_get_wsi_image;
    chain->base.acquire_next_image = x11_acquire_next_image;
    chain->base.queue_present = x11_queue_present;
+   chain->base.wait_for_present = x11_wait_for_present;
+   chain->base.release_images = x11_release_images;
    chain->base.present_mode = present_mode;
    chain->base.image_count = num_images;
    chain->conn = conn;

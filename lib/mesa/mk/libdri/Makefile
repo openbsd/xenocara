@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.4 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.5 2023/11/02 04:53:31 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -27,7 +27,8 @@ CPPFLAGS+=	-DGALLIUM_SOFTPIPE \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mesa/drivers/dri/common \
 		-I${MESA_SRC}/src/gallium/include \
-		-I${MESA_SRC}/src/gallium/auxiliary
+		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/generated/src
 
 install:
 

@@ -655,7 +655,7 @@ emit_reduction(lower_context* ctx, aco_opcode op, ReduceOp reduce_op, unsigned c
                         Operand(PhysReg{tmp + i}, v1), Operand::c32(0xffffffffu),
                         Operand::c32(0xffffffffu))
                   .instr;
-            perm->vop3().opsel = 1; /* FI (Fetch Inactive) */
+            perm->valu().opsel = 1; /* FI (Fetch Inactive) */
          }
          bld.sop1(Builder::s_mov, Definition(exec, bld.lm), Operand::c64(UINT64_MAX));
 
@@ -789,7 +789,7 @@ emit_reduction(lower_context* ctx, aco_opcode op, ReduceOp reduce_op, unsigned c
                         Operand(PhysReg{tmp + i}, v1), Operand::c32(0xffffffffu),
                         Operand::c32(0xffffffffu))
                   .instr;
-            perm->vop3().opsel = 1; /* FI (Fetch Inactive) */
+            perm->valu().opsel = 1; /* FI (Fetch Inactive) */
          }
          emit_op(ctx, tmp, tmp, vtmp, PhysReg{0}, reduce_op, src.size());
 
@@ -839,6 +839,67 @@ emit_reduction(lower_context* ctx, aco_opcode op, ReduceOp reduce_op, unsigned c
 }
 
 void
+emit_gfx11_wave64_bpermute(Program* program, aco_ptr<Instruction>& instr, Builder& bld)
+{
+   /* Emulates proper bpermute on GFX11 in wave64 mode.
+    *
+    * Similar to emit_gfx10_wave64_bpermute, but uses the new
+    * v_permlane64_b32 instruction to swap data between lo and hi halves.
+    */
+
+   assert(program->gfx_level >= GFX11);
+   assert(program->wave_size == 64);
+
+   Definition dst = instr->definitions[0];
+   Definition tmp_exec = instr->definitions[1];
+   Definition clobber_scc = instr->definitions[2];
+   Operand tmp_op = instr->operands[0];
+   Operand index_x4 = instr->operands[1];
+   Operand input_data = instr->operands[2];
+   Operand same_half = instr->operands[3];
+
+   assert(dst.regClass() == v1);
+   assert(tmp_exec.regClass() == bld.lm);
+   assert(clobber_scc.isFixed() && clobber_scc.physReg() == scc);
+   assert(same_half.regClass() == bld.lm);
+   assert(tmp_op.regClass() == v1.as_linear());
+   assert(index_x4.regClass() == v1);
+   assert(input_data.regClass().type() == RegType::vgpr);
+   assert(input_data.bytes() <= 4);
+
+   Definition tmp_def(tmp_op.physReg(), tmp_op.regClass());
+
+   /* Permute the input within the same half-wave. */
+   bld.ds(aco_opcode::ds_bpermute_b32, dst, index_x4, input_data);
+
+   /* Save EXEC and enable all lanes. */
+   bld.sop1(aco_opcode::s_or_saveexec_b64, tmp_exec, clobber_scc, Definition(exec, s2),
+            Operand::c32(-1u), Operand(exec, s2));
+
+   /* Copy input data from other half to current half's linear VGPR. */
+   bld.vop1(aco_opcode::v_permlane64_b32, tmp_def, input_data);
+
+   /* Permute the input from the other half-wave, write to linear VGPR. */
+   bld.ds(aco_opcode::ds_bpermute_b32, tmp_def, index_x4, tmp_op);
+
+   /* Restore saved EXEC. */
+   bld.sop1(aco_opcode::s_mov_b64, Definition(exec, s2), Operand(tmp_exec.physReg(), s2));
+
+   /* Select correct permute result. */
+   bld.vop2_e64(aco_opcode::v_cndmask_b32, dst, tmp_op, Operand(dst.physReg(), dst.regClass()),
+                same_half);
+
+   /* RA assumes that the result is always in the low part of the register, so we have to shift,
+    * if it's not there already.
+    */
+   if (input_data.physReg().byte()) {
+      unsigned right_shift = input_data.physReg().byte() * 8;
+      bld.vop2(aco_opcode::v_lshrrev_b32, dst, Operand::c32(right_shift),
+               Operand(dst.physReg(), dst.regClass()));
+   }
+}
+
+void
 emit_gfx10_wave64_bpermute(Program* program, aco_ptr<Instruction>& instr, Builder& bld)
 {
    /* Emulates proper bpermute on GFX10 in wave64 mode.
@@ -848,7 +909,7 @@ emit_gfx10_wave64_bpermute(Program* program, aco_ptr<Instruction>& instr, Builde
     * manually swap the data between the two halves using two shared VGPRs.
     */
 
-   assert(program->gfx_level >= GFX10);
+   assert(program->gfx_level >= GFX10 && program->gfx_level <= GFX10_3);
    assert(program->wave_size == 64);
 
    unsigned shared_vgpr_reg_0 = align(program->config->num_vgprs, 4) + 256;
@@ -907,8 +968,9 @@ emit_gfx10_wave64_bpermute(Program* program, aco_ptr<Instruction>& instr, Builde
    /* Restore saved EXEC */
    bld.sop1(aco_opcode::s_mov_b64, Definition(exec, s2), Operand(tmp_exec.physReg(), s2));
 
-   /* RA assumes that the result is always in the low part of the register, so we have to shift, if
-    * it's not there already */
+   /* RA assumes that the result is always in the low part of the register, so we have to shift,
+    * if it's not there already.
+    */
    if (input_data.physReg().byte()) {
       unsigned right_shift = input_data.physReg().byte() * 8;
       bld.vop2(aco_opcode::v_lshrrev_b32, dst, Operand::c32(right_shift),
@@ -955,6 +1017,15 @@ emit_gfx6_bpermute(Program* program, aco_ptr<Instruction>& instr, Builder& bld)
       /* Restore original EXEC */
       bld.sop1(aco_opcode::s_mov_b64, Definition(exec, s2), Operand(temp_exec.physReg(), s2));
    }
+
+   /* RA assumes that the result is always in the low part of the register, so we have to shift,
+    * if it's not there already.
+    */
+   if (input.physReg().byte()) {
+      unsigned right_shift = input.physReg().byte() * 8;
+      bld.vop2(aco_opcode::v_lshrrev_b32, dst, Operand::c32(right_shift),
+               Operand(dst.physReg(), v1));
+   }
 }
 
 struct copy_operation {
@@ -976,8 +1047,10 @@ split_copy(lower_context* ctx, unsigned offset, Definition* def, Operand* op,
    def_reg.reg_b += offset;
    op_reg.reg_b += offset;
 
-   /* 64-bit VGPR copies (implemented with v_lshrrev_b64) are slow before GFX10 */
-   if (ctx->program->gfx_level < GFX10 && src.def.regClass().type() == RegType::vgpr)
+   /* 64-bit VGPR copies (implemented with v_lshrrev_b64) are slow before GFX10, and on GFX11
+    * v_lshrrev_b64 doesn't get dual issued. */
+   if ((ctx->program->gfx_level < GFX10 || ctx->program->gfx_level >= GFX11) &&
+       src.def.regClass().type() == RegType::vgpr)
       max_size = MIN2(max_size, 4);
    unsigned max_align = src.def.regClass().type() == RegType::vgpr ? 4 : 16;
 
@@ -1038,6 +1111,25 @@ create_bperm(Builder& bld, uint8_t swiz[4], Definition dst, Operand src1,
 }
 
 void
+emit_v_mov_b16(Builder& bld, Definition dst, Operand op)
+{
+   /* v_mov_b16 uses 32bit inline constants. */
+   if (op.isConstant()) {
+      if (!op.isLiteral() && op.physReg() >= 240) {
+         /* v_add_f16 is smaller because it can use 16bit fp inline constants. */
+         Instruction* instr = bld.vop2_e64(aco_opcode::v_add_f16, dst, op, Operand::zero());
+         instr->valu().opsel[3] = dst.physReg().byte() == 2;
+         return;
+      }
+      op = Operand::c32((int32_t)(int16_t)op.constantValue());
+   }
+
+   Instruction* instr = bld.vop1(aco_opcode::v_mov_b16, dst, op);
+   instr->valu().opsel[0] = op.physReg().byte() == 2;
+   instr->valu().opsel[3] = dst.physReg().byte() == 2;
+}
+
+void
 copy_constant(lower_context* ctx, Builder& bld, Definition dst, Operand op)
 {
    assert(op.bytes() == dst.bytes());
@@ -1054,12 +1146,20 @@ copy_constant(lower_context* ctx, Builder& bld, Definition dst, Operand op)
          else
             bld.vop1(aco_opcode::v_bfrev_b32, dst, Operand::c32(rev));
          return;
-      } else if (dst.regClass() == s1 && imm != 0) {
+      } else if (dst.regClass() == s1) {
          unsigned start = (ffs(imm) - 1) & 0x1f;
          unsigned size = util_bitcount(imm) & 0x1f;
-         if ((((1u << size) - 1u) << start) == imm) {
+         if (BITFIELD_RANGE(start, size) == imm) {
             bld.sop2(aco_opcode::s_bfm_b32, dst, Operand::c32(size), Operand::c32(start));
             return;
+         }
+         if (ctx->program->gfx_level >= GFX9) {
+            Operand op_lo = Operand::c32(int32_t(int16_t(imm)));
+            Operand op_hi = Operand::c32(int32_t(int16_t(imm >> 16)));
+            if (!op_lo.isLiteral() && !op_hi.isLiteral()) {
+               bld.sop2(aco_opcode::s_pack_ll_b32_b16, dst, op_lo, op_hi);
+               return;
+            }
          }
       }
    }
@@ -1072,6 +1172,15 @@ copy_constant(lower_context* ctx, Builder& bld, Definition dst, Operand op)
    } else if (dst.regClass() == s2) {
       /* s_ashr_i64 writes SCC, so we can't use it */
       assert(Operand::is_constant_representable(op.constantValue64(), 8, true, false));
+      uint64_t imm = op.constantValue64();
+      if (op.isLiteral()) {
+         unsigned start = (ffsll(imm) - 1) & 0x3f;
+         unsigned size = util_bitcount64(imm) & 0x3f;
+         if (BITFIELD64_RANGE(start, size) == imm) {
+            bld.sop2(aco_opcode::s_bfm_b64, dst, Operand::c32(size), Operand::c32(start));
+            return;
+         }
+      }
       bld.sop1(aco_opcode::s_mov_b64, dst, op);
    } else if (dst.regClass() == v2) {
       if (Operand::is_constant_representable(op.constantValue64(), 8, true, false)) {
@@ -1102,6 +1211,8 @@ copy_constant(lower_context* ctx, Builder& bld, Definition dst, Operand op)
          } else {
             bld.vop1_sdwa(aco_opcode::v_mov_b32, dst, op32);
          }
+      } else if (dst.regClass() == v2b && ctx->program->gfx_level >= GFX11) {
+         emit_v_mov_b16(bld, dst, op);
       } else if (dst.regClass() == v2b && use_sdwa && !op.isLiteral()) {
          if (op.constantValue() >= 0xfff0 || op.constantValue() <= 64) {
             /* use v_mov_b32 to avoid possible issues with denormal flushing or
@@ -1116,12 +1227,12 @@ copy_constant(lower_context* ctx, Builder& bld, Definition dst, Operand op)
          if (dst.physReg().byte() == 2) {
             Operand def_lo(dst.physReg().advance(-2), v2b);
             Instruction* instr = bld.vop3(aco_opcode::v_pack_b32_f16, dst, def_lo, op);
-            instr->vop3().opsel = 0;
+            instr->valu().opsel = 0;
          } else {
             assert(dst.physReg().byte() == 0);
             Operand def_hi(dst.physReg().advance(2), v2b);
             Instruction* instr = bld.vop3(aco_opcode::v_pack_b32_f16, dst, op, def_hi);
-            instr->vop3().opsel = 2;
+            instr->valu().opsel = 2;
          }
       } else if (can_use_perm) {
          uint8_t swiz[] = {4, 5, 6, 7};
@@ -1197,11 +1308,11 @@ addsub_subdword_gfx11(Builder& bld, Definition dst, Operand src0, Operand src1, 
    Instruction* instr =
       bld.vop3(sub ? aco_opcode::v_sub_u16_e64 : aco_opcode::v_add_u16_e64, dst, src0, src1).instr;
    if (src0.physReg().byte() == 2)
-      instr->vop3().opsel |= 0x1;
+      instr->valu().opsel |= 0x1;
    if (src1.physReg().byte() == 2)
-      instr->vop3().opsel |= 0x2;
+      instr->valu().opsel |= 0x2;
    if (dst.physReg().byte() == 2)
-      instr->vop3().opsel |= 0x8;
+      instr->valu().opsel |= 0x8;
 }
 
 bool
@@ -1276,7 +1387,7 @@ do_copy(lower_context* ctx, Builder& bld, const copy_operation& copy, bool* pres
          swiz[def.physReg().byte()] = op.physReg().byte();
          create_bperm(bld, swiz, def, op);
       } else if (def.regClass() == v2b && ctx->program->gfx_level >= GFX11) {
-         addsub_subdword_gfx11(bld, def, op, Operand::zero(), false);
+         emit_v_mov_b16(bld, def, op);
       } else if (def.regClass().is_subdword()) {
          bld.vop1_sdwa(aco_opcode::v_mov_b32, def, op);
       } else {
@@ -1445,14 +1556,14 @@ do_pack_2x16(lower_context* ctx, Builder& bld, Definition def, Operand lo, Opera
    if (can_use_pack) {
       Instruction* instr = bld.vop3(aco_opcode::v_pack_b32_f16, def, lo, hi);
       /* opsel: 0 = select low half, 1 = select high half. [0] = src0, [1] = src1 */
-      instr->vop3().opsel = hi.physReg().byte() | (lo.physReg().byte() >> 1);
+      instr->valu().opsel = hi.physReg().byte() | (lo.physReg().byte() >> 1);
       return;
    }
 
    /* a single alignbyte can be sufficient: hi can be a 32-bit integer constant */
    if (lo.physReg().byte() == 2 && hi.physReg().byte() == 0 &&
-       (!hi.isConstant() || !Operand::c32(hi.constantValue()).isLiteral() ||
-        ctx->program->gfx_level >= GFX10)) {
+       (!hi.isConstant() || (hi.constantValue() && (!Operand::c32(hi.constantValue()).isLiteral() ||
+                                                    ctx->program->gfx_level >= GFX10)))) {
       if (hi.isConstant())
          bld.vop3(aco_opcode::v_alignbyte_b32, def, Operand::c32(hi.constantValue()), lo,
                   Operand::c32(2u));
@@ -1470,18 +1581,22 @@ do_pack_2x16(lower_context* ctx, Builder& bld, Definition def, Operand lo, Opera
          bld.vop2(aco_opcode::v_lshlrev_b32, def_hi, Operand::c32(16u), hi);
       else
          bld.vop2(aco_opcode::v_and_b32, def_hi, Operand::c32(~0xFFFFu), hi);
-      bld.vop2(aco_opcode::v_or_b32, def, Operand::c32(lo.constantValue()),
-               Operand(def.physReg(), v1));
+      if (lo.constantValue())
+         bld.vop2(aco_opcode::v_or_b32, def, Operand::c32(lo.constantValue()),
+                  Operand(def.physReg(), v1));
       return;
    }
    if (hi.isConstant()) {
       /* move lo and zero high bits */
       if (lo.physReg().byte() == 2)
          bld.vop2(aco_opcode::v_lshrrev_b32, def_lo, Operand::c32(16u), lo);
+      else if (ctx->program->gfx_level >= GFX11)
+         bld.vop1(aco_opcode::v_cvt_u32_u16, def, lo);
       else
          bld.vop2(aco_opcode::v_and_b32, def_lo, Operand::c32(0xFFFFu), lo);
-      bld.vop2(aco_opcode::v_or_b32, def, Operand::c32(hi.constantValue() << 16u),
-               Operand(def.physReg(), v1));
+      if (hi.constantValue())
+         bld.vop2(aco_opcode::v_or_b32, def, Operand::c32(hi.constantValue() << 16u),
+                  Operand(def.physReg(), v1));
       return;
    }
 
@@ -1509,9 +1624,9 @@ do_pack_2x16(lower_context* ctx, Builder& bld, Definition def, Operand lo, Opera
    /* either hi or lo are already placed correctly */
    if (ctx->program->gfx_level >= GFX11) {
       if (lo.physReg().reg() == def.physReg().reg())
-         addsub_subdword_gfx11(bld, def_hi, hi, Operand::zero(), false);
+         emit_v_mov_b16(bld, def_hi, hi);
       else
-         addsub_subdword_gfx11(bld, def_lo, lo, Operand::zero(), false);
+         emit_v_mov_b16(bld, def_lo, lo);
       return;
    } else if (ctx->program->gfx_level >= GFX8) {
       if (lo.physReg().reg() == def.physReg().reg())
@@ -1653,7 +1768,7 @@ handle_operands(std::map<PhysReg, copy_operation>& copy_map, lower_context* ctx,
    bool skip_partial_copies = true;
    for (auto it = copy_map.begin();;) {
       if (copy_map.empty()) {
-         ctx->program->statistics[statistic_copies] +=
+         ctx->program->statistics[aco_statistic_copies] +=
             ctx->instructions.size() - num_instructions_before;
          return;
       }
@@ -1961,7 +2076,8 @@ handle_operands(std::map<PhysReg, copy_operation>& copy_map, lower_context* ctx,
             break;
       }
    }
-   ctx->program->statistics[statistic_copies] += ctx->instructions.size() - num_instructions_before;
+   ctx->program->statistics[aco_statistic_copies] +=
+      ctx->instructions.size() - num_instructions_before;
 }
 
 void
@@ -1998,6 +2114,37 @@ emit_set_mode_from_block(Builder& bld, Program& program, Block* block, bool alwa
     * the "jump over empty blocks" optimization */
    assert((!set_round && !set_denorm) || (block->kind & block_kind_top_level));
    emit_set_mode(bld, block->fp_mode, set_round, set_denorm);
+}
+
+void
+hw_init_scratch(Builder& bld, Definition def, Operand scratch_addr, Operand scratch_offset)
+{
+   /* Since we know what the high 16 bits of scratch_hi is, we can set all the high 16
+    * bits in the same instruction that we add the carry.
+    */
+   Operand hi_add = Operand::c32(0xffff0000 - S_008F04_SWIZZLE_ENABLE_GFX6(1));
+   Operand scratch_addr_lo(scratch_addr.physReg(), s1);
+   Operand scratch_addr_hi(scratch_addr_lo.physReg().advance(4), s1);
+
+   if (bld.program->gfx_level >= GFX10) {
+      PhysReg scratch_lo = def.physReg();
+      PhysReg scratch_hi = def.physReg().advance(4);
+
+      bld.sop2(aco_opcode::s_add_u32, Definition(scratch_lo, s1), Definition(scc, s1),
+               scratch_addr_lo, scratch_offset);
+      bld.sop2(aco_opcode::s_addc_u32, Definition(scratch_hi, s1), Definition(scc, s1),
+               scratch_addr_hi, hi_add, Operand(scc, s1));
+
+      /* "((size - 1) << 11) | register" (FLAT_SCRATCH_LO/HI is encoded as register
+       * 20/21) */
+      bld.sopk(aco_opcode::s_setreg_b32, Operand(scratch_lo, s1), (31 << 11) | 20);
+      bld.sopk(aco_opcode::s_setreg_b32, Operand(scratch_hi, s1), (31 << 11) | 21);
+   } else {
+      bld.sop2(aco_opcode::s_add_u32, Definition(flat_scr_lo, s1), Definition(scc, s1),
+               scratch_addr_lo, scratch_offset);
+      bld.sop2(aco_opcode::s_addc_u32, Definition(flat_scr_hi, s1), Definition(scc, s1),
+               scratch_addr_hi, hi_add, Operand(scc, s1));
+   }
 }
 
 void
@@ -2100,7 +2247,7 @@ lower_to_hw_instr(Program* program)
                if ((block->instructions.size() - 1 - instr_idx) <= 4 &&
                    block->instructions.back()->opcode == aco_opcode::s_endpgm) {
                   unsigned null_exp_dest =
-                     (ctx.program->stage.hw == HWStage::FS) ? 9 /* NULL */ : V_008DFC_SQ_EXP_POS;
+                     program->gfx_level >= GFX11 ? V_008DFC_SQ_EXP_MRT : V_008DFC_SQ_EXP_NULL;
                   bool ignore_early_exit = true;
 
                   for (unsigned k = instr_idx + 1; k < block->instructions.size(); ++k) {
@@ -2109,7 +2256,8 @@ lower_to_hw_instr(Program* program)
                          instr2->opcode == aco_opcode::p_logical_end)
                         continue;
                      else if (instr2->opcode == aco_opcode::exp &&
-                              instr2->exp().dest == null_exp_dest)
+                              instr2->exp().dest == null_exp_dest &&
+                              instr2->exp().enabled_mask == 0)
                         continue;
                      else if (instr2->opcode == aco_opcode::p_parallelcopy &&
                               instr2->definitions[0].isFixed() &&
@@ -2133,8 +2281,9 @@ lower_to_hw_instr(Program* program)
                   if (program->gfx_level >= GFX11)
                      target =
                         program->has_color_exports ? V_008DFC_SQ_EXP_MRT : V_008DFC_SQ_EXP_MRTZ;
-                  bld.exp(aco_opcode::exp, Operand(v1), Operand(v1), Operand(v1), Operand(v1), 0,
-                          target, false, true, true);
+                  if (program->stage == fragment_fs)
+                     bld.exp(aco_opcode::exp, Operand(v1), Operand(v1), Operand(v1), Operand(v1),
+                             0, target, false, true, true);
                   if (should_dealloc_vgprs)
                      bld.sopp(aco_opcode::s_sendmsg, -1, sendmsg_dealloc_vgprs);
                   bld.sopp(aco_opcode::s_endpgm);
@@ -2189,13 +2338,16 @@ lower_to_hw_instr(Program* program)
                }
                break;
             }
-            case aco_opcode::p_bpermute: {
-               if (ctx.program->gfx_level <= GFX7)
-                  emit_gfx6_bpermute(program, instr, bld);
-               else if (ctx.program->gfx_level >= GFX10 && ctx.program->wave_size == 64)
-                  emit_gfx10_wave64_bpermute(program, instr, bld);
-               else
-                  unreachable("Current hardware supports ds_bpermute, don't emit p_bpermute.");
+            case aco_opcode::p_bpermute_gfx6: {
+               emit_gfx6_bpermute(program, instr, bld);
+               break;
+            }
+            case aco_opcode::p_bpermute_gfx10w64: {
+               emit_gfx10_wave64_bpermute(program, instr, bld);
+               break;
+            }
+            case aco_opcode::p_bpermute_gfx11w64: {
+               emit_gfx11_wave64_bpermute(program, instr, bld);
                break;
             }
             case aco_opcode::p_constaddr: {
@@ -2233,12 +2385,15 @@ lower_to_hw_instr(Program* program)
                      bld.sop2(signext ? aco_opcode::s_bfe_i32 : aco_opcode::s_bfe_u32, dst,
                               bld.def(s1, scc), op, Operand::c32((bits << 16) | offset));
                   }
-               } else if ((dst.regClass() == v1 && op.regClass() == v1) ||
+               } else if ((dst.regClass() == v1 && op.physReg().byte() == 0) ||
                           ctx.program->gfx_level <= GFX7) {
                   assert(op.physReg().byte() == 0 && dst.physReg().byte() == 0);
                   if (offset == (32 - bits) && op.regClass() != s1) {
                      bld.vop2(signext ? aco_opcode::v_ashrrev_i32 : aco_opcode::v_lshrrev_b32, dst,
                               Operand::c32(offset), op);
+                  } else if (offset == 0 && bits == 16 && ctx.program->gfx_level >= GFX11) {
+                     bld.vop1(signext ? aco_opcode::v_cvt_i32_i16 : aco_opcode::v_cvt_u32_u16, dst,
+                              op);
                   } else {
                      bld.vop3(signext ? aco_opcode::v_bfe_i32 : aco_opcode::v_bfe_u32, dst, op,
                               Operand::c32(offset), Operand::c32(bits));
@@ -2278,7 +2433,7 @@ lower_to_hw_instr(Program* program)
                      }
                   } else {
                      SDWA_instruction& sdwa =
-                        bld.vop1_sdwa(aco_opcode::v_mov_b32, dst, op).instr->sdwa();
+                        bld.vop1_sdwa(aco_opcode::v_mov_b32, dst, op)->sdwa();
                      sdwa.sel[0] = SubdwordSel(bits / 8, offset / 8, signext);
                   }
                }
@@ -2316,7 +2471,7 @@ lower_to_hw_instr(Program* program)
                   } else if (offset == 0 && (dst.regClass() == v1 || program->gfx_level <= GFX7)) {
                      bld.vop3(aco_opcode::v_bfe_u32, dst, op, Operand::zero(), Operand::c32(bits));
                   } else if (has_sdwa && (op.regClass() != s1 || program->gfx_level >= GFX9)) {
-                     bld.vop1_sdwa(aco_opcode::v_mov_b32, dst, op).instr->sdwa().dst_sel =
+                     bld.vop1_sdwa(aco_opcode::v_mov_b32, dst, op)->sdwa().dst_sel =
                         SubdwordSel(bits / 8, offset / 8, false);
                   } else if (program->gfx_level >= GFX11) {
                      uint8_t swiz[] = {4, 5, 6, 7};
@@ -2333,8 +2488,7 @@ lower_to_hw_instr(Program* program)
                } else {
                   assert(dst.regClass() == v2b);
                   bld.vop2_sdwa(aco_opcode::v_lshlrev_b32, dst, Operand::c32(offset), op)
-                     .instr->sdwa()
-                     .sel[1] = SubdwordSel::ubyte;
+                     ->sdwa().sel[1] = SubdwordSel::ubyte;
                }
                break;
             }
@@ -2344,39 +2498,13 @@ lower_to_hw_instr(Program* program)
                   break;
 
                Operand scratch_addr = instr->operands[0];
-               Operand scratch_addr_lo(scratch_addr.physReg(), s1);
                if (program->stage.hw != HWStage::CS) {
                   bld.smem(aco_opcode::s_load_dwordx2, instr->definitions[0], scratch_addr,
                            Operand::zero());
-                  scratch_addr_lo.setFixed(instr->definitions[0].physReg());
+                  scratch_addr.setFixed(instr->definitions[0].physReg());
                }
-               Operand scratch_addr_hi(scratch_addr_lo.physReg().advance(4), s1);
 
-               /* Since we know what the high 16 bits of scratch_hi is, we can set all the high 16
-                * bits in the same instruction that we add the carry.
-                */
-               uint32_t hi_add = 0xffff0000 - S_008F04_SWIZZLE_ENABLE_GFX6(1);
-
-               if (program->gfx_level >= GFX10) {
-                  Operand scratch_lo(instr->definitions[0].physReg(), s1);
-                  Operand scratch_hi(instr->definitions[0].physReg().advance(4), s1);
-
-                  bld.sop2(aco_opcode::s_add_u32, Definition(scratch_lo.physReg(), s1),
-                           Definition(scc, s1), scratch_addr_lo, instr->operands[1]);
-                  bld.sop2(aco_opcode::s_addc_u32, Definition(scratch_hi.physReg(), s1),
-                           Definition(scc, s1), scratch_addr_hi, Operand::c32(hi_add),
-                           Operand(scc, s1));
-
-                  /* "((size - 1) << 11) | register" (FLAT_SCRATCH_LO/HI is encoded as register
-                   * 20/21) */
-                  bld.sopk(aco_opcode::s_setreg_b32, scratch_lo, (31 << 11) | 20);
-                  bld.sopk(aco_opcode::s_setreg_b32, scratch_hi, (31 << 11) | 21);
-               } else {
-                  bld.sop2(aco_opcode::s_add_u32, Definition(flat_scr_lo, s1), Definition(scc, s1),
-                           scratch_addr_lo, instr->operands[1]);
-                  bld.sop2(aco_opcode::s_addc_u32, Definition(flat_scr_hi, s1), Definition(scc, s1),
-                           scratch_addr_hi, Operand::c32(hi_add), Operand(scc, s1));
-               }
+               hw_init_scratch(bld, instr->definitions[0], scratch_addr, instr->operands[1]);
                break;
             }
             case aco_opcode::p_jump_to_epilog: {
@@ -2386,15 +2514,11 @@ lower_to_hw_instr(Program* program)
             case aco_opcode::p_interp_gfx11: {
                assert(instr->definitions[0].regClass() == v1 ||
                       instr->definitions[0].regClass() == v2b);
-               assert(instr->definitions[1].regClass() == bld.lm);
-               assert(instr->definitions[2].isFixed() && instr->definitions[2].physReg() == scc);
                assert(instr->operands[0].regClass() == v1.as_linear());
                assert(instr->operands[1].isConstant());
                assert(instr->operands[2].isConstant());
                assert(instr->operands.back().physReg() == m0);
                Definition dst = instr->definitions[0];
-               PhysReg exec_tmp = instr->definitions[1].physReg();
-               Definition clobber_scc = instr->definitions[2];
                PhysReg lin_vgpr = instr->operands[0].physReg();
                unsigned attribute = instr->operands[1].constantValue();
                unsigned component = instr->operands[2].constantValue();
@@ -2410,12 +2534,8 @@ lower_to_hw_instr(Program* program)
                   dpp_ctrl = instr->operands[3].constantValue();
                }
 
-               bld.sop1(Builder::s_mov, Definition(exec_tmp, bld.lm), Operand(exec, bld.lm));
-               bld.sop1(Builder::s_wqm, Definition(exec, bld.lm), clobber_scc,
-                        Operand(exec, bld.lm));
                bld.ldsdir(aco_opcode::lds_param_load, Definition(lin_vgpr, v1), Operand(m0, s1),
                           attribute, component);
-               bld.sop1(Builder::s_mov, Definition(exec, bld.lm), Operand(exec_tmp, bld.lm));
 
                Operand p(lin_vgpr, v1);
                Operand dst_op(dst.physReg(), v1);
@@ -2475,7 +2595,7 @@ lower_to_hw_instr(Program* program)
                   Builder::Result ret =
                      bld.vop1_dpp8(aco_opcode::v_mov_b32, Definition(dst0, v1), src0);
                   for (unsigned j = 0; j < 8; j++) {
-                     ret.instr->dpp8().lane_sel[j] = j ^ 1;
+                     ret->dpp8().lane_sel[j] = j ^ 1;
                   }
 
                   /* Swap even lanes between mrt0 and mrt1. */
@@ -2488,7 +2608,7 @@ lower_to_hw_instr(Program* program)
                   ret = bld.vop1_dpp8(aco_opcode::v_mov_b32, Definition(dst0, v1),
                                       Operand(tmp.physReg(), v1));
                   for (unsigned j = 0; j < 8; j++) {
-                     ret.instr->dpp8().lane_sel[j] = j ^ 1;
+                     ret->dpp8().lane_sel[j] = j ^ 1;
                   }
 
                   mrt0[i] = Operand(dst0, v1);
@@ -2518,7 +2638,8 @@ lower_to_hw_instr(Program* program)
          } else if (instr->isBranch()) {
             Pseudo_branch_instruction* branch = &instr->branch();
             const uint32_t target = branch->target[0];
-            const bool uniform_branch = !(branch->opcode == aco_opcode::p_cbranch_z &&
+            const bool uniform_branch = !((branch->opcode == aco_opcode::p_cbranch_z ||
+                                           branch->opcode == aco_opcode::p_cbranch_nz) &&
                                           branch->operands[0].physReg() == exec);
 
             /* Check if the branch instruction can be removed.
@@ -2530,9 +2651,7 @@ lower_to_hw_instr(Program* program)
              * - The compiler stack knows that it's a divergent branch always taken
              */
             const bool prefer_remove =
-               (branch->selection_control == nir_selection_control_flatten ||
-                branch->selection_control == nir_selection_control_divergent_always_taken) &&
-               ctx.program->gfx_level >= GFX10;
+               branch->selection_control_remove && ctx.program->gfx_level >= GFX10;
             bool can_remove = block->index < target;
             unsigned num_scalar = 0;
             unsigned num_vector = 0;
@@ -2562,7 +2681,7 @@ lower_to_hw_instr(Program* program)
                         can_remove = false;
                   } else if (inst->isSALU()) {
                      num_scalar++;
-                  } else if (inst->isVALU() || inst->isVINTRP() || inst->isVINTERP_INREG()) {
+                  } else if (inst->isVALU() || inst->isVINTRP()) {
                      num_vector++;
                      /* VALU which writes SGPRs are always executed on GFX10+ */
                      if (ctx.program->gfx_level >= GFX10) {

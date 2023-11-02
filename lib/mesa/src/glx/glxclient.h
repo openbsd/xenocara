@@ -2,30 +2,7 @@
  * SGI FREE SOFTWARE LICENSE B (Version 2.0, Sept. 18, 2008)
  * Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice including the dates of first publication and
- * either this permission notice or a reference to
- * http://oss.sgi.com/projects/FreeB/
- * shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * SILICON GRAPHICS, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- * Except as contained in this notice, the name of Silicon Graphics, Inc.
- * shall not be used in advertising or otherwise to promote the sale, use or
- * other dealings in this Software without prior written authorization from
- * Silicon Graphics, Inc.
+ * SPDX-License-Identifier: SGI-B-2.0
  */
 
 /**
@@ -234,9 +211,8 @@ struct mesa_glinterop_export_out;
 
 struct glx_context_vtable {
    void (*destroy)(struct glx_context *ctx);
-   int (*bind)(struct glx_context *context, struct glx_context *old,
-	       GLXDrawable draw, GLXDrawable read);
-   void (*unbind)(struct glx_context *context, struct glx_context *new_ctx);
+   int (*bind)(struct glx_context *context, GLXDrawable draw, GLXDrawable read);
+   void (*unbind)(struct glx_context *context);
    void (*wait_gl)(struct glx_context *ctx);
    void (*wait_x)(struct glx_context *ctx);
    int (*interop_query_device_info)(struct glx_context *ctx,
@@ -294,10 +270,6 @@ struct glx_context
      */
    XID share_xid;
 
-    /**
-     * Screen number.
-     */
-   GLint screen;
    struct glx_screen *psc;
 
     /**
@@ -482,6 +454,11 @@ struct glx_screen_vtable {
 					 struct glx_context *shareList,
 					 int renderType);
 
+   /* The error outparameter abuses the fact that the only possible errors are
+    * GLXBadContext (0), GLXBadFBConfig (9), GLXBadProfileARB (13), BadValue
+    * (2), BadMatch (8), and BadAlloc (11). Since those don't collide we just
+    * use them directly rather than try to offset or use a sign convention. 
+    */
    struct glx_context *(*create_context_attribs)(struct glx_screen *psc,
 						 struct glx_config *config,
 						 struct glx_context *shareList,
@@ -738,8 +715,7 @@ extern void __glEmptyImage(struct glx_context *, GLint, GLint, GLint, GLint, GLe
 extern void __glXInitVertexArrayState(struct glx_context *);
 extern void __glXFreeVertexArrayState(struct glx_context *);
 
-_X_HIDDEN void
-__glX_send_client_info(struct glx_display *glx_dpy);
+extern void glxSendClientInfo(struct glx_display *glx_dpy, int screen);
 
 /************************************************************************/
 

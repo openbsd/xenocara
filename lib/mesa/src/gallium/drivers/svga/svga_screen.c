@@ -1,5 +1,5 @@
 /**********************************************************
- * Copyright 2008-2009 VMware, Inc.  All rights reserved.
+ * Copyright 2008-2023 VMware, Inc.  All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -250,12 +250,7 @@ svga_get_param(struct pipe_screen *screen, enum pipe_cap param)
       return MIN2(util_logbase2(result.u) + 1, SVGA_MAX_TEXTURE_LEVELS);
 
    case PIPE_CAP_MAX_TEXTURE_CUBE_LEVELS:
-      /*
-       * No mechanism to query the host, and at least limited to 2048x2048 on
-       * certain hardware.
-       */
-      return MIN2(util_last_bit(screen->get_param(screen, PIPE_CAP_MAX_TEXTURE_2D_SIZE)),
-                  12 /* 2048x2048 */);
+      return util_last_bit(screen->get_param(screen, PIPE_CAP_MAX_TEXTURE_2D_SIZE));
 
    case PIPE_CAP_MAX_TEXTURE_ARRAY_LAYERS:
       return sws->have_sm5 ? SVGA3D_SM5_MAX_SURFACE_ARRAYSIZE :
@@ -411,9 +406,13 @@ svga_get_param(struct pipe_screen *screen, enum pipe_cap param)
    case PIPE_CAP_MIN_MAP_BUFFER_ALIGNMENT:
       return 64;
    case PIPE_CAP_VERTEX_BUFFER_STRIDE_4BYTE_ALIGNED_ONLY:
+      return sws->have_vgpu10 ? 0 : 1;
+   case PIPE_CAP_VERTEX_ATTRIB_ELEMENT_ALIGNED_ONLY:
+      /* This CAP cannot be used with any other alignment-requiring CAPs */
+      return sws->have_vgpu10 ? 1 : 0;
    case PIPE_CAP_VERTEX_BUFFER_OFFSET_4BYTE_ALIGNED_ONLY:
    case PIPE_CAP_VERTEX_ELEMENT_SRC_OFFSET_4BYTE_ALIGNED_ONLY:
-      return 1;  /* need 4-byte alignment for all offsets and strides */
+      return sws->have_vgpu10 ? 0 : 1;
    case PIPE_CAP_MAX_VERTEX_ATTRIB_STRIDE:
       return 2048;
    case PIPE_CAP_MAX_VIEWPORTS:
@@ -541,8 +540,6 @@ vgpu9_get_shader_param(struct pipe_screen *screen,
       case PIPE_SHADER_CAP_SUPPORTED_IRS:
          return (1 << PIPE_SHADER_IR_TGSI) | (svgascreen->debug.nir ? (1 << PIPE_SHADER_IR_NIR) : 0);
       case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-      case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-      case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
       case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
       case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
@@ -607,8 +604,6 @@ vgpu9_get_shader_param(struct pipe_screen *screen,
       case PIPE_SHADER_CAP_SUPPORTED_IRS:
          return (1 << PIPE_SHADER_IR_TGSI) | (svgascreen->debug.nir ? (1 << PIPE_SHADER_IR_NIR) : 0);
       case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-      case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-      case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
       case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
       case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
       case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
@@ -718,8 +713,6 @@ vgpu10_get_shader_param(struct pipe_screen *screen,
       else
          return 0;
    case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-   case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-   case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
       /* For the above cases, we rely on the GLSL compiler to translate/lower
        * the TGIS instruction into other instructions we do support.
        */
@@ -753,6 +746,7 @@ vgpu10_get_shader_param(struct pipe_screen *screen,
    .lower_int64_options = nir_lower_imul_2x32_64,                             \
    .lower_fdph = true,                                                        \
    .lower_flrp64 = true,                                                      \
+   .lower_ldexp = true,                                                       \
    .lower_rotate = true,                                                      \
    .lower_uniforms_to_ubo = true,                                             \
    .lower_vector_cmp = true,                                                  \
@@ -892,7 +886,7 @@ svga_fence_finish(struct pipe_screen *screen,
    }
    else {
       SVGA_DBG(DEBUG_DMA|DEBUG_PERF, "%s fence_ptr %p\n",
-               __FUNCTION__, fence);
+               __func__, fence);
 
       retVal = sws->fence_finish(sws, fence, timeout, 0) == 0;
    }
@@ -1016,7 +1010,7 @@ init_logging(struct pipe_screen *screen)
     */
    if (debug_get_bool_option("SVGA_EXTRA_LOGGING", FALSE)) {
       char cmdline[1000];
-      if (os_get_command_line(cmdline, sizeof(cmdline))) {
+      if (util_get_command_line(cmdline, sizeof(cmdline))) {
          snprintf(host_log, sizeof(host_log) - strlen(log_prefix),
                   "%s%s\n", log_prefix, cmdline);
          svgascreen->sws->host_log(svgascreen->sws, host_log);
@@ -1048,6 +1042,15 @@ svga_destroy_screen( struct pipe_screen *screen )
    svgascreen->sws->destroy(svgascreen->sws);
 
    FREE(svgascreen);
+}
+
+
+static int
+svga_screen_get_fd( struct pipe_screen *screen )
+{
+   struct svga_winsys_screen *sws = svga_screen(screen)->sws;
+
+   return sws->get_fd(sws);
 }
 
 
@@ -1089,6 +1092,7 @@ svga_screen_create(struct svga_winsys_screen *sws)
    screen->get_name = svga_get_name;
    screen->get_vendor = svga_get_vendor;
    screen->get_device_vendor = svga_get_vendor; // TODO actual device vendor
+   screen->get_screen_fd = svga_screen_get_fd;
    screen->get_param = svga_get_param;
    screen->get_shader_param = svga_get_shader_param;
    screen->get_compiler_options = svga_get_compiler_options;

@@ -19,10 +19,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- *
- * Authors:
- *    Jason Ekstrand (jason@jlekstrand.net)
- *
  */
 
 #include "brw_nir.h"
@@ -36,12 +32,11 @@
 static inline bool
 are_all_uses_fadd(nir_ssa_def *def)
 {
-   if (!list_is_empty(&def->if_uses))
-      return false;
+   nir_foreach_use_including_if(use_src, def) {
+      if (use_src->is_if)
+         return false;
 
-   nir_foreach_use(use_src, def) {
       nir_instr *use_instr = use_src->parent_instr;
-
       if (use_instr->type != nir_instr_type_alu)
          return false;
 
@@ -68,9 +63,9 @@ are_all_uses_fadd(nir_ssa_def *def)
 
 static nir_alu_instr *
 get_mul_for_src(nir_alu_src *src, unsigned num_components,
-                uint8_t swizzle[4], bool *negate, bool *abs)
+                uint8_t *swizzle, bool *negate, bool *abs)
 {
-   uint8_t swizzle_tmp[4];
+   uint8_t swizzle_tmp[NIR_MAX_VEC_COMPONENTS];
    assert(src->src.is_ssa && !src->abs && !src->negate);
 
    nir_instr *instr = src->src.ssa->parent_instr;
@@ -133,7 +128,7 @@ get_mul_for_src(nir_alu_src *src, unsigned num_components,
     *   Expected output swizzle = zyxx
     *   If we reuse swizzle in the loop, then output swizzle would be zyzz.
     */
-   memcpy(swizzle_tmp, swizzle, 4*sizeof(uint8_t));
+   memcpy(swizzle_tmp, swizzle, NIR_MAX_VEC_COMPONENTS*sizeof(uint8_t));
    for (int i = 0; i < num_components; i++)
       swizzle[i] = swizzle_tmp[src->swizzle[i]];
 
@@ -152,10 +147,8 @@ any_alu_src_is_a_constant(nir_alu_src srcs[])
          nir_load_const_instr *load_const =
             nir_instr_as_load_const (srcs[i].src.ssa->parent_instr);
 
-         if (list_is_singular(&load_const->def.uses) &&
-             list_is_empty(&load_const->def.if_uses)) {
+         if (list_is_singular(&load_const->def.uses))
             return true;
-         }
       }
    }
 
@@ -189,10 +182,10 @@ brw_nir_opt_peephole_ffma_instr(nir_builder *b,
       return false;
 
    nir_alu_instr *mul;
-   uint8_t add_mul_src, swizzle[4];
+   uint8_t add_mul_src, swizzle[NIR_MAX_VEC_COMPONENTS];
    bool negate, abs;
    for (add_mul_src = 0; add_mul_src < 2; add_mul_src++) {
-      for (unsigned i = 0; i < 4; i++)
+      for (unsigned i = 0; i < NIR_MAX_VEC_COMPONENTS; i++)
          swizzle[i] = i;
 
       negate = false;

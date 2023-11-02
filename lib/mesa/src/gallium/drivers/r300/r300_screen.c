@@ -46,7 +46,7 @@
  * (Or egotistical. Yet.) */
 static const char* r300_get_vendor(struct pipe_screen* pscreen)
 {
-    return "X.Org R300 Project";
+    return "Mesa";
 }
 
 static const char* r300_get_device_vendor(struct pipe_screen* pscreen)
@@ -232,13 +232,13 @@ static int r300_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
         case PIPE_CAP_UMA:
                 return 0;
         case PIPE_CAP_PCI_GROUP:
-            return r300screen->info.pci_domain;
+            return r300screen->info.pci.domain;
         case PIPE_CAP_PCI_BUS:
-            return r300screen->info.pci_bus;
+            return r300screen->info.pci.bus;
         case PIPE_CAP_PCI_DEVICE:
-            return r300screen->info.pci_dev;
+            return r300screen->info.pci.dev;
         case PIPE_CAP_PCI_FUNCTION:
-            return r300screen->info.pci_func;
+            return r300screen->info.pci.func;
         default:
             return u_pipe_screen_get_param_defaults(pscreen, param);
     }
@@ -311,8 +311,6 @@ static int r300_get_shader_param(struct pipe_screen *pscreen,
         case PIPE_SHADER_CAP_INT16:
         case PIPE_SHADER_CAP_GLSL_16BIT_CONSTS:
         case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-        case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-        case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
         case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
         case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
@@ -402,8 +400,6 @@ static int r300_get_shader_param(struct pipe_screen *pscreen,
         case PIPE_SHADER_CAP_MAX_TEXTURE_SAMPLERS:
         case PIPE_SHADER_CAP_MAX_SAMPLER_VIEWS:
         case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-        case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-        case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_MAX_SHADER_BUFFERS:
         case PIPE_SHADER_CAP_MAX_SHADER_IMAGES:
         case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
@@ -498,10 +494,13 @@ static int r300_get_video_param(struct pipe_screen *screen,
    .lower_extract_word = true,                \
    .lower_fdiv = true,                        \
    .lower_fdph = true,                        \
+   .lower_ffloor = true,                      \
    .lower_flrp32 = true,                      \
    .lower_flrp64 = true,                      \
    .lower_fmod = true,                        \
    .lower_fround_even = true,                 \
+   .lower_fsign = true,                       \
+   .lower_ftrunc = true,                      \
    .lower_insert_byte = true,                 \
    .lower_insert_word = true,                 \
    .lower_rotate = true,                      \
@@ -516,12 +515,13 @@ static const nir_shader_compiler_options r500_vs_compiler_options = {
    /* Have HW loops support and 1024 max instr count, but don't unroll *too*
     * hard.
     */
-   .max_unroll_iterations = 32,
+   .max_unroll_iterations = 29,
 };
 
 static const nir_shader_compiler_options r500_fs_compiler_options = {
    COMMON_NIR_OPTIONS,
    .lower_fpow = true, /* POW is only in the VS */
+   .has_fused_comp_and_csel = true,
 
    /* Have HW loops support and 512 max instr count, but don't unroll *too*
     * hard.
@@ -542,6 +542,7 @@ static const nir_shader_compiler_options r300_fs_compiler_options = {
    COMMON_NIR_OPTIONS,
    .lower_fpow = true, /* POW is only in the VS */
    .lower_sincos = true,
+   .has_fused_comp_and_csel = true,
 
     /* No HW loops support, so set it equal to ALU instr max */
    .max_unroll_iterations = 64,
@@ -807,6 +808,13 @@ static bool r300_fence_finish(struct pipe_screen *screen,
     return rws->fence_wait(rws, fence, timeout);
 }
 
+static int r300_screen_get_fd(struct pipe_screen *screen)
+{
+    struct radeon_winsys *rws = r300_screen(screen)->rws;
+
+    return rws->get_fd(rws);
+}
+
 struct pipe_screen* r300_screen_create(struct radeon_winsys *rws,
                                        const struct pipe_screen_config *config)
 {
@@ -817,7 +825,7 @@ struct pipe_screen* r300_screen_create(struct radeon_winsys *rws,
         return NULL;
     }
 
-    rws->query_info(rws, &r300screen->info, false, false);
+    rws->query_info(rws, &r300screen->info);
 
     r300_init_debug(r300screen);
     r300_parse_chipset(r300screen->info.pci_id, &r300screen->caps);
@@ -836,6 +844,7 @@ struct pipe_screen* r300_screen_create(struct radeon_winsys *rws,
     r300screen->screen.get_compiler_options = r300_get_compiler_options;
     r300screen->screen.get_device_vendor = r300_get_device_vendor;
     r300screen->screen.get_disk_shader_cache = r300_get_disk_shader_cache;
+    r300screen->screen.get_screen_fd = r300_screen_get_fd;
     r300screen->screen.get_param = r300_get_param;
     r300screen->screen.get_shader_param = r300_get_shader_param;
     r300screen->screen.get_paramf = r300_get_paramf;

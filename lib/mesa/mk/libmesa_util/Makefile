@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.8 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.9 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	mesa_util
 
@@ -62,7 +62,8 @@ SRCS=	anon_file.c \
 	u_thread.c \
 	u_vector.c \
 	vma.c \
-	mesa_cache_db.c
+	mesa_cache_db.c \
+	mesa_cache_db_multipart.c
 
 SRCS+=	u_debug_stack.c \
 	u_debug_symbol.c \

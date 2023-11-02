@@ -160,13 +160,6 @@ int virgl_encoder_set_vertex_buffers(struct virgl_context *ctx,
                                     unsigned num_buffers,
                                     const struct pipe_vertex_buffer *buffers);
 
-
-int virgl_encoder_inline_write(struct virgl_context *ctx,
-                              struct virgl_resource *res,
-                              unsigned level, unsigned usage,
-                              const struct pipe_box *box,
-                              const void *data, unsigned stride,
-                              unsigned layer_stride);
 int virgl_encode_sampler_state(struct virgl_context *ctx,
                               uint32_t handle,
                               const struct pipe_sampler_state *state);
@@ -339,6 +332,11 @@ void virgl_encode_decode_bitstream(struct virgl_context *ctx,
                                    struct virgl_video_codec *cdc,
                                    struct virgl_video_buffer *buf,
                                    void *desc, uint32_t desc_size);
+
+void virgl_encode_encode_bitstream(struct virgl_context *ctx,
+                                   struct virgl_video_codec *cdc,
+                                   struct virgl_video_buffer *buf,
+                                   struct virgl_resource *tgt);
 
 void virgl_encode_end_frame(struct virgl_context *ctx,
                             struct virgl_video_codec *cdc,

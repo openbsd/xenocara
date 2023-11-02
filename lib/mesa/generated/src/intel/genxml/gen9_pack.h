@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX9_PACK_H
-#define GFX9_PACK_H
+#ifndef GFX9_SKL_PACK_H
+#define GFX9_SKL_PACK_H
 
 #include <stdio.h>
 
@@ -5079,7 +5079,6 @@ struct GFX9_3DSTATE_PS_EXTRA {
 #define PSCDEPTH_ON_LE                           3
    bool                                 PixelShaderKillsPixel;
    bool                                 oMaskPresenttoRenderTarget;
-   bool                                 PixelShaderDoesnotwritetoRT;
    bool                                 PixelShaderValid;
 };
 
@@ -5111,7 +5110,6 @@ GFX9_3DSTATE_PS_EXTRA_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->PixelShaderComputedDepthMode, 26, 27) |
       util_bitpack_uint(values->PixelShaderKillsPixel, 28, 28) |
       util_bitpack_uint(values->oMaskPresenttoRenderTarget, 29, 29) |
-      util_bitpack_uint(values->PixelShaderDoesnotwritetoRT, 30, 30) |
       util_bitpack_uint(values->PixelShaderValid, 31, 31);
 }
 
@@ -10991,7 +10989,7 @@ struct GFX9_MFD_AVC_BSD_OBJECT {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             IndirectBSDDataLength;
-   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint64_t                             IndirectBSDDataStartAddress;
    struct GFX9_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT InlineData;
 };
 
@@ -11013,7 +11011,8 @@ GFX9_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
-   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 
    GFX9_INLINE_DATA_DESCRIPTION_FOR_MFD_AVC_BSD_OBJECT_pack(data, &dw[3], &values->InlineData);
 }
@@ -11021,7 +11020,7 @@ GFX9_MFD_AVC_BSD_OBJECT_pack(__attribute__((unused)) __gen_user_data *data,
 #define GFX9_MFD_AVC_DPB_STATE_length         27
 #define GFX9_MFD_AVC_DPB_STATE_length_bias      2
 #define GFX9_MFD_AVC_DPB_STATE_header           \
-   .DWordLength                         =      9,  \
+   .DWordLength                         =     25,  \
    .SubOpcodeB                          =      6,  \
    .SubOpcodeA                          =      1,  \
    .MediaCommandOpcode                  =      1,  \
@@ -11045,8 +11044,6 @@ struct GFX9_MFD_AVC_DPB_STATE {
 #define BOTTOM_FIELD                             2
 #define FRAME                                    3
    uint32_t                             LTSTFrameNumberList[16];
-#define LTST_LongTermFrame                       1
-#define LTST_ShortTermFrame                      0
    uint32_t                             ViewID[16];
    uint32_t                             L0ViewOrder[16];
    uint32_t                             L1ViewOrder[16];
@@ -11324,7 +11321,7 @@ struct GFX9_MFD_AVC_SLICEADDR {
    uint32_t                             Pipeline;
    uint32_t                             CommandType;
    uint32_t                             IndirectBSDDataLength;
-   __gen_address_type                   IndirectBSDDataStartAddress;
+   uint64_t                             IndirectBSDDataStartAddress;
 };
 
 static inline __attribute__((always_inline)) void
@@ -11345,7 +11342,8 @@ GFX9_MFD_AVC_SLICEADDR_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] =
       util_bitpack_uint(values->IndirectBSDDataLength, 0, 31);
 
-   dw[2] = __gen_address(data, &dw[2], values->IndirectBSDDataStartAddress, 0, 0, 28);
+   dw[2] =
+      __gen_offset(values->IndirectBSDDataStartAddress, 0, 28);
 }
 
 #define GFX9_MFD_IT_OBJECT_length_bias         2
@@ -12231,10 +12229,10 @@ GFX9_MFX_AVC_DIRECTMODE_STATE_pack(__attribute__((unused)) __gen_user_data *data
       util_bitpack_uint(values->POCList[33], 0, 31);
 }
 
-#define GFX9_MFX_AVC_IMG_STATE_length         14
+#define GFX9_MFX_AVC_IMG_STATE_length         21
 #define GFX9_MFX_AVC_IMG_STATE_length_bias      2
 #define GFX9_MFX_AVC_IMG_STATE_header           \
-   .DWordLength                         =     12,  \
+   .DWordLength                         =     19,  \
    .SubOpcodeB                          =      0,  \
    .SubOpcodeA                          =      0,  \
    .MediaCommandOpcode                  =      1,  \
@@ -12262,8 +12260,8 @@ struct GFX9_MFX_AVC_IMG_STATE {
 #define IMPLICIT                                 2
    bool                                 WeightedPredictionEnable;
    bool                                 RhoDomainRateControlEnable;
-   uint32_t                             FirstChromaQPOffset;
-   uint32_t                             SecondChromaQPOffset;
+   int32_t                              FirstChromaQPOffset;
+   int32_t                              SecondChromaQPOffset;
    bool                                 FieldPicture;
    bool                                 MBAFFMode;
    bool                                 FrameMBOnly;
@@ -12374,8 +12372,8 @@ GFX9_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->WeightedBiPredictionIDC, 10, 11) |
       util_bitpack_uint(values->WeightedPredictionEnable, 12, 12) |
       util_bitpack_uint(values->RhoDomainRateControlEnable, 13, 13) |
-      util_bitpack_uint(values->FirstChromaQPOffset, 16, 20) |
-      util_bitpack_uint(values->SecondChromaQPOffset, 24, 28);
+      util_bitpack_sint(values->FirstChromaQPOffset, 16, 20) |
+      util_bitpack_sint(values->SecondChromaQPOffset, 24, 28);
 
    dw[4] =
       util_bitpack_uint(values->FieldPicture, 0, 0) |
@@ -12445,6 +12443,38 @@ GFX9_MFX_AVC_IMG_STATE_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->NumberofActiveReferencePicturesfromL1, 16, 21) |
       util_bitpack_uint(values->NumberofReferenceFrames, 24, 28) |
       util_bitpack_uint(values->CurrentPictureHasPerformedMMCO5, 29, 29);
+
+   dw[14] =
+      util_bitpack_uint(values->PicOrderPresent, 0, 0) |
+      util_bitpack_uint(values->DeltaPicOrderAlwaysZero, 1, 1) |
+      util_bitpack_uint(values->PicOrderCountType, 2, 3) |
+      util_bitpack_uint(values->SliceGroupMapType, 8, 10) |
+      util_bitpack_uint(values->RedundantPicCountPresent, 11, 11) |
+      util_bitpack_uint(values->NumberofSliceGroups, 12, 14) |
+      util_bitpack_uint(values->DeblockingFilterControlPresent, 15, 15) |
+      util_bitpack_uint(values->Log2MaxFrameNumber, 16, 23) |
+      util_bitpack_uint(values->Log2MaxPicOrderCountLSB, 24, 31);
+
+   dw[15] =
+      util_bitpack_uint(values->SliceGroupChangeRate, 0, 15) |
+      util_bitpack_uint(values->CurrentPictureFrameNumber, 16, 31);
+
+   dw[16] =
+      util_bitpack_uint(values->CurrentFrameViewID, 0, 9) |
+      util_bitpack_uint(values->MaxViewIDXL0, 12, 15) |
+      util_bitpack_uint(values->MaxViewIDXL1, 18, 21) |
+      util_bitpack_uint(values->InterViewOrderDisable, 31, 31);
+
+   dw[17] =
+      util_bitpack_uint(values->RhoDomainAverageMBQP, 16, 21);
+
+   dw[18] = 0;
+
+   dw[19] =
+      util_bitpack_uint(values->ThresholdSize, 0, 31);
+
+   dw[20] =
+      util_bitpack_uint(values->TargetSliceSize, 0, 31);
 }
 
 #define GFX9_MFX_AVC_REF_IDX_STATE_length     10
@@ -21555,4 +21585,4 @@ GFX9_VS_INVOCATION_COUNT_pack(__attribute__((unused)) __gen_user_data *data,
    dw[1] = v0 >> 32;
 }
 
-#endif /* GFX9_PACK_H */
+#endif /* GFX9_SKL_PACK_H */

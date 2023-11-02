@@ -586,10 +586,10 @@ static void r600_set_vertex_buffers(struct pipe_context *ctx,
 	/* Set vertex buffers. */
 	if (input) {
 		for (i = 0; i < count; i++) {
-			if ((input[i].buffer.resource != vb[i].buffer.resource) ||
-			    (vb[i].stride != input[i].stride) ||
-			    (vb[i].buffer_offset != input[i].buffer_offset) ||
-			    (vb[i].is_user_buffer != input[i].is_user_buffer)) {
+			if (likely((input[i].buffer.resource != vb[i].buffer.resource) ||
+				   (vb[i].stride != input[i].stride) ||
+				   (vb[i].buffer_offset != input[i].buffer_offset) ||
+				   (vb[i].is_user_buffer != input[i].is_user_buffer))) {
 				if (input[i].buffer.resource) {
 					vb[i].stride = input[i].stride;
 					vb[i].buffer_offset = input[i].buffer_offset;
@@ -605,6 +605,14 @@ static void r600_set_vertex_buffers(struct pipe_context *ctx,
 				} else {
 					pipe_resource_reference(&vb[i].buffer.resource, NULL);
 					disable_mask |= 1 << i;
+				}
+			} else if (input[i].buffer.resource) {
+				if (take_ownership) {
+					pipe_resource_reference(&vb[i].buffer.resource, NULL);
+					vb[i].buffer.resource = input[i].buffer.resource;
+				} else {
+					pipe_resource_reference(&vb[i].buffer.resource,
+								input[i].buffer.resource);
 				}
 			}
 		}
@@ -1178,6 +1186,10 @@ void r600_delete_shader_selector(struct pipe_context *ctx,
 	struct r600_pipe_shader *p = sel->current, *c;
 	while (p) {
 		c = p->next_variant;
+		if (p->gs_copy_shader) {
+			r600_pipe_shader_destroy(ctx, p->gs_copy_shader);
+			free(p->gs_copy_shader);
+		}
 		r600_pipe_shader_destroy(ctx, p);
 		free(p);
 		p = c;
@@ -1191,6 +1203,8 @@ void r600_delete_shader_selector(struct pipe_context *ctx,
 	}
 	else if (sel->ir_type == PIPE_SHADER_IR_NIR)
 		ralloc_free(sel->nir);
+	if (sel->nir_blob)
+		free(sel->nir_blob);
 	free(sel);
 }
 
@@ -2020,13 +2034,6 @@ static bool r600_update_derived_state(struct r600_context *rctx)
 		r600_update_db_shader_control(rctx);
 	}
 
-	/* For each shader stage that needs to spill, set up buffer for MEM_SCRATCH */
-	if (rctx->b.gfx_level >= EVERGREEN) {
-		evergreen_setup_scratch_buffers(rctx);
-	} else {
-		r600_setup_scratch_buffers(rctx);
-	}
-
 	/* on R600 we stuff masks + txq info into one constant buffer */
 	/* on evergreen we only need a txq info one */
 	if (rctx->ps_shader) {
@@ -2406,6 +2413,13 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 		rctx->last_primitive_type = info->mode;
 	}
 
+   /* For each shader stage that needs to spill, set up buffer for MEM_SCRATCH */
+	if (rctx->b.gfx_level >= EVERGREEN) {
+		evergreen_setup_scratch_buffers(rctx);
+	} else {
+		r600_setup_scratch_buffers(rctx);
+	}
+
 	/* Draw packets. */
 	if (likely(!indirect)) {
 		radeon_emit(cs, PKT3(PKT3_NUM_INSTANCES, 0, 0));
@@ -2442,7 +2456,9 @@ static void r600_draw_vbo(struct pipe_context *ctx, const struct pipe_draw_info 
 			radeon_emit(cs, PKT3(PKT3_DRAW_INDEX_IMMD, 1 + size_dw, render_cond_bit));
 			radeon_emit(cs, draws[0].count);
 			radeon_emit(cs, V_0287F0_DI_SRC_SEL_IMMEDIATE);
-			radeon_emit_array(cs, info->index.user + draws[0].start * index_size, size_dw);
+			memcpy(cs->current.buf + cs->current.cdw,
+			       info->index.user + draws[0].start * index_size, size_bytes);
+			cs->current.cdw += size_dw;
 		} else {
 			uint64_t va = r600_resource(indexbuf)->gpu_address + index_offset;
 
@@ -3034,14 +3050,8 @@ uint32_t r600_translate_texformat(struct pipe_screen *screen,
 		goto out_unknown;
 	}
 
-	/* Find the first non-VOID channel. */
-	for (i = 0; i < 4; i++) {
-		if (desc->channel[i].type != UTIL_FORMAT_TYPE_VOID) {
-			break;
-		}
-	}
-
-	if (i == 4)
+	i = util_format_get_first_non_void_channel(format);
+	if (i == -1)
 		goto out_unknown;
 
 	/* uniform formats */

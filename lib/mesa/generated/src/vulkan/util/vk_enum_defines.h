@@ -25,7 +25,7 @@
     #ifndef MESA_VK_ENUM_DEFINES_H
     #define MESA_VK_ENUM_DEFINES_H
 
-    #include <vulkan/vulkan.h>
+    #include <vulkan/vulkan_core.h>
     #include <vulkan/vk_android_native_buffer.h>
 
     #ifdef __cplusplus
@@ -55,7 +55,10 @@
     #define _VK_AMD_shader_trinary_minmax_number (21)
     #define _VK_AMD_texture_gather_bias_lod_number (42)
     #define _VK_ANDROID_external_memory_android_hardware_buffer_number (130)
+    #define _VK_ANDROID_native_buffer_number (11)
     #define _VK_ARM_rasterization_order_attachment_access_number (343)
+    #define _VK_ARM_shader_core_builtins_number (498)
+    #define _VK_ARM_shader_core_properties_number (416)
     #define _VK_EXT_4444_formats_number (341)
     #define _VK_EXT_acquire_drm_display_number (286)
     #define _VK_EXT_acquire_xlib_display_number (90)
@@ -76,6 +79,7 @@
     #define _VK_EXT_depth_clip_control_number (356)
     #define _VK_EXT_depth_clip_enable_number (103)
     #define _VK_EXT_depth_range_unrestricted_number (14)
+    #define _VK_EXT_descriptor_buffer_number (317)
     #define _VK_EXT_descriptor_indexing_number (162)
     #define _VK_EXT_device_address_binding_report_number (355)
     #define _VK_EXT_device_fault_number (342)
@@ -106,6 +110,7 @@
     #define _VK_EXT_image_compression_control_swapchain_number (438)
     #define _VK_EXT_image_drm_format_modifier_number (159)
     #define _VK_EXT_image_robustness_number (336)
+    #define _VK_EXT_image_sliced_view_of_3d_number (419)
     #define _VK_EXT_image_view_min_lod_number (392)
     #define _VK_EXT_index_type_uint8_number (266)
     #define _VK_EXT_inline_uniform_block_number (139)
@@ -127,6 +132,7 @@
     #define _VK_EXT_physical_device_drm_number (354)
     #define _VK_EXT_pipeline_creation_cache_control_number (298)
     #define _VK_EXT_pipeline_creation_feedback_number (193)
+    #define _VK_EXT_pipeline_library_group_handles_number (499)
     #define _VK_EXT_pipeline_properties_number (373)
     #define _VK_EXT_pipeline_protected_access_number (467)
     #define _VK_EXT_pipeline_robustness_number (69)
@@ -148,13 +154,17 @@
     #define _VK_EXT_shader_demote_to_helper_invocation_number (277)
     #define _VK_EXT_shader_image_atomic_int64_number (235)
     #define _VK_EXT_shader_module_identifier_number (463)
+    #define _VK_EXT_shader_object_number (483)
     #define _VK_EXT_shader_stencil_export_number (141)
     #define _VK_EXT_shader_subgroup_ballot_number (65)
     #define _VK_EXT_shader_subgroup_vote_number (66)
+    #define _VK_EXT_shader_tile_image_number (396)
     #define _VK_EXT_shader_viewport_index_layer_number (163)
     #define _VK_EXT_subgroup_size_control_number (226)
     #define _VK_EXT_subpass_merge_feedback_number (459)
+    #define _VK_EXT_surface_maintenance1_number (275)
     #define _VK_EXT_swapchain_colorspace_number (105)
+    #define _VK_EXT_swapchain_maintenance1_number (276)
     #define _VK_EXT_texel_buffer_alignment_number (282)
     #define _VK_EXT_texture_compression_astc_hdr_number (67)
     #define _VK_EXT_tooling_info_number (246)
@@ -164,8 +174,6 @@
     #define _VK_EXT_validation_flags_number (62)
     #define _VK_EXT_vertex_attribute_divisor_number (191)
     #define _VK_EXT_vertex_input_dynamic_state_number (353)
-    #define _VK_EXT_video_decode_h264_number (41)
-    #define _VK_EXT_video_decode_h265_number (188)
     #define _VK_EXT_video_encode_h264_number (39)
     #define _VK_EXT_video_encode_h265_number (40)
     #define _VK_EXT_ycbcr_2plane_444_formats_number (331)
@@ -181,6 +189,7 @@
     #define _VK_GOOGLE_hlsl_functionality1_number (224)
     #define _VK_GOOGLE_surfaceless_query_number (434)
     #define _VK_GOOGLE_user_type_number (290)
+    #define _VK_HUAWEI_cluster_culling_shader_number (405)
     #define _VK_HUAWEI_invocation_mask_number (371)
     #define _VK_HUAWEI_subpass_shading_number (370)
     #define _VK_IMG_filter_cubic_number (16)
@@ -233,6 +242,7 @@
     #define _VK_KHR_maintenance2_number (118)
     #define _VK_KHR_maintenance3_number (169)
     #define _VK_KHR_maintenance4_number (414)
+    #define _VK_KHR_map_memory2_number (272)
     #define _VK_KHR_multiview_number (54)
     #define _VK_KHR_performance_query_number (117)
     #define _VK_KHR_pipeline_executable_properties_number (270)
@@ -270,6 +280,8 @@
     #define _VK_KHR_timeline_semaphore_number (208)
     #define _VK_KHR_uniform_buffer_standard_layout_number (254)
     #define _VK_KHR_variable_pointers_number (121)
+    #define _VK_KHR_video_decode_h264_number (41)
+    #define _VK_KHR_video_decode_h265_number (188)
     #define _VK_KHR_video_decode_queue_number (25)
     #define _VK_KHR_video_encode_queue_number (300)
     #define _VK_KHR_video_queue_number (24)
@@ -281,6 +293,7 @@
     #define _VK_KHR_xcb_surface_number (6)
     #define _VK_KHR_xlib_surface_number (5)
     #define _VK_KHR_zero_initialize_workgroup_memory_number (326)
+    #define _VK_LUNARG_direct_driver_loading_number (460)
     #define _VK_MVK_ios_surface_number (123)
     #define _VK_MVK_macos_surface_number (124)
     #define _VK_NN_vi_surface_number (63)
@@ -291,6 +304,7 @@
     #define _VK_NV_clip_space_w_scaling_number (88)
     #define _VK_NV_compute_shader_derivatives_number (202)
     #define _VK_NV_cooperative_matrix_number (250)
+    #define _VK_NV_copy_memory_indirect_number (427)
     #define _VK_NV_corner_sampled_image_number (51)
     #define _VK_NV_coverage_reduction_mode_number (251)
     #define _VK_NV_dedicated_allocation_number (27)
@@ -298,6 +312,7 @@
     #define _VK_NV_device_diagnostic_checkpoints_number (207)
     #define _VK_NV_device_diagnostics_config_number (301)
     #define _VK_NV_device_generated_commands_number (278)
+    #define _VK_NV_displacement_micromap_number (398)
     #define _VK_NV_external_memory_number (57)
     #define _VK_NV_external_memory_capabilities_number (56)
     #define _VK_NV_external_memory_rdma_number (372)
@@ -311,10 +326,13 @@
     #define _VK_NV_glsl_shader_number (13)
     #define _VK_NV_inherited_viewport_scissor_number (279)
     #define _VK_NV_linear_color_attachment_number (431)
+    #define _VK_NV_low_latency_number (311)
+    #define _VK_NV_memory_decompression_number (428)
     #define _VK_NV_mesh_shader_number (203)
     #define _VK_NV_optical_flow_number (465)
     #define _VK_NV_present_barrier_number (293)
     #define _VK_NV_ray_tracing_number (166)
+    #define _VK_NV_ray_tracing_invocation_reorder_number (491)
     #define _VK_NV_ray_tracing_motion_blur_number (328)
     #define _VK_NV_representative_fragment_test_number (167)
     #define _VK_NV_sample_mask_override_coverage_number (95)
@@ -328,6 +346,8 @@
     #define _VK_NV_win32_keyed_mutex_number (59)
     #define _VK_QCOM_fragment_density_map_offset_number (426)
     #define _VK_QCOM_image_processing_number (441)
+    #define _VK_QCOM_multiview_per_view_render_areas_number (511)
+    #define _VK_QCOM_multiview_per_view_viewports_number (489)
     #define _VK_QCOM_render_pass_shader_resolve_number (172)
     #define _VK_QCOM_render_pass_store_ops_number (302)
     #define _VK_QCOM_render_pass_transform_number (283)
@@ -338,13 +358,13 @@
     #define _VK_VALVE_descriptor_set_host_mapping_number (421)
     #define _VK_VALVE_mutable_descriptor_type_number (352)
 
-    #define VK_ALL_ACCELERATION_STRUCTURE_CREATE_FLAG_BITS_KHR 0x5u
+    #define VK_ALL_ACCELERATION_STRUCTURE_CREATE_FLAG_BITS_KHR 0xdu
     #define VK_ALL_ACCESS_FLAG_BITS 0xfffffffu
             #define VK_ALL_ACQUIRE_PROFILING_LOCK_FLAG_BITS_KHR 0x0u
     #define VK_ALL_ATTACHMENT_DESCRIPTION_FLAG_BITS 0x1u
-    #define VK_ALL_BUFFER_CREATE_FLAG_BITS 0x1fu
-    #define VK_ALL_BUFFER_USAGE_FLAG_BITS 0x19bffffu
-    #define VK_ALL_BUILD_ACCELERATION_STRUCTURE_FLAG_BITS_KHR 0x1ffu
+    #define VK_ALL_BUFFER_CREATE_FLAG_BITS 0x3fu
+    #define VK_ALL_BUFFER_USAGE_FLAG_BITS 0x5fbffffu
+    #define VK_ALL_BUILD_ACCELERATION_STRUCTURE_FLAG_BITS_KHR 0x3ffu
     #define VK_ALL_BUILD_MICROMAP_FLAG_BITS_EXT 0x7u
     #define VK_ALL_COLOR_COMPONENT_FLAG_BITS 0xfu
     #define VK_ALL_COMMAND_BUFFER_RESET_FLAG_BITS 0x1u
@@ -360,14 +380,16 @@
     #define VK_ALL_DEPENDENCY_FLAG_BITS 0xfu
     #define VK_ALL_DESCRIPTOR_BINDING_FLAG_BITS 0xfu
     #define VK_ALL_DESCRIPTOR_POOL_CREATE_FLAG_BITS 0x7u
-    #define VK_ALL_DESCRIPTOR_SET_LAYOUT_CREATE_FLAG_BITS 0x7u
+    #define VK_ALL_DESCRIPTOR_SET_LAYOUT_CREATE_FLAG_BITS 0x37u
     #define VK_ALL_DEVICE_ADDRESS_BINDING_FLAG_BITS_EXT 0x1u
     #define VK_ALL_DEVICE_DIAGNOSTICS_CONFIG_FLAG_BITS_NV 0xfu
     #define VK_ALL_DEVICE_GROUP_PRESENT_MODE_FLAG_BITS_KHR 0xfu
     #define VK_ALL_DEVICE_QUEUE_CREATE_FLAG_BITS 0x1u
     #define VK_ALL_DISPLAY_PLANE_ALPHA_FLAG_BITS_KHR 0xfu
     #define VK_ALL_EVENT_CREATE_FLAG_BITS 0x1u
+#ifdef VK_USE_PLATFORM_METAL_EXT
     #define VK_ALL_EXPORT_METAL_OBJECT_TYPE_FLAG_BITS_EXT 0x3fu
+#endif
     #define VK_ALL_EXTERNAL_FENCE_FEATURE_FLAG_BITS 0x3u
     #define VK_ALL_EXTERNAL_FENCE_HANDLE_TYPE_FLAG_BITS 0xfu
     #define VK_ALL_EXTERNAL_MEMORY_FEATURE_FLAG_BITS 0x7u
@@ -386,16 +408,17 @@
     #define VK_ALL_IMAGE_ASPECT_FLAG_BITS 0x7ffu
     #define VK_ALL_IMAGE_COMPRESSION_FIXED_RATE_FLAG_BITS_EXT 0xffffffu
     #define VK_ALL_IMAGE_COMPRESSION_FLAG_BITS_EXT 0x7u
+#ifdef VK_USE_PLATFORM_FUCHSIA
     #define VK_ALL_IMAGE_CONSTRAINTS_INFO_FLAG_BITS_FUCHSIA 0x1fu
-    #define VK_ALL_IMAGE_CREATE_FLAG_BITS 0x6ffffu
-    #define VK_ALL_IMAGE_FORMAT_CONSTRAINTS_FLAG_BITS_FUCHSIA 0x0u
+#endif
+    #define VK_ALL_IMAGE_CREATE_FLAG_BITS 0x7ffffu
     #define VK_ALL_IMAGE_USAGE_FLAG_BITS 0x3cffffu
-    #define VK_ALL_IMAGE_VIEW_CREATE_FLAG_BITS 0x3u
+    #define VK_ALL_IMAGE_VIEW_CREATE_FLAG_BITS 0x7u
     #define VK_ALL_INDIRECT_COMMANDS_LAYOUT_USAGE_FLAG_BITS_NV 0x7u
     #define VK_ALL_INDIRECT_STATE_FLAG_BITS_NV 0x1u
     #define VK_ALL_INSTANCE_CREATE_FLAG_BITS 0x1u
     #define VK_ALL_MEMORY_ALLOCATE_FLAG_BITS 0x7u
-    #define VK_ALL_MEMORY_HEAP_FLAG_BITS 0x3u
+            #define VK_ALL_MEMORY_HEAP_FLAG_BITS 0x3u
     #define VK_ALL_MEMORY_PROPERTY_FLAG_BITS 0x1ffu
     #define VK_ALL_MICROMAP_CREATE_FLAG_BITS_EXT 0x1u
     #define VK_ALL_OPTICAL_FLOW_EXECUTE_FLAG_BITS_NV 0x1u
@@ -407,27 +430,27 @@
     #define VK_ALL_PIPELINE_CACHE_CREATE_FLAG_BITS 0x1u
     #define VK_ALL_PIPELINE_COLOR_BLEND_STATE_CREATE_FLAG_BITS 0x1u
     #define VK_ALL_PIPELINE_COMPILER_CONTROL_FLAG_BITS_AMD 0x0u
-    #define VK_ALL_PIPELINE_CREATE_FLAG_BITS 0x4fffffffu
+    #define VK_ALL_PIPELINE_CREATE_FLAG_BITS 0x7fffffffu
     #define VK_ALL_PIPELINE_CREATION_FEEDBACK_FLAG_BITS 0x7u
     #define VK_ALL_PIPELINE_DEPTH_STENCIL_STATE_CREATE_FLAG_BITS 0x3u
     #define VK_ALL_PIPELINE_LAYOUT_CREATE_FLAG_BITS 0x2u
     #define VK_ALL_PIPELINE_SHADER_STAGE_CREATE_FLAG_BITS 0x3u
     #define VK_ALL_PIPELINE_STAGE_FLAG_BITS 0x3ffffffu
-            #define VK_ALL_PRIVATE_DATA_SLOT_CREATE_FLAG_BITS 0x0u
+            #define VK_ALL_PRESENT_GRAVITY_FLAG_BITS_EXT 0x7u
+    #define VK_ALL_PRESENT_SCALING_FLAG_BITS_EXT 0x7u
     #define VK_ALL_QUERY_CONTROL_FLAG_BITS 0x1u
-    #define VK_ALL_QUERY_PIPELINE_STATISTIC_FLAG_BITS 0x1fffu
+    #define VK_ALL_QUERY_PIPELINE_STATISTIC_FLAG_BITS 0x3fffu
     #define VK_ALL_QUERY_RESULT_FLAG_BITS 0x1fu
     #define VK_ALL_QUEUE_FLAG_BITS 0x17fu
     #define VK_ALL_RENDER_PASS_CREATE_FLAG_BITS 0x2u
     #define VK_ALL_RENDERING_FLAG_BITS 0xfu
     #define VK_ALL_RESOLVE_MODE_FLAG_BITS 0xfu
     #define VK_ALL_SAMPLE_COUNT_FLAG_BITS 0x7fu
-    #define VK_ALL_SAMPLER_CREATE_FLAG_BITS 0x17u
-    #define VK_ALL_SEMAPHORE_CREATE_FLAG_BITS 0x0u
+    #define VK_ALL_SAMPLER_CREATE_FLAG_BITS 0x1fu
     #define VK_ALL_SEMAPHORE_IMPORT_FLAG_BITS 0x1u
     #define VK_ALL_SEMAPHORE_WAIT_FLAG_BITS 0x1u
     #define VK_ALL_SHADER_CORE_PROPERTIES_FLAG_BITS_AMD 0x0u
-    #define VK_ALL_SHADER_MODULE_CREATE_FLAG_BITS 0x0u
+    #define VK_ALL_SHADER_CREATE_FLAG_BITS_EXT 0x7fu
     #define VK_ALL_SHADER_STAGE_FLAG_BITS 0x7fffffffu
     #define VK_ALL_SPARSE_IMAGE_FORMAT_FLAG_BITS 0x7u
     #define VK_ALL_SPARSE_MEMORY_BIND_FLAG_BITS 0x1u
@@ -437,8 +460,10 @@
     #define VK_ALL_SUBPASS_DESCRIPTION_FLAG_BITS 0xffu
     #define VK_ALL_SURFACE_COUNTER_FLAG_BITS_EXT 0x1u
     #define VK_ALL_SURFACE_TRANSFORM_FLAG_BITS_KHR 0x1ffu
-    #define VK_ALL_SWAPCHAIN_CREATE_FLAG_BITS_KHR 0x7u
+    #define VK_ALL_SWAPCHAIN_CREATE_FLAG_BITS_KHR 0xfu
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
     #define VK_ALL_SWAPCHAIN_IMAGE_USAGE_FLAG_BITS_ANDROID 0x1u
+#endif
     #define VK_ALL_TOOL_PURPOSE_FLAG_BITS 0x7fu
     #define VK_ALL_VIDEO_CAPABILITY_FLAG_BITS_KHR 0x3u
     #define VK_ALL_VIDEO_CHROMA_SUBSAMPLING_FLAG_BITS_KHR 0xfu
@@ -446,20 +471,8 @@
     #define VK_ALL_VIDEO_CODING_CONTROL_FLAG_BITS_KHR 0x7u
     #define VK_ALL_VIDEO_COMPONENT_BIT_DEPTH_FLAG_BITS_KHR 0x15u
     #define VK_ALL_VIDEO_DECODE_CAPABILITY_FLAG_BITS_KHR 0x3u
-    #define VK_ALL_VIDEO_DECODE_H264_PICTURE_LAYOUT_FLAG_BITS_EXT 0x3u
+    #define VK_ALL_VIDEO_DECODE_H264_PICTURE_LAYOUT_FLAG_BITS_KHR 0x3u
     #define VK_ALL_VIDEO_DECODE_USAGE_FLAG_BITS_KHR 0x7u
-    #define VK_ALL_VIDEO_ENCODE_CAPABILITY_FLAG_BITS_KHR 0x1u
-    #define VK_ALL_VIDEO_ENCODE_CONTENT_FLAG_BITS_KHR 0x7u
-    #define VK_ALL_VIDEO_ENCODE_H264_CAPABILITY_FLAG_BITS_EXT 0x1ffffffu
-    #define VK_ALL_VIDEO_ENCODE_H264_INPUT_MODE_FLAG_BITS_EXT 0x7u
-    #define VK_ALL_VIDEO_ENCODE_H264_OUTPUT_MODE_FLAG_BITS_EXT 0x7u
-    #define VK_ALL_VIDEO_ENCODE_H265_CAPABILITY_FLAG_BITS_EXT 0x3ffffffu
-    #define VK_ALL_VIDEO_ENCODE_H265_CTB_SIZE_FLAG_BITS_EXT 0x7u
-    #define VK_ALL_VIDEO_ENCODE_H265_INPUT_MODE_FLAG_BITS_EXT 0x7u
-    #define VK_ALL_VIDEO_ENCODE_H265_OUTPUT_MODE_FLAG_BITS_EXT 0x7u
-    #define VK_ALL_VIDEO_ENCODE_H265_TRANSFORM_BLOCK_SIZE_FLAG_BITS_EXT 0xfu
-    #define VK_ALL_VIDEO_ENCODE_RATE_CONTROL_MODE_FLAG_BITS_KHR 0x3u
-    #define VK_ALL_VIDEO_ENCODE_USAGE_FLAG_BITS_KHR 0xfu
     #define VK_ALL_VIDEO_SESSION_CREATE_FLAG_BITS_KHR 0x1u
 
                     /* Redefine bitmask values of VkAccessFlagBits2 */
@@ -523,6 +536,7 @@
     #define VK_ACCESS_2_ACCELERATION_STRUCTURE_WRITE_BIT_NV (0x400000ULL)
     #define VK_ACCESS_2_FRAGMENT_DENSITY_MAP_READ_BIT_EXT (0x1000000ULL)
     #define VK_ACCESS_2_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT (0x80000ULL)
+    #define VK_ACCESS_2_DESCRIPTOR_BUFFER_READ_BIT_EXT (0x20000000000ULL)
     #define VK_ACCESS_2_INVOCATION_MASK_READ_BIT_HUAWEI (0x8000000000ULL)
     #define VK_ACCESS_2_SHADER_BINDING_TABLE_READ_BIT_KHR (0x10000000000ULL)
     #define VK_ACCESS_2_MICROMAP_READ_BIT_EXT (0x100000000000ULL)
@@ -599,7 +613,9 @@
     #define VK_FORMAT_FEATURE_2_OPTICAL_FLOW_IMAGE_BIT_NV (0x10000000000ULL)
     #define VK_FORMAT_FEATURE_2_OPTICAL_FLOW_VECTOR_BIT_NV (0x20000000000ULL)
     #define VK_FORMAT_FEATURE_2_OPTICAL_FLOW_COST_BIT_NV (0x40000000000ULL)
-                                                                                                                                                                                                                                                                                    /* Redefine bitmask values of VkPipelineStageFlagBits2 */
+                                                                                                                            /* Redefine bitmask values of VkMemoryDecompressionMethodFlagBitsNV */
+    #define VK_MEMORY_DECOMPRESSION_METHOD_GDEFLATE_1_0_BIT_NV (0x1ULL)
+                                                                                                                                                    /* Redefine bitmask values of VkPipelineStageFlagBits2 */
     #define VK_PIPELINE_STAGE_2_NONE (0x0ULL)
     #define VK_PIPELINE_STAGE_2_NONE_KHR (0x0ULL)
     #define VK_PIPELINE_STAGE_2_TOP_OF_PIPE_BIT (0x1ULL)
@@ -672,8 +688,15 @@
     #define VK_PIPELINE_STAGE_2_INVOCATION_MASK_BIT_HUAWEI (0x10000000000ULL)
     #define VK_PIPELINE_STAGE_2_ACCELERATION_STRUCTURE_COPY_BIT_KHR (0x10000000ULL)
     #define VK_PIPELINE_STAGE_2_MICROMAP_BUILD_BIT_EXT (0x40000000ULL)
+    #define VK_PIPELINE_STAGE_2_CLUSTER_CULLING_SHADER_BIT_HUAWEI (0x20000000000ULL)
     #define VK_PIPELINE_STAGE_2_OPTICAL_FLOW_BIT_NV (0x20000000ULL)
-                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                
+    static inline VkFormatFeatureFlags
+    vk_format_features2_to_features(VkFormatFeatureFlags2 features2)
+    {
+       return features2 & VK_ALL_FORMAT_FEATURE_FLAG_BITS;
+    }
+
     #ifdef __cplusplus
     } /* extern "C" */
     #endif

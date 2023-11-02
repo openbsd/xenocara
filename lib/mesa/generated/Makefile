@@ -18,11 +18,13 @@ all:
 	mkdir -p src/gallium/drivers/r300
 	mkdir -p src/gallium/drivers/r600
 	mkdir -p src/intel/compiler
+	mkdir -p src/intel/dev
 	mkdir -p src/intel/ds
 	mkdir -p src/intel/genxml
 	mkdir -p src/intel/isl
 	mkdir -p src/intel/perf
 	mkdir -p src/intel/vulkan
+	mkdir -p src/intel/vulkan/shaders
 	mkdir -p src/intel/vulkan_hasvk
 	mkdir -p src/mapi/es1api
 	mkdir -p src/mapi/es2api
@@ -100,8 +102,13 @@ all:
 	    > src/intel/genxml/gen${GEN}_pack.h
 .endfor
 	${PYTHON} ${MESA_SRC}/src/intel/genxml/gen_pack_header.py \
-	    ${MESA_SRC}/src/intel/genxml/gen_rt.xml \
-	    > src/intel/genxml/gen_rt_pack.h
+	    ${MESA_SRC}/src/intel/genxml/gen125_rt.xml \
+	    --engines=render,blitter,video \
+	    > src/intel/genxml/gen125_rt_pack.h
+	${PYTHON} ${MESA_SRC}/src/intel/dev/gen_wa_helpers.py \
+	    ${MESA_SRC}/src/intel/dev/mesa_defs.json \
+	    src/intel/dev/intel_wa.h \
+	    src/intel/dev/intel_wa.c
 	${PYTHON} ${MESA_SRC}/src/intel/genxml/gen_bits_header.py \
 	    ${MESA_SRC}/src/intel/genxml/gen4.xml \
 	    ${MESA_SRC}/src/intel/genxml/gen45.xml \
@@ -114,9 +121,10 @@ all:
 	    ${MESA_SRC}/src/intel/genxml/gen11.xml \
 	    ${MESA_SRC}/src/intel/genxml/gen12.xml \
 	    ${MESA_SRC}/src/intel/genxml/gen125.xml \
+	    ${MESA_SRC}/src/intel/genxml/gen125_rt.xml \
 	    -o src/intel/genxml/genX_bits.h \
 	    --include-symbols \
-	    'MI_BATCH_BUFFER_START::Batch Buffer Start Address,MI_REPORT_PERF_COUNT::Memory Address,MI_STORE_DATA_IMM::Address,MI_STORE_DATA_IMM::Immediate Data,MI_STORE_REGISTER_MEM::Memory Address,3DSTATE_DEPTH_BUFFER::Surface Base Address,3DSTATE_DEPTH_BUFFER::Surface Pitch,3DSTATE_STENCIL_BUFFER::Surface Base Address,3DSTATE_STENCIL_BUFFER::Surface Pitch,3DSTATE_HIER_DEPTH_BUFFER::Surface Base Address,3DSTATE_HIER_DEPTH_BUFFER::Surface Pitch,3DSTATE_CLEAR_PARAMS,3DSTATE_SO_BUFFER::Surface Base Address,3DSTATE_SO_BUFFER::Stream Offset,3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Base Address,3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Pitch,RENDER_SURFACE_STATE::Surface Base Address,RENDER_SURFACE_STATE::Surface Pitch,RENDER_SURFACE_STATE::Auxiliary Surface Base Address,RENDER_SURFACE_STATE::Auxiliary Surface Pitch,RENDER_SURFACE_STATE::Clear Value Address,RENDER_SURFACE_STATE::Red Clear Color,RENDER_SURFACE_STATE::Green Clear Color,RENDER_SURFACE_STATE::Blue Clear Color,RENDER_SURFACE_STATE::Alpha Clear Color,CLEAR_COLOR,VERTEX_BUFFER_STATE::Buffer Starting Address,CPS_STATE'
+	    'MI_BATCH_BUFFER_START::Batch Buffer Start Address,MI_REPORT_PERF_COUNT::Memory Address,MI_STORE_DATA_IMM::Address,MI_STORE_DATA_IMM::Immediate Data,MI_STORE_REGISTER_MEM::Memory Address,3DSTATE_DEPTH_BUFFER::Surface Base Address,3DSTATE_DEPTH_BUFFER::Surface Pitch,3DSTATE_STENCIL_BUFFER::Surface Base Address,3DSTATE_STENCIL_BUFFER::Surface Pitch,3DSTATE_HIER_DEPTH_BUFFER::Surface Base Address,3DSTATE_HIER_DEPTH_BUFFER::Surface Pitch,3DSTATE_CLEAR_PARAMS,3DSTATE_SO_BUFFER::Surface Base Address,3DSTATE_SO_BUFFER::Stream Offset,3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Base Address,3DSTATE_CPSIZE_CONTROL_BUFFER::Surface Pitch,RENDER_SURFACE_STATE::Surface Base Address,RENDER_SURFACE_STATE::Surface Pitch,RENDER_SURFACE_STATE::Auxiliary Surface Base Address,RENDER_SURFACE_STATE::Auxiliary Surface Pitch,RENDER_SURFACE_STATE::Clear Value Address,RENDER_SURFACE_STATE::Red Clear Color,RENDER_SURFACE_STATE::Green Clear Color,RENDER_SURFACE_STATE::Blue Clear Color,RENDER_SURFACE_STATE::Alpha Clear Color,CLEAR_COLOR,VERTEX_BUFFER_STATE::Buffer StartingAddress,CPS_STATE,RT_DISPATCH_GLOBALS::Hit Group Table,RT_DISPATCH_GLOBALS::Miss Group Table,RT_DISPATCH_GLOBALS::Callable Group Table,RT_DISPATCH_GLOBALS::Launch Width,RT_DISPATCH_GLOBALS::Launch Height,RT_DISPATCH_GLOBALS::Launch Depth'
 	${PYTHON} ${MESA_SRC}/src/gallium/drivers/r300/compiler/r300_nir_algebraic.py \
 	    -p ${MESA_SRC}/src/compiler/nir/ \
 	    src/gallium/drivers/r300/r300_nir_algebraic.c
@@ -129,6 +137,7 @@ all:
 	    ${MESA_SRC}/src/amd/registers/gfx8.json \
 	    ${MESA_SRC}/src/amd/registers/gfx81.json \
 	    ${MESA_SRC}/src/amd/registers/gfx9.json \
+	    ${MESA_SRC}/src/amd/registers/gfx940.json \
 	    ${MESA_SRC}/src/amd/registers/gfx10.json \
 	    ${MESA_SRC}/src/amd/registers/gfx103.json \
 	    ${MESA_SRC}/src/amd/registers/gfx11.json \
@@ -145,6 +154,7 @@ all:
 	    ${MESA_SRC}/src/amd/registers/gfx8.json \
 	    ${MESA_SRC}/src/amd/registers/gfx81.json \
 	    ${MESA_SRC}/src/amd/registers/gfx9.json \
+	    ${MESA_SRC}/src/amd/registers/gfx940.json \
 	    ${MESA_SRC}/src/amd/registers/gfx10.json \
 	    ${MESA_SRC}/src/amd/registers/gfx103.json \
 	    ${MESA_SRC}/src/amd/registers/gfx11.json \
@@ -159,8 +169,24 @@ all:
 	    ${MESA_SRC}/src/amd/registers/gfx11-rsrc.json \
 	    > src/amd/common/gfx10_format_table.c
 	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
+	    ${MESA_SRC}/src/compiler/glsl/bc1.glsl \
+	    src/compiler/glsl/bc1_glsl.h -n bc1_source
+	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
+	    ${MESA_SRC}/src/compiler/glsl/bc4.glsl \
+	    src/compiler/glsl/bc4_glsl.h -n bc4_source
+	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
+	    ${MESA_SRC}/src/compiler/glsl/etc2_rgba_stitch.glsl \
+	    src/compiler/glsl/etc2_rgba_stitch_glsl.h -n etc2_rgba_stitch_source
+	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
+	    ${MESA_SRC}/src/compiler/glsl/astc_decoder.glsl \
+	    src/compiler/glsl/astc_glsl.h -n astc_source
+	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
 	    ${MESA_SRC}/src/compiler/glsl/float64.glsl \
 	    src/compiler/glsl/float64_glsl.h -n float64_source
+	${PYTHON} ${MESA_SRC}/src/util/xxd.py \
+	    ${MESA_SRC}/src/compiler/glsl/CrossPlatformSettings_piece_all.glsl \
+	    src/compiler/glsl/cross_platform_settings_piece_all.h \
+	    -n cross_platform_settings_piece_all_header
 	${FLEX} -o src/compiler/glsl/glcpp/glcpp-lex.c \
 	    ${MESA_SRC}/src/compiler/glsl/glcpp/glcpp-lex.l
 	${BISON} -Wno-deprecated -o src/compiler/glsl/glcpp/glcpp-parse.c \
@@ -253,7 +279,12 @@ all:
 	    ${MESA_SRC}/src/intel/perf/oa-tglgt2.xml \
 	    ${MESA_SRC}/src/intel/perf/oa-rkl.xml \
 	    ${MESA_SRC}/src/intel/perf/oa-dg1.xml \
-	    ${MESA_SRC}/src/intel/perf/oa-adl.xml
+	    ${MESA_SRC}/src/intel/perf/oa-adl.xml \
+	    ${MESA_SRC}/src/intel/perf/oa-acmgt1.xml \
+	    ${MESA_SRC}/src/intel/perf/oa-acmgt2.xml \
+	    ${MESA_SRC}/src/intel/perf/oa-acmgt3.xml \
+	    ${MESA_SRC}/src/intel/perf/oa-mtlgt2.xml \
+	    ${MESA_SRC}/src/intel/perf/oa-mtlgt3.xml
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --proto --weak \
@@ -264,7 +295,9 @@ all:
 	    --device-prefix gfx11 \
 	    --device-prefix gfx12 \
 	    --device-prefix gfx125 \
-	    --device-prefix hitman3
+	    --device-prefix doom64 \
+	    --device-prefix hitman3 \
+	    --device-prefix android
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --proto --weak \
@@ -273,14 +306,32 @@ all:
 	    --prefix anv \
 	    --device-prefix gfx7 \
 	    --device-prefix gfx75 \
-	    --device-prefix gfx8
+	    --device-prefix gfx8 \
+	    --device-prefix doom64
 	${PYTHON} ${MESA_SRC}/src/util/glsl2spirv.py \
 	    ${MESA_SRC}/src/compiler/glsl/float64.glsl \
-	    src/intel/vulkan/float64_spv.h \
+	    src/intel/vulkan/shaders/float64_spv.h \
+	    ${GLSLV} \
 	    --create-entry main \
 	    --vn float64_spv_source \
 	    --glsl-version 450 \
 	    -Olib
+	${PYTHON} ${MESA_SRC}/src/util/glsl2spirv.py \
+	    ${MESA_SRC}/src/intel/vulkan/shaders/gfx9_generated_draws.glsl \
+	    src/intel/vulkan/shaders/gfx9_generated_draws_spv.h \
+	    ${GLSLV} \
+	    --vn gfx9_generated_draws_spv_source \
+	    --glsl-version 450 \
+	    --stage frag \
+	    -I${MESA_SRC}/src/intel/vulkan/shaders
+	${PYTHON} ${MESA_SRC}/src/util/glsl2spirv.py \
+	    ${MESA_SRC}/src/intel/vulkan/shaders/gfx11_generated_draws.glsl \
+	    src/intel/vulkan/shaders/gfx11_generated_draws_spv.h \
+	    ${GLSLV} \
+	    --vn gfx11_generated_draws_spv_source \
+	    --glsl-version 450 \
+	    --stage frag \
+	    -I${MESA_SRC}/src/intel/vulkan/shaders
 	${PYTHON} ${MESA_SRC}/src/mapi/glapi/gen/api_exec_init.py \
 	    -f ${MESA_SRC}/src/mapi/glapi/gen/gl_and_es_API.xml \
 	    > src/mapi/glapi/gen/api_exec_init.c
@@ -344,15 +395,50 @@ all:
 	    --out-c src/amd/vulkan/radv_entrypoints.c \
 	    --prefix radv \
 	    --device-prefix sqtt \
-	    --device-prefix metro_exodus \
 	    --device-prefix rra \
+	    --device-prefix rmv \
+	    --device-prefix metro_exodus \
 	    --device-prefix rage2
-.for SHADER in copy lbvh_internal leaf morton ploc_internal converter_internal converter_leaf
 	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
 	    --target-env spirv1.5 -x \
-	    -o src/amd/vulkan/bvh/${SHADER}.comp.spv.h \
-	    ${MESA_SRC}/src/amd/vulkan/bvh/${SHADER}.comp --quiet
-.endfor
+	    -o src/amd/vulkan/bvh/lbvh_main.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/lbvh_main.comp --quiet
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/leaf.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/leaf.comp --quiet
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/morton.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/morton.comp --quiet
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/ploc_internal.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/ploc_internal.comp --quiet -DEXTENDED_SAH=0
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/ploc_internal_extended.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/ploc_internal.comp --quiet -DEXTENDED_SAH=1
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/copy.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/copy.comp --quiet
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/encode.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/encode.comp --quiet -DCOMPACT=0
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/encode_compact.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/encode.comp --quiet -DCOMPACT=1
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/header.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/header.comp --quiet
+	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/bvh \
+	    --target-env spirv1.5 -x \
+	    -o src/amd/vulkan/bvh/lbvh_generate_ir.spv.h \
+	    ${MESA_SRC}/src/amd/vulkan/bvh/lbvh_generate_ir.comp --quiet
 .for SHADER in init fill histogram prefix scatter_0_even scatter_0_odd scatter_1_even scatter_1_odd
 	${GLSLV} -V -I${MESA_SRC}/src/amd/vulkan/radix_sort/targets/u64 \
 	    --target-env spirv1.3 -x \
@@ -381,6 +467,10 @@ all:
 	    --out-h src/vulkan/wsi/wsi_common_entrypoints.h \
 	    --out-c src/vulkan/wsi/wsi_common_entrypoints.c \
 	    --prefix wsi
+	${PYTHON} ${MESA_SRC}/src/vulkan/runtime/vk_format_info_gen.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --out-c src/vulkan/runtime/vk_format_info.c \
+	    --out-h src/vulkan/runtime/vk_format_info.h
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_entrypoints_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --proto --weak \
@@ -398,9 +488,10 @@ all:
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --out-c src/vulkan/runtime/vk_dispatch_trampolines.c \
 	    --out-h src/vulkan/runtime/vk_dispatch_trampolines.h
-	${PYTHON} ${MESA_SRC}/src/vulkan/runtime/vk_physical_device_features.py \
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_physical_device_features.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
-	    --out-c src/vulkan/runtime/vk_physical_device_features.c
+	    --out-c src/vulkan/runtime/vk_physical_device_features.c \
+	    --out-h src/vulkan/runtime/vk_physical_device_features.h
 	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_cmd_queue_gen.py \
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --out-c src/vulkan/runtime/vk_cmd_queue.c \
@@ -413,8 +504,12 @@ all:
 	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
 	    --out-c src/vulkan/util/vk_extensions.c \
 	    --out-h src/vulkan/util/vk_extensions.h
+	${PYTHON} ${MESA_SRC}/src/vulkan/util/vk_struct_type_cast_gen.py \
+	    --xml ${MESA_SRC}/src/vulkan/registry/vk.xml \
+	    --outdir src/vulkan/util
 	${PYTHON} ${MESA_SRC}/src/util/driconf_static.py \
 	    ${MESA_SRC}/src/util/00-mesa-defaults.conf \
+	    ${MESA_SRC}/src/util/00-radv-defaults.conf \
 	    src/util/driconf_static.h
 
 clean:
@@ -427,13 +522,16 @@ clean:
 	rm -f src/amd/vulkan/radeon_icd.json
 	rm -f src/amd/vulkan/radv_entrypoints.c
 	rm -f src/amd/vulkan/radv_entrypoints.h
-	rm -f src/amd/vulkan/bvh/converter_internal.comp.spv.h
-	rm -f src/amd/vulkan/bvh/converter_leaf.comp.spv.h
-	rm -f src/amd/vulkan/bvh/copy.comp.spv.h
-	rm -f src/amd/vulkan/bvh/lbvh_internal.comp.spv.h
-	rm -f src/amd/vulkan/bvh/leaf.comp.spv.h
-	rm -f src/amd/vulkan/bvh/morton.comp.spv.h
-	rm -f src/amd/vulkan/bvh/ploc_internal.comp.spv.h
+	rm -f src/amd/vulkan/bvh/copy.spv.h
+	rm -f src/amd/vulkan/bvh/encode.spv.h
+	rm -f src/amd/vulkan/bvh/encode_compact.spv.h
+	rm -f src/amd/vulkan/bvh/header.spv.h
+	rm -f src/amd/vulkan/bvh/lbvh_generate_ir.spv.h
+	rm -f src/amd/vulkan/bvh/lbvh_main.spv.h
+	rm -f src/amd/vulkan/bvh/leaf.spv.h
+	rm -f src/amd/vulkan/bvh/morton.spv.h
+	rm -f src/amd/vulkan/bvh/ploc_internal.spv.h
+	rm -f src/amd/vulkan/bvh/ploc_internal_extended.spv.h
 	rm -f src/amd/vulkan/radix_sort/shaders/fill.comp.spv.h
 	rm -f src/amd/vulkan/radix_sort/shaders/histogram.comp.spv.h
 	rm -f src/amd/vulkan/radix_sort/shaders/init.comp.spv.h
@@ -442,6 +540,11 @@ clean:
 	rm -f src/amd/vulkan/radix_sort/shaders/scatter_0_odd.comp.spv.h
 	rm -f src/amd/vulkan/radix_sort/shaders/scatter_1_even.comp.spv.h
 	rm -f src/amd/vulkan/radix_sort/shaders/scatter_1_odd.comp.spv.h
+	rm -f src/compiler/glsl/astc_glsl.h
+	rm -f src/compiler/glsl/bc1_glsl.h
+	rm -f src/compiler/glsl/bc4_glsl.h
+	rm -f src/compiler/glsl/cross_platform_settings_piece_all.h
+	rm -f src/compiler/glsl/etc2_rgba_stitch_glsl.h
 	rm -f src/compiler/glsl/float64_glsl.h
 	rm -f src/compiler/glsl/glcpp/glcpp-lex.c
 	rm -f src/compiler/glsl/glcpp/glcpp-parse.c
@@ -476,19 +579,25 @@ clean:
 .for GEN in 4 45 5 6 7 75 8 9 11 12 125
 	rm -f src/intel/genxml/gen${GEN}_pack.h
 .endfor
+	rm -f src/intel/dev/intel_wa.c
+	rm -f src/intel/dev/intel_wa.h
 	rm -f src/intel/ds/intel_tracepoints.c
 	rm -f src/intel/ds/intel_tracepoints.h
 	rm -f src/intel/ds/intel_tracepoints_perfetto.h
 	rm -f src/intel/genxml/genX_bits.h
 	rm -f src/intel/genxml/genX_xml.h
-	rm -f src/intel/genxml/gen_rt_pack.h
+	rm -f src/intel/genxml/gen125_rt_pack.h
 	rm -f src/intel/isl/isl_format_layout.c
 	rm -f src/intel/perf/intel_perf_metrics.c
 	rm -f src/intel/perf/intel_perf_metrics.h
 	rm -f src/intel/vulkan/anv_entrypoints.c
 	rm -f src/intel/vulkan/anv_entrypoints.h
-	rm -f src/intel/vulkan/float64_spv.h
 	rm -f src/intel/vulkan/intel_icd.json
+	rm -f src/intel/vulkan/shaders/float64_spv.h
+	rm -f src/intel/vulkan/shaders/gfx9_generated_draws_spv.h
+	rm -f src/intel/vulkan/shaders/gfx9_generated_draws.glsl
+	rm -f src/intel/vulkan/shaders/gfx11_generated_draws_spv.h
+	rm -f src/intel/vulkan/shaders/gfx11_generated_draws.glsl
 	rm -f src/intel/vulkan_hasvk/anv_entrypoints.c
 	rm -f src/intel/vulkan_hasvk/anv_entrypoints.h
 	rm -f src/intel/vulkan_hasvk/intel_hasvk_icd.json
@@ -536,6 +645,7 @@ clean:
 	rm -f src/vulkan/runtime/vk_dispatch_trampolines.c
 	rm -f src/vulkan/runtime/vk_dispatch_trampolines.h
 	rm -f src/vulkan/runtime/vk_physical_device_features.c
+	rm -f src/vulkan/runtime/vk_physical_device_features.h
 	rm -f src/vulkan/util/vk_dispatch_table.c
 	rm -f src/vulkan/util/vk_dispatch_table.h
 	rm -f src/vulkan/util/vk_enum_defines.h
@@ -543,5 +653,8 @@ clean:
 	rm -f src/vulkan/util/vk_enum_to_str.h
 	rm -f src/vulkan/util/vk_extensions.c
 	rm -f src/vulkan/util/vk_extensions.h
+	rm -f src/vulkan/util/vk_struct_type_cast.h
 	rm -f src/vulkan/wsi/wsi_common_entrypoints.c
 	rm -f src/vulkan/wsi/wsi_common_entrypoints.h
+	rm -f src/vulkan/runtime/vk_format_info.c
+	rm -f src/vulkan/runtime/vk_format_info.h

@@ -65,6 +65,7 @@
     const char * vk_DeviceFaultAddressTypeEXT_to_str(VkDeviceFaultAddressTypeEXT input);
     const char * vk_DeviceFaultVendorBinaryHeaderVersionEXT_to_str(VkDeviceFaultVendorBinaryHeaderVersionEXT input);
     const char * vk_DeviceMemoryReportEventTypeEXT_to_str(VkDeviceMemoryReportEventTypeEXT input);
+    const char * vk_DirectDriverLoadingModeLUNARG_to_str(VkDirectDriverLoadingModeLUNARG input);
     const char * vk_DiscardRectangleModeEXT_to_str(VkDiscardRectangleModeEXT input);
     const char * vk_DisplayEventTypeEXT_to_str(VkDisplayEventTypeEXT input);
     const char * vk_DisplayPowerStateEXT_to_str(VkDisplayPowerStateEXT input);
@@ -115,12 +116,11 @@
     const char * vk_PrimitiveTopology_to_str(VkPrimitiveTopology input);
     const char * vk_ProvokingVertexModeEXT_to_str(VkProvokingVertexModeEXT input);
     const char * vk_QueryPoolSamplingModeINTEL_to_str(VkQueryPoolSamplingModeINTEL input);
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     const char * vk_QueryResultStatusKHR_to_str(VkQueryResultStatusKHR input);
-#endif
     const char * vk_QueryType_to_str(VkQueryType input);
     const char * vk_QueueGlobalPriorityKHR_to_str(VkQueueGlobalPriorityKHR input);
     const char * vk_RasterizationOrderAMD_to_str(VkRasterizationOrderAMD input);
+    const char * vk_RayTracingInvocationReorderModeNV_to_str(VkRayTracingInvocationReorderModeNV input);
     const char * vk_RayTracingShaderGroupTypeKHR_to_str(VkRayTracingShaderGroupTypeKHR input);
     const char * vk_Result_to_str(VkResult input);
     const char * vk_SamplerAddressMode_to_str(VkSamplerAddressMode input);
@@ -130,6 +130,7 @@
     const char * vk_SamplerYcbcrRange_to_str(VkSamplerYcbcrRange input);
     const char * vk_ScopeNV_to_str(VkScopeNV input);
     const char * vk_SemaphoreType_to_str(VkSemaphoreType input);
+    const char * vk_ShaderCodeTypeEXT_to_str(VkShaderCodeTypeEXT input);
     const char * vk_ShaderFloatControlsIndependence_to_str(VkShaderFloatControlsIndependence input);
     const char * vk_ShaderGroupShaderKHR_to_str(VkShaderGroupShaderKHR input);
     const char * vk_ShaderInfoTypeAMD_to_str(VkShaderInfoTypeAMD input);
@@ -148,16 +149,128 @@
     const char * vk_ValidationFeatureEnableEXT_to_str(VkValidationFeatureEnableEXT input);
     const char * vk_VendorId_to_str(VkVendorId input);
     const char * vk_VertexInputRate_to_str(VkVertexInputRate input);
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    const char * vk_VideoEncodeH264RateControlStructureEXT_to_str(VkVideoEncodeH264RateControlStructureEXT input);
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    const char * vk_VideoEncodeH265RateControlStructureEXT_to_str(VkVideoEncodeH265RateControlStructureEXT input);
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    const char * vk_VideoEncodeTuningModeKHR_to_str(VkVideoEncodeTuningModeKHR input);
-#endif
     const char * vk_ViewportCoordinateSwizzleNV_to_str(VkViewportCoordinateSwizzleNV input);
+
+    const char * vk_AccelerationStructureCreateFlagBitsKHR_to_str(VkAccelerationStructureCreateFlagBitsKHR input);
+    const char * vk_AccessFlagBits_to_str(VkAccessFlagBits input);
+    const char * vk_AccessFlagBits2_to_str(VkAccessFlagBits2 input);
+    const char * vk_AcquireProfilingLockFlagBitsKHR_to_str(VkAcquireProfilingLockFlagBitsKHR input);
+    const char * vk_AttachmentDescriptionFlagBits_to_str(VkAttachmentDescriptionFlagBits input);
+    const char * vk_BufferCreateFlagBits_to_str(VkBufferCreateFlagBits input);
+    const char * vk_BufferUsageFlagBits_to_str(VkBufferUsageFlagBits input);
+    const char * vk_BuildAccelerationStructureFlagBitsKHR_to_str(VkBuildAccelerationStructureFlagBitsKHR input);
+    const char * vk_BuildMicromapFlagBitsEXT_to_str(VkBuildMicromapFlagBitsEXT input);
+    const char * vk_ColorComponentFlagBits_to_str(VkColorComponentFlagBits input);
+    const char * vk_CommandBufferResetFlagBits_to_str(VkCommandBufferResetFlagBits input);
+    const char * vk_CommandBufferUsageFlagBits_to_str(VkCommandBufferUsageFlagBits input);
+    const char * vk_CommandPoolCreateFlagBits_to_str(VkCommandPoolCreateFlagBits input);
+    const char * vk_CommandPoolResetFlagBits_to_str(VkCommandPoolResetFlagBits input);
+    const char * vk_CompositeAlphaFlagBitsKHR_to_str(VkCompositeAlphaFlagBitsKHR input);
+    const char * vk_ConditionalRenderingFlagBitsEXT_to_str(VkConditionalRenderingFlagBitsEXT input);
+    const char * vk_CullModeFlagBits_to_str(VkCullModeFlagBits input);
+    const char * vk_DebugReportFlagBitsEXT_to_str(VkDebugReportFlagBitsEXT input);
+    const char * vk_DebugUtilsMessageSeverityFlagBitsEXT_to_str(VkDebugUtilsMessageSeverityFlagBitsEXT input);
+    const char * vk_DebugUtilsMessageTypeFlagBitsEXT_to_str(VkDebugUtilsMessageTypeFlagBitsEXT input);
+    const char * vk_DependencyFlagBits_to_str(VkDependencyFlagBits input);
+    const char * vk_DescriptorBindingFlagBits_to_str(VkDescriptorBindingFlagBits input);
+    const char * vk_DescriptorPoolCreateFlagBits_to_str(VkDescriptorPoolCreateFlagBits input);
+    const char * vk_DescriptorSetLayoutCreateFlagBits_to_str(VkDescriptorSetLayoutCreateFlagBits input);
+    const char * vk_DeviceAddressBindingFlagBitsEXT_to_str(VkDeviceAddressBindingFlagBitsEXT input);
+    const char * vk_DeviceDiagnosticsConfigFlagBitsNV_to_str(VkDeviceDiagnosticsConfigFlagBitsNV input);
+    const char * vk_DeviceGroupPresentModeFlagBitsKHR_to_str(VkDeviceGroupPresentModeFlagBitsKHR input);
+    const char * vk_DeviceQueueCreateFlagBits_to_str(VkDeviceQueueCreateFlagBits input);
+    const char * vk_DisplayPlaneAlphaFlagBitsKHR_to_str(VkDisplayPlaneAlphaFlagBitsKHR input);
+    const char * vk_EventCreateFlagBits_to_str(VkEventCreateFlagBits input);
+#ifdef VK_USE_PLATFORM_METAL_EXT
+    const char * vk_ExportMetalObjectTypeFlagBitsEXT_to_str(VkExportMetalObjectTypeFlagBitsEXT input);
+#endif
+    const char * vk_ExternalFenceFeatureFlagBits_to_str(VkExternalFenceFeatureFlagBits input);
+    const char * vk_ExternalFenceHandleTypeFlagBits_to_str(VkExternalFenceHandleTypeFlagBits input);
+    const char * vk_ExternalMemoryFeatureFlagBits_to_str(VkExternalMemoryFeatureFlagBits input);
+    const char * vk_ExternalMemoryFeatureFlagBitsNV_to_str(VkExternalMemoryFeatureFlagBitsNV input);
+    const char * vk_ExternalMemoryHandleTypeFlagBits_to_str(VkExternalMemoryHandleTypeFlagBits input);
+    const char * vk_ExternalMemoryHandleTypeFlagBitsNV_to_str(VkExternalMemoryHandleTypeFlagBitsNV input);
+    const char * vk_ExternalSemaphoreFeatureFlagBits_to_str(VkExternalSemaphoreFeatureFlagBits input);
+    const char * vk_ExternalSemaphoreHandleTypeFlagBits_to_str(VkExternalSemaphoreHandleTypeFlagBits input);
+    const char * vk_FenceCreateFlagBits_to_str(VkFenceCreateFlagBits input);
+    const char * vk_FenceImportFlagBits_to_str(VkFenceImportFlagBits input);
+    const char * vk_FormatFeatureFlagBits_to_str(VkFormatFeatureFlagBits input);
+    const char * vk_FormatFeatureFlagBits2_to_str(VkFormatFeatureFlagBits2 input);
+    const char * vk_FramebufferCreateFlagBits_to_str(VkFramebufferCreateFlagBits input);
+    const char * vk_GeometryFlagBitsKHR_to_str(VkGeometryFlagBitsKHR input);
+    const char * vk_GeometryInstanceFlagBitsKHR_to_str(VkGeometryInstanceFlagBitsKHR input);
+    const char * vk_GraphicsPipelineLibraryFlagBitsEXT_to_str(VkGraphicsPipelineLibraryFlagBitsEXT input);
+    const char * vk_ImageAspectFlagBits_to_str(VkImageAspectFlagBits input);
+    const char * vk_ImageCompressionFixedRateFlagBitsEXT_to_str(VkImageCompressionFixedRateFlagBitsEXT input);
+    const char * vk_ImageCompressionFlagBitsEXT_to_str(VkImageCompressionFlagBitsEXT input);
+#ifdef VK_USE_PLATFORM_FUCHSIA
+    const char * vk_ImageConstraintsInfoFlagBitsFUCHSIA_to_str(VkImageConstraintsInfoFlagBitsFUCHSIA input);
+#endif
+    const char * vk_ImageCreateFlagBits_to_str(VkImageCreateFlagBits input);
+    const char * vk_ImageUsageFlagBits_to_str(VkImageUsageFlagBits input);
+    const char * vk_ImageViewCreateFlagBits_to_str(VkImageViewCreateFlagBits input);
+    const char * vk_IndirectCommandsLayoutUsageFlagBitsNV_to_str(VkIndirectCommandsLayoutUsageFlagBitsNV input);
+    const char * vk_IndirectStateFlagBitsNV_to_str(VkIndirectStateFlagBitsNV input);
+    const char * vk_InstanceCreateFlagBits_to_str(VkInstanceCreateFlagBits input);
+    const char * vk_MemoryAllocateFlagBits_to_str(VkMemoryAllocateFlagBits input);
+    const char * vk_MemoryDecompressionMethodFlagBitsNV_to_str(VkMemoryDecompressionMethodFlagBitsNV input);
+    const char * vk_MemoryHeapFlagBits_to_str(VkMemoryHeapFlagBits input);
+    const char * vk_MemoryPropertyFlagBits_to_str(VkMemoryPropertyFlagBits input);
+    const char * vk_MicromapCreateFlagBitsEXT_to_str(VkMicromapCreateFlagBitsEXT input);
+    const char * vk_OpticalFlowExecuteFlagBitsNV_to_str(VkOpticalFlowExecuteFlagBitsNV input);
+    const char * vk_OpticalFlowGridSizeFlagBitsNV_to_str(VkOpticalFlowGridSizeFlagBitsNV input);
+    const char * vk_OpticalFlowSessionCreateFlagBitsNV_to_str(VkOpticalFlowSessionCreateFlagBitsNV input);
+    const char * vk_OpticalFlowUsageFlagBitsNV_to_str(VkOpticalFlowUsageFlagBitsNV input);
+    const char * vk_PeerMemoryFeatureFlagBits_to_str(VkPeerMemoryFeatureFlagBits input);
+    const char * vk_PerformanceCounterDescriptionFlagBitsKHR_to_str(VkPerformanceCounterDescriptionFlagBitsKHR input);
+    const char * vk_PipelineCacheCreateFlagBits_to_str(VkPipelineCacheCreateFlagBits input);
+    const char * vk_PipelineColorBlendStateCreateFlagBits_to_str(VkPipelineColorBlendStateCreateFlagBits input);
+    const char * vk_PipelineCompilerControlFlagBitsAMD_to_str(VkPipelineCompilerControlFlagBitsAMD input);
+    const char * vk_PipelineCreateFlagBits_to_str(VkPipelineCreateFlagBits input);
+    const char * vk_PipelineCreationFeedbackFlagBits_to_str(VkPipelineCreationFeedbackFlagBits input);
+    const char * vk_PipelineDepthStencilStateCreateFlagBits_to_str(VkPipelineDepthStencilStateCreateFlagBits input);
+    const char * vk_PipelineLayoutCreateFlagBits_to_str(VkPipelineLayoutCreateFlagBits input);
+    const char * vk_PipelineShaderStageCreateFlagBits_to_str(VkPipelineShaderStageCreateFlagBits input);
+    const char * vk_PipelineStageFlagBits_to_str(VkPipelineStageFlagBits input);
+    const char * vk_PipelineStageFlagBits2_to_str(VkPipelineStageFlagBits2 input);
+    const char * vk_PresentGravityFlagBitsEXT_to_str(VkPresentGravityFlagBitsEXT input);
+    const char * vk_PresentScalingFlagBitsEXT_to_str(VkPresentScalingFlagBitsEXT input);
+    const char * vk_QueryControlFlagBits_to_str(VkQueryControlFlagBits input);
+    const char * vk_QueryPipelineStatisticFlagBits_to_str(VkQueryPipelineStatisticFlagBits input);
+    const char * vk_QueryResultFlagBits_to_str(VkQueryResultFlagBits input);
+    const char * vk_QueueFlagBits_to_str(VkQueueFlagBits input);
+    const char * vk_RenderPassCreateFlagBits_to_str(VkRenderPassCreateFlagBits input);
+    const char * vk_RenderingFlagBits_to_str(VkRenderingFlagBits input);
+    const char * vk_ResolveModeFlagBits_to_str(VkResolveModeFlagBits input);
+    const char * vk_SampleCountFlagBits_to_str(VkSampleCountFlagBits input);
+    const char * vk_SamplerCreateFlagBits_to_str(VkSamplerCreateFlagBits input);
+    const char * vk_SemaphoreImportFlagBits_to_str(VkSemaphoreImportFlagBits input);
+    const char * vk_SemaphoreWaitFlagBits_to_str(VkSemaphoreWaitFlagBits input);
+    const char * vk_ShaderCorePropertiesFlagBitsAMD_to_str(VkShaderCorePropertiesFlagBitsAMD input);
+    const char * vk_ShaderCreateFlagBitsEXT_to_str(VkShaderCreateFlagBitsEXT input);
+    const char * vk_ShaderStageFlagBits_to_str(VkShaderStageFlagBits input);
+    const char * vk_SparseImageFormatFlagBits_to_str(VkSparseImageFormatFlagBits input);
+    const char * vk_SparseMemoryBindFlagBits_to_str(VkSparseMemoryBindFlagBits input);
+    const char * vk_StencilFaceFlagBits_to_str(VkStencilFaceFlagBits input);
+    const char * vk_SubgroupFeatureFlagBits_to_str(VkSubgroupFeatureFlagBits input);
+    const char * vk_SubmitFlagBits_to_str(VkSubmitFlagBits input);
+    const char * vk_SubpassDescriptionFlagBits_to_str(VkSubpassDescriptionFlagBits input);
+    const char * vk_SurfaceCounterFlagBitsEXT_to_str(VkSurfaceCounterFlagBitsEXT input);
+    const char * vk_SurfaceTransformFlagBitsKHR_to_str(VkSurfaceTransformFlagBitsKHR input);
+    const char * vk_SwapchainCreateFlagBitsKHR_to_str(VkSwapchainCreateFlagBitsKHR input);
+#ifdef VK_USE_PLATFORM_ANDROID_KHR
+    const char * vk_SwapchainImageUsageFlagBitsANDROID_to_str(VkSwapchainImageUsageFlagBitsANDROID input);
+#endif
+    const char * vk_ToolPurposeFlagBits_to_str(VkToolPurposeFlagBits input);
+    const char * vk_VideoCapabilityFlagBitsKHR_to_str(VkVideoCapabilityFlagBitsKHR input);
+    const char * vk_VideoChromaSubsamplingFlagBitsKHR_to_str(VkVideoChromaSubsamplingFlagBitsKHR input);
+    const char * vk_VideoCodecOperationFlagBitsKHR_to_str(VkVideoCodecOperationFlagBitsKHR input);
+    const char * vk_VideoCodingControlFlagBitsKHR_to_str(VkVideoCodingControlFlagBitsKHR input);
+    const char * vk_VideoComponentBitDepthFlagBitsKHR_to_str(VkVideoComponentBitDepthFlagBitsKHR input);
+    const char * vk_VideoDecodeCapabilityFlagBitsKHR_to_str(VkVideoDecodeCapabilityFlagBitsKHR input);
+    const char * vk_VideoDecodeH264PictureLayoutFlagBitsKHR_to_str(VkVideoDecodeH264PictureLayoutFlagBitsKHR input);
+    const char * vk_VideoDecodeUsageFlagBitsKHR_to_str(VkVideoDecodeUsageFlagBitsKHR input);
+    const char * vk_VideoSessionCreateFlagBitsKHR_to_str(VkVideoSessionCreateFlagBitsKHR input);
 
     size_t vk_structure_type_size(const struct VkBaseInStructure *item);
 

@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX4_PACK_H
-#define GFX4_PACK_H
+#ifndef GFX4_BRW_PACK_H
+#define GFX4_BRW_PACK_H
 
 #include <stdio.h>
 
@@ -2743,4 +2743,4 @@ GFX4_XY_TEXT_IMMEDIATE_BLT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_sint(values->DestinationY2Coordinate, 16, 31);
 }
 
-#endif /* GFX4_PACK_H */
+#endif /* GFX4_BRW_PACK_H */

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	radeonsi
 
@@ -23,6 +23,9 @@ SRCS=	gfx10_query.c \
 	si_pipe.c \
 	si_pm4.c \
 	si_query.c \
+	si_nir_lower_abi.c \
+	si_nir_lower_resource.c \
+	si_nir_lower_vs_inputs.c \
 	si_nir_optim.c \
 	si_sdma_copy_image.c \
 	si_shader.c \
@@ -30,7 +33,6 @@ SRCS=	gfx10_query.c \
 	si_shader_llvm.c \
 	si_shader_llvm_gs.c \
 	si_shader_llvm_ps.c \
-	si_shader_llvm_resources.c \
 	si_shader_llvm_tess.c \
 	si_shader_llvm_vs.c \
 	si_shader_nir.c \

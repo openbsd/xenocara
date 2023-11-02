@@ -46,6 +46,7 @@
 #include <util/compiler.h>
 #include <util/hash_table.h>
 #include <util/timespec.h>
+#include <util/u_endian.h>
 #include <util/u_vector.h>
 #include <util/u_dynarray.h>
 #include <util/anon_file.h>
@@ -291,7 +292,7 @@ wsi_wl_display_add_drm_format_modifier(struct wsi_wl_display *display,
 
    /* Vulkan _PACKN formats have the same component order as DRM formats
     * on little endian systems, on big endian there exists no analog. */
-#if MESA_LITTLE_ENDIAN
+#if UTIL_ARCH_LITTLE_ENDIAN
    case DRM_FORMAT_RGBA4444:
       wsi_wl_display_add_vk_format_modifier(display, formats,
                                             VK_FORMAT_R4G4B4A4_UNORM_PACK16,
@@ -472,7 +473,7 @@ wl_drm_format_for_vk_format(VkFormat vk_format, bool alpha)
    case VK_FORMAT_A4B4G4R4_UNORM_PACK16:
       return alpha ? DRM_FORMAT_ABGR4444 : DRM_FORMAT_XBGR4444;
 #endif
-#if MESA_LITTLE_ENDIAN
+#if UTIL_ARCH_LITTLE_ENDIAN
    case VK_FORMAT_R4G4B4A4_UNORM_PACK16:
       return alpha ? DRM_FORMAT_RGBA4444 : DRM_FORMAT_RGBX4444;
    case VK_FORMAT_B4G4R4A4_UNORM_PACK16:
@@ -646,8 +647,7 @@ default_dmabuf_feedback_main_device(void *data,
    struct wsi_wl_display *display = data;
 
    assert(device->size == sizeof(dev_t));
-   dev_t *dev = device->data;
-   display->main_device = *dev;
+   memcpy(&display->main_device, device->data, device->size);
 }
 
 static void
@@ -738,15 +738,14 @@ registry_handle_global(void *data, struct wl_registry *registry,
          display->wl_shm = wl_registry_bind(registry, name, &wl_shm_interface, 1);
          wl_shm_add_listener(display->wl_shm, &shm_listener, display);
       }
-      return;
-   }
-
-   if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0 && version >= 3) {
-      display->wl_dmabuf =
-         wl_registry_bind(registry, name, &zwp_linux_dmabuf_v1_interface,
-                          MIN2(version, ZWP_LINUX_DMABUF_V1_GET_DEFAULT_FEEDBACK_SINCE_VERSION));
-      zwp_linux_dmabuf_v1_add_listener(display->wl_dmabuf,
-                                       &dmabuf_listener, display);
+   } else {
+      if (strcmp(interface, zwp_linux_dmabuf_v1_interface.name) == 0 && version >= 3) {
+         display->wl_dmabuf =
+            wl_registry_bind(registry, name, &zwp_linux_dmabuf_v1_interface,
+                             MIN2(version, ZWP_LINUX_DMABUF_V1_GET_DEFAULT_FEEDBACK_SINCE_VERSION));
+         zwp_linux_dmabuf_v1_add_listener(display->wl_dmabuf,
+                                          &dmabuf_listener, display);
+      }
    }
 }
 
@@ -963,18 +962,56 @@ static const VkPresentModeKHR present_modes[] = {
    VK_PRESENT_MODE_FIFO_KHR,
 };
 
+static uint32_t
+wsi_wl_surface_get_min_image_count(const VkSurfacePresentModeEXT *present_mode)
+{
+   if (present_mode && (present_mode->presentMode == VK_PRESENT_MODE_FIFO_KHR ||
+                        present_mode->presentMode == VK_PRESENT_MODE_FIFO_RELAXED_KHR)) {
+      /* If we receive a FIFO present mode, only 2 images is required for forward progress.
+       * Performance with 2 images will be questionable, but we only allow it for applications
+       * using the new API, so we don't risk breaking any existing apps this way.
+       * Other ICDs expose 2 images here already. */
+       return 2;
+   } else {
+      /* For true mailbox mode, we need at least 4 images:
+       *  1) One to scan out from
+       *  2) One to have queued for scan-out
+       *  3) One to be currently held by the Wayland compositor
+       *  4) One to render to
+       */
+      return 4;
+   }
+}
+
+static uint32_t
+wsi_wl_surface_get_min_image_count_for_mode_group(const VkSwapchainPresentModesCreateInfoEXT *modes)
+{
+   /* If we don't provide the PresentModeCreateInfo struct, we must be backwards compatible,
+    * and assume that minImageCount is the default one, i.e. 4, which supports both FIFO and MAILBOX. */
+   if (!modes) {
+      return wsi_wl_surface_get_min_image_count(NULL);
+   }
+
+   uint32_t max_required = 0;
+   for (uint32_t i = 0; i < modes->presentModeCount; i++) {
+      const VkSurfacePresentModeEXT mode = {
+         VK_STRUCTURE_TYPE_SURFACE_PRESENT_MODE_EXT,
+         NULL,
+         modes->pPresentModes[i]
+      };
+      max_required = MAX2(max_required, wsi_wl_surface_get_min_image_count(&mode));
+   }
+
+   return max_required;
+}
+
 static VkResult
 wsi_wl_surface_get_capabilities(VkIcdSurfaceBase *surface,
                                 struct wsi_device *wsi_device,
+                                const VkSurfacePresentModeEXT *present_mode,
                                 VkSurfaceCapabilitiesKHR* caps)
 {
-   /* For true mailbox mode, we need at least 4 images:
-    *  1) One to scan out from
-    *  2) One to have queued for scan-out
-    *  3) One to be currently held by the Wayland compositor
-    *  4) One to render to
-    */
-   caps->minImageCount = 4;
+   caps->minImageCount = wsi_wl_surface_get_min_image_count(present_mode);
    /* There is no real maximum */
    caps->maxImageCount = 0;
 
@@ -1001,6 +1038,10 @@ wsi_wl_surface_get_capabilities(VkIcdSurfaceBase *surface,
       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
       VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
 
+   VK_FROM_HANDLE(vk_physical_device, pdevice, wsi_device->pdevice);
+   if (pdevice->supported_extensions.EXT_attachment_feedback_loop_layout)
+      caps->supportedUsageFlags |= VK_IMAGE_USAGE_ATTACHMENT_FEEDBACK_LOOP_BIT_EXT;
+
    return VK_SUCCESS;
 }
 
@@ -1012,8 +1053,10 @@ wsi_wl_surface_get_capabilities2(VkIcdSurfaceBase *surface,
 {
    assert(caps->sType == VK_STRUCTURE_TYPE_SURFACE_CAPABILITIES_2_KHR);
 
+   const VkSurfacePresentModeEXT *present_mode = vk_find_struct_const(info_next, SURFACE_PRESENT_MODE_EXT);
+
    VkResult result =
-      wsi_wl_surface_get_capabilities(surface, wsi_device,
+      wsi_wl_surface_get_capabilities(surface, wsi_device, present_mode,
                                       &caps->surfaceCapabilities);
 
    vk_foreach_struct(ext, caps->pNext) {
@@ -1021,6 +1064,40 @@ wsi_wl_surface_get_capabilities2(VkIcdSurfaceBase *surface,
       case VK_STRUCTURE_TYPE_SURFACE_PROTECTED_CAPABILITIES_KHR: {
          VkSurfaceProtectedCapabilitiesKHR *protected = (void *)ext;
          protected->supportsProtected = VK_FALSE;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_SURFACE_PRESENT_SCALING_CAPABILITIES_EXT: {
+         /* Unsupported. */
+         VkSurfacePresentScalingCapabilitiesEXT *scaling = (void *)ext;
+         scaling->supportedPresentScaling = 0;
+         scaling->supportedPresentGravityX = 0;
+         scaling->supportedPresentGravityY = 0;
+         scaling->minScaledImageExtent = caps->surfaceCapabilities.minImageExtent;
+         scaling->maxScaledImageExtent = caps->surfaceCapabilities.maxImageExtent;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_SURFACE_PRESENT_MODE_COMPATIBILITY_EXT: {
+         /* Can easily toggle between FIFO and MAILBOX on Wayland. */
+         VkSurfacePresentModeCompatibilityEXT *compat = (void *)ext;
+         if (compat->pPresentModes) {
+            assert(present_mode);
+            VK_OUTARRAY_MAKE_TYPED(VkPresentModeKHR, modes, compat->pPresentModes, &compat->presentModeCount);
+            /* Must always return queried present mode even when truncating. */
+            vk_outarray_append_typed(VkPresentModeKHR, &modes, mode) {
+               *mode = present_mode->presentMode;
+            }
+            for (unsigned i = 0; i < ARRAY_SIZE(present_modes); i++) {
+               if (present_modes[i] != present_mode->presentMode) {
+                  vk_outarray_append_typed(VkPresentModeKHR, &modes, mode) {
+                     *mode = present_modes[i];
+                  }
+               }
+            }
+         } else {
+            compat->presentModeCount = ARRAY_SIZE(present_modes);
+         }
          break;
       }
 
@@ -1112,6 +1189,7 @@ wsi_wl_surface_get_formats2(VkIcdSurfaceBase *icd_surface,
 
 static VkResult
 wsi_wl_surface_get_present_modes(VkIcdSurfaceBase *surface,
+                                 struct wsi_device *wsi_device,
                                  uint32_t* pPresentModeCount,
                                  VkPresentModeKHR* pPresentModes)
 {
@@ -1156,17 +1234,17 @@ wsi_wl_surface_destroy(VkIcdSurfaceBase *icd_surface, VkInstance _instance,
    struct wsi_wl_surface *wsi_wl_surface =
       wl_container_of((VkIcdSurfaceWayland *)icd_surface, wsi_wl_surface, base);
 
-   if (wsi_wl_surface->surface)
-      wl_proxy_wrapper_destroy(wsi_wl_surface->surface);
-
-   if (wsi_wl_surface->display)
-      wsi_wl_display_destroy(wsi_wl_surface->display);
-
    if (wsi_wl_surface->wl_dmabuf_feedback) {
       zwp_linux_dmabuf_feedback_v1_destroy(wsi_wl_surface->wl_dmabuf_feedback);
       dmabuf_feedback_fini(&wsi_wl_surface->dmabuf_feedback);
       dmabuf_feedback_fini(&wsi_wl_surface->pending_dmabuf_feedback);
    }
+
+   if (wsi_wl_surface->surface)
+      wl_proxy_wrapper_destroy(wsi_wl_surface->surface);
+
+   if (wsi_wl_surface->display)
+      wsi_wl_display_destroy(wsi_wl_surface->display);
 
    vk_free2(&instance->alloc, pAllocator, wsi_wl_surface);
 }
@@ -1420,6 +1498,11 @@ static VkResult wsi_wl_surface_init(struct wsi_wl_surface *wsi_wl_surface,
    return VK_SUCCESS;
 
 fail:
+   if (wsi_wl_surface->surface)
+      wl_proxy_wrapper_destroy(wsi_wl_surface->surface);
+
+   if (wsi_wl_surface->display)
+      wsi_wl_display_destroy(wsi_wl_surface->display);
    return result;
 }
 
@@ -1460,6 +1543,27 @@ wsi_wl_swapchain_get_wsi_image(struct wsi_swapchain *wsi_chain,
 }
 
 static VkResult
+wsi_wl_swapchain_release_images(struct wsi_swapchain *wsi_chain,
+                                uint32_t count, const uint32_t *indices)
+{
+   struct wsi_wl_swapchain *chain = (struct wsi_wl_swapchain *)wsi_chain;
+   for (uint32_t i = 0; i < count; i++) {
+      uint32_t index = indices[i];
+      assert(chain->images[index].busy);
+      chain->images[index].busy = false;
+   }
+   return VK_SUCCESS;
+}
+
+static void
+wsi_wl_swapchain_set_present_mode(struct wsi_swapchain *wsi_chain,
+                                  VkPresentModeKHR mode)
+{
+   struct wsi_wl_swapchain *chain = (struct wsi_wl_swapchain *)wsi_chain;
+   chain->base.present_mode = mode;
+}
+
+static VkResult
 wsi_wl_swapchain_acquire_next_image(struct wsi_swapchain *wsi_chain,
                                     const VkAcquireNextImageInfoKHR *info,
                                     uint32_t *image_index)
@@ -1496,7 +1600,7 @@ wsi_wl_swapchain_acquire_next_image(struct wsi_swapchain *wsi_chain,
       struct timespec current_time;
       clock_gettime(CLOCK_MONOTONIC, &current_time);
       if (timespec_after(&current_time, &end_time))
-         return VK_NOT_READY;
+         return (info->timeout ? VK_TIMEOUT : VK_NOT_READY);
 
       /* Try to read events from the server. */
       ret = wl_display_prepare_read_queue(wsi_wl_surface->display->wl_display,
@@ -1553,6 +1657,7 @@ static const struct wl_callback_listener frame_listener = {
 static VkResult
 wsi_wl_swapchain_queue_present(struct wsi_swapchain *wsi_chain,
                                uint32_t image_index,
+                               uint64_t present_id,
                                const VkPresentRegionKHR *damage)
 {
    struct wsi_wl_swapchain *chain = (struct wsi_wl_swapchain *)wsi_chain;
@@ -1563,13 +1668,14 @@ wsi_wl_swapchain_queue_present(struct wsi_swapchain *wsi_chain,
       memcpy(image->shm_ptr, image->base.cpu_map,
              image->base.row_pitches[0] * chain->extent.height);
    }
-   if (chain->base.present_mode == VK_PRESENT_MODE_FIFO_KHR) {
-      while (!chain->fifo_ready) {
-         int ret = wl_display_dispatch_queue(wsi_wl_surface->display->wl_display,
-                                             wsi_wl_surface->display->queue);
-         if (ret < 0)
-            return VK_ERROR_OUT_OF_DATE_KHR;
-      }
+
+   /* For EXT_swapchain_maintenance1. We might have transitioned from FIFO to MAILBOX.
+    * In this case we need to let the FIFO request complete, before presenting MAILBOX. */
+   while (!chain->fifo_ready) {
+      int ret = wl_display_dispatch_queue(wsi_wl_surface->display->wl_display,
+                                          wsi_wl_surface->display->queue);
+      if (ret < 0)
+         return VK_ERROR_OUT_OF_DATE_KHR;
    }
 
    assert(image_index < chain->base.image_count);
@@ -1592,6 +1698,9 @@ wsi_wl_swapchain_queue_present(struct wsi_swapchain *wsi_chain,
       chain->frame = wl_surface_frame(wsi_wl_surface->surface);
       wl_callback_add_listener(chain->frame, &frame_listener, chain);
       chain->fifo_ready = false;
+   } else {
+      /* If we present MAILBOX, any subsequent presentation in FIFO can replace this image. */
+      chain->fifo_ready = true;
    }
 
    chain->images[image_index].busy = true;
@@ -1783,14 +1892,13 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
       return VK_ERROR_OUT_OF_HOST_MEMORY;
 
    /* We are taking ownership of the wsi_wl_surface, so remove ownership from
-    * oldSwapchain.
-    *
-    * If the surface is currently owned by a swapchain that is not
-    * oldSwapchain we should return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR. There's
-    * an open issue tracking that:
-    *
-    * https://gitlab.freedesktop.org/mesa/mesa/-/issues/7467
+    * oldSwapchain. If the surface is currently owned by a swapchain that is
+    * not oldSwapchain we return an error.
     */
+   if (wsi_wl_surface->chain &&
+       wsi_swapchain_to_handle(&wsi_wl_surface->chain->base) != pCreateInfo->oldSwapchain) {
+      return VK_ERROR_NATIVE_WINDOW_IN_USE_KHR;
+   }
    if (pCreateInfo->oldSwapchain) {
       VK_FROM_HANDLE(wsi_wl_swapchain, old_chain, pCreateInfo->oldSwapchain);
       old_chain->wsi_wl_surface = NULL;
@@ -1858,10 +1966,8 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
 
    result = wsi_swapchain_init(wsi_device, &chain->base, device,
                                pCreateInfo, image_params, pAllocator);
-   if (result != VK_SUCCESS) {
-      vk_free(pAllocator, chain);
-      return result;
-   }
+   if (result != VK_SUCCESS)
+      goto fail;
 
    bool alpha = pCreateInfo->compositeAlpha ==
                       VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR;
@@ -1870,6 +1976,8 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
    chain->base.get_wsi_image = wsi_wl_swapchain_get_wsi_image;
    chain->base.acquire_next_image = wsi_wl_swapchain_acquire_next_image;
    chain->base.queue_present = wsi_wl_swapchain_queue_present;
+   chain->base.release_images = wsi_wl_swapchain_release_images;
+   chain->base.set_present_mode = wsi_wl_swapchain_set_present_mode;
    chain->base.present_mode = wsi_swapchain_get_present_mode(wsi_device, pCreateInfo);
    chain->base.image_count = num_images;
    chain->extent = pCreateInfo->imageExtent;
@@ -1899,8 +2007,10 @@ wsi_wl_surface_create_swapchain(VkIcdSurfaceBase *icd_surface,
 fail_image_init:
    wsi_wl_swapchain_images_free(chain);
 
-fail:
    wsi_wl_swapchain_chain_free(chain, pAllocator);
+fail:
+   vk_free(pAllocator, chain);
+   wsi_wl_surface->chain = NULL;
 
    return result;
 }

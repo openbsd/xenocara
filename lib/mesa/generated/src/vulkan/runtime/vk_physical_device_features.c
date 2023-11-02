@@ -25,6 +25,7 @@
 
 #include "vk_log.h"
 #include "vk_physical_device.h"
+#include "vk_physical_device_features.h"
 #include "vk_util.h"
 
 static VkResult
@@ -250,6 +251,8 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
    VkPhysicalDeviceComputeShaderDerivativesFeaturesNV supported_VkPhysicalDeviceComputeShaderDerivativesFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceShaderImageFootprintFeaturesNV supported_VkPhysicalDeviceShaderImageFootprintFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV supported_VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV = { .pNext = NULL };
+   VkPhysicalDeviceCopyMemoryIndirectFeaturesNV supported_VkPhysicalDeviceCopyMemoryIndirectFeaturesNV = { .pNext = NULL };
+   VkPhysicalDeviceMemoryDecompressionFeaturesNV supported_VkPhysicalDeviceMemoryDecompressionFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceShadingRateImageFeaturesNV supported_VkPhysicalDeviceShadingRateImageFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceInvocationMaskFeaturesHUAWEI supported_VkPhysicalDeviceInvocationMaskFeaturesHUAWEI = { .pNext = NULL };
    VkPhysicalDeviceMeshShaderFeaturesNV supported_VkPhysicalDeviceMeshShaderFeaturesNV = { .pNext = NULL };
@@ -305,11 +308,13 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
    VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR supported_VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR = { .pNext = NULL };
    VkPhysicalDevice4444FormatsFeaturesEXT supported_VkPhysicalDevice4444FormatsFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceSubpassShadingFeaturesHUAWEI supported_VkPhysicalDeviceSubpassShadingFeaturesHUAWEI = { .pNext = NULL };
+   VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI supported_VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI = { .pNext = NULL };
    VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT supported_VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceFragmentShadingRateFeaturesKHR supported_VkPhysicalDeviceFragmentShadingRateFeaturesKHR = { .pNext = NULL };
    VkPhysicalDeviceShaderTerminateInvocationFeatures supported_VkPhysicalDeviceShaderTerminateInvocationFeatures = { .pNext = NULL };
    VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV supported_VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceImage2DViewOf3DFeaturesEXT supported_VkPhysicalDeviceImage2DViewOf3DFeaturesEXT = { .pNext = NULL };
+   VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT supported_VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT supported_VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceDepthClipControlFeaturesEXT supported_VkPhysicalDeviceDepthClipControlFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT supported_VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT = { .pNext = NULL };
@@ -323,6 +328,7 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
    VkPhysicalDeviceInheritedViewportScissorFeaturesNV supported_VkPhysicalDeviceInheritedViewportScissorFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT supported_VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceProvokingVertexFeaturesEXT supported_VkPhysicalDeviceProvokingVertexFeaturesEXT = { .pNext = NULL };
+   VkPhysicalDeviceDescriptorBufferFeaturesEXT supported_VkPhysicalDeviceDescriptorBufferFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceShaderIntegerDotProductFeatures supported_VkPhysicalDeviceShaderIntegerDotProductFeatures = { .pNext = NULL };
    VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR supported_VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR = { .pNext = NULL };
    VkPhysicalDeviceRayTracingMotionBlurFeaturesNV supported_VkPhysicalDeviceRayTracingMotionBlurFeaturesNV = { .pNext = NULL };
@@ -350,10 +356,18 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
    VkPhysicalDeviceAddressBindingReportFeaturesEXT supported_VkPhysicalDeviceAddressBindingReportFeaturesEXT = { .pNext = NULL };
    VkPhysicalDeviceOpticalFlowFeaturesNV supported_VkPhysicalDeviceOpticalFlowFeaturesNV = { .pNext = NULL };
    VkPhysicalDeviceFaultFeaturesEXT supported_VkPhysicalDeviceFaultFeaturesEXT = { .pNext = NULL };
+   VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT supported_VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT = { .pNext = NULL };
+   VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM supported_VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM = { .pNext = NULL };
+   VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT supported_VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT = { .pNext = NULL };
+   VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV supported_VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV = { .pNext = NULL };
+   VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM supported_VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM = { .pNext = NULL };
+   VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM supported_VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM = { .pNext = NULL };
+   VkPhysicalDeviceShaderObjectFeaturesEXT supported_VkPhysicalDeviceShaderObjectFeaturesEXT = { .pNext = NULL };
+   VkPhysicalDeviceShaderTileImageFeaturesEXT supported_VkPhysicalDeviceShaderTileImageFeaturesEXT = { .pNext = NULL };
 
-   vk_foreach_struct_const(feat, pCreateInfo->pNext) {
+   vk_foreach_struct_const(features, pCreateInfo->pNext) {
       VkBaseOutStructure *supported = NULL;
-      switch (feat->sType) {
+      switch (features->sType) {
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV;
          break;
@@ -461,6 +475,12 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
          break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEDICATED_ALLOCATION_IMAGE_ALIASING_FEATURES_NV:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COPY_MEMORY_INDIRECT_FEATURES_NV:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceCopyMemoryIndirectFeaturesNV;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_DECOMPRESSION_FEATURES_NV:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceMemoryDecompressionFeaturesNV;
          break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADING_RATE_IMAGE_FEATURES_NV:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceShadingRateImageFeaturesNV;
@@ -627,6 +647,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceSubpassShadingFeaturesHUAWEI;
          break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_CULLING_SHADER_FEATURES_HUAWEI:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI;
+         break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT;
          break;
@@ -641,6 +664,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
          break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceImage2DViewOf3DFeaturesEXT;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_SLICED_VIEW_OF_3D_FEATURES_EXT:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT;
          break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT;
@@ -680,6 +706,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
          break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_FEATURES_EXT:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceProvokingVertexFeaturesEXT;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceDescriptorBufferFeaturesEXT;
          break;
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceShaderIntegerDotProductFeatures;
@@ -762,6 +791,30 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT:
          supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceFaultFeaturesEXT;
          break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_LIBRARY_GROUP_HANDLES_FEATURES_EXT:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_BUILTINS_FEATURES_ARM:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_FEATURES_NV:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_VIEWPORTS_FEATURES_QCOM:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_RENDER_AREAS_FEATURES_QCOM:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceShaderObjectFeaturesEXT;
+         break;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TILE_IMAGE_FEATURES_EXT:
+         supported = (VkBaseOutStructure *) &supported_VkPhysicalDeviceShaderTileImageFeaturesEXT;
+         break;
       default:
          break;
       }
@@ -774,7 +827,7 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
       if (supported->pNext != NULL || supported->sType != 0)
          return VK_ERROR_UNKNOWN;
 
-      supported->sType = feat->sType;
+      supported->sType = features->sType;
       __vk_append_struct(&supported_features2, supported);
    }
 
@@ -792,11 +845,11 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
    }
 
    /* Iterate through additional feature structs */
-   vk_foreach_struct_const(feat, pCreateInfo->pNext) {
+   vk_foreach_struct_const(features, pCreateInfo->pNext) {
       /* Check each feature boolean for given structure. */
-      switch (feat->sType) {
+      switch (features->sType) {
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2: {
-         const VkPhysicalDeviceFeatures2 *features2 = (const void *)feat;
+         const VkPhysicalDeviceFeatures2 *features2 = (const void *)features;
          VkResult result =
             check_physical_device_features(physical_device,
                                            &supported_features2.features,
@@ -806,25 +859,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
             return result;
         break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV : {
-         VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *a = &supported_VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV;
-         VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *b = (VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV: {
+         const VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *a = &supported_VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV;
+         const VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *b = (const void *) features;
          if (b->deviceGeneratedCommands && !a->deviceGeneratedCommands)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV", "deviceGeneratedCommands");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES : {
-         VkPhysicalDevicePrivateDataFeatures *a = &supported_VkPhysicalDevicePrivateDataFeatures;
-         VkPhysicalDevicePrivateDataFeatures *b = (VkPhysicalDevicePrivateDataFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES: {
+         const VkPhysicalDevicePrivateDataFeatures *a = &supported_VkPhysicalDevicePrivateDataFeatures;
+         const VkPhysicalDevicePrivateDataFeatures *b = (const void *) features;
          if (b->privateData && !a->privateData)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePrivateDataFeatures", "privateData");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES : {
-         VkPhysicalDeviceVariablePointersFeatures *a = &supported_VkPhysicalDeviceVariablePointersFeatures;
-         VkPhysicalDeviceVariablePointersFeatures *b = (VkPhysicalDeviceVariablePointersFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES: {
+         const VkPhysicalDeviceVariablePointersFeatures *a = &supported_VkPhysicalDeviceVariablePointersFeatures;
+         const VkPhysicalDeviceVariablePointersFeatures *b = (const void *) features;
          if (b->variablePointersStorageBuffer && !a->variablePointersStorageBuffer)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVariablePointersFeatures", "variablePointersStorageBuffer");
@@ -833,9 +886,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceVariablePointersFeatures", "variablePointers");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES : {
-         VkPhysicalDeviceMultiviewFeatures *a = &supported_VkPhysicalDeviceMultiviewFeatures;
-         VkPhysicalDeviceMultiviewFeatures *b = (VkPhysicalDeviceMultiviewFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES: {
+         const VkPhysicalDeviceMultiviewFeatures *a = &supported_VkPhysicalDeviceMultiviewFeatures;
+         const VkPhysicalDeviceMultiviewFeatures *b = (const void *) features;
          if (b->multiview && !a->multiview)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMultiviewFeatures", "multiview");
@@ -847,25 +900,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceMultiviewFeatures", "multiviewTessellationShader");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR : {
-         VkPhysicalDevicePresentIdFeaturesKHR *a = &supported_VkPhysicalDevicePresentIdFeaturesKHR;
-         VkPhysicalDevicePresentIdFeaturesKHR *b = (VkPhysicalDevicePresentIdFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR: {
+         const VkPhysicalDevicePresentIdFeaturesKHR *a = &supported_VkPhysicalDevicePresentIdFeaturesKHR;
+         const VkPhysicalDevicePresentIdFeaturesKHR *b = (const void *) features;
          if (b->presentId && !a->presentId)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePresentIdFeaturesKHR", "presentId");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR : {
-         VkPhysicalDevicePresentWaitFeaturesKHR *a = &supported_VkPhysicalDevicePresentWaitFeaturesKHR;
-         VkPhysicalDevicePresentWaitFeaturesKHR *b = (VkPhysicalDevicePresentWaitFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR: {
+         const VkPhysicalDevicePresentWaitFeaturesKHR *a = &supported_VkPhysicalDevicePresentWaitFeaturesKHR;
+         const VkPhysicalDevicePresentWaitFeaturesKHR *b = (const void *) features;
          if (b->presentWait && !a->presentWait)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePresentWaitFeaturesKHR", "presentWait");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES : {
-         VkPhysicalDevice16BitStorageFeatures *a = &supported_VkPhysicalDevice16BitStorageFeatures;
-         VkPhysicalDevice16BitStorageFeatures *b = (VkPhysicalDevice16BitStorageFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES: {
+         const VkPhysicalDevice16BitStorageFeatures *a = &supported_VkPhysicalDevice16BitStorageFeatures;
+         const VkPhysicalDevice16BitStorageFeatures *b = (const void *) features;
          if (b->storageBuffer16BitAccess && !a->storageBuffer16BitAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevice16BitStorageFeatures", "storageBuffer16BitAccess");
@@ -880,49 +933,49 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDevice16BitStorageFeatures", "storageInputOutput16");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES : {
-         VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *a = &supported_VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures;
-         VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *b = (VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES: {
+         const VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *a = &supported_VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures;
+         const VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *b = (const void *) features;
          if (b->shaderSubgroupExtendedTypes && !a->shaderSubgroupExtendedTypes)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures", "shaderSubgroupExtendedTypes");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES : {
-         VkPhysicalDeviceSamplerYcbcrConversionFeatures *a = &supported_VkPhysicalDeviceSamplerYcbcrConversionFeatures;
-         VkPhysicalDeviceSamplerYcbcrConversionFeatures *b = (VkPhysicalDeviceSamplerYcbcrConversionFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES: {
+         const VkPhysicalDeviceSamplerYcbcrConversionFeatures *a = &supported_VkPhysicalDeviceSamplerYcbcrConversionFeatures;
+         const VkPhysicalDeviceSamplerYcbcrConversionFeatures *b = (const void *) features;
          if (b->samplerYcbcrConversion && !a->samplerYcbcrConversion)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceSamplerYcbcrConversionFeatures", "samplerYcbcrConversion");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES : {
-         VkPhysicalDeviceProtectedMemoryFeatures *a = &supported_VkPhysicalDeviceProtectedMemoryFeatures;
-         VkPhysicalDeviceProtectedMemoryFeatures *b = (VkPhysicalDeviceProtectedMemoryFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES: {
+         const VkPhysicalDeviceProtectedMemoryFeatures *a = &supported_VkPhysicalDeviceProtectedMemoryFeatures;
+         const VkPhysicalDeviceProtectedMemoryFeatures *b = (const void *) features;
          if (b->protectedMemory && !a->protectedMemory)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceProtectedMemoryFeatures", "protectedMemory");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_FEATURES_EXT : {
-         VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *a = &supported_VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT;
-         VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *b = (VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_FEATURES_EXT: {
+         const VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *a = &supported_VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT;
+         const VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *b = (const void *) features;
          if (b->advancedBlendCoherentOperations && !a->advancedBlendCoherentOperations)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT", "advancedBlendCoherentOperations");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_FEATURES_EXT : {
-         VkPhysicalDeviceMultiDrawFeaturesEXT *a = &supported_VkPhysicalDeviceMultiDrawFeaturesEXT;
-         VkPhysicalDeviceMultiDrawFeaturesEXT *b = (VkPhysicalDeviceMultiDrawFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_FEATURES_EXT: {
+         const VkPhysicalDeviceMultiDrawFeaturesEXT *a = &supported_VkPhysicalDeviceMultiDrawFeaturesEXT;
+         const VkPhysicalDeviceMultiDrawFeaturesEXT *b = (const void *) features;
          if (b->multiDraw && !a->multiDraw)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMultiDrawFeaturesEXT", "multiDraw");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES : {
-         VkPhysicalDeviceInlineUniformBlockFeatures *a = &supported_VkPhysicalDeviceInlineUniformBlockFeatures;
-         VkPhysicalDeviceInlineUniformBlockFeatures *b = (VkPhysicalDeviceInlineUniformBlockFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES: {
+         const VkPhysicalDeviceInlineUniformBlockFeatures *a = &supported_VkPhysicalDeviceInlineUniformBlockFeatures;
+         const VkPhysicalDeviceInlineUniformBlockFeatures *b = (const void *) features;
          if (b->inlineUniformBlock && !a->inlineUniformBlock)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceInlineUniformBlockFeatures", "inlineUniformBlock");
@@ -931,25 +984,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceInlineUniformBlockFeatures", "descriptorBindingInlineUniformBlockUpdateAfterBind");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES : {
-         VkPhysicalDeviceMaintenance4Features *a = &supported_VkPhysicalDeviceMaintenance4Features;
-         VkPhysicalDeviceMaintenance4Features *b = (VkPhysicalDeviceMaintenance4Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES: {
+         const VkPhysicalDeviceMaintenance4Features *a = &supported_VkPhysicalDeviceMaintenance4Features;
+         const VkPhysicalDeviceMaintenance4Features *b = (const void *) features;
          if (b->maintenance4 && !a->maintenance4)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMaintenance4Features", "maintenance4");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES : {
-         VkPhysicalDeviceShaderDrawParametersFeatures *a = &supported_VkPhysicalDeviceShaderDrawParametersFeatures;
-         VkPhysicalDeviceShaderDrawParametersFeatures *b = (VkPhysicalDeviceShaderDrawParametersFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES: {
+         const VkPhysicalDeviceShaderDrawParametersFeatures *a = &supported_VkPhysicalDeviceShaderDrawParametersFeatures;
+         const VkPhysicalDeviceShaderDrawParametersFeatures *b = (const void *) features;
          if (b->shaderDrawParameters && !a->shaderDrawParameters)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderDrawParametersFeatures", "shaderDrawParameters");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES : {
-         VkPhysicalDeviceShaderFloat16Int8Features *a = &supported_VkPhysicalDeviceShaderFloat16Int8Features;
-         VkPhysicalDeviceShaderFloat16Int8Features *b = (VkPhysicalDeviceShaderFloat16Int8Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES: {
+         const VkPhysicalDeviceShaderFloat16Int8Features *a = &supported_VkPhysicalDeviceShaderFloat16Int8Features;
+         const VkPhysicalDeviceShaderFloat16Int8Features *b = (const void *) features;
          if (b->shaderFloat16 && !a->shaderFloat16)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderFloat16Int8Features", "shaderFloat16");
@@ -958,33 +1011,33 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShaderFloat16Int8Features", "shaderInt8");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES : {
-         VkPhysicalDeviceHostQueryResetFeatures *a = &supported_VkPhysicalDeviceHostQueryResetFeatures;
-         VkPhysicalDeviceHostQueryResetFeatures *b = (VkPhysicalDeviceHostQueryResetFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES: {
+         const VkPhysicalDeviceHostQueryResetFeatures *a = &supported_VkPhysicalDeviceHostQueryResetFeatures;
+         const VkPhysicalDeviceHostQueryResetFeatures *b = (const void *) features;
          if (b->hostQueryReset && !a->hostQueryReset)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceHostQueryResetFeatures", "hostQueryReset");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR : {
-         VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *a = &supported_VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR;
-         VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *b = (VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR: {
+         const VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *a = &supported_VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR;
+         const VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *b = (const void *) features;
          if (b->globalPriorityQuery && !a->globalPriorityQuery)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR", "globalPriorityQuery");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_MEMORY_REPORT_FEATURES_EXT : {
-         VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *a = &supported_VkPhysicalDeviceDeviceMemoryReportFeaturesEXT;
-         VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *b = (VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_MEMORY_REPORT_FEATURES_EXT: {
+         const VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *a = &supported_VkPhysicalDeviceDeviceMemoryReportFeaturesEXT;
+         const VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *b = (const void *) features;
          if (b->deviceMemoryReport && !a->deviceMemoryReport)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDeviceMemoryReportFeaturesEXT", "deviceMemoryReport");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES : {
-         VkPhysicalDeviceDescriptorIndexingFeatures *a = &supported_VkPhysicalDeviceDescriptorIndexingFeatures;
-         VkPhysicalDeviceDescriptorIndexingFeatures *b = (VkPhysicalDeviceDescriptorIndexingFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES: {
+         const VkPhysicalDeviceDescriptorIndexingFeatures *a = &supported_VkPhysicalDeviceDescriptorIndexingFeatures;
+         const VkPhysicalDeviceDescriptorIndexingFeatures *b = (const void *) features;
          if (b->shaderInputAttachmentArrayDynamicIndexing && !a->shaderInputAttachmentArrayDynamicIndexing)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDescriptorIndexingFeatures", "shaderInputAttachmentArrayDynamicIndexing");
@@ -1047,17 +1100,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceDescriptorIndexingFeatures", "runtimeDescriptorArray");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES : {
-         VkPhysicalDeviceTimelineSemaphoreFeatures *a = &supported_VkPhysicalDeviceTimelineSemaphoreFeatures;
-         VkPhysicalDeviceTimelineSemaphoreFeatures *b = (VkPhysicalDeviceTimelineSemaphoreFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES: {
+         const VkPhysicalDeviceTimelineSemaphoreFeatures *a = &supported_VkPhysicalDeviceTimelineSemaphoreFeatures;
+         const VkPhysicalDeviceTimelineSemaphoreFeatures *b = (const void *) features;
          if (b->timelineSemaphore && !a->timelineSemaphore)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceTimelineSemaphoreFeatures", "timelineSemaphore");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES : {
-         VkPhysicalDevice8BitStorageFeatures *a = &supported_VkPhysicalDevice8BitStorageFeatures;
-         VkPhysicalDevice8BitStorageFeatures *b = (VkPhysicalDevice8BitStorageFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES: {
+         const VkPhysicalDevice8BitStorageFeatures *a = &supported_VkPhysicalDevice8BitStorageFeatures;
+         const VkPhysicalDevice8BitStorageFeatures *b = (const void *) features;
          if (b->storageBuffer8BitAccess && !a->storageBuffer8BitAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevice8BitStorageFeatures", "storageBuffer8BitAccess");
@@ -1069,9 +1122,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDevice8BitStorageFeatures", "storagePushConstant8");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONDITIONAL_RENDERING_FEATURES_EXT : {
-         VkPhysicalDeviceConditionalRenderingFeaturesEXT *a = &supported_VkPhysicalDeviceConditionalRenderingFeaturesEXT;
-         VkPhysicalDeviceConditionalRenderingFeaturesEXT *b = (VkPhysicalDeviceConditionalRenderingFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONDITIONAL_RENDERING_FEATURES_EXT: {
+         const VkPhysicalDeviceConditionalRenderingFeaturesEXT *a = &supported_VkPhysicalDeviceConditionalRenderingFeaturesEXT;
+         const VkPhysicalDeviceConditionalRenderingFeaturesEXT *b = (const void *) features;
          if (b->conditionalRendering && !a->conditionalRendering)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceConditionalRenderingFeaturesEXT", "conditionalRendering");
@@ -1080,9 +1133,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceConditionalRenderingFeaturesEXT", "inheritedConditionalRendering");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES : {
-         VkPhysicalDeviceVulkanMemoryModelFeatures *a = &supported_VkPhysicalDeviceVulkanMemoryModelFeatures;
-         VkPhysicalDeviceVulkanMemoryModelFeatures *b = (VkPhysicalDeviceVulkanMemoryModelFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES: {
+         const VkPhysicalDeviceVulkanMemoryModelFeatures *a = &supported_VkPhysicalDeviceVulkanMemoryModelFeatures;
+         const VkPhysicalDeviceVulkanMemoryModelFeatures *b = (const void *) features;
          if (b->vulkanMemoryModel && !a->vulkanMemoryModel)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVulkanMemoryModelFeatures", "vulkanMemoryModel");
@@ -1094,9 +1147,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceVulkanMemoryModelFeatures", "vulkanMemoryModelAvailabilityVisibilityChains");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES : {
-         VkPhysicalDeviceShaderAtomicInt64Features *a = &supported_VkPhysicalDeviceShaderAtomicInt64Features;
-         VkPhysicalDeviceShaderAtomicInt64Features *b = (VkPhysicalDeviceShaderAtomicInt64Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES: {
+         const VkPhysicalDeviceShaderAtomicInt64Features *a = &supported_VkPhysicalDeviceShaderAtomicInt64Features;
+         const VkPhysicalDeviceShaderAtomicInt64Features *b = (const void *) features;
          if (b->shaderBufferInt64Atomics && !a->shaderBufferInt64Atomics)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderAtomicInt64Features", "shaderBufferInt64Atomics");
@@ -1105,9 +1158,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShaderAtomicInt64Features", "shaderSharedInt64Atomics");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT : {
-         VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *a = &supported_VkPhysicalDeviceShaderAtomicFloatFeaturesEXT;
-         VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *b = (VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *a = &supported_VkPhysicalDeviceShaderAtomicFloatFeaturesEXT;
+         const VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *b = (const void *) features;
          if (b->shaderBufferFloat32Atomics && !a->shaderBufferFloat32Atomics)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderAtomicFloatFeaturesEXT", "shaderBufferFloat32Atomics");
@@ -1146,9 +1199,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShaderAtomicFloatFeaturesEXT", "sparseImageFloat32AtomicAdd");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT : {
-         VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *a = &supported_VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT;
-         VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *b = (VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *a = &supported_VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT;
+         const VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *b = (const void *) features;
          if (b->shaderBufferFloat16Atomics && !a->shaderBufferFloat16Atomics)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT", "shaderBufferFloat16Atomics");
@@ -1187,9 +1240,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT", "sparseImageFloat32AtomicMinMax");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT : {
-         VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *a = &supported_VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT;
-         VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *b = (VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT: {
+         const VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *a = &supported_VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT;
+         const VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *b = (const void *) features;
          if (b->vertexAttributeInstanceRateDivisor && !a->vertexAttributeInstanceRateDivisor)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT", "vertexAttributeInstanceRateDivisor");
@@ -1198,17 +1251,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT", "vertexAttributeInstanceRateZeroDivisor");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT : {
-         VkPhysicalDeviceASTCDecodeFeaturesEXT *a = &supported_VkPhysicalDeviceASTCDecodeFeaturesEXT;
-         VkPhysicalDeviceASTCDecodeFeaturesEXT *b = (VkPhysicalDeviceASTCDecodeFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT: {
+         const VkPhysicalDeviceASTCDecodeFeaturesEXT *a = &supported_VkPhysicalDeviceASTCDecodeFeaturesEXT;
+         const VkPhysicalDeviceASTCDecodeFeaturesEXT *b = (const void *) features;
          if (b->decodeModeSharedExponent && !a->decodeModeSharedExponent)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceASTCDecodeFeaturesEXT", "decodeModeSharedExponent");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT : {
-         VkPhysicalDeviceTransformFeedbackFeaturesEXT *a = &supported_VkPhysicalDeviceTransformFeedbackFeaturesEXT;
-         VkPhysicalDeviceTransformFeedbackFeaturesEXT *b = (VkPhysicalDeviceTransformFeedbackFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT: {
+         const VkPhysicalDeviceTransformFeedbackFeaturesEXT *a = &supported_VkPhysicalDeviceTransformFeedbackFeaturesEXT;
+         const VkPhysicalDeviceTransformFeedbackFeaturesEXT *b = (const void *) features;
          if (b->transformFeedback && !a->transformFeedback)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceTransformFeedbackFeaturesEXT", "transformFeedback");
@@ -1217,33 +1270,33 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceTransformFeedbackFeaturesEXT", "geometryStreams");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_REPRESENTATIVE_FRAGMENT_TEST_FEATURES_NV : {
-         VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *a = &supported_VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV;
-         VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *b = (VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_REPRESENTATIVE_FRAGMENT_TEST_FEATURES_NV: {
+         const VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *a = &supported_VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV;
+         const VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *b = (const void *) features;
          if (b->representativeFragmentTest && !a->representativeFragmentTest)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV", "representativeFragmentTest");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV : {
-         VkPhysicalDeviceExclusiveScissorFeaturesNV *a = &supported_VkPhysicalDeviceExclusiveScissorFeaturesNV;
-         VkPhysicalDeviceExclusiveScissorFeaturesNV *b = (VkPhysicalDeviceExclusiveScissorFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV: {
+         const VkPhysicalDeviceExclusiveScissorFeaturesNV *a = &supported_VkPhysicalDeviceExclusiveScissorFeaturesNV;
+         const VkPhysicalDeviceExclusiveScissorFeaturesNV *b = (const void *) features;
          if (b->exclusiveScissor && !a->exclusiveScissor)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceExclusiveScissorFeaturesNV", "exclusiveScissor");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CORNER_SAMPLED_IMAGE_FEATURES_NV : {
-         VkPhysicalDeviceCornerSampledImageFeaturesNV *a = &supported_VkPhysicalDeviceCornerSampledImageFeaturesNV;
-         VkPhysicalDeviceCornerSampledImageFeaturesNV *b = (VkPhysicalDeviceCornerSampledImageFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CORNER_SAMPLED_IMAGE_FEATURES_NV: {
+         const VkPhysicalDeviceCornerSampledImageFeaturesNV *a = &supported_VkPhysicalDeviceCornerSampledImageFeaturesNV;
+         const VkPhysicalDeviceCornerSampledImageFeaturesNV *b = (const void *) features;
          if (b->cornerSampledImage && !a->cornerSampledImage)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceCornerSampledImageFeaturesNV", "cornerSampledImage");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV : {
-         VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *a = &supported_VkPhysicalDeviceComputeShaderDerivativesFeaturesNV;
-         VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *b = (VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV: {
+         const VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *a = &supported_VkPhysicalDeviceComputeShaderDerivativesFeaturesNV;
+         const VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *b = (const void *) features;
          if (b->computeDerivativeGroupQuads && !a->computeDerivativeGroupQuads)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceComputeShaderDerivativesFeaturesNV", "computeDerivativeGroupQuads");
@@ -1252,25 +1305,41 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceComputeShaderDerivativesFeaturesNV", "computeDerivativeGroupLinear");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_FOOTPRINT_FEATURES_NV : {
-         VkPhysicalDeviceShaderImageFootprintFeaturesNV *a = &supported_VkPhysicalDeviceShaderImageFootprintFeaturesNV;
-         VkPhysicalDeviceShaderImageFootprintFeaturesNV *b = (VkPhysicalDeviceShaderImageFootprintFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_FOOTPRINT_FEATURES_NV: {
+         const VkPhysicalDeviceShaderImageFootprintFeaturesNV *a = &supported_VkPhysicalDeviceShaderImageFootprintFeaturesNV;
+         const VkPhysicalDeviceShaderImageFootprintFeaturesNV *b = (const void *) features;
          if (b->imageFootprint && !a->imageFootprint)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderImageFootprintFeaturesNV", "imageFootprint");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEDICATED_ALLOCATION_IMAGE_ALIASING_FEATURES_NV : {
-         VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *a = &supported_VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV;
-         VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *b = (VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEDICATED_ALLOCATION_IMAGE_ALIASING_FEATURES_NV: {
+         const VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *a = &supported_VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV;
+         const VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *b = (const void *) features;
          if (b->dedicatedAllocationImageAliasing && !a->dedicatedAllocationImageAliasing)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV", "dedicatedAllocationImageAliasing");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADING_RATE_IMAGE_FEATURES_NV : {
-         VkPhysicalDeviceShadingRateImageFeaturesNV *a = &supported_VkPhysicalDeviceShadingRateImageFeaturesNV;
-         VkPhysicalDeviceShadingRateImageFeaturesNV *b = (VkPhysicalDeviceShadingRateImageFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COPY_MEMORY_INDIRECT_FEATURES_NV: {
+         const VkPhysicalDeviceCopyMemoryIndirectFeaturesNV *a = &supported_VkPhysicalDeviceCopyMemoryIndirectFeaturesNV;
+         const VkPhysicalDeviceCopyMemoryIndirectFeaturesNV *b = (const void *) features;
+         if (b->indirectCopy && !a->indirectCopy)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceCopyMemoryIndirectFeaturesNV", "indirectCopy");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_DECOMPRESSION_FEATURES_NV: {
+         const VkPhysicalDeviceMemoryDecompressionFeaturesNV *a = &supported_VkPhysicalDeviceMemoryDecompressionFeaturesNV;
+         const VkPhysicalDeviceMemoryDecompressionFeaturesNV *b = (const void *) features;
+         if (b->memoryDecompression && !a->memoryDecompression)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceMemoryDecompressionFeaturesNV", "memoryDecompression");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADING_RATE_IMAGE_FEATURES_NV: {
+         const VkPhysicalDeviceShadingRateImageFeaturesNV *a = &supported_VkPhysicalDeviceShadingRateImageFeaturesNV;
+         const VkPhysicalDeviceShadingRateImageFeaturesNV *b = (const void *) features;
          if (b->shadingRateImage && !a->shadingRateImage)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShadingRateImageFeaturesNV", "shadingRateImage");
@@ -1279,17 +1348,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShadingRateImageFeaturesNV", "shadingRateCoarseSampleOrder");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI : {
-         VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *a = &supported_VkPhysicalDeviceInvocationMaskFeaturesHUAWEI;
-         VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *b = (VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI: {
+         const VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *a = &supported_VkPhysicalDeviceInvocationMaskFeaturesHUAWEI;
+         const VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *b = (const void *) features;
          if (b->invocationMask && !a->invocationMask)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceInvocationMaskFeaturesHUAWEI", "invocationMask");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_NV : {
-         VkPhysicalDeviceMeshShaderFeaturesNV *a = &supported_VkPhysicalDeviceMeshShaderFeaturesNV;
-         VkPhysicalDeviceMeshShaderFeaturesNV *b = (VkPhysicalDeviceMeshShaderFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_NV: {
+         const VkPhysicalDeviceMeshShaderFeaturesNV *a = &supported_VkPhysicalDeviceMeshShaderFeaturesNV;
+         const VkPhysicalDeviceMeshShaderFeaturesNV *b = (const void *) features;
          if (b->taskShader && !a->taskShader)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMeshShaderFeaturesNV", "taskShader");
@@ -1298,9 +1367,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceMeshShaderFeaturesNV", "meshShader");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT : {
-         VkPhysicalDeviceMeshShaderFeaturesEXT *a = &supported_VkPhysicalDeviceMeshShaderFeaturesEXT;
-         VkPhysicalDeviceMeshShaderFeaturesEXT *b = (VkPhysicalDeviceMeshShaderFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT: {
+         const VkPhysicalDeviceMeshShaderFeaturesEXT *a = &supported_VkPhysicalDeviceMeshShaderFeaturesEXT;
+         const VkPhysicalDeviceMeshShaderFeaturesEXT *b = (const void *) features;
          if (b->taskShader && !a->taskShader)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMeshShaderFeaturesEXT", "taskShader");
@@ -1318,9 +1387,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceMeshShaderFeaturesEXT", "meshShaderQueries");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR : {
-         VkPhysicalDeviceAccelerationStructureFeaturesKHR *a = &supported_VkPhysicalDeviceAccelerationStructureFeaturesKHR;
-         VkPhysicalDeviceAccelerationStructureFeaturesKHR *b = (VkPhysicalDeviceAccelerationStructureFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR: {
+         const VkPhysicalDeviceAccelerationStructureFeaturesKHR *a = &supported_VkPhysicalDeviceAccelerationStructureFeaturesKHR;
+         const VkPhysicalDeviceAccelerationStructureFeaturesKHR *b = (const void *) features;
          if (b->accelerationStructure && !a->accelerationStructure)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceAccelerationStructureFeaturesKHR", "accelerationStructure");
@@ -1338,9 +1407,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceAccelerationStructureFeaturesKHR", "descriptorBindingAccelerationStructureUpdateAfterBind");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR : {
-         VkPhysicalDeviceRayTracingPipelineFeaturesKHR *a = &supported_VkPhysicalDeviceRayTracingPipelineFeaturesKHR;
-         VkPhysicalDeviceRayTracingPipelineFeaturesKHR *b = (VkPhysicalDeviceRayTracingPipelineFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR: {
+         const VkPhysicalDeviceRayTracingPipelineFeaturesKHR *a = &supported_VkPhysicalDeviceRayTracingPipelineFeaturesKHR;
+         const VkPhysicalDeviceRayTracingPipelineFeaturesKHR *b = (const void *) features;
          if (b->rayTracingPipeline && !a->rayTracingPipeline)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRayTracingPipelineFeaturesKHR", "rayTracingPipeline");
@@ -1358,17 +1427,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceRayTracingPipelineFeaturesKHR", "rayTraversalPrimitiveCulling");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR : {
-         VkPhysicalDeviceRayQueryFeaturesKHR *a = &supported_VkPhysicalDeviceRayQueryFeaturesKHR;
-         VkPhysicalDeviceRayQueryFeaturesKHR *b = (VkPhysicalDeviceRayQueryFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR: {
+         const VkPhysicalDeviceRayQueryFeaturesKHR *a = &supported_VkPhysicalDeviceRayQueryFeaturesKHR;
+         const VkPhysicalDeviceRayQueryFeaturesKHR *b = (const void *) features;
          if (b->rayQuery && !a->rayQuery)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRayQueryFeaturesKHR", "rayQuery");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR : {
-         VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *a = &supported_VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR;
-         VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *b = (VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR: {
+         const VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *a = &supported_VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR;
+         const VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *b = (const void *) features;
          if (b->rayTracingMaintenance1 && !a->rayTracingMaintenance1)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR", "rayTracingMaintenance1");
@@ -1377,9 +1446,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR", "rayTracingPipelineTraceRaysIndirect2");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT : {
-         VkPhysicalDeviceFragmentDensityMapFeaturesEXT *a = &supported_VkPhysicalDeviceFragmentDensityMapFeaturesEXT;
-         VkPhysicalDeviceFragmentDensityMapFeaturesEXT *b = (VkPhysicalDeviceFragmentDensityMapFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT: {
+         const VkPhysicalDeviceFragmentDensityMapFeaturesEXT *a = &supported_VkPhysicalDeviceFragmentDensityMapFeaturesEXT;
+         const VkPhysicalDeviceFragmentDensityMapFeaturesEXT *b = (const void *) features;
          if (b->fragmentDensityMap && !a->fragmentDensityMap)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentDensityMapFeaturesEXT", "fragmentDensityMap");
@@ -1391,65 +1460,65 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceFragmentDensityMapFeaturesEXT", "fragmentDensityMapNonSubsampledImages");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT : {
-         VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *a = &supported_VkPhysicalDeviceFragmentDensityMap2FeaturesEXT;
-         VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *b = (VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT: {
+         const VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *a = &supported_VkPhysicalDeviceFragmentDensityMap2FeaturesEXT;
+         const VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *b = (const void *) features;
          if (b->fragmentDensityMapDeferred && !a->fragmentDensityMapDeferred)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentDensityMap2FeaturesEXT", "fragmentDensityMapDeferred");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM : {
-         VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *a = &supported_VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM;
-         VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *b = (VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM: {
+         const VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *a = &supported_VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM;
+         const VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *b = (const void *) features;
          if (b->fragmentDensityMapOffset && !a->fragmentDensityMapOffset)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM", "fragmentDensityMapOffset");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES : {
-         VkPhysicalDeviceScalarBlockLayoutFeatures *a = &supported_VkPhysicalDeviceScalarBlockLayoutFeatures;
-         VkPhysicalDeviceScalarBlockLayoutFeatures *b = (VkPhysicalDeviceScalarBlockLayoutFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES: {
+         const VkPhysicalDeviceScalarBlockLayoutFeatures *a = &supported_VkPhysicalDeviceScalarBlockLayoutFeatures;
+         const VkPhysicalDeviceScalarBlockLayoutFeatures *b = (const void *) features;
          if (b->scalarBlockLayout && !a->scalarBlockLayout)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceScalarBlockLayoutFeatures", "scalarBlockLayout");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES : {
-         VkPhysicalDeviceUniformBufferStandardLayoutFeatures *a = &supported_VkPhysicalDeviceUniformBufferStandardLayoutFeatures;
-         VkPhysicalDeviceUniformBufferStandardLayoutFeatures *b = (VkPhysicalDeviceUniformBufferStandardLayoutFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES: {
+         const VkPhysicalDeviceUniformBufferStandardLayoutFeatures *a = &supported_VkPhysicalDeviceUniformBufferStandardLayoutFeatures;
+         const VkPhysicalDeviceUniformBufferStandardLayoutFeatures *b = (const void *) features;
          if (b->uniformBufferStandardLayout && !a->uniformBufferStandardLayout)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceUniformBufferStandardLayoutFeatures", "uniformBufferStandardLayout");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT : {
-         VkPhysicalDeviceDepthClipEnableFeaturesEXT *a = &supported_VkPhysicalDeviceDepthClipEnableFeaturesEXT;
-         VkPhysicalDeviceDepthClipEnableFeaturesEXT *b = (VkPhysicalDeviceDepthClipEnableFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT: {
+         const VkPhysicalDeviceDepthClipEnableFeaturesEXT *a = &supported_VkPhysicalDeviceDepthClipEnableFeaturesEXT;
+         const VkPhysicalDeviceDepthClipEnableFeaturesEXT *b = (const void *) features;
          if (b->depthClipEnable && !a->depthClipEnable)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDepthClipEnableFeaturesEXT", "depthClipEnable");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT : {
-         VkPhysicalDeviceMemoryPriorityFeaturesEXT *a = &supported_VkPhysicalDeviceMemoryPriorityFeaturesEXT;
-         VkPhysicalDeviceMemoryPriorityFeaturesEXT *b = (VkPhysicalDeviceMemoryPriorityFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT: {
+         const VkPhysicalDeviceMemoryPriorityFeaturesEXT *a = &supported_VkPhysicalDeviceMemoryPriorityFeaturesEXT;
+         const VkPhysicalDeviceMemoryPriorityFeaturesEXT *b = (const void *) features;
          if (b->memoryPriority && !a->memoryPriority)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMemoryPriorityFeaturesEXT", "memoryPriority");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT : {
-         VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *a = &supported_VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT;
-         VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *b = (VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT: {
+         const VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *a = &supported_VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT;
+         const VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *b = (const void *) features;
          if (b->pageableDeviceLocalMemory && !a->pageableDeviceLocalMemory)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT", "pageableDeviceLocalMemory");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES : {
-         VkPhysicalDeviceBufferDeviceAddressFeatures *a = &supported_VkPhysicalDeviceBufferDeviceAddressFeatures;
-         VkPhysicalDeviceBufferDeviceAddressFeatures *b = (VkPhysicalDeviceBufferDeviceAddressFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES: {
+         const VkPhysicalDeviceBufferDeviceAddressFeatures *a = &supported_VkPhysicalDeviceBufferDeviceAddressFeatures;
+         const VkPhysicalDeviceBufferDeviceAddressFeatures *b = (const void *) features;
          if (b->bufferDeviceAddress && !a->bufferDeviceAddress)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceBufferDeviceAddressFeatures", "bufferDeviceAddress");
@@ -1461,9 +1530,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceBufferDeviceAddressFeatures", "bufferDeviceAddressMultiDevice");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT : {
-         VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *a = &supported_VkPhysicalDeviceBufferDeviceAddressFeaturesEXT;
-         VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *b = (VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT: {
+         const VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *a = &supported_VkPhysicalDeviceBufferDeviceAddressFeaturesEXT;
+         const VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *b = (const void *) features;
          if (b->bufferDeviceAddress && !a->bufferDeviceAddress)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceBufferDeviceAddressFeaturesEXT", "bufferDeviceAddress");
@@ -1475,25 +1544,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceBufferDeviceAddressFeaturesEXT", "bufferDeviceAddressMultiDevice");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES : {
-         VkPhysicalDeviceImagelessFramebufferFeatures *a = &supported_VkPhysicalDeviceImagelessFramebufferFeatures;
-         VkPhysicalDeviceImagelessFramebufferFeatures *b = (VkPhysicalDeviceImagelessFramebufferFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES: {
+         const VkPhysicalDeviceImagelessFramebufferFeatures *a = &supported_VkPhysicalDeviceImagelessFramebufferFeatures;
+         const VkPhysicalDeviceImagelessFramebufferFeatures *b = (const void *) features;
          if (b->imagelessFramebuffer && !a->imagelessFramebuffer)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImagelessFramebufferFeatures", "imagelessFramebuffer");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES : {
-         VkPhysicalDeviceTextureCompressionASTCHDRFeatures *a = &supported_VkPhysicalDeviceTextureCompressionASTCHDRFeatures;
-         VkPhysicalDeviceTextureCompressionASTCHDRFeatures *b = (VkPhysicalDeviceTextureCompressionASTCHDRFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES: {
+         const VkPhysicalDeviceTextureCompressionASTCHDRFeatures *a = &supported_VkPhysicalDeviceTextureCompressionASTCHDRFeatures;
+         const VkPhysicalDeviceTextureCompressionASTCHDRFeatures *b = (const void *) features;
          if (b->textureCompressionASTC_HDR && !a->textureCompressionASTC_HDR)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceTextureCompressionASTCHDRFeatures", "textureCompressionASTC_HDR");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_NV : {
-         VkPhysicalDeviceCooperativeMatrixFeaturesNV *a = &supported_VkPhysicalDeviceCooperativeMatrixFeaturesNV;
-         VkPhysicalDeviceCooperativeMatrixFeaturesNV *b = (VkPhysicalDeviceCooperativeMatrixFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_NV: {
+         const VkPhysicalDeviceCooperativeMatrixFeaturesNV *a = &supported_VkPhysicalDeviceCooperativeMatrixFeaturesNV;
+         const VkPhysicalDeviceCooperativeMatrixFeaturesNV *b = (const void *) features;
          if (b->cooperativeMatrix && !a->cooperativeMatrix)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceCooperativeMatrixFeaturesNV", "cooperativeMatrix");
@@ -1502,25 +1571,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceCooperativeMatrixFeaturesNV", "cooperativeMatrixRobustBufferAccess");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_IMAGE_ARRAYS_FEATURES_EXT : {
-         VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *a = &supported_VkPhysicalDeviceYcbcrImageArraysFeaturesEXT;
-         VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *b = (VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_IMAGE_ARRAYS_FEATURES_EXT: {
+         const VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *a = &supported_VkPhysicalDeviceYcbcrImageArraysFeaturesEXT;
+         const VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *b = (const void *) features;
          if (b->ycbcrImageArrays && !a->ycbcrImageArrays)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceYcbcrImageArraysFeaturesEXT", "ycbcrImageArrays");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_BARRIER_FEATURES_NV : {
-         VkPhysicalDevicePresentBarrierFeaturesNV *a = &supported_VkPhysicalDevicePresentBarrierFeaturesNV;
-         VkPhysicalDevicePresentBarrierFeaturesNV *b = (VkPhysicalDevicePresentBarrierFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_BARRIER_FEATURES_NV: {
+         const VkPhysicalDevicePresentBarrierFeaturesNV *a = &supported_VkPhysicalDevicePresentBarrierFeaturesNV;
+         const VkPhysicalDevicePresentBarrierFeaturesNV *b = (const void *) features;
          if (b->presentBarrier && !a->presentBarrier)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePresentBarrierFeaturesNV", "presentBarrier");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR : {
-         VkPhysicalDevicePerformanceQueryFeaturesKHR *a = &supported_VkPhysicalDevicePerformanceQueryFeaturesKHR;
-         VkPhysicalDevicePerformanceQueryFeaturesKHR *b = (VkPhysicalDevicePerformanceQueryFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR: {
+         const VkPhysicalDevicePerformanceQueryFeaturesKHR *a = &supported_VkPhysicalDevicePerformanceQueryFeaturesKHR;
+         const VkPhysicalDevicePerformanceQueryFeaturesKHR *b = (const void *) features;
          if (b->performanceCounterQueryPools && !a->performanceCounterQueryPools)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePerformanceQueryFeaturesKHR", "performanceCounterQueryPools");
@@ -1529,25 +1598,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDevicePerformanceQueryFeaturesKHR", "performanceCounterMultipleQueryPools");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COVERAGE_REDUCTION_MODE_FEATURES_NV : {
-         VkPhysicalDeviceCoverageReductionModeFeaturesNV *a = &supported_VkPhysicalDeviceCoverageReductionModeFeaturesNV;
-         VkPhysicalDeviceCoverageReductionModeFeaturesNV *b = (VkPhysicalDeviceCoverageReductionModeFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COVERAGE_REDUCTION_MODE_FEATURES_NV: {
+         const VkPhysicalDeviceCoverageReductionModeFeaturesNV *a = &supported_VkPhysicalDeviceCoverageReductionModeFeaturesNV;
+         const VkPhysicalDeviceCoverageReductionModeFeaturesNV *b = (const void *) features;
          if (b->coverageReductionMode && !a->coverageReductionMode)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceCoverageReductionModeFeaturesNV", "coverageReductionMode");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL : {
-         VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *a = &supported_VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL;
-         VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *b = (VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL: {
+         const VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *a = &supported_VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL;
+         const VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *b = (const void *) features;
          if (b->shaderIntegerFunctions2 && !a->shaderIntegerFunctions2)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL", "shaderIntegerFunctions2");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR : {
-         VkPhysicalDeviceShaderClockFeaturesKHR *a = &supported_VkPhysicalDeviceShaderClockFeaturesKHR;
-         VkPhysicalDeviceShaderClockFeaturesKHR *b = (VkPhysicalDeviceShaderClockFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR: {
+         const VkPhysicalDeviceShaderClockFeaturesKHR *a = &supported_VkPhysicalDeviceShaderClockFeaturesKHR;
+         const VkPhysicalDeviceShaderClockFeaturesKHR *b = (const void *) features;
          if (b->shaderSubgroupClock && !a->shaderSubgroupClock)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderClockFeaturesKHR", "shaderSubgroupClock");
@@ -1556,25 +1625,25 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShaderClockFeaturesKHR", "shaderDeviceClock");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT : {
-         VkPhysicalDeviceIndexTypeUint8FeaturesEXT *a = &supported_VkPhysicalDeviceIndexTypeUint8FeaturesEXT;
-         VkPhysicalDeviceIndexTypeUint8FeaturesEXT *b = (VkPhysicalDeviceIndexTypeUint8FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT: {
+         const VkPhysicalDeviceIndexTypeUint8FeaturesEXT *a = &supported_VkPhysicalDeviceIndexTypeUint8FeaturesEXT;
+         const VkPhysicalDeviceIndexTypeUint8FeaturesEXT *b = (const void *) features;
          if (b->indexTypeUint8 && !a->indexTypeUint8)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceIndexTypeUint8FeaturesEXT", "indexTypeUint8");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_FEATURES_NV : {
-         VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *a = &supported_VkPhysicalDeviceShaderSMBuiltinsFeaturesNV;
-         VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *b = (VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_FEATURES_NV: {
+         const VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *a = &supported_VkPhysicalDeviceShaderSMBuiltinsFeaturesNV;
+         const VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *b = (const void *) features;
          if (b->shaderSMBuiltins && !a->shaderSMBuiltins)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderSMBuiltinsFeaturesNV", "shaderSMBuiltins");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT : {
-         VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *a = &supported_VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT;
-         VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *b = (VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT: {
+         const VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *a = &supported_VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT;
+         const VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *b = (const void *) features;
          if (b->fragmentShaderSampleInterlock && !a->fragmentShaderSampleInterlock)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT", "fragmentShaderSampleInterlock");
@@ -1586,17 +1655,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT", "fragmentShaderShadingRateInterlock");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES : {
-         VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *a = &supported_VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures;
-         VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *b = (VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES: {
+         const VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *a = &supported_VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures;
+         const VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *b = (const void *) features;
          if (b->separateDepthStencilLayouts && !a->separateDepthStencilLayouts)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures", "separateDepthStencilLayouts");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT : {
-         VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *a = &supported_VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT;
-         VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *b = (VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT: {
+         const VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *a = &supported_VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT;
+         const VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *b = (const void *) features;
          if (b->primitiveTopologyListRestart && !a->primitiveTopologyListRestart)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT", "primitiveTopologyListRestart");
@@ -1605,33 +1674,33 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT", "primitiveTopologyPatchListRestart");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR : {
-         VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *a = &supported_VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR;
-         VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *b = (VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR: {
+         const VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *a = &supported_VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR;
+         const VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *b = (const void *) features;
          if (b->pipelineExecutableInfo && !a->pipelineExecutableInfo)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR", "pipelineExecutableInfo");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES : {
-         VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *a = &supported_VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures;
-         VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *b = (VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES: {
+         const VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *a = &supported_VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures;
+         const VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *b = (const void *) features;
          if (b->shaderDemoteToHelperInvocation && !a->shaderDemoteToHelperInvocation)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures", "shaderDemoteToHelperInvocation");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT : {
-         VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *a = &supported_VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT;
-         VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *b = (VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT: {
+         const VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *a = &supported_VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT;
+         const VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *b = (const void *) features;
          if (b->texelBufferAlignment && !a->texelBufferAlignment)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT", "texelBufferAlignment");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES : {
-         VkPhysicalDeviceSubgroupSizeControlFeatures *a = &supported_VkPhysicalDeviceSubgroupSizeControlFeatures;
-         VkPhysicalDeviceSubgroupSizeControlFeatures *b = (VkPhysicalDeviceSubgroupSizeControlFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES: {
+         const VkPhysicalDeviceSubgroupSizeControlFeatures *a = &supported_VkPhysicalDeviceSubgroupSizeControlFeatures;
+         const VkPhysicalDeviceSubgroupSizeControlFeatures *b = (const void *) features;
          if (b->subgroupSizeControl && !a->subgroupSizeControl)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceSubgroupSizeControlFeatures", "subgroupSizeControl");
@@ -1640,9 +1709,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceSubgroupSizeControlFeatures", "computeFullSubgroups");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_FEATURES_EXT : {
-         VkPhysicalDeviceLineRasterizationFeaturesEXT *a = &supported_VkPhysicalDeviceLineRasterizationFeaturesEXT;
-         VkPhysicalDeviceLineRasterizationFeaturesEXT *b = (VkPhysicalDeviceLineRasterizationFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_FEATURES_EXT: {
+         const VkPhysicalDeviceLineRasterizationFeaturesEXT *a = &supported_VkPhysicalDeviceLineRasterizationFeaturesEXT;
+         const VkPhysicalDeviceLineRasterizationFeaturesEXT *b = (const void *) features;
          if (b->rectangularLines && !a->rectangularLines)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceLineRasterizationFeaturesEXT", "rectangularLines");
@@ -1663,17 +1732,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceLineRasterizationFeaturesEXT", "stippledSmoothLines");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES : {
-         VkPhysicalDevicePipelineCreationCacheControlFeatures *a = &supported_VkPhysicalDevicePipelineCreationCacheControlFeatures;
-         VkPhysicalDevicePipelineCreationCacheControlFeatures *b = (VkPhysicalDevicePipelineCreationCacheControlFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES: {
+         const VkPhysicalDevicePipelineCreationCacheControlFeatures *a = &supported_VkPhysicalDevicePipelineCreationCacheControlFeatures;
+         const VkPhysicalDevicePipelineCreationCacheControlFeatures *b = (const void *) features;
          if (b->pipelineCreationCacheControl && !a->pipelineCreationCacheControl)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePipelineCreationCacheControlFeatures", "pipelineCreationCacheControl");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES : {
-         VkPhysicalDeviceVulkan11Features *a = &supported_VkPhysicalDeviceVulkan11Features;
-         VkPhysicalDeviceVulkan11Features *b = (VkPhysicalDeviceVulkan11Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES: {
+         const VkPhysicalDeviceVulkan11Features *a = &supported_VkPhysicalDeviceVulkan11Features;
+         const VkPhysicalDeviceVulkan11Features *b = (const void *) features;
          if (b->storageBuffer16BitAccess && !a->storageBuffer16BitAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVulkan11Features", "storageBuffer16BitAccess");
@@ -1712,9 +1781,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceVulkan11Features", "shaderDrawParameters");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES : {
-         VkPhysicalDeviceVulkan12Features *a = &supported_VkPhysicalDeviceVulkan12Features;
-         VkPhysicalDeviceVulkan12Features *b = (VkPhysicalDeviceVulkan12Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES: {
+         const VkPhysicalDeviceVulkan12Features *a = &supported_VkPhysicalDeviceVulkan12Features;
+         const VkPhysicalDeviceVulkan12Features *b = (const void *) features;
          if (b->samplerMirrorClampToEdge && !a->samplerMirrorClampToEdge)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVulkan12Features", "samplerMirrorClampToEdge");
@@ -1858,9 +1927,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceVulkan12Features", "subgroupBroadcastDynamicId");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES : {
-         VkPhysicalDeviceVulkan13Features *a = &supported_VkPhysicalDeviceVulkan13Features;
-         VkPhysicalDeviceVulkan13Features *b = (VkPhysicalDeviceVulkan13Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES: {
+         const VkPhysicalDeviceVulkan13Features *a = &supported_VkPhysicalDeviceVulkan13Features;
+         const VkPhysicalDeviceVulkan13Features *b = (const void *) features;
          if (b->robustImageAccess && !a->robustImageAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVulkan13Features", "robustImageAccess");
@@ -1908,17 +1977,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceVulkan13Features", "maintenance4");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD : {
-         VkPhysicalDeviceCoherentMemoryFeaturesAMD *a = &supported_VkPhysicalDeviceCoherentMemoryFeaturesAMD;
-         VkPhysicalDeviceCoherentMemoryFeaturesAMD *b = (VkPhysicalDeviceCoherentMemoryFeaturesAMD *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD: {
+         const VkPhysicalDeviceCoherentMemoryFeaturesAMD *a = &supported_VkPhysicalDeviceCoherentMemoryFeaturesAMD;
+         const VkPhysicalDeviceCoherentMemoryFeaturesAMD *b = (const void *) features;
          if (b->deviceCoherentMemory && !a->deviceCoherentMemory)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceCoherentMemoryFeaturesAMD", "deviceCoherentMemory");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT : {
-         VkPhysicalDeviceCustomBorderColorFeaturesEXT *a = &supported_VkPhysicalDeviceCustomBorderColorFeaturesEXT;
-         VkPhysicalDeviceCustomBorderColorFeaturesEXT *b = (VkPhysicalDeviceCustomBorderColorFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT: {
+         const VkPhysicalDeviceCustomBorderColorFeaturesEXT *a = &supported_VkPhysicalDeviceCustomBorderColorFeaturesEXT;
+         const VkPhysicalDeviceCustomBorderColorFeaturesEXT *b = (const void *) features;
          if (b->customBorderColors && !a->customBorderColors)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceCustomBorderColorFeaturesEXT", "customBorderColors");
@@ -1927,9 +1996,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceCustomBorderColorFeaturesEXT", "customBorderColorWithoutFormat");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BORDER_COLOR_SWIZZLE_FEATURES_EXT : {
-         VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *a = &supported_VkPhysicalDeviceBorderColorSwizzleFeaturesEXT;
-         VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *b = (VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BORDER_COLOR_SWIZZLE_FEATURES_EXT: {
+         const VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *a = &supported_VkPhysicalDeviceBorderColorSwizzleFeaturesEXT;
+         const VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *b = (const void *) features;
          if (b->borderColorSwizzle && !a->borderColorSwizzle)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceBorderColorSwizzleFeaturesEXT", "borderColorSwizzle");
@@ -1938,17 +2007,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceBorderColorSwizzleFeaturesEXT", "borderColorSwizzleFromImage");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT : {
-         VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *a = &supported_VkPhysicalDeviceExtendedDynamicStateFeaturesEXT;
-         VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *b = (VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *a = &supported_VkPhysicalDeviceExtendedDynamicStateFeaturesEXT;
+         const VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *b = (const void *) features;
          if (b->extendedDynamicState && !a->extendedDynamicState)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceExtendedDynamicStateFeaturesEXT", "extendedDynamicState");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT : {
-         VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *a = &supported_VkPhysicalDeviceExtendedDynamicState2FeaturesEXT;
-         VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *b = (VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *a = &supported_VkPhysicalDeviceExtendedDynamicState2FeaturesEXT;
+         const VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *b = (const void *) features;
          if (b->extendedDynamicState2 && !a->extendedDynamicState2)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceExtendedDynamicState2FeaturesEXT", "extendedDynamicState2");
@@ -1960,9 +2029,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceExtendedDynamicState2FeaturesEXT", "extendedDynamicState2PatchControlPoints");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT : {
-         VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *a = &supported_VkPhysicalDeviceExtendedDynamicState3FeaturesEXT;
-         VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *b = (VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *a = &supported_VkPhysicalDeviceExtendedDynamicState3FeaturesEXT;
+         const VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *b = (const void *) features;
          if (b->extendedDynamicState3TessellationDomainOrigin && !a->extendedDynamicState3TessellationDomainOrigin)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceExtendedDynamicState3FeaturesEXT", "extendedDynamicState3TessellationDomainOrigin");
@@ -2058,33 +2127,33 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceExtendedDynamicState3FeaturesEXT", "extendedDynamicState3ShadingRateImageEnable");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DIAGNOSTICS_CONFIG_FEATURES_NV : {
-         VkPhysicalDeviceDiagnosticsConfigFeaturesNV *a = &supported_VkPhysicalDeviceDiagnosticsConfigFeaturesNV;
-         VkPhysicalDeviceDiagnosticsConfigFeaturesNV *b = (VkPhysicalDeviceDiagnosticsConfigFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DIAGNOSTICS_CONFIG_FEATURES_NV: {
+         const VkPhysicalDeviceDiagnosticsConfigFeaturesNV *a = &supported_VkPhysicalDeviceDiagnosticsConfigFeaturesNV;
+         const VkPhysicalDeviceDiagnosticsConfigFeaturesNV *b = (const void *) features;
          if (b->diagnosticsConfig && !a->diagnosticsConfig)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDiagnosticsConfigFeaturesNV", "diagnosticsConfig");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES : {
-         VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *a = &supported_VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures;
-         VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *b = (VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES: {
+         const VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *a = &supported_VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures;
+         const VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *b = (const void *) features;
          if (b->shaderZeroInitializeWorkgroupMemory && !a->shaderZeroInitializeWorkgroupMemory)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures", "shaderZeroInitializeWorkgroupMemory");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_UNIFORM_CONTROL_FLOW_FEATURES_KHR : {
-         VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *a = &supported_VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR;
-         VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *b = (VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_UNIFORM_CONTROL_FLOW_FEATURES_KHR: {
+         const VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *a = &supported_VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR;
+         const VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *b = (const void *) features;
          if (b->shaderSubgroupUniformControlFlow && !a->shaderSubgroupUniformControlFlow)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR", "shaderSubgroupUniformControlFlow");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT : {
-         VkPhysicalDeviceRobustness2FeaturesEXT *a = &supported_VkPhysicalDeviceRobustness2FeaturesEXT;
-         VkPhysicalDeviceRobustness2FeaturesEXT *b = (VkPhysicalDeviceRobustness2FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT: {
+         const VkPhysicalDeviceRobustness2FeaturesEXT *a = &supported_VkPhysicalDeviceRobustness2FeaturesEXT;
+         const VkPhysicalDeviceRobustness2FeaturesEXT *b = (const void *) features;
          if (b->robustBufferAccess2 && !a->robustBufferAccess2)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRobustness2FeaturesEXT", "robustBufferAccess2");
@@ -2096,17 +2165,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceRobustness2FeaturesEXT", "nullDescriptor");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES : {
-         VkPhysicalDeviceImageRobustnessFeatures *a = &supported_VkPhysicalDeviceImageRobustnessFeatures;
-         VkPhysicalDeviceImageRobustnessFeatures *b = (VkPhysicalDeviceImageRobustnessFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES: {
+         const VkPhysicalDeviceImageRobustnessFeatures *a = &supported_VkPhysicalDeviceImageRobustnessFeatures;
+         const VkPhysicalDeviceImageRobustnessFeatures *b = (const void *) features;
          if (b->robustImageAccess && !a->robustImageAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImageRobustnessFeatures", "robustImageAccess");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_WORKGROUP_MEMORY_EXPLICIT_LAYOUT_FEATURES_KHR : {
-         VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *a = &supported_VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR;
-         VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *b = (VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_WORKGROUP_MEMORY_EXPLICIT_LAYOUT_FEATURES_KHR: {
+         const VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *a = &supported_VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR;
+         const VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *b = (const void *) features;
          if (b->workgroupMemoryExplicitLayout && !a->workgroupMemoryExplicitLayout)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR", "workgroupMemoryExplicitLayout");
@@ -2121,9 +2190,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR", "workgroupMemoryExplicitLayout16BitAccess");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT : {
-         VkPhysicalDevice4444FormatsFeaturesEXT *a = &supported_VkPhysicalDevice4444FormatsFeaturesEXT;
-         VkPhysicalDevice4444FormatsFeaturesEXT *b = (VkPhysicalDevice4444FormatsFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT: {
+         const VkPhysicalDevice4444FormatsFeaturesEXT *a = &supported_VkPhysicalDevice4444FormatsFeaturesEXT;
+         const VkPhysicalDevice4444FormatsFeaturesEXT *b = (const void *) features;
          if (b->formatA4R4G4B4 && !a->formatA4R4G4B4)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevice4444FormatsFeaturesEXT", "formatA4R4G4B4");
@@ -2132,17 +2201,28 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDevice4444FormatsFeaturesEXT", "formatA4B4G4R4");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI : {
-         VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *a = &supported_VkPhysicalDeviceSubpassShadingFeaturesHUAWEI;
-         VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *b = (VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI: {
+         const VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *a = &supported_VkPhysicalDeviceSubpassShadingFeaturesHUAWEI;
+         const VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *b = (const void *) features;
          if (b->subpassShading && !a->subpassShading)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceSubpassShadingFeaturesHUAWEI", "subpassShading");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT : {
-         VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *a = &supported_VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT;
-         VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *b = (VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_CULLING_SHADER_FEATURES_HUAWEI: {
+         const VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI *a = &supported_VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI;
+         const VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI *b = (const void *) features;
+         if (b->clustercullingShader && !a->clustercullingShader)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI", "clustercullingShader");
+         if (b->multiviewClusterCullingShader && !a->multiviewClusterCullingShader)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI", "multiviewClusterCullingShader");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *a = &supported_VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT;
+         const VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *b = (const void *) features;
          if (b->shaderImageInt64Atomics && !a->shaderImageInt64Atomics)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT", "shaderImageInt64Atomics");
@@ -2151,9 +2231,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT", "sparseImageInt64Atomics");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR : {
-         VkPhysicalDeviceFragmentShadingRateFeaturesKHR *a = &supported_VkPhysicalDeviceFragmentShadingRateFeaturesKHR;
-         VkPhysicalDeviceFragmentShadingRateFeaturesKHR *b = (VkPhysicalDeviceFragmentShadingRateFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR: {
+         const VkPhysicalDeviceFragmentShadingRateFeaturesKHR *a = &supported_VkPhysicalDeviceFragmentShadingRateFeaturesKHR;
+         const VkPhysicalDeviceFragmentShadingRateFeaturesKHR *b = (const void *) features;
          if (b->pipelineFragmentShadingRate && !a->pipelineFragmentShadingRate)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShadingRateFeaturesKHR", "pipelineFragmentShadingRate");
@@ -2165,17 +2245,17 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShadingRateFeaturesKHR", "attachmentFragmentShadingRate");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES : {
-         VkPhysicalDeviceShaderTerminateInvocationFeatures *a = &supported_VkPhysicalDeviceShaderTerminateInvocationFeatures;
-         VkPhysicalDeviceShaderTerminateInvocationFeatures *b = (VkPhysicalDeviceShaderTerminateInvocationFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES: {
+         const VkPhysicalDeviceShaderTerminateInvocationFeatures *a = &supported_VkPhysicalDeviceShaderTerminateInvocationFeatures;
+         const VkPhysicalDeviceShaderTerminateInvocationFeatures *b = (const void *) features;
          if (b->shaderTerminateInvocation && !a->shaderTerminateInvocation)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderTerminateInvocationFeatures", "shaderTerminateInvocation");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV : {
-         VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *a = &supported_VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV;
-         VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *b = (VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV: {
+         const VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *a = &supported_VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV;
+         const VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *b = (const void *) features;
          if (b->fragmentShadingRateEnums && !a->fragmentShadingRateEnums)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV", "fragmentShadingRateEnums");
@@ -2187,9 +2267,9 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV", "noInvocationFragmentShadingRates");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT : {
-         VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *a = &supported_VkPhysicalDeviceImage2DViewOf3DFeaturesEXT;
-         VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *b = (VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT: {
+         const VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *a = &supported_VkPhysicalDeviceImage2DViewOf3DFeaturesEXT;
+         const VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *b = (const void *) features;
          if (b->image2DViewOf3D && !a->image2DViewOf3D)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImage2DViewOf3DFeaturesEXT", "image2DViewOf3D");
@@ -2198,57 +2278,65 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceImage2DViewOf3DFeaturesEXT", "sampler2DViewOf3D");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT : {
-         VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *a = &supported_VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT;
-         VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *b = (VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_SLICED_VIEW_OF_3D_FEATURES_EXT: {
+         const VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT *a = &supported_VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT;
+         const VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT *b = (const void *) features;
+         if (b->imageSlicedViewOf3D && !a->imageSlicedViewOf3D)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT", "imageSlicedViewOf3D");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT: {
+         const VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *a = &supported_VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT;
+         const VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *b = (const void *) features;
          if (b->mutableDescriptorType && !a->mutableDescriptorType)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT", "mutableDescriptorType");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_CONTROL_FEATURES_EXT : {
-         VkPhysicalDeviceDepthClipControlFeaturesEXT *a = &supported_VkPhysicalDeviceDepthClipControlFeaturesEXT;
-         VkPhysicalDeviceDepthClipControlFeaturesEXT *b = (VkPhysicalDeviceDepthClipControlFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_CONTROL_FEATURES_EXT: {
+         const VkPhysicalDeviceDepthClipControlFeaturesEXT *a = &supported_VkPhysicalDeviceDepthClipControlFeaturesEXT;
+         const VkPhysicalDeviceDepthClipControlFeaturesEXT *b = (const void *) features;
          if (b->depthClipControl && !a->depthClipControl)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDepthClipControlFeaturesEXT", "depthClipControl");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT : {
-         VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *a = &supported_VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT;
-         VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *b = (VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT: {
+         const VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *a = &supported_VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT;
+         const VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *b = (const void *) features;
          if (b->vertexInputDynamicState && !a->vertexInputDynamicState)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT", "vertexInputDynamicState");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV : {
-         VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *a = &supported_VkPhysicalDeviceExternalMemoryRDMAFeaturesNV;
-         VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *b = (VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV: {
+         const VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *a = &supported_VkPhysicalDeviceExternalMemoryRDMAFeaturesNV;
+         const VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *b = (const void *) features;
          if (b->externalMemoryRDMA && !a->externalMemoryRDMA)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceExternalMemoryRDMAFeaturesNV", "externalMemoryRDMA");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT : {
-         VkPhysicalDeviceColorWriteEnableFeaturesEXT *a = &supported_VkPhysicalDeviceColorWriteEnableFeaturesEXT;
-         VkPhysicalDeviceColorWriteEnableFeaturesEXT *b = (VkPhysicalDeviceColorWriteEnableFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT: {
+         const VkPhysicalDeviceColorWriteEnableFeaturesEXT *a = &supported_VkPhysicalDeviceColorWriteEnableFeaturesEXT;
+         const VkPhysicalDeviceColorWriteEnableFeaturesEXT *b = (const void *) features;
          if (b->colorWriteEnable && !a->colorWriteEnable)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceColorWriteEnableFeaturesEXT", "colorWriteEnable");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES : {
-         VkPhysicalDeviceSynchronization2Features *a = &supported_VkPhysicalDeviceSynchronization2Features;
-         VkPhysicalDeviceSynchronization2Features *b = (VkPhysicalDeviceSynchronization2Features *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES: {
+         const VkPhysicalDeviceSynchronization2Features *a = &supported_VkPhysicalDeviceSynchronization2Features;
+         const VkPhysicalDeviceSynchronization2Features *b = (const void *) features;
          if (b->synchronization2 && !a->synchronization2)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceSynchronization2Features", "synchronization2");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVES_GENERATED_QUERY_FEATURES_EXT : {
-         VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *a = &supported_VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT;
-         VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *b = (VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVES_GENERATED_QUERY_FEATURES_EXT: {
+         const VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *a = &supported_VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT;
+         const VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *b = (const void *) features;
          if (b->primitivesGeneratedQuery && !a->primitivesGeneratedQuery)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT", "primitivesGeneratedQuery");
@@ -2260,49 +2348,49 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT", "primitivesGeneratedQueryWithNonZeroStreams");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_DITHERING_FEATURES_EXT : {
-         VkPhysicalDeviceLegacyDitheringFeaturesEXT *a = &supported_VkPhysicalDeviceLegacyDitheringFeaturesEXT;
-         VkPhysicalDeviceLegacyDitheringFeaturesEXT *b = (VkPhysicalDeviceLegacyDitheringFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_DITHERING_FEATURES_EXT: {
+         const VkPhysicalDeviceLegacyDitheringFeaturesEXT *a = &supported_VkPhysicalDeviceLegacyDitheringFeaturesEXT;
+         const VkPhysicalDeviceLegacyDitheringFeaturesEXT *b = (const void *) features;
          if (b->legacyDithering && !a->legacyDithering)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceLegacyDitheringFeaturesEXT", "legacyDithering");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_FEATURES_EXT : {
-         VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *a = &supported_VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT;
-         VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *b = (VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_FEATURES_EXT: {
+         const VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *a = &supported_VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT;
+         const VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *b = (const void *) features;
          if (b->multisampledRenderToSingleSampled && !a->multisampledRenderToSingleSampled)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT", "multisampledRenderToSingleSampled");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROTECTED_ACCESS_FEATURES_EXT : {
-         VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *a = &supported_VkPhysicalDevicePipelineProtectedAccessFeaturesEXT;
-         VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *b = (VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROTECTED_ACCESS_FEATURES_EXT: {
+         const VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *a = &supported_VkPhysicalDevicePipelineProtectedAccessFeaturesEXT;
+         const VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *b = (const void *) features;
          if (b->pipelineProtectedAccess && !a->pipelineProtectedAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePipelineProtectedAccessFeaturesEXT", "pipelineProtectedAccess");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INHERITED_VIEWPORT_SCISSOR_FEATURES_NV : {
-         VkPhysicalDeviceInheritedViewportScissorFeaturesNV *a = &supported_VkPhysicalDeviceInheritedViewportScissorFeaturesNV;
-         VkPhysicalDeviceInheritedViewportScissorFeaturesNV *b = (VkPhysicalDeviceInheritedViewportScissorFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INHERITED_VIEWPORT_SCISSOR_FEATURES_NV: {
+         const VkPhysicalDeviceInheritedViewportScissorFeaturesNV *a = &supported_VkPhysicalDeviceInheritedViewportScissorFeaturesNV;
+         const VkPhysicalDeviceInheritedViewportScissorFeaturesNV *b = (const void *) features;
          if (b->inheritedViewportScissor2D && !a->inheritedViewportScissor2D)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceInheritedViewportScissorFeaturesNV", "inheritedViewportScissor2D");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT : {
-         VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *a = &supported_VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT;
-         VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *b = (VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT: {
+         const VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *a = &supported_VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT;
+         const VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *b = (const void *) features;
          if (b->ycbcr2plane444Formats && !a->ycbcr2plane444Formats)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT", "ycbcr2plane444Formats");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_FEATURES_EXT : {
-         VkPhysicalDeviceProvokingVertexFeaturesEXT *a = &supported_VkPhysicalDeviceProvokingVertexFeaturesEXT;
-         VkPhysicalDeviceProvokingVertexFeaturesEXT *b = (VkPhysicalDeviceProvokingVertexFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_FEATURES_EXT: {
+         const VkPhysicalDeviceProvokingVertexFeaturesEXT *a = &supported_VkPhysicalDeviceProvokingVertexFeaturesEXT;
+         const VkPhysicalDeviceProvokingVertexFeaturesEXT *b = (const void *) features;
          if (b->provokingVertexLast && !a->provokingVertexLast)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceProvokingVertexFeaturesEXT", "provokingVertexLast");
@@ -2311,25 +2399,42 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceProvokingVertexFeaturesEXT", "transformFeedbackPreservesProvokingVertex");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES : {
-         VkPhysicalDeviceShaderIntegerDotProductFeatures *a = &supported_VkPhysicalDeviceShaderIntegerDotProductFeatures;
-         VkPhysicalDeviceShaderIntegerDotProductFeatures *b = (VkPhysicalDeviceShaderIntegerDotProductFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT: {
+         const VkPhysicalDeviceDescriptorBufferFeaturesEXT *a = &supported_VkPhysicalDeviceDescriptorBufferFeaturesEXT;
+         const VkPhysicalDeviceDescriptorBufferFeaturesEXT *b = (const void *) features;
+         if (b->descriptorBuffer && !a->descriptorBuffer)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceDescriptorBufferFeaturesEXT", "descriptorBuffer");
+         if (b->descriptorBufferCaptureReplay && !a->descriptorBufferCaptureReplay)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceDescriptorBufferFeaturesEXT", "descriptorBufferCaptureReplay");
+         if (b->descriptorBufferImageLayoutIgnored && !a->descriptorBufferImageLayoutIgnored)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceDescriptorBufferFeaturesEXT", "descriptorBufferImageLayoutIgnored");
+         if (b->descriptorBufferPushDescriptors && !a->descriptorBufferPushDescriptors)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceDescriptorBufferFeaturesEXT", "descriptorBufferPushDescriptors");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES: {
+         const VkPhysicalDeviceShaderIntegerDotProductFeatures *a = &supported_VkPhysicalDeviceShaderIntegerDotProductFeatures;
+         const VkPhysicalDeviceShaderIntegerDotProductFeatures *b = (const void *) features;
          if (b->shaderIntegerDotProduct && !a->shaderIntegerDotProduct)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderIntegerDotProductFeatures", "shaderIntegerDotProduct");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR : {
-         VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *a = &supported_VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR;
-         VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *b = (VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR: {
+         const VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *a = &supported_VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR;
+         const VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *b = (const void *) features;
          if (b->fragmentShaderBarycentric && !a->fragmentShaderBarycentric)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR", "fragmentShaderBarycentric");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV : {
-         VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *a = &supported_VkPhysicalDeviceRayTracingMotionBlurFeaturesNV;
-         VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *b = (VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV: {
+         const VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *a = &supported_VkPhysicalDeviceRayTracingMotionBlurFeaturesNV;
+         const VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *b = (const void *) features;
          if (b->rayTracingMotionBlur && !a->rayTracingMotionBlur)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRayTracingMotionBlurFeaturesNV", "rayTracingMotionBlur");
@@ -2338,33 +2443,33 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceRayTracingMotionBlurFeaturesNV", "rayTracingMotionBlurPipelineTraceRaysIndirect");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT : {
-         VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *a = &supported_VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT;
-         VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *b = (VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT: {
+         const VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *a = &supported_VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT;
+         const VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *b = (const void *) features;
          if (b->formatRgba10x6WithoutYCbCrSampler && !a->formatRgba10x6WithoutYCbCrSampler)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT", "formatRgba10x6WithoutYCbCrSampler");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES : {
-         VkPhysicalDeviceDynamicRenderingFeatures *a = &supported_VkPhysicalDeviceDynamicRenderingFeatures;
-         VkPhysicalDeviceDynamicRenderingFeatures *b = (VkPhysicalDeviceDynamicRenderingFeatures *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES: {
+         const VkPhysicalDeviceDynamicRenderingFeatures *a = &supported_VkPhysicalDeviceDynamicRenderingFeatures;
+         const VkPhysicalDeviceDynamicRenderingFeatures *b = (const void *) features;
          if (b->dynamicRendering && !a->dynamicRendering)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDynamicRenderingFeatures", "dynamicRendering");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_VIEW_MIN_LOD_FEATURES_EXT : {
-         VkPhysicalDeviceImageViewMinLodFeaturesEXT *a = &supported_VkPhysicalDeviceImageViewMinLodFeaturesEXT;
-         VkPhysicalDeviceImageViewMinLodFeaturesEXT *b = (VkPhysicalDeviceImageViewMinLodFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_VIEW_MIN_LOD_FEATURES_EXT: {
+         const VkPhysicalDeviceImageViewMinLodFeaturesEXT *a = &supported_VkPhysicalDeviceImageViewMinLodFeaturesEXT;
+         const VkPhysicalDeviceImageViewMinLodFeaturesEXT *b = (const void *) features;
          if (b->minLod && !a->minLod)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImageViewMinLodFeaturesEXT", "minLod");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT : {
-         VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *a = &supported_VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT;
-         VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *b = (VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT: {
+         const VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *a = &supported_VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT;
+         const VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *b = (const void *) features;
          if (b->rasterizationOrderColorAttachmentAccess && !a->rasterizationOrderColorAttachmentAccess)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT", "rasterizationOrderColorAttachmentAccess");
@@ -2376,65 +2481,65 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT", "rasterizationOrderStencilAttachmentAccess");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV : {
-         VkPhysicalDeviceLinearColorAttachmentFeaturesNV *a = &supported_VkPhysicalDeviceLinearColorAttachmentFeaturesNV;
-         VkPhysicalDeviceLinearColorAttachmentFeaturesNV *b = (VkPhysicalDeviceLinearColorAttachmentFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV: {
+         const VkPhysicalDeviceLinearColorAttachmentFeaturesNV *a = &supported_VkPhysicalDeviceLinearColorAttachmentFeaturesNV;
+         const VkPhysicalDeviceLinearColorAttachmentFeaturesNV *b = (const void *) features;
          if (b->linearColorAttachment && !a->linearColorAttachment)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceLinearColorAttachmentFeaturesNV", "linearColorAttachment");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT : {
-         VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *a = &supported_VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT;
-         VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *b = (VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT: {
+         const VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *a = &supported_VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT;
+         const VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *b = (const void *) features;
          if (b->graphicsPipelineLibrary && !a->graphicsPipelineLibrary)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT", "graphicsPipelineLibrary");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_SET_HOST_MAPPING_FEATURES_VALVE : {
-         VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *a = &supported_VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE;
-         VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *b = (VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_SET_HOST_MAPPING_FEATURES_VALVE: {
+         const VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *a = &supported_VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE;
+         const VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *b = (const void *) features;
          if (b->descriptorSetHostMapping && !a->descriptorSetHostMapping)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE", "descriptorSetHostMapping");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT : {
-         VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *a = &supported_VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT;
-         VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *b = (VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *a = &supported_VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT;
+         const VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *b = (const void *) features;
          if (b->shaderModuleIdentifier && !a->shaderModuleIdentifier)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT", "shaderModuleIdentifier");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_FEATURES_EXT : {
-         VkPhysicalDeviceImageCompressionControlFeaturesEXT *a = &supported_VkPhysicalDeviceImageCompressionControlFeaturesEXT;
-         VkPhysicalDeviceImageCompressionControlFeaturesEXT *b = (VkPhysicalDeviceImageCompressionControlFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_FEATURES_EXT: {
+         const VkPhysicalDeviceImageCompressionControlFeaturesEXT *a = &supported_VkPhysicalDeviceImageCompressionControlFeaturesEXT;
+         const VkPhysicalDeviceImageCompressionControlFeaturesEXT *b = (const void *) features;
          if (b->imageCompressionControl && !a->imageCompressionControl)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImageCompressionControlFeaturesEXT", "imageCompressionControl");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT : {
-         VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *a = &supported_VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT;
-         VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *b = (VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT: {
+         const VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *a = &supported_VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT;
+         const VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *b = (const void *) features;
          if (b->imageCompressionControlSwapchain && !a->imageCompressionControlSwapchain)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT", "imageCompressionControlSwapchain");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_MERGE_FEEDBACK_FEATURES_EXT : {
-         VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *a = &supported_VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT;
-         VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *b = (VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_MERGE_FEEDBACK_FEATURES_EXT: {
+         const VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *a = &supported_VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT;
+         const VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *b = (const void *) features;
          if (b->subpassMergeFeedback && !a->subpassMergeFeedback)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT", "subpassMergeFeedback");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT : {
-         VkPhysicalDeviceOpacityMicromapFeaturesEXT *a = &supported_VkPhysicalDeviceOpacityMicromapFeaturesEXT;
-         VkPhysicalDeviceOpacityMicromapFeaturesEXT *b = (VkPhysicalDeviceOpacityMicromapFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT: {
+         const VkPhysicalDeviceOpacityMicromapFeaturesEXT *a = &supported_VkPhysicalDeviceOpacityMicromapFeaturesEXT;
+         const VkPhysicalDeviceOpacityMicromapFeaturesEXT *b = (const void *) features;
          if (b->micromap && !a->micromap)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceOpacityMicromapFeaturesEXT", "micromap");
@@ -2446,41 +2551,41 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceOpacityMicromapFeaturesEXT", "micromapHostCommands");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROPERTIES_FEATURES_EXT : {
-         VkPhysicalDevicePipelinePropertiesFeaturesEXT *a = &supported_VkPhysicalDevicePipelinePropertiesFeaturesEXT;
-         VkPhysicalDevicePipelinePropertiesFeaturesEXT *b = (VkPhysicalDevicePipelinePropertiesFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROPERTIES_FEATURES_EXT: {
+         const VkPhysicalDevicePipelinePropertiesFeaturesEXT *a = &supported_VkPhysicalDevicePipelinePropertiesFeaturesEXT;
+         const VkPhysicalDevicePipelinePropertiesFeaturesEXT *b = (const void *) features;
          if (b->pipelinePropertiesIdentifier && !a->pipelinePropertiesIdentifier)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePipelinePropertiesFeaturesEXT", "pipelinePropertiesIdentifier");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_EARLY_AND_LATE_FRAGMENT_TESTS_FEATURES_AMD : {
-         VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *a = &supported_VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD;
-         VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *b = (VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_EARLY_AND_LATE_FRAGMENT_TESTS_FEATURES_AMD: {
+         const VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *a = &supported_VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD;
+         const VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *b = (const void *) features;
          if (b->shaderEarlyAndLateFragmentTests && !a->shaderEarlyAndLateFragmentTests)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD", "shaderEarlyAndLateFragmentTests");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NON_SEAMLESS_CUBE_MAP_FEATURES_EXT : {
-         VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *a = &supported_VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT;
-         VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *b = (VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NON_SEAMLESS_CUBE_MAP_FEATURES_EXT: {
+         const VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *a = &supported_VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT;
+         const VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *b = (const void *) features;
          if (b->nonSeamlessCubeMap && !a->nonSeamlessCubeMap)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT", "nonSeamlessCubeMap");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT : {
-         VkPhysicalDevicePipelineRobustnessFeaturesEXT *a = &supported_VkPhysicalDevicePipelineRobustnessFeaturesEXT;
-         VkPhysicalDevicePipelineRobustnessFeaturesEXT *b = (VkPhysicalDevicePipelineRobustnessFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT: {
+         const VkPhysicalDevicePipelineRobustnessFeaturesEXT *a = &supported_VkPhysicalDevicePipelineRobustnessFeaturesEXT;
+         const VkPhysicalDevicePipelineRobustnessFeaturesEXT *b = (const void *) features;
          if (b->pipelineRobustness && !a->pipelineRobustness)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDevicePipelineRobustnessFeaturesEXT", "pipelineRobustness");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_FEATURES_QCOM : {
-         VkPhysicalDeviceImageProcessingFeaturesQCOM *a = &supported_VkPhysicalDeviceImageProcessingFeaturesQCOM;
-         VkPhysicalDeviceImageProcessingFeaturesQCOM *b = (VkPhysicalDeviceImageProcessingFeaturesQCOM *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_FEATURES_QCOM: {
+         const VkPhysicalDeviceImageProcessingFeaturesQCOM *a = &supported_VkPhysicalDeviceImageProcessingFeaturesQCOM;
+         const VkPhysicalDeviceImageProcessingFeaturesQCOM *b = (const void *) features;
          if (b->textureSampleWeighted && !a->textureSampleWeighted)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceImageProcessingFeaturesQCOM", "textureSampleWeighted");
@@ -2492,63 +2597,133 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
                              "%s.%s not supported", "VkPhysicalDeviceImageProcessingFeaturesQCOM", "textureBlockMatch");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TILE_PROPERTIES_FEATURES_QCOM : {
-         VkPhysicalDeviceTilePropertiesFeaturesQCOM *a = &supported_VkPhysicalDeviceTilePropertiesFeaturesQCOM;
-         VkPhysicalDeviceTilePropertiesFeaturesQCOM *b = (VkPhysicalDeviceTilePropertiesFeaturesQCOM *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TILE_PROPERTIES_FEATURES_QCOM: {
+         const VkPhysicalDeviceTilePropertiesFeaturesQCOM *a = &supported_VkPhysicalDeviceTilePropertiesFeaturesQCOM;
+         const VkPhysicalDeviceTilePropertiesFeaturesQCOM *b = (const void *) features;
          if (b->tileProperties && !a->tileProperties)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceTilePropertiesFeaturesQCOM", "tileProperties");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC : {
-         VkPhysicalDeviceAmigoProfilingFeaturesSEC *a = &supported_VkPhysicalDeviceAmigoProfilingFeaturesSEC;
-         VkPhysicalDeviceAmigoProfilingFeaturesSEC *b = (VkPhysicalDeviceAmigoProfilingFeaturesSEC *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC: {
+         const VkPhysicalDeviceAmigoProfilingFeaturesSEC *a = &supported_VkPhysicalDeviceAmigoProfilingFeaturesSEC;
+         const VkPhysicalDeviceAmigoProfilingFeaturesSEC *b = (const void *) features;
          if (b->amigoProfiling && !a->amigoProfiling)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceAmigoProfilingFeaturesSEC", "amigoProfiling");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT : {
-         VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *a = &supported_VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT;
-         VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *b = (VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT: {
+         const VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *a = &supported_VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT;
+         const VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *b = (const void *) features;
          if (b->attachmentFeedbackLoopLayout && !a->attachmentFeedbackLoopLayout)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT", "attachmentFeedbackLoopLayout");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_EXT : {
-         VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *a = &supported_VkPhysicalDeviceDepthClampZeroOneFeaturesEXT;
-         VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *b = (VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_EXT: {
+         const VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *a = &supported_VkPhysicalDeviceDepthClampZeroOneFeaturesEXT;
+         const VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *b = (const void *) features;
          if (b->depthClampZeroOne && !a->depthClampZeroOne)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceDepthClampZeroOneFeaturesEXT", "depthClampZeroOne");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ADDRESS_BINDING_REPORT_FEATURES_EXT : {
-         VkPhysicalDeviceAddressBindingReportFeaturesEXT *a = &supported_VkPhysicalDeviceAddressBindingReportFeaturesEXT;
-         VkPhysicalDeviceAddressBindingReportFeaturesEXT *b = (VkPhysicalDeviceAddressBindingReportFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ADDRESS_BINDING_REPORT_FEATURES_EXT: {
+         const VkPhysicalDeviceAddressBindingReportFeaturesEXT *a = &supported_VkPhysicalDeviceAddressBindingReportFeaturesEXT;
+         const VkPhysicalDeviceAddressBindingReportFeaturesEXT *b = (const void *) features;
          if (b->reportAddressBinding && !a->reportAddressBinding)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceAddressBindingReportFeaturesEXT", "reportAddressBinding");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_FEATURES_NV : {
-         VkPhysicalDeviceOpticalFlowFeaturesNV *a = &supported_VkPhysicalDeviceOpticalFlowFeaturesNV;
-         VkPhysicalDeviceOpticalFlowFeaturesNV *b = (VkPhysicalDeviceOpticalFlowFeaturesNV *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_FEATURES_NV: {
+         const VkPhysicalDeviceOpticalFlowFeaturesNV *a = &supported_VkPhysicalDeviceOpticalFlowFeaturesNV;
+         const VkPhysicalDeviceOpticalFlowFeaturesNV *b = (const void *) features;
          if (b->opticalFlow && !a->opticalFlow)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceOpticalFlowFeaturesNV", "opticalFlow");
          break;
       }
-      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT : {
-         VkPhysicalDeviceFaultFeaturesEXT *a = &supported_VkPhysicalDeviceFaultFeaturesEXT;
-         VkPhysicalDeviceFaultFeaturesEXT *b = (VkPhysicalDeviceFaultFeaturesEXT *) feat;
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT: {
+         const VkPhysicalDeviceFaultFeaturesEXT *a = &supported_VkPhysicalDeviceFaultFeaturesEXT;
+         const VkPhysicalDeviceFaultFeaturesEXT *b = (const void *) features;
          if (b->deviceFault && !a->deviceFault)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFaultFeaturesEXT", "deviceFault");
          if (b->deviceFaultVendorBinary && !a->deviceFaultVendorBinary)
             return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
                              "%s.%s not supported", "VkPhysicalDeviceFaultFeaturesEXT", "deviceFaultVendorBinary");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_LIBRARY_GROUP_HANDLES_FEATURES_EXT: {
+         const VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT *a = &supported_VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT;
+         const VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT *b = (const void *) features;
+         if (b->pipelineLibraryGroupHandles && !a->pipelineLibraryGroupHandles)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT", "pipelineLibraryGroupHandles");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_BUILTINS_FEATURES_ARM: {
+         const VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM *a = &supported_VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM;
+         const VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM *b = (const void *) features;
+         if (b->shaderCoreBuiltins && !a->shaderCoreBuiltins)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM", "shaderCoreBuiltins");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT: {
+         const VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT *a = &supported_VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT;
+         const VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT *b = (const void *) features;
+         if (b->swapchainMaintenance1 && !a->swapchainMaintenance1)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT", "swapchainMaintenance1");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_FEATURES_NV: {
+         const VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV *a = &supported_VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV;
+         const VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV *b = (const void *) features;
+         if (b->rayTracingInvocationReorder && !a->rayTracingInvocationReorder)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV", "rayTracingInvocationReorder");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_VIEWPORTS_FEATURES_QCOM: {
+         const VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM *a = &supported_VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM;
+         const VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM *b = (const void *) features;
+         if (b->multiviewPerViewViewports && !a->multiviewPerViewViewports)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM", "multiviewPerViewViewports");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_RENDER_AREAS_FEATURES_QCOM: {
+         const VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM *a = &supported_VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM;
+         const VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM *b = (const void *) features;
+         if (b->multiviewPerViewRenderAreas && !a->multiviewPerViewRenderAreas)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM", "multiviewPerViewRenderAreas");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderObjectFeaturesEXT *a = &supported_VkPhysicalDeviceShaderObjectFeaturesEXT;
+         const VkPhysicalDeviceShaderObjectFeaturesEXT *b = (const void *) features;
+         if (b->shaderObject && !a->shaderObject)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceShaderObjectFeaturesEXT", "shaderObject");
+         break;
+      }
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TILE_IMAGE_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderTileImageFeaturesEXT *a = &supported_VkPhysicalDeviceShaderTileImageFeaturesEXT;
+         const VkPhysicalDeviceShaderTileImageFeaturesEXT *b = (const void *) features;
+         if (b->shaderTileImageColorReadAccess && !a->shaderTileImageColorReadAccess)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceShaderTileImageFeaturesEXT", "shaderTileImageColorReadAccess");
+         if (b->shaderTileImageDepthReadAccess && !a->shaderTileImageDepthReadAccess)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceShaderTileImageFeaturesEXT", "shaderTileImageDepthReadAccess");
+         if (b->shaderTileImageStencilReadAccess && !a->shaderTileImageStencilReadAccess)
+            return vk_errorf(physical_device, VK_ERROR_FEATURE_NOT_PRESENT,
+                             "%s.%s not supported", "VkPhysicalDeviceShaderTileImageFeaturesEXT", "shaderTileImageStencilReadAccess");
          break;
       }
       default:
@@ -2558,3 +2733,2816 @@ vk_physical_device_check_device_features(struct vk_physical_device *physical_dev
    return VK_SUCCESS;
 }
 
+void
+vk_set_physical_device_features_1_0(struct vk_features *all_features,
+                                    const VkPhysicalDeviceFeatures *pFeatures)
+{
+   if (pFeatures->robustBufferAccess)
+      all_features->robustBufferAccess = true;
+   if (pFeatures->fullDrawIndexUint32)
+      all_features->fullDrawIndexUint32 = true;
+   if (pFeatures->imageCubeArray)
+      all_features->imageCubeArray = true;
+   if (pFeatures->independentBlend)
+      all_features->independentBlend = true;
+   if (pFeatures->geometryShader)
+      all_features->geometryShader = true;
+   if (pFeatures->tessellationShader)
+      all_features->tessellationShader = true;
+   if (pFeatures->sampleRateShading)
+      all_features->sampleRateShading = true;
+   if (pFeatures->dualSrcBlend)
+      all_features->dualSrcBlend = true;
+   if (pFeatures->logicOp)
+      all_features->logicOp = true;
+   if (pFeatures->multiDrawIndirect)
+      all_features->multiDrawIndirect = true;
+   if (pFeatures->drawIndirectFirstInstance)
+      all_features->drawIndirectFirstInstance = true;
+   if (pFeatures->depthClamp)
+      all_features->depthClamp = true;
+   if (pFeatures->depthBiasClamp)
+      all_features->depthBiasClamp = true;
+   if (pFeatures->fillModeNonSolid)
+      all_features->fillModeNonSolid = true;
+   if (pFeatures->depthBounds)
+      all_features->depthBounds = true;
+   if (pFeatures->wideLines)
+      all_features->wideLines = true;
+   if (pFeatures->largePoints)
+      all_features->largePoints = true;
+   if (pFeatures->alphaToOne)
+      all_features->alphaToOne = true;
+   if (pFeatures->multiViewport)
+      all_features->multiViewport = true;
+   if (pFeatures->samplerAnisotropy)
+      all_features->samplerAnisotropy = true;
+   if (pFeatures->textureCompressionETC2)
+      all_features->textureCompressionETC2 = true;
+   if (pFeatures->textureCompressionASTC_LDR)
+      all_features->textureCompressionASTC_LDR = true;
+   if (pFeatures->textureCompressionBC)
+      all_features->textureCompressionBC = true;
+   if (pFeatures->occlusionQueryPrecise)
+      all_features->occlusionQueryPrecise = true;
+   if (pFeatures->pipelineStatisticsQuery)
+      all_features->pipelineStatisticsQuery = true;
+   if (pFeatures->vertexPipelineStoresAndAtomics)
+      all_features->vertexPipelineStoresAndAtomics = true;
+   if (pFeatures->fragmentStoresAndAtomics)
+      all_features->fragmentStoresAndAtomics = true;
+   if (pFeatures->shaderTessellationAndGeometryPointSize)
+      all_features->shaderTessellationAndGeometryPointSize = true;
+   if (pFeatures->shaderImageGatherExtended)
+      all_features->shaderImageGatherExtended = true;
+   if (pFeatures->shaderStorageImageExtendedFormats)
+      all_features->shaderStorageImageExtendedFormats = true;
+   if (pFeatures->shaderStorageImageMultisample)
+      all_features->shaderStorageImageMultisample = true;
+   if (pFeatures->shaderStorageImageReadWithoutFormat)
+      all_features->shaderStorageImageReadWithoutFormat = true;
+   if (pFeatures->shaderStorageImageWriteWithoutFormat)
+      all_features->shaderStorageImageWriteWithoutFormat = true;
+   if (pFeatures->shaderUniformBufferArrayDynamicIndexing)
+      all_features->shaderUniformBufferArrayDynamicIndexing = true;
+   if (pFeatures->shaderSampledImageArrayDynamicIndexing)
+      all_features->shaderSampledImageArrayDynamicIndexing = true;
+   if (pFeatures->shaderStorageBufferArrayDynamicIndexing)
+      all_features->shaderStorageBufferArrayDynamicIndexing = true;
+   if (pFeatures->shaderStorageImageArrayDynamicIndexing)
+      all_features->shaderStorageImageArrayDynamicIndexing = true;
+   if (pFeatures->shaderClipDistance)
+      all_features->shaderClipDistance = true;
+   if (pFeatures->shaderCullDistance)
+      all_features->shaderCullDistance = true;
+   if (pFeatures->shaderFloat64)
+      all_features->shaderFloat64 = true;
+   if (pFeatures->shaderInt64)
+      all_features->shaderInt64 = true;
+   if (pFeatures->shaderInt16)
+      all_features->shaderInt16 = true;
+   if (pFeatures->shaderResourceResidency)
+      all_features->shaderResourceResidency = true;
+   if (pFeatures->shaderResourceMinLod)
+      all_features->shaderResourceMinLod = true;
+   if (pFeatures->sparseBinding)
+      all_features->sparseBinding = true;
+   if (pFeatures->sparseResidencyBuffer)
+      all_features->sparseResidencyBuffer = true;
+   if (pFeatures->sparseResidencyImage2D)
+      all_features->sparseResidencyImage2D = true;
+   if (pFeatures->sparseResidencyImage3D)
+      all_features->sparseResidencyImage3D = true;
+   if (pFeatures->sparseResidency2Samples)
+      all_features->sparseResidency2Samples = true;
+   if (pFeatures->sparseResidency4Samples)
+      all_features->sparseResidency4Samples = true;
+   if (pFeatures->sparseResidency8Samples)
+      all_features->sparseResidency8Samples = true;
+   if (pFeatures->sparseResidency16Samples)
+      all_features->sparseResidency16Samples = true;
+   if (pFeatures->sparseResidencyAliased)
+      all_features->sparseResidencyAliased = true;
+   if (pFeatures->variableMultisampleRate)
+      all_features->variableMultisampleRate = true;
+   if (pFeatures->inheritedQueries)
+      all_features->inheritedQueries = true;
+}
+
+void
+vk_set_physical_device_features(struct vk_features *all_features,
+                                const VkPhysicalDeviceFeatures2 *pFeatures)
+{
+   vk_foreach_struct_const(ext, pFeatures) {
+      switch (ext->sType) {
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2: {
+         const VkPhysicalDeviceFeatures2 *features = (const void *) ext;
+         vk_set_physical_device_features_1_0(all_features, &features->features);
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV: {
+         const VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *features = (const void *) ext;
+         if (features->deviceGeneratedCommands)
+            all_features->deviceGeneratedCommands = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES: {
+         const VkPhysicalDevicePrivateDataFeatures *features = (const void *) ext;
+         if (features->privateData)
+            all_features->privateData = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES: {
+         const VkPhysicalDeviceVariablePointersFeatures *features = (const void *) ext;
+         if (features->variablePointersStorageBuffer)
+            all_features->variablePointersStorageBuffer = true;
+         if (features->variablePointers)
+            all_features->variablePointers = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES: {
+         const VkPhysicalDeviceMultiviewFeatures *features = (const void *) ext;
+         if (features->multiview)
+            all_features->multiview = true;
+         if (features->multiviewGeometryShader)
+            all_features->multiviewGeometryShader = true;
+         if (features->multiviewTessellationShader)
+            all_features->multiviewTessellationShader = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR: {
+         const VkPhysicalDevicePresentIdFeaturesKHR *features = (const void *) ext;
+         if (features->presentId)
+            all_features->presentId = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR: {
+         const VkPhysicalDevicePresentWaitFeaturesKHR *features = (const void *) ext;
+         if (features->presentWait)
+            all_features->presentWait = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES: {
+         const VkPhysicalDevice16BitStorageFeatures *features = (const void *) ext;
+         if (features->storageBuffer16BitAccess)
+            all_features->storageBuffer16BitAccess = true;
+         if (features->uniformAndStorageBuffer16BitAccess)
+            all_features->uniformAndStorageBuffer16BitAccess = true;
+         if (features->storagePushConstant16)
+            all_features->storagePushConstant16 = true;
+         if (features->storageInputOutput16)
+            all_features->storageInputOutput16 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES: {
+         const VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *features = (const void *) ext;
+         if (features->shaderSubgroupExtendedTypes)
+            all_features->shaderSubgroupExtendedTypes = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES: {
+         const VkPhysicalDeviceSamplerYcbcrConversionFeatures *features = (const void *) ext;
+         if (features->samplerYcbcrConversion)
+            all_features->samplerYcbcrConversion = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES: {
+         const VkPhysicalDeviceProtectedMemoryFeatures *features = (const void *) ext;
+         if (features->protectedMemory)
+            all_features->protectedMemory = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_FEATURES_EXT: {
+         const VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *features = (const void *) ext;
+         if (features->advancedBlendCoherentOperations)
+            all_features->advancedBlendCoherentOperations = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_FEATURES_EXT: {
+         const VkPhysicalDeviceMultiDrawFeaturesEXT *features = (const void *) ext;
+         if (features->multiDraw)
+            all_features->multiDraw = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES: {
+         const VkPhysicalDeviceInlineUniformBlockFeatures *features = (const void *) ext;
+         if (features->inlineUniformBlock)
+            all_features->inlineUniformBlock = true;
+         if (features->descriptorBindingInlineUniformBlockUpdateAfterBind)
+            all_features->descriptorBindingInlineUniformBlockUpdateAfterBind = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES: {
+         const VkPhysicalDeviceMaintenance4Features *features = (const void *) ext;
+         if (features->maintenance4)
+            all_features->maintenance4 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES: {
+         const VkPhysicalDeviceShaderDrawParametersFeatures *features = (const void *) ext;
+         if (features->shaderDrawParameters)
+            all_features->shaderDrawParameters = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES: {
+         const VkPhysicalDeviceShaderFloat16Int8Features *features = (const void *) ext;
+         if (features->shaderFloat16)
+            all_features->shaderFloat16 = true;
+         if (features->shaderInt8)
+            all_features->shaderInt8 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES: {
+         const VkPhysicalDeviceHostQueryResetFeatures *features = (const void *) ext;
+         if (features->hostQueryReset)
+            all_features->hostQueryReset = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR: {
+         const VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *features = (const void *) ext;
+         if (features->globalPriorityQuery)
+            all_features->globalPriorityQuery = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_MEMORY_REPORT_FEATURES_EXT: {
+         const VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *features = (const void *) ext;
+         if (features->deviceMemoryReport)
+            all_features->deviceMemoryReport = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES: {
+         const VkPhysicalDeviceDescriptorIndexingFeatures *features = (const void *) ext;
+         if (features->shaderInputAttachmentArrayDynamicIndexing)
+            all_features->shaderInputAttachmentArrayDynamicIndexing = true;
+         if (features->shaderUniformTexelBufferArrayDynamicIndexing)
+            all_features->shaderUniformTexelBufferArrayDynamicIndexing = true;
+         if (features->shaderStorageTexelBufferArrayDynamicIndexing)
+            all_features->shaderStorageTexelBufferArrayDynamicIndexing = true;
+         if (features->shaderUniformBufferArrayNonUniformIndexing)
+            all_features->shaderUniformBufferArrayNonUniformIndexing = true;
+         if (features->shaderSampledImageArrayNonUniformIndexing)
+            all_features->shaderSampledImageArrayNonUniformIndexing = true;
+         if (features->shaderStorageBufferArrayNonUniformIndexing)
+            all_features->shaderStorageBufferArrayNonUniformIndexing = true;
+         if (features->shaderStorageImageArrayNonUniformIndexing)
+            all_features->shaderStorageImageArrayNonUniformIndexing = true;
+         if (features->shaderInputAttachmentArrayNonUniformIndexing)
+            all_features->shaderInputAttachmentArrayNonUniformIndexing = true;
+         if (features->shaderUniformTexelBufferArrayNonUniformIndexing)
+            all_features->shaderUniformTexelBufferArrayNonUniformIndexing = true;
+         if (features->shaderStorageTexelBufferArrayNonUniformIndexing)
+            all_features->shaderStorageTexelBufferArrayNonUniformIndexing = true;
+         if (features->descriptorBindingUniformBufferUpdateAfterBind)
+            all_features->descriptorBindingUniformBufferUpdateAfterBind = true;
+         if (features->descriptorBindingSampledImageUpdateAfterBind)
+            all_features->descriptorBindingSampledImageUpdateAfterBind = true;
+         if (features->descriptorBindingStorageImageUpdateAfterBind)
+            all_features->descriptorBindingStorageImageUpdateAfterBind = true;
+         if (features->descriptorBindingStorageBufferUpdateAfterBind)
+            all_features->descriptorBindingStorageBufferUpdateAfterBind = true;
+         if (features->descriptorBindingUniformTexelBufferUpdateAfterBind)
+            all_features->descriptorBindingUniformTexelBufferUpdateAfterBind = true;
+         if (features->descriptorBindingStorageTexelBufferUpdateAfterBind)
+            all_features->descriptorBindingStorageTexelBufferUpdateAfterBind = true;
+         if (features->descriptorBindingUpdateUnusedWhilePending)
+            all_features->descriptorBindingUpdateUnusedWhilePending = true;
+         if (features->descriptorBindingPartiallyBound)
+            all_features->descriptorBindingPartiallyBound = true;
+         if (features->descriptorBindingVariableDescriptorCount)
+            all_features->descriptorBindingVariableDescriptorCount = true;
+         if (features->runtimeDescriptorArray)
+            all_features->runtimeDescriptorArray = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES: {
+         const VkPhysicalDeviceTimelineSemaphoreFeatures *features = (const void *) ext;
+         if (features->timelineSemaphore)
+            all_features->timelineSemaphore = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES: {
+         const VkPhysicalDevice8BitStorageFeatures *features = (const void *) ext;
+         if (features->storageBuffer8BitAccess)
+            all_features->storageBuffer8BitAccess = true;
+         if (features->uniformAndStorageBuffer8BitAccess)
+            all_features->uniformAndStorageBuffer8BitAccess = true;
+         if (features->storagePushConstant8)
+            all_features->storagePushConstant8 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONDITIONAL_RENDERING_FEATURES_EXT: {
+         const VkPhysicalDeviceConditionalRenderingFeaturesEXT *features = (const void *) ext;
+         if (features->conditionalRendering)
+            all_features->conditionalRendering = true;
+         if (features->inheritedConditionalRendering)
+            all_features->inheritedConditionalRendering = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES: {
+         const VkPhysicalDeviceVulkanMemoryModelFeatures *features = (const void *) ext;
+         if (features->vulkanMemoryModel)
+            all_features->vulkanMemoryModel = true;
+         if (features->vulkanMemoryModelDeviceScope)
+            all_features->vulkanMemoryModelDeviceScope = true;
+         if (features->vulkanMemoryModelAvailabilityVisibilityChains)
+            all_features->vulkanMemoryModelAvailabilityVisibilityChains = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES: {
+         const VkPhysicalDeviceShaderAtomicInt64Features *features = (const void *) ext;
+         if (features->shaderBufferInt64Atomics)
+            all_features->shaderBufferInt64Atomics = true;
+         if (features->shaderSharedInt64Atomics)
+            all_features->shaderSharedInt64Atomics = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *features = (const void *) ext;
+         if (features->shaderBufferFloat32Atomics)
+            all_features->shaderBufferFloat32Atomics = true;
+         if (features->shaderBufferFloat32AtomicAdd)
+            all_features->shaderBufferFloat32AtomicAdd = true;
+         if (features->shaderBufferFloat64Atomics)
+            all_features->shaderBufferFloat64Atomics = true;
+         if (features->shaderBufferFloat64AtomicAdd)
+            all_features->shaderBufferFloat64AtomicAdd = true;
+         if (features->shaderSharedFloat32Atomics)
+            all_features->shaderSharedFloat32Atomics = true;
+         if (features->shaderSharedFloat32AtomicAdd)
+            all_features->shaderSharedFloat32AtomicAdd = true;
+         if (features->shaderSharedFloat64Atomics)
+            all_features->shaderSharedFloat64Atomics = true;
+         if (features->shaderSharedFloat64AtomicAdd)
+            all_features->shaderSharedFloat64AtomicAdd = true;
+         if (features->shaderImageFloat32Atomics)
+            all_features->shaderImageFloat32Atomics = true;
+         if (features->shaderImageFloat32AtomicAdd)
+            all_features->shaderImageFloat32AtomicAdd = true;
+         if (features->sparseImageFloat32Atomics)
+            all_features->sparseImageFloat32Atomics = true;
+         if (features->sparseImageFloat32AtomicAdd)
+            all_features->sparseImageFloat32AtomicAdd = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *features = (const void *) ext;
+         if (features->shaderBufferFloat16Atomics)
+            all_features->shaderBufferFloat16Atomics = true;
+         if (features->shaderBufferFloat16AtomicAdd)
+            all_features->shaderBufferFloat16AtomicAdd = true;
+         if (features->shaderBufferFloat16AtomicMinMax)
+            all_features->shaderBufferFloat16AtomicMinMax = true;
+         if (features->shaderBufferFloat32AtomicMinMax)
+            all_features->shaderBufferFloat32AtomicMinMax = true;
+         if (features->shaderBufferFloat64AtomicMinMax)
+            all_features->shaderBufferFloat64AtomicMinMax = true;
+         if (features->shaderSharedFloat16Atomics)
+            all_features->shaderSharedFloat16Atomics = true;
+         if (features->shaderSharedFloat16AtomicAdd)
+            all_features->shaderSharedFloat16AtomicAdd = true;
+         if (features->shaderSharedFloat16AtomicMinMax)
+            all_features->shaderSharedFloat16AtomicMinMax = true;
+         if (features->shaderSharedFloat32AtomicMinMax)
+            all_features->shaderSharedFloat32AtomicMinMax = true;
+         if (features->shaderSharedFloat64AtomicMinMax)
+            all_features->shaderSharedFloat64AtomicMinMax = true;
+         if (features->shaderImageFloat32AtomicMinMax)
+            all_features->shaderImageFloat32AtomicMinMax = true;
+         if (features->sparseImageFloat32AtomicMinMax)
+            all_features->sparseImageFloat32AtomicMinMax = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT: {
+         const VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *features = (const void *) ext;
+         if (features->vertexAttributeInstanceRateDivisor)
+            all_features->vertexAttributeInstanceRateDivisor = true;
+         if (features->vertexAttributeInstanceRateZeroDivisor)
+            all_features->vertexAttributeInstanceRateZeroDivisor = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT: {
+         const VkPhysicalDeviceASTCDecodeFeaturesEXT *features = (const void *) ext;
+         if (features->decodeModeSharedExponent)
+            all_features->decodeModeSharedExponent = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT: {
+         const VkPhysicalDeviceTransformFeedbackFeaturesEXT *features = (const void *) ext;
+         if (features->transformFeedback)
+            all_features->transformFeedback = true;
+         if (features->geometryStreams)
+            all_features->geometryStreams = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_REPRESENTATIVE_FRAGMENT_TEST_FEATURES_NV: {
+         const VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *features = (const void *) ext;
+         if (features->representativeFragmentTest)
+            all_features->representativeFragmentTest = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV: {
+         const VkPhysicalDeviceExclusiveScissorFeaturesNV *features = (const void *) ext;
+         if (features->exclusiveScissor)
+            all_features->exclusiveScissor = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CORNER_SAMPLED_IMAGE_FEATURES_NV: {
+         const VkPhysicalDeviceCornerSampledImageFeaturesNV *features = (const void *) ext;
+         if (features->cornerSampledImage)
+            all_features->cornerSampledImage = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV: {
+         const VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *features = (const void *) ext;
+         if (features->computeDerivativeGroupQuads)
+            all_features->computeDerivativeGroupQuads = true;
+         if (features->computeDerivativeGroupLinear)
+            all_features->computeDerivativeGroupLinear = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_FOOTPRINT_FEATURES_NV: {
+         const VkPhysicalDeviceShaderImageFootprintFeaturesNV *features = (const void *) ext;
+         if (features->imageFootprint)
+            all_features->imageFootprint = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEDICATED_ALLOCATION_IMAGE_ALIASING_FEATURES_NV: {
+         const VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *features = (const void *) ext;
+         if (features->dedicatedAllocationImageAliasing)
+            all_features->dedicatedAllocationImageAliasing = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COPY_MEMORY_INDIRECT_FEATURES_NV: {
+         const VkPhysicalDeviceCopyMemoryIndirectFeaturesNV *features = (const void *) ext;
+         if (features->indirectCopy)
+            all_features->indirectCopy = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_DECOMPRESSION_FEATURES_NV: {
+         const VkPhysicalDeviceMemoryDecompressionFeaturesNV *features = (const void *) ext;
+         if (features->memoryDecompression)
+            all_features->memoryDecompression = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADING_RATE_IMAGE_FEATURES_NV: {
+         const VkPhysicalDeviceShadingRateImageFeaturesNV *features = (const void *) ext;
+         if (features->shadingRateImage)
+            all_features->shadingRateImage = true;
+         if (features->shadingRateCoarseSampleOrder)
+            all_features->shadingRateCoarseSampleOrder = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI: {
+         const VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *features = (const void *) ext;
+         if (features->invocationMask)
+            all_features->invocationMask = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_NV: {
+         const VkPhysicalDeviceMeshShaderFeaturesNV *features = (const void *) ext;
+         if (features->taskShader)
+            all_features->taskShaderNV = true;
+         if (features->meshShader)
+            all_features->meshShaderNV = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT: {
+         const VkPhysicalDeviceMeshShaderFeaturesEXT *features = (const void *) ext;
+         if (features->taskShader)
+            all_features->taskShader = true;
+         if (features->meshShader)
+            all_features->meshShader = true;
+         if (features->multiviewMeshShader)
+            all_features->multiviewMeshShader = true;
+         if (features->primitiveFragmentShadingRateMeshShader)
+            all_features->primitiveFragmentShadingRateMeshShader = true;
+         if (features->meshShaderQueries)
+            all_features->meshShaderQueries = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR: {
+         const VkPhysicalDeviceAccelerationStructureFeaturesKHR *features = (const void *) ext;
+         if (features->accelerationStructure)
+            all_features->accelerationStructure = true;
+         if (features->accelerationStructureCaptureReplay)
+            all_features->accelerationStructureCaptureReplay = true;
+         if (features->accelerationStructureIndirectBuild)
+            all_features->accelerationStructureIndirectBuild = true;
+         if (features->accelerationStructureHostCommands)
+            all_features->accelerationStructureHostCommands = true;
+         if (features->descriptorBindingAccelerationStructureUpdateAfterBind)
+            all_features->descriptorBindingAccelerationStructureUpdateAfterBind = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR: {
+         const VkPhysicalDeviceRayTracingPipelineFeaturesKHR *features = (const void *) ext;
+         if (features->rayTracingPipeline)
+            all_features->rayTracingPipeline = true;
+         if (features->rayTracingPipelineShaderGroupHandleCaptureReplay)
+            all_features->rayTracingPipelineShaderGroupHandleCaptureReplay = true;
+         if (features->rayTracingPipelineShaderGroupHandleCaptureReplayMixed)
+            all_features->rayTracingPipelineShaderGroupHandleCaptureReplayMixed = true;
+         if (features->rayTracingPipelineTraceRaysIndirect)
+            all_features->rayTracingPipelineTraceRaysIndirect = true;
+         if (features->rayTraversalPrimitiveCulling)
+            all_features->rayTraversalPrimitiveCulling = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR: {
+         const VkPhysicalDeviceRayQueryFeaturesKHR *features = (const void *) ext;
+         if (features->rayQuery)
+            all_features->rayQuery = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR: {
+         const VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *features = (const void *) ext;
+         if (features->rayTracingMaintenance1)
+            all_features->rayTracingMaintenance1 = true;
+         if (features->rayTracingPipelineTraceRaysIndirect2)
+            all_features->rayTracingPipelineTraceRaysIndirect2 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT: {
+         const VkPhysicalDeviceFragmentDensityMapFeaturesEXT *features = (const void *) ext;
+         if (features->fragmentDensityMap)
+            all_features->fragmentDensityMap = true;
+         if (features->fragmentDensityMapDynamic)
+            all_features->fragmentDensityMapDynamic = true;
+         if (features->fragmentDensityMapNonSubsampledImages)
+            all_features->fragmentDensityMapNonSubsampledImages = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT: {
+         const VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *features = (const void *) ext;
+         if (features->fragmentDensityMapDeferred)
+            all_features->fragmentDensityMapDeferred = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM: {
+         const VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *features = (const void *) ext;
+         if (features->fragmentDensityMapOffset)
+            all_features->fragmentDensityMapOffset = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES: {
+         const VkPhysicalDeviceScalarBlockLayoutFeatures *features = (const void *) ext;
+         if (features->scalarBlockLayout)
+            all_features->scalarBlockLayout = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES: {
+         const VkPhysicalDeviceUniformBufferStandardLayoutFeatures *features = (const void *) ext;
+         if (features->uniformBufferStandardLayout)
+            all_features->uniformBufferStandardLayout = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT: {
+         const VkPhysicalDeviceDepthClipEnableFeaturesEXT *features = (const void *) ext;
+         if (features->depthClipEnable)
+            all_features->depthClipEnable = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT: {
+         const VkPhysicalDeviceMemoryPriorityFeaturesEXT *features = (const void *) ext;
+         if (features->memoryPriority)
+            all_features->memoryPriority = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT: {
+         const VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *features = (const void *) ext;
+         if (features->pageableDeviceLocalMemory)
+            all_features->pageableDeviceLocalMemory = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES: {
+         const VkPhysicalDeviceBufferDeviceAddressFeatures *features = (const void *) ext;
+         if (features->bufferDeviceAddress)
+            all_features->bufferDeviceAddress = true;
+         if (features->bufferDeviceAddressCaptureReplay)
+            all_features->bufferDeviceAddressCaptureReplay = true;
+         if (features->bufferDeviceAddressMultiDevice)
+            all_features->bufferDeviceAddressMultiDevice = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT: {
+         const VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *features = (const void *) ext;
+         if (features->bufferDeviceAddress)
+            all_features->bufferDeviceAddress = true;
+         if (features->bufferDeviceAddressCaptureReplay)
+            all_features->bufferDeviceAddressCaptureReplayEXT = true;
+         if (features->bufferDeviceAddressMultiDevice)
+            all_features->bufferDeviceAddressMultiDevice = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES: {
+         const VkPhysicalDeviceImagelessFramebufferFeatures *features = (const void *) ext;
+         if (features->imagelessFramebuffer)
+            all_features->imagelessFramebuffer = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES: {
+         const VkPhysicalDeviceTextureCompressionASTCHDRFeatures *features = (const void *) ext;
+         if (features->textureCompressionASTC_HDR)
+            all_features->textureCompressionASTC_HDR = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_NV: {
+         const VkPhysicalDeviceCooperativeMatrixFeaturesNV *features = (const void *) ext;
+         if (features->cooperativeMatrix)
+            all_features->cooperativeMatrix = true;
+         if (features->cooperativeMatrixRobustBufferAccess)
+            all_features->cooperativeMatrixRobustBufferAccess = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_IMAGE_ARRAYS_FEATURES_EXT: {
+         const VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *features = (const void *) ext;
+         if (features->ycbcrImageArrays)
+            all_features->ycbcrImageArrays = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_BARRIER_FEATURES_NV: {
+         const VkPhysicalDevicePresentBarrierFeaturesNV *features = (const void *) ext;
+         if (features->presentBarrier)
+            all_features->presentBarrier = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR: {
+         const VkPhysicalDevicePerformanceQueryFeaturesKHR *features = (const void *) ext;
+         if (features->performanceCounterQueryPools)
+            all_features->performanceCounterQueryPools = true;
+         if (features->performanceCounterMultipleQueryPools)
+            all_features->performanceCounterMultipleQueryPools = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COVERAGE_REDUCTION_MODE_FEATURES_NV: {
+         const VkPhysicalDeviceCoverageReductionModeFeaturesNV *features = (const void *) ext;
+         if (features->coverageReductionMode)
+            all_features->coverageReductionMode = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL: {
+         const VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *features = (const void *) ext;
+         if (features->shaderIntegerFunctions2)
+            all_features->shaderIntegerFunctions2 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR: {
+         const VkPhysicalDeviceShaderClockFeaturesKHR *features = (const void *) ext;
+         if (features->shaderSubgroupClock)
+            all_features->shaderSubgroupClock = true;
+         if (features->shaderDeviceClock)
+            all_features->shaderDeviceClock = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT: {
+         const VkPhysicalDeviceIndexTypeUint8FeaturesEXT *features = (const void *) ext;
+         if (features->indexTypeUint8)
+            all_features->indexTypeUint8 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_FEATURES_NV: {
+         const VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *features = (const void *) ext;
+         if (features->shaderSMBuiltins)
+            all_features->shaderSMBuiltins = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT: {
+         const VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *features = (const void *) ext;
+         if (features->fragmentShaderSampleInterlock)
+            all_features->fragmentShaderSampleInterlock = true;
+         if (features->fragmentShaderPixelInterlock)
+            all_features->fragmentShaderPixelInterlock = true;
+         if (features->fragmentShaderShadingRateInterlock)
+            all_features->fragmentShaderShadingRateInterlock = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES: {
+         const VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *features = (const void *) ext;
+         if (features->separateDepthStencilLayouts)
+            all_features->separateDepthStencilLayouts = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT: {
+         const VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *features = (const void *) ext;
+         if (features->primitiveTopologyListRestart)
+            all_features->primitiveTopologyListRestart = true;
+         if (features->primitiveTopologyPatchListRestart)
+            all_features->primitiveTopologyPatchListRestart = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR: {
+         const VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *features = (const void *) ext;
+         if (features->pipelineExecutableInfo)
+            all_features->pipelineExecutableInfo = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES: {
+         const VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *features = (const void *) ext;
+         if (features->shaderDemoteToHelperInvocation)
+            all_features->shaderDemoteToHelperInvocation = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT: {
+         const VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *features = (const void *) ext;
+         if (features->texelBufferAlignment)
+            all_features->texelBufferAlignment = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES: {
+         const VkPhysicalDeviceSubgroupSizeControlFeatures *features = (const void *) ext;
+         if (features->subgroupSizeControl)
+            all_features->subgroupSizeControl = true;
+         if (features->computeFullSubgroups)
+            all_features->computeFullSubgroups = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_FEATURES_EXT: {
+         const VkPhysicalDeviceLineRasterizationFeaturesEXT *features = (const void *) ext;
+         if (features->rectangularLines)
+            all_features->rectangularLines = true;
+         if (features->bresenhamLines)
+            all_features->bresenhamLines = true;
+         if (features->smoothLines)
+            all_features->smoothLines = true;
+         if (features->stippledRectangularLines)
+            all_features->stippledRectangularLines = true;
+         if (features->stippledBresenhamLines)
+            all_features->stippledBresenhamLines = true;
+         if (features->stippledSmoothLines)
+            all_features->stippledSmoothLines = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES: {
+         const VkPhysicalDevicePipelineCreationCacheControlFeatures *features = (const void *) ext;
+         if (features->pipelineCreationCacheControl)
+            all_features->pipelineCreationCacheControl = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES: {
+         const VkPhysicalDeviceVulkan11Features *features = (const void *) ext;
+         if (features->storageBuffer16BitAccess)
+            all_features->storageBuffer16BitAccess = true;
+         if (features->uniformAndStorageBuffer16BitAccess)
+            all_features->uniformAndStorageBuffer16BitAccess = true;
+         if (features->storagePushConstant16)
+            all_features->storagePushConstant16 = true;
+         if (features->storageInputOutput16)
+            all_features->storageInputOutput16 = true;
+         if (features->multiview)
+            all_features->multiview = true;
+         if (features->multiviewGeometryShader)
+            all_features->multiviewGeometryShader = true;
+         if (features->multiviewTessellationShader)
+            all_features->multiviewTessellationShader = true;
+         if (features->variablePointersStorageBuffer)
+            all_features->variablePointersStorageBuffer = true;
+         if (features->variablePointers)
+            all_features->variablePointers = true;
+         if (features->protectedMemory)
+            all_features->protectedMemory = true;
+         if (features->samplerYcbcrConversion)
+            all_features->samplerYcbcrConversion = true;
+         if (features->shaderDrawParameters)
+            all_features->shaderDrawParameters = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES: {
+         const VkPhysicalDeviceVulkan12Features *features = (const void *) ext;
+         if (features->samplerMirrorClampToEdge)
+            all_features->samplerMirrorClampToEdge = true;
+         if (features->drawIndirectCount)
+            all_features->drawIndirectCount = true;
+         if (features->storageBuffer8BitAccess)
+            all_features->storageBuffer8BitAccess = true;
+         if (features->uniformAndStorageBuffer8BitAccess)
+            all_features->uniformAndStorageBuffer8BitAccess = true;
+         if (features->storagePushConstant8)
+            all_features->storagePushConstant8 = true;
+         if (features->shaderBufferInt64Atomics)
+            all_features->shaderBufferInt64Atomics = true;
+         if (features->shaderSharedInt64Atomics)
+            all_features->shaderSharedInt64Atomics = true;
+         if (features->shaderFloat16)
+            all_features->shaderFloat16 = true;
+         if (features->shaderInt8)
+            all_features->shaderInt8 = true;
+         if (features->descriptorIndexing)
+            all_features->descriptorIndexing = true;
+         if (features->shaderInputAttachmentArrayDynamicIndexing)
+            all_features->shaderInputAttachmentArrayDynamicIndexing = true;
+         if (features->shaderUniformTexelBufferArrayDynamicIndexing)
+            all_features->shaderUniformTexelBufferArrayDynamicIndexing = true;
+         if (features->shaderStorageTexelBufferArrayDynamicIndexing)
+            all_features->shaderStorageTexelBufferArrayDynamicIndexing = true;
+         if (features->shaderUniformBufferArrayNonUniformIndexing)
+            all_features->shaderUniformBufferArrayNonUniformIndexing = true;
+         if (features->shaderSampledImageArrayNonUniformIndexing)
+            all_features->shaderSampledImageArrayNonUniformIndexing = true;
+         if (features->shaderStorageBufferArrayNonUniformIndexing)
+            all_features->shaderStorageBufferArrayNonUniformIndexing = true;
+         if (features->shaderStorageImageArrayNonUniformIndexing)
+            all_features->shaderStorageImageArrayNonUniformIndexing = true;
+         if (features->shaderInputAttachmentArrayNonUniformIndexing)
+            all_features->shaderInputAttachmentArrayNonUniformIndexing = true;
+         if (features->shaderUniformTexelBufferArrayNonUniformIndexing)
+            all_features->shaderUniformTexelBufferArrayNonUniformIndexing = true;
+         if (features->shaderStorageTexelBufferArrayNonUniformIndexing)
+            all_features->shaderStorageTexelBufferArrayNonUniformIndexing = true;
+         if (features->descriptorBindingUniformBufferUpdateAfterBind)
+            all_features->descriptorBindingUniformBufferUpdateAfterBind = true;
+         if (features->descriptorBindingSampledImageUpdateAfterBind)
+            all_features->descriptorBindingSampledImageUpdateAfterBind = true;
+         if (features->descriptorBindingStorageImageUpdateAfterBind)
+            all_features->descriptorBindingStorageImageUpdateAfterBind = true;
+         if (features->descriptorBindingStorageBufferUpdateAfterBind)
+            all_features->descriptorBindingStorageBufferUpdateAfterBind = true;
+         if (features->descriptorBindingUniformTexelBufferUpdateAfterBind)
+            all_features->descriptorBindingUniformTexelBufferUpdateAfterBind = true;
+         if (features->descriptorBindingStorageTexelBufferUpdateAfterBind)
+            all_features->descriptorBindingStorageTexelBufferUpdateAfterBind = true;
+         if (features->descriptorBindingUpdateUnusedWhilePending)
+            all_features->descriptorBindingUpdateUnusedWhilePending = true;
+         if (features->descriptorBindingPartiallyBound)
+            all_features->descriptorBindingPartiallyBound = true;
+         if (features->descriptorBindingVariableDescriptorCount)
+            all_features->descriptorBindingVariableDescriptorCount = true;
+         if (features->runtimeDescriptorArray)
+            all_features->runtimeDescriptorArray = true;
+         if (features->samplerFilterMinmax)
+            all_features->samplerFilterMinmax = true;
+         if (features->scalarBlockLayout)
+            all_features->scalarBlockLayout = true;
+         if (features->imagelessFramebuffer)
+            all_features->imagelessFramebuffer = true;
+         if (features->uniformBufferStandardLayout)
+            all_features->uniformBufferStandardLayout = true;
+         if (features->shaderSubgroupExtendedTypes)
+            all_features->shaderSubgroupExtendedTypes = true;
+         if (features->separateDepthStencilLayouts)
+            all_features->separateDepthStencilLayouts = true;
+         if (features->hostQueryReset)
+            all_features->hostQueryReset = true;
+         if (features->timelineSemaphore)
+            all_features->timelineSemaphore = true;
+         if (features->bufferDeviceAddress)
+            all_features->bufferDeviceAddress = true;
+         if (features->bufferDeviceAddressCaptureReplay)
+            all_features->bufferDeviceAddressCaptureReplay = true;
+         if (features->bufferDeviceAddressMultiDevice)
+            all_features->bufferDeviceAddressMultiDevice = true;
+         if (features->vulkanMemoryModel)
+            all_features->vulkanMemoryModel = true;
+         if (features->vulkanMemoryModelDeviceScope)
+            all_features->vulkanMemoryModelDeviceScope = true;
+         if (features->vulkanMemoryModelAvailabilityVisibilityChains)
+            all_features->vulkanMemoryModelAvailabilityVisibilityChains = true;
+         if (features->shaderOutputViewportIndex)
+            all_features->shaderOutputViewportIndex = true;
+         if (features->shaderOutputLayer)
+            all_features->shaderOutputLayer = true;
+         if (features->subgroupBroadcastDynamicId)
+            all_features->subgroupBroadcastDynamicId = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES: {
+         const VkPhysicalDeviceVulkan13Features *features = (const void *) ext;
+         if (features->robustImageAccess)
+            all_features->robustImageAccess = true;
+         if (features->inlineUniformBlock)
+            all_features->inlineUniformBlock = true;
+         if (features->descriptorBindingInlineUniformBlockUpdateAfterBind)
+            all_features->descriptorBindingInlineUniformBlockUpdateAfterBind = true;
+         if (features->pipelineCreationCacheControl)
+            all_features->pipelineCreationCacheControl = true;
+         if (features->privateData)
+            all_features->privateData = true;
+         if (features->shaderDemoteToHelperInvocation)
+            all_features->shaderDemoteToHelperInvocation = true;
+         if (features->shaderTerminateInvocation)
+            all_features->shaderTerminateInvocation = true;
+         if (features->subgroupSizeControl)
+            all_features->subgroupSizeControl = true;
+         if (features->computeFullSubgroups)
+            all_features->computeFullSubgroups = true;
+         if (features->synchronization2)
+            all_features->synchronization2 = true;
+         if (features->textureCompressionASTC_HDR)
+            all_features->textureCompressionASTC_HDR = true;
+         if (features->shaderZeroInitializeWorkgroupMemory)
+            all_features->shaderZeroInitializeWorkgroupMemory = true;
+         if (features->dynamicRendering)
+            all_features->dynamicRendering = true;
+         if (features->shaderIntegerDotProduct)
+            all_features->shaderIntegerDotProduct = true;
+         if (features->maintenance4)
+            all_features->maintenance4 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD: {
+         const VkPhysicalDeviceCoherentMemoryFeaturesAMD *features = (const void *) ext;
+         if (features->deviceCoherentMemory)
+            all_features->deviceCoherentMemory = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT: {
+         const VkPhysicalDeviceCustomBorderColorFeaturesEXT *features = (const void *) ext;
+         if (features->customBorderColors)
+            all_features->customBorderColors = true;
+         if (features->customBorderColorWithoutFormat)
+            all_features->customBorderColorWithoutFormat = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BORDER_COLOR_SWIZZLE_FEATURES_EXT: {
+         const VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *features = (const void *) ext;
+         if (features->borderColorSwizzle)
+            all_features->borderColorSwizzle = true;
+         if (features->borderColorSwizzleFromImage)
+            all_features->borderColorSwizzleFromImage = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *features = (const void *) ext;
+         if (features->extendedDynamicState)
+            all_features->extendedDynamicState = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *features = (const void *) ext;
+         if (features->extendedDynamicState2)
+            all_features->extendedDynamicState2 = true;
+         if (features->extendedDynamicState2LogicOp)
+            all_features->extendedDynamicState2LogicOp = true;
+         if (features->extendedDynamicState2PatchControlPoints)
+            all_features->extendedDynamicState2PatchControlPoints = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT: {
+         const VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *features = (const void *) ext;
+         if (features->extendedDynamicState3TessellationDomainOrigin)
+            all_features->extendedDynamicState3TessellationDomainOrigin = true;
+         if (features->extendedDynamicState3DepthClampEnable)
+            all_features->extendedDynamicState3DepthClampEnable = true;
+         if (features->extendedDynamicState3PolygonMode)
+            all_features->extendedDynamicState3PolygonMode = true;
+         if (features->extendedDynamicState3RasterizationSamples)
+            all_features->extendedDynamicState3RasterizationSamples = true;
+         if (features->extendedDynamicState3SampleMask)
+            all_features->extendedDynamicState3SampleMask = true;
+         if (features->extendedDynamicState3AlphaToCoverageEnable)
+            all_features->extendedDynamicState3AlphaToCoverageEnable = true;
+         if (features->extendedDynamicState3AlphaToOneEnable)
+            all_features->extendedDynamicState3AlphaToOneEnable = true;
+         if (features->extendedDynamicState3LogicOpEnable)
+            all_features->extendedDynamicState3LogicOpEnable = true;
+         if (features->extendedDynamicState3ColorBlendEnable)
+            all_features->extendedDynamicState3ColorBlendEnable = true;
+         if (features->extendedDynamicState3ColorBlendEquation)
+            all_features->extendedDynamicState3ColorBlendEquation = true;
+         if (features->extendedDynamicState3ColorWriteMask)
+            all_features->extendedDynamicState3ColorWriteMask = true;
+         if (features->extendedDynamicState3RasterizationStream)
+            all_features->extendedDynamicState3RasterizationStream = true;
+         if (features->extendedDynamicState3ConservativeRasterizationMode)
+            all_features->extendedDynamicState3ConservativeRasterizationMode = true;
+         if (features->extendedDynamicState3ExtraPrimitiveOverestimationSize)
+            all_features->extendedDynamicState3ExtraPrimitiveOverestimationSize = true;
+         if (features->extendedDynamicState3DepthClipEnable)
+            all_features->extendedDynamicState3DepthClipEnable = true;
+         if (features->extendedDynamicState3SampleLocationsEnable)
+            all_features->extendedDynamicState3SampleLocationsEnable = true;
+         if (features->extendedDynamicState3ColorBlendAdvanced)
+            all_features->extendedDynamicState3ColorBlendAdvanced = true;
+         if (features->extendedDynamicState3ProvokingVertexMode)
+            all_features->extendedDynamicState3ProvokingVertexMode = true;
+         if (features->extendedDynamicState3LineRasterizationMode)
+            all_features->extendedDynamicState3LineRasterizationMode = true;
+         if (features->extendedDynamicState3LineStippleEnable)
+            all_features->extendedDynamicState3LineStippleEnable = true;
+         if (features->extendedDynamicState3DepthClipNegativeOneToOne)
+            all_features->extendedDynamicState3DepthClipNegativeOneToOne = true;
+         if (features->extendedDynamicState3ViewportWScalingEnable)
+            all_features->extendedDynamicState3ViewportWScalingEnable = true;
+         if (features->extendedDynamicState3ViewportSwizzle)
+            all_features->extendedDynamicState3ViewportSwizzle = true;
+         if (features->extendedDynamicState3CoverageToColorEnable)
+            all_features->extendedDynamicState3CoverageToColorEnable = true;
+         if (features->extendedDynamicState3CoverageToColorLocation)
+            all_features->extendedDynamicState3CoverageToColorLocation = true;
+         if (features->extendedDynamicState3CoverageModulationMode)
+            all_features->extendedDynamicState3CoverageModulationMode = true;
+         if (features->extendedDynamicState3CoverageModulationTableEnable)
+            all_features->extendedDynamicState3CoverageModulationTableEnable = true;
+         if (features->extendedDynamicState3CoverageModulationTable)
+            all_features->extendedDynamicState3CoverageModulationTable = true;
+         if (features->extendedDynamicState3CoverageReductionMode)
+            all_features->extendedDynamicState3CoverageReductionMode = true;
+         if (features->extendedDynamicState3RepresentativeFragmentTestEnable)
+            all_features->extendedDynamicState3RepresentativeFragmentTestEnable = true;
+         if (features->extendedDynamicState3ShadingRateImageEnable)
+            all_features->extendedDynamicState3ShadingRateImageEnable = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DIAGNOSTICS_CONFIG_FEATURES_NV: {
+         const VkPhysicalDeviceDiagnosticsConfigFeaturesNV *features = (const void *) ext;
+         if (features->diagnosticsConfig)
+            all_features->diagnosticsConfig = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES: {
+         const VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *features = (const void *) ext;
+         if (features->shaderZeroInitializeWorkgroupMemory)
+            all_features->shaderZeroInitializeWorkgroupMemory = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_UNIFORM_CONTROL_FLOW_FEATURES_KHR: {
+         const VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *features = (const void *) ext;
+         if (features->shaderSubgroupUniformControlFlow)
+            all_features->shaderSubgroupUniformControlFlow = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT: {
+         const VkPhysicalDeviceRobustness2FeaturesEXT *features = (const void *) ext;
+         if (features->robustBufferAccess2)
+            all_features->robustBufferAccess2 = true;
+         if (features->robustImageAccess2)
+            all_features->robustImageAccess2 = true;
+         if (features->nullDescriptor)
+            all_features->nullDescriptor = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES: {
+         const VkPhysicalDeviceImageRobustnessFeatures *features = (const void *) ext;
+         if (features->robustImageAccess)
+            all_features->robustImageAccess = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_WORKGROUP_MEMORY_EXPLICIT_LAYOUT_FEATURES_KHR: {
+         const VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *features = (const void *) ext;
+         if (features->workgroupMemoryExplicitLayout)
+            all_features->workgroupMemoryExplicitLayout = true;
+         if (features->workgroupMemoryExplicitLayoutScalarBlockLayout)
+            all_features->workgroupMemoryExplicitLayoutScalarBlockLayout = true;
+         if (features->workgroupMemoryExplicitLayout8BitAccess)
+            all_features->workgroupMemoryExplicitLayout8BitAccess = true;
+         if (features->workgroupMemoryExplicitLayout16BitAccess)
+            all_features->workgroupMemoryExplicitLayout16BitAccess = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT: {
+         const VkPhysicalDevice4444FormatsFeaturesEXT *features = (const void *) ext;
+         if (features->formatA4R4G4B4)
+            all_features->formatA4R4G4B4 = true;
+         if (features->formatA4B4G4R4)
+            all_features->formatA4B4G4R4 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI: {
+         const VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *features = (const void *) ext;
+         if (features->subpassShading)
+            all_features->subpassShading = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_CULLING_SHADER_FEATURES_HUAWEI: {
+         const VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI *features = (const void *) ext;
+         if (features->clustercullingShader)
+            all_features->clustercullingShader = true;
+         if (features->multiviewClusterCullingShader)
+            all_features->multiviewClusterCullingShader = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *features = (const void *) ext;
+         if (features->shaderImageInt64Atomics)
+            all_features->shaderImageInt64Atomics = true;
+         if (features->sparseImageInt64Atomics)
+            all_features->sparseImageInt64Atomics = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR: {
+         const VkPhysicalDeviceFragmentShadingRateFeaturesKHR *features = (const void *) ext;
+         if (features->pipelineFragmentShadingRate)
+            all_features->pipelineFragmentShadingRate = true;
+         if (features->primitiveFragmentShadingRate)
+            all_features->primitiveFragmentShadingRate = true;
+         if (features->attachmentFragmentShadingRate)
+            all_features->attachmentFragmentShadingRate = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES: {
+         const VkPhysicalDeviceShaderTerminateInvocationFeatures *features = (const void *) ext;
+         if (features->shaderTerminateInvocation)
+            all_features->shaderTerminateInvocation = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV: {
+         const VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *features = (const void *) ext;
+         if (features->fragmentShadingRateEnums)
+            all_features->fragmentShadingRateEnums = true;
+         if (features->supersampleFragmentShadingRates)
+            all_features->supersampleFragmentShadingRates = true;
+         if (features->noInvocationFragmentShadingRates)
+            all_features->noInvocationFragmentShadingRates = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT: {
+         const VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *features = (const void *) ext;
+         if (features->image2DViewOf3D)
+            all_features->image2DViewOf3D = true;
+         if (features->sampler2DViewOf3D)
+            all_features->sampler2DViewOf3D = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_SLICED_VIEW_OF_3D_FEATURES_EXT: {
+         const VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT *features = (const void *) ext;
+         if (features->imageSlicedViewOf3D)
+            all_features->imageSlicedViewOf3D = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT: {
+         const VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *features = (const void *) ext;
+         if (features->mutableDescriptorType)
+            all_features->mutableDescriptorType = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_CONTROL_FEATURES_EXT: {
+         const VkPhysicalDeviceDepthClipControlFeaturesEXT *features = (const void *) ext;
+         if (features->depthClipControl)
+            all_features->depthClipControl = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT: {
+         const VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *features = (const void *) ext;
+         if (features->vertexInputDynamicState)
+            all_features->vertexInputDynamicState = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV: {
+         const VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *features = (const void *) ext;
+         if (features->externalMemoryRDMA)
+            all_features->externalMemoryRDMA = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT: {
+         const VkPhysicalDeviceColorWriteEnableFeaturesEXT *features = (const void *) ext;
+         if (features->colorWriteEnable)
+            all_features->colorWriteEnable = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES: {
+         const VkPhysicalDeviceSynchronization2Features *features = (const void *) ext;
+         if (features->synchronization2)
+            all_features->synchronization2 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVES_GENERATED_QUERY_FEATURES_EXT: {
+         const VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *features = (const void *) ext;
+         if (features->primitivesGeneratedQuery)
+            all_features->primitivesGeneratedQuery = true;
+         if (features->primitivesGeneratedQueryWithRasterizerDiscard)
+            all_features->primitivesGeneratedQueryWithRasterizerDiscard = true;
+         if (features->primitivesGeneratedQueryWithNonZeroStreams)
+            all_features->primitivesGeneratedQueryWithNonZeroStreams = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_DITHERING_FEATURES_EXT: {
+         const VkPhysicalDeviceLegacyDitheringFeaturesEXT *features = (const void *) ext;
+         if (features->legacyDithering)
+            all_features->legacyDithering = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_FEATURES_EXT: {
+         const VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *features = (const void *) ext;
+         if (features->multisampledRenderToSingleSampled)
+            all_features->multisampledRenderToSingleSampled = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROTECTED_ACCESS_FEATURES_EXT: {
+         const VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *features = (const void *) ext;
+         if (features->pipelineProtectedAccess)
+            all_features->pipelineProtectedAccess = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INHERITED_VIEWPORT_SCISSOR_FEATURES_NV: {
+         const VkPhysicalDeviceInheritedViewportScissorFeaturesNV *features = (const void *) ext;
+         if (features->inheritedViewportScissor2D)
+            all_features->inheritedViewportScissor2D = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT: {
+         const VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *features = (const void *) ext;
+         if (features->ycbcr2plane444Formats)
+            all_features->ycbcr2plane444Formats = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_FEATURES_EXT: {
+         const VkPhysicalDeviceProvokingVertexFeaturesEXT *features = (const void *) ext;
+         if (features->provokingVertexLast)
+            all_features->provokingVertexLast = true;
+         if (features->transformFeedbackPreservesProvokingVertex)
+            all_features->transformFeedbackPreservesProvokingVertex = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT: {
+         const VkPhysicalDeviceDescriptorBufferFeaturesEXT *features = (const void *) ext;
+         if (features->descriptorBuffer)
+            all_features->descriptorBuffer = true;
+         if (features->descriptorBufferCaptureReplay)
+            all_features->descriptorBufferCaptureReplay = true;
+         if (features->descriptorBufferImageLayoutIgnored)
+            all_features->descriptorBufferImageLayoutIgnored = true;
+         if (features->descriptorBufferPushDescriptors)
+            all_features->descriptorBufferPushDescriptors = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES: {
+         const VkPhysicalDeviceShaderIntegerDotProductFeatures *features = (const void *) ext;
+         if (features->shaderIntegerDotProduct)
+            all_features->shaderIntegerDotProduct = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR: {
+         const VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *features = (const void *) ext;
+         if (features->fragmentShaderBarycentric)
+            all_features->fragmentShaderBarycentric = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV: {
+         const VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *features = (const void *) ext;
+         if (features->rayTracingMotionBlur)
+            all_features->rayTracingMotionBlur = true;
+         if (features->rayTracingMotionBlurPipelineTraceRaysIndirect)
+            all_features->rayTracingMotionBlurPipelineTraceRaysIndirect = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT: {
+         const VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *features = (const void *) ext;
+         if (features->formatRgba10x6WithoutYCbCrSampler)
+            all_features->formatRgba10x6WithoutYCbCrSampler = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES: {
+         const VkPhysicalDeviceDynamicRenderingFeatures *features = (const void *) ext;
+         if (features->dynamicRendering)
+            all_features->dynamicRendering = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_VIEW_MIN_LOD_FEATURES_EXT: {
+         const VkPhysicalDeviceImageViewMinLodFeaturesEXT *features = (const void *) ext;
+         if (features->minLod)
+            all_features->minLod = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT: {
+         const VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *features = (const void *) ext;
+         if (features->rasterizationOrderColorAttachmentAccess)
+            all_features->rasterizationOrderColorAttachmentAccess = true;
+         if (features->rasterizationOrderDepthAttachmentAccess)
+            all_features->rasterizationOrderDepthAttachmentAccess = true;
+         if (features->rasterizationOrderStencilAttachmentAccess)
+            all_features->rasterizationOrderStencilAttachmentAccess = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV: {
+         const VkPhysicalDeviceLinearColorAttachmentFeaturesNV *features = (const void *) ext;
+         if (features->linearColorAttachment)
+            all_features->linearColorAttachment = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT: {
+         const VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *features = (const void *) ext;
+         if (features->graphicsPipelineLibrary)
+            all_features->graphicsPipelineLibrary = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_SET_HOST_MAPPING_FEATURES_VALVE: {
+         const VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *features = (const void *) ext;
+         if (features->descriptorSetHostMapping)
+            all_features->descriptorSetHostMapping = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *features = (const void *) ext;
+         if (features->shaderModuleIdentifier)
+            all_features->shaderModuleIdentifier = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_FEATURES_EXT: {
+         const VkPhysicalDeviceImageCompressionControlFeaturesEXT *features = (const void *) ext;
+         if (features->imageCompressionControl)
+            all_features->imageCompressionControl = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT: {
+         const VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *features = (const void *) ext;
+         if (features->imageCompressionControlSwapchain)
+            all_features->imageCompressionControlSwapchain = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_MERGE_FEEDBACK_FEATURES_EXT: {
+         const VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *features = (const void *) ext;
+         if (features->subpassMergeFeedback)
+            all_features->subpassMergeFeedback = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT: {
+         const VkPhysicalDeviceOpacityMicromapFeaturesEXT *features = (const void *) ext;
+         if (features->micromap)
+            all_features->micromap = true;
+         if (features->micromapCaptureReplay)
+            all_features->micromapCaptureReplay = true;
+         if (features->micromapHostCommands)
+            all_features->micromapHostCommands = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROPERTIES_FEATURES_EXT: {
+         const VkPhysicalDevicePipelinePropertiesFeaturesEXT *features = (const void *) ext;
+         if (features->pipelinePropertiesIdentifier)
+            all_features->pipelinePropertiesIdentifier = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_EARLY_AND_LATE_FRAGMENT_TESTS_FEATURES_AMD: {
+         const VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *features = (const void *) ext;
+         if (features->shaderEarlyAndLateFragmentTests)
+            all_features->shaderEarlyAndLateFragmentTests = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NON_SEAMLESS_CUBE_MAP_FEATURES_EXT: {
+         const VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *features = (const void *) ext;
+         if (features->nonSeamlessCubeMap)
+            all_features->nonSeamlessCubeMap = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT: {
+         const VkPhysicalDevicePipelineRobustnessFeaturesEXT *features = (const void *) ext;
+         if (features->pipelineRobustness)
+            all_features->pipelineRobustness = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_FEATURES_QCOM: {
+         const VkPhysicalDeviceImageProcessingFeaturesQCOM *features = (const void *) ext;
+         if (features->textureSampleWeighted)
+            all_features->textureSampleWeighted = true;
+         if (features->textureBoxFilter)
+            all_features->textureBoxFilter = true;
+         if (features->textureBlockMatch)
+            all_features->textureBlockMatch = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TILE_PROPERTIES_FEATURES_QCOM: {
+         const VkPhysicalDeviceTilePropertiesFeaturesQCOM *features = (const void *) ext;
+         if (features->tileProperties)
+            all_features->tileProperties = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC: {
+         const VkPhysicalDeviceAmigoProfilingFeaturesSEC *features = (const void *) ext;
+         if (features->amigoProfiling)
+            all_features->amigoProfiling = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT: {
+         const VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *features = (const void *) ext;
+         if (features->attachmentFeedbackLoopLayout)
+            all_features->attachmentFeedbackLoopLayout = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_EXT: {
+         const VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *features = (const void *) ext;
+         if (features->depthClampZeroOne)
+            all_features->depthClampZeroOne = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ADDRESS_BINDING_REPORT_FEATURES_EXT: {
+         const VkPhysicalDeviceAddressBindingReportFeaturesEXT *features = (const void *) ext;
+         if (features->reportAddressBinding)
+            all_features->reportAddressBinding = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_FEATURES_NV: {
+         const VkPhysicalDeviceOpticalFlowFeaturesNV *features = (const void *) ext;
+         if (features->opticalFlow)
+            all_features->opticalFlow = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT: {
+         const VkPhysicalDeviceFaultFeaturesEXT *features = (const void *) ext;
+         if (features->deviceFault)
+            all_features->deviceFault = true;
+         if (features->deviceFaultVendorBinary)
+            all_features->deviceFaultVendorBinary = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_LIBRARY_GROUP_HANDLES_FEATURES_EXT: {
+         const VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT *features = (const void *) ext;
+         if (features->pipelineLibraryGroupHandles)
+            all_features->pipelineLibraryGroupHandles = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_BUILTINS_FEATURES_ARM: {
+         const VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM *features = (const void *) ext;
+         if (features->shaderCoreBuiltins)
+            all_features->shaderCoreBuiltins = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT: {
+         const VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT *features = (const void *) ext;
+         if (features->swapchainMaintenance1)
+            all_features->swapchainMaintenance1 = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_FEATURES_NV: {
+         const VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV *features = (const void *) ext;
+         if (features->rayTracingInvocationReorder)
+            all_features->rayTracingInvocationReorder = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_VIEWPORTS_FEATURES_QCOM: {
+         const VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM *features = (const void *) ext;
+         if (features->multiviewPerViewViewports)
+            all_features->multiviewPerViewViewports = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_RENDER_AREAS_FEATURES_QCOM: {
+         const VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM *features = (const void *) ext;
+         if (features->multiviewPerViewRenderAreas)
+            all_features->multiviewPerViewRenderAreas = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderObjectFeaturesEXT *features = (const void *) ext;
+         if (features->shaderObject)
+            all_features->shaderObject = true;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TILE_IMAGE_FEATURES_EXT: {
+         const VkPhysicalDeviceShaderTileImageFeaturesEXT *features = (const void *) ext;
+         if (features->shaderTileImageColorReadAccess)
+            all_features->shaderTileImageColorReadAccess = true;
+         if (features->shaderTileImageDepthReadAccess)
+            all_features->shaderTileImageDepthReadAccess = true;
+         if (features->shaderTileImageStencilReadAccess)
+            all_features->shaderTileImageStencilReadAccess = true;
+         break;
+      }
+
+      default:
+         break;
+      }
+   }
+}
+
+void
+vk_get_physical_device_features(VkPhysicalDeviceFeatures2 *pFeatures,
+                                const struct vk_features *all_features)
+{
+   pFeatures->features.robustBufferAccess = all_features->robustBufferAccess;
+   pFeatures->features.fullDrawIndexUint32 = all_features->fullDrawIndexUint32;
+   pFeatures->features.imageCubeArray = all_features->imageCubeArray;
+   pFeatures->features.independentBlend = all_features->independentBlend;
+   pFeatures->features.geometryShader = all_features->geometryShader;
+   pFeatures->features.tessellationShader = all_features->tessellationShader;
+   pFeatures->features.sampleRateShading = all_features->sampleRateShading;
+   pFeatures->features.dualSrcBlend = all_features->dualSrcBlend;
+   pFeatures->features.logicOp = all_features->logicOp;
+   pFeatures->features.multiDrawIndirect = all_features->multiDrawIndirect;
+   pFeatures->features.drawIndirectFirstInstance = all_features->drawIndirectFirstInstance;
+   pFeatures->features.depthClamp = all_features->depthClamp;
+   pFeatures->features.depthBiasClamp = all_features->depthBiasClamp;
+   pFeatures->features.fillModeNonSolid = all_features->fillModeNonSolid;
+   pFeatures->features.depthBounds = all_features->depthBounds;
+   pFeatures->features.wideLines = all_features->wideLines;
+   pFeatures->features.largePoints = all_features->largePoints;
+   pFeatures->features.alphaToOne = all_features->alphaToOne;
+   pFeatures->features.multiViewport = all_features->multiViewport;
+   pFeatures->features.samplerAnisotropy = all_features->samplerAnisotropy;
+   pFeatures->features.textureCompressionETC2 = all_features->textureCompressionETC2;
+   pFeatures->features.textureCompressionASTC_LDR = all_features->textureCompressionASTC_LDR;
+   pFeatures->features.textureCompressionBC = all_features->textureCompressionBC;
+   pFeatures->features.occlusionQueryPrecise = all_features->occlusionQueryPrecise;
+   pFeatures->features.pipelineStatisticsQuery = all_features->pipelineStatisticsQuery;
+   pFeatures->features.vertexPipelineStoresAndAtomics = all_features->vertexPipelineStoresAndAtomics;
+   pFeatures->features.fragmentStoresAndAtomics = all_features->fragmentStoresAndAtomics;
+   pFeatures->features.shaderTessellationAndGeometryPointSize = all_features->shaderTessellationAndGeometryPointSize;
+   pFeatures->features.shaderImageGatherExtended = all_features->shaderImageGatherExtended;
+   pFeatures->features.shaderStorageImageExtendedFormats = all_features->shaderStorageImageExtendedFormats;
+   pFeatures->features.shaderStorageImageMultisample = all_features->shaderStorageImageMultisample;
+   pFeatures->features.shaderStorageImageReadWithoutFormat = all_features->shaderStorageImageReadWithoutFormat;
+   pFeatures->features.shaderStorageImageWriteWithoutFormat = all_features->shaderStorageImageWriteWithoutFormat;
+   pFeatures->features.shaderUniformBufferArrayDynamicIndexing = all_features->shaderUniformBufferArrayDynamicIndexing;
+   pFeatures->features.shaderSampledImageArrayDynamicIndexing = all_features->shaderSampledImageArrayDynamicIndexing;
+   pFeatures->features.shaderStorageBufferArrayDynamicIndexing = all_features->shaderStorageBufferArrayDynamicIndexing;
+   pFeatures->features.shaderStorageImageArrayDynamicIndexing = all_features->shaderStorageImageArrayDynamicIndexing;
+   pFeatures->features.shaderClipDistance = all_features->shaderClipDistance;
+   pFeatures->features.shaderCullDistance = all_features->shaderCullDistance;
+   pFeatures->features.shaderFloat64 = all_features->shaderFloat64;
+   pFeatures->features.shaderInt64 = all_features->shaderInt64;
+   pFeatures->features.shaderInt16 = all_features->shaderInt16;
+   pFeatures->features.shaderResourceResidency = all_features->shaderResourceResidency;
+   pFeatures->features.shaderResourceMinLod = all_features->shaderResourceMinLod;
+   pFeatures->features.sparseBinding = all_features->sparseBinding;
+   pFeatures->features.sparseResidencyBuffer = all_features->sparseResidencyBuffer;
+   pFeatures->features.sparseResidencyImage2D = all_features->sparseResidencyImage2D;
+   pFeatures->features.sparseResidencyImage3D = all_features->sparseResidencyImage3D;
+   pFeatures->features.sparseResidency2Samples = all_features->sparseResidency2Samples;
+   pFeatures->features.sparseResidency4Samples = all_features->sparseResidency4Samples;
+   pFeatures->features.sparseResidency8Samples = all_features->sparseResidency8Samples;
+   pFeatures->features.sparseResidency16Samples = all_features->sparseResidency16Samples;
+   pFeatures->features.sparseResidencyAliased = all_features->sparseResidencyAliased;
+   pFeatures->features.variableMultisampleRate = all_features->variableMultisampleRate;
+   pFeatures->features.inheritedQueries = all_features->inheritedQueries;
+
+   vk_foreach_struct(ext, pFeatures) {
+      switch (ext->sType) {
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_GENERATED_COMMANDS_FEATURES_NV: {
+         VkPhysicalDeviceDeviceGeneratedCommandsFeaturesNV *features = (void *) ext;
+         features->deviceGeneratedCommands = all_features->deviceGeneratedCommands;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIVATE_DATA_FEATURES: {
+         VkPhysicalDevicePrivateDataFeatures *features = (void *) ext;
+         features->privateData = all_features->privateData;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VARIABLE_POINTERS_FEATURES: {
+         VkPhysicalDeviceVariablePointersFeatures *features = (void *) ext;
+         features->variablePointersStorageBuffer = all_features->variablePointersStorageBuffer;
+         features->variablePointers = all_features->variablePointers;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES: {
+         VkPhysicalDeviceMultiviewFeatures *features = (void *) ext;
+         features->multiview = all_features->multiview;
+         features->multiviewGeometryShader = all_features->multiviewGeometryShader;
+         features->multiviewTessellationShader = all_features->multiviewTessellationShader;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_ID_FEATURES_KHR: {
+         VkPhysicalDevicePresentIdFeaturesKHR *features = (void *) ext;
+         features->presentId = all_features->presentId;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_WAIT_FEATURES_KHR: {
+         VkPhysicalDevicePresentWaitFeaturesKHR *features = (void *) ext;
+         features->presentWait = all_features->presentWait;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_16BIT_STORAGE_FEATURES: {
+         VkPhysicalDevice16BitStorageFeatures *features = (void *) ext;
+         features->storageBuffer16BitAccess = all_features->storageBuffer16BitAccess;
+         features->uniformAndStorageBuffer16BitAccess = all_features->uniformAndStorageBuffer16BitAccess;
+         features->storagePushConstant16 = all_features->storagePushConstant16;
+         features->storageInputOutput16 = all_features->storageInputOutput16;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_EXTENDED_TYPES_FEATURES: {
+         VkPhysicalDeviceShaderSubgroupExtendedTypesFeatures *features = (void *) ext;
+         features->shaderSubgroupExtendedTypes = all_features->shaderSubgroupExtendedTypes;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SAMPLER_YCBCR_CONVERSION_FEATURES: {
+         VkPhysicalDeviceSamplerYcbcrConversionFeatures *features = (void *) ext;
+         features->samplerYcbcrConversion = all_features->samplerYcbcrConversion;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROTECTED_MEMORY_FEATURES: {
+         VkPhysicalDeviceProtectedMemoryFeatures *features = (void *) ext;
+         features->protectedMemory = all_features->protectedMemory;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BLEND_OPERATION_ADVANCED_FEATURES_EXT: {
+         VkPhysicalDeviceBlendOperationAdvancedFeaturesEXT *features = (void *) ext;
+         features->advancedBlendCoherentOperations = all_features->advancedBlendCoherentOperations;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTI_DRAW_FEATURES_EXT: {
+         VkPhysicalDeviceMultiDrawFeaturesEXT *features = (void *) ext;
+         features->multiDraw = all_features->multiDraw;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INLINE_UNIFORM_BLOCK_FEATURES: {
+         VkPhysicalDeviceInlineUniformBlockFeatures *features = (void *) ext;
+         features->inlineUniformBlock = all_features->inlineUniformBlock;
+         features->descriptorBindingInlineUniformBlockUpdateAfterBind = all_features->descriptorBindingInlineUniformBlockUpdateAfterBind;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MAINTENANCE_4_FEATURES: {
+         VkPhysicalDeviceMaintenance4Features *features = (void *) ext;
+         features->maintenance4 = all_features->maintenance4;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DRAW_PARAMETERS_FEATURES: {
+         VkPhysicalDeviceShaderDrawParametersFeatures *features = (void *) ext;
+         features->shaderDrawParameters = all_features->shaderDrawParameters;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_FLOAT16_INT8_FEATURES: {
+         VkPhysicalDeviceShaderFloat16Int8Features *features = (void *) ext;
+         features->shaderFloat16 = all_features->shaderFloat16;
+         features->shaderInt8 = all_features->shaderInt8;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES: {
+         VkPhysicalDeviceHostQueryResetFeatures *features = (void *) ext;
+         features->hostQueryReset = all_features->hostQueryReset;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GLOBAL_PRIORITY_QUERY_FEATURES_KHR: {
+         VkPhysicalDeviceGlobalPriorityQueryFeaturesKHR *features = (void *) ext;
+         features->globalPriorityQuery = all_features->globalPriorityQuery;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEVICE_MEMORY_REPORT_FEATURES_EXT: {
+         VkPhysicalDeviceDeviceMemoryReportFeaturesEXT *features = (void *) ext;
+         features->deviceMemoryReport = all_features->deviceMemoryReport;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES: {
+         VkPhysicalDeviceDescriptorIndexingFeatures *features = (void *) ext;
+         features->shaderInputAttachmentArrayDynamicIndexing = all_features->shaderInputAttachmentArrayDynamicIndexing;
+         features->shaderUniformTexelBufferArrayDynamicIndexing = all_features->shaderUniformTexelBufferArrayDynamicIndexing;
+         features->shaderStorageTexelBufferArrayDynamicIndexing = all_features->shaderStorageTexelBufferArrayDynamicIndexing;
+         features->shaderUniformBufferArrayNonUniformIndexing = all_features->shaderUniformBufferArrayNonUniformIndexing;
+         features->shaderSampledImageArrayNonUniformIndexing = all_features->shaderSampledImageArrayNonUniformIndexing;
+         features->shaderStorageBufferArrayNonUniformIndexing = all_features->shaderStorageBufferArrayNonUniformIndexing;
+         features->shaderStorageImageArrayNonUniformIndexing = all_features->shaderStorageImageArrayNonUniformIndexing;
+         features->shaderInputAttachmentArrayNonUniformIndexing = all_features->shaderInputAttachmentArrayNonUniformIndexing;
+         features->shaderUniformTexelBufferArrayNonUniformIndexing = all_features->shaderUniformTexelBufferArrayNonUniformIndexing;
+         features->shaderStorageTexelBufferArrayNonUniformIndexing = all_features->shaderStorageTexelBufferArrayNonUniformIndexing;
+         features->descriptorBindingUniformBufferUpdateAfterBind = all_features->descriptorBindingUniformBufferUpdateAfterBind;
+         features->descriptorBindingSampledImageUpdateAfterBind = all_features->descriptorBindingSampledImageUpdateAfterBind;
+         features->descriptorBindingStorageImageUpdateAfterBind = all_features->descriptorBindingStorageImageUpdateAfterBind;
+         features->descriptorBindingStorageBufferUpdateAfterBind = all_features->descriptorBindingStorageBufferUpdateAfterBind;
+         features->descriptorBindingUniformTexelBufferUpdateAfterBind = all_features->descriptorBindingUniformTexelBufferUpdateAfterBind;
+         features->descriptorBindingStorageTexelBufferUpdateAfterBind = all_features->descriptorBindingStorageTexelBufferUpdateAfterBind;
+         features->descriptorBindingUpdateUnusedWhilePending = all_features->descriptorBindingUpdateUnusedWhilePending;
+         features->descriptorBindingPartiallyBound = all_features->descriptorBindingPartiallyBound;
+         features->descriptorBindingVariableDescriptorCount = all_features->descriptorBindingVariableDescriptorCount;
+         features->runtimeDescriptorArray = all_features->runtimeDescriptorArray;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TIMELINE_SEMAPHORE_FEATURES: {
+         VkPhysicalDeviceTimelineSemaphoreFeatures *features = (void *) ext;
+         features->timelineSemaphore = all_features->timelineSemaphore;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_8BIT_STORAGE_FEATURES: {
+         VkPhysicalDevice8BitStorageFeatures *features = (void *) ext;
+         features->storageBuffer8BitAccess = all_features->storageBuffer8BitAccess;
+         features->uniformAndStorageBuffer8BitAccess = all_features->uniformAndStorageBuffer8BitAccess;
+         features->storagePushConstant8 = all_features->storagePushConstant8;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CONDITIONAL_RENDERING_FEATURES_EXT: {
+         VkPhysicalDeviceConditionalRenderingFeaturesEXT *features = (void *) ext;
+         features->conditionalRendering = all_features->conditionalRendering;
+         features->inheritedConditionalRendering = all_features->inheritedConditionalRendering;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_MEMORY_MODEL_FEATURES: {
+         VkPhysicalDeviceVulkanMemoryModelFeatures *features = (void *) ext;
+         features->vulkanMemoryModel = all_features->vulkanMemoryModel;
+         features->vulkanMemoryModelDeviceScope = all_features->vulkanMemoryModelDeviceScope;
+         features->vulkanMemoryModelAvailabilityVisibilityChains = all_features->vulkanMemoryModelAvailabilityVisibilityChains;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_INT64_FEATURES: {
+         VkPhysicalDeviceShaderAtomicInt64Features *features = (void *) ext;
+         features->shaderBufferInt64Atomics = all_features->shaderBufferInt64Atomics;
+         features->shaderSharedInt64Atomics = all_features->shaderSharedInt64Atomics;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_FEATURES_EXT: {
+         VkPhysicalDeviceShaderAtomicFloatFeaturesEXT *features = (void *) ext;
+         features->shaderBufferFloat32Atomics = all_features->shaderBufferFloat32Atomics;
+         features->shaderBufferFloat32AtomicAdd = all_features->shaderBufferFloat32AtomicAdd;
+         features->shaderBufferFloat64Atomics = all_features->shaderBufferFloat64Atomics;
+         features->shaderBufferFloat64AtomicAdd = all_features->shaderBufferFloat64AtomicAdd;
+         features->shaderSharedFloat32Atomics = all_features->shaderSharedFloat32Atomics;
+         features->shaderSharedFloat32AtomicAdd = all_features->shaderSharedFloat32AtomicAdd;
+         features->shaderSharedFloat64Atomics = all_features->shaderSharedFloat64Atomics;
+         features->shaderSharedFloat64AtomicAdd = all_features->shaderSharedFloat64AtomicAdd;
+         features->shaderImageFloat32Atomics = all_features->shaderImageFloat32Atomics;
+         features->shaderImageFloat32AtomicAdd = all_features->shaderImageFloat32AtomicAdd;
+         features->sparseImageFloat32Atomics = all_features->sparseImageFloat32Atomics;
+         features->sparseImageFloat32AtomicAdd = all_features->sparseImageFloat32AtomicAdd;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_ATOMIC_FLOAT_2_FEATURES_EXT: {
+         VkPhysicalDeviceShaderAtomicFloat2FeaturesEXT *features = (void *) ext;
+         features->shaderBufferFloat16Atomics = all_features->shaderBufferFloat16Atomics;
+         features->shaderBufferFloat16AtomicAdd = all_features->shaderBufferFloat16AtomicAdd;
+         features->shaderBufferFloat16AtomicMinMax = all_features->shaderBufferFloat16AtomicMinMax;
+         features->shaderBufferFloat32AtomicMinMax = all_features->shaderBufferFloat32AtomicMinMax;
+         features->shaderBufferFloat64AtomicMinMax = all_features->shaderBufferFloat64AtomicMinMax;
+         features->shaderSharedFloat16Atomics = all_features->shaderSharedFloat16Atomics;
+         features->shaderSharedFloat16AtomicAdd = all_features->shaderSharedFloat16AtomicAdd;
+         features->shaderSharedFloat16AtomicMinMax = all_features->shaderSharedFloat16AtomicMinMax;
+         features->shaderSharedFloat32AtomicMinMax = all_features->shaderSharedFloat32AtomicMinMax;
+         features->shaderSharedFloat64AtomicMinMax = all_features->shaderSharedFloat64AtomicMinMax;
+         features->shaderImageFloat32AtomicMinMax = all_features->shaderImageFloat32AtomicMinMax;
+         features->sparseImageFloat32AtomicMinMax = all_features->sparseImageFloat32AtomicMinMax;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_ATTRIBUTE_DIVISOR_FEATURES_EXT: {
+         VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT *features = (void *) ext;
+         features->vertexAttributeInstanceRateDivisor = all_features->vertexAttributeInstanceRateDivisor;
+         features->vertexAttributeInstanceRateZeroDivisor = all_features->vertexAttributeInstanceRateZeroDivisor;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ASTC_DECODE_FEATURES_EXT: {
+         VkPhysicalDeviceASTCDecodeFeaturesEXT *features = (void *) ext;
+         features->decodeModeSharedExponent = all_features->decodeModeSharedExponent;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TRANSFORM_FEEDBACK_FEATURES_EXT: {
+         VkPhysicalDeviceTransformFeedbackFeaturesEXT *features = (void *) ext;
+         features->transformFeedback = all_features->transformFeedback;
+         features->geometryStreams = all_features->geometryStreams;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_REPRESENTATIVE_FRAGMENT_TEST_FEATURES_NV: {
+         VkPhysicalDeviceRepresentativeFragmentTestFeaturesNV *features = (void *) ext;
+         features->representativeFragmentTest = all_features->representativeFragmentTest;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXCLUSIVE_SCISSOR_FEATURES_NV: {
+         VkPhysicalDeviceExclusiveScissorFeaturesNV *features = (void *) ext;
+         features->exclusiveScissor = all_features->exclusiveScissor;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CORNER_SAMPLED_IMAGE_FEATURES_NV: {
+         VkPhysicalDeviceCornerSampledImageFeaturesNV *features = (void *) ext;
+         features->cornerSampledImage = all_features->cornerSampledImage;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COMPUTE_SHADER_DERIVATIVES_FEATURES_NV: {
+         VkPhysicalDeviceComputeShaderDerivativesFeaturesNV *features = (void *) ext;
+         features->computeDerivativeGroupQuads = all_features->computeDerivativeGroupQuads;
+         features->computeDerivativeGroupLinear = all_features->computeDerivativeGroupLinear;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_FOOTPRINT_FEATURES_NV: {
+         VkPhysicalDeviceShaderImageFootprintFeaturesNV *features = (void *) ext;
+         features->imageFootprint = all_features->imageFootprint;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEDICATED_ALLOCATION_IMAGE_ALIASING_FEATURES_NV: {
+         VkPhysicalDeviceDedicatedAllocationImageAliasingFeaturesNV *features = (void *) ext;
+         features->dedicatedAllocationImageAliasing = all_features->dedicatedAllocationImageAliasing;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COPY_MEMORY_INDIRECT_FEATURES_NV: {
+         VkPhysicalDeviceCopyMemoryIndirectFeaturesNV *features = (void *) ext;
+         features->indirectCopy = all_features->indirectCopy;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_DECOMPRESSION_FEATURES_NV: {
+         VkPhysicalDeviceMemoryDecompressionFeaturesNV *features = (void *) ext;
+         features->memoryDecompression = all_features->memoryDecompression;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADING_RATE_IMAGE_FEATURES_NV: {
+         VkPhysicalDeviceShadingRateImageFeaturesNV *features = (void *) ext;
+         features->shadingRateImage = all_features->shadingRateImage;
+         features->shadingRateCoarseSampleOrder = all_features->shadingRateCoarseSampleOrder;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INVOCATION_MASK_FEATURES_HUAWEI: {
+         VkPhysicalDeviceInvocationMaskFeaturesHUAWEI *features = (void *) ext;
+         features->invocationMask = all_features->invocationMask;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_NV: {
+         VkPhysicalDeviceMeshShaderFeaturesNV *features = (void *) ext;
+         features->taskShader = all_features->taskShaderNV;
+         features->meshShader = all_features->meshShaderNV;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT: {
+         VkPhysicalDeviceMeshShaderFeaturesEXT *features = (void *) ext;
+         features->taskShader = all_features->taskShader;
+         features->meshShader = all_features->meshShader;
+         features->multiviewMeshShader = all_features->multiviewMeshShader;
+         features->primitiveFragmentShadingRateMeshShader = all_features->primitiveFragmentShadingRateMeshShader;
+         features->meshShaderQueries = all_features->meshShaderQueries;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ACCELERATION_STRUCTURE_FEATURES_KHR: {
+         VkPhysicalDeviceAccelerationStructureFeaturesKHR *features = (void *) ext;
+         features->accelerationStructure = all_features->accelerationStructure;
+         features->accelerationStructureCaptureReplay = all_features->accelerationStructureCaptureReplay;
+         features->accelerationStructureIndirectBuild = all_features->accelerationStructureIndirectBuild;
+         features->accelerationStructureHostCommands = all_features->accelerationStructureHostCommands;
+         features->descriptorBindingAccelerationStructureUpdateAfterBind = all_features->descriptorBindingAccelerationStructureUpdateAfterBind;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_PIPELINE_FEATURES_KHR: {
+         VkPhysicalDeviceRayTracingPipelineFeaturesKHR *features = (void *) ext;
+         features->rayTracingPipeline = all_features->rayTracingPipeline;
+         features->rayTracingPipelineShaderGroupHandleCaptureReplay = all_features->rayTracingPipelineShaderGroupHandleCaptureReplay;
+         features->rayTracingPipelineShaderGroupHandleCaptureReplayMixed = all_features->rayTracingPipelineShaderGroupHandleCaptureReplayMixed;
+         features->rayTracingPipelineTraceRaysIndirect = all_features->rayTracingPipelineTraceRaysIndirect;
+         features->rayTraversalPrimitiveCulling = all_features->rayTraversalPrimitiveCulling;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_QUERY_FEATURES_KHR: {
+         VkPhysicalDeviceRayQueryFeaturesKHR *features = (void *) ext;
+         features->rayQuery = all_features->rayQuery;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MAINTENANCE_1_FEATURES_KHR: {
+         VkPhysicalDeviceRayTracingMaintenance1FeaturesKHR *features = (void *) ext;
+         features->rayTracingMaintenance1 = all_features->rayTracingMaintenance1;
+         features->rayTracingPipelineTraceRaysIndirect2 = all_features->rayTracingPipelineTraceRaysIndirect2;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_FEATURES_EXT: {
+         VkPhysicalDeviceFragmentDensityMapFeaturesEXT *features = (void *) ext;
+         features->fragmentDensityMap = all_features->fragmentDensityMap;
+         features->fragmentDensityMapDynamic = all_features->fragmentDensityMapDynamic;
+         features->fragmentDensityMapNonSubsampledImages = all_features->fragmentDensityMapNonSubsampledImages;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_2_FEATURES_EXT: {
+         VkPhysicalDeviceFragmentDensityMap2FeaturesEXT *features = (void *) ext;
+         features->fragmentDensityMapDeferred = all_features->fragmentDensityMapDeferred;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_DENSITY_MAP_OFFSET_FEATURES_QCOM: {
+         VkPhysicalDeviceFragmentDensityMapOffsetFeaturesQCOM *features = (void *) ext;
+         features->fragmentDensityMapOffset = all_features->fragmentDensityMapOffset;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES: {
+         VkPhysicalDeviceScalarBlockLayoutFeatures *features = (void *) ext;
+         features->scalarBlockLayout = all_features->scalarBlockLayout;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_UNIFORM_BUFFER_STANDARD_LAYOUT_FEATURES: {
+         VkPhysicalDeviceUniformBufferStandardLayoutFeatures *features = (void *) ext;
+         features->uniformBufferStandardLayout = all_features->uniformBufferStandardLayout;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_ENABLE_FEATURES_EXT: {
+         VkPhysicalDeviceDepthClipEnableFeaturesEXT *features = (void *) ext;
+         features->depthClipEnable = all_features->depthClipEnable;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PRIORITY_FEATURES_EXT: {
+         VkPhysicalDeviceMemoryPriorityFeaturesEXT *features = (void *) ext;
+         features->memoryPriority = all_features->memoryPriority;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PAGEABLE_DEVICE_LOCAL_MEMORY_FEATURES_EXT: {
+         VkPhysicalDevicePageableDeviceLocalMemoryFeaturesEXT *features = (void *) ext;
+         features->pageableDeviceLocalMemory = all_features->pageableDeviceLocalMemory;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES: {
+         VkPhysicalDeviceBufferDeviceAddressFeatures *features = (void *) ext;
+         features->bufferDeviceAddress = all_features->bufferDeviceAddress;
+         features->bufferDeviceAddressCaptureReplay = all_features->bufferDeviceAddressCaptureReplay;
+         features->bufferDeviceAddressMultiDevice = all_features->bufferDeviceAddressMultiDevice;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BUFFER_DEVICE_ADDRESS_FEATURES_EXT: {
+         VkPhysicalDeviceBufferDeviceAddressFeaturesEXT *features = (void *) ext;
+         features->bufferDeviceAddress = all_features->bufferDeviceAddress;
+         features->bufferDeviceAddressCaptureReplay = all_features->bufferDeviceAddressCaptureReplayEXT;
+         features->bufferDeviceAddressMultiDevice = all_features->bufferDeviceAddressMultiDevice;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGELESS_FRAMEBUFFER_FEATURES: {
+         VkPhysicalDeviceImagelessFramebufferFeatures *features = (void *) ext;
+         features->imagelessFramebuffer = all_features->imagelessFramebuffer;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXTURE_COMPRESSION_ASTC_HDR_FEATURES: {
+         VkPhysicalDeviceTextureCompressionASTCHDRFeatures *features = (void *) ext;
+         features->textureCompressionASTC_HDR = all_features->textureCompressionASTC_HDR;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COOPERATIVE_MATRIX_FEATURES_NV: {
+         VkPhysicalDeviceCooperativeMatrixFeaturesNV *features = (void *) ext;
+         features->cooperativeMatrix = all_features->cooperativeMatrix;
+         features->cooperativeMatrixRobustBufferAccess = all_features->cooperativeMatrixRobustBufferAccess;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_IMAGE_ARRAYS_FEATURES_EXT: {
+         VkPhysicalDeviceYcbcrImageArraysFeaturesEXT *features = (void *) ext;
+         features->ycbcrImageArrays = all_features->ycbcrImageArrays;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRESENT_BARRIER_FEATURES_NV: {
+         VkPhysicalDevicePresentBarrierFeaturesNV *features = (void *) ext;
+         features->presentBarrier = all_features->presentBarrier;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PERFORMANCE_QUERY_FEATURES_KHR: {
+         VkPhysicalDevicePerformanceQueryFeaturesKHR *features = (void *) ext;
+         features->performanceCounterQueryPools = all_features->performanceCounterQueryPools;
+         features->performanceCounterMultipleQueryPools = all_features->performanceCounterMultipleQueryPools;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COVERAGE_REDUCTION_MODE_FEATURES_NV: {
+         VkPhysicalDeviceCoverageReductionModeFeaturesNV *features = (void *) ext;
+         features->coverageReductionMode = all_features->coverageReductionMode;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_FUNCTIONS_2_FEATURES_INTEL: {
+         VkPhysicalDeviceShaderIntegerFunctions2FeaturesINTEL *features = (void *) ext;
+         features->shaderIntegerFunctions2 = all_features->shaderIntegerFunctions2;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CLOCK_FEATURES_KHR: {
+         VkPhysicalDeviceShaderClockFeaturesKHR *features = (void *) ext;
+         features->shaderSubgroupClock = all_features->shaderSubgroupClock;
+         features->shaderDeviceClock = all_features->shaderDeviceClock;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INDEX_TYPE_UINT8_FEATURES_EXT: {
+         VkPhysicalDeviceIndexTypeUint8FeaturesEXT *features = (void *) ext;
+         features->indexTypeUint8 = all_features->indexTypeUint8;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SM_BUILTINS_FEATURES_NV: {
+         VkPhysicalDeviceShaderSMBuiltinsFeaturesNV *features = (void *) ext;
+         features->shaderSMBuiltins = all_features->shaderSMBuiltins;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_INTERLOCK_FEATURES_EXT: {
+         VkPhysicalDeviceFragmentShaderInterlockFeaturesEXT *features = (void *) ext;
+         features->fragmentShaderSampleInterlock = all_features->fragmentShaderSampleInterlock;
+         features->fragmentShaderPixelInterlock = all_features->fragmentShaderPixelInterlock;
+         features->fragmentShaderShadingRateInterlock = all_features->fragmentShaderShadingRateInterlock;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SEPARATE_DEPTH_STENCIL_LAYOUTS_FEATURES: {
+         VkPhysicalDeviceSeparateDepthStencilLayoutsFeatures *features = (void *) ext;
+         features->separateDepthStencilLayouts = all_features->separateDepthStencilLayouts;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVE_TOPOLOGY_LIST_RESTART_FEATURES_EXT: {
+         VkPhysicalDevicePrimitiveTopologyListRestartFeaturesEXT *features = (void *) ext;
+         features->primitiveTopologyListRestart = all_features->primitiveTopologyListRestart;
+         features->primitiveTopologyPatchListRestart = all_features->primitiveTopologyPatchListRestart;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_EXECUTABLE_PROPERTIES_FEATURES_KHR: {
+         VkPhysicalDevicePipelineExecutablePropertiesFeaturesKHR *features = (void *) ext;
+         features->pipelineExecutableInfo = all_features->pipelineExecutableInfo;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_DEMOTE_TO_HELPER_INVOCATION_FEATURES: {
+         VkPhysicalDeviceShaderDemoteToHelperInvocationFeatures *features = (void *) ext;
+         features->shaderDemoteToHelperInvocation = all_features->shaderDemoteToHelperInvocation;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TEXEL_BUFFER_ALIGNMENT_FEATURES_EXT: {
+         VkPhysicalDeviceTexelBufferAlignmentFeaturesEXT *features = (void *) ext;
+         features->texelBufferAlignment = all_features->texelBufferAlignment;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_SIZE_CONTROL_FEATURES: {
+         VkPhysicalDeviceSubgroupSizeControlFeatures *features = (void *) ext;
+         features->subgroupSizeControl = all_features->subgroupSizeControl;
+         features->computeFullSubgroups = all_features->computeFullSubgroups;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINE_RASTERIZATION_FEATURES_EXT: {
+         VkPhysicalDeviceLineRasterizationFeaturesEXT *features = (void *) ext;
+         features->rectangularLines = all_features->rectangularLines;
+         features->bresenhamLines = all_features->bresenhamLines;
+         features->smoothLines = all_features->smoothLines;
+         features->stippledRectangularLines = all_features->stippledRectangularLines;
+         features->stippledBresenhamLines = all_features->stippledBresenhamLines;
+         features->stippledSmoothLines = all_features->stippledSmoothLines;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_CREATION_CACHE_CONTROL_FEATURES: {
+         VkPhysicalDevicePipelineCreationCacheControlFeatures *features = (void *) ext;
+         features->pipelineCreationCacheControl = all_features->pipelineCreationCacheControl;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES: {
+         VkPhysicalDeviceVulkan11Features *features = (void *) ext;
+         features->storageBuffer16BitAccess = all_features->storageBuffer16BitAccess;
+         features->uniformAndStorageBuffer16BitAccess = all_features->uniformAndStorageBuffer16BitAccess;
+         features->storagePushConstant16 = all_features->storagePushConstant16;
+         features->storageInputOutput16 = all_features->storageInputOutput16;
+         features->multiview = all_features->multiview;
+         features->multiviewGeometryShader = all_features->multiviewGeometryShader;
+         features->multiviewTessellationShader = all_features->multiviewTessellationShader;
+         features->variablePointersStorageBuffer = all_features->variablePointersStorageBuffer;
+         features->variablePointers = all_features->variablePointers;
+         features->protectedMemory = all_features->protectedMemory;
+         features->samplerYcbcrConversion = all_features->samplerYcbcrConversion;
+         features->shaderDrawParameters = all_features->shaderDrawParameters;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES: {
+         VkPhysicalDeviceVulkan12Features *features = (void *) ext;
+         features->samplerMirrorClampToEdge = all_features->samplerMirrorClampToEdge;
+         features->drawIndirectCount = all_features->drawIndirectCount;
+         features->storageBuffer8BitAccess = all_features->storageBuffer8BitAccess;
+         features->uniformAndStorageBuffer8BitAccess = all_features->uniformAndStorageBuffer8BitAccess;
+         features->storagePushConstant8 = all_features->storagePushConstant8;
+         features->shaderBufferInt64Atomics = all_features->shaderBufferInt64Atomics;
+         features->shaderSharedInt64Atomics = all_features->shaderSharedInt64Atomics;
+         features->shaderFloat16 = all_features->shaderFloat16;
+         features->shaderInt8 = all_features->shaderInt8;
+         features->descriptorIndexing = all_features->descriptorIndexing;
+         features->shaderInputAttachmentArrayDynamicIndexing = all_features->shaderInputAttachmentArrayDynamicIndexing;
+         features->shaderUniformTexelBufferArrayDynamicIndexing = all_features->shaderUniformTexelBufferArrayDynamicIndexing;
+         features->shaderStorageTexelBufferArrayDynamicIndexing = all_features->shaderStorageTexelBufferArrayDynamicIndexing;
+         features->shaderUniformBufferArrayNonUniformIndexing = all_features->shaderUniformBufferArrayNonUniformIndexing;
+         features->shaderSampledImageArrayNonUniformIndexing = all_features->shaderSampledImageArrayNonUniformIndexing;
+         features->shaderStorageBufferArrayNonUniformIndexing = all_features->shaderStorageBufferArrayNonUniformIndexing;
+         features->shaderStorageImageArrayNonUniformIndexing = all_features->shaderStorageImageArrayNonUniformIndexing;
+         features->shaderInputAttachmentArrayNonUniformIndexing = all_features->shaderInputAttachmentArrayNonUniformIndexing;
+         features->shaderUniformTexelBufferArrayNonUniformIndexing = all_features->shaderUniformTexelBufferArrayNonUniformIndexing;
+         features->shaderStorageTexelBufferArrayNonUniformIndexing = all_features->shaderStorageTexelBufferArrayNonUniformIndexing;
+         features->descriptorBindingUniformBufferUpdateAfterBind = all_features->descriptorBindingUniformBufferUpdateAfterBind;
+         features->descriptorBindingSampledImageUpdateAfterBind = all_features->descriptorBindingSampledImageUpdateAfterBind;
+         features->descriptorBindingStorageImageUpdateAfterBind = all_features->descriptorBindingStorageImageUpdateAfterBind;
+         features->descriptorBindingStorageBufferUpdateAfterBind = all_features->descriptorBindingStorageBufferUpdateAfterBind;
+         features->descriptorBindingUniformTexelBufferUpdateAfterBind = all_features->descriptorBindingUniformTexelBufferUpdateAfterBind;
+         features->descriptorBindingStorageTexelBufferUpdateAfterBind = all_features->descriptorBindingStorageTexelBufferUpdateAfterBind;
+         features->descriptorBindingUpdateUnusedWhilePending = all_features->descriptorBindingUpdateUnusedWhilePending;
+         features->descriptorBindingPartiallyBound = all_features->descriptorBindingPartiallyBound;
+         features->descriptorBindingVariableDescriptorCount = all_features->descriptorBindingVariableDescriptorCount;
+         features->runtimeDescriptorArray = all_features->runtimeDescriptorArray;
+         features->samplerFilterMinmax = all_features->samplerFilterMinmax;
+         features->scalarBlockLayout = all_features->scalarBlockLayout;
+         features->imagelessFramebuffer = all_features->imagelessFramebuffer;
+         features->uniformBufferStandardLayout = all_features->uniformBufferStandardLayout;
+         features->shaderSubgroupExtendedTypes = all_features->shaderSubgroupExtendedTypes;
+         features->separateDepthStencilLayouts = all_features->separateDepthStencilLayouts;
+         features->hostQueryReset = all_features->hostQueryReset;
+         features->timelineSemaphore = all_features->timelineSemaphore;
+         features->bufferDeviceAddress = all_features->bufferDeviceAddress;
+         features->bufferDeviceAddressCaptureReplay = all_features->bufferDeviceAddressCaptureReplay;
+         features->bufferDeviceAddressMultiDevice = all_features->bufferDeviceAddressMultiDevice;
+         features->vulkanMemoryModel = all_features->vulkanMemoryModel;
+         features->vulkanMemoryModelDeviceScope = all_features->vulkanMemoryModelDeviceScope;
+         features->vulkanMemoryModelAvailabilityVisibilityChains = all_features->vulkanMemoryModelAvailabilityVisibilityChains;
+         features->shaderOutputViewportIndex = all_features->shaderOutputViewportIndex;
+         features->shaderOutputLayer = all_features->shaderOutputLayer;
+         features->subgroupBroadcastDynamicId = all_features->subgroupBroadcastDynamicId;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES: {
+         VkPhysicalDeviceVulkan13Features *features = (void *) ext;
+         features->robustImageAccess = all_features->robustImageAccess;
+         features->inlineUniformBlock = all_features->inlineUniformBlock;
+         features->descriptorBindingInlineUniformBlockUpdateAfterBind = all_features->descriptorBindingInlineUniformBlockUpdateAfterBind;
+         features->pipelineCreationCacheControl = all_features->pipelineCreationCacheControl;
+         features->privateData = all_features->privateData;
+         features->shaderDemoteToHelperInvocation = all_features->shaderDemoteToHelperInvocation;
+         features->shaderTerminateInvocation = all_features->shaderTerminateInvocation;
+         features->subgroupSizeControl = all_features->subgroupSizeControl;
+         features->computeFullSubgroups = all_features->computeFullSubgroups;
+         features->synchronization2 = all_features->synchronization2;
+         features->textureCompressionASTC_HDR = all_features->textureCompressionASTC_HDR;
+         features->shaderZeroInitializeWorkgroupMemory = all_features->shaderZeroInitializeWorkgroupMemory;
+         features->dynamicRendering = all_features->dynamicRendering;
+         features->shaderIntegerDotProduct = all_features->shaderIntegerDotProduct;
+         features->maintenance4 = all_features->maintenance4;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COHERENT_MEMORY_FEATURES_AMD: {
+         VkPhysicalDeviceCoherentMemoryFeaturesAMD *features = (void *) ext;
+         features->deviceCoherentMemory = all_features->deviceCoherentMemory;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CUSTOM_BORDER_COLOR_FEATURES_EXT: {
+         VkPhysicalDeviceCustomBorderColorFeaturesEXT *features = (void *) ext;
+         features->customBorderColors = all_features->customBorderColors;
+         features->customBorderColorWithoutFormat = all_features->customBorderColorWithoutFormat;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_BORDER_COLOR_SWIZZLE_FEATURES_EXT: {
+         VkPhysicalDeviceBorderColorSwizzleFeaturesEXT *features = (void *) ext;
+         features->borderColorSwizzle = all_features->borderColorSwizzle;
+         features->borderColorSwizzleFromImage = all_features->borderColorSwizzleFromImage;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_FEATURES_EXT: {
+         VkPhysicalDeviceExtendedDynamicStateFeaturesEXT *features = (void *) ext;
+         features->extendedDynamicState = all_features->extendedDynamicState;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_2_FEATURES_EXT: {
+         VkPhysicalDeviceExtendedDynamicState2FeaturesEXT *features = (void *) ext;
+         features->extendedDynamicState2 = all_features->extendedDynamicState2;
+         features->extendedDynamicState2LogicOp = all_features->extendedDynamicState2LogicOp;
+         features->extendedDynamicState2PatchControlPoints = all_features->extendedDynamicState2PatchControlPoints;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTENDED_DYNAMIC_STATE_3_FEATURES_EXT: {
+         VkPhysicalDeviceExtendedDynamicState3FeaturesEXT *features = (void *) ext;
+         features->extendedDynamicState3TessellationDomainOrigin = all_features->extendedDynamicState3TessellationDomainOrigin;
+         features->extendedDynamicState3DepthClampEnable = all_features->extendedDynamicState3DepthClampEnable;
+         features->extendedDynamicState3PolygonMode = all_features->extendedDynamicState3PolygonMode;
+         features->extendedDynamicState3RasterizationSamples = all_features->extendedDynamicState3RasterizationSamples;
+         features->extendedDynamicState3SampleMask = all_features->extendedDynamicState3SampleMask;
+         features->extendedDynamicState3AlphaToCoverageEnable = all_features->extendedDynamicState3AlphaToCoverageEnable;
+         features->extendedDynamicState3AlphaToOneEnable = all_features->extendedDynamicState3AlphaToOneEnable;
+         features->extendedDynamicState3LogicOpEnable = all_features->extendedDynamicState3LogicOpEnable;
+         features->extendedDynamicState3ColorBlendEnable = all_features->extendedDynamicState3ColorBlendEnable;
+         features->extendedDynamicState3ColorBlendEquation = all_features->extendedDynamicState3ColorBlendEquation;
+         features->extendedDynamicState3ColorWriteMask = all_features->extendedDynamicState3ColorWriteMask;
+         features->extendedDynamicState3RasterizationStream = all_features->extendedDynamicState3RasterizationStream;
+         features->extendedDynamicState3ConservativeRasterizationMode = all_features->extendedDynamicState3ConservativeRasterizationMode;
+         features->extendedDynamicState3ExtraPrimitiveOverestimationSize = all_features->extendedDynamicState3ExtraPrimitiveOverestimationSize;
+         features->extendedDynamicState3DepthClipEnable = all_features->extendedDynamicState3DepthClipEnable;
+         features->extendedDynamicState3SampleLocationsEnable = all_features->extendedDynamicState3SampleLocationsEnable;
+         features->extendedDynamicState3ColorBlendAdvanced = all_features->extendedDynamicState3ColorBlendAdvanced;
+         features->extendedDynamicState3ProvokingVertexMode = all_features->extendedDynamicState3ProvokingVertexMode;
+         features->extendedDynamicState3LineRasterizationMode = all_features->extendedDynamicState3LineRasterizationMode;
+         features->extendedDynamicState3LineStippleEnable = all_features->extendedDynamicState3LineStippleEnable;
+         features->extendedDynamicState3DepthClipNegativeOneToOne = all_features->extendedDynamicState3DepthClipNegativeOneToOne;
+         features->extendedDynamicState3ViewportWScalingEnable = all_features->extendedDynamicState3ViewportWScalingEnable;
+         features->extendedDynamicState3ViewportSwizzle = all_features->extendedDynamicState3ViewportSwizzle;
+         features->extendedDynamicState3CoverageToColorEnable = all_features->extendedDynamicState3CoverageToColorEnable;
+         features->extendedDynamicState3CoverageToColorLocation = all_features->extendedDynamicState3CoverageToColorLocation;
+         features->extendedDynamicState3CoverageModulationMode = all_features->extendedDynamicState3CoverageModulationMode;
+         features->extendedDynamicState3CoverageModulationTableEnable = all_features->extendedDynamicState3CoverageModulationTableEnable;
+         features->extendedDynamicState3CoverageModulationTable = all_features->extendedDynamicState3CoverageModulationTable;
+         features->extendedDynamicState3CoverageReductionMode = all_features->extendedDynamicState3CoverageReductionMode;
+         features->extendedDynamicState3RepresentativeFragmentTestEnable = all_features->extendedDynamicState3RepresentativeFragmentTestEnable;
+         features->extendedDynamicState3ShadingRateImageEnable = all_features->extendedDynamicState3ShadingRateImageEnable;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DIAGNOSTICS_CONFIG_FEATURES_NV: {
+         VkPhysicalDeviceDiagnosticsConfigFeaturesNV *features = (void *) ext;
+         features->diagnosticsConfig = all_features->diagnosticsConfig;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ZERO_INITIALIZE_WORKGROUP_MEMORY_FEATURES: {
+         VkPhysicalDeviceZeroInitializeWorkgroupMemoryFeatures *features = (void *) ext;
+         features->shaderZeroInitializeWorkgroupMemory = all_features->shaderZeroInitializeWorkgroupMemory;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_SUBGROUP_UNIFORM_CONTROL_FLOW_FEATURES_KHR: {
+         VkPhysicalDeviceShaderSubgroupUniformControlFlowFeaturesKHR *features = (void *) ext;
+         features->shaderSubgroupUniformControlFlow = all_features->shaderSubgroupUniformControlFlow;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ROBUSTNESS_2_FEATURES_EXT: {
+         VkPhysicalDeviceRobustness2FeaturesEXT *features = (void *) ext;
+         features->robustBufferAccess2 = all_features->robustBufferAccess2;
+         features->robustImageAccess2 = all_features->robustImageAccess2;
+         features->nullDescriptor = all_features->nullDescriptor;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_ROBUSTNESS_FEATURES: {
+         VkPhysicalDeviceImageRobustnessFeatures *features = (void *) ext;
+         features->robustImageAccess = all_features->robustImageAccess;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_WORKGROUP_MEMORY_EXPLICIT_LAYOUT_FEATURES_KHR: {
+         VkPhysicalDeviceWorkgroupMemoryExplicitLayoutFeaturesKHR *features = (void *) ext;
+         features->workgroupMemoryExplicitLayout = all_features->workgroupMemoryExplicitLayout;
+         features->workgroupMemoryExplicitLayoutScalarBlockLayout = all_features->workgroupMemoryExplicitLayoutScalarBlockLayout;
+         features->workgroupMemoryExplicitLayout8BitAccess = all_features->workgroupMemoryExplicitLayout8BitAccess;
+         features->workgroupMemoryExplicitLayout16BitAccess = all_features->workgroupMemoryExplicitLayout16BitAccess;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_4444_FORMATS_FEATURES_EXT: {
+         VkPhysicalDevice4444FormatsFeaturesEXT *features = (void *) ext;
+         features->formatA4R4G4B4 = all_features->formatA4R4G4B4;
+         features->formatA4B4G4R4 = all_features->formatA4B4G4R4;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_SHADING_FEATURES_HUAWEI: {
+         VkPhysicalDeviceSubpassShadingFeaturesHUAWEI *features = (void *) ext;
+         features->subpassShading = all_features->subpassShading;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_CLUSTER_CULLING_SHADER_FEATURES_HUAWEI: {
+         VkPhysicalDeviceClusterCullingShaderFeaturesHUAWEI *features = (void *) ext;
+         features->clustercullingShader = all_features->clustercullingShader;
+         features->multiviewClusterCullingShader = all_features->multiviewClusterCullingShader;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_IMAGE_ATOMIC_INT64_FEATURES_EXT: {
+         VkPhysicalDeviceShaderImageAtomicInt64FeaturesEXT *features = (void *) ext;
+         features->shaderImageInt64Atomics = all_features->shaderImageInt64Atomics;
+         features->sparseImageInt64Atomics = all_features->sparseImageInt64Atomics;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_FEATURES_KHR: {
+         VkPhysicalDeviceFragmentShadingRateFeaturesKHR *features = (void *) ext;
+         features->pipelineFragmentShadingRate = all_features->pipelineFragmentShadingRate;
+         features->primitiveFragmentShadingRate = all_features->primitiveFragmentShadingRate;
+         features->attachmentFragmentShadingRate = all_features->attachmentFragmentShadingRate;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TERMINATE_INVOCATION_FEATURES: {
+         VkPhysicalDeviceShaderTerminateInvocationFeatures *features = (void *) ext;
+         features->shaderTerminateInvocation = all_features->shaderTerminateInvocation;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADING_RATE_ENUMS_FEATURES_NV: {
+         VkPhysicalDeviceFragmentShadingRateEnumsFeaturesNV *features = (void *) ext;
+         features->fragmentShadingRateEnums = all_features->fragmentShadingRateEnums;
+         features->supersampleFragmentShadingRates = all_features->supersampleFragmentShadingRates;
+         features->noInvocationFragmentShadingRates = all_features->noInvocationFragmentShadingRates;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_2D_VIEW_OF_3D_FEATURES_EXT: {
+         VkPhysicalDeviceImage2DViewOf3DFeaturesEXT *features = (void *) ext;
+         features->image2DViewOf3D = all_features->image2DViewOf3D;
+         features->sampler2DViewOf3D = all_features->sampler2DViewOf3D;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_SLICED_VIEW_OF_3D_FEATURES_EXT: {
+         VkPhysicalDeviceImageSlicedViewOf3DFeaturesEXT *features = (void *) ext;
+         features->imageSlicedViewOf3D = all_features->imageSlicedViewOf3D;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MUTABLE_DESCRIPTOR_TYPE_FEATURES_EXT: {
+         VkPhysicalDeviceMutableDescriptorTypeFeaturesEXT *features = (void *) ext;
+         features->mutableDescriptorType = all_features->mutableDescriptorType;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLIP_CONTROL_FEATURES_EXT: {
+         VkPhysicalDeviceDepthClipControlFeaturesEXT *features = (void *) ext;
+         features->depthClipControl = all_features->depthClipControl;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VERTEX_INPUT_DYNAMIC_STATE_FEATURES_EXT: {
+         VkPhysicalDeviceVertexInputDynamicStateFeaturesEXT *features = (void *) ext;
+         features->vertexInputDynamicState = all_features->vertexInputDynamicState;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_MEMORY_RDMA_FEATURES_NV: {
+         VkPhysicalDeviceExternalMemoryRDMAFeaturesNV *features = (void *) ext;
+         features->externalMemoryRDMA = all_features->externalMemoryRDMA;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT: {
+         VkPhysicalDeviceColorWriteEnableFeaturesEXT *features = (void *) ext;
+         features->colorWriteEnable = all_features->colorWriteEnable;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SYNCHRONIZATION_2_FEATURES: {
+         VkPhysicalDeviceSynchronization2Features *features = (void *) ext;
+         features->synchronization2 = all_features->synchronization2;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PRIMITIVES_GENERATED_QUERY_FEATURES_EXT: {
+         VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT *features = (void *) ext;
+         features->primitivesGeneratedQuery = all_features->primitivesGeneratedQuery;
+         features->primitivesGeneratedQueryWithRasterizerDiscard = all_features->primitivesGeneratedQueryWithRasterizerDiscard;
+         features->primitivesGeneratedQueryWithNonZeroStreams = all_features->primitivesGeneratedQueryWithNonZeroStreams;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LEGACY_DITHERING_FEATURES_EXT: {
+         VkPhysicalDeviceLegacyDitheringFeaturesEXT *features = (void *) ext;
+         features->legacyDithering = all_features->legacyDithering;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTISAMPLED_RENDER_TO_SINGLE_SAMPLED_FEATURES_EXT: {
+         VkPhysicalDeviceMultisampledRenderToSingleSampledFeaturesEXT *features = (void *) ext;
+         features->multisampledRenderToSingleSampled = all_features->multisampledRenderToSingleSampled;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROTECTED_ACCESS_FEATURES_EXT: {
+         VkPhysicalDevicePipelineProtectedAccessFeaturesEXT *features = (void *) ext;
+         features->pipelineProtectedAccess = all_features->pipelineProtectedAccess;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_INHERITED_VIEWPORT_SCISSOR_FEATURES_NV: {
+         VkPhysicalDeviceInheritedViewportScissorFeaturesNV *features = (void *) ext;
+         features->inheritedViewportScissor2D = all_features->inheritedViewportScissor2D;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_YCBCR_2_PLANE_444_FORMATS_FEATURES_EXT: {
+         VkPhysicalDeviceYcbcr2Plane444FormatsFeaturesEXT *features = (void *) ext;
+         features->ycbcr2plane444Formats = all_features->ycbcr2plane444Formats;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROVOKING_VERTEX_FEATURES_EXT: {
+         VkPhysicalDeviceProvokingVertexFeaturesEXT *features = (void *) ext;
+         features->provokingVertexLast = all_features->provokingVertexLast;
+         features->transformFeedbackPreservesProvokingVertex = all_features->transformFeedbackPreservesProvokingVertex;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_BUFFER_FEATURES_EXT: {
+         VkPhysicalDeviceDescriptorBufferFeaturesEXT *features = (void *) ext;
+         features->descriptorBuffer = all_features->descriptorBuffer;
+         features->descriptorBufferCaptureReplay = all_features->descriptorBufferCaptureReplay;
+         features->descriptorBufferImageLayoutIgnored = all_features->descriptorBufferImageLayoutIgnored;
+         features->descriptorBufferPushDescriptors = all_features->descriptorBufferPushDescriptors;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_INTEGER_DOT_PRODUCT_FEATURES: {
+         VkPhysicalDeviceShaderIntegerDotProductFeatures *features = (void *) ext;
+         features->shaderIntegerDotProduct = all_features->shaderIntegerDotProduct;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FRAGMENT_SHADER_BARYCENTRIC_FEATURES_KHR: {
+         VkPhysicalDeviceFragmentShaderBarycentricFeaturesKHR *features = (void *) ext;
+         features->fragmentShaderBarycentric = all_features->fragmentShaderBarycentric;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_MOTION_BLUR_FEATURES_NV: {
+         VkPhysicalDeviceRayTracingMotionBlurFeaturesNV *features = (void *) ext;
+         features->rayTracingMotionBlur = all_features->rayTracingMotionBlur;
+         features->rayTracingMotionBlurPipelineTraceRaysIndirect = all_features->rayTracingMotionBlurPipelineTraceRaysIndirect;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RGBA10X6_FORMATS_FEATURES_EXT: {
+         VkPhysicalDeviceRGBA10X6FormatsFeaturesEXT *features = (void *) ext;
+         features->formatRgba10x6WithoutYCbCrSampler = all_features->formatRgba10x6WithoutYCbCrSampler;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES: {
+         VkPhysicalDeviceDynamicRenderingFeatures *features = (void *) ext;
+         features->dynamicRendering = all_features->dynamicRendering;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_VIEW_MIN_LOD_FEATURES_EXT: {
+         VkPhysicalDeviceImageViewMinLodFeaturesEXT *features = (void *) ext;
+         features->minLod = all_features->minLod;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RASTERIZATION_ORDER_ATTACHMENT_ACCESS_FEATURES_EXT: {
+         VkPhysicalDeviceRasterizationOrderAttachmentAccessFeaturesEXT *features = (void *) ext;
+         features->rasterizationOrderColorAttachmentAccess = all_features->rasterizationOrderColorAttachmentAccess;
+         features->rasterizationOrderDepthAttachmentAccess = all_features->rasterizationOrderDepthAttachmentAccess;
+         features->rasterizationOrderStencilAttachmentAccess = all_features->rasterizationOrderStencilAttachmentAccess;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_LINEAR_COLOR_ATTACHMENT_FEATURES_NV: {
+         VkPhysicalDeviceLinearColorAttachmentFeaturesNV *features = (void *) ext;
+         features->linearColorAttachment = all_features->linearColorAttachment;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_GRAPHICS_PIPELINE_LIBRARY_FEATURES_EXT: {
+         VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT *features = (void *) ext;
+         features->graphicsPipelineLibrary = all_features->graphicsPipelineLibrary;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_SET_HOST_MAPPING_FEATURES_VALVE: {
+         VkPhysicalDeviceDescriptorSetHostMappingFeaturesVALVE *features = (void *) ext;
+         features->descriptorSetHostMapping = all_features->descriptorSetHostMapping;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_MODULE_IDENTIFIER_FEATURES_EXT: {
+         VkPhysicalDeviceShaderModuleIdentifierFeaturesEXT *features = (void *) ext;
+         features->shaderModuleIdentifier = all_features->shaderModuleIdentifier;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_FEATURES_EXT: {
+         VkPhysicalDeviceImageCompressionControlFeaturesEXT *features = (void *) ext;
+         features->imageCompressionControl = all_features->imageCompressionControl;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_COMPRESSION_CONTROL_SWAPCHAIN_FEATURES_EXT: {
+         VkPhysicalDeviceImageCompressionControlSwapchainFeaturesEXT *features = (void *) ext;
+         features->imageCompressionControlSwapchain = all_features->imageCompressionControlSwapchain;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBPASS_MERGE_FEEDBACK_FEATURES_EXT: {
+         VkPhysicalDeviceSubpassMergeFeedbackFeaturesEXT *features = (void *) ext;
+         features->subpassMergeFeedback = all_features->subpassMergeFeedback;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPACITY_MICROMAP_FEATURES_EXT: {
+         VkPhysicalDeviceOpacityMicromapFeaturesEXT *features = (void *) ext;
+         features->micromap = all_features->micromap;
+         features->micromapCaptureReplay = all_features->micromapCaptureReplay;
+         features->micromapHostCommands = all_features->micromapHostCommands;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_PROPERTIES_FEATURES_EXT: {
+         VkPhysicalDevicePipelinePropertiesFeaturesEXT *features = (void *) ext;
+         features->pipelinePropertiesIdentifier = all_features->pipelinePropertiesIdentifier;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_EARLY_AND_LATE_FRAGMENT_TESTS_FEATURES_AMD: {
+         VkPhysicalDeviceShaderEarlyAndLateFragmentTestsFeaturesAMD *features = (void *) ext;
+         features->shaderEarlyAndLateFragmentTests = all_features->shaderEarlyAndLateFragmentTests;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_NON_SEAMLESS_CUBE_MAP_FEATURES_EXT: {
+         VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT *features = (void *) ext;
+         features->nonSeamlessCubeMap = all_features->nonSeamlessCubeMap;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_ROBUSTNESS_FEATURES_EXT: {
+         VkPhysicalDevicePipelineRobustnessFeaturesEXT *features = (void *) ext;
+         features->pipelineRobustness = all_features->pipelineRobustness;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_PROCESSING_FEATURES_QCOM: {
+         VkPhysicalDeviceImageProcessingFeaturesQCOM *features = (void *) ext;
+         features->textureSampleWeighted = all_features->textureSampleWeighted;
+         features->textureBoxFilter = all_features->textureBoxFilter;
+         features->textureBlockMatch = all_features->textureBlockMatch;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_TILE_PROPERTIES_FEATURES_QCOM: {
+         VkPhysicalDeviceTilePropertiesFeaturesQCOM *features = (void *) ext;
+         features->tileProperties = all_features->tileProperties;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_AMIGO_PROFILING_FEATURES_SEC: {
+         VkPhysicalDeviceAmigoProfilingFeaturesSEC *features = (void *) ext;
+         features->amigoProfiling = all_features->amigoProfiling;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ATTACHMENT_FEEDBACK_LOOP_LAYOUT_FEATURES_EXT: {
+         VkPhysicalDeviceAttachmentFeedbackLoopLayoutFeaturesEXT *features = (void *) ext;
+         features->attachmentFeedbackLoopLayout = all_features->attachmentFeedbackLoopLayout;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DEPTH_CLAMP_ZERO_ONE_FEATURES_EXT: {
+         VkPhysicalDeviceDepthClampZeroOneFeaturesEXT *features = (void *) ext;
+         features->depthClampZeroOne = all_features->depthClampZeroOne;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_ADDRESS_BINDING_REPORT_FEATURES_EXT: {
+         VkPhysicalDeviceAddressBindingReportFeaturesEXT *features = (void *) ext;
+         features->reportAddressBinding = all_features->reportAddressBinding;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_OPTICAL_FLOW_FEATURES_NV: {
+         VkPhysicalDeviceOpticalFlowFeaturesNV *features = (void *) ext;
+         features->opticalFlow = all_features->opticalFlow;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT: {
+         VkPhysicalDeviceFaultFeaturesEXT *features = (void *) ext;
+         features->deviceFault = all_features->deviceFault;
+         features->deviceFaultVendorBinary = all_features->deviceFaultVendorBinary;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PIPELINE_LIBRARY_GROUP_HANDLES_FEATURES_EXT: {
+         VkPhysicalDevicePipelineLibraryGroupHandlesFeaturesEXT *features = (void *) ext;
+         features->pipelineLibraryGroupHandles = all_features->pipelineLibraryGroupHandles;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_CORE_BUILTINS_FEATURES_ARM: {
+         VkPhysicalDeviceShaderCoreBuiltinsFeaturesARM *features = (void *) ext;
+         features->shaderCoreBuiltins = all_features->shaderCoreBuiltins;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SWAPCHAIN_MAINTENANCE_1_FEATURES_EXT: {
+         VkPhysicalDeviceSwapchainMaintenance1FeaturesEXT *features = (void *) ext;
+         features->swapchainMaintenance1 = all_features->swapchainMaintenance1;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_RAY_TRACING_INVOCATION_REORDER_FEATURES_NV: {
+         VkPhysicalDeviceRayTracingInvocationReorderFeaturesNV *features = (void *) ext;
+         features->rayTracingInvocationReorder = all_features->rayTracingInvocationReorder;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_VIEWPORTS_FEATURES_QCOM: {
+         VkPhysicalDeviceMultiviewPerViewViewportsFeaturesQCOM *features = (void *) ext;
+         features->multiviewPerViewViewports = all_features->multiviewPerViewViewports;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_RENDER_AREAS_FEATURES_QCOM: {
+         VkPhysicalDeviceMultiviewPerViewRenderAreasFeaturesQCOM *features = (void *) ext;
+         features->multiviewPerViewRenderAreas = all_features->multiviewPerViewRenderAreas;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT: {
+         VkPhysicalDeviceShaderObjectFeaturesEXT *features = (void *) ext;
+         features->shaderObject = all_features->shaderObject;
+         break;
+      }
+
+      case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_TILE_IMAGE_FEATURES_EXT: {
+         VkPhysicalDeviceShaderTileImageFeaturesEXT *features = (void *) ext;
+         features->shaderTileImageColorReadAccess = all_features->shaderTileImageColorReadAccess;
+         features->shaderTileImageDepthReadAccess = all_features->shaderTileImageDepthReadAccess;
+         features->shaderTileImageStencilReadAccess = all_features->shaderTileImageStencilReadAccess;
+         break;
+      }
+
+      default:
+         break;
+      }
+   }
+}

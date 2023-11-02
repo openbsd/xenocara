@@ -198,19 +198,7 @@ setup_border_colors(struct fd_texture_stateobj *tex,
 
       bc = &sampler->border_color;
 
-      /*
-       * XXX HACK ALERT XXX
-       *
-       * The border colors need to be swizzled in a particular
-       * format-dependent order. Even though samplers don't know about
-       * formats, we can assume that with a GL state tracker, there's a
-       * 1:1 correspondence between sampler and texture. Take advantage
-       * of that knowledge.
-       */
-      if ((i >= tex->num_textures) || !tex->textures[i])
-         continue;
-
-      enum pipe_format format = tex->textures[i]->format;
+      enum pipe_format format = sampler->border_color_format;
       const struct util_format_description *desc =
          util_format_description(format);
 
@@ -653,7 +641,7 @@ fd5_emit_state(struct fd_context *ctx, struct fd_ringbuffer *ring,
       OUT_RING(ring, A5XX_GRAS_CL_VPORT_ZSCALE_0(vp->scale[2]));
    }
 
-   if (dirty & (FD_DIRTY_PROG | FD_DIRTY_RASTERIZER_CLIP_PLANE_ENABLE))
+   if (dirty & FD_DIRTY_PROG)
       fd5_program_emit(ctx, ring, emit);
 
    if (dirty & FD_DIRTY_RASTERIZER) {

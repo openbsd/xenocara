@@ -47,6 +47,7 @@ struct trace_surface {
 };
 void __trace_surface(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , void *cs
      , const struct pipe_surface * psurf
 );
@@ -55,11 +56,13 @@ static ALWAYS_INLINE void trace_surface(
    , void *cs
    , const struct pipe_surface * psurf
 ) {
-   if (!unlikely(u_trace_instrument() &&
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
                  true))
       return;
    __trace_surface(
         ut
+      , enabled_traces
       , cs
       , psurf
    );
@@ -77,6 +80,7 @@ struct trace_framebuffer {
 };
 void __trace_framebuffer(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , void *cs
      , const struct pipe_framebuffer_state * pfb
 );
@@ -85,11 +89,13 @@ static ALWAYS_INLINE void trace_framebuffer(
    , void *cs
    , const struct pipe_framebuffer_state * pfb
 ) {
-   if (!unlikely(u_trace_instrument() &&
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
                  true))
       return;
    __trace_framebuffer(
         ut
+      , enabled_traces
       , cs
       , pfb
    );
@@ -109,6 +115,7 @@ struct trace_grid_info {
 };
 void __trace_grid_info(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , void *cs
      , const struct pipe_grid_info * pgrid
 );
@@ -117,11 +124,13 @@ static ALWAYS_INLINE void trace_grid_info(
    , void *cs
    , const struct pipe_grid_info * pgrid
 ) {
-   if (!unlikely(u_trace_instrument() &&
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
                  true))
       return;
    __trace_grid_info(
         ut
+      , enabled_traces
       , cs
       , pgrid
    );

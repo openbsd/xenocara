@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2022/09/02 05:46:40 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	r300
 
@@ -42,7 +42,6 @@ SRCS=	r300_blit.c \
 	radeon_dataflow.c \
 	radeon_dataflow_deadcode.c \
 	radeon_dataflow_swizzles.c \
-	radeon_emulate_branches.c \
 	radeon_inline_literals.c \
 	radeon_list.c \
 	radeon_opcodes.c \
@@ -56,6 +55,7 @@ SRCS=	r300_blit.c \
 	radeon_program_pair.c \
 	radeon_program_print.c \
 	radeon_program_tex.c \
+	radeon_regalloc.c \
 	radeon_remove_constants.c \
 	radeon_rename_regs.c \
 	radeon_variable.c \

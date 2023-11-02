@@ -2,30 +2,7 @@
  * SGI FREE SOFTWARE LICENSE B (Version 2.0, Sept. 18, 2008)
  * Copyright (C) 1991-2000 Silicon Graphics, Inc. All Rights Reserved.
  *
- * Permission is hereby granted, free of charge, to any person obtaining a
- * copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice including the dates of first publication and
- * either this permission notice or a reference to
- * http://oss.sgi.com/projects/FreeB/
- * shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
- * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * SILICON GRAPHICS, INC. BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
- * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- * Except as contained in this notice, the name of Silicon Graphics, Inc.
- * shall not be used in advertising or otherwise to promote the sale, use or
- * other dealings in this Software without prior written authorization from
- * Silicon Graphics, Inc.
+ * SPDX-License-Identifier: SGI-B-2.0
  */
 
 /**
@@ -176,6 +153,7 @@ MakeContextCurrent(Display * dpy, GLXDrawable draw,
 {
    struct glx_context *gc = (struct glx_context *) gc_user;
    struct glx_context *oldGC = __glXGetCurrentContext();
+   int ret = GL_TRUE;
 
    /* Make sure that the new context has a nonzero ID.  In the request,
     * a zero context ID is used only to mean that we bind to no current
@@ -187,24 +165,31 @@ MakeContextCurrent(Display * dpy, GLXDrawable draw,
 
    _glapi_check_multithread();
 
-   __glXLock();
-   if (oldGC == gc &&
-       gc->currentDrawable == draw && gc->currentReadable == read) {
-      __glXUnlock();
-      return True;
-   }
-
    /* can't have only one be 0 */
    if (!!draw != !!read) {
-      __glXUnlock();
       __glXSendError(dpy, BadMatch, None, opcode, True);
       return False;
    }
 
+   if (oldGC == gc &&
+       gc->currentDrawable == draw && gc->currentReadable == read)
+      return True;
+
+   __glXLock();
+
    if (oldGC != &dummyContext) {
-      oldGC->vtable->unbind(oldGC, gc);
+      oldGC->vtable->unbind(oldGC);
       oldGC->currentDpy = NULL;
+
+      if (oldGC->xid == None) {
+         /* We are switching away from a context that was
+          * previously destroyed, so we need to free the memory
+          * for the old handle. */
+         oldGC->vtable->destroy(oldGC);
+      }
    }
+
+   __glXSetCurrentContextNull();
 
    if (gc) {
       /* Attempt to bind the context.  We do this before mucking with
@@ -215,31 +200,22 @@ MakeContextCurrent(Display * dpy, GLXDrawable draw,
        * blown away our old context.  The caller is responsible for
        * figuring out how to handle setting a valid context.
        */
-      if (gc->vtable->bind(gc, oldGC, draw, read) != Success) {
-         __glXSetCurrentContextNull();
-         __glXUnlock();
-         __glXSendError(dpy, GLXBadContext, None, opcode, False);
-         return GL_FALSE;
+      if (gc->vtable->bind(gc, draw, read) != Success) {
+         ret = GL_FALSE;
+      } else {
+         gc->currentDpy = dpy;
+         gc->currentDrawable = draw;
+         gc->currentReadable = read;
+         __glXSetCurrentContext(gc);
       }
-
-      gc->currentDpy = dpy;
-      gc->currentDrawable = draw;
-      gc->currentReadable = read;
-      __glXSetCurrentContext(gc);
-   } else {
-      __glXSetCurrentContextNull();
-   }
-
-   if (oldGC->currentDpy == NULL && oldGC != &dummyContext && oldGC->xid == None) {
-      /* We are switching away from a context that was
-       * previously destroyed, so we need to free the memory
-       * for the old handle. */
-      oldGC->vtable->destroy(oldGC);
    }
 
    __glXUnlock();
 
-   return GL_TRUE;
+   if (!ret)
+      __glXSendError(dpy, GLXBadContext, None, opcode, False);
+
+   return ret;
 }
 
 _GLX_PUBLIC Bool

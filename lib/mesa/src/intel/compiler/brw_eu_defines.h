@@ -388,7 +388,6 @@ enum opcode {
     */
    VEC4_OPCODE_UNTYPED_ATOMIC,
    SHADER_OPCODE_UNTYPED_ATOMIC_LOGICAL,
-   SHADER_OPCODE_UNTYPED_ATOMIC_FLOAT_LOGICAL,
    VEC4_OPCODE_UNTYPED_SURFACE_READ,
    SHADER_OPCODE_UNTYPED_SURFACE_READ_LOGICAL,
    VEC4_OPCODE_UNTYPED_SURFACE_WRITE,
@@ -413,11 +412,6 @@ enum opcode {
    SHADER_OPCODE_A64_UNALIGNED_OWORD_BLOCK_READ_LOGICAL,
    SHADER_OPCODE_A64_OWORD_BLOCK_WRITE_LOGICAL,
    SHADER_OPCODE_A64_UNTYPED_ATOMIC_LOGICAL,
-   SHADER_OPCODE_A64_UNTYPED_ATOMIC_INT16_LOGICAL,
-   SHADER_OPCODE_A64_UNTYPED_ATOMIC_INT64_LOGICAL,
-   SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT16_LOGICAL,
-   SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT32_LOGICAL,
-   SHADER_OPCODE_A64_UNTYPED_ATOMIC_FLOAT64_LOGICAL,
 
    SHADER_OPCODE_TYPED_ATOMIC_LOGICAL,
    SHADER_OPCODE_TYPED_SURFACE_READ_LOGICAL,
@@ -565,7 +559,6 @@ enum opcode {
    FS_OPCODE_PIXEL_X,
    FS_OPCODE_PIXEL_Y,
    FS_OPCODE_UNIFORM_PULL_CONSTANT_LOAD,
-   FS_OPCODE_UNIFORM_PULL_CONSTANT_LOAD_GFX7,
    FS_OPCODE_VARYING_PULL_CONSTANT_LOAD_GFX4,
    FS_OPCODE_VARYING_PULL_CONSTANT_LOAD_LOGICAL,
    FS_OPCODE_SET_SAMPLE_ID,
@@ -892,6 +885,17 @@ enum tex_logical_srcs {
    TEX_LOGICAL_SRC_GRAD_COMPONENTS,
 
    TEX_LOGICAL_NUM_SRCS,
+};
+
+enum pull_uniform_constant_srcs {
+   /** Surface binding table index */
+   PULL_UNIFORM_CONSTANT_SRC_SURFACE,
+   /** Surface offset */
+   PULL_UNIFORM_CONSTANT_SRC_OFFSET,
+   /** Pull size */
+   PULL_UNIFORM_CONSTANT_SRC_SIZE,
+
+   PULL_UNIFORM_CONSTANT_SRCS,
 };
 
 enum surface_logical_srcs {
@@ -1236,15 +1240,13 @@ tgl_swsb_encode(const struct intel_device_info *devinfo, struct tgl_swsb swsb)
  * tgl_swsb.
  */
 static inline struct tgl_swsb
-tgl_swsb_decode(const struct intel_device_info *devinfo, const enum opcode opcode,
-                const uint8_t x)
+tgl_swsb_decode(const struct intel_device_info *devinfo,
+                const bool is_unordered, const uint8_t x)
 {
    if (x & 0x80) {
       const struct tgl_swsb swsb = { (x & 0x70u) >> 4, TGL_PIPE_NONE,
                                      x & 0xfu,
-                                     (opcode == BRW_OPCODE_SEND ||
-                                      opcode == BRW_OPCODE_SENDC ||
-                                      opcode == BRW_OPCODE_MATH) ?
+                                     is_unordered ?
                                      TGL_SBID_SET : TGL_SBID_DST };
       return swsb;
    } else if ((x & 0x70) == 0x20) {

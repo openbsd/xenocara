@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:34 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	intel-driver-ds
 
@@ -17,6 +17,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel/ds \
 		-I${MESA_SRC}/generated/src/compiler/nir
 

@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX6_PACK_H
-#define GFX6_PACK_H
+#ifndef GFX6_SNB_PACK_H
+#define GFX6_SNB_PACK_H
 
 #include <stdio.h>
 
@@ -8313,4 +8313,4 @@ GFX6_VCS_RING_BUFFER_CTL_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_uint(values->BufferLengthinpages1, 12, 20);
 }
 
-#endif /* GFX6_PACK_H */
+#endif /* GFX6_SNB_PACK_H */

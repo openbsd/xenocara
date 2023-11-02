@@ -152,11 +152,14 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
 
    /* Get DRM version. */
    version = drmGetVersion(ws->fd);
+   if (!version)
+      return false;
+
    if (version->version_major != 2 ||
        version->version_minor < 50) {
       fprintf(stderr, "%s: DRM version is %d.%d.%d but this driver is "
                       "only compatible with 2.50.0 (kernel 4.12) or later.\n",
-              __FUNCTION__,
+              __func__,
               version->version_major,
               version->version_minor,
               version->version_patchlevel);
@@ -440,9 +443,12 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
        * This fails (silently) on non-GCN or older kernels, overwriting the
        * default enabled_rb_mask with the result of the last query.
        */
-      if (ws->gen >= DRV_SI)
-         radeon_get_drm_value(ws->fd, RADEON_INFO_SI_BACKEND_ENABLED_MASK, NULL,
-                              &ws->info.enabled_rb_mask);
+      if (ws->gen >= DRV_SI) {
+         uint32_t mask;
+
+         radeon_get_drm_value(ws->fd, RADEON_INFO_SI_BACKEND_ENABLED_MASK, NULL, &mask);
+         ws->info.enabled_rb_mask = mask;
+      }
 
       ws->info.r600_has_virtual_memory = false;
 
@@ -575,9 +581,17 @@ static bool do_winsys_init(struct radeon_drm_winsys *ws)
    ws->info.num_physical_sgprs_per_simd = 512;
    ws->info.num_physical_wave64_vgprs_per_simd = 256;
    ws->info.has_3d_cube_border_color_mipmap = true;
+   ws->info.has_image_opcodes = true;
    ws->info.spi_cu_en_has_effect = false;
    ws->info.spi_cu_en = 0xffff;
    ws->info.never_stop_sq_perf_counters = false;
+
+   /* The maximum number of scratch waves. The number is only a function of the number of CUs.
+    * It should be large enough to hold at least 1 threadgroup. Use the minimum per-SA CU count.
+    */
+   const unsigned max_waves_per_tg = 1024 / 64; /* LLVM only supports 1024 threads per block */
+   ws->info.max_scratch_waves = MAX2(32 * ws->info.min_good_cu_per_sa * ws->info.max_sa_per_se *
+                                     ws->info.num_se, max_waves_per_tg);
 
    ws->check_vm = strstr(debug_get_option("R600_DEBUG", ""), "check_vm") != NULL ||
                                                                             strstr(debug_get_option("AMD_DEBUG", ""), "check_vm") != NULL;
@@ -618,10 +632,7 @@ static void radeon_winsys_destroy(struct radeon_winsys *rws)
    FREE(rws);
 }
 
-static void radeon_query_info(struct radeon_winsys *rws,
-                              struct radeon_info *info,
-                              bool enable_smart_access_memory,
-                              bool disable_smart_access_memory)
+static void radeon_query_info(struct radeon_winsys *rws, struct radeon_info *info)
 {
    *info = ((struct radeon_drm_winsys *)rws)->info;
 }
@@ -792,6 +803,14 @@ static bool radeon_cs_set_pstate(struct radeon_cmdbuf* cs, enum radeon_ctx_pstat
     return false;
 }
 
+static int
+radeon_drm_winsys_get_fd(struct radeon_winsys *ws)
+{
+   struct radeon_drm_winsys *rws = (struct radeon_drm_winsys*)ws;
+
+   return rws->fd;
+}
+
 PUBLIC struct radeon_winsys *
 radeon_drm_winsys_create(int fd, const struct pipe_screen_config *config,
                          radeon_screen_create_t screen_create)
@@ -858,6 +877,7 @@ radeon_drm_winsys_create(int fd, const struct pipe_screen_config *config,
    /* Set functions. */
    ws->base.unref = radeon_winsys_unref;
    ws->base.destroy = radeon_winsys_destroy;
+   ws->base.get_fd = radeon_drm_winsys_get_fd;
    ws->base.query_info = radeon_query_info;
    ws->base.pin_threads_to_L3_cache = radeon_pin_threads_to_L3_cache;
    ws->base.cs_request_feature = radeon_cs_request_feature;

@@ -128,11 +128,10 @@ radv_amdgpu_winsys_bo_virtual_bind(struct radeon_winsys *_ws, struct radeon_wins
     * will first unmap all existing VA that overlap the requested range and then map.
     */
    if (bo) {
-      r = radv_amdgpu_bo_va_op(ws, bo->bo, bo_offset, size, parent->base.va + offset, 0, 0,
-                               AMDGPU_VA_OP_REPLACE);
+      r = radv_amdgpu_bo_va_op(ws, bo->bo, bo_offset, size, parent->base.va + offset, 0, 0, AMDGPU_VA_OP_REPLACE);
    } else {
-      r = radv_amdgpu_bo_va_op(ws, NULL, 0, size, parent->base.va + offset, 0, AMDGPU_VM_PAGE_PRT,
-                               AMDGPU_VA_OP_REPLACE);
+      r =
+         radv_amdgpu_bo_va_op(ws, NULL, 0, size, parent->base.va + offset, 0, AMDGPU_VM_PAGE_PRT, AMDGPU_VA_OP_REPLACE);
    }
 
    if (r) {
@@ -338,7 +337,7 @@ radv_amdgpu_winsys_bo_destroy(struct radeon_winsys *_ws, struct radeon_winsys_bo
       int r;
 
       /* Clear mappings of this PRT VA region. */
-      r = radv_amdgpu_bo_va_op(ws, bo->bo, 0, bo->size, bo->base.va, 0, 0, AMDGPU_VA_OP_CLEAR);
+      r = radv_amdgpu_bo_va_op(ws, NULL, 0, bo->size, bo->base.va, 0, 0, AMDGPU_VA_OP_CLEAR);
       if (r) {
          fprintf(stderr, "radv/amdgpu: Failed to clear a PRT VA region (%d).\n", r);
       }
@@ -431,8 +430,7 @@ radv_amdgpu_winsys_bo_create(struct radeon_winsys *_ws, uint64_t size, unsigned 
       bo->ranges[0].bo_offset = 0;
 
       /* Reserve a PRT VA region. */
-      r = radv_amdgpu_bo_va_op(ws, NULL, 0, size, bo->base.va, 0, AMDGPU_VM_PAGE_PRT,
-                               AMDGPU_VA_OP_MAP);
+      r = radv_amdgpu_bo_va_op(ws, NULL, 0, size, bo->base.va, 0, AMDGPU_VM_PAGE_PRT, AMDGPU_VA_OP_MAP);
       if (r) {
          fprintf(stderr, "radv/amdgpu: Failed to reserve a PRT VA region (%d).\n", r);
          result = VK_ERROR_OUT_OF_DEVICE_MEMORY;

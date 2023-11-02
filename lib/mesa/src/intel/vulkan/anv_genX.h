@@ -38,8 +38,6 @@
 
 struct intel_sample_positions;
 
-typedef struct VkRenderingSelfDependencyInfoMESA VkRenderingSelfDependencyInfoMESA;
-
 extern const uint32_t genX(vk_to_intel_cullmode)[];
 
 extern const uint32_t genX(vk_to_intel_front_face)[];
@@ -81,18 +79,29 @@ void genX(cmd_buffer_emit_hashing_mode)(struct anv_cmd_buffer *cmd_buffer,
 
 void genX(flush_pipeline_select_3d)(struct anv_cmd_buffer *cmd_buffer);
 void genX(flush_pipeline_select_gpgpu)(struct anv_cmd_buffer *cmd_buffer);
+void genX(emit_pipeline_select)(struct anv_batch *batch, uint32_t pipeline);
+
+void genX(apply_task_urb_workaround)(struct anv_cmd_buffer *cmd_buffer);
+
+void genX(emit_vertex_input)(struct anv_batch *batch,
+                             uint32_t *vertex_element_dws,
+                             const struct anv_graphics_pipeline *pipeline,
+                             const struct vk_vertex_input_state *vi);
 
 enum anv_pipe_bits
 genX(emit_apply_pipe_flushes)(struct anv_batch *batch,
                               struct anv_device *device,
                               uint32_t current_pipeline,
-                              enum anv_pipe_bits bits);
+                              enum anv_pipe_bits bits,
+                              enum anv_query_bits *query_bits);
 
 void genX(emit_so_memcpy_init)(struct anv_memcpy_state *state,
                                struct anv_device *device,
                                struct anv_batch *batch);
 
 void genX(emit_so_memcpy_fini)(struct anv_memcpy_state *state);
+
+void genX(emit_so_memcpy_end)(struct anv_memcpy_state *state);
 
 void genX(emit_so_memcpy)(struct anv_memcpy_state *state,
                           struct anv_address dst, struct anv_address src,
@@ -121,6 +130,9 @@ void genX(cmd_buffer_mark_image_written)(struct anv_cmd_buffer *cmd_buffer,
 void genX(cmd_emit_conditional_render_predicate)(struct anv_cmd_buffer *cmd_buffer);
 
 struct anv_state genX(cmd_buffer_ray_query_globals)(struct anv_cmd_buffer *cmd_buffer);
+
+void genX(cmd_buffer_ensure_cfe_state)(struct anv_cmd_buffer *cmd_buffer,
+                                       uint32_t total_scratch);
 
 void
 genX(emit_urb_setup)(struct anv_device *device, struct anv_batch *batch,
@@ -178,3 +190,23 @@ genX(compute_pipeline_emit)(struct anv_compute_pipeline *pipeline);
 
 void
 genX(ray_tracing_pipeline_emit)(struct anv_ray_tracing_pipeline *pipeline);
+
+#define anv_shader_bin_get_bsr(bin, local_arg_offset) ({             \
+   assert((local_arg_offset) % 8 == 0);                              \
+   const struct brw_bs_prog_data *prog_data =                        \
+      brw_bs_prog_data_const(bin->prog_data);                        \
+   assert(prog_data->simd_size == 8 || prog_data->simd_size == 16);  \
+                                                                     \
+   (struct GENX(BINDLESS_SHADER_RECORD)) {                           \
+      .OffsetToLocalArguments = (local_arg_offset) / 8,              \
+      .BindlessShaderDispatchMode =                                  \
+         prog_data->simd_size == 16 ? RT_SIMD16 : RT_SIMD8,          \
+      .KernelStartPointer = bin->kernel.offset,                      \
+   };                                                                \
+})
+
+void
+genX(batch_set_preemption)(struct anv_batch *batch, bool value);
+
+void
+genX(cmd_buffer_set_preemption)(struct anv_cmd_buffer *cmd_buffer, bool value);

@@ -260,6 +260,16 @@ blorp_get_l3_config(struct blorp_batch *batch)
    return cmd_buffer->state.current_l3_config;
 }
 
+static bool
+blorp_uses_bti_rt_writes(const struct blorp_batch *batch, const struct blorp_params *params)
+{
+   if (batch->flags & (BLORP_BATCH_USE_BLITTER | BLORP_BATCH_USE_COMPUTE))
+      return false;
+
+   /* HIZ clears use WM_HZ ops rather than a clear shader using RT writes. */
+   return params->hiz_op == ISL_AUX_OP_NONE;
+}
+
 static void
 blorp_exec_on_render(struct blorp_batch *batch,
                      const struct blorp_params *params)
@@ -282,10 +292,12 @@ blorp_exec_on_render(struct blorp_batch *batch,
     *     is set due to new association of BTI, PS Scoreboard Stall bit must
     *     be set in this packet."
     */
-   anv_add_pending_pipe_bits(cmd_buffer,
-                             ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
-                             ANV_PIPE_STALL_AT_SCOREBOARD_BIT,
-                             "before blorp BTI change");
+   if (blorp_uses_bti_rt_writes(batch, params)) {
+      anv_add_pending_pipe_bits(cmd_buffer,
+                                ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
+                                ANV_PIPE_STALL_AT_SCOREBOARD_BIT,
+                                "before blorp BTI change");
+   }
 #endif
 
    if (params->depth.enabled &&
@@ -293,6 +305,9 @@ blorp_exec_on_render(struct blorp_batch *batch,
       genX(cmd_buffer_emit_gfx12_depth_wa)(cmd_buffer, &params->depth.surf);
 
    genX(flush_pipeline_select_3d)(cmd_buffer);
+
+   /* Wa_14015814527 */
+   genX(apply_task_urb_workaround)(cmd_buffer);
 
    /* Apply any outstanding flushes in case pipeline select haven't. */
    genX(cmd_buffer_apply_pipe_flushes)(cmd_buffer);
@@ -313,10 +328,12 @@ blorp_exec_on_render(struct blorp_batch *batch,
     *     is set due to new association of BTI, PS Scoreboard Stall bit must
     *     be set in this packet."
     */
-   anv_add_pending_pipe_bits(cmd_buffer,
-                             ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
-                             ANV_PIPE_STALL_AT_SCOREBOARD_BIT,
-                             "after blorp BTI change");
+   if (blorp_uses_bti_rt_writes(batch, params)) {
+      anv_add_pending_pipe_bits(cmd_buffer,
+                                ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
+                                ANV_PIPE_STALL_AT_SCOREBOARD_BIT,
+                                "after blorp BTI change");
+   }
 #endif
 
    /* Calculate state that does not get touched by blorp.
@@ -369,6 +386,10 @@ genX(blorp_exec)(struct blorp_batch *batch,
                  const struct blorp_params *params)
 {
    struct anv_cmd_buffer *cmd_buffer = batch->driver_batch;
+
+   /* Turn on preemption if it was toggled off. */
+   if (!cmd_buffer->state.gfx.object_preemption)
+      genX(cmd_buffer_set_preemption)(cmd_buffer, true);
 
    if (!cmd_buffer->state.current_l3_config) {
       const struct intel_l3_config *cfg =

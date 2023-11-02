@@ -282,16 +282,8 @@ struct vk_physical_device_dispatch_table {
         PFN_vkGetPhysicalDeviceToolPropertiesEXT GetPhysicalDeviceToolPropertiesEXT;
     };
         PFN_vkGetPhysicalDeviceFragmentShadingRatesKHR GetPhysicalDeviceFragmentShadingRatesKHR;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR GetPhysicalDeviceVideoCapabilitiesKHR;
-#else
-    PFN_vkVoidFunction GetPhysicalDeviceVideoCapabilitiesKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR GetPhysicalDeviceVideoFormatPropertiesKHR;
-#else
-    PFN_vkVoidFunction GetPhysicalDeviceVideoFormatPropertiesKHR;
-#endif
     PFN_vkAcquireDrmDisplayEXT AcquireDrmDisplayEXT;
     PFN_vkGetDrmDisplayEXT GetDrmDisplayEXT;
     PFN_vkGetPhysicalDeviceOpticalFlowImageFormatsNV GetPhysicalDeviceOpticalFlowImageFormatsNV;
@@ -404,11 +396,15 @@ struct vk_device_dispatch_table {
     PFN_vkCmdDispatch CmdDispatch;
     PFN_vkCmdDispatchIndirect CmdDispatchIndirect;
     PFN_vkCmdSubpassShadingHUAWEI CmdSubpassShadingHUAWEI;
+    PFN_vkCmdDrawClusterHUAWEI CmdDrawClusterHUAWEI;
+    PFN_vkCmdDrawClusterIndirectHUAWEI CmdDrawClusterIndirectHUAWEI;
     PFN_vkCmdCopyBuffer CmdCopyBuffer;
     PFN_vkCmdCopyImage CmdCopyImage;
     PFN_vkCmdBlitImage CmdBlitImage;
     PFN_vkCmdCopyBufferToImage CmdCopyBufferToImage;
     PFN_vkCmdCopyImageToBuffer CmdCopyImageToBuffer;
+    PFN_vkCmdCopyMemoryIndirectNV CmdCopyMemoryIndirectNV;
+    PFN_vkCmdCopyMemoryToImageIndirectNV CmdCopyMemoryToImageIndirectNV;
     PFN_vkCmdUpdateBuffer CmdUpdateBuffer;
     PFN_vkCmdFillBuffer CmdFillBuffer;
     PFN_vkCmdClearColorImage CmdClearColorImage;
@@ -561,6 +557,8 @@ struct vk_device_dispatch_table {
     PFN_vkGetPastPresentationTimingGOOGLE GetPastPresentationTimingGOOGLE;
     PFN_vkCmdSetViewportWScalingNV CmdSetViewportWScalingNV;
     PFN_vkCmdSetDiscardRectangleEXT CmdSetDiscardRectangleEXT;
+    PFN_vkCmdSetDiscardRectangleEnableEXT CmdSetDiscardRectangleEnableEXT;
+    PFN_vkCmdSetDiscardRectangleModeEXT CmdSetDiscardRectangleModeEXT;
     PFN_vkCmdSetSampleLocationsEXT CmdSetSampleLocationsEXT;
     union {
         PFN_vkGetBufferMemoryRequirements2 GetBufferMemoryRequirements2;
@@ -693,6 +691,7 @@ struct vk_device_dispatch_table {
     PFN_vkCmdEndQueryIndexedEXT CmdEndQueryIndexedEXT;
     PFN_vkCmdDrawIndirectByteCountEXT CmdDrawIndirectByteCountEXT;
     PFN_vkCmdSetExclusiveScissorNV CmdSetExclusiveScissorNV;
+    PFN_vkCmdSetExclusiveScissorEnableNV CmdSetExclusiveScissorEnableNV;
     PFN_vkCmdBindShadingRateImageNV CmdBindShadingRateImageNV;
     PFN_vkCmdSetViewportShadingRatePaletteNV CmdSetViewportShadingRatePaletteNV;
     PFN_vkCmdSetCoarseSampleOrderNV CmdSetCoarseSampleOrderNV;
@@ -853,11 +852,7 @@ struct vk_device_dispatch_table {
         PFN_vkCmdSetPrimitiveRestartEnable CmdSetPrimitiveRestartEnable;
         PFN_vkCmdSetPrimitiveRestartEnableEXT CmdSetPrimitiveRestartEnableEXT;
     };
-        union {
-        PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
-        PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
-    };
-    PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
+        PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
     PFN_vkCmdSetDepthClampEnableEXT CmdSetDepthClampEnableEXT;
     PFN_vkCmdSetPolygonModeEXT CmdSetPolygonModeEXT;
     PFN_vkCmdSetRasterizationSamplesEXT CmdSetRasterizationSamplesEXT;
@@ -888,6 +883,10 @@ struct vk_device_dispatch_table {
     PFN_vkCmdSetShadingRateImageEnableNV CmdSetShadingRateImageEnableNV;
     PFN_vkCmdSetCoverageReductionModeNV CmdSetCoverageReductionModeNV;
     PFN_vkCmdSetRepresentativeFragmentTestEnableNV CmdSetRepresentativeFragmentTestEnableNV;
+    union {
+        PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
+        PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
+    };
         union {
         PFN_vkDestroyPrivateDataSlot DestroyPrivateDataSlot;
         PFN_vkDestroyPrivateDataSlotEXT DestroyPrivateDataSlotEXT;
@@ -955,71 +954,35 @@ struct vk_device_dispatch_table {
     };
         PFN_vkCmdWriteBufferMarker2AMD CmdWriteBufferMarker2AMD;
     PFN_vkGetQueueCheckpointData2NV GetQueueCheckpointData2NV;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCreateVideoSessionKHR CreateVideoSessionKHR;
-#else
-    PFN_vkVoidFunction CreateVideoSessionKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkDestroyVideoSessionKHR DestroyVideoSessionKHR;
-#else
-    PFN_vkVoidFunction DestroyVideoSessionKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCreateVideoSessionParametersKHR CreateVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction CreateVideoSessionParametersKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkUpdateVideoSessionParametersKHR UpdateVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction UpdateVideoSessionParametersKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkDestroyVideoSessionParametersKHR DestroyVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction DestroyVideoSessionParametersKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetVideoSessionMemoryRequirementsKHR GetVideoSessionMemoryRequirementsKHR;
-#else
-    PFN_vkVoidFunction GetVideoSessionMemoryRequirementsKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkBindVideoSessionMemoryKHR BindVideoSessionMemoryKHR;
-#else
-    PFN_vkVoidFunction BindVideoSessionMemoryKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdDecodeVideoKHR CmdDecodeVideoKHR;
-#else
-    PFN_vkVoidFunction CmdDecodeVideoKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdBeginVideoCodingKHR CmdBeginVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdBeginVideoCodingKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdControlVideoCodingKHR CmdControlVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdControlVideoCodingKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdEndVideoCodingKHR CmdEndVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdEndVideoCodingKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    PFN_vkCmdEncodeVideoKHR CmdEncodeVideoKHR;
-#else
-    PFN_vkVoidFunction CmdEncodeVideoKHR;
-#endif
+    PFN_vkCmdDecompressMemoryNV CmdDecompressMemoryNV;
+    PFN_vkCmdDecompressMemoryIndirectCountNV CmdDecompressMemoryIndirectCountNV;
     PFN_vkCreateCuModuleNVX CreateCuModuleNVX;
     PFN_vkCreateCuFunctionNVX CreateCuFunctionNVX;
     PFN_vkDestroyCuModuleNVX DestroyCuModuleNVX;
     PFN_vkDestroyCuFunctionNVX DestroyCuFunctionNVX;
     PFN_vkCmdCuLaunchKernelNVX CmdCuLaunchKernelNVX;
+    PFN_vkGetDescriptorSetLayoutSizeEXT GetDescriptorSetLayoutSizeEXT;
+    PFN_vkGetDescriptorSetLayoutBindingOffsetEXT GetDescriptorSetLayoutBindingOffsetEXT;
+    PFN_vkGetDescriptorEXT GetDescriptorEXT;
+    PFN_vkCmdBindDescriptorBuffersEXT CmdBindDescriptorBuffersEXT;
+    PFN_vkCmdSetDescriptorBufferOffsetsEXT CmdSetDescriptorBufferOffsetsEXT;
+    PFN_vkCmdBindDescriptorBufferEmbeddedSamplersEXT CmdBindDescriptorBufferEmbeddedSamplersEXT;
+    PFN_vkGetBufferOpaqueCaptureDescriptorDataEXT GetBufferOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetImageOpaqueCaptureDescriptorDataEXT GetImageOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetImageViewOpaqueCaptureDescriptorDataEXT GetImageViewOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetSamplerOpaqueCaptureDescriptorDataEXT GetSamplerOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT GetAccelerationStructureOpaqueCaptureDescriptorDataEXT;
     PFN_vkSetDeviceMemoryPriorityEXT SetDeviceMemoryPriorityEXT;
     PFN_vkWaitForPresentKHR WaitForPresentKHR;
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -1087,6 +1050,13 @@ struct vk_device_dispatch_table {
     PFN_vkBindOpticalFlowSessionImageNV BindOpticalFlowSessionImageNV;
     PFN_vkCmdOpticalFlowExecuteNV CmdOpticalFlowExecuteNV;
     PFN_vkGetDeviceFaultInfoEXT GetDeviceFaultInfoEXT;
+    PFN_vkReleaseSwapchainImagesEXT ReleaseSwapchainImagesEXT;
+    PFN_vkMapMemory2KHR MapMemory2KHR;
+    PFN_vkUnmapMemory2KHR UnmapMemory2KHR;
+    PFN_vkCreateShadersEXT CreateShadersEXT;
+    PFN_vkDestroyShaderEXT DestroyShaderEXT;
+    PFN_vkGetShaderBinaryDataEXT GetShaderBinaryDataEXT;
+    PFN_vkCmdBindShadersEXT CmdBindShadersEXT;
 
 };
 
@@ -1323,16 +1293,8 @@ struct vk_dispatch_table {
         PFN_vkGetPhysicalDeviceToolPropertiesEXT GetPhysicalDeviceToolPropertiesEXT;
     };
         PFN_vkGetPhysicalDeviceFragmentShadingRatesKHR GetPhysicalDeviceFragmentShadingRatesKHR;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR GetPhysicalDeviceVideoCapabilitiesKHR;
-#else
-    PFN_vkVoidFunction GetPhysicalDeviceVideoCapabilitiesKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR GetPhysicalDeviceVideoFormatPropertiesKHR;
-#else
-    PFN_vkVoidFunction GetPhysicalDeviceVideoFormatPropertiesKHR;
-#endif
     PFN_vkAcquireDrmDisplayEXT AcquireDrmDisplayEXT;
     PFN_vkGetDrmDisplayEXT GetDrmDisplayEXT;
     PFN_vkGetPhysicalDeviceOpticalFlowImageFormatsNV GetPhysicalDeviceOpticalFlowImageFormatsNV;
@@ -1442,11 +1404,15 @@ struct vk_dispatch_table {
     PFN_vkCmdDispatch CmdDispatch;
     PFN_vkCmdDispatchIndirect CmdDispatchIndirect;
     PFN_vkCmdSubpassShadingHUAWEI CmdSubpassShadingHUAWEI;
+    PFN_vkCmdDrawClusterHUAWEI CmdDrawClusterHUAWEI;
+    PFN_vkCmdDrawClusterIndirectHUAWEI CmdDrawClusterIndirectHUAWEI;
     PFN_vkCmdCopyBuffer CmdCopyBuffer;
     PFN_vkCmdCopyImage CmdCopyImage;
     PFN_vkCmdBlitImage CmdBlitImage;
     PFN_vkCmdCopyBufferToImage CmdCopyBufferToImage;
     PFN_vkCmdCopyImageToBuffer CmdCopyImageToBuffer;
+    PFN_vkCmdCopyMemoryIndirectNV CmdCopyMemoryIndirectNV;
+    PFN_vkCmdCopyMemoryToImageIndirectNV CmdCopyMemoryToImageIndirectNV;
     PFN_vkCmdUpdateBuffer CmdUpdateBuffer;
     PFN_vkCmdFillBuffer CmdFillBuffer;
     PFN_vkCmdClearColorImage CmdClearColorImage;
@@ -1599,6 +1565,8 @@ struct vk_dispatch_table {
     PFN_vkGetPastPresentationTimingGOOGLE GetPastPresentationTimingGOOGLE;
     PFN_vkCmdSetViewportWScalingNV CmdSetViewportWScalingNV;
     PFN_vkCmdSetDiscardRectangleEXT CmdSetDiscardRectangleEXT;
+    PFN_vkCmdSetDiscardRectangleEnableEXT CmdSetDiscardRectangleEnableEXT;
+    PFN_vkCmdSetDiscardRectangleModeEXT CmdSetDiscardRectangleModeEXT;
     PFN_vkCmdSetSampleLocationsEXT CmdSetSampleLocationsEXT;
     union {
         PFN_vkGetBufferMemoryRequirements2 GetBufferMemoryRequirements2;
@@ -1731,6 +1699,7 @@ struct vk_dispatch_table {
     PFN_vkCmdEndQueryIndexedEXT CmdEndQueryIndexedEXT;
     PFN_vkCmdDrawIndirectByteCountEXT CmdDrawIndirectByteCountEXT;
     PFN_vkCmdSetExclusiveScissorNV CmdSetExclusiveScissorNV;
+    PFN_vkCmdSetExclusiveScissorEnableNV CmdSetExclusiveScissorEnableNV;
     PFN_vkCmdBindShadingRateImageNV CmdBindShadingRateImageNV;
     PFN_vkCmdSetViewportShadingRatePaletteNV CmdSetViewportShadingRatePaletteNV;
     PFN_vkCmdSetCoarseSampleOrderNV CmdSetCoarseSampleOrderNV;
@@ -1891,11 +1860,7 @@ struct vk_dispatch_table {
         PFN_vkCmdSetPrimitiveRestartEnable CmdSetPrimitiveRestartEnable;
         PFN_vkCmdSetPrimitiveRestartEnableEXT CmdSetPrimitiveRestartEnableEXT;
     };
-        union {
-        PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
-        PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
-    };
-    PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
+        PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
     PFN_vkCmdSetDepthClampEnableEXT CmdSetDepthClampEnableEXT;
     PFN_vkCmdSetPolygonModeEXT CmdSetPolygonModeEXT;
     PFN_vkCmdSetRasterizationSamplesEXT CmdSetRasterizationSamplesEXT;
@@ -1926,6 +1891,10 @@ struct vk_dispatch_table {
     PFN_vkCmdSetShadingRateImageEnableNV CmdSetShadingRateImageEnableNV;
     PFN_vkCmdSetCoverageReductionModeNV CmdSetCoverageReductionModeNV;
     PFN_vkCmdSetRepresentativeFragmentTestEnableNV CmdSetRepresentativeFragmentTestEnableNV;
+    union {
+        PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
+        PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
+    };
         union {
         PFN_vkDestroyPrivateDataSlot DestroyPrivateDataSlot;
         PFN_vkDestroyPrivateDataSlotEXT DestroyPrivateDataSlotEXT;
@@ -1993,71 +1962,35 @@ struct vk_dispatch_table {
     };
         PFN_vkCmdWriteBufferMarker2AMD CmdWriteBufferMarker2AMD;
     PFN_vkGetQueueCheckpointData2NV GetQueueCheckpointData2NV;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCreateVideoSessionKHR CreateVideoSessionKHR;
-#else
-    PFN_vkVoidFunction CreateVideoSessionKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkDestroyVideoSessionKHR DestroyVideoSessionKHR;
-#else
-    PFN_vkVoidFunction DestroyVideoSessionKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCreateVideoSessionParametersKHR CreateVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction CreateVideoSessionParametersKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkUpdateVideoSessionParametersKHR UpdateVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction UpdateVideoSessionParametersKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkDestroyVideoSessionParametersKHR DestroyVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction DestroyVideoSessionParametersKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetVideoSessionMemoryRequirementsKHR GetVideoSessionMemoryRequirementsKHR;
-#else
-    PFN_vkVoidFunction GetVideoSessionMemoryRequirementsKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkBindVideoSessionMemoryKHR BindVideoSessionMemoryKHR;
-#else
-    PFN_vkVoidFunction BindVideoSessionMemoryKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdDecodeVideoKHR CmdDecodeVideoKHR;
-#else
-    PFN_vkVoidFunction CmdDecodeVideoKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdBeginVideoCodingKHR CmdBeginVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdBeginVideoCodingKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdControlVideoCodingKHR CmdControlVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdControlVideoCodingKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdEndVideoCodingKHR CmdEndVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdEndVideoCodingKHR;
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    PFN_vkCmdEncodeVideoKHR CmdEncodeVideoKHR;
-#else
-    PFN_vkVoidFunction CmdEncodeVideoKHR;
-#endif
+    PFN_vkCmdDecompressMemoryNV CmdDecompressMemoryNV;
+    PFN_vkCmdDecompressMemoryIndirectCountNV CmdDecompressMemoryIndirectCountNV;
     PFN_vkCreateCuModuleNVX CreateCuModuleNVX;
     PFN_vkCreateCuFunctionNVX CreateCuFunctionNVX;
     PFN_vkDestroyCuModuleNVX DestroyCuModuleNVX;
     PFN_vkDestroyCuFunctionNVX DestroyCuFunctionNVX;
     PFN_vkCmdCuLaunchKernelNVX CmdCuLaunchKernelNVX;
+    PFN_vkGetDescriptorSetLayoutSizeEXT GetDescriptorSetLayoutSizeEXT;
+    PFN_vkGetDescriptorSetLayoutBindingOffsetEXT GetDescriptorSetLayoutBindingOffsetEXT;
+    PFN_vkGetDescriptorEXT GetDescriptorEXT;
+    PFN_vkCmdBindDescriptorBuffersEXT CmdBindDescriptorBuffersEXT;
+    PFN_vkCmdSetDescriptorBufferOffsetsEXT CmdSetDescriptorBufferOffsetsEXT;
+    PFN_vkCmdBindDescriptorBufferEmbeddedSamplersEXT CmdBindDescriptorBufferEmbeddedSamplersEXT;
+    PFN_vkGetBufferOpaqueCaptureDescriptorDataEXT GetBufferOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetImageOpaqueCaptureDescriptorDataEXT GetImageOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetImageViewOpaqueCaptureDescriptorDataEXT GetImageViewOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetSamplerOpaqueCaptureDescriptorDataEXT GetSamplerOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT GetAccelerationStructureOpaqueCaptureDescriptorDataEXT;
     PFN_vkSetDeviceMemoryPriorityEXT SetDeviceMemoryPriorityEXT;
     PFN_vkWaitForPresentKHR WaitForPresentKHR;
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -2125,6 +2058,13 @@ struct vk_dispatch_table {
     PFN_vkBindOpticalFlowSessionImageNV BindOpticalFlowSessionImageNV;
     PFN_vkCmdOpticalFlowExecuteNV CmdOpticalFlowExecuteNV;
     PFN_vkGetDeviceFaultInfoEXT GetDeviceFaultInfoEXT;
+    PFN_vkReleaseSwapchainImagesEXT ReleaseSwapchainImagesEXT;
+    PFN_vkMapMemory2KHR MapMemory2KHR;
+    PFN_vkUnmapMemory2KHR UnmapMemory2KHR;
+    PFN_vkCreateShadersEXT CreateShadersEXT;
+    PFN_vkDestroyShaderEXT DestroyShaderEXT;
+    PFN_vkGetShaderBinaryDataEXT GetShaderBinaryDataEXT;
+    PFN_vkCmdBindShadersEXT CmdBindShadersEXT;
 
         };
     };
@@ -2333,16 +2273,8 @@ struct vk_physical_device_entrypoint_table {
     PFN_vkGetPhysicalDeviceToolProperties GetPhysicalDeviceToolProperties;
     PFN_vkGetPhysicalDeviceToolPropertiesEXT GetPhysicalDeviceToolPropertiesEXT;
     PFN_vkGetPhysicalDeviceFragmentShadingRatesKHR GetPhysicalDeviceFragmentShadingRatesKHR;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetPhysicalDeviceVideoCapabilitiesKHR GetPhysicalDeviceVideoCapabilitiesKHR;
-#else
-    PFN_vkVoidFunction GetPhysicalDeviceVideoCapabilitiesKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetPhysicalDeviceVideoFormatPropertiesKHR GetPhysicalDeviceVideoFormatPropertiesKHR;
-#else
-    PFN_vkVoidFunction GetPhysicalDeviceVideoFormatPropertiesKHR;
-# endif
     PFN_vkAcquireDrmDisplayEXT AcquireDrmDisplayEXT;
     PFN_vkGetDrmDisplayEXT GetDrmDisplayEXT;
     PFN_vkGetPhysicalDeviceOpticalFlowImageFormatsNV GetPhysicalDeviceOpticalFlowImageFormatsNV;
@@ -2452,11 +2384,15 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdDispatch CmdDispatch;
     PFN_vkCmdDispatchIndirect CmdDispatchIndirect;
     PFN_vkCmdSubpassShadingHUAWEI CmdSubpassShadingHUAWEI;
+    PFN_vkCmdDrawClusterHUAWEI CmdDrawClusterHUAWEI;
+    PFN_vkCmdDrawClusterIndirectHUAWEI CmdDrawClusterIndirectHUAWEI;
     PFN_vkCmdCopyBuffer CmdCopyBuffer;
     PFN_vkCmdCopyImage CmdCopyImage;
     PFN_vkCmdBlitImage CmdBlitImage;
     PFN_vkCmdCopyBufferToImage CmdCopyBufferToImage;
     PFN_vkCmdCopyImageToBuffer CmdCopyImageToBuffer;
+    PFN_vkCmdCopyMemoryIndirectNV CmdCopyMemoryIndirectNV;
+    PFN_vkCmdCopyMemoryToImageIndirectNV CmdCopyMemoryToImageIndirectNV;
     PFN_vkCmdUpdateBuffer CmdUpdateBuffer;
     PFN_vkCmdFillBuffer CmdFillBuffer;
     PFN_vkCmdClearColorImage CmdClearColorImage;
@@ -2591,6 +2527,8 @@ struct vk_device_entrypoint_table {
     PFN_vkGetPastPresentationTimingGOOGLE GetPastPresentationTimingGOOGLE;
     PFN_vkCmdSetViewportWScalingNV CmdSetViewportWScalingNV;
     PFN_vkCmdSetDiscardRectangleEXT CmdSetDiscardRectangleEXT;
+    PFN_vkCmdSetDiscardRectangleEnableEXT CmdSetDiscardRectangleEnableEXT;
+    PFN_vkCmdSetDiscardRectangleModeEXT CmdSetDiscardRectangleModeEXT;
     PFN_vkCmdSetSampleLocationsEXT CmdSetSampleLocationsEXT;
     PFN_vkGetBufferMemoryRequirements2 GetBufferMemoryRequirements2;
     PFN_vkGetBufferMemoryRequirements2KHR GetBufferMemoryRequirements2KHR;
@@ -2687,6 +2625,7 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdEndQueryIndexedEXT CmdEndQueryIndexedEXT;
     PFN_vkCmdDrawIndirectByteCountEXT CmdDrawIndirectByteCountEXT;
     PFN_vkCmdSetExclusiveScissorNV CmdSetExclusiveScissorNV;
+    PFN_vkCmdSetExclusiveScissorEnableNV CmdSetExclusiveScissorEnableNV;
     PFN_vkCmdBindShadingRateImageNV CmdBindShadingRateImageNV;
     PFN_vkCmdSetViewportShadingRatePaletteNV CmdSetViewportShadingRatePaletteNV;
     PFN_vkCmdSetCoarseSampleOrderNV CmdSetCoarseSampleOrderNV;
@@ -2809,7 +2748,6 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdSetLogicOpEXT CmdSetLogicOpEXT;
     PFN_vkCmdSetPrimitiveRestartEnable CmdSetPrimitiveRestartEnable;
     PFN_vkCmdSetPrimitiveRestartEnableEXT CmdSetPrimitiveRestartEnableEXT;
-    PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
     PFN_vkCmdSetTessellationDomainOriginEXT CmdSetTessellationDomainOriginEXT;
     PFN_vkCmdSetDepthClampEnableEXT CmdSetDepthClampEnableEXT;
     PFN_vkCmdSetPolygonModeEXT CmdSetPolygonModeEXT;
@@ -2841,6 +2779,7 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdSetShadingRateImageEnableNV CmdSetShadingRateImageEnableNV;
     PFN_vkCmdSetCoverageReductionModeNV CmdSetCoverageReductionModeNV;
     PFN_vkCmdSetRepresentativeFragmentTestEnableNV CmdSetRepresentativeFragmentTestEnableNV;
+    PFN_vkCreatePrivateDataSlot CreatePrivateDataSlot;
     PFN_vkCreatePrivateDataSlotEXT CreatePrivateDataSlotEXT;
     PFN_vkDestroyPrivateDataSlot DestroyPrivateDataSlot;
     PFN_vkDestroyPrivateDataSlotEXT DestroyPrivateDataSlotEXT;
@@ -2879,71 +2818,35 @@ struct vk_device_entrypoint_table {
     PFN_vkCmdWriteTimestamp2KHR CmdWriteTimestamp2KHR;
     PFN_vkCmdWriteBufferMarker2AMD CmdWriteBufferMarker2AMD;
     PFN_vkGetQueueCheckpointData2NV GetQueueCheckpointData2NV;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCreateVideoSessionKHR CreateVideoSessionKHR;
-#else
-    PFN_vkVoidFunction CreateVideoSessionKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkDestroyVideoSessionKHR DestroyVideoSessionKHR;
-#else
-    PFN_vkVoidFunction DestroyVideoSessionKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCreateVideoSessionParametersKHR CreateVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction CreateVideoSessionParametersKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkUpdateVideoSessionParametersKHR UpdateVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction UpdateVideoSessionParametersKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkDestroyVideoSessionParametersKHR DestroyVideoSessionParametersKHR;
-#else
-    PFN_vkVoidFunction DestroyVideoSessionParametersKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkGetVideoSessionMemoryRequirementsKHR GetVideoSessionMemoryRequirementsKHR;
-#else
-    PFN_vkVoidFunction GetVideoSessionMemoryRequirementsKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkBindVideoSessionMemoryKHR BindVideoSessionMemoryKHR;
-#else
-    PFN_vkVoidFunction BindVideoSessionMemoryKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdDecodeVideoKHR CmdDecodeVideoKHR;
-#else
-    PFN_vkVoidFunction CmdDecodeVideoKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdBeginVideoCodingKHR CmdBeginVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdBeginVideoCodingKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdControlVideoCodingKHR CmdControlVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdControlVideoCodingKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     PFN_vkCmdEndVideoCodingKHR CmdEndVideoCodingKHR;
-#else
-    PFN_vkVoidFunction CmdEndVideoCodingKHR;
-# endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    PFN_vkCmdEncodeVideoKHR CmdEncodeVideoKHR;
-#else
-    PFN_vkVoidFunction CmdEncodeVideoKHR;
-# endif
+    PFN_vkCmdDecompressMemoryNV CmdDecompressMemoryNV;
+    PFN_vkCmdDecompressMemoryIndirectCountNV CmdDecompressMemoryIndirectCountNV;
     PFN_vkCreateCuModuleNVX CreateCuModuleNVX;
     PFN_vkCreateCuFunctionNVX CreateCuFunctionNVX;
     PFN_vkDestroyCuModuleNVX DestroyCuModuleNVX;
     PFN_vkDestroyCuFunctionNVX DestroyCuFunctionNVX;
     PFN_vkCmdCuLaunchKernelNVX CmdCuLaunchKernelNVX;
+    PFN_vkGetDescriptorSetLayoutSizeEXT GetDescriptorSetLayoutSizeEXT;
+    PFN_vkGetDescriptorSetLayoutBindingOffsetEXT GetDescriptorSetLayoutBindingOffsetEXT;
+    PFN_vkGetDescriptorEXT GetDescriptorEXT;
+    PFN_vkCmdBindDescriptorBuffersEXT CmdBindDescriptorBuffersEXT;
+    PFN_vkCmdSetDescriptorBufferOffsetsEXT CmdSetDescriptorBufferOffsetsEXT;
+    PFN_vkCmdBindDescriptorBufferEmbeddedSamplersEXT CmdBindDescriptorBufferEmbeddedSamplersEXT;
+    PFN_vkGetBufferOpaqueCaptureDescriptorDataEXT GetBufferOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetImageOpaqueCaptureDescriptorDataEXT GetImageOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetImageViewOpaqueCaptureDescriptorDataEXT GetImageViewOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetSamplerOpaqueCaptureDescriptorDataEXT GetSamplerOpaqueCaptureDescriptorDataEXT;
+    PFN_vkGetAccelerationStructureOpaqueCaptureDescriptorDataEXT GetAccelerationStructureOpaqueCaptureDescriptorDataEXT;
     PFN_vkSetDeviceMemoryPriorityEXT SetDeviceMemoryPriorityEXT;
     PFN_vkWaitForPresentKHR WaitForPresentKHR;
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -3007,6 +2910,13 @@ struct vk_device_entrypoint_table {
     PFN_vkBindOpticalFlowSessionImageNV BindOpticalFlowSessionImageNV;
     PFN_vkCmdOpticalFlowExecuteNV CmdOpticalFlowExecuteNV;
     PFN_vkGetDeviceFaultInfoEXT GetDeviceFaultInfoEXT;
+    PFN_vkReleaseSwapchainImagesEXT ReleaseSwapchainImagesEXT;
+    PFN_vkMapMemory2KHR MapMemory2KHR;
+    PFN_vkUnmapMemory2KHR UnmapMemory2KHR;
+    PFN_vkCreateShadersEXT CreateShadersEXT;
+    PFN_vkDestroyShaderEXT DestroyShaderEXT;
+    PFN_vkGetShaderBinaryDataEXT GetShaderBinaryDataEXT;
+    PFN_vkCmdBindShadersEXT CmdBindShadersEXT;
 };
 
 

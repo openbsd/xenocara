@@ -61,6 +61,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -86,7 +87,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyInstance@4=_vk_entrypoint_stub@0")
@@ -111,6 +114,7 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -136,7 +140,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumeratePhysicalDevices@4=_vk_entrypoint_stub@0")
@@ -161,6 +167,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumeratePhysicalDevices(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -186,7 +193,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumeratePhysicalDevices(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetInstanceProcAddr@4=_vk_entrypoint_stub@0")
@@ -211,6 +220,7 @@
 #endif
 #else
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_cmd_enqueue_GetInstanceProcAddr(VkInstance instance, const char* pName) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -236,7 +246,9 @@
 #endif
 #else
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_cmd_enqueue_unless_primary_GetInstanceProcAddr(VkInstance instance, const char* pName) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumerateInstanceVersion@4=_vk_entrypoint_stub@0")
@@ -261,6 +273,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumerateInstanceVersion(uint32_t* pApiVersion) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -286,7 +299,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumerateInstanceVersion(uint32_t* pApiVersion) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumerateInstanceLayerProperties@4=_vk_entrypoint_stub@0")
@@ -311,6 +326,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerProperties* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -336,7 +352,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumerateInstanceExtensionProperties@4=_vk_entrypoint_stub@0")
@@ -361,6 +379,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumerateInstanceExtensionProperties(const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -386,7 +405,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumerateInstanceExtensionProperties(const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -412,6 +433,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateAndroidSurfaceKHR(VkInstance instance, const VkAndroidSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -437,7 +459,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateAndroidSurfaceKHR(VkInstance instance, const VkAndroidSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -463,6 +487,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDisplayPlaneSurfaceKHR(VkInstance instance, const VkDisplaySurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -488,7 +513,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDisplayPlaneSurfaceKHR(VkInstance instance, const VkDisplaySurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroySurfaceKHR@4=_vk_entrypoint_stub@0")
@@ -513,6 +540,7 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -538,7 +566,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_VI_NN
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -564,6 +594,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateViSurfaceNN(VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -589,7 +620,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateViSurfaceNN(VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_VI_NN
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef _MSC_VER
@@ -616,6 +649,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateWaylandSurfaceKHR(VkInstance instance, const VkWaylandSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -641,7 +675,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateWaylandSurfaceKHR(VkInstance instance, const VkWaylandSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -668,6 +704,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateWin32SurfaceKHR(VkInstance instance, const VkWin32SurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -693,7 +730,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateWin32SurfaceKHR(VkInstance instance, const VkWin32SurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_XLIB_KHR
 #ifdef _MSC_VER
@@ -720,6 +759,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateXlibSurfaceKHR(VkInstance instance, const VkXlibSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -745,7 +785,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateXlibSurfaceKHR(VkInstance instance, const VkXlibSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_KHR
 #ifdef VK_USE_PLATFORM_XCB_KHR
 #ifdef _MSC_VER
@@ -772,6 +814,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateXcbSurfaceKHR(VkInstance instance, const VkXcbSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -797,7 +840,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateXcbSurfaceKHR(VkInstance instance, const VkXcbSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XCB_KHR
 #ifdef VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef _MSC_VER
@@ -824,6 +869,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDirectFBSurfaceEXT(VkInstance instance, const VkDirectFBSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -849,7 +895,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDirectFBSurfaceEXT(VkInstance instance, const VkDirectFBSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -876,6 +924,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateImagePipeSurfaceFUCHSIA(VkInstance instance, const VkImagePipeSurfaceCreateInfoFUCHSIA* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -901,7 +950,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateImagePipeSurfaceFUCHSIA(VkInstance instance, const VkImagePipeSurfaceCreateInfoFUCHSIA* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_GGP
 #ifdef _MSC_VER
@@ -928,6 +979,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateStreamDescriptorSurfaceGGP(VkInstance instance, const VkStreamDescriptorSurfaceCreateInfoGGP* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -953,7 +1005,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateStreamDescriptorSurfaceGGP(VkInstance instance, const VkStreamDescriptorSurfaceCreateInfoGGP* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_GGP
 #ifdef VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
@@ -980,6 +1034,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateScreenSurfaceQNX(VkInstance instance, const VkScreenSurfaceCreateInfoQNX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1005,7 +1060,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateScreenSurfaceQNX(VkInstance instance, const VkScreenSurfaceCreateInfoQNX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1031,6 +1088,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1056,7 +1114,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDebugReportCallbackEXT@4=_vk_entrypoint_stub@0")
@@ -1081,6 +1141,7 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1106,7 +1167,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DebugReportMessageEXT@4=_vk_entrypoint_stub@0")
@@ -1131,6 +1194,7 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1156,7 +1220,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumeratePhysicalDeviceGroups@4=_vk_entrypoint_stub@0")
@@ -1181,6 +1247,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumeratePhysicalDeviceGroups(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupProperties* pPhysicalDeviceGroupProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1206,7 +1273,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumeratePhysicalDeviceGroups(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupProperties* pPhysicalDeviceGroupProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumeratePhysicalDeviceGroupsKHR@4=_vk_entrypoint_stub@0")
@@ -1231,6 +1300,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumeratePhysicalDeviceGroupsKHR(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupProperties* pPhysicalDeviceGroupProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1256,7 +1326,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumeratePhysicalDeviceGroupsKHR(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupProperties* pPhysicalDeviceGroupProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_IOS_MVK
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1282,6 +1354,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateIOSSurfaceMVK(VkInstance instance, const VkIOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1307,7 +1380,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateIOSSurfaceMVK(VkInstance instance, const VkIOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_IOS_MVK
 #ifdef VK_USE_PLATFORM_MACOS_MVK
 #ifdef _MSC_VER
@@ -1334,6 +1409,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateMacOSSurfaceMVK(VkInstance instance, const VkMacOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1359,7 +1435,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateMacOSSurfaceMVK(VkInstance instance, const VkMacOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_MACOS_MVK
 #ifdef VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
@@ -1386,6 +1464,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateMetalSurfaceEXT(VkInstance instance, const VkMetalSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1411,7 +1490,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateMetalSurfaceEXT(VkInstance instance, const VkMetalSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1437,6 +1518,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1462,7 +1544,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDebugUtilsMessengerEXT@4=_vk_entrypoint_stub@0")
@@ -1487,6 +1571,7 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1512,7 +1597,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SubmitDebugUtilsMessageEXT@4=_vk_entrypoint_stub@0")
@@ -1537,6 +1624,7 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_SubmitDebugUtilsMessageEXT(VkInstance instance, VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1562,7 +1650,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_SubmitDebugUtilsMessageEXT(VkInstance instance, VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateHeadlessSurfaceEXT@4=_vk_entrypoint_stub@0")
@@ -1587,6 +1677,7 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateHeadlessSurfaceEXT(VkInstance instance, const VkHeadlessSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1612,7 +1703,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateHeadlessSurfaceEXT(VkInstance instance, const VkHeadlessSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 
 const struct vk_instance_entrypoint_table vk_cmd_enqueue_instance_entrypoints = {
     .CreateInstance = vk_cmd_enqueue_CreateInstance,
@@ -1786,6 +1879,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 };
 
 
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceProperties@4=_vk_entrypoint_stub@0")
@@ -1810,6 +1904,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1835,7 +1930,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyProperties@4=_vk_entrypoint_stub@0")
@@ -1860,6 +1957,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1885,7 +1983,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceMemoryProperties@4=_vk_entrypoint_stub@0")
@@ -1910,6 +2010,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1935,7 +2036,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFeatures@4=_vk_entrypoint_stub@0")
@@ -1960,6 +2063,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures* pFeatures) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1985,7 +2089,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures* pFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFormatProperties@4=_vk_entrypoint_stub@0")
@@ -2010,6 +2116,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties* pFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2035,7 +2142,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties* pFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceImageFormatProperties@4=_vk_entrypoint_stub@0")
@@ -2060,6 +2169,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceImageFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2085,7 +2195,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceImageFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDevice@4=_vk_entrypoint_stub@0")
@@ -2110,6 +2222,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDevice* pDevice) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2135,7 +2248,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDevice* pDevice) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumerateDeviceLayerProperties@4=_vk_entrypoint_stub@0")
@@ -2160,6 +2275,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumerateDeviceLayerProperties(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkLayerProperties* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2185,7 +2301,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumerateDeviceLayerProperties(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkLayerProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EnumerateDeviceExtensionProperties@4=_vk_entrypoint_stub@0")
@@ -2210,6 +2328,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2235,7 +2354,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSparseImageFormatProperties@4=_vk_entrypoint_stub@0")
@@ -2260,6 +2381,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSparseImageFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkSampleCountFlagBits samples, VkImageUsageFlags usage, VkImageTiling tiling, uint32_t* pPropertyCount, VkSparseImageFormatProperties* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2285,7 +2407,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSparseImageFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkSampleCountFlagBits samples, VkImageUsageFlags usage, VkImageTiling tiling, uint32_t* pPropertyCount, VkSparseImageFormatProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceDisplayPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2310,6 +2434,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceDisplayPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2335,7 +2460,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceDisplayPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceDisplayPlanePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2360,6 +2487,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceDisplayPlanePropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlanePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2385,7 +2513,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceDisplayPlanePropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlanePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDisplayPlaneSupportedDisplaysKHR@4=_vk_entrypoint_stub@0")
@@ -2410,6 +2540,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDisplayPlaneSupportedDisplaysKHR(VkPhysicalDevice physicalDevice, uint32_t planeIndex, uint32_t* pDisplayCount, VkDisplayKHR* pDisplays) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2435,7 +2566,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDisplayPlaneSupportedDisplaysKHR(VkPhysicalDevice physicalDevice, uint32_t planeIndex, uint32_t* pDisplayCount, VkDisplayKHR* pDisplays) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDisplayModePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2460,6 +2593,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDisplayModePropertiesKHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2485,7 +2619,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDisplayModePropertiesKHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDisplayModeKHR@4=_vk_entrypoint_stub@0")
@@ -2510,6 +2646,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDisplayModeKHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, const VkDisplayModeCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDisplayModeKHR* pMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2535,7 +2672,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDisplayModeKHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, const VkDisplayModeCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDisplayModeKHR* pMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDisplayPlaneCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -2560,6 +2699,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDisplayPlaneCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkDisplayModeKHR mode, uint32_t planeIndex, VkDisplayPlaneCapabilitiesKHR* pCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2585,7 +2725,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDisplayPlaneCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkDisplayModeKHR mode, uint32_t planeIndex, VkDisplayPlaneCapabilitiesKHR* pCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSurfaceSupportKHR@4=_vk_entrypoint_stub@0")
@@ -2610,6 +2752,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfaceSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2635,7 +2778,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfaceSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSurfaceCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -2660,6 +2805,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2685,7 +2831,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSurfaceFormatsKHR@4=_vk_entrypoint_stub@0")
@@ -2710,6 +2858,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pSurfaceFormatCount, VkSurfaceFormatKHR* pSurfaceFormats) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2735,7 +2884,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pSurfaceFormatCount, VkSurfaceFormatKHR* pSurfaceFormats) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSurfacePresentModesKHR@4=_vk_entrypoint_stub@0")
@@ -2760,6 +2911,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfacePresentModesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2785,7 +2937,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfacePresentModesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2811,6 +2965,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceWaylandPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, struct wl_display* display) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2836,7 +2991,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceWaylandPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, struct wl_display* display) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -2863,6 +3020,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceWin32PresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2888,7 +3046,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceWin32PresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_XLIB_KHR
 #ifdef _MSC_VER
@@ -2915,6 +3075,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceXlibPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, Display* dpy, VisualID visualID) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2940,7 +3101,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceXlibPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, Display* dpy, VisualID visualID) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_KHR
 #ifdef VK_USE_PLATFORM_XCB_KHR
 #ifdef _MSC_VER
@@ -2967,6 +3130,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceXcbPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, xcb_connection_t* connection, xcb_visualid_t visual_id) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2992,7 +3156,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceXcbPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, xcb_connection_t* connection, xcb_visualid_t visual_id) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XCB_KHR
 #ifdef VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef _MSC_VER
@@ -3019,6 +3185,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceDirectFBPresentationSupportEXT(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, IDirectFB* dfb) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3044,7 +3211,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceDirectFBPresentationSupportEXT(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, IDirectFB* dfb) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
@@ -3071,6 +3240,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceScreenPresentationSupportQNX(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, struct _screen_window* window) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3096,7 +3266,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceScreenPresentationSupportQNX(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, struct _screen_window* window) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3122,6 +3294,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalImageFormatPropertiesNV(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkExternalMemoryHandleTypeFlagsNV externalHandleType, VkExternalImageFormatPropertiesNV* pExternalImageFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3147,7 +3320,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalImageFormatPropertiesNV(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkExternalMemoryHandleTypeFlagsNV externalHandleType, VkExternalImageFormatPropertiesNV* pExternalImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFeatures2@4=_vk_entrypoint_stub@0")
@@ -3172,6 +3347,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3197,7 +3373,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFeatures2KHR@4=_vk_entrypoint_stub@0")
@@ -3222,6 +3400,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFeatures2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3247,7 +3426,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFeatures2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceProperties2@4=_vk_entrypoint_stub@0")
@@ -3272,6 +3453,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3297,7 +3479,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -3322,6 +3506,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceProperties2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3347,7 +3532,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceProperties2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFormatProperties2@4=_vk_entrypoint_stub@0")
@@ -3372,6 +3559,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFormatProperties2(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2* pFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3397,7 +3585,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFormatProperties2(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2* pFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFormatProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -3422,6 +3612,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFormatProperties2KHR(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2* pFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3447,7 +3638,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFormatProperties2KHR(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2* pFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceImageFormatProperties2@4=_vk_entrypoint_stub@0")
@@ -3472,6 +3665,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceImageFormatProperties2(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3497,7 +3691,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceImageFormatProperties2(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceImageFormatProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -3522,6 +3718,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceImageFormatProperties2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3547,7 +3744,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceImageFormatProperties2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyProperties2@4=_vk_entrypoint_stub@0")
@@ -3572,6 +3771,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyProperties2(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3597,7 +3797,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceQueueFamilyProperties2(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -3622,6 +3824,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3647,7 +3850,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceQueueFamilyProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceMemoryProperties2@4=_vk_entrypoint_stub@0")
@@ -3672,6 +3877,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceMemoryProperties2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3697,7 +3903,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceMemoryProperties2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceMemoryProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -3722,6 +3930,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceMemoryProperties2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3747,7 +3956,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceMemoryProperties2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSparseImageFormatProperties2@4=_vk_entrypoint_stub@0")
@@ -3772,6 +3983,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSparseImageFormatProperties2(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3797,7 +4009,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSparseImageFormatProperties2(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSparseImageFormatProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -3822,6 +4036,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSparseImageFormatProperties2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3847,7 +4062,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSparseImageFormatProperties2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceExternalBufferProperties@4=_vk_entrypoint_stub@0")
@@ -3872,6 +4089,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalBufferProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfo* pExternalBufferInfo, VkExternalBufferProperties* pExternalBufferProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3897,7 +4115,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalBufferProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfo* pExternalBufferInfo, VkExternalBufferProperties* pExternalBufferProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceExternalBufferPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -3922,6 +4142,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalBufferPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfo* pExternalBufferInfo, VkExternalBufferProperties* pExternalBufferProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3947,7 +4168,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalBufferPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfo* pExternalBufferInfo, VkExternalBufferProperties* pExternalBufferProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceExternalSemaphoreProperties@4=_vk_entrypoint_stub@0")
@@ -3972,6 +4195,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalSemaphoreProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfo* pExternalSemaphoreInfo, VkExternalSemaphoreProperties* pExternalSemaphoreProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -3997,7 +4221,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalSemaphoreProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfo* pExternalSemaphoreInfo, VkExternalSemaphoreProperties* pExternalSemaphoreProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceExternalSemaphorePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -4022,6 +4248,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalSemaphorePropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfo* pExternalSemaphoreInfo, VkExternalSemaphoreProperties* pExternalSemaphoreProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4047,7 +4274,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalSemaphorePropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfo* pExternalSemaphoreInfo, VkExternalSemaphoreProperties* pExternalSemaphoreProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceExternalFenceProperties@4=_vk_entrypoint_stub@0")
@@ -4072,6 +4301,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalFenceProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalFenceInfo* pExternalFenceInfo, VkExternalFenceProperties* pExternalFenceProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4097,7 +4327,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalFenceProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalFenceInfo* pExternalFenceInfo, VkExternalFenceProperties* pExternalFenceProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceExternalFencePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -4122,6 +4354,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceExternalFencePropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalFenceInfo* pExternalFenceInfo, VkExternalFenceProperties* pExternalFenceProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4147,7 +4380,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceExternalFencePropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalFenceInfo* pExternalFenceInfo, VkExternalFenceProperties* pExternalFenceProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseDisplayEXT@4=_vk_entrypoint_stub@0")
@@ -4172,6 +4407,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ReleaseDisplayEXT(VkPhysicalDevice physicalDevice, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4197,7 +4433,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ReleaseDisplayEXT(VkPhysicalDevice physicalDevice, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4223,6 +4461,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireXlibDisplayEXT(VkPhysicalDevice physicalDevice, Display* dpy, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4248,7 +4487,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireXlibDisplayEXT(VkPhysicalDevice physicalDevice, Display* dpy, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef _MSC_VER
@@ -4275,6 +4516,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetRandROutputDisplayEXT(VkPhysicalDevice physicalDevice, Display* dpy, RROutput rrOutput, VkDisplayKHR* pDisplay) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4300,7 +4542,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRandROutputDisplayEXT(VkPhysicalDevice physicalDevice, Display* dpy, RROutput rrOutput, VkDisplayKHR* pDisplay) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -4327,6 +4571,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireWinrtDisplayNV(VkPhysicalDevice physicalDevice, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4352,7 +4597,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireWinrtDisplayNV(VkPhysicalDevice physicalDevice, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -4379,6 +4626,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetWinrtDisplayNV(VkPhysicalDevice physicalDevice, uint32_t deviceRelativeId, VkDisplayKHR* pDisplay) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4404,7 +4652,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetWinrtDisplayNV(VkPhysicalDevice physicalDevice, uint32_t deviceRelativeId, VkDisplayKHR* pDisplay) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4430,6 +4680,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfaceCapabilities2EXT(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilities2EXT* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4455,7 +4706,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfaceCapabilities2EXT(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilities2EXT* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDevicePresentRectanglesKHR@4=_vk_entrypoint_stub@0")
@@ -4480,6 +4733,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pRectCount, VkRect2D* pRects) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4505,7 +4759,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pRectCount, VkRect2D* pRects) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceMultisamplePropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -4530,6 +4786,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceMultisamplePropertiesEXT(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits samples, VkMultisamplePropertiesEXT* pMultisampleProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4555,7 +4812,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceMultisamplePropertiesEXT(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits samples, VkMultisamplePropertiesEXT* pMultisampleProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSurfaceCapabilities2KHR@4=_vk_entrypoint_stub@0")
@@ -4580,6 +4839,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfaceCapabilities2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, VkSurfaceCapabilities2KHR* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4605,7 +4865,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfaceCapabilities2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, VkSurfaceCapabilities2KHR* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSurfaceFormats2KHR@4=_vk_entrypoint_stub@0")
@@ -4630,6 +4892,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfaceFormats2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, uint32_t* pSurfaceFormatCount, VkSurfaceFormat2KHR* pSurfaceFormats) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4655,7 +4918,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfaceFormats2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, uint32_t* pSurfaceFormatCount, VkSurfaceFormat2KHR* pSurfaceFormats) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceDisplayProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -4680,6 +4945,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceDisplayProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4705,7 +4971,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceDisplayProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceDisplayPlaneProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -4730,6 +4998,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceDisplayPlaneProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlaneProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4755,7 +5024,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceDisplayPlaneProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlaneProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDisplayModeProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -4780,6 +5051,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDisplayModeProperties2KHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModeProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4805,7 +5077,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDisplayModeProperties2KHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModeProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDisplayPlaneCapabilities2KHR@4=_vk_entrypoint_stub@0")
@@ -4830,6 +5104,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDisplayPlaneCapabilities2KHR(VkPhysicalDevice physicalDevice, const VkDisplayPlaneInfo2KHR* pDisplayPlaneInfo, VkDisplayPlaneCapabilities2KHR* pCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4855,7 +5130,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDisplayPlaneCapabilities2KHR(VkPhysicalDevice physicalDevice, const VkDisplayPlaneInfo2KHR* pDisplayPlaneInfo, VkDisplayPlaneCapabilities2KHR* pCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCalibrateableTimeDomainsEXT@4=_vk_entrypoint_stub@0")
@@ -4880,6 +5157,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceCalibrateableTimeDomainsEXT(VkPhysicalDevice physicalDevice, uint32_t* pTimeDomainCount, VkTimeDomainEXT* pTimeDomains) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4905,7 +5183,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCalibrateableTimeDomainsEXT(VkPhysicalDevice physicalDevice, uint32_t* pTimeDomainCount, VkTimeDomainEXT* pTimeDomains) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesNV@4=_vk_entrypoint_stub@0")
@@ -4930,6 +5210,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceCooperativeMatrixPropertiesNV(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesNV* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4955,7 +5236,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceCooperativeMatrixPropertiesNV(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesNV* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -4981,6 +5264,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSurfacePresentModes2EXT(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5006,7 +5290,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSurfacePresentModes2EXT(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5032,6 +5318,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, uint32_t* pCounterCount, VkPerformanceCounterKHR* pCounters, VkPerformanceCounterDescriptionKHR* pCounterDescriptions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5057,7 +5344,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, uint32_t* pCounterCount, VkPerformanceCounterKHR* pCounters, VkPerformanceCounterDescriptionKHR* pCounterDescriptions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR@4=_vk_entrypoint_stub@0")
@@ -5082,6 +5371,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR(VkPhysicalDevice physicalDevice, const VkQueryPoolPerformanceCreateInfoKHR* pPerformanceQueryCreateInfo, uint32_t* pNumPasses) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5107,7 +5397,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR(VkPhysicalDevice physicalDevice, const VkQueryPoolPerformanceCreateInfoKHR* pPerformanceQueryCreateInfo, uint32_t* pNumPasses) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV@4=_vk_entrypoint_stub@0")
@@ -5132,6 +5424,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV(VkPhysicalDevice physicalDevice, uint32_t* pCombinationCount, VkFramebufferMixedSamplesCombinationNV* pCombinations) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5157,7 +5450,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV(VkPhysicalDevice physicalDevice, uint32_t* pCombinationCount, VkFramebufferMixedSamplesCombinationNV* pCombinations) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceToolProperties@4=_vk_entrypoint_stub@0")
@@ -5182,6 +5477,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceToolProperties(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5207,7 +5503,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceToolProperties(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceToolPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -5232,6 +5530,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceToolPropertiesEXT(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5257,7 +5556,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceToolPropertiesEXT(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceFragmentShadingRatesKHR@4=_vk_entrypoint_stub@0")
@@ -5282,6 +5583,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceFragmentShadingRatesKHR(VkPhysicalDevice physicalDevice, uint32_t* pFragmentShadingRateCount, VkPhysicalDeviceFragmentShadingRateKHR* pFragmentShadingRates) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5307,8 +5609,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFragmentShadingRatesKHR(VkPhysicalDevice physicalDevice, uint32_t* pFragmentShadingRateCount, VkPhysicalDeviceFragmentShadingRateKHR* pFragmentShadingRates) __attribute__ ((weak));
+
 #endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceVideoCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -5333,6 +5636,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceVideoCapabilitiesKHR(VkPhysicalDevice physicalDevice, const VkVideoProfileInfoKHR* pVideoProfile, VkVideoCapabilitiesKHR* pCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5358,9 +5662,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceVideoCapabilitiesKHR(VkPhysicalDevice physicalDevice, const VkVideoProfileInfoKHR* pVideoProfile, VkVideoCapabilitiesKHR* pCapabilities) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceVideoFormatPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -5385,6 +5689,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceVideoFormatPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceVideoFormatInfoKHR* pVideoFormatInfo, uint32_t* pVideoFormatPropertyCount, VkVideoFormatPropertiesKHR* pVideoFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5410,8 +5715,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceVideoFormatPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceVideoFormatInfoKHR* pVideoFormatInfo, uint32_t* pVideoFormatPropertyCount, VkVideoFormatPropertiesKHR* pVideoFormatProperties) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AcquireDrmDisplayEXT@4=_vk_entrypoint_stub@0")
@@ -5436,6 +5742,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5461,7 +5768,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDrmDisplayEXT@4=_vk_entrypoint_stub@0")
@@ -5486,6 +5795,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, uint32_t connectorId, VkDisplayKHR* display) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5511,7 +5821,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, uint32_t connectorId, VkDisplayKHR* display) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPhysicalDeviceOpticalFlowImageFormatsNV@4=_vk_entrypoint_stub@0")
@@ -5536,6 +5848,7 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPhysicalDeviceOpticalFlowImageFormatsNV(VkPhysicalDevice physicalDevice, const VkOpticalFlowImageFormatInfoNV* pOpticalFlowImageFormatInfo, uint32_t* pFormatCount, VkOpticalFlowImageFormatPropertiesNV* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5561,7 +5874,9 @@ const struct vk_instance_entrypoint_table vk_cmd_enqueue_unless_primary_instance
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPhysicalDeviceOpticalFlowImageFormatsNV(VkPhysicalDevice physicalDevice, const VkOpticalFlowImageFormatInfoNV* pOpticalFlowImageFormatInfo, uint32_t* pFormatCount, VkOpticalFlowImageFormatPropertiesNV* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 
 const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_physical_device_entrypoints = {
     .GetPhysicalDeviceProperties = vk_cmd_enqueue_GetPhysicalDeviceProperties,
@@ -5678,16 +5993,8 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_physical_device_
     .GetPhysicalDeviceToolProperties = vk_cmd_enqueue_GetPhysicalDeviceToolProperties,
     .GetPhysicalDeviceToolPropertiesEXT = vk_cmd_enqueue_GetPhysicalDeviceToolPropertiesEXT,
     .GetPhysicalDeviceFragmentShadingRatesKHR = vk_cmd_enqueue_GetPhysicalDeviceFragmentShadingRatesKHR,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetPhysicalDeviceVideoCapabilitiesKHR = vk_cmd_enqueue_GetPhysicalDeviceVideoCapabilitiesKHR,
-#elif defined(_MSC_VER)
-    .GetPhysicalDeviceVideoCapabilitiesKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetPhysicalDeviceVideoFormatPropertiesKHR = vk_cmd_enqueue_GetPhysicalDeviceVideoFormatPropertiesKHR,
-#elif defined(_MSC_VER)
-    .GetPhysicalDeviceVideoFormatPropertiesKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
     .AcquireDrmDisplayEXT = vk_cmd_enqueue_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = vk_cmd_enqueue_GetDrmDisplayEXT,
     .GetPhysicalDeviceOpticalFlowImageFormatsNV = vk_cmd_enqueue_GetPhysicalDeviceOpticalFlowImageFormatsNV,
@@ -5807,20 +6114,13 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
     .GetPhysicalDeviceToolProperties = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceToolProperties,
     .GetPhysicalDeviceToolPropertiesEXT = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceToolPropertiesEXT,
     .GetPhysicalDeviceFragmentShadingRatesKHR = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceFragmentShadingRatesKHR,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetPhysicalDeviceVideoCapabilitiesKHR = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceVideoCapabilitiesKHR,
-#elif defined(_MSC_VER)
-    .GetPhysicalDeviceVideoCapabilitiesKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetPhysicalDeviceVideoFormatPropertiesKHR = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceVideoFormatPropertiesKHR,
-#elif defined(_MSC_VER)
-    .GetPhysicalDeviceVideoFormatPropertiesKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
     .AcquireDrmDisplayEXT = vk_cmd_enqueue_unless_primary_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = vk_cmd_enqueue_unless_primary_GetDrmDisplayEXT,
     .GetPhysicalDeviceOpticalFlowImageFormatsNV = vk_cmd_enqueue_unless_primary_GetPhysicalDeviceOpticalFlowImageFormatsNV,
 };
+
 
 
 #ifdef _MSC_VER
@@ -5847,6 +6147,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_cmd_enqueue_GetDeviceProcAddr(VkDevice device, const char* pName) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5872,7 +6173,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceProcAddr(VkDevice device, const char* pName) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDevice@4=_vk_entrypoint_stub@0")
@@ -5897,6 +6200,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5922,7 +6226,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceQueue@4=_vk_entrypoint_stub@0")
@@ -5947,6 +6253,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -5972,7 +6279,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueSubmit@4=_vk_entrypoint_stub@0")
@@ -5997,6 +6306,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6022,7 +6332,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueWaitIdle@4=_vk_entrypoint_stub@0")
@@ -6047,6 +6359,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueWaitIdle(VkQueue queue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6072,7 +6385,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueWaitIdle(VkQueue queue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DeviceWaitIdle@4=_vk_entrypoint_stub@0")
@@ -6097,6 +6412,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_DeviceWaitIdle(VkDevice device) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6122,7 +6438,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_DeviceWaitIdle(VkDevice device) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AllocateMemory@4=_vk_entrypoint_stub@0")
@@ -6147,6 +6465,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AllocateMemory(VkDevice device, const VkMemoryAllocateInfo* pAllocateInfo, const VkAllocationCallbacks* pAllocator, VkDeviceMemory* pMemory) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6172,7 +6491,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AllocateMemory(VkDevice device, const VkMemoryAllocateInfo* pAllocateInfo, const VkAllocationCallbacks* pAllocator, VkDeviceMemory* pMemory) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_FreeMemory@4=_vk_entrypoint_stub@0")
@@ -6197,6 +6518,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_FreeMemory(VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6222,7 +6544,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_FreeMemory(VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory@4=_vk_entrypoint_stub@0")
@@ -6247,6 +6571,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_MapMemory(VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void** ppData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6272,7 +6597,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_MapMemory(VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void** ppData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory@4=_vk_entrypoint_stub@0")
@@ -6297,6 +6624,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_UnmapMemory(VkDevice device, VkDeviceMemory memory) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6322,7 +6650,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_UnmapMemory(VkDevice device, VkDeviceMemory memory) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_FlushMappedMemoryRanges@4=_vk_entrypoint_stub@0")
@@ -6347,6 +6677,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_FlushMappedMemoryRanges(VkDevice device, uint32_t memoryRangeCount, const VkMappedMemoryRange* pMemoryRanges) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6372,7 +6703,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_FlushMappedMemoryRanges(VkDevice device, uint32_t memoryRangeCount, const VkMappedMemoryRange* pMemoryRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_InvalidateMappedMemoryRanges@4=_vk_entrypoint_stub@0")
@@ -6397,6 +6730,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_InvalidateMappedMemoryRanges(VkDevice device, uint32_t memoryRangeCount, const VkMappedMemoryRange* pMemoryRanges) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6422,7 +6756,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_InvalidateMappedMemoryRanges(VkDevice device, uint32_t memoryRangeCount, const VkMappedMemoryRange* pMemoryRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceMemoryCommitment@4=_vk_entrypoint_stub@0")
@@ -6447,6 +6783,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceMemoryCommitment(VkDevice device, VkDeviceMemory memory, VkDeviceSize* pCommittedMemoryInBytes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6472,7 +6809,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceMemoryCommitment(VkDevice device, VkDeviceMemory memory, VkDeviceSize* pCommittedMemoryInBytes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -6497,6 +6836,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetBufferMemoryRequirements(VkDevice device, VkBuffer buffer, VkMemoryRequirements* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6522,7 +6862,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferMemoryRequirements(VkDevice device, VkBuffer buffer, VkMemoryRequirements* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindBufferMemory@4=_vk_entrypoint_stub@0")
@@ -6547,6 +6889,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindBufferMemory(VkDevice device, VkBuffer buffer, VkDeviceMemory memory, VkDeviceSize memoryOffset) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6572,7 +6915,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindBufferMemory(VkDevice device, VkBuffer buffer, VkDeviceMemory memory, VkDeviceSize memoryOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -6597,6 +6942,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageMemoryRequirements(VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6622,7 +6968,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageMemoryRequirements(VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindImageMemory@4=_vk_entrypoint_stub@0")
@@ -6647,6 +6995,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindImageMemory(VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6672,7 +7021,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindImageMemory(VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -6697,6 +7048,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSparseMemoryRequirements(VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6722,7 +7074,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSparseMemoryRequirements(VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueBindSparse@4=_vk_entrypoint_stub@0")
@@ -6747,6 +7101,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueBindSparse(VkQueue queue, uint32_t bindInfoCount, const VkBindSparseInfo* pBindInfo, VkFence fence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6772,7 +7127,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueBindSparse(VkQueue queue, uint32_t bindInfoCount, const VkBindSparseInfo* pBindInfo, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateFence@4=_vk_entrypoint_stub@0")
@@ -6797,6 +7154,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateFence(VkDevice device, const VkFenceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6822,7 +7180,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateFence(VkDevice device, const VkFenceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyFence@4=_vk_entrypoint_stub@0")
@@ -6847,6 +7207,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyFence(VkDevice device, VkFence fence, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6872,7 +7233,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyFence(VkDevice device, VkFence fence, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetFences@4=_vk_entrypoint_stub@0")
@@ -6897,6 +7260,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ResetFences(VkDevice device, uint32_t fenceCount, const VkFence* pFences) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6922,7 +7286,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetFences(VkDevice device, uint32_t fenceCount, const VkFence* pFences) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetFenceStatus@4=_vk_entrypoint_stub@0")
@@ -6947,6 +7313,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetFenceStatus(VkDevice device, VkFence fence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6972,7 +7339,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetFenceStatus(VkDevice device, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_WaitForFences@4=_vk_entrypoint_stub@0")
@@ -6997,6 +7366,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_WaitForFences(VkDevice device, uint32_t fenceCount, const VkFence* pFences, VkBool32 waitAll, uint64_t timeout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7022,7 +7392,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_WaitForFences(VkDevice device, uint32_t fenceCount, const VkFence* pFences, VkBool32 waitAll, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateSemaphore@4=_vk_entrypoint_stub@0")
@@ -7047,6 +7419,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateSemaphore(VkDevice device, const VkSemaphoreCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSemaphore* pSemaphore) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7072,7 +7445,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateSemaphore(VkDevice device, const VkSemaphoreCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSemaphore* pSemaphore) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroySemaphore@4=_vk_entrypoint_stub@0")
@@ -7097,6 +7472,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroySemaphore(VkDevice device, VkSemaphore semaphore, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7122,7 +7498,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroySemaphore(VkDevice device, VkSemaphore semaphore, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateEvent@4=_vk_entrypoint_stub@0")
@@ -7147,6 +7525,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateEvent(VkDevice device, const VkEventCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkEvent* pEvent) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7172,7 +7551,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateEvent(VkDevice device, const VkEventCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkEvent* pEvent) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyEvent@4=_vk_entrypoint_stub@0")
@@ -7197,6 +7578,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyEvent(VkDevice device, VkEvent event, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7222,7 +7604,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyEvent(VkDevice device, VkEvent event, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetEventStatus@4=_vk_entrypoint_stub@0")
@@ -7247,6 +7631,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetEventStatus(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7272,7 +7657,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetEventStatus(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetEvent@4=_vk_entrypoint_stub@0")
@@ -7297,6 +7684,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetEvent(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7322,7 +7710,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetEvent(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetEvent@4=_vk_entrypoint_stub@0")
@@ -7347,6 +7737,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ResetEvent(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7372,7 +7763,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetEvent(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateQueryPool@4=_vk_entrypoint_stub@0")
@@ -7397,6 +7790,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateQueryPool(VkDevice device, const VkQueryPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkQueryPool* pQueryPool) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7422,7 +7816,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateQueryPool(VkDevice device, const VkQueryPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkQueryPool* pQueryPool) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyQueryPool@4=_vk_entrypoint_stub@0")
@@ -7447,6 +7843,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyQueryPool(VkDevice device, VkQueryPool queryPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7472,7 +7869,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyQueryPool(VkDevice device, VkQueryPool queryPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetQueryPoolResults@4=_vk_entrypoint_stub@0")
@@ -7497,6 +7896,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetQueryPoolResults(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, size_t dataSize, void* pData, VkDeviceSize stride, VkQueryResultFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7522,7 +7922,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetQueryPoolResults(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, size_t dataSize, void* pData, VkDeviceSize stride, VkQueryResultFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetQueryPool@4=_vk_entrypoint_stub@0")
@@ -7547,6 +7949,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_ResetQueryPool(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7572,7 +7975,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetQueryPool(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetQueryPoolEXT@4=_vk_entrypoint_stub@0")
@@ -7597,6 +8002,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_ResetQueryPoolEXT(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7622,7 +8028,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetQueryPoolEXT(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateBuffer@4=_vk_entrypoint_stub@0")
@@ -7647,6 +8055,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateBuffer(VkDevice device, const VkBufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBuffer* pBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7672,7 +8081,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateBuffer(VkDevice device, const VkBufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBuffer* pBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyBuffer@4=_vk_entrypoint_stub@0")
@@ -7697,6 +8108,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyBuffer(VkDevice device, VkBuffer buffer, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7722,7 +8134,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyBuffer(VkDevice device, VkBuffer buffer, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateBufferView@4=_vk_entrypoint_stub@0")
@@ -7747,6 +8161,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateBufferView(VkDevice device, const VkBufferViewCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBufferView* pView) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7772,7 +8187,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateBufferView(VkDevice device, const VkBufferViewCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBufferView* pView) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyBufferView@4=_vk_entrypoint_stub@0")
@@ -7797,6 +8214,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyBufferView(VkDevice device, VkBufferView bufferView, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7822,7 +8240,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyBufferView(VkDevice device, VkBufferView bufferView, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateImage@4=_vk_entrypoint_stub@0")
@@ -7847,6 +8267,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7872,7 +8293,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyImage@4=_vk_entrypoint_stub@0")
@@ -7897,6 +8320,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7922,7 +8346,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout@4=_vk_entrypoint_stub@0")
@@ -7947,6 +8373,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSubresourceLayout(VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7972,7 +8399,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout(VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateImageView@4=_vk_entrypoint_stub@0")
@@ -7997,6 +8426,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateImageView(VkDevice device, const VkImageViewCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImageView* pView) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8022,7 +8452,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateImageView(VkDevice device, const VkImageViewCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImageView* pView) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyImageView@4=_vk_entrypoint_stub@0")
@@ -8047,6 +8479,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyImageView(VkDevice device, VkImageView imageView, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8072,7 +8505,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyImageView(VkDevice device, VkImageView imageView, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShaderModule@4=_vk_entrypoint_stub@0")
@@ -8097,6 +8532,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateShaderModule(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkShaderModule* pShaderModule) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8122,7 +8558,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateShaderModule(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkShaderModule* pShaderModule) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderModule@4=_vk_entrypoint_stub@0")
@@ -8147,6 +8585,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyShaderModule(VkDevice device, VkShaderModule shaderModule, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8172,7 +8611,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyShaderModule(VkDevice device, VkShaderModule shaderModule, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePipelineCache@4=_vk_entrypoint_stub@0")
@@ -8197,6 +8638,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreatePipelineCache(VkDevice device, const VkPipelineCacheCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineCache* pPipelineCache) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8222,7 +8664,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreatePipelineCache(VkDevice device, const VkPipelineCacheCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineCache* pPipelineCache) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyPipelineCache@4=_vk_entrypoint_stub@0")
@@ -8247,6 +8691,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyPipelineCache(VkDevice device, VkPipelineCache pipelineCache, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8272,7 +8717,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyPipelineCache(VkDevice device, VkPipelineCache pipelineCache, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineCacheData@4=_vk_entrypoint_stub@0")
@@ -8297,6 +8744,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPipelineCacheData(VkDevice device, VkPipelineCache pipelineCache, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8322,7 +8770,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelineCacheData(VkDevice device, VkPipelineCache pipelineCache, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MergePipelineCaches@4=_vk_entrypoint_stub@0")
@@ -8347,6 +8797,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_MergePipelineCaches(VkDevice device, VkPipelineCache dstCache, uint32_t srcCacheCount, const VkPipelineCache* pSrcCaches) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8372,7 +8823,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_MergePipelineCaches(VkDevice device, VkPipelineCache dstCache, uint32_t srcCacheCount, const VkPipelineCache* pSrcCaches) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateGraphicsPipelines@4=_vk_entrypoint_stub@0")
@@ -8397,6 +8850,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateGraphicsPipelines(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkGraphicsPipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8422,7 +8876,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateGraphicsPipelines(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkGraphicsPipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateComputePipelines@4=_vk_entrypoint_stub@0")
@@ -8447,6 +8903,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateComputePipelines(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkComputePipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8472,7 +8929,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateComputePipelines(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkComputePipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI@4=_vk_entrypoint_stub@0")
@@ -8497,6 +8956,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI(VkDevice device, VkRenderPass renderpass, VkExtent2D* pMaxWorkgroupSize) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8522,7 +8982,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI(VkDevice device, VkRenderPass renderpass, VkExtent2D* pMaxWorkgroupSize) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyPipeline@4=_vk_entrypoint_stub@0")
@@ -8547,6 +9009,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyPipeline(VkDevice device, VkPipeline pipeline, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8572,7 +9035,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyPipeline(VkDevice device, VkPipeline pipeline, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePipelineLayout@4=_vk_entrypoint_stub@0")
@@ -8597,6 +9062,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreatePipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineLayout* pPipelineLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8622,7 +9088,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreatePipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineLayout* pPipelineLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyPipelineLayout@4=_vk_entrypoint_stub@0")
@@ -8647,6 +9115,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8672,7 +9141,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateSampler@4=_vk_entrypoint_stub@0")
@@ -8697,6 +9168,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateSampler(VkDevice device, const VkSamplerCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSampler* pSampler) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8722,7 +9194,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateSampler(VkDevice device, const VkSamplerCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSampler* pSampler) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroySampler@4=_vk_entrypoint_stub@0")
@@ -8747,6 +9221,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroySampler(VkDevice device, VkSampler sampler, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8772,7 +9247,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroySampler(VkDevice device, VkSampler sampler, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDescriptorSetLayout@4=_vk_entrypoint_stub@0")
@@ -8797,6 +9274,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorSetLayout* pSetLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8822,7 +9300,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorSetLayout* pSetLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDescriptorSetLayout@4=_vk_entrypoint_stub@0")
@@ -8847,6 +9327,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8872,7 +9353,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDescriptorPool@4=_vk_entrypoint_stub@0")
@@ -8897,6 +9380,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8922,7 +9406,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDescriptorPool@4=_vk_entrypoint_stub@0")
@@ -8947,6 +9433,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8972,7 +9459,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetDescriptorPool@4=_vk_entrypoint_stub@0")
@@ -8997,6 +9486,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ResetDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorPoolResetFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9022,7 +9512,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorPoolResetFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AllocateDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -9047,6 +9539,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AllocateDescriptorSets(VkDevice device, const VkDescriptorSetAllocateInfo* pAllocateInfo, VkDescriptorSet* pDescriptorSets) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9072,7 +9565,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AllocateDescriptorSets(VkDevice device, const VkDescriptorSetAllocateInfo* pAllocateInfo, VkDescriptorSet* pDescriptorSets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_FreeDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -9097,6 +9592,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_FreeDescriptorSets(VkDevice device, VkDescriptorPool descriptorPool, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9122,7 +9618,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_FreeDescriptorSets(VkDevice device, VkDescriptorPool descriptorPool, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UpdateDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -9147,6 +9645,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_UpdateDescriptorSets(VkDevice device, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites, uint32_t descriptorCopyCount, const VkCopyDescriptorSet* pDescriptorCopies) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9172,7 +9671,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_UpdateDescriptorSets(VkDevice device, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites, uint32_t descriptorCopyCount, const VkCopyDescriptorSet* pDescriptorCopies) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateFramebuffer@4=_vk_entrypoint_stub@0")
@@ -9197,6 +9698,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateFramebuffer(VkDevice device, const VkFramebufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkFramebuffer* pFramebuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9222,7 +9724,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateFramebuffer(VkDevice device, const VkFramebufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkFramebuffer* pFramebuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyFramebuffer@4=_vk_entrypoint_stub@0")
@@ -9247,6 +9751,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyFramebuffer(VkDevice device, VkFramebuffer framebuffer, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9272,7 +9777,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyFramebuffer(VkDevice device, VkFramebuffer framebuffer, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateRenderPass@4=_vk_entrypoint_stub@0")
@@ -9297,6 +9804,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9322,7 +9830,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyRenderPass@4=_vk_entrypoint_stub@0")
@@ -9347,6 +9857,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyRenderPass(VkDevice device, VkRenderPass renderPass, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9372,7 +9883,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyRenderPass(VkDevice device, VkRenderPass renderPass, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRenderAreaGranularity@4=_vk_entrypoint_stub@0")
@@ -9397,6 +9910,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetRenderAreaGranularity(VkDevice device, VkRenderPass renderPass, VkExtent2D* pGranularity) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9422,7 +9936,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRenderAreaGranularity(VkDevice device, VkRenderPass renderPass, VkExtent2D* pGranularity) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateCommandPool@4=_vk_entrypoint_stub@0")
@@ -9447,6 +9963,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9472,7 +9989,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyCommandPool@4=_vk_entrypoint_stub@0")
@@ -9497,6 +10016,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyCommandPool(VkDevice device, VkCommandPool commandPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9522,7 +10042,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyCommandPool(VkDevice device, VkCommandPool commandPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetCommandPool@4=_vk_entrypoint_stub@0")
@@ -9547,6 +10069,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ResetCommandPool(VkDevice device, VkCommandPool commandPool, VkCommandPoolResetFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9572,7 +10095,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetCommandPool(VkDevice device, VkCommandPool commandPool, VkCommandPoolResetFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AllocateCommandBuffers@4=_vk_entrypoint_stub@0")
@@ -9597,6 +10122,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AllocateCommandBuffers(VkDevice device, const VkCommandBufferAllocateInfo* pAllocateInfo, VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9622,7 +10148,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AllocateCommandBuffers(VkDevice device, const VkCommandBufferAllocateInfo* pAllocateInfo, VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_FreeCommandBuffers@4=_vk_entrypoint_stub@0")
@@ -9647,6 +10175,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_FreeCommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9672,7 +10201,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_FreeCommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BeginCommandBuffer@4=_vk_entrypoint_stub@0")
@@ -9697,6 +10228,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BeginCommandBuffer(VkCommandBuffer commandBuffer, const VkCommandBufferBeginInfo* pBeginInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9722,7 +10254,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BeginCommandBuffer(VkCommandBuffer commandBuffer, const VkCommandBufferBeginInfo* pBeginInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_EndCommandBuffer@4=_vk_entrypoint_stub@0")
@@ -9747,6 +10281,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_EndCommandBuffer(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9772,7 +10307,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_EndCommandBuffer(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ResetCommandBuffer@4=_vk_entrypoint_stub@0")
@@ -9797,6 +10334,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ResetCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferResetFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9822,7 +10360,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ResetCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferResetFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindPipeline@4=_vk_entrypoint_stub@0")
@@ -9847,6 +10387,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9872,7 +10413,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewport@4=_vk_entrypoint_stub@0")
@@ -9897,6 +10440,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9922,7 +10466,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetScissor@4=_vk_entrypoint_stub@0")
@@ -9947,6 +10493,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetScissor(VkCommandBuffer commandBuffer, uint32_t firstScissor, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9972,7 +10519,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetScissor(VkCommandBuffer commandBuffer, uint32_t firstScissor, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetLineWidth@4=_vk_entrypoint_stub@0")
@@ -9997,6 +10546,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetLineWidth(VkCommandBuffer commandBuffer, float lineWidth) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10022,7 +10572,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetLineWidth(VkCommandBuffer commandBuffer, float lineWidth) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBias@4=_vk_entrypoint_stub@0")
@@ -10047,6 +10599,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBias(VkCommandBuffer commandBuffer, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10072,7 +10625,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBias(VkCommandBuffer commandBuffer, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetBlendConstants@4=_vk_entrypoint_stub@0")
@@ -10097,6 +10652,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetBlendConstants(VkCommandBuffer commandBuffer, const float blendConstants[4]) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10122,7 +10678,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetBlendConstants(VkCommandBuffer commandBuffer, const float blendConstants[4]) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBounds@4=_vk_entrypoint_stub@0")
@@ -10147,6 +10705,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBounds(VkCommandBuffer commandBuffer, float minDepthBounds, float maxDepthBounds) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10172,7 +10731,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBounds(VkCommandBuffer commandBuffer, float minDepthBounds, float maxDepthBounds) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilCompareMask@4=_vk_entrypoint_stub@0")
@@ -10197,6 +10758,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilCompareMask(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t compareMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10222,7 +10784,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilCompareMask(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t compareMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilWriteMask@4=_vk_entrypoint_stub@0")
@@ -10247,6 +10811,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilWriteMask(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t writeMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10272,7 +10837,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilWriteMask(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t writeMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilReference@4=_vk_entrypoint_stub@0")
@@ -10297,6 +10864,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilReference(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t reference) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10322,7 +10890,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilReference(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t reference) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -10347,6 +10917,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10372,7 +10943,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindIndexBuffer@4=_vk_entrypoint_stub@0")
@@ -10397,6 +10970,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10422,7 +10996,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindVertexBuffers@4=_vk_entrypoint_stub@0")
@@ -10447,6 +11023,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10472,7 +11049,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDraw@4=_vk_entrypoint_stub@0")
@@ -10497,6 +11076,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10522,7 +11102,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndexed@4=_vk_entrypoint_stub@0")
@@ -10547,6 +11129,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10572,7 +11155,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMultiEXT@4=_vk_entrypoint_stub@0")
@@ -10597,6 +11182,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMultiEXT(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawInfoEXT* pVertexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10622,7 +11208,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMultiEXT(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawInfoEXT* pVertexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMultiIndexedEXT@4=_vk_entrypoint_stub@0")
@@ -10647,6 +11235,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMultiIndexedEXT(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawIndexedInfoEXT* pIndexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride, const int32_t* pVertexOffset) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10672,7 +11261,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMultiIndexedEXT(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawIndexedInfoEXT* pIndexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride, const int32_t* pVertexOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndirect@4=_vk_entrypoint_stub@0")
@@ -10697,6 +11288,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10722,7 +11314,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndexedIndirect@4=_vk_entrypoint_stub@0")
@@ -10747,6 +11341,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndexedIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10772,7 +11367,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndexedIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDispatch@4=_vk_entrypoint_stub@0")
@@ -10797,6 +11394,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDispatch(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10822,7 +11420,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDispatch(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDispatchIndirect@4=_vk_entrypoint_stub@0")
@@ -10847,6 +11447,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDispatchIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10872,7 +11473,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDispatchIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSubpassShadingHUAWEI@4=_vk_entrypoint_stub@0")
@@ -10897,6 +11500,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSubpassShadingHUAWEI(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10922,7 +11526,115 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSubpassShadingHUAWEI(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterHUAWEI@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdDrawClusterHUAWEI=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdDrawClusterHUAWEI=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawClusterHUAWEI(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyBuffer@4=_vk_entrypoint_stub@0")
@@ -10947,6 +11659,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10972,7 +11685,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyImage@4=_vk_entrypoint_stub@0")
@@ -10997,6 +11712,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11022,7 +11738,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBlitImage@4=_vk_entrypoint_stub@0")
@@ -11047,6 +11765,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBlitImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageBlit* pRegions, VkFilter filter) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11072,7 +11791,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBlitImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageBlit* pRegions, VkFilter filter) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyBufferToImage@4=_vk_entrypoint_stub@0")
@@ -11097,6 +11818,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11122,7 +11844,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyImageToBuffer@4=_vk_entrypoint_stub@0")
@@ -11147,6 +11871,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyImageToBuffer(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11172,7 +11897,115 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyImageToBuffer(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryIndirectNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdCopyMemoryIndirectNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdCopyMemoryIndirectNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyMemoryIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride, VkImage dstImage, VkImageLayout dstImageLayout, const VkImageSubresourceLayers* pImageSubresources) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride, VkImage dstImage, VkImageLayout dstImageLayout, const VkImageSubresourceLayers* pImageSubresources) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdUpdateBuffer@4=_vk_entrypoint_stub@0")
@@ -11197,6 +12030,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdUpdateBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11222,7 +12056,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdUpdateBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdFillBuffer@4=_vk_entrypoint_stub@0")
@@ -11247,6 +12083,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdFillBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize size, uint32_t data) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11272,7 +12109,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdFillBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize size, uint32_t data) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdClearColorImage@4=_vk_entrypoint_stub@0")
@@ -11297,6 +12136,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdClearColorImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11322,7 +12162,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdClearColorImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdClearDepthStencilImage@4=_vk_entrypoint_stub@0")
@@ -11347,6 +12189,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdClearDepthStencilImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearDepthStencilValue* pDepthStencil, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11372,7 +12215,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdClearDepthStencilImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearDepthStencilValue* pDepthStencil, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdClearAttachments@4=_vk_entrypoint_stub@0")
@@ -11397,6 +12242,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdClearAttachments(VkCommandBuffer commandBuffer, uint32_t attachmentCount, const VkClearAttachment* pAttachments, uint32_t rectCount, const VkClearRect* pRects) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11422,7 +12268,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdClearAttachments(VkCommandBuffer commandBuffer, uint32_t attachmentCount, const VkClearAttachment* pAttachments, uint32_t rectCount, const VkClearRect* pRects) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResolveImage@4=_vk_entrypoint_stub@0")
@@ -11447,6 +12295,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResolveImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageResolve* pRegions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11472,7 +12321,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResolveImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageResolve* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetEvent@4=_vk_entrypoint_stub@0")
@@ -11497,6 +12348,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11522,7 +12374,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResetEvent@4=_vk_entrypoint_stub@0")
@@ -11547,6 +12401,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11572,7 +12427,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWaitEvents@4=_vk_entrypoint_stub@0")
@@ -11597,6 +12454,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWaitEvents(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11622,7 +12480,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWaitEvents(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPipelineBarrier@4=_vk_entrypoint_stub@0")
@@ -11647,6 +12507,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPipelineBarrier(VkCommandBuffer commandBuffer, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11672,7 +12533,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPipelineBarrier(VkCommandBuffer commandBuffer, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginQuery@4=_vk_entrypoint_stub@0")
@@ -11697,6 +12560,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11722,7 +12586,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndQuery@4=_vk_entrypoint_stub@0")
@@ -11747,6 +12613,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11772,7 +12639,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginConditionalRenderingEXT@4=_vk_entrypoint_stub@0")
@@ -11797,6 +12666,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginConditionalRenderingEXT(VkCommandBuffer commandBuffer, const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11822,7 +12692,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginConditionalRenderingEXT(VkCommandBuffer commandBuffer, const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndConditionalRenderingEXT@4=_vk_entrypoint_stub@0")
@@ -11847,6 +12719,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndConditionalRenderingEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11872,7 +12745,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndConditionalRenderingEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResetQueryPool@4=_vk_entrypoint_stub@0")
@@ -11897,6 +12772,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResetQueryPool(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11922,7 +12798,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResetQueryPool(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteTimestamp@4=_vk_entrypoint_stub@0")
@@ -11947,6 +12825,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -11972,7 +12851,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyQueryPoolResults@4=_vk_entrypoint_stub@0")
@@ -11997,6 +12878,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryResultFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12022,7 +12904,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryResultFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPushConstants@4=_vk_entrypoint_stub@0")
@@ -12047,6 +12931,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12072,7 +12957,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginRenderPass@4=_vk_entrypoint_stub@0")
@@ -12097,6 +12984,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginRenderPass(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12122,7 +13010,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginRenderPass(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdNextSubpass@4=_vk_entrypoint_stub@0")
@@ -12147,6 +13037,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdNextSubpass(VkCommandBuffer commandBuffer, VkSubpassContents contents) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12172,7 +13063,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdNextSubpass(VkCommandBuffer commandBuffer, VkSubpassContents contents) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndRenderPass@4=_vk_entrypoint_stub@0")
@@ -12197,6 +13090,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndRenderPass(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12222,7 +13116,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndRenderPass(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdExecuteCommands@4=_vk_entrypoint_stub@0")
@@ -12247,6 +13143,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdExecuteCommands(VkCommandBuffer commandBuffer, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12272,7 +13169,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdExecuteCommands(VkCommandBuffer commandBuffer, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateSharedSwapchainsKHR@4=_vk_entrypoint_stub@0")
@@ -12297,6 +13196,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateSharedSwapchainsKHR(VkDevice device, uint32_t swapchainCount, const VkSwapchainCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchains) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12322,7 +13222,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateSharedSwapchainsKHR(VkDevice device, uint32_t swapchainCount, const VkSwapchainCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchains) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateSwapchainKHR@4=_vk_entrypoint_stub@0")
@@ -12347,6 +13249,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12372,7 +13275,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroySwapchainKHR@4=_vk_entrypoint_stub@0")
@@ -12397,6 +13302,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12422,7 +13328,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSwapchainImagesKHR@4=_vk_entrypoint_stub@0")
@@ -12447,6 +13355,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pSwapchainImageCount, VkImage* pSwapchainImages) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12472,7 +13381,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pSwapchainImageCount, VkImage* pSwapchainImages) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AcquireNextImageKHR@4=_vk_entrypoint_stub@0")
@@ -12497,6 +13408,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12522,7 +13434,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueuePresentKHR@4=_vk_entrypoint_stub@0")
@@ -12547,6 +13461,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12572,7 +13487,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DebugMarkerSetObjectNameEXT@4=_vk_entrypoint_stub@0")
@@ -12597,6 +13514,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_DebugMarkerSetObjectNameEXT(VkDevice device, const VkDebugMarkerObjectNameInfoEXT* pNameInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12622,7 +13540,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_DebugMarkerSetObjectNameEXT(VkDevice device, const VkDebugMarkerObjectNameInfoEXT* pNameInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DebugMarkerSetObjectTagEXT@4=_vk_entrypoint_stub@0")
@@ -12647,6 +13567,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_DebugMarkerSetObjectTagEXT(VkDevice device, const VkDebugMarkerObjectTagInfoEXT* pTagInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12672,7 +13593,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_DebugMarkerSetObjectTagEXT(VkDevice device, const VkDebugMarkerObjectTagInfoEXT* pTagInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDebugMarkerBeginEXT@4=_vk_entrypoint_stub@0")
@@ -12697,6 +13620,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDebugMarkerBeginEXT(VkCommandBuffer commandBuffer, const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12722,7 +13646,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDebugMarkerBeginEXT(VkCommandBuffer commandBuffer, const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDebugMarkerEndEXT@4=_vk_entrypoint_stub@0")
@@ -12747,6 +13673,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12772,7 +13699,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDebugMarkerInsertEXT@4=_vk_entrypoint_stub@0")
@@ -12797,6 +13726,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDebugMarkerInsertEXT(VkCommandBuffer commandBuffer, const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12822,7 +13752,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDebugMarkerInsertEXT(VkCommandBuffer commandBuffer, const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12848,6 +13780,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryWin32HandleNV(VkDevice device, VkDeviceMemory memory, VkExternalMemoryHandleTypeFlagsNV handleType, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12873,7 +13806,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryWin32HandleNV(VkDevice device, VkDeviceMemory memory, VkExternalMemoryHandleTypeFlagsNV handleType, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12899,6 +13834,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdExecuteGeneratedCommandsNV(VkCommandBuffer commandBuffer, VkBool32 isPreprocessed, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12924,7 +13860,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdExecuteGeneratedCommandsNV(VkCommandBuffer commandBuffer, VkBool32 isPreprocessed, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPreprocessGeneratedCommandsNV@4=_vk_entrypoint_stub@0")
@@ -12949,6 +13887,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPreprocessGeneratedCommandsNV(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -12974,7 +13913,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPreprocessGeneratedCommandsNV(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindPipelineShaderGroupNV@4=_vk_entrypoint_stub@0")
@@ -12999,6 +13940,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindPipelineShaderGroupNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline, uint32_t groupIndex) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13024,7 +13966,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindPipelineShaderGroupNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline, uint32_t groupIndex) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetGeneratedCommandsMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
@@ -13049,6 +13993,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetGeneratedCommandsMemoryRequirementsNV(VkDevice device, const VkGeneratedCommandsMemoryRequirementsInfoNV* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13074,7 +14019,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetGeneratedCommandsMemoryRequirementsNV(VkDevice device, const VkGeneratedCommandsMemoryRequirementsInfoNV* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateIndirectCommandsLayoutNV@4=_vk_entrypoint_stub@0")
@@ -13099,6 +14046,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateIndirectCommandsLayoutNV(VkDevice device, const VkIndirectCommandsLayoutCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkIndirectCommandsLayoutNV* pIndirectCommandsLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13124,7 +14072,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateIndirectCommandsLayoutNV(VkDevice device, const VkIndirectCommandsLayoutCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkIndirectCommandsLayoutNV* pIndirectCommandsLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyIndirectCommandsLayoutNV@4=_vk_entrypoint_stub@0")
@@ -13149,6 +14099,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyIndirectCommandsLayoutNV(VkDevice device, VkIndirectCommandsLayoutNV indirectCommandsLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13174,7 +14125,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyIndirectCommandsLayoutNV(VkDevice device, VkIndirectCommandsLayoutNV indirectCommandsLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPushDescriptorSetKHR@4=_vk_entrypoint_stub@0")
@@ -13199,6 +14152,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13224,7 +14178,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TrimCommandPool@4=_vk_entrypoint_stub@0")
@@ -13249,6 +14205,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_TrimCommandPool(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13274,7 +14231,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_TrimCommandPool(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_TrimCommandPoolKHR@4=_vk_entrypoint_stub@0")
@@ -13299,6 +14258,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_TrimCommandPoolKHR(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlags flags) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13324,7 +14284,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_TrimCommandPoolKHR(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13350,6 +14312,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryWin32HandleKHR(VkDevice device, const VkMemoryGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13375,7 +14338,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryWin32HandleKHR(VkDevice device, const VkMemoryGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -13402,6 +14367,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryWin32HandlePropertiesKHR(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, HANDLE handle, VkMemoryWin32HandlePropertiesKHR* pMemoryWin32HandleProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13427,7 +14393,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryWin32HandlePropertiesKHR(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, HANDLE handle, VkMemoryWin32HandlePropertiesKHR* pMemoryWin32HandleProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13453,6 +14421,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryFdKHR(VkDevice device, const VkMemoryGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13478,7 +14447,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryFdKHR(VkDevice device, const VkMemoryGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetMemoryFdPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -13503,6 +14474,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryFdPropertiesKHR(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, int fd, VkMemoryFdPropertiesKHR* pMemoryFdProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13528,7 +14500,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryFdPropertiesKHR(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, int fd, VkMemoryFdPropertiesKHR* pMemoryFdProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13554,6 +14528,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryZirconHandleFUCHSIA(VkDevice device, const VkMemoryGetZirconHandleInfoFUCHSIA* pGetZirconHandleInfo, zx_handle_t* pZirconHandle) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13579,7 +14554,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryZirconHandleFUCHSIA(VkDevice device, const VkMemoryGetZirconHandleInfoFUCHSIA* pGetZirconHandleInfo, zx_handle_t* pZirconHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -13606,6 +14583,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryZirconHandlePropertiesFUCHSIA(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, zx_handle_t zirconHandle, VkMemoryZirconHandlePropertiesFUCHSIA* pMemoryZirconHandleProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13631,7 +14609,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryZirconHandlePropertiesFUCHSIA(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, zx_handle_t zirconHandle, VkMemoryZirconHandlePropertiesFUCHSIA* pMemoryZirconHandleProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13657,6 +14637,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryRemoteAddressNV(VkDevice device, const VkMemoryGetRemoteAddressInfoNV* pMemoryGetRemoteAddressInfo, VkRemoteAddressNV* pAddress) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13682,7 +14663,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryRemoteAddressNV(VkDevice device, const VkMemoryGetRemoteAddressInfoNV* pMemoryGetRemoteAddressInfo, VkRemoteAddressNV* pAddress) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13708,6 +14691,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSemaphoreWin32HandleKHR(VkDevice device, const VkSemaphoreGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13733,7 +14717,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSemaphoreWin32HandleKHR(VkDevice device, const VkSemaphoreGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -13760,6 +14746,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ImportSemaphoreWin32HandleKHR(VkDevice device, const VkImportSemaphoreWin32HandleInfoKHR* pImportSemaphoreWin32HandleInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13785,7 +14772,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ImportSemaphoreWin32HandleKHR(VkDevice device, const VkImportSemaphoreWin32HandleInfoKHR* pImportSemaphoreWin32HandleInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13811,6 +14800,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSemaphoreFdKHR(VkDevice device, const VkSemaphoreGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13836,7 +14826,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSemaphoreFdKHR(VkDevice device, const VkSemaphoreGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ImportSemaphoreFdKHR@4=_vk_entrypoint_stub@0")
@@ -13861,6 +14853,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ImportSemaphoreFdKHR(VkDevice device, const VkImportSemaphoreFdInfoKHR* pImportSemaphoreFdInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13886,7 +14879,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ImportSemaphoreFdKHR(VkDevice device, const VkImportSemaphoreFdInfoKHR* pImportSemaphoreFdInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13912,6 +14907,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSemaphoreZirconHandleFUCHSIA(VkDevice device, const VkSemaphoreGetZirconHandleInfoFUCHSIA* pGetZirconHandleInfo, zx_handle_t* pZirconHandle) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13937,7 +14933,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSemaphoreZirconHandleFUCHSIA(VkDevice device, const VkSemaphoreGetZirconHandleInfoFUCHSIA* pGetZirconHandleInfo, zx_handle_t* pZirconHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -13964,6 +14962,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ImportSemaphoreZirconHandleFUCHSIA(VkDevice device, const VkImportSemaphoreZirconHandleInfoFUCHSIA* pImportSemaphoreZirconHandleInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -13989,7 +14988,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ImportSemaphoreZirconHandleFUCHSIA(VkDevice device, const VkImportSemaphoreZirconHandleInfoFUCHSIA* pImportSemaphoreZirconHandleInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -14016,6 +15017,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetFenceWin32HandleKHR(VkDevice device, const VkFenceGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14041,7 +15043,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetFenceWin32HandleKHR(VkDevice device, const VkFenceGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -14068,6 +15072,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ImportFenceWin32HandleKHR(VkDevice device, const VkImportFenceWin32HandleInfoKHR* pImportFenceWin32HandleInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14093,7 +15098,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ImportFenceWin32HandleKHR(VkDevice device, const VkImportFenceWin32HandleInfoKHR* pImportFenceWin32HandleInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14119,6 +15126,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetFenceFdKHR(VkDevice device, const VkFenceGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14144,7 +15152,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetFenceFdKHR(VkDevice device, const VkFenceGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ImportFenceFdKHR@4=_vk_entrypoint_stub@0")
@@ -14169,6 +15179,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ImportFenceFdKHR(VkDevice device, const VkImportFenceFdInfoKHR* pImportFenceFdInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14194,7 +15205,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ImportFenceFdKHR(VkDevice device, const VkImportFenceFdInfoKHR* pImportFenceFdInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DisplayPowerControlEXT@4=_vk_entrypoint_stub@0")
@@ -14219,6 +15232,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_DisplayPowerControlEXT(VkDevice device, VkDisplayKHR display, const VkDisplayPowerInfoEXT* pDisplayPowerInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14244,7 +15258,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_DisplayPowerControlEXT(VkDevice device, VkDisplayKHR display, const VkDisplayPowerInfoEXT* pDisplayPowerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_RegisterDeviceEventEXT@4=_vk_entrypoint_stub@0")
@@ -14269,6 +15285,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_RegisterDeviceEventEXT(VkDevice device, const VkDeviceEventInfoEXT* pDeviceEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14294,7 +15311,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_RegisterDeviceEventEXT(VkDevice device, const VkDeviceEventInfoEXT* pDeviceEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_RegisterDisplayEventEXT@4=_vk_entrypoint_stub@0")
@@ -14319,6 +15338,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_RegisterDisplayEventEXT(VkDevice device, VkDisplayKHR display, const VkDisplayEventInfoEXT* pDisplayEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14344,7 +15364,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_RegisterDisplayEventEXT(VkDevice device, VkDisplayKHR display, const VkDisplayEventInfoEXT* pDisplayEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSwapchainCounterEXT@4=_vk_entrypoint_stub@0")
@@ -14369,6 +15391,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSwapchainCounterEXT(VkDevice device, VkSwapchainKHR swapchain, VkSurfaceCounterFlagBitsEXT counter, uint64_t* pCounterValue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14394,7 +15417,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSwapchainCounterEXT(VkDevice device, VkSwapchainKHR swapchain, VkSurfaceCounterFlagBitsEXT counter, uint64_t* pCounterValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceGroupPeerMemoryFeatures@4=_vk_entrypoint_stub@0")
@@ -14419,6 +15444,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceGroupPeerMemoryFeatures(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlags* pPeerMemoryFeatures) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14444,7 +15470,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceGroupPeerMemoryFeatures(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlags* pPeerMemoryFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceGroupPeerMemoryFeaturesKHR@4=_vk_entrypoint_stub@0")
@@ -14469,6 +15497,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceGroupPeerMemoryFeaturesKHR(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlags* pPeerMemoryFeatures) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14494,7 +15523,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceGroupPeerMemoryFeaturesKHR(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlags* pPeerMemoryFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindBufferMemory2@4=_vk_entrypoint_stub@0")
@@ -14519,6 +15550,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindBufferMemory2(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14544,7 +15576,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindBufferMemory2(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindBufferMemory2KHR@4=_vk_entrypoint_stub@0")
@@ -14569,6 +15603,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindBufferMemory2KHR(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14594,7 +15629,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindBufferMemory2KHR(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindImageMemory2@4=_vk_entrypoint_stub@0")
@@ -14619,6 +15656,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindImageMemory2(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14644,7 +15682,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindImageMemory2(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindImageMemory2KHR@4=_vk_entrypoint_stub@0")
@@ -14669,6 +15709,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindImageMemory2KHR(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14694,7 +15735,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindImageMemory2KHR(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDeviceMask@4=_vk_entrypoint_stub@0")
@@ -14719,6 +15762,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDeviceMask(VkCommandBuffer commandBuffer, uint32_t deviceMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14744,7 +15788,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDeviceMask(VkCommandBuffer commandBuffer, uint32_t deviceMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDeviceMaskKHR@4=_vk_entrypoint_stub@0")
@@ -14769,6 +15815,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDeviceMaskKHR(VkCommandBuffer commandBuffer, uint32_t deviceMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14794,7 +15841,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDeviceMaskKHR(VkCommandBuffer commandBuffer, uint32_t deviceMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceGroupPresentCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -14819,6 +15868,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDeviceGroupPresentCapabilitiesKHR(VkDevice device, VkDeviceGroupPresentCapabilitiesKHR* pDeviceGroupPresentCapabilities) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14844,7 +15894,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceGroupPresentCapabilitiesKHR(VkDevice device, VkDeviceGroupPresentCapabilitiesKHR* pDeviceGroupPresentCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceGroupSurfacePresentModesKHR@4=_vk_entrypoint_stub@0")
@@ -14869,6 +15921,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDeviceGroupSurfacePresentModesKHR(VkDevice device, VkSurfaceKHR surface, VkDeviceGroupPresentModeFlagsKHR* pModes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14894,7 +15947,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceGroupSurfacePresentModesKHR(VkDevice device, VkSurfaceKHR surface, VkDeviceGroupPresentModeFlagsKHR* pModes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AcquireNextImage2KHR@4=_vk_entrypoint_stub@0")
@@ -14919,6 +15974,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14944,7 +16000,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDispatchBase@4=_vk_entrypoint_stub@0")
@@ -14969,6 +16027,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDispatchBase(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14994,7 +16053,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDispatchBase(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDispatchBaseKHR@4=_vk_entrypoint_stub@0")
@@ -15019,6 +16080,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDispatchBaseKHR(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15044,7 +16106,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDispatchBaseKHR(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDescriptorUpdateTemplate@4=_vk_entrypoint_stub@0")
@@ -15069,6 +16133,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDescriptorUpdateTemplate(VkDevice device, const VkDescriptorUpdateTemplateCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorUpdateTemplate* pDescriptorUpdateTemplate) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15094,7 +16159,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDescriptorUpdateTemplate(VkDevice device, const VkDescriptorUpdateTemplateCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorUpdateTemplate* pDescriptorUpdateTemplate) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDescriptorUpdateTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -15119,6 +16186,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDescriptorUpdateTemplateKHR(VkDevice device, const VkDescriptorUpdateTemplateCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorUpdateTemplate* pDescriptorUpdateTemplate) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15144,7 +16212,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDescriptorUpdateTemplateKHR(VkDevice device, const VkDescriptorUpdateTemplateCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorUpdateTemplate* pDescriptorUpdateTemplate) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDescriptorUpdateTemplate@4=_vk_entrypoint_stub@0")
@@ -15169,6 +16239,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDescriptorUpdateTemplate(VkDevice device, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15194,7 +16265,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDescriptorUpdateTemplate(VkDevice device, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDescriptorUpdateTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -15219,6 +16292,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDescriptorUpdateTemplateKHR(VkDevice device, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15244,7 +16318,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDescriptorUpdateTemplateKHR(VkDevice device, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UpdateDescriptorSetWithTemplate@4=_vk_entrypoint_stub@0")
@@ -15269,6 +16345,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_UpdateDescriptorSetWithTemplate(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15294,7 +16371,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_UpdateDescriptorSetWithTemplate(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UpdateDescriptorSetWithTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -15319,6 +16398,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_UpdateDescriptorSetWithTemplateKHR(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15344,7 +16424,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_UpdateDescriptorSetWithTemplateKHR(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPushDescriptorSetWithTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -15369,6 +16451,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPushDescriptorSetWithTemplateKHR(VkCommandBuffer commandBuffer, VkDescriptorUpdateTemplate descriptorUpdateTemplate, VkPipelineLayout layout, uint32_t set, const void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15394,7 +16477,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPushDescriptorSetWithTemplateKHR(VkCommandBuffer commandBuffer, VkDescriptorUpdateTemplate descriptorUpdateTemplate, VkPipelineLayout layout, uint32_t set, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetHdrMetadataEXT@4=_vk_entrypoint_stub@0")
@@ -15419,6 +16504,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_SetHdrMetadataEXT(VkDevice device, uint32_t swapchainCount, const VkSwapchainKHR* pSwapchains, const VkHdrMetadataEXT* pMetadata) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15444,7 +16530,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_SetHdrMetadataEXT(VkDevice device, uint32_t swapchainCount, const VkSwapchainKHR* pSwapchains, const VkHdrMetadataEXT* pMetadata) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSwapchainStatusKHR@4=_vk_entrypoint_stub@0")
@@ -15469,6 +16557,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSwapchainStatusKHR(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15494,7 +16583,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSwapchainStatusKHR(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRefreshCycleDurationGOOGLE@4=_vk_entrypoint_stub@0")
@@ -15519,6 +16610,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetRefreshCycleDurationGOOGLE(VkDevice device, VkSwapchainKHR swapchain, VkRefreshCycleDurationGOOGLE* pDisplayTimingProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15544,7 +16636,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRefreshCycleDurationGOOGLE(VkDevice device, VkSwapchainKHR swapchain, VkRefreshCycleDurationGOOGLE* pDisplayTimingProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPastPresentationTimingGOOGLE@4=_vk_entrypoint_stub@0")
@@ -15569,6 +16663,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPastPresentationTimingGOOGLE(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pPresentationTimingCount, VkPastPresentationTimingGOOGLE* pPresentationTimings) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15594,7 +16689,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPastPresentationTimingGOOGLE(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pPresentationTimingCount, VkPastPresentationTimingGOOGLE* pPresentationTimings) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewportWScalingNV@4=_vk_entrypoint_stub@0")
@@ -15619,6 +16716,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewportWScalingNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportWScalingNV* pViewportWScalings) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15644,7 +16742,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewportWScalingNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportWScalingNV* pViewportWScalings) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEXT@4=_vk_entrypoint_stub@0")
@@ -15669,6 +16769,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDiscardRectangleEXT(VkCommandBuffer commandBuffer, uint32_t firstDiscardRectangle, uint32_t discardRectangleCount, const VkRect2D* pDiscardRectangles) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15694,7 +16795,115 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEXT(VkCommandBuffer commandBuffer, uint32_t firstDiscardRectangle, uint32_t discardRectangleCount, const VkRect2D* pDiscardRectangles) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 discardRectangleEnable) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 discardRectangleEnable) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT(VkCommandBuffer commandBuffer, VkDiscardRectangleModeEXT discardRectangleMode) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT(VkCommandBuffer commandBuffer, VkDiscardRectangleModeEXT discardRectangleMode) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetSampleLocationsEXT@4=_vk_entrypoint_stub@0")
@@ -15719,6 +16928,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetSampleLocationsEXT(VkCommandBuffer commandBuffer, const VkSampleLocationsInfoEXT* pSampleLocationsInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15744,7 +16954,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetSampleLocationsEXT(VkCommandBuffer commandBuffer, const VkSampleLocationsInfoEXT* pSampleLocationsInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferMemoryRequirements2@4=_vk_entrypoint_stub@0")
@@ -15769,6 +16981,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetBufferMemoryRequirements2(VkDevice device, const VkBufferMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15794,7 +17007,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferMemoryRequirements2(VkDevice device, const VkBufferMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
@@ -15819,6 +17034,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetBufferMemoryRequirements2KHR(VkDevice device, const VkBufferMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15844,7 +17060,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferMemoryRequirements2KHR(VkDevice device, const VkBufferMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageMemoryRequirements2@4=_vk_entrypoint_stub@0")
@@ -15869,6 +17087,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageMemoryRequirements2(VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15894,7 +17113,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageMemoryRequirements2(VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
@@ -15919,6 +17140,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageMemoryRequirements2KHR(VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15944,7 +17166,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageMemoryRequirements2KHR(VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSparseMemoryRequirements2@4=_vk_entrypoint_stub@0")
@@ -15969,6 +17193,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSparseMemoryRequirements2(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15994,7 +17219,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSparseMemoryRequirements2(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSparseMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
@@ -16019,6 +17246,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSparseMemoryRequirements2KHR(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16044,7 +17272,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSparseMemoryRequirements2KHR(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -16069,6 +17299,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceBufferMemoryRequirements(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16094,7 +17325,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceBufferMemoryRequirements(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -16119,6 +17352,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16144,7 +17378,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -16169,6 +17405,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16194,7 +17431,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -16219,6 +17458,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16244,7 +17484,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -16269,6 +17511,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16294,7 +17537,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -16319,6 +17564,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16344,7 +17590,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateSamplerYcbcrConversion@4=_vk_entrypoint_stub@0")
@@ -16369,6 +17617,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateSamplerYcbcrConversion(VkDevice device, const VkSamplerYcbcrConversionCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSamplerYcbcrConversion* pYcbcrConversion) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16394,7 +17643,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateSamplerYcbcrConversion(VkDevice device, const VkSamplerYcbcrConversionCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSamplerYcbcrConversion* pYcbcrConversion) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateSamplerYcbcrConversionKHR@4=_vk_entrypoint_stub@0")
@@ -16419,6 +17670,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateSamplerYcbcrConversionKHR(VkDevice device, const VkSamplerYcbcrConversionCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSamplerYcbcrConversion* pYcbcrConversion) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16444,7 +17696,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateSamplerYcbcrConversionKHR(VkDevice device, const VkSamplerYcbcrConversionCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSamplerYcbcrConversion* pYcbcrConversion) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroySamplerYcbcrConversion@4=_vk_entrypoint_stub@0")
@@ -16469,6 +17723,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroySamplerYcbcrConversion(VkDevice device, VkSamplerYcbcrConversion ycbcrConversion, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16494,7 +17749,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroySamplerYcbcrConversion(VkDevice device, VkSamplerYcbcrConversion ycbcrConversion, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroySamplerYcbcrConversionKHR@4=_vk_entrypoint_stub@0")
@@ -16519,6 +17776,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroySamplerYcbcrConversionKHR(VkDevice device, VkSamplerYcbcrConversion ycbcrConversion, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16544,7 +17802,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroySamplerYcbcrConversionKHR(VkDevice device, VkSamplerYcbcrConversion ycbcrConversion, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceQueue2@4=_vk_entrypoint_stub@0")
@@ -16569,6 +17829,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceQueue2(VkDevice device, const VkDeviceQueueInfo2* pQueueInfo, VkQueue* pQueue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16594,7 +17855,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceQueue2(VkDevice device, const VkDeviceQueueInfo2* pQueueInfo, VkQueue* pQueue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateValidationCacheEXT@4=_vk_entrypoint_stub@0")
@@ -16619,6 +17882,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateValidationCacheEXT(VkDevice device, const VkValidationCacheCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkValidationCacheEXT* pValidationCache) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16644,7 +17908,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateValidationCacheEXT(VkDevice device, const VkValidationCacheCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkValidationCacheEXT* pValidationCache) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyValidationCacheEXT@4=_vk_entrypoint_stub@0")
@@ -16669,6 +17935,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyValidationCacheEXT(VkDevice device, VkValidationCacheEXT validationCache, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16694,7 +17961,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyValidationCacheEXT(VkDevice device, VkValidationCacheEXT validationCache, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetValidationCacheDataEXT@4=_vk_entrypoint_stub@0")
@@ -16719,6 +17988,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetValidationCacheDataEXT(VkDevice device, VkValidationCacheEXT validationCache, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16744,7 +18014,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetValidationCacheDataEXT(VkDevice device, VkValidationCacheEXT validationCache, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MergeValidationCachesEXT@4=_vk_entrypoint_stub@0")
@@ -16769,6 +18041,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_MergeValidationCachesEXT(VkDevice device, VkValidationCacheEXT dstCache, uint32_t srcCacheCount, const VkValidationCacheEXT* pSrcCaches) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16794,7 +18067,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_MergeValidationCachesEXT(VkDevice device, VkValidationCacheEXT dstCache, uint32_t srcCacheCount, const VkValidationCacheEXT* pSrcCaches) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSupport@4=_vk_entrypoint_stub@0")
@@ -16819,6 +18094,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorSetLayoutSupport(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16844,7 +18120,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSupport(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSupportKHR@4=_vk_entrypoint_stub@0")
@@ -16869,6 +18147,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorSetLayoutSupportKHR(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16894,7 +18173,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSupportKHR(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16920,6 +18201,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSwapchainGrallocUsageANDROID(VkDevice device, VkFormat format, VkImageUsageFlags imageUsage, int* grallocUsage) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16945,7 +18227,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSwapchainGrallocUsageANDROID(VkDevice device, VkFormat format, VkImageUsageFlags imageUsage, int* grallocUsage) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -16972,6 +18256,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSwapchainGrallocUsage2ANDROID(VkDevice device, VkFormat format, VkImageUsageFlags imageUsage, VkSwapchainImageUsageFlagsANDROID swapchainImageUsage, uint64_t* grallocConsumerUsage, uint64_t* grallocProducerUsage) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -16997,7 +18282,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSwapchainGrallocUsage2ANDROID(VkDevice device, VkFormat format, VkImageUsageFlags imageUsage, VkSwapchainImageUsageFlagsANDROID swapchainImageUsage, uint64_t* grallocConsumerUsage, uint64_t* grallocProducerUsage) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -17024,6 +18311,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireImageANDROID(VkDevice device, VkImage image, int nativeFenceFd, VkSemaphore semaphore, VkFence fence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17049,7 +18337,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireImageANDROID(VkDevice device, VkImage image, int nativeFenceFd, VkSemaphore semaphore, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -17076,6 +18366,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueSignalReleaseImageANDROID(VkQueue queue, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, VkImage image, int* pNativeFenceFd) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17101,7 +18392,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueSignalReleaseImageANDROID(VkQueue queue, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, VkImage image, int* pNativeFenceFd) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17127,6 +18420,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetShaderInfoAMD(VkDevice device, VkPipeline pipeline, VkShaderStageFlagBits shaderStage, VkShaderInfoTypeAMD infoType, size_t* pInfoSize, void* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17152,7 +18446,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetShaderInfoAMD(VkDevice device, VkPipeline pipeline, VkShaderStageFlagBits shaderStage, VkShaderInfoTypeAMD infoType, size_t* pInfoSize, void* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetLocalDimmingAMD@4=_vk_entrypoint_stub@0")
@@ -17177,6 +18473,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_SetLocalDimmingAMD(VkDevice device, VkSwapchainKHR swapChain, VkBool32 localDimmingEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17202,7 +18499,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_SetLocalDimmingAMD(VkDevice device, VkSwapchainKHR swapChain, VkBool32 localDimmingEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetCalibratedTimestampsEXT@4=_vk_entrypoint_stub@0")
@@ -17227,6 +18526,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetCalibratedTimestampsEXT(VkDevice device, uint32_t timestampCount, const VkCalibratedTimestampInfoEXT* pTimestampInfos, uint64_t* pTimestamps, uint64_t* pMaxDeviation) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17252,7 +18552,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetCalibratedTimestampsEXT(VkDevice device, uint32_t timestampCount, const VkCalibratedTimestampInfoEXT* pTimestampInfos, uint64_t* pTimestamps, uint64_t* pMaxDeviation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetDebugUtilsObjectNameEXT@4=_vk_entrypoint_stub@0")
@@ -17277,6 +18579,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17302,7 +18605,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetDebugUtilsObjectTagEXT@4=_vk_entrypoint_stub@0")
@@ -17327,6 +18632,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetDebugUtilsObjectTagEXT(VkDevice device, const VkDebugUtilsObjectTagInfoEXT* pTagInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17352,7 +18658,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetDebugUtilsObjectTagEXT(VkDevice device, const VkDebugUtilsObjectTagInfoEXT* pTagInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueBeginDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -17377,6 +18685,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_QueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17402,7 +18711,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueEndDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -17427,6 +18738,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_QueueEndDebugUtilsLabelEXT(VkQueue queue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17452,7 +18764,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueEndDebugUtilsLabelEXT(VkQueue queue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueInsertDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -17477,6 +18791,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_QueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17502,7 +18817,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -17527,6 +18844,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17552,7 +18870,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -17577,6 +18897,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17602,7 +18923,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdInsertDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -17627,6 +18950,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17652,7 +18976,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetMemoryHostPointerPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -17677,6 +19003,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryHostPointerPropertiesEXT(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, const void* pHostPointer, VkMemoryHostPointerPropertiesEXT* pMemoryHostPointerProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17702,7 +19029,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryHostPointerPropertiesEXT(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, const void* pHostPointer, VkMemoryHostPointerPropertiesEXT* pMemoryHostPointerProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteBufferMarkerAMD@4=_vk_entrypoint_stub@0")
@@ -17727,6 +19056,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteBufferMarkerAMD(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkBuffer dstBuffer, VkDeviceSize dstOffset, uint32_t marker) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17752,7 +19082,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteBufferMarkerAMD(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkBuffer dstBuffer, VkDeviceSize dstOffset, uint32_t marker) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateRenderPass2@4=_vk_entrypoint_stub@0")
@@ -17777,6 +19109,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateRenderPass2(VkDevice device, const VkRenderPassCreateInfo2* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17802,7 +19135,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateRenderPass2(VkDevice device, const VkRenderPassCreateInfo2* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateRenderPass2KHR@4=_vk_entrypoint_stub@0")
@@ -17827,6 +19162,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateRenderPass2KHR(VkDevice device, const VkRenderPassCreateInfo2* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17852,7 +19188,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateRenderPass2KHR(VkDevice device, const VkRenderPassCreateInfo2* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginRenderPass2@4=_vk_entrypoint_stub@0")
@@ -17877,6 +19215,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginRenderPass2(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfo*      pSubpassBeginInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17902,7 +19241,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginRenderPass2(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfo*      pSubpassBeginInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginRenderPass2KHR@4=_vk_entrypoint_stub@0")
@@ -17927,6 +19268,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginRenderPass2KHR(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfo*      pSubpassBeginInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -17952,7 +19294,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginRenderPass2KHR(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfo*      pSubpassBeginInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdNextSubpass2@4=_vk_entrypoint_stub@0")
@@ -17977,6 +19321,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdNextSubpass2(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo*      pSubpassBeginInfo, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18002,7 +19347,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdNextSubpass2(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo*      pSubpassBeginInfo, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdNextSubpass2KHR@4=_vk_entrypoint_stub@0")
@@ -18027,6 +19374,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdNextSubpass2KHR(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo*      pSubpassBeginInfo, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18052,7 +19400,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdNextSubpass2KHR(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo*      pSubpassBeginInfo, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndRenderPass2@4=_vk_entrypoint_stub@0")
@@ -18077,6 +19427,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndRenderPass2(VkCommandBuffer commandBuffer, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18102,7 +19453,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndRenderPass2(VkCommandBuffer commandBuffer, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndRenderPass2KHR@4=_vk_entrypoint_stub@0")
@@ -18127,6 +19480,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndRenderPass2KHR(VkCommandBuffer commandBuffer, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18152,7 +19506,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndRenderPass2KHR(VkCommandBuffer commandBuffer, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSemaphoreCounterValue@4=_vk_entrypoint_stub@0")
@@ -18177,6 +19533,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSemaphoreCounterValue(VkDevice device, VkSemaphore semaphore, uint64_t* pValue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18202,7 +19559,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSemaphoreCounterValue(VkDevice device, VkSemaphore semaphore, uint64_t* pValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSemaphoreCounterValueKHR@4=_vk_entrypoint_stub@0")
@@ -18227,6 +19586,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSemaphoreCounterValueKHR(VkDevice device, VkSemaphore semaphore, uint64_t* pValue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18252,7 +19612,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSemaphoreCounterValueKHR(VkDevice device, VkSemaphore semaphore, uint64_t* pValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_WaitSemaphores@4=_vk_entrypoint_stub@0")
@@ -18277,6 +19639,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_WaitSemaphores(VkDevice device, const VkSemaphoreWaitInfo* pWaitInfo, uint64_t timeout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18302,7 +19665,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_WaitSemaphores(VkDevice device, const VkSemaphoreWaitInfo* pWaitInfo, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_WaitSemaphoresKHR@4=_vk_entrypoint_stub@0")
@@ -18327,6 +19692,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_WaitSemaphoresKHR(VkDevice device, const VkSemaphoreWaitInfo* pWaitInfo, uint64_t timeout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18352,7 +19718,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_WaitSemaphoresKHR(VkDevice device, const VkSemaphoreWaitInfo* pWaitInfo, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SignalSemaphore@4=_vk_entrypoint_stub@0")
@@ -18377,6 +19745,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SignalSemaphore(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18402,7 +19771,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SignalSemaphore(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SignalSemaphoreKHR@4=_vk_entrypoint_stub@0")
@@ -18427,6 +19798,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SignalSemaphoreKHR(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18452,7 +19824,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SignalSemaphoreKHR(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18478,6 +19852,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetAndroidHardwareBufferPropertiesANDROID(VkDevice device, const struct AHardwareBuffer* buffer, VkAndroidHardwareBufferPropertiesANDROID* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18503,7 +19878,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetAndroidHardwareBufferPropertiesANDROID(VkDevice device, const struct AHardwareBuffer* buffer, VkAndroidHardwareBufferPropertiesANDROID* pProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -18530,6 +19907,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetMemoryAndroidHardwareBufferANDROID(VkDevice device, const VkMemoryGetAndroidHardwareBufferInfoANDROID* pInfo, struct AHardwareBuffer** pBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18555,7 +19933,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMemoryAndroidHardwareBufferANDROID(VkDevice device, const VkMemoryGetAndroidHardwareBufferInfoANDROID* pInfo, struct AHardwareBuffer** pBuffer) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18581,6 +19961,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18606,7 +19987,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndirectCountKHR@4=_vk_entrypoint_stub@0")
@@ -18631,6 +20014,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndirectCountKHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18656,7 +20040,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndirectCountKHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndirectCountAMD@4=_vk_entrypoint_stub@0")
@@ -18681,6 +20067,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndirectCountAMD(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18706,7 +20093,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndirectCountAMD(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndexedIndirectCount@4=_vk_entrypoint_stub@0")
@@ -18731,6 +20120,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndexedIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18756,7 +20146,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndexedIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndexedIndirectCountKHR@4=_vk_entrypoint_stub@0")
@@ -18781,6 +20173,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndexedIndirectCountKHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18806,7 +20199,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndexedIndirectCountKHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndexedIndirectCountAMD@4=_vk_entrypoint_stub@0")
@@ -18831,6 +20226,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndexedIndirectCountAMD(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18856,7 +20252,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndexedIndirectCountAMD(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCheckpointNV@4=_vk_entrypoint_stub@0")
@@ -18881,6 +20279,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCheckpointNV(VkCommandBuffer commandBuffer, const void* pCheckpointMarker) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18906,7 +20305,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCheckpointNV(VkCommandBuffer commandBuffer, const void* pCheckpointMarker) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetQueueCheckpointDataNV@4=_vk_entrypoint_stub@0")
@@ -18931,6 +20332,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetQueueCheckpointDataNV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointDataNV* pCheckpointData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -18956,7 +20358,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetQueueCheckpointDataNV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointDataNV* pCheckpointData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindTransformFeedbackBuffersEXT@4=_vk_entrypoint_stub@0")
@@ -18981,6 +20385,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindTransformFeedbackBuffersEXT(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19006,7 +20411,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindTransformFeedbackBuffersEXT(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginTransformFeedbackEXT@4=_vk_entrypoint_stub@0")
@@ -19031,6 +20438,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_t firstCounterBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers, const VkDeviceSize* pCounterBufferOffsets) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19056,7 +20464,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_t firstCounterBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers, const VkDeviceSize* pCounterBufferOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndTransformFeedbackEXT@4=_vk_entrypoint_stub@0")
@@ -19081,6 +20491,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_t firstCounterBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers, const VkDeviceSize* pCounterBufferOffsets) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19106,7 +20517,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_t firstCounterBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers, const VkDeviceSize* pCounterBufferOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginQueryIndexedEXT@4=_vk_entrypoint_stub@0")
@@ -19131,6 +20544,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags, uint32_t index) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19156,7 +20570,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags, uint32_t index) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndQueryIndexedEXT@4=_vk_entrypoint_stub@0")
@@ -19181,6 +20597,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, uint32_t index) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19206,7 +20623,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, uint32_t index) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawIndirectByteCountEXT@4=_vk_entrypoint_stub@0")
@@ -19231,6 +20650,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawIndirectByteCountEXT(VkCommandBuffer commandBuffer, uint32_t instanceCount, uint32_t firstInstance, VkBuffer counterBuffer, VkDeviceSize counterBufferOffset, uint32_t counterOffset, uint32_t vertexStride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19256,7 +20676,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawIndirectByteCountEXT(VkCommandBuffer commandBuffer, uint32_t instanceCount, uint32_t firstInstance, VkBuffer counterBuffer, VkDeviceSize counterBufferOffset, uint32_t counterOffset, uint32_t vertexStride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorNV@4=_vk_entrypoint_stub@0")
@@ -19281,6 +20703,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetExclusiveScissorNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkRect2D* pExclusiveScissors) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19306,7 +20729,62 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkRect2D* pExclusiveScissors) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkBool32* pExclusiveScissorEnables) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkBool32* pExclusiveScissorEnables) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadingRateImageNV@4=_vk_entrypoint_stub@0")
@@ -19331,6 +20809,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindShadingRateImageNV(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19356,7 +20835,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindShadingRateImageNV(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewportShadingRatePaletteNV@4=_vk_entrypoint_stub@0")
@@ -19381,6 +20862,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewportShadingRatePaletteNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkShadingRatePaletteNV* pShadingRatePalettes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19406,7 +20888,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewportShadingRatePaletteNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkShadingRatePaletteNV* pShadingRatePalettes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoarseSampleOrderNV@4=_vk_entrypoint_stub@0")
@@ -19431,6 +20915,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoarseSampleOrderNV(VkCommandBuffer commandBuffer, VkCoarseSampleOrderTypeNV sampleOrderType, uint32_t customSampleOrderCount, const VkCoarseSampleOrderCustomNV* pCustomSampleOrders) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19456,7 +20941,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoarseSampleOrderNV(VkCommandBuffer commandBuffer, VkCoarseSampleOrderTypeNV sampleOrderType, uint32_t customSampleOrderCount, const VkCoarseSampleOrderCustomNV* pCustomSampleOrders) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMeshTasksNV@4=_vk_entrypoint_stub@0")
@@ -19481,6 +20968,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMeshTasksNV(VkCommandBuffer commandBuffer, uint32_t taskCount, uint32_t firstTask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19506,7 +20994,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksNV(VkCommandBuffer commandBuffer, uint32_t taskCount, uint32_t firstTask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMeshTasksIndirectNV@4=_vk_entrypoint_stub@0")
@@ -19531,6 +21021,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMeshTasksIndirectNV(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19556,7 +21047,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectNV(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountNV@4=_vk_entrypoint_stub@0")
@@ -19581,6 +21074,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountNV(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19606,7 +21100,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectCountNV(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMeshTasksEXT@4=_vk_entrypoint_stub@0")
@@ -19631,6 +21127,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19656,7 +21153,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMeshTasksIndirectEXT@4=_vk_entrypoint_stub@0")
@@ -19681,6 +21180,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19706,7 +21206,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountEXT@4=_vk_entrypoint_stub@0")
@@ -19731,6 +21233,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19756,7 +21259,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CompileDeferredNV@4=_vk_entrypoint_stub@0")
@@ -19781,6 +21286,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CompileDeferredNV(VkDevice device, VkPipeline pipeline, uint32_t shader) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19806,7 +21312,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CompileDeferredNV(VkDevice device, VkPipeline pipeline, uint32_t shader) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -19831,6 +21339,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateAccelerationStructureNV(VkDevice device, const VkAccelerationStructureCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureNV* pAccelerationStructure) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19856,7 +21365,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateAccelerationStructureNV(VkDevice device, const VkAccelerationStructureCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureNV* pAccelerationStructure) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindInvocationMaskHUAWEI@4=_vk_entrypoint_stub@0")
@@ -19881,6 +21392,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindInvocationMaskHUAWEI(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19906,7 +21418,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindInvocationMaskHUAWEI(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -19931,6 +21445,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyAccelerationStructureKHR(VkDevice device, VkAccelerationStructureKHR accelerationStructure, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -19956,7 +21471,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyAccelerationStructureKHR(VkDevice device, VkAccelerationStructureKHR accelerationStructure, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -19981,6 +21498,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyAccelerationStructureNV(VkDevice device, VkAccelerationStructureNV accelerationStructure, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20006,7 +21524,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyAccelerationStructureNV(VkDevice device, VkAccelerationStructureNV accelerationStructure, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
@@ -20031,6 +21551,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetAccelerationStructureMemoryRequirementsNV(VkDevice device, const VkAccelerationStructureMemoryRequirementsInfoNV* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20056,7 +21577,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetAccelerationStructureMemoryRequirementsNV(VkDevice device, const VkAccelerationStructureMemoryRequirementsInfoNV* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindAccelerationStructureMemoryNV@4=_vk_entrypoint_stub@0")
@@ -20081,6 +21604,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindAccelerationStructureMemoryNV(VkDevice device, uint32_t bindInfoCount, const VkBindAccelerationStructureMemoryInfoNV* pBindInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20106,7 +21630,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindAccelerationStructureMemoryNV(VkDevice device, uint32_t bindInfoCount, const VkBindAccelerationStructureMemoryInfoNV* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -20131,6 +21657,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyAccelerationStructureNV(VkCommandBuffer commandBuffer, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkCopyAccelerationStructureModeKHR mode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20156,7 +21683,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyAccelerationStructureNV(VkCommandBuffer commandBuffer, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkCopyAccelerationStructureModeKHR mode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -20181,6 +21710,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyAccelerationStructureKHR(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20206,7 +21736,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyAccelerationStructureKHR(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -20231,6 +21763,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyAccelerationStructureKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20256,7 +21789,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyAccelerationStructureKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyAccelerationStructureToMemoryKHR@4=_vk_entrypoint_stub@0")
@@ -20281,6 +21816,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyAccelerationStructureToMemoryKHR(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20306,7 +21842,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyAccelerationStructureToMemoryKHR(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyAccelerationStructureToMemoryKHR@4=_vk_entrypoint_stub@0")
@@ -20331,6 +21869,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyAccelerationStructureToMemoryKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20356,7 +21895,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyAccelerationStructureToMemoryKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -20381,6 +21922,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyMemoryToAccelerationStructureKHR(VkCommandBuffer commandBuffer, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20406,7 +21948,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyMemoryToAccelerationStructureKHR(VkCommandBuffer commandBuffer, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -20431,6 +21975,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyMemoryToAccelerationStructureKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20456,7 +22001,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyMemoryToAccelerationStructureKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteAccelerationStructuresPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -20481,6 +22028,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteAccelerationStructuresPropertiesKHR(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20506,7 +22054,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteAccelerationStructuresPropertiesKHR(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteAccelerationStructuresPropertiesNV@4=_vk_entrypoint_stub@0")
@@ -20531,6 +22081,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteAccelerationStructuresPropertiesNV(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureNV* pAccelerationStructures, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20556,7 +22107,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteAccelerationStructuresPropertiesNV(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureNV* pAccelerationStructures, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBuildAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -20581,6 +22134,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBuildAccelerationStructureNV(VkCommandBuffer commandBuffer, const VkAccelerationStructureInfoNV* pInfo, VkBuffer instanceData, VkDeviceSize instanceOffset, VkBool32 update, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer scratch, VkDeviceSize scratchOffset) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20606,7 +22160,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBuildAccelerationStructureNV(VkCommandBuffer commandBuffer, const VkAccelerationStructureInfoNV* pInfo, VkBuffer instanceData, VkDeviceSize instanceOffset, VkBool32 update, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer scratch, VkDeviceSize scratchOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_WriteAccelerationStructuresPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -20631,6 +22187,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_WriteAccelerationStructuresPropertiesKHR(VkDevice device, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryType  queryType, size_t       dataSize, void* pData, size_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20656,7 +22213,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_WriteAccelerationStructuresPropertiesKHR(VkDevice device, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryType  queryType, size_t       dataSize, void* pData, size_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdTraceRaysKHR@4=_vk_entrypoint_stub@0")
@@ -20681,6 +22240,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20706,7 +22266,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdTraceRaysNV@4=_vk_entrypoint_stub@0")
@@ -20731,6 +22293,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdTraceRaysNV(VkCommandBuffer commandBuffer, VkBuffer raygenShaderBindingTableBuffer, VkDeviceSize raygenShaderBindingOffset, VkBuffer missShaderBindingTableBuffer, VkDeviceSize missShaderBindingOffset, VkDeviceSize missShaderBindingStride, VkBuffer hitShaderBindingTableBuffer, VkDeviceSize hitShaderBindingOffset, VkDeviceSize hitShaderBindingStride, VkBuffer callableShaderBindingTableBuffer, VkDeviceSize callableShaderBindingOffset, VkDeviceSize callableShaderBindingStride, uint32_t width, uint32_t height, uint32_t depth) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20756,7 +22319,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdTraceRaysNV(VkCommandBuffer commandBuffer, VkBuffer raygenShaderBindingTableBuffer, VkDeviceSize raygenShaderBindingOffset, VkBuffer missShaderBindingTableBuffer, VkDeviceSize missShaderBindingOffset, VkDeviceSize missShaderBindingStride, VkBuffer hitShaderBindingTableBuffer, VkDeviceSize hitShaderBindingOffset, VkDeviceSize hitShaderBindingStride, VkBuffer callableShaderBindingTableBuffer, VkDeviceSize callableShaderBindingOffset, VkDeviceSize callableShaderBindingStride, uint32_t width, uint32_t height, uint32_t depth) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRayTracingShaderGroupHandlesKHR@4=_vk_entrypoint_stub@0")
@@ -20781,6 +22346,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20806,7 +22372,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRayTracingShaderGroupHandlesNV@4=_vk_entrypoint_stub@0")
@@ -20831,6 +22399,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetRayTracingShaderGroupHandlesNV(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20856,7 +22425,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRayTracingShaderGroupHandlesNV(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRayTracingCaptureReplayShaderGroupHandlesKHR@4=_vk_entrypoint_stub@0")
@@ -20881,6 +22452,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetRayTracingCaptureReplayShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20906,7 +22478,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRayTracingCaptureReplayShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureHandleNV@4=_vk_entrypoint_stub@0")
@@ -20931,6 +22505,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetAccelerationStructureHandleNV(VkDevice device, VkAccelerationStructureNV accelerationStructure, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -20956,7 +22531,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetAccelerationStructureHandleNV(VkDevice device, VkAccelerationStructureNV accelerationStructure, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateRayTracingPipelinesNV@4=_vk_entrypoint_stub@0")
@@ -20981,6 +22558,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateRayTracingPipelinesNV(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoNV* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21006,7 +22584,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateRayTracingPipelinesNV(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoNV* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateRayTracingPipelinesKHR@4=_vk_entrypoint_stub@0")
@@ -21031,6 +22611,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21056,7 +22637,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdTraceRaysIndirectKHR@4=_vk_entrypoint_stub@0")
@@ -21081,6 +22664,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdTraceRaysIndirectKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, VkDeviceAddress indirectDeviceAddress) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21106,7 +22690,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdTraceRaysIndirectKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, VkDeviceAddress indirectDeviceAddress) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdTraceRaysIndirect2KHR@4=_vk_entrypoint_stub@0")
@@ -21131,6 +22717,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdTraceRaysIndirect2KHR(VkCommandBuffer commandBuffer, VkDeviceAddress indirectDeviceAddress) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21156,7 +22743,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdTraceRaysIndirect2KHR(VkCommandBuffer commandBuffer, VkDeviceAddress indirectDeviceAddress) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceAccelerationStructureCompatibilityKHR@4=_vk_entrypoint_stub@0")
@@ -21181,6 +22770,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceAccelerationStructureCompatibilityKHR(VkDevice device, const VkAccelerationStructureVersionInfoKHR* pVersionInfo, VkAccelerationStructureCompatibilityKHR* pCompatibility) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21206,7 +22796,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceAccelerationStructureCompatibilityKHR(VkDevice device, const VkAccelerationStructureVersionInfoKHR* pVersionInfo, VkAccelerationStructureCompatibilityKHR* pCompatibility) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetRayTracingShaderGroupStackSizeKHR@4=_vk_entrypoint_stub@0")
@@ -21231,6 +22823,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceSize VKAPI_CALL vk_cmd_enqueue_GetRayTracingShaderGroupStackSizeKHR(VkDevice device, VkPipeline pipeline, uint32_t group, VkShaderGroupShaderKHR groupShader) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21256,7 +22849,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceSize VKAPI_CALL vk_cmd_enqueue_unless_primary_GetRayTracingShaderGroupStackSizeKHR(VkDevice device, VkPipeline pipeline, uint32_t group, VkShaderGroupShaderKHR groupShader) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetRayTracingPipelineStackSizeKHR@4=_vk_entrypoint_stub@0")
@@ -21281,6 +22876,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetRayTracingPipelineStackSizeKHR(VkCommandBuffer commandBuffer, uint32_t pipelineStackSize) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21306,7 +22902,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetRayTracingPipelineStackSizeKHR(VkCommandBuffer commandBuffer, uint32_t pipelineStackSize) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewHandleNVX@4=_vk_entrypoint_stub@0")
@@ -21331,6 +22929,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint32_t VKAPI_CALL vk_cmd_enqueue_GetImageViewHandleNVX(VkDevice device, const VkImageViewHandleInfoNVX* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21356,7 +22955,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint32_t VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageViewHandleNVX(VkDevice device, const VkImageViewHandleInfoNVX* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewAddressNVX@4=_vk_entrypoint_stub@0")
@@ -21381,6 +22982,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetImageViewAddressNVX(VkDevice device, VkImageView imageView, VkImageViewAddressPropertiesNVX* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21406,7 +23008,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageViewAddressNVX(VkDevice device, VkImageView imageView, VkImageViewAddressPropertiesNVX* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21432,6 +23036,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDeviceGroupSurfacePresentModes2EXT(VkDevice device, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, VkDeviceGroupPresentModeFlagsKHR* pModes) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21457,7 +23062,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceGroupSurfacePresentModes2EXT(VkDevice device, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, VkDeviceGroupPresentModeFlagsKHR* pModes) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -21484,6 +23091,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireFullScreenExclusiveModeEXT(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21509,7 +23117,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireFullScreenExclusiveModeEXT(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -21536,6 +23146,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ReleaseFullScreenExclusiveModeEXT(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21561,7 +23172,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ReleaseFullScreenExclusiveModeEXT(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21587,6 +23200,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquireProfilingLockKHR(VkDevice device, const VkAcquireProfilingLockInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21612,7 +23226,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquireProfilingLockKHR(VkDevice device, const VkAcquireProfilingLockInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseProfilingLockKHR@4=_vk_entrypoint_stub@0")
@@ -21637,6 +23253,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_ReleaseProfilingLockKHR(VkDevice device) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21662,7 +23279,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_ReleaseProfilingLockKHR(VkDevice device) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageDrmFormatModifierPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -21687,6 +23306,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetImageDrmFormatModifierPropertiesEXT(VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21712,7 +23332,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageDrmFormatModifierPropertiesEXT(VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureAddress@4=_vk_entrypoint_stub@0")
@@ -21737,6 +23359,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_GetBufferOpaqueCaptureAddress(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21762,7 +23385,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureAddress(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureAddressKHR@4=_vk_entrypoint_stub@0")
@@ -21787,6 +23412,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_GetBufferOpaqueCaptureAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21812,7 +23438,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferDeviceAddress@4=_vk_entrypoint_stub@0")
@@ -21837,6 +23465,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_GetBufferDeviceAddress(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21862,7 +23491,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferDeviceAddress(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferDeviceAddressKHR@4=_vk_entrypoint_stub@0")
@@ -21887,6 +23518,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_GetBufferDeviceAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21912,7 +23544,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferDeviceAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferDeviceAddressEXT@4=_vk_entrypoint_stub@0")
@@ -21937,6 +23571,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_GetBufferDeviceAddressEXT(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -21962,7 +23597,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferDeviceAddressEXT(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_InitializePerformanceApiINTEL@4=_vk_entrypoint_stub@0")
@@ -21987,6 +23624,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_InitializePerformanceApiINTEL(VkDevice device, const VkInitializePerformanceApiInfoINTEL* pInitializeInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22012,7 +23650,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_InitializePerformanceApiINTEL(VkDevice device, const VkInitializePerformanceApiInfoINTEL* pInitializeInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UninitializePerformanceApiINTEL@4=_vk_entrypoint_stub@0")
@@ -22037,6 +23677,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_UninitializePerformanceApiINTEL(VkDevice device) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22062,7 +23703,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_UninitializePerformanceApiINTEL(VkDevice device) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPerformanceMarkerINTEL@4=_vk_entrypoint_stub@0")
@@ -22087,6 +23730,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CmdSetPerformanceMarkerINTEL(VkCommandBuffer commandBuffer, const VkPerformanceMarkerInfoINTEL* pMarkerInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22112,7 +23756,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPerformanceMarkerINTEL(VkCommandBuffer commandBuffer, const VkPerformanceMarkerInfoINTEL* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPerformanceStreamMarkerINTEL@4=_vk_entrypoint_stub@0")
@@ -22137,6 +23783,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CmdSetPerformanceStreamMarkerINTEL(VkCommandBuffer commandBuffer, const VkPerformanceStreamMarkerInfoINTEL* pMarkerInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22162,7 +23809,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPerformanceStreamMarkerINTEL(VkCommandBuffer commandBuffer, const VkPerformanceStreamMarkerInfoINTEL* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPerformanceOverrideINTEL@4=_vk_entrypoint_stub@0")
@@ -22187,6 +23836,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CmdSetPerformanceOverrideINTEL(VkCommandBuffer commandBuffer, const VkPerformanceOverrideInfoINTEL* pOverrideInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22212,7 +23862,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPerformanceOverrideINTEL(VkCommandBuffer commandBuffer, const VkPerformanceOverrideInfoINTEL* pOverrideInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_AcquirePerformanceConfigurationINTEL@4=_vk_entrypoint_stub@0")
@@ -22237,6 +23889,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_AcquirePerformanceConfigurationINTEL(VkDevice device, const VkPerformanceConfigurationAcquireInfoINTEL* pAcquireInfo, VkPerformanceConfigurationINTEL* pConfiguration) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22262,7 +23915,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_AcquirePerformanceConfigurationINTEL(VkDevice device, const VkPerformanceConfigurationAcquireInfoINTEL* pAcquireInfo, VkPerformanceConfigurationINTEL* pConfiguration) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleasePerformanceConfigurationINTEL@4=_vk_entrypoint_stub@0")
@@ -22287,6 +23942,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ReleasePerformanceConfigurationINTEL(VkDevice device, VkPerformanceConfigurationINTEL configuration) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22312,7 +23968,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ReleasePerformanceConfigurationINTEL(VkDevice device, VkPerformanceConfigurationINTEL configuration) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueSetPerformanceConfigurationINTEL@4=_vk_entrypoint_stub@0")
@@ -22337,6 +23995,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueSetPerformanceConfigurationINTEL(VkQueue queue, VkPerformanceConfigurationINTEL configuration) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22362,7 +24021,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueSetPerformanceConfigurationINTEL(VkQueue queue, VkPerformanceConfigurationINTEL configuration) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPerformanceParameterINTEL@4=_vk_entrypoint_stub@0")
@@ -22387,6 +24048,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPerformanceParameterINTEL(VkDevice device, VkPerformanceParameterTypeINTEL parameter, VkPerformanceValueINTEL* pValue) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22412,7 +24074,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPerformanceParameterINTEL(VkDevice device, VkPerformanceParameterTypeINTEL parameter, VkPerformanceValueINTEL* pValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceMemoryOpaqueCaptureAddress@4=_vk_entrypoint_stub@0")
@@ -22437,6 +24101,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_GetDeviceMemoryOpaqueCaptureAddress(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22462,7 +24127,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceMemoryOpaqueCaptureAddress(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceMemoryOpaqueCaptureAddressKHR@4=_vk_entrypoint_stub@0")
@@ -22487,6 +24154,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_GetDeviceMemoryOpaqueCaptureAddressKHR(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22512,7 +24180,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceMemoryOpaqueCaptureAddressKHR(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineExecutablePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -22537,6 +24207,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPipelineExecutablePropertiesKHR(VkDevice                        device, const VkPipelineInfoKHR*        pPipelineInfo, uint32_t* pExecutableCount, VkPipelineExecutablePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22562,7 +24233,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelineExecutablePropertiesKHR(VkDevice                        device, const VkPipelineInfoKHR*        pPipelineInfo, uint32_t* pExecutableCount, VkPipelineExecutablePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineExecutableStatisticsKHR@4=_vk_entrypoint_stub@0")
@@ -22587,6 +24260,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPipelineExecutableStatisticsKHR(VkDevice                        device, const VkPipelineExecutableInfoKHR*  pExecutableInfo, uint32_t* pStatisticCount, VkPipelineExecutableStatisticKHR* pStatistics) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22612,7 +24286,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelineExecutableStatisticsKHR(VkDevice                        device, const VkPipelineExecutableInfoKHR*  pExecutableInfo, uint32_t* pStatisticCount, VkPipelineExecutableStatisticKHR* pStatistics) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelineExecutableInternalRepresentationsKHR@4=_vk_entrypoint_stub@0")
@@ -22637,6 +24313,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPipelineExecutableInternalRepresentationsKHR(VkDevice                        device, const VkPipelineExecutableInfoKHR*  pExecutableInfo, uint32_t* pInternalRepresentationCount, VkPipelineExecutableInternalRepresentationKHR* pInternalRepresentations) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22662,7 +24339,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelineExecutableInternalRepresentationsKHR(VkDevice                        device, const VkPipelineExecutableInfoKHR*  pExecutableInfo, uint32_t* pInternalRepresentationCount, VkPipelineExecutableInternalRepresentationKHR* pInternalRepresentations) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetLineStippleEXT@4=_vk_entrypoint_stub@0")
@@ -22687,6 +24366,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22712,7 +24392,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -22737,6 +24419,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateAccelerationStructureKHR(VkDevice                                           device, const VkAccelerationStructureCreateInfoKHR*        pCreateInfo, const VkAllocationCallbacks*       pAllocator, VkAccelerationStructureKHR*                        pAccelerationStructure) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22762,7 +24445,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateAccelerationStructureKHR(VkDevice                                           device, const VkAccelerationStructureCreateInfoKHR*        pCreateInfo, const VkAllocationCallbacks*       pAllocator, VkAccelerationStructureKHR*                        pAccelerationStructure) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBuildAccelerationStructuresKHR@4=_vk_entrypoint_stub@0")
@@ -22787,6 +24472,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBuildAccelerationStructuresKHR(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22812,7 +24498,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBuildAccelerationStructuresKHR(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBuildAccelerationStructuresIndirectKHR@4=_vk_entrypoint_stub@0")
@@ -22837,6 +24525,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBuildAccelerationStructuresIndirectKHR(VkCommandBuffer                  commandBuffer, uint32_t                                           infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkDeviceAddress*             pIndirectDeviceAddresses, const uint32_t*                    pIndirectStrides, const uint32_t* const*             ppMaxPrimitiveCounts) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22862,7 +24551,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBuildAccelerationStructuresIndirectKHR(VkCommandBuffer                  commandBuffer, uint32_t                                           infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkDeviceAddress*             pIndirectDeviceAddresses, const uint32_t*                    pIndirectStrides, const uint32_t* const*             ppMaxPrimitiveCounts) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BuildAccelerationStructuresKHR@4=_vk_entrypoint_stub@0")
@@ -22887,6 +24578,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BuildAccelerationStructuresKHR(VkDevice                                           device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22912,7 +24604,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BuildAccelerationStructuresKHR(VkDevice                                           device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureDeviceAddressKHR@4=_vk_entrypoint_stub@0")
@@ -22937,6 +24631,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_GetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -22962,7 +24657,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_cmd_enqueue_unless_primary_GetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateDeferredOperationKHR@4=_vk_entrypoint_stub@0")
@@ -22987,6 +24684,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateDeferredOperationKHR(VkDevice device, const VkAllocationCallbacks* pAllocator, VkDeferredOperationKHR* pDeferredOperation) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23012,7 +24710,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateDeferredOperationKHR(VkDevice device, const VkAllocationCallbacks* pAllocator, VkDeferredOperationKHR* pDeferredOperation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyDeferredOperationKHR@4=_vk_entrypoint_stub@0")
@@ -23037,6 +24737,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyDeferredOperationKHR(VkDevice device, VkDeferredOperationKHR operation, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23062,7 +24763,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyDeferredOperationKHR(VkDevice device, VkDeferredOperationKHR operation, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeferredOperationMaxConcurrencyKHR@4=_vk_entrypoint_stub@0")
@@ -23087,6 +24790,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint32_t VKAPI_CALL vk_cmd_enqueue_GetDeferredOperationMaxConcurrencyKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23112,7 +24816,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR uint32_t VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeferredOperationMaxConcurrencyKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeferredOperationResultKHR@4=_vk_entrypoint_stub@0")
@@ -23137,6 +24843,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDeferredOperationResultKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23162,7 +24869,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeferredOperationResultKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DeferredOperationJoinKHR@4=_vk_entrypoint_stub@0")
@@ -23187,6 +24896,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_DeferredOperationJoinKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23212,7 +24922,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_DeferredOperationJoinKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCullMode@4=_vk_entrypoint_stub@0")
@@ -23237,6 +24949,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23262,7 +24975,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCullModeEXT@4=_vk_entrypoint_stub@0")
@@ -23287,6 +25002,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCullModeEXT(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23312,7 +25028,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCullModeEXT(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetFrontFace@4=_vk_entrypoint_stub@0")
@@ -23337,6 +25055,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23362,7 +25081,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetFrontFaceEXT@4=_vk_entrypoint_stub@0")
@@ -23387,6 +25108,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetFrontFaceEXT(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23412,7 +25134,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetFrontFaceEXT(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPrimitiveTopology@4=_vk_entrypoint_stub@0")
@@ -23437,6 +25161,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23462,7 +25187,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPrimitiveTopologyEXT@4=_vk_entrypoint_stub@0")
@@ -23487,6 +25214,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetPrimitiveTopologyEXT(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23512,7 +25240,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPrimitiveTopologyEXT(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewportWithCount@4=_vk_entrypoint_stub@0")
@@ -23537,6 +25267,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23562,7 +25293,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewportWithCountEXT@4=_vk_entrypoint_stub@0")
@@ -23587,6 +25320,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewportWithCountEXT(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23612,7 +25346,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewportWithCountEXT(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetScissorWithCount@4=_vk_entrypoint_stub@0")
@@ -23637,6 +25373,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23662,7 +25399,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetScissorWithCountEXT@4=_vk_entrypoint_stub@0")
@@ -23687,6 +25426,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23712,7 +25452,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindVertexBuffers2@4=_vk_entrypoint_stub@0")
@@ -23737,6 +25479,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23762,7 +25505,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindVertexBuffers2EXT@4=_vk_entrypoint_stub@0")
@@ -23787,6 +25532,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindVertexBuffers2EXT(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23812,7 +25558,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindVertexBuffers2EXT(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthTestEnable@4=_vk_entrypoint_stub@0")
@@ -23837,6 +25585,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23862,7 +25611,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthTestEnableEXT@4=_vk_entrypoint_stub@0")
@@ -23887,6 +25638,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23912,7 +25664,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthWriteEnable@4=_vk_entrypoint_stub@0")
@@ -23937,6 +25691,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -23962,7 +25717,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthWriteEnableEXT@4=_vk_entrypoint_stub@0")
@@ -23987,6 +25744,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthWriteEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24012,7 +25770,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthWriteEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthCompareOp@4=_vk_entrypoint_stub@0")
@@ -24037,6 +25797,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24062,7 +25823,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthCompareOpEXT@4=_vk_entrypoint_stub@0")
@@ -24087,6 +25850,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthCompareOpEXT(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24112,7 +25876,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthCompareOpEXT(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBoundsTestEnable@4=_vk_entrypoint_stub@0")
@@ -24137,6 +25903,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24162,7 +25929,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBoundsTestEnableEXT@4=_vk_entrypoint_stub@0")
@@ -24187,6 +25956,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBoundsTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24212,7 +25982,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBoundsTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilTestEnable@4=_vk_entrypoint_stub@0")
@@ -24237,6 +26009,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24262,7 +26035,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilTestEnableEXT@4=_vk_entrypoint_stub@0")
@@ -24287,6 +26062,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24312,7 +26088,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilOp@4=_vk_entrypoint_stub@0")
@@ -24337,6 +26115,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24362,7 +26141,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetStencilOpEXT@4=_vk_entrypoint_stub@0")
@@ -24387,6 +26168,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetStencilOpEXT(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24412,7 +26194,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetStencilOpEXT(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPatchControlPointsEXT@4=_vk_entrypoint_stub@0")
@@ -24437,6 +26221,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetPatchControlPointsEXT(VkCommandBuffer commandBuffer, uint32_t patchControlPoints) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24462,7 +26247,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPatchControlPointsEXT(VkCommandBuffer commandBuffer, uint32_t patchControlPoints) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetRasterizerDiscardEnable@4=_vk_entrypoint_stub@0")
@@ -24487,6 +26274,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24512,7 +26300,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetRasterizerDiscardEnableEXT@4=_vk_entrypoint_stub@0")
@@ -24537,6 +26327,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetRasterizerDiscardEnableEXT(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24562,7 +26353,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetRasterizerDiscardEnableEXT(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBiasEnable@4=_vk_entrypoint_stub@0")
@@ -24587,6 +26380,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24612,7 +26406,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthBiasEnableEXT@4=_vk_entrypoint_stub@0")
@@ -24637,6 +26433,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthBiasEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24662,7 +26459,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthBiasEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetLogicOpEXT@4=_vk_entrypoint_stub@0")
@@ -24687,6 +26486,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetLogicOpEXT(VkCommandBuffer commandBuffer, VkLogicOp logicOp) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24712,7 +26512,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetLogicOpEXT(VkCommandBuffer commandBuffer, VkLogicOp logicOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPrimitiveRestartEnable@4=_vk_entrypoint_stub@0")
@@ -24737,6 +26539,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24762,7 +26565,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPrimitiveRestartEnableEXT@4=_vk_entrypoint_stub@0")
@@ -24787,6 +26592,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetPrimitiveRestartEnableEXT(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24812,57 +26618,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPrimitiveRestartEnableEXT(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+
 #endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CreatePrivateDataSlot=vk_entrypoint_stub")
-#if defined(_M_ARM64EC)
-    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CreatePrivateDataSlot=#vk_entrypoint_stub")
-#endif
-#endif
-#else
-    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
-#endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot=vk_entrypoint_stub")
-#if defined(_M_ARM64EC)
-    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot=#vk_entrypoint_stub")
-#endif
-#endif
-#else
-    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
-#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetTessellationDomainOriginEXT@4=_vk_entrypoint_stub@0")
@@ -24887,6 +26645,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetTessellationDomainOriginEXT(VkCommandBuffer commandBuffer, VkTessellationDomainOrigin domainOrigin) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24912,7 +26671,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetTessellationDomainOriginEXT(VkCommandBuffer commandBuffer, VkTessellationDomainOrigin domainOrigin) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthClampEnableEXT@4=_vk_entrypoint_stub@0")
@@ -24937,6 +26698,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthClampEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClampEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -24962,7 +26724,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthClampEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClampEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetPolygonModeEXT@4=_vk_entrypoint_stub@0")
@@ -24987,6 +26751,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetPolygonModeEXT(VkCommandBuffer commandBuffer, VkPolygonMode polygonMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25012,7 +26777,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetPolygonModeEXT(VkCommandBuffer commandBuffer, VkPolygonMode polygonMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetRasterizationSamplesEXT@4=_vk_entrypoint_stub@0")
@@ -25037,6 +26804,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetRasterizationSamplesEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  rasterizationSamples) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25062,7 +26830,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetRasterizationSamplesEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  rasterizationSamples) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetSampleMaskEXT@4=_vk_entrypoint_stub@0")
@@ -25087,6 +26857,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetSampleMaskEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  samples, const VkSampleMask*    pSampleMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25112,7 +26883,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetSampleMaskEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  samples, const VkSampleMask*    pSampleMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAlphaToCoverageEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25137,6 +26910,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetAlphaToCoverageEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToCoverageEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25162,7 +26936,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetAlphaToCoverageEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToCoverageEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetAlphaToOneEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25187,6 +26963,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetAlphaToOneEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToOneEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25212,7 +26989,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetAlphaToOneEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToOneEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetLogicOpEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25237,6 +27016,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetLogicOpEnableEXT(VkCommandBuffer commandBuffer, VkBool32 logicOpEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25262,7 +27042,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetLogicOpEnableEXT(VkCommandBuffer commandBuffer, VkBool32 logicOpEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetColorBlendEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25287,6 +27069,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetColorBlendEnableEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkBool32* pColorBlendEnables) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25312,7 +27095,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetColorBlendEnableEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkBool32* pColorBlendEnables) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetColorBlendEquationEXT@4=_vk_entrypoint_stub@0")
@@ -25337,6 +27122,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetColorBlendEquationEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendEquationEXT* pColorBlendEquations) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25362,7 +27148,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetColorBlendEquationEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendEquationEXT* pColorBlendEquations) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetColorWriteMaskEXT@4=_vk_entrypoint_stub@0")
@@ -25387,6 +27175,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetColorWriteMaskEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorComponentFlags* pColorWriteMasks) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25412,7 +27201,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetColorWriteMaskEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorComponentFlags* pColorWriteMasks) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetRasterizationStreamEXT@4=_vk_entrypoint_stub@0")
@@ -25437,6 +27228,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetRasterizationStreamEXT(VkCommandBuffer commandBuffer, uint32_t rasterizationStream) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25462,7 +27254,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetRasterizationStreamEXT(VkCommandBuffer commandBuffer, uint32_t rasterizationStream) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetConservativeRasterizationModeEXT@4=_vk_entrypoint_stub@0")
@@ -25487,6 +27281,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetConservativeRasterizationModeEXT(VkCommandBuffer commandBuffer, VkConservativeRasterizationModeEXT conservativeRasterizationMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25512,7 +27307,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetConservativeRasterizationModeEXT(VkCommandBuffer commandBuffer, VkConservativeRasterizationModeEXT conservativeRasterizationMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetExtraPrimitiveOverestimationSizeEXT@4=_vk_entrypoint_stub@0")
@@ -25537,6 +27334,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetExtraPrimitiveOverestimationSizeEXT(VkCommandBuffer commandBuffer, float extraPrimitiveOverestimationSize) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25562,7 +27360,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetExtraPrimitiveOverestimationSizeEXT(VkCommandBuffer commandBuffer, float extraPrimitiveOverestimationSize) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthClipEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25587,6 +27387,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthClipEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClipEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25612,7 +27413,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthClipEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClipEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetSampleLocationsEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25637,6 +27440,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetSampleLocationsEnableEXT(VkCommandBuffer commandBuffer, VkBool32 sampleLocationsEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25662,7 +27466,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetSampleLocationsEnableEXT(VkCommandBuffer commandBuffer, VkBool32 sampleLocationsEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetColorBlendAdvancedEXT@4=_vk_entrypoint_stub@0")
@@ -25687,6 +27493,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetColorBlendAdvancedEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendAdvancedEXT* pColorBlendAdvanced) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25712,7 +27519,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetColorBlendAdvancedEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendAdvancedEXT* pColorBlendAdvanced) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetProvokingVertexModeEXT@4=_vk_entrypoint_stub@0")
@@ -25737,6 +27546,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetProvokingVertexModeEXT(VkCommandBuffer commandBuffer, VkProvokingVertexModeEXT provokingVertexMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25762,7 +27572,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetProvokingVertexModeEXT(VkCommandBuffer commandBuffer, VkProvokingVertexModeEXT provokingVertexMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetLineRasterizationModeEXT@4=_vk_entrypoint_stub@0")
@@ -25787,6 +27599,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetLineRasterizationModeEXT(VkCommandBuffer commandBuffer, VkLineRasterizationModeEXT lineRasterizationMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25812,7 +27625,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetLineRasterizationModeEXT(VkCommandBuffer commandBuffer, VkLineRasterizationModeEXT lineRasterizationMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetLineStippleEnableEXT@4=_vk_entrypoint_stub@0")
@@ -25837,6 +27652,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetLineStippleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stippledLineEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25862,7 +27678,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetLineStippleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stippledLineEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDepthClipNegativeOneToOneEXT@4=_vk_entrypoint_stub@0")
@@ -25887,6 +27705,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDepthClipNegativeOneToOneEXT(VkCommandBuffer commandBuffer, VkBool32 negativeOneToOne) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25912,7 +27731,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDepthClipNegativeOneToOneEXT(VkCommandBuffer commandBuffer, VkBool32 negativeOneToOne) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewportWScalingEnableNV@4=_vk_entrypoint_stub@0")
@@ -25937,6 +27758,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewportWScalingEnableNV(VkCommandBuffer commandBuffer, VkBool32 viewportWScalingEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -25962,7 +27784,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewportWScalingEnableNV(VkCommandBuffer commandBuffer, VkBool32 viewportWScalingEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetViewportSwizzleNV@4=_vk_entrypoint_stub@0")
@@ -25987,6 +27811,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetViewportSwizzleNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportSwizzleNV* pViewportSwizzles) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26012,7 +27837,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetViewportSwizzleNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportSwizzleNV* pViewportSwizzles) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoverageToColorEnableNV@4=_vk_entrypoint_stub@0")
@@ -26037,6 +27864,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoverageToColorEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageToColorEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26062,7 +27890,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoverageToColorEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageToColorEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoverageToColorLocationNV@4=_vk_entrypoint_stub@0")
@@ -26087,6 +27917,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoverageToColorLocationNV(VkCommandBuffer commandBuffer, uint32_t coverageToColorLocation) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26112,7 +27943,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoverageToColorLocationNV(VkCommandBuffer commandBuffer, uint32_t coverageToColorLocation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoverageModulationModeNV@4=_vk_entrypoint_stub@0")
@@ -26137,6 +27970,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoverageModulationModeNV(VkCommandBuffer commandBuffer, VkCoverageModulationModeNV coverageModulationMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26162,7 +27996,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoverageModulationModeNV(VkCommandBuffer commandBuffer, VkCoverageModulationModeNV coverageModulationMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoverageModulationTableEnableNV@4=_vk_entrypoint_stub@0")
@@ -26187,6 +28023,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoverageModulationTableEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageModulationTableEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26212,7 +28049,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoverageModulationTableEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageModulationTableEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoverageModulationTableNV@4=_vk_entrypoint_stub@0")
@@ -26237,6 +28076,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoverageModulationTableNV(VkCommandBuffer commandBuffer, uint32_t coverageModulationTableCount, const float* pCoverageModulationTable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26262,7 +28102,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoverageModulationTableNV(VkCommandBuffer commandBuffer, uint32_t coverageModulationTableCount, const float* pCoverageModulationTable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetShadingRateImageEnableNV@4=_vk_entrypoint_stub@0")
@@ -26287,6 +28129,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetShadingRateImageEnableNV(VkCommandBuffer commandBuffer, VkBool32 shadingRateImageEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26312,7 +28155,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetShadingRateImageEnableNV(VkCommandBuffer commandBuffer, VkBool32 shadingRateImageEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetCoverageReductionModeNV@4=_vk_entrypoint_stub@0")
@@ -26337,6 +28182,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetCoverageReductionModeNV(VkCommandBuffer commandBuffer, VkCoverageReductionModeNV coverageReductionMode) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26362,7 +28208,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetCoverageReductionModeNV(VkCommandBuffer commandBuffer, VkCoverageReductionModeNV coverageReductionMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetRepresentativeFragmentTestEnableNV@4=_vk_entrypoint_stub@0")
@@ -26387,6 +28235,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetRepresentativeFragmentTestEnableNV(VkCommandBuffer commandBuffer, VkBool32 representativeFragmentTestEnable) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26412,7 +28261,62 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetRepresentativeFragmentTestEnableNV(VkCommandBuffer commandBuffer, VkBool32 representativeFragmentTestEnable) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CreatePrivateDataSlot=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CreatePrivateDataSlot=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreatePrivateDataSlotEXT@4=_vk_entrypoint_stub@0")
@@ -26437,6 +28341,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26462,7 +28367,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyPrivateDataSlot@4=_vk_entrypoint_stub@0")
@@ -26487,6 +28394,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26512,7 +28420,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyPrivateDataSlotEXT@4=_vk_entrypoint_stub@0")
@@ -26537,6 +28447,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26562,7 +28473,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetPrivateData@4=_vk_entrypoint_stub@0")
@@ -26587,6 +28500,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26612,7 +28526,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetPrivateDataEXT@4=_vk_entrypoint_stub@0")
@@ -26637,6 +28553,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26662,7 +28579,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPrivateData@4=_vk_entrypoint_stub@0")
@@ -26687,6 +28606,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26712,7 +28632,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPrivateDataEXT@4=_vk_entrypoint_stub@0")
@@ -26737,6 +28659,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26762,7 +28685,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyBuffer2@4=_vk_entrypoint_stub@0")
@@ -26787,6 +28712,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26812,7 +28738,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyBuffer2KHR@4=_vk_entrypoint_stub@0")
@@ -26837,6 +28765,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26862,7 +28791,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyImage2@4=_vk_entrypoint_stub@0")
@@ -26887,6 +28818,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26912,7 +28844,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyImage2KHR@4=_vk_entrypoint_stub@0")
@@ -26937,6 +28871,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -26962,7 +28897,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBlitImage2@4=_vk_entrypoint_stub@0")
@@ -26987,6 +28924,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27012,7 +28950,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBlitImage2KHR@4=_vk_entrypoint_stub@0")
@@ -27037,6 +28977,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27062,7 +29003,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyBufferToImage2@4=_vk_entrypoint_stub@0")
@@ -27087,6 +29030,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27112,7 +29056,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyBufferToImage2KHR@4=_vk_entrypoint_stub@0")
@@ -27137,6 +29083,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27162,7 +29109,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyImageToBuffer2@4=_vk_entrypoint_stub@0")
@@ -27187,6 +29136,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27212,7 +29162,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyImageToBuffer2KHR@4=_vk_entrypoint_stub@0")
@@ -27237,6 +29189,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27262,7 +29215,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResolveImage2@4=_vk_entrypoint_stub@0")
@@ -27287,6 +29242,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27312,7 +29268,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResolveImage2KHR@4=_vk_entrypoint_stub@0")
@@ -27337,6 +29295,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27362,7 +29321,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetFragmentShadingRateKHR@4=_vk_entrypoint_stub@0")
@@ -27387,6 +29348,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetFragmentShadingRateKHR(VkCommandBuffer           commandBuffer, const VkExtent2D*                           pFragmentSize, const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27412,7 +29374,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetFragmentShadingRateKHR(VkCommandBuffer           commandBuffer, const VkExtent2D*                           pFragmentSize, const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetFragmentShadingRateEnumNV@4=_vk_entrypoint_stub@0")
@@ -27437,6 +29401,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetFragmentShadingRateEnumNV(VkCommandBuffer           commandBuffer, VkFragmentShadingRateNV                     shadingRate, const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27462,7 +29427,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetFragmentShadingRateEnumNV(VkCommandBuffer           commandBuffer, VkFragmentShadingRateNV                     shadingRate, const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureBuildSizesKHR@4=_vk_entrypoint_stub@0")
@@ -27487,6 +29454,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetAccelerationStructureBuildSizesKHR(VkDevice                                            device, VkAccelerationStructureBuildTypeKHR                 buildType, const VkAccelerationStructureBuildGeometryInfoKHR*  pBuildInfo, const uint32_t*  pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR*           pSizeInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27512,7 +29480,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetAccelerationStructureBuildSizesKHR(VkDevice                                            device, VkAccelerationStructureBuildTypeKHR                 buildType, const VkAccelerationStructureBuildGeometryInfoKHR*  pBuildInfo, const uint32_t*  pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR*           pSizeInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetVertexInputEXT@4=_vk_entrypoint_stub@0")
@@ -27537,6 +29507,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetVertexInputEXT(VkCommandBuffer commandBuffer, uint32_t vertexBindingDescriptionCount, const VkVertexInputBindingDescription2EXT* pVertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27562,7 +29533,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetVertexInputEXT(VkCommandBuffer commandBuffer, uint32_t vertexBindingDescriptionCount, const VkVertexInputBindingDescription2EXT* pVertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetColorWriteEnableEXT@4=_vk_entrypoint_stub@0")
@@ -27587,6 +29560,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetColorWriteEnableEXT(VkCommandBuffer       commandBuffer, uint32_t                                attachmentCount, const VkBool32*   pColorWriteEnables) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27612,7 +29586,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetColorWriteEnableEXT(VkCommandBuffer       commandBuffer, uint32_t                                attachmentCount, const VkBool32*   pColorWriteEnables) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetEvent2@4=_vk_entrypoint_stub@0")
@@ -27637,6 +29613,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27662,7 +29639,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetEvent2KHR@4=_vk_entrypoint_stub@0")
@@ -27687,6 +29666,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27712,7 +29692,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResetEvent2@4=_vk_entrypoint_stub@0")
@@ -27737,6 +29719,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27762,7 +29745,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdResetEvent2KHR@4=_vk_entrypoint_stub@0")
@@ -27787,6 +29772,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27812,7 +29798,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWaitEvents2@4=_vk_entrypoint_stub@0")
@@ -27837,6 +29825,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27862,7 +29851,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWaitEvents2KHR@4=_vk_entrypoint_stub@0")
@@ -27887,6 +29878,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27912,7 +29904,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPipelineBarrier2@4=_vk_entrypoint_stub@0")
@@ -27937,6 +29931,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPipelineBarrier2(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -27962,7 +29957,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPipelineBarrier2(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdPipelineBarrier2KHR@4=_vk_entrypoint_stub@0")
@@ -27987,6 +29984,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28012,7 +30010,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueSubmit2@4=_vk_entrypoint_stub@0")
@@ -28037,6 +30037,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueSubmit2(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28062,7 +30063,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueSubmit2(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_QueueSubmit2KHR@4=_vk_entrypoint_stub@0")
@@ -28087,6 +30090,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28112,7 +30116,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteTimestamp2@4=_vk_entrypoint_stub@0")
@@ -28137,6 +30143,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28162,7 +30169,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteTimestamp2KHR@4=_vk_entrypoint_stub@0")
@@ -28187,6 +30196,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28212,7 +30222,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteBufferMarker2AMD@4=_vk_entrypoint_stub@0")
@@ -28237,6 +30249,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28262,7 +30275,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetQueueCheckpointData2NV@4=_vk_entrypoint_stub@0")
@@ -28287,6 +30302,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetQueueCheckpointData2NV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointData2NV* pCheckpointData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28312,8 +30328,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetQueueCheckpointData2NV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointData2NV* pCheckpointData) __attribute__ ((weak));
+
 #endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateVideoSessionKHR@4=_vk_entrypoint_stub@0")
@@ -28338,6 +30355,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28363,9 +30381,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyVideoSessionKHR@4=_vk_entrypoint_stub@0")
@@ -28390,6 +30408,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyVideoSessionKHR(VkDevice device, VkVideoSessionKHR videoSession, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28415,9 +30434,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyVideoSessionKHR(VkDevice device, VkVideoSessionKHR videoSession, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateVideoSessionParametersKHR@4=_vk_entrypoint_stub@0")
@@ -28442,6 +30461,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateVideoSessionParametersKHR(VkDevice device, const VkVideoSessionParametersCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionParametersKHR* pVideoSessionParameters) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28467,9 +30487,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateVideoSessionParametersKHR(VkDevice device, const VkVideoSessionParametersCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionParametersKHR* pVideoSessionParameters) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UpdateVideoSessionParametersKHR@4=_vk_entrypoint_stub@0")
@@ -28494,6 +30514,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_UpdateVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkVideoSessionParametersUpdateInfoKHR* pUpdateInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28519,9 +30540,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_UpdateVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkVideoSessionParametersUpdateInfoKHR* pUpdateInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyVideoSessionParametersKHR@4=_vk_entrypoint_stub@0")
@@ -28546,6 +30567,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28571,9 +30593,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetVideoSessionMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -28598,6 +30620,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetVideoSessionMemoryRequirementsKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t* pMemoryRequirementsCount, VkVideoSessionMemoryRequirementsKHR* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28623,9 +30646,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetVideoSessionMemoryRequirementsKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t* pMemoryRequirementsCount, VkVideoSessionMemoryRequirementsKHR* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindVideoSessionMemoryKHR@4=_vk_entrypoint_stub@0")
@@ -28650,6 +30673,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindVideoSessionMemoryKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t bindSessionMemoryInfoCount, const VkBindVideoSessionMemoryInfoKHR* pBindSessionMemoryInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28675,9 +30699,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindVideoSessionMemoryKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t bindSessionMemoryInfoCount, const VkBindVideoSessionMemoryInfoKHR* pBindSessionMemoryInfos) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecodeVideoKHR@4=_vk_entrypoint_stub@0")
@@ -28702,6 +30726,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28727,9 +30752,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginVideoCodingKHR@4=_vk_entrypoint_stub@0")
@@ -28754,6 +30779,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoBeginCodingInfoKHR* pBeginInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28779,9 +30805,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoBeginCodingInfoKHR* pBeginInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdControlVideoCodingKHR@4=_vk_entrypoint_stub@0")
@@ -28806,6 +30832,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdControlVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoCodingControlInfoKHR* pCodingControlInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28831,9 +30858,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdControlVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoCodingControlInfoKHR* pCodingControlInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndVideoCodingKHR@4=_vk_entrypoint_stub@0")
@@ -28858,6 +30885,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoEndCodingInfoKHR* pEndCodingInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28883,60 +30911,115 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoEndCodingInfoKHR* pEndCodingInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEncodeVideoKHR@104=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryNV@104=_vk_entrypoint_stub@0")
 #else
-    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdEncodeVideoKHR=vk_entrypoint_stub")
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdDecompressMemoryNV=vk_entrypoint_stub")
 #if defined(_M_ARM64EC)
-    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdEncodeVideoKHR=#vk_entrypoint_stub")
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdDecompressMemoryNV=#vk_entrypoint_stub")
 #endif
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDecompressMemoryNV(VkCommandBuffer commandBuffer, uint32_t decompressRegionCount, const VkDecompressMemoryRegionNV* pDecompressMemoryRegions) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR@104=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV@104=_vk_entrypoint_stub@0")
 #else
-    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR=vk_entrypoint_stub")
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV=vk_entrypoint_stub")
 #if defined(_M_ARM64EC)
-    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR=#vk_entrypoint_stub")
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV=#vk_entrypoint_stub")
 #endif
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV(VkCommandBuffer commandBuffer, uint32_t decompressRegionCount, const VkDecompressMemoryRegionNV* pDecompressMemoryRegions) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV(VkCommandBuffer commandBuffer, VkDeviceAddress indirectCommandsAddress, VkDeviceAddress indirectCommandsCountAddress, uint32_t stride) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV(VkCommandBuffer commandBuffer, VkDeviceAddress indirectCommandsAddress, VkDeviceAddress indirectCommandsCountAddress, uint32_t stride) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateCuModuleNVX@4=_vk_entrypoint_stub@0")
@@ -28961,6 +31044,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateCuModuleNVX(VkDevice device, const VkCuModuleCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuModuleNVX* pModule) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -28986,7 +31070,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateCuModuleNVX(VkDevice device, const VkCuModuleCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuModuleNVX* pModule) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateCuFunctionNVX@4=_vk_entrypoint_stub@0")
@@ -29011,6 +31097,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateCuFunctionNVX(VkDevice device, const VkCuFunctionCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuFunctionNVX* pFunction) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29036,7 +31123,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateCuFunctionNVX(VkDevice device, const VkCuFunctionCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuFunctionNVX* pFunction) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyCuModuleNVX@4=_vk_entrypoint_stub@0")
@@ -29061,6 +31150,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyCuModuleNVX(VkDevice device, VkCuModuleNVX module, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29086,7 +31176,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyCuModuleNVX(VkDevice device, VkCuModuleNVX module, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyCuFunctionNVX@4=_vk_entrypoint_stub@0")
@@ -29111,6 +31203,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyCuFunctionNVX(VkDevice device, VkCuFunctionNVX function, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29136,7 +31229,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyCuFunctionNVX(VkDevice device, VkCuFunctionNVX function, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCuLaunchKernelNVX@4=_vk_entrypoint_stub@0")
@@ -29161,6 +31256,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCuLaunchKernelNVX(VkCommandBuffer commandBuffer, const VkCuLaunchInfoNVX* pLaunchInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29186,7 +31282,592 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCuLaunchKernelNVX(VkCommandBuffer commandBuffer, const VkCuLaunchInfoNVX* pLaunchInfo) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT(VkDevice device, VkDescriptorSetLayout layout, VkDeviceSize* pLayoutSizeInBytes) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT(VkDevice device, VkDescriptorSetLayout layout, VkDeviceSize* pLayoutSizeInBytes) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT(VkDevice device, VkDescriptorSetLayout layout, uint32_t binding, VkDeviceSize* pOffset) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT(VkDevice device, VkDescriptorSetLayout layout, uint32_t binding, VkDeviceSize* pOffset) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetDescriptorEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetDescriptorEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorEXT(VkDevice device, const VkDescriptorGetInfoEXT* pDescriptorInfo, size_t dataSize, void* pDescriptor) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetDescriptorEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetDescriptorEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetDescriptorEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorEXT(VkDevice device, const VkDescriptorGetInfoEXT* pDescriptorInfo, size_t dataSize, void* pDescriptor) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBuffersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdBindDescriptorBuffersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdBindDescriptorBuffersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindDescriptorBuffersEXT(VkCommandBuffer commandBuffer, uint32_t bufferCount, const VkDescriptorBufferBindingInfoEXT* pBindingInfos) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT(VkCommandBuffer commandBuffer, uint32_t bufferCount, const VkDescriptorBufferBindingInfoEXT* pBindingInfos) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t setCount, const uint32_t* pBufferIndices, const VkDeviceSize* pOffsets) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t setCount, const uint32_t* pBufferIndices, const VkDeviceSize* pOffsets) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkBufferCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkBufferCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageViewCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageViewCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkSamplerCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkSamplerCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkAccelerationStructureCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkAccelerationStructureCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_SetDeviceMemoryPriorityEXT@4=_vk_entrypoint_stub@0")
@@ -29211,6 +31892,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_SetDeviceMemoryPriorityEXT(VkDevice       device, VkDeviceMemory memory, float          priority) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29236,7 +31918,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_SetDeviceMemoryPriorityEXT(VkDevice       device, VkDeviceMemory memory, float          priority) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_WaitForPresentKHR@4=_vk_entrypoint_stub@0")
@@ -29261,6 +31945,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_WaitForPresentKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t presentId, uint64_t timeout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29286,7 +31971,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_WaitForPresentKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t presentId, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29312,6 +31999,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateBufferCollectionFUCHSIA(VkDevice device, const VkBufferCollectionCreateInfoFUCHSIA* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBufferCollectionFUCHSIA* pCollection) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29337,7 +32025,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateBufferCollectionFUCHSIA(VkDevice device, const VkBufferCollectionCreateInfoFUCHSIA* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBufferCollectionFUCHSIA* pCollection) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -29364,6 +32054,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetBufferCollectionBufferConstraintsFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkBufferConstraintsInfoFUCHSIA* pBufferConstraintsInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29389,7 +32080,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetBufferCollectionBufferConstraintsFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkBufferConstraintsInfoFUCHSIA* pBufferConstraintsInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -29416,6 +32109,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_SetBufferCollectionImageConstraintsFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkImageConstraintsInfoFUCHSIA* pImageConstraintsInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29441,7 +32135,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_SetBufferCollectionImageConstraintsFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkImageConstraintsInfoFUCHSIA* pImageConstraintsInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -29468,6 +32164,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyBufferCollectionFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29493,7 +32190,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyBufferCollectionFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -29520,6 +32219,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetBufferCollectionPropertiesFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, VkBufferCollectionPropertiesFUCHSIA* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29545,7 +32245,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetBufferCollectionPropertiesFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, VkBufferCollectionPropertiesFUCHSIA* pProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29571,6 +32273,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginRendering(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29596,7 +32299,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginRendering(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBeginRenderingKHR@4=_vk_entrypoint_stub@0")
@@ -29621,6 +32326,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBeginRenderingKHR(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29646,7 +32352,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBeginRenderingKHR(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndRendering@4=_vk_entrypoint_stub@0")
@@ -29671,6 +32379,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndRendering(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29696,7 +32405,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndRendering(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdEndRenderingKHR@4=_vk_entrypoint_stub@0")
@@ -29721,6 +32432,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdEndRenderingKHR(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29746,7 +32458,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdEndRenderingKHR(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetLayoutHostMappingInfoVALVE@4=_vk_entrypoint_stub@0")
@@ -29771,6 +32485,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorSetLayoutHostMappingInfoVALVE(VkDevice device, const VkDescriptorSetBindingReferenceVALVE* pBindingReference, VkDescriptorSetLayoutHostMappingInfoVALVE* pHostMapping) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29796,7 +32511,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutHostMappingInfoVALVE(VkDevice device, const VkDescriptorSetBindingReferenceVALVE* pBindingReference, VkDescriptorSetLayoutHostMappingInfoVALVE* pHostMapping) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDescriptorSetHostMappingVALVE@4=_vk_entrypoint_stub@0")
@@ -29821,6 +32538,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDescriptorSetHostMappingVALVE(VkDevice device, VkDescriptorSet descriptorSet, void** ppData) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29846,7 +32564,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDescriptorSetHostMappingVALVE(VkDevice device, VkDescriptorSet descriptorSet, void** ppData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -29871,6 +32591,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateMicromapEXT(VkDevice                                           device, const VkMicromapCreateInfoEXT*        pCreateInfo, const VkAllocationCallbacks*       pAllocator, VkMicromapEXT*                        pMicromap) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29896,7 +32617,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateMicromapEXT(VkDevice                                           device, const VkMicromapCreateInfoEXT*        pCreateInfo, const VkAllocationCallbacks*       pAllocator, VkMicromapEXT*                        pMicromap) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBuildMicromapsEXT@4=_vk_entrypoint_stub@0")
@@ -29921,6 +32644,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBuildMicromapsEXT(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29946,7 +32670,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBuildMicromapsEXT(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BuildMicromapsEXT@4=_vk_entrypoint_stub@0")
@@ -29971,6 +32697,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BuildMicromapsEXT(VkDevice                                           device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -29996,7 +32723,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BuildMicromapsEXT(VkDevice                                           device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -30021,6 +32750,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyMicromapEXT(VkDevice device, VkMicromapEXT micromap, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30046,7 +32776,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyMicromapEXT(VkDevice device, VkMicromapEXT micromap, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -30071,6 +32803,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30096,7 +32829,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -30121,6 +32856,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyMicromapEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30146,7 +32882,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyMicromapEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMicromapToMemoryEXT@4=_vk_entrypoint_stub@0")
@@ -30171,6 +32909,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyMicromapToMemoryEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30196,7 +32935,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyMicromapToMemoryEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMicromapToMemoryEXT@4=_vk_entrypoint_stub@0")
@@ -30221,6 +32962,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyMicromapToMemoryEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMicromapToMemoryInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30246,7 +32988,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyMicromapToMemoryEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMicromapToMemoryInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdCopyMemoryToMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -30271,6 +33015,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdCopyMemoryToMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30296,7 +33041,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdCopyMemoryToMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CopyMemoryToMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -30321,6 +33068,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CopyMemoryToMicromapEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMemoryToMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30346,7 +33094,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CopyMemoryToMicromapEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMemoryToMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdWriteMicromapsPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -30371,6 +33121,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdWriteMicromapsPropertiesEXT(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30396,7 +33147,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdWriteMicromapsPropertiesEXT(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_WriteMicromapsPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -30421,6 +33174,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_WriteMicromapsPropertiesEXT(VkDevice device, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType  queryType, size_t       dataSize, void* pData, size_t stride) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30446,7 +33200,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_WriteMicromapsPropertiesEXT(VkDevice device, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType  queryType, size_t       dataSize, void* pData, size_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceMicromapCompatibilityEXT@4=_vk_entrypoint_stub@0")
@@ -30471,6 +33227,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetDeviceMicromapCompatibilityEXT(VkDevice device, const VkMicromapVersionInfoEXT* pVersionInfo, VkAccelerationStructureCompatibilityKHR* pCompatibility) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30496,7 +33253,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceMicromapCompatibilityEXT(VkDevice device, const VkMicromapVersionInfoEXT* pVersionInfo, VkAccelerationStructureCompatibilityKHR* pCompatibility) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetMicromapBuildSizesEXT@4=_vk_entrypoint_stub@0")
@@ -30521,6 +33280,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetMicromapBuildSizesEXT(VkDevice                                            device, VkAccelerationStructureBuildTypeKHR                 buildType, const VkMicromapBuildInfoEXT*  pBuildInfo, VkMicromapBuildSizesInfoEXT*           pSizeInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30546,7 +33306,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetMicromapBuildSizesEXT(VkDevice                                            device, VkAccelerationStructureBuildTypeKHR                 buildType, const VkMicromapBuildInfoEXT*  pBuildInfo, VkMicromapBuildSizesInfoEXT*           pSizeInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderModuleIdentifierEXT@4=_vk_entrypoint_stub@0")
@@ -30571,6 +33333,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetShaderModuleIdentifierEXT(VkDevice device, VkShaderModule shaderModule, VkShaderModuleIdentifierEXT* pIdentifier) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30596,7 +33359,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetShaderModuleIdentifierEXT(VkDevice device, VkShaderModule shaderModule, VkShaderModuleIdentifierEXT* pIdentifier) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderModuleCreateInfoIdentifierEXT@4=_vk_entrypoint_stub@0")
@@ -30621,6 +33386,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetShaderModuleCreateInfoIdentifierEXT(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, VkShaderModuleIdentifierEXT* pIdentifier) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30646,7 +33412,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetShaderModuleCreateInfoIdentifierEXT(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, VkShaderModuleIdentifierEXT* pIdentifier) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetImageSubresourceLayout2EXT@4=_vk_entrypoint_stub@0")
@@ -30671,6 +33439,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30696,7 +33465,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetPipelinePropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -30721,6 +33492,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetPipelinePropertiesEXT(VkDevice device, const VkPipelineInfoEXT* pPipelineInfo, VkBaseOutStructure* pPipelineProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30746,7 +33518,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetPipelinePropertiesEXT(VkDevice device, const VkPipelineInfoEXT* pPipelineInfo, VkBaseOutStructure* pPipelineProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30772,6 +33546,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_ExportMetalObjectsEXT(VkDevice device, VkExportMetalObjectsInfoEXT* pMetalObjectsInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30797,7 +33572,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_ExportMetalObjectsEXT(VkDevice device, VkExportMetalObjectsInfoEXT* pMetalObjectsInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30823,6 +33600,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetFramebufferTilePropertiesQCOM(VkDevice device, VkFramebuffer framebuffer, uint32_t* pPropertiesCount, VkTilePropertiesQCOM* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30848,7 +33626,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetFramebufferTilePropertiesQCOM(VkDevice device, VkFramebuffer framebuffer, uint32_t* pPropertiesCount, VkTilePropertiesQCOM* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDynamicRenderingTilePropertiesQCOM@4=_vk_entrypoint_stub@0")
@@ -30873,6 +33653,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDynamicRenderingTilePropertiesQCOM(VkDevice device, const VkRenderingInfo* pRenderingInfo, VkTilePropertiesQCOM* pProperties) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30898,7 +33679,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDynamicRenderingTilePropertiesQCOM(VkDevice device, const VkRenderingInfo* pRenderingInfo, VkTilePropertiesQCOM* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateOpticalFlowSessionNV@4=_vk_entrypoint_stub@0")
@@ -30923,6 +33706,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateOpticalFlowSessionNV(VkDevice device, const VkOpticalFlowSessionCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkOpticalFlowSessionNV* pSession) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30948,7 +33732,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateOpticalFlowSessionNV(VkDevice device, const VkOpticalFlowSessionCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkOpticalFlowSessionNV* pSession) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyOpticalFlowSessionNV@4=_vk_entrypoint_stub@0")
@@ -30973,6 +33759,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyOpticalFlowSessionNV(VkDevice device, VkOpticalFlowSessionNV session, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -30998,7 +33785,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyOpticalFlowSessionNV(VkDevice device, VkOpticalFlowSessionNV session, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_BindOpticalFlowSessionImageNV@4=_vk_entrypoint_stub@0")
@@ -31023,6 +33812,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_BindOpticalFlowSessionImageNV(VkDevice device, VkOpticalFlowSessionNV session, VkOpticalFlowSessionBindingPointNV bindingPoint, VkImageView view, VkImageLayout layout) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -31048,7 +33838,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_BindOpticalFlowSessionImageNV(VkDevice device, VkOpticalFlowSessionNV session, VkOpticalFlowSessionBindingPointNV bindingPoint, VkImageView view, VkImageLayout layout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdOpticalFlowExecuteNV@4=_vk_entrypoint_stub@0")
@@ -31073,6 +33865,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdOpticalFlowExecuteNV(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session, const VkOpticalFlowExecuteInfoNV* pExecuteInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -31098,7 +33891,9 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdOpticalFlowExecuteNV(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session, const VkOpticalFlowExecuteInfoNV* pExecuteInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetDeviceFaultInfoEXT@4=_vk_entrypoint_stub@0")
@@ -31123,6 +33918,7 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetDeviceFaultInfoEXT(VkDevice device, VkDeviceFaultCountsEXT* pFaultCounts, VkDeviceFaultInfoEXT* pFaultInfo) __attribute__ ((weak));
+
 #endif
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -31148,7 +33944,380 @@ const struct vk_physical_device_entrypoint_table vk_cmd_enqueue_unless_primary_p
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetDeviceFaultInfoEXT(VkDevice device, VkDeviceFaultCountsEXT* pFaultCounts, VkDeviceFaultInfoEXT* pFaultInfo) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_ReleaseSwapchainImagesEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_ReleaseSwapchainImagesEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_ReleaseSwapchainImagesEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_MapMemory2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_MapMemory2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_MapMemory2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_MapMemory2KHR(VkDevice device, const VkMemoryMapInfoKHR* pMemoryMapInfo, void** ppData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_MapMemory2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_MapMemory2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_MapMemory2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_MapMemory2KHR(VkDevice device, const VkMemoryMapInfoKHR* pMemoryMapInfo, void** ppData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_UnmapMemory2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_UnmapMemory2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_UnmapMemory2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_UnmapMemory2KHR(VkDevice device, const VkMemoryUnmapInfoKHR* pMemoryUnmapInfo) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_UnmapMemory2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_UnmapMemory2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_UnmapMemory2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_UnmapMemory2KHR(VkDevice device, const VkMemoryUnmapInfoKHR* pMemoryUnmapInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CreateShadersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CreateShadersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CreateShadersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_CreateShadersEXT(VkDevice device, uint32_t createInfoCount, const VkShaderCreateInfoEXT* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkShaderEXT* pShaders) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CreateShadersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CreateShadersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CreateShadersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_CreateShadersEXT(VkDevice device, uint32_t createInfoCount, const VkShaderCreateInfoEXT* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkShaderEXT* pShaders) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_DestroyShaderEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_DestroyShaderEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_DestroyShaderEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_DestroyShaderEXT(VkDevice device, VkShaderEXT shader, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_DestroyShaderEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_DestroyShaderEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_DestroyShaderEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_DestroyShaderEXT(VkDevice device, VkShaderEXT shader, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_GetShaderBinaryDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_GetShaderBinaryDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_GetShaderBinaryDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_GetShaderBinaryDataEXT(VkDevice device, VkShaderEXT shader, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT(VkDevice device, VkShaderEXT shader, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_CmdBindShadersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_CmdBindShadersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_CmdBindShadersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) __attribute__ ((weak));
+
+#endif
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_cmd_enqueue_unless_primary_CmdBindShadersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_cmd_enqueue_unless_primary_CmdBindShadersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_cmd_enqueue_unless_primary_CmdBindShadersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_cmd_enqueue_unless_primary_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) __attribute__ ((weak));
+
+#endif
+
 
 const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .GetDeviceProcAddr = vk_cmd_enqueue_GetDeviceProcAddr,
@@ -31253,11 +34422,15 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdDispatch = vk_cmd_enqueue_CmdDispatch,
     .CmdDispatchIndirect = vk_cmd_enqueue_CmdDispatchIndirect,
     .CmdSubpassShadingHUAWEI = vk_cmd_enqueue_CmdSubpassShadingHUAWEI,
+    .CmdDrawClusterHUAWEI = vk_cmd_enqueue_CmdDrawClusterHUAWEI,
+    .CmdDrawClusterIndirectHUAWEI = vk_cmd_enqueue_CmdDrawClusterIndirectHUAWEI,
     .CmdCopyBuffer = vk_cmd_enqueue_CmdCopyBuffer,
     .CmdCopyImage = vk_cmd_enqueue_CmdCopyImage,
     .CmdBlitImage = vk_cmd_enqueue_CmdBlitImage,
     .CmdCopyBufferToImage = vk_cmd_enqueue_CmdCopyBufferToImage,
     .CmdCopyImageToBuffer = vk_cmd_enqueue_CmdCopyImageToBuffer,
+    .CmdCopyMemoryIndirectNV = vk_cmd_enqueue_CmdCopyMemoryIndirectNV,
+    .CmdCopyMemoryToImageIndirectNV = vk_cmd_enqueue_CmdCopyMemoryToImageIndirectNV,
     .CmdUpdateBuffer = vk_cmd_enqueue_CmdUpdateBuffer,
     .CmdFillBuffer = vk_cmd_enqueue_CmdFillBuffer,
     .CmdClearColorImage = vk_cmd_enqueue_CmdClearColorImage,
@@ -31392,6 +34565,8 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .GetPastPresentationTimingGOOGLE = vk_cmd_enqueue_GetPastPresentationTimingGOOGLE,
     .CmdSetViewportWScalingNV = vk_cmd_enqueue_CmdSetViewportWScalingNV,
     .CmdSetDiscardRectangleEXT = vk_cmd_enqueue_CmdSetDiscardRectangleEXT,
+    .CmdSetDiscardRectangleEnableEXT = vk_cmd_enqueue_CmdSetDiscardRectangleEnableEXT,
+    .CmdSetDiscardRectangleModeEXT = vk_cmd_enqueue_CmdSetDiscardRectangleModeEXT,
     .CmdSetSampleLocationsEXT = vk_cmd_enqueue_CmdSetSampleLocationsEXT,
     .GetBufferMemoryRequirements2 = vk_cmd_enqueue_GetBufferMemoryRequirements2,
     .GetBufferMemoryRequirements2KHR = vk_cmd_enqueue_GetBufferMemoryRequirements2KHR,
@@ -31488,6 +34663,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdEndQueryIndexedEXT = vk_cmd_enqueue_CmdEndQueryIndexedEXT,
     .CmdDrawIndirectByteCountEXT = vk_cmd_enqueue_CmdDrawIndirectByteCountEXT,
     .CmdSetExclusiveScissorNV = vk_cmd_enqueue_CmdSetExclusiveScissorNV,
+    .CmdSetExclusiveScissorEnableNV = vk_cmd_enqueue_CmdSetExclusiveScissorEnableNV,
     .CmdBindShadingRateImageNV = vk_cmd_enqueue_CmdBindShadingRateImageNV,
     .CmdSetViewportShadingRatePaletteNV = vk_cmd_enqueue_CmdSetViewportShadingRatePaletteNV,
     .CmdSetCoarseSampleOrderNV = vk_cmd_enqueue_CmdSetCoarseSampleOrderNV,
@@ -31610,7 +34786,6 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdSetLogicOpEXT = vk_cmd_enqueue_CmdSetLogicOpEXT,
     .CmdSetPrimitiveRestartEnable = vk_cmd_enqueue_CmdSetPrimitiveRestartEnable,
     .CmdSetPrimitiveRestartEnableEXT = vk_cmd_enqueue_CmdSetPrimitiveRestartEnableEXT,
-    .CreatePrivateDataSlot = vk_cmd_enqueue_CreatePrivateDataSlot,
     .CmdSetTessellationDomainOriginEXT = vk_cmd_enqueue_CmdSetTessellationDomainOriginEXT,
     .CmdSetDepthClampEnableEXT = vk_cmd_enqueue_CmdSetDepthClampEnableEXT,
     .CmdSetPolygonModeEXT = vk_cmd_enqueue_CmdSetPolygonModeEXT,
@@ -31642,6 +34817,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdSetShadingRateImageEnableNV = vk_cmd_enqueue_CmdSetShadingRateImageEnableNV,
     .CmdSetCoverageReductionModeNV = vk_cmd_enqueue_CmdSetCoverageReductionModeNV,
     .CmdSetRepresentativeFragmentTestEnableNV = vk_cmd_enqueue_CmdSetRepresentativeFragmentTestEnableNV,
+    .CreatePrivateDataSlot = vk_cmd_enqueue_CreatePrivateDataSlot,
     .CreatePrivateDataSlotEXT = vk_cmd_enqueue_CreatePrivateDataSlotEXT,
     .DestroyPrivateDataSlot = vk_cmd_enqueue_DestroyPrivateDataSlot,
     .DestroyPrivateDataSlotEXT = vk_cmd_enqueue_DestroyPrivateDataSlotEXT,
@@ -31680,71 +34856,35 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .CmdWriteTimestamp2KHR = vk_cmd_enqueue_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = vk_cmd_enqueue_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = vk_cmd_enqueue_GetQueueCheckpointData2NV,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionKHR = vk_cmd_enqueue_CreateVideoSessionKHR,
-#elif defined(_MSC_VER)
-    .CreateVideoSessionKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionKHR = vk_cmd_enqueue_DestroyVideoSessionKHR,
-#elif defined(_MSC_VER)
-    .DestroyVideoSessionKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionParametersKHR = vk_cmd_enqueue_CreateVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .CreateVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .UpdateVideoSessionParametersKHR = vk_cmd_enqueue_UpdateVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .UpdateVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionParametersKHR = vk_cmd_enqueue_DestroyVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .DestroyVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetVideoSessionMemoryRequirementsKHR = vk_cmd_enqueue_GetVideoSessionMemoryRequirementsKHR,
-#elif defined(_MSC_VER)
-    .GetVideoSessionMemoryRequirementsKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .BindVideoSessionMemoryKHR = vk_cmd_enqueue_BindVideoSessionMemoryKHR,
-#elif defined(_MSC_VER)
-    .BindVideoSessionMemoryKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdDecodeVideoKHR = vk_cmd_enqueue_CmdDecodeVideoKHR,
-#elif defined(_MSC_VER)
-    .CmdDecodeVideoKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdBeginVideoCodingKHR = vk_cmd_enqueue_CmdBeginVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdBeginVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdControlVideoCodingKHR = vk_cmd_enqueue_CmdControlVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdControlVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdEndVideoCodingKHR = vk_cmd_enqueue_CmdEndVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdEndVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    .CmdEncodeVideoKHR = vk_cmd_enqueue_CmdEncodeVideoKHR,
-#elif defined(_MSC_VER)
-    .CmdEncodeVideoKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
+    .CmdDecompressMemoryNV = vk_cmd_enqueue_CmdDecompressMemoryNV,
+    .CmdDecompressMemoryIndirectCountNV = vk_cmd_enqueue_CmdDecompressMemoryIndirectCountNV,
     .CreateCuModuleNVX = vk_cmd_enqueue_CreateCuModuleNVX,
     .CreateCuFunctionNVX = vk_cmd_enqueue_CreateCuFunctionNVX,
     .DestroyCuModuleNVX = vk_cmd_enqueue_DestroyCuModuleNVX,
     .DestroyCuFunctionNVX = vk_cmd_enqueue_DestroyCuFunctionNVX,
     .CmdCuLaunchKernelNVX = vk_cmd_enqueue_CmdCuLaunchKernelNVX,
+    .GetDescriptorSetLayoutSizeEXT = vk_cmd_enqueue_GetDescriptorSetLayoutSizeEXT,
+    .GetDescriptorSetLayoutBindingOffsetEXT = vk_cmd_enqueue_GetDescriptorSetLayoutBindingOffsetEXT,
+    .GetDescriptorEXT = vk_cmd_enqueue_GetDescriptorEXT,
+    .CmdBindDescriptorBuffersEXT = vk_cmd_enqueue_CmdBindDescriptorBuffersEXT,
+    .CmdSetDescriptorBufferOffsetsEXT = vk_cmd_enqueue_CmdSetDescriptorBufferOffsetsEXT,
+    .CmdBindDescriptorBufferEmbeddedSamplersEXT = vk_cmd_enqueue_CmdBindDescriptorBufferEmbeddedSamplersEXT,
+    .GetBufferOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_GetBufferOpaqueCaptureDescriptorDataEXT,
+    .GetImageOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_GetImageOpaqueCaptureDescriptorDataEXT,
+    .GetImageViewOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_GetImageViewOpaqueCaptureDescriptorDataEXT,
+    .GetSamplerOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_GetSamplerOpaqueCaptureDescriptorDataEXT,
+    .GetAccelerationStructureOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT,
     .SetDeviceMemoryPriorityEXT = vk_cmd_enqueue_SetDeviceMemoryPriorityEXT,
     .WaitForPresentKHR = vk_cmd_enqueue_WaitForPresentKHR,
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -31808,6 +34948,13 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_device_entrypoints = {
     .BindOpticalFlowSessionImageNV = vk_cmd_enqueue_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = vk_cmd_enqueue_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = vk_cmd_enqueue_GetDeviceFaultInfoEXT,
+    .ReleaseSwapchainImagesEXT = vk_cmd_enqueue_ReleaseSwapchainImagesEXT,
+    .MapMemory2KHR = vk_cmd_enqueue_MapMemory2KHR,
+    .UnmapMemory2KHR = vk_cmd_enqueue_UnmapMemory2KHR,
+    .CreateShadersEXT = vk_cmd_enqueue_CreateShadersEXT,
+    .DestroyShaderEXT = vk_cmd_enqueue_DestroyShaderEXT,
+    .GetShaderBinaryDataEXT = vk_cmd_enqueue_GetShaderBinaryDataEXT,
+    .CmdBindShadersEXT = vk_cmd_enqueue_CmdBindShadersEXT,
 };
 const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_entrypoints = {
     .GetDeviceProcAddr = vk_cmd_enqueue_unless_primary_GetDeviceProcAddr,
@@ -31912,11 +35059,15 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdDispatch = vk_cmd_enqueue_unless_primary_CmdDispatch,
     .CmdDispatchIndirect = vk_cmd_enqueue_unless_primary_CmdDispatchIndirect,
     .CmdSubpassShadingHUAWEI = vk_cmd_enqueue_unless_primary_CmdSubpassShadingHUAWEI,
+    .CmdDrawClusterHUAWEI = vk_cmd_enqueue_unless_primary_CmdDrawClusterHUAWEI,
+    .CmdDrawClusterIndirectHUAWEI = vk_cmd_enqueue_unless_primary_CmdDrawClusterIndirectHUAWEI,
     .CmdCopyBuffer = vk_cmd_enqueue_unless_primary_CmdCopyBuffer,
     .CmdCopyImage = vk_cmd_enqueue_unless_primary_CmdCopyImage,
     .CmdBlitImage = vk_cmd_enqueue_unless_primary_CmdBlitImage,
     .CmdCopyBufferToImage = vk_cmd_enqueue_unless_primary_CmdCopyBufferToImage,
     .CmdCopyImageToBuffer = vk_cmd_enqueue_unless_primary_CmdCopyImageToBuffer,
+    .CmdCopyMemoryIndirectNV = vk_cmd_enqueue_unless_primary_CmdCopyMemoryIndirectNV,
+    .CmdCopyMemoryToImageIndirectNV = vk_cmd_enqueue_unless_primary_CmdCopyMemoryToImageIndirectNV,
     .CmdUpdateBuffer = vk_cmd_enqueue_unless_primary_CmdUpdateBuffer,
     .CmdFillBuffer = vk_cmd_enqueue_unless_primary_CmdFillBuffer,
     .CmdClearColorImage = vk_cmd_enqueue_unless_primary_CmdClearColorImage,
@@ -32051,6 +35202,8 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .GetPastPresentationTimingGOOGLE = vk_cmd_enqueue_unless_primary_GetPastPresentationTimingGOOGLE,
     .CmdSetViewportWScalingNV = vk_cmd_enqueue_unless_primary_CmdSetViewportWScalingNV,
     .CmdSetDiscardRectangleEXT = vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEXT,
+    .CmdSetDiscardRectangleEnableEXT = vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleEnableEXT,
+    .CmdSetDiscardRectangleModeEXT = vk_cmd_enqueue_unless_primary_CmdSetDiscardRectangleModeEXT,
     .CmdSetSampleLocationsEXT = vk_cmd_enqueue_unless_primary_CmdSetSampleLocationsEXT,
     .GetBufferMemoryRequirements2 = vk_cmd_enqueue_unless_primary_GetBufferMemoryRequirements2,
     .GetBufferMemoryRequirements2KHR = vk_cmd_enqueue_unless_primary_GetBufferMemoryRequirements2KHR,
@@ -32147,6 +35300,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdEndQueryIndexedEXT = vk_cmd_enqueue_unless_primary_CmdEndQueryIndexedEXT,
     .CmdDrawIndirectByteCountEXT = vk_cmd_enqueue_unless_primary_CmdDrawIndirectByteCountEXT,
     .CmdSetExclusiveScissorNV = vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorNV,
+    .CmdSetExclusiveScissorEnableNV = vk_cmd_enqueue_unless_primary_CmdSetExclusiveScissorEnableNV,
     .CmdBindShadingRateImageNV = vk_cmd_enqueue_unless_primary_CmdBindShadingRateImageNV,
     .CmdSetViewportShadingRatePaletteNV = vk_cmd_enqueue_unless_primary_CmdSetViewportShadingRatePaletteNV,
     .CmdSetCoarseSampleOrderNV = vk_cmd_enqueue_unless_primary_CmdSetCoarseSampleOrderNV,
@@ -32269,7 +35423,6 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdSetLogicOpEXT = vk_cmd_enqueue_unless_primary_CmdSetLogicOpEXT,
     .CmdSetPrimitiveRestartEnable = vk_cmd_enqueue_unless_primary_CmdSetPrimitiveRestartEnable,
     .CmdSetPrimitiveRestartEnableEXT = vk_cmd_enqueue_unless_primary_CmdSetPrimitiveRestartEnableEXT,
-    .CreatePrivateDataSlot = vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot,
     .CmdSetTessellationDomainOriginEXT = vk_cmd_enqueue_unless_primary_CmdSetTessellationDomainOriginEXT,
     .CmdSetDepthClampEnableEXT = vk_cmd_enqueue_unless_primary_CmdSetDepthClampEnableEXT,
     .CmdSetPolygonModeEXT = vk_cmd_enqueue_unless_primary_CmdSetPolygonModeEXT,
@@ -32301,6 +35454,7 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdSetShadingRateImageEnableNV = vk_cmd_enqueue_unless_primary_CmdSetShadingRateImageEnableNV,
     .CmdSetCoverageReductionModeNV = vk_cmd_enqueue_unless_primary_CmdSetCoverageReductionModeNV,
     .CmdSetRepresentativeFragmentTestEnableNV = vk_cmd_enqueue_unless_primary_CmdSetRepresentativeFragmentTestEnableNV,
+    .CreatePrivateDataSlot = vk_cmd_enqueue_unless_primary_CreatePrivateDataSlot,
     .CreatePrivateDataSlotEXT = vk_cmd_enqueue_unless_primary_CreatePrivateDataSlotEXT,
     .DestroyPrivateDataSlot = vk_cmd_enqueue_unless_primary_DestroyPrivateDataSlot,
     .DestroyPrivateDataSlotEXT = vk_cmd_enqueue_unless_primary_DestroyPrivateDataSlotEXT,
@@ -32339,71 +35493,35 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .CmdWriteTimestamp2KHR = vk_cmd_enqueue_unless_primary_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = vk_cmd_enqueue_unless_primary_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = vk_cmd_enqueue_unless_primary_GetQueueCheckpointData2NV,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionKHR = vk_cmd_enqueue_unless_primary_CreateVideoSessionKHR,
-#elif defined(_MSC_VER)
-    .CreateVideoSessionKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionKHR = vk_cmd_enqueue_unless_primary_DestroyVideoSessionKHR,
-#elif defined(_MSC_VER)
-    .DestroyVideoSessionKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionParametersKHR = vk_cmd_enqueue_unless_primary_CreateVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .CreateVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .UpdateVideoSessionParametersKHR = vk_cmd_enqueue_unless_primary_UpdateVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .UpdateVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionParametersKHR = vk_cmd_enqueue_unless_primary_DestroyVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .DestroyVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetVideoSessionMemoryRequirementsKHR = vk_cmd_enqueue_unless_primary_GetVideoSessionMemoryRequirementsKHR,
-#elif defined(_MSC_VER)
-    .GetVideoSessionMemoryRequirementsKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .BindVideoSessionMemoryKHR = vk_cmd_enqueue_unless_primary_BindVideoSessionMemoryKHR,
-#elif defined(_MSC_VER)
-    .BindVideoSessionMemoryKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdDecodeVideoKHR = vk_cmd_enqueue_unless_primary_CmdDecodeVideoKHR,
-#elif defined(_MSC_VER)
-    .CmdDecodeVideoKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdBeginVideoCodingKHR = vk_cmd_enqueue_unless_primary_CmdBeginVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdBeginVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdControlVideoCodingKHR = vk_cmd_enqueue_unless_primary_CmdControlVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdControlVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdEndVideoCodingKHR = vk_cmd_enqueue_unless_primary_CmdEndVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdEndVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    .CmdEncodeVideoKHR = vk_cmd_enqueue_unless_primary_CmdEncodeVideoKHR,
-#elif defined(_MSC_VER)
-    .CmdEncodeVideoKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
+    .CmdDecompressMemoryNV = vk_cmd_enqueue_unless_primary_CmdDecompressMemoryNV,
+    .CmdDecompressMemoryIndirectCountNV = vk_cmd_enqueue_unless_primary_CmdDecompressMemoryIndirectCountNV,
     .CreateCuModuleNVX = vk_cmd_enqueue_unless_primary_CreateCuModuleNVX,
     .CreateCuFunctionNVX = vk_cmd_enqueue_unless_primary_CreateCuFunctionNVX,
     .DestroyCuModuleNVX = vk_cmd_enqueue_unless_primary_DestroyCuModuleNVX,
     .DestroyCuFunctionNVX = vk_cmd_enqueue_unless_primary_DestroyCuFunctionNVX,
     .CmdCuLaunchKernelNVX = vk_cmd_enqueue_unless_primary_CmdCuLaunchKernelNVX,
+    .GetDescriptorSetLayoutSizeEXT = vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutSizeEXT,
+    .GetDescriptorSetLayoutBindingOffsetEXT = vk_cmd_enqueue_unless_primary_GetDescriptorSetLayoutBindingOffsetEXT,
+    .GetDescriptorEXT = vk_cmd_enqueue_unless_primary_GetDescriptorEXT,
+    .CmdBindDescriptorBuffersEXT = vk_cmd_enqueue_unless_primary_CmdBindDescriptorBuffersEXT,
+    .CmdSetDescriptorBufferOffsetsEXT = vk_cmd_enqueue_unless_primary_CmdSetDescriptorBufferOffsetsEXT,
+    .CmdBindDescriptorBufferEmbeddedSamplersEXT = vk_cmd_enqueue_unless_primary_CmdBindDescriptorBufferEmbeddedSamplersEXT,
+    .GetBufferOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_unless_primary_GetBufferOpaqueCaptureDescriptorDataEXT,
+    .GetImageOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_unless_primary_GetImageOpaqueCaptureDescriptorDataEXT,
+    .GetImageViewOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_unless_primary_GetImageViewOpaqueCaptureDescriptorDataEXT,
+    .GetSamplerOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_unless_primary_GetSamplerOpaqueCaptureDescriptorDataEXT,
+    .GetAccelerationStructureOpaqueCaptureDescriptorDataEXT = vk_cmd_enqueue_unless_primary_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT,
     .SetDeviceMemoryPriorityEXT = vk_cmd_enqueue_unless_primary_SetDeviceMemoryPriorityEXT,
     .WaitForPresentKHR = vk_cmd_enqueue_unless_primary_WaitForPresentKHR,
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -32467,5 +35585,13 @@ const struct vk_device_entrypoint_table vk_cmd_enqueue_unless_primary_device_ent
     .BindOpticalFlowSessionImageNV = vk_cmd_enqueue_unless_primary_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = vk_cmd_enqueue_unless_primary_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = vk_cmd_enqueue_unless_primary_GetDeviceFaultInfoEXT,
+    .ReleaseSwapchainImagesEXT = vk_cmd_enqueue_unless_primary_ReleaseSwapchainImagesEXT,
+    .MapMemory2KHR = vk_cmd_enqueue_unless_primary_MapMemory2KHR,
+    .UnmapMemory2KHR = vk_cmd_enqueue_unless_primary_UnmapMemory2KHR,
+    .CreateShadersEXT = vk_cmd_enqueue_unless_primary_CreateShadersEXT,
+    .DestroyShaderEXT = vk_cmd_enqueue_unless_primary_DestroyShaderEXT,
+    .GetShaderBinaryDataEXT = vk_cmd_enqueue_unless_primary_GetShaderBinaryDataEXT,
+    .CmdBindShadersEXT = vk_cmd_enqueue_unless_primary_CmdBindShadersEXT,
 };
+
 

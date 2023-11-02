@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2023/01/28 08:56:35 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	mesa
 
@@ -23,7 +23,6 @@ SRCS=	accum.c \
 	conservativeraster.c \
 	context.c \
 	copyimage.c \
-	cpuinfo.c \
 	debug.c \
 	debug_output.c \
 	depth.c \
@@ -56,6 +55,7 @@ SRCS=	accum.c \
 	glthread.c \
 	glthread_bufferobj.c \
 	glthread_draw.c \
+	glthread_draw_unroll.c \
 	glthread_get.c \
 	glthread_list.c \
 	glthread_shaderobj.c \
@@ -101,6 +101,8 @@ SRCS=	accum.c \
 	syncobj.c \
 	texcompress.c \
 	texcompress_astc.cpp \
+	texcompress_astc_luts.cpp \
+	texcompress_astc_luts_wrap.cpp \
 	texcompress_bptc.c \
 	texcompress_cpal.c \
 	texcompress_etc.c \
@@ -126,12 +128,8 @@ SRCS=	accum.c \
 	version.c \
 	viewport.c \
 	es1_conversion.c \
-	m_debug_clip.c \
-	m_debug_norm.c \
-	m_debug_xform.c \
 	m_eval.c \
 	m_matrix.c \
-	m_vector.c \
 	arbprogparse.c \
 	link_program.cpp \
 	prog_cache.c \
@@ -146,7 +144,6 @@ SRCS=	accum.c \
 	programopt.c \
 	symbol_table.c \
 	st_atifs_to_nir.c \
-	st_atom.c \
 	st_atom_array.cpp \
 	st_atom_atomicbuf.c \
 	st_atom_blend.c \
@@ -199,6 +196,7 @@ SRCS=	accum.c \
 	st_sampler_view.c \
 	st_scissor.c \
 	st_shader_cache.c \
+	st_texcompress_compute.c \
 	st_texture.c \
 	st_vdpau.c \
 	vbo_context.c \
@@ -211,13 +209,7 @@ SRCS=	accum.c \
 	vbo_save.c \
 	vbo_save_api.c \
 	vbo_save_draw.c \
-	vbo_save_loopback.c \
-	common_x86.c
-
-.if ${MACHINE_ARCH} == "i386"
-SRCS+=	common_x86_asm.S \
-	read_rgba_span_x86.S
-.endif
+	vbo_save_loopback.c
 
 SRCS+=	lex.yy.c \
 	program_parse.tab.c \

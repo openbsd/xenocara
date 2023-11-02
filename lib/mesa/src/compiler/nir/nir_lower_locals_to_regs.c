@@ -19,10 +19,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
- *
- * Authors:
- *    Jason Ekstrand (jason@jlekstrand.net)
- *
  */
 
 #include "nir.h"
@@ -166,7 +162,7 @@ get_deref_reg_src(nir_deref_instr *deref, struct locals_to_regs_state *state)
          }
 
          assert(src.reg.indirect->is_ssa);
-         nir_ssa_def *index = nir_i2i(b, nir_ssa_for_src(b, d->arr.index, 1), 32);
+         nir_ssa_def *index = nir_i2iN(b, nir_ssa_for_src(b, d->arr.index, 1), 32);
          src.reg.indirect->ssa =
             nir_iadd(b, src.reg.indirect->ssa,
                         nir_imul_imm(b, index, inner_array_size));

@@ -48,7 +48,7 @@
 #define DBG_CHANNEL DBG_ADAPTER
 
 /* On non-x86 archs, Box86 has issues with thread_submit. */
-#if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
+#if DETECT_ARCH_X86 || DETECT_ARCH_X86_64
 #define DEFAULT_THREADSUBMIT true
 #else
 #define DEFAULT_THREADSUBMIT false
@@ -230,7 +230,7 @@ drm_create_adapter( int fd,
 
     /* Although the fd is provided from external source, mesa/nine
      * takes ownership of it. */
-    fd = loader_get_user_preferred_fd(fd, &different_device);
+    different_device = loader_get_user_preferred_fd(&fd, NULL);
     ctx->fd = fd;
     ctx->base.linear_framebuffer = different_device;
 

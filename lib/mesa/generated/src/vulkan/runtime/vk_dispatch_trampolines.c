@@ -98,7 +98,7 @@ vk_tramp_GetPhysicalDeviceSparseImageFormatProperties(VkPhysicalDevice physicalD
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     vk_physical_device->dispatch_table.GetPhysicalDeviceSparseImageFormatProperties(physicalDevice, format, type, samples, usage, tiling, pPropertyCount, pProperties);
 }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                static VKAPI_ATTR VkResult VKAPI_CALL
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_GetPhysicalDeviceDisplayPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties)
 {
     
@@ -356,7 +356,7 @@ vk_tramp_GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice physicalDevice, 
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     return vk_physical_device->dispatch_table.GetPhysicalDevicePresentRectanglesKHR(physicalDevice, surface, pRectCount, pRects);
 }
-                                                                    static VKAPI_ATTR void VKAPI_CALL
+                                                                            static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_GetPhysicalDeviceMultisamplePropertiesEXT(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits samples, VkMultisamplePropertiesEXT* pMultisampleProperties)
 {
     
@@ -412,7 +412,7 @@ vk_tramp_GetPhysicalDeviceCalibrateableTimeDomainsEXT(VkPhysicalDevice physicalD
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     return vk_physical_device->dispatch_table.GetPhysicalDeviceCalibrateableTimeDomainsEXT(physicalDevice, pTimeDomainCount, pTimeDomains);
 }
-                                                                                                                                                                                                                                                                                                                                static VKAPI_ATTR VkResult VKAPI_CALL
+                                                                                                                                                                                                                                                                                                                                    static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_GetPhysicalDeviceCooperativeMatrixPropertiesNV(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesNV* pProperties)
 {
     
@@ -463,16 +463,13 @@ vk_tramp_GetPhysicalDeviceFragmentShadingRatesKHR(VkPhysicalDevice physicalDevic
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     return vk_physical_device->dispatch_table.GetPhysicalDeviceFragmentShadingRatesKHR(physicalDevice, pFragmentShadingRateCount, pFragmentShadingRates);
 }
-                                                                        #ifdef VK_ENABLE_BETA_EXTENSIONS
-static VKAPI_ATTR VkResult VKAPI_CALL
+                                                                        static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_GetPhysicalDeviceVideoCapabilitiesKHR(VkPhysicalDevice physicalDevice, const VkVideoProfileInfoKHR* pVideoProfile, VkVideoCapabilitiesKHR* pCapabilities)
 {
     
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     return vk_physical_device->dispatch_table.GetPhysicalDeviceVideoCapabilitiesKHR(physicalDevice, pVideoProfile, pCapabilities);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_GetPhysicalDeviceVideoFormatPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceVideoFormatInfoKHR* pVideoFormatInfo, uint32_t* pVideoFormatPropertyCount, VkVideoFormatPropertiesKHR* pVideoFormatProperties)
 {
@@ -480,8 +477,7 @@ vk_tramp_GetPhysicalDeviceVideoFormatPropertiesKHR(VkPhysicalDevice physicalDevi
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     return vk_physical_device->dispatch_table.GetPhysicalDeviceVideoFormatPropertiesKHR(physicalDevice, pVideoFormatInfo, pVideoFormatPropertyCount, pVideoFormatProperties);
 }
-#endif
-                                                                        static VKAPI_ATTR VkResult VKAPI_CALL
+                                                                                                                        static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_AcquireDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, VkDisplayKHR display)
 {
     
@@ -502,7 +498,7 @@ vk_tramp_GetPhysicalDeviceOpticalFlowImageFormatsNV(VkPhysicalDevice physicalDev
     VK_FROM_HANDLE(vk_physical_device, vk_physical_device, physicalDevice);
     return vk_physical_device->dispatch_table.GetPhysicalDeviceOpticalFlowImageFormatsNV(physicalDevice, pOpticalFlowImageFormatInfo, pFormatCount, pImageFormatProperties);
 }
-                    
+                                                
 struct vk_physical_device_dispatch_table vk_physical_device_trampolines = {
                         .GetPhysicalDeviceProperties = vk_tramp_GetPhysicalDeviceProperties,
     .GetPhysicalDeviceQueueFamilyProperties = vk_tramp_GetPhysicalDeviceQueueFamilyProperties,
@@ -514,7 +510,7 @@ struct vk_physical_device_dispatch_table vk_physical_device_trampolines = {
                     .EnumerateDeviceLayerProperties = vk_tramp_EnumerateDeviceLayerProperties,
     .EnumerateDeviceExtensionProperties = vk_tramp_EnumerateDeviceExtensionProperties,
                                                                     .GetPhysicalDeviceSparseImageFormatProperties = vk_tramp_GetPhysicalDeviceSparseImageFormatProperties,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                    .GetPhysicalDeviceDisplayPropertiesKHR = vk_tramp_GetPhysicalDeviceDisplayPropertiesKHR,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    .GetPhysicalDeviceDisplayPropertiesKHR = vk_tramp_GetPhysicalDeviceDisplayPropertiesKHR,
     .GetPhysicalDeviceDisplayPlanePropertiesKHR = vk_tramp_GetPhysicalDeviceDisplayPlanePropertiesKHR,
     .GetDisplayPlaneSupportedDisplaysKHR = vk_tramp_GetDisplayPlaneSupportedDisplaysKHR,
     .GetDisplayModePropertiesKHR = vk_tramp_GetDisplayModePropertiesKHR,
@@ -568,7 +564,7 @@ struct vk_physical_device_dispatch_table vk_physical_device_trampolines = {
 #endif
                     .GetPhysicalDeviceSurfaceCapabilities2EXT = vk_tramp_GetPhysicalDeviceSurfaceCapabilities2EXT,
                                                                 .GetPhysicalDevicePresentRectanglesKHR = vk_tramp_GetPhysicalDevicePresentRectanglesKHR,
-                                                                        .GetPhysicalDeviceMultisamplePropertiesEXT = vk_tramp_GetPhysicalDeviceMultisamplePropertiesEXT,
+                                                                                .GetPhysicalDeviceMultisamplePropertiesEXT = vk_tramp_GetPhysicalDeviceMultisamplePropertiesEXT,
     .GetPhysicalDeviceSurfaceCapabilities2KHR = vk_tramp_GetPhysicalDeviceSurfaceCapabilities2KHR,
     .GetPhysicalDeviceSurfaceFormats2KHR = vk_tramp_GetPhysicalDeviceSurfaceFormats2KHR,
     .GetPhysicalDeviceDisplayProperties2KHR = vk_tramp_GetPhysicalDeviceDisplayProperties2KHR,
@@ -576,7 +572,7 @@ struct vk_physical_device_dispatch_table vk_physical_device_trampolines = {
     .GetDisplayModeProperties2KHR = vk_tramp_GetDisplayModeProperties2KHR,
     .GetDisplayPlaneCapabilities2KHR = vk_tramp_GetDisplayPlaneCapabilities2KHR,
                                                                                                                         .GetPhysicalDeviceCalibrateableTimeDomainsEXT = vk_tramp_GetPhysicalDeviceCalibrateableTimeDomainsEXT,
-                                                                                                                                                                                                                                                                                                                                    .GetPhysicalDeviceCooperativeMatrixPropertiesNV = vk_tramp_GetPhysicalDeviceCooperativeMatrixPropertiesNV,
+                                                                                                                                                                                                                                                                                                                                        .GetPhysicalDeviceCooperativeMatrixPropertiesNV = vk_tramp_GetPhysicalDeviceCooperativeMatrixPropertiesNV,
                             #ifdef VK_USE_PLATFORM_WIN32_KHR
     .GetPhysicalDeviceSurfacePresentModes2EXT = vk_tramp_GetPhysicalDeviceSurfacePresentModes2EXT,
 #endif
@@ -585,16 +581,12 @@ struct vk_physical_device_dispatch_table vk_physical_device_trampolines = {
                                         .GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV = vk_tramp_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV,
                                                                 .GetPhysicalDeviceToolProperties = vk_tramp_GetPhysicalDeviceToolProperties,
                                                                                                                                                                                                                                                                                                                                                                                                 .GetPhysicalDeviceFragmentShadingRatesKHR = vk_tramp_GetPhysicalDeviceFragmentShadingRatesKHR,
-                                                                        #ifdef VK_ENABLE_BETA_EXTENSIONS
-    .GetPhysicalDeviceVideoCapabilitiesKHR = vk_tramp_GetPhysicalDeviceVideoCapabilitiesKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+                                                                            .GetPhysicalDeviceVideoCapabilitiesKHR = vk_tramp_GetPhysicalDeviceVideoCapabilitiesKHR,
     .GetPhysicalDeviceVideoFormatPropertiesKHR = vk_tramp_GetPhysicalDeviceVideoFormatPropertiesKHR,
-#endif
-                                                                            .AcquireDrmDisplayEXT = vk_tramp_AcquireDrmDisplayEXT,
+                                                                                                                            .AcquireDrmDisplayEXT = vk_tramp_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = vk_tramp_GetDrmDisplayEXT,
                                                                                                                                         .GetPhysicalDeviceOpticalFlowImageFormatsNV = vk_tramp_GetPhysicalDeviceOpticalFlowImageFormatsNV,
-                    };
+                                                };
 
             static VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL
 vk_tramp_GetDeviceProcAddr(VkDevice device, const char* pName)
@@ -1203,6 +1195,18 @@ vk_tramp_CmdSubpassShadingHUAWEI(VkCommandBuffer commandBuffer)
     vk_object->device->dispatch_table.CmdSubpassShadingHUAWEI(commandBuffer);
 }
 static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdDrawClusterHUAWEI(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdDrawClusterHUAWEI(commandBuffer, groupCountX, groupCountY, groupCountZ);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdDrawClusterIndirectHUAWEI(commandBuffer, buffer, offset);
+}
+static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
@@ -1231,6 +1235,18 @@ vk_tramp_CmdCopyImageToBuffer(VkCommandBuffer commandBuffer, VkImage srcImage, V
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdCopyImageToBuffer(commandBuffer, srcImage, srcImageLayout, dstBuffer, regionCount, pRegions);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdCopyMemoryIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdCopyMemoryIndirectNV(commandBuffer, copyBufferAddress, copyCount, stride);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdCopyMemoryToImageIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride, VkImage dstImage, VkImageLayout dstImageLayout, const VkImageSubresourceLayers* pImageSubresources)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdCopyMemoryToImageIndirectNV(commandBuffer, copyBufferAddress, copyCount, stride, dstImage, dstImageLayout, pImageSubresources);
 }
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdUpdateBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData)
@@ -1741,6 +1757,18 @@ vk_tramp_CmdSetDiscardRectangleEXT(VkCommandBuffer commandBuffer, uint32_t first
     vk_object->device->dispatch_table.CmdSetDiscardRectangleEXT(commandBuffer, firstDiscardRectangle, discardRectangleCount, pDiscardRectangles);
 }
 static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdSetDiscardRectangleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 discardRectangleEnable)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdSetDiscardRectangleEnableEXT(commandBuffer, discardRectangleEnable);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdSetDiscardRectangleModeEXT(VkCommandBuffer commandBuffer, VkDiscardRectangleModeEXT discardRectangleMode)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdSetDiscardRectangleModeEXT(commandBuffer, discardRectangleMode);
+}
+static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdSetSampleLocationsEXT(VkCommandBuffer commandBuffer, const VkSampleLocationsInfoEXT* pSampleLocationsInfo)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
@@ -2063,6 +2091,12 @@ vk_tramp_CmdSetExclusiveScissorNV(VkCommandBuffer commandBuffer, uint32_t firstE
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdSetExclusiveScissorNV(commandBuffer, firstExclusiveScissor, exclusiveScissorCount, pExclusiveScissors);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdSetExclusiveScissorEnableNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkBool32* pExclusiveScissorEnables)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdSetExclusiveScissorEnableNV(commandBuffer, firstExclusiveScissor, exclusiveScissorCount, pExclusiveScissorEnables);
 }
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdBindShadingRateImageNV(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout)
@@ -2610,13 +2644,7 @@ vk_tramp_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 pr
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdSetPrimitiveRestartEnable(commandBuffer, primitiveRestartEnable);
 }
-    static VKAPI_ATTR VkResult VKAPI_CALL
-vk_tramp_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot)
-{
-    VK_FROM_HANDLE(vk_device, vk_device, device);
-    return vk_device->dispatch_table.CreatePrivateDataSlot(device, pCreateInfo, pAllocator, pPrivateDataSlot);
-}
-static VKAPI_ATTR void VKAPI_CALL
+    static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdSetTessellationDomainOriginEXT(VkCommandBuffer commandBuffer, VkTessellationDomainOrigin domainOrigin)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
@@ -2802,6 +2830,12 @@ vk_tramp_CmdSetRepresentativeFragmentTestEnableNV(VkCommandBuffer commandBuffer,
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdSetRepresentativeFragmentTestEnableNV(commandBuffer, representativeFragmentTestEnable);
 }
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.CreatePrivateDataSlot(device, pCreateInfo, pAllocator, pPrivateDataSlot);
+}
     static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator)
 {
@@ -2934,102 +2968,84 @@ vk_tramp_GetQueueCheckpointData2NV(VkQueue queue, uint32_t* pCheckpointDataCount
     struct vk_object_base *vk_object = (struct vk_object_base *)queue;
     vk_object->device->dispatch_table.GetQueueCheckpointData2NV(queue, pCheckpointDataCount, pCheckpointData);
 }
-        #ifdef VK_ENABLE_BETA_EXTENSIONS
-static VKAPI_ATTR VkResult VKAPI_CALL
+        static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     return vk_device->dispatch_table.CreateVideoSessionKHR(device, pCreateInfo, pAllocator, pVideoSession);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_DestroyVideoSessionKHR(VkDevice device, VkVideoSessionKHR videoSession, const VkAllocationCallbacks* pAllocator)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     vk_device->dispatch_table.DestroyVideoSessionKHR(device, videoSession, pAllocator);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_CreateVideoSessionParametersKHR(VkDevice device, const VkVideoSessionParametersCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionParametersKHR* pVideoSessionParameters)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     return vk_device->dispatch_table.CreateVideoSessionParametersKHR(device, pCreateInfo, pAllocator, pVideoSessionParameters);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_UpdateVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkVideoSessionParametersUpdateInfoKHR* pUpdateInfo)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     return vk_device->dispatch_table.UpdateVideoSessionParametersKHR(device, videoSessionParameters, pUpdateInfo);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_DestroyVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkAllocationCallbacks* pAllocator)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     vk_device->dispatch_table.DestroyVideoSessionParametersKHR(device, videoSessionParameters, pAllocator);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_GetVideoSessionMemoryRequirementsKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t* pMemoryRequirementsCount, VkVideoSessionMemoryRequirementsKHR* pMemoryRequirements)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     return vk_device->dispatch_table.GetVideoSessionMemoryRequirementsKHR(device, videoSession, pMemoryRequirementsCount, pMemoryRequirements);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_BindVideoSessionMemoryKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t bindSessionMemoryInfoCount, const VkBindVideoSessionMemoryInfoKHR* pBindSessionMemoryInfos)
 {
     VK_FROM_HANDLE(vk_device, vk_device, device);
     return vk_device->dispatch_table.BindVideoSessionMemoryKHR(device, videoSession, bindSessionMemoryInfoCount, pBindSessionMemoryInfos);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdDecodeVideoKHR(commandBuffer, pDecodeInfo);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdBeginVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoBeginCodingInfoKHR* pBeginInfo)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdBeginVideoCodingKHR(commandBuffer, pBeginInfo);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdControlVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoCodingControlInfoKHR* pCodingControlInfo)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdControlVideoCodingKHR(commandBuffer, pCodingControlInfo);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_CmdEndVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoEndCodingInfoKHR* pEndCodingInfo)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdEndVideoCodingKHR(commandBuffer, pEndCodingInfo);
 }
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
 static VKAPI_ATTR void VKAPI_CALL
-vk_tramp_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo)
+vk_tramp_CmdDecompressMemoryNV(VkCommandBuffer commandBuffer, uint32_t decompressRegionCount, const VkDecompressMemoryRegionNV* pDecompressMemoryRegions)
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
-    vk_object->device->dispatch_table.CmdEncodeVideoKHR(commandBuffer, pEncodeInfo);
+    vk_object->device->dispatch_table.CmdDecompressMemoryNV(commandBuffer, decompressRegionCount, pDecompressMemoryRegions);
 }
-#endif
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdDecompressMemoryIndirectCountNV(VkCommandBuffer commandBuffer, VkDeviceAddress indirectCommandsAddress, VkDeviceAddress indirectCommandsCountAddress, uint32_t stride)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdDecompressMemoryIndirectCountNV(commandBuffer, indirectCommandsAddress, indirectCommandsCountAddress, stride);
+}
 static VKAPI_ATTR VkResult VKAPI_CALL
 vk_tramp_CreateCuModuleNVX(VkDevice device, const VkCuModuleCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuModuleNVX* pModule)
 {
@@ -3059,6 +3075,72 @@ vk_tramp_CmdCuLaunchKernelNVX(VkCommandBuffer commandBuffer, const VkCuLaunchInf
 {
     struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
     vk_object->device->dispatch_table.CmdCuLaunchKernelNVX(commandBuffer, pLaunchInfo);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_GetDescriptorSetLayoutSizeEXT(VkDevice device, VkDescriptorSetLayout layout, VkDeviceSize* pLayoutSizeInBytes)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    vk_device->dispatch_table.GetDescriptorSetLayoutSizeEXT(device, layout, pLayoutSizeInBytes);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_GetDescriptorSetLayoutBindingOffsetEXT(VkDevice device, VkDescriptorSetLayout layout, uint32_t binding, VkDeviceSize* pOffset)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    vk_device->dispatch_table.GetDescriptorSetLayoutBindingOffsetEXT(device, layout, binding, pOffset);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_GetDescriptorEXT(VkDevice device, const VkDescriptorGetInfoEXT* pDescriptorInfo, size_t dataSize, void* pDescriptor)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    vk_device->dispatch_table.GetDescriptorEXT(device, pDescriptorInfo, dataSize, pDescriptor);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdBindDescriptorBuffersEXT(VkCommandBuffer commandBuffer, uint32_t bufferCount, const VkDescriptorBufferBindingInfoEXT* pBindingInfos)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdBindDescriptorBuffersEXT(commandBuffer, bufferCount, pBindingInfos);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdSetDescriptorBufferOffsetsEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t setCount, const uint32_t* pBufferIndices, const VkDeviceSize* pOffsets)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdSetDescriptorBufferOffsetsEXT(commandBuffer, pipelineBindPoint, layout, firstSet, setCount, pBufferIndices, pOffsets);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdBindDescriptorBufferEmbeddedSamplersEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdBindDescriptorBufferEmbeddedSamplersEXT(commandBuffer, pipelineBindPoint, layout, set);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_GetBufferOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkBufferCaptureDescriptorDataInfoEXT* pInfo, void* pData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.GetBufferOpaqueCaptureDescriptorDataEXT(device, pInfo, pData);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_GetImageOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageCaptureDescriptorDataInfoEXT* pInfo, void* pData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.GetImageOpaqueCaptureDescriptorDataEXT(device, pInfo, pData);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_GetImageViewOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageViewCaptureDescriptorDataInfoEXT* pInfo, void* pData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.GetImageViewOpaqueCaptureDescriptorDataEXT(device, pInfo, pData);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_GetSamplerOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkSamplerCaptureDescriptorDataInfoEXT* pInfo, void* pData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.GetSamplerOpaqueCaptureDescriptorDataEXT(device, pInfo, pData);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkAccelerationStructureCaptureDescriptorDataInfoEXT* pInfo, void* pData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.GetAccelerationStructureOpaqueCaptureDescriptorDataEXT(device, pInfo, pData);
 }
 static VKAPI_ATTR void VKAPI_CALL
 vk_tramp_SetDeviceMemoryPriorityEXT(VkDevice       device, VkDeviceMemory memory, float          priority)
@@ -3294,6 +3376,48 @@ vk_tramp_GetDeviceFaultInfoEXT(VkDevice device, VkDeviceFaultCountsEXT* pFaultCo
     VK_FROM_HANDLE(vk_device, vk_device, device);
     return vk_device->dispatch_table.GetDeviceFaultInfoEXT(device, pFaultCounts, pFaultInfo);
 }
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.ReleaseSwapchainImagesEXT(device, pReleaseInfo);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_MapMemory2KHR(VkDevice device, const VkMemoryMapInfoKHR* pMemoryMapInfo, void** ppData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.MapMemory2KHR(device, pMemoryMapInfo, ppData);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_UnmapMemory2KHR(VkDevice device, const VkMemoryUnmapInfoKHR* pMemoryUnmapInfo)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.UnmapMemory2KHR(device, pMemoryUnmapInfo);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_CreateShadersEXT(VkDevice device, uint32_t createInfoCount, const VkShaderCreateInfoEXT* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkShaderEXT* pShaders)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.CreateShadersEXT(device, createInfoCount, pCreateInfos, pAllocator, pShaders);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_DestroyShaderEXT(VkDevice device, VkShaderEXT shader, const VkAllocationCallbacks* pAllocator)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    vk_device->dispatch_table.DestroyShaderEXT(device, shader, pAllocator);
+}
+static VKAPI_ATTR VkResult VKAPI_CALL
+vk_tramp_GetShaderBinaryDataEXT(VkDevice device, VkShaderEXT shader, size_t* pDataSize, void* pData)
+{
+    VK_FROM_HANDLE(vk_device, vk_device, device);
+    return vk_device->dispatch_table.GetShaderBinaryDataEXT(device, shader, pDataSize, pData);
+}
+static VKAPI_ATTR void VKAPI_CALL
+vk_tramp_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders)
+{
+    struct vk_object_base *vk_object = (struct vk_object_base *)commandBuffer;
+    vk_object->device->dispatch_table.CmdBindShadersEXT(commandBuffer, stageCount, pStages, pShaders);
+}
 
 struct vk_device_dispatch_table vk_device_trampolines = {
                 .GetDeviceProcAddr = vk_tramp_GetDeviceProcAddr,
@@ -3397,11 +3521,15 @@ struct vk_device_dispatch_table vk_device_trampolines = {
     .CmdDispatch = vk_tramp_CmdDispatch,
     .CmdDispatchIndirect = vk_tramp_CmdDispatchIndirect,
     .CmdSubpassShadingHUAWEI = vk_tramp_CmdSubpassShadingHUAWEI,
+    .CmdDrawClusterHUAWEI = vk_tramp_CmdDrawClusterHUAWEI,
+    .CmdDrawClusterIndirectHUAWEI = vk_tramp_CmdDrawClusterIndirectHUAWEI,
     .CmdCopyBuffer = vk_tramp_CmdCopyBuffer,
     .CmdCopyImage = vk_tramp_CmdCopyImage,
     .CmdBlitImage = vk_tramp_CmdBlitImage,
     .CmdCopyBufferToImage = vk_tramp_CmdCopyBufferToImage,
     .CmdCopyImageToBuffer = vk_tramp_CmdCopyImageToBuffer,
+    .CmdCopyMemoryIndirectNV = vk_tramp_CmdCopyMemoryIndirectNV,
+    .CmdCopyMemoryToImageIndirectNV = vk_tramp_CmdCopyMemoryToImageIndirectNV,
     .CmdUpdateBuffer = vk_tramp_CmdUpdateBuffer,
     .CmdFillBuffer = vk_tramp_CmdFillBuffer,
     .CmdClearColorImage = vk_tramp_CmdClearColorImage,
@@ -3505,6 +3633,8 @@ struct vk_device_dispatch_table vk_device_trampolines = {
     .GetPastPresentationTimingGOOGLE = vk_tramp_GetPastPresentationTimingGOOGLE,
                 .CmdSetViewportWScalingNV = vk_tramp_CmdSetViewportWScalingNV,
     .CmdSetDiscardRectangleEXT = vk_tramp_CmdSetDiscardRectangleEXT,
+    .CmdSetDiscardRectangleEnableEXT = vk_tramp_CmdSetDiscardRectangleEnableEXT,
+    .CmdSetDiscardRectangleModeEXT = vk_tramp_CmdSetDiscardRectangleModeEXT,
     .CmdSetSampleLocationsEXT = vk_tramp_CmdSetSampleLocationsEXT,
                                 .GetBufferMemoryRequirements2 = vk_tramp_GetBufferMemoryRequirements2,
         .GetImageMemoryRequirements2 = vk_tramp_GetImageMemoryRequirements2,
@@ -3569,6 +3699,7 @@ struct vk_device_dispatch_table vk_device_trampolines = {
     .CmdEndQueryIndexedEXT = vk_tramp_CmdEndQueryIndexedEXT,
     .CmdDrawIndirectByteCountEXT = vk_tramp_CmdDrawIndirectByteCountEXT,
     .CmdSetExclusiveScissorNV = vk_tramp_CmdSetExclusiveScissorNV,
+    .CmdSetExclusiveScissorEnableNV = vk_tramp_CmdSetExclusiveScissorEnableNV,
     .CmdBindShadingRateImageNV = vk_tramp_CmdBindShadingRateImageNV,
     .CmdSetViewportShadingRatePaletteNV = vk_tramp_CmdSetViewportShadingRatePaletteNV,
     .CmdSetCoarseSampleOrderNV = vk_tramp_CmdSetCoarseSampleOrderNV,
@@ -3665,8 +3796,7 @@ struct vk_device_dispatch_table vk_device_trampolines = {
         .CmdSetDepthBiasEnable = vk_tramp_CmdSetDepthBiasEnable,
         .CmdSetLogicOpEXT = vk_tramp_CmdSetLogicOpEXT,
     .CmdSetPrimitiveRestartEnable = vk_tramp_CmdSetPrimitiveRestartEnable,
-        .CreatePrivateDataSlot = vk_tramp_CreatePrivateDataSlot,
-    .CmdSetTessellationDomainOriginEXT = vk_tramp_CmdSetTessellationDomainOriginEXT,
+        .CmdSetTessellationDomainOriginEXT = vk_tramp_CmdSetTessellationDomainOriginEXT,
     .CmdSetDepthClampEnableEXT = vk_tramp_CmdSetDepthClampEnableEXT,
     .CmdSetPolygonModeEXT = vk_tramp_CmdSetPolygonModeEXT,
     .CmdSetRasterizationSamplesEXT = vk_tramp_CmdSetRasterizationSamplesEXT,
@@ -3697,6 +3827,7 @@ struct vk_device_dispatch_table vk_device_trampolines = {
     .CmdSetShadingRateImageEnableNV = vk_tramp_CmdSetShadingRateImageEnableNV,
     .CmdSetCoverageReductionModeNV = vk_tramp_CmdSetCoverageReductionModeNV,
     .CmdSetRepresentativeFragmentTestEnableNV = vk_tramp_CmdSetRepresentativeFragmentTestEnableNV,
+    .CreatePrivateDataSlot = vk_tramp_CreatePrivateDataSlot,
         .DestroyPrivateDataSlot = vk_tramp_DestroyPrivateDataSlot,
         .SetPrivateData = vk_tramp_SetPrivateData,
         .GetPrivateData = vk_tramp_GetPrivateData,
@@ -3719,47 +3850,35 @@ struct vk_device_dispatch_table vk_device_trampolines = {
         .CmdWriteTimestamp2 = vk_tramp_CmdWriteTimestamp2,
         .CmdWriteBufferMarker2AMD = vk_tramp_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = vk_tramp_GetQueueCheckpointData2NV,
-        #ifdef VK_ENABLE_BETA_EXTENSIONS
-    .CreateVideoSessionKHR = vk_tramp_CreateVideoSessionKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+            .CreateVideoSessionKHR = vk_tramp_CreateVideoSessionKHR,
     .DestroyVideoSessionKHR = vk_tramp_DestroyVideoSessionKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionParametersKHR = vk_tramp_CreateVideoSessionParametersKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .UpdateVideoSessionParametersKHR = vk_tramp_UpdateVideoSessionParametersKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionParametersKHR = vk_tramp_DestroyVideoSessionParametersKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetVideoSessionMemoryRequirementsKHR = vk_tramp_GetVideoSessionMemoryRequirementsKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .BindVideoSessionMemoryKHR = vk_tramp_BindVideoSessionMemoryKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdDecodeVideoKHR = vk_tramp_CmdDecodeVideoKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdBeginVideoCodingKHR = vk_tramp_CmdBeginVideoCodingKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdControlVideoCodingKHR = vk_tramp_CmdControlVideoCodingKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdEndVideoCodingKHR = vk_tramp_CmdEndVideoCodingKHR,
-#endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    .CmdEncodeVideoKHR = vk_tramp_CmdEncodeVideoKHR,
-#endif
+    .CmdDecompressMemoryNV = vk_tramp_CmdDecompressMemoryNV,
+    .CmdDecompressMemoryIndirectCountNV = vk_tramp_CmdDecompressMemoryIndirectCountNV,
     .CreateCuModuleNVX = vk_tramp_CreateCuModuleNVX,
     .CreateCuFunctionNVX = vk_tramp_CreateCuFunctionNVX,
     .DestroyCuModuleNVX = vk_tramp_DestroyCuModuleNVX,
     .DestroyCuFunctionNVX = vk_tramp_DestroyCuFunctionNVX,
     .CmdCuLaunchKernelNVX = vk_tramp_CmdCuLaunchKernelNVX,
+    .GetDescriptorSetLayoutSizeEXT = vk_tramp_GetDescriptorSetLayoutSizeEXT,
+    .GetDescriptorSetLayoutBindingOffsetEXT = vk_tramp_GetDescriptorSetLayoutBindingOffsetEXT,
+    .GetDescriptorEXT = vk_tramp_GetDescriptorEXT,
+    .CmdBindDescriptorBuffersEXT = vk_tramp_CmdBindDescriptorBuffersEXT,
+    .CmdSetDescriptorBufferOffsetsEXT = vk_tramp_CmdSetDescriptorBufferOffsetsEXT,
+    .CmdBindDescriptorBufferEmbeddedSamplersEXT = vk_tramp_CmdBindDescriptorBufferEmbeddedSamplersEXT,
+    .GetBufferOpaqueCaptureDescriptorDataEXT = vk_tramp_GetBufferOpaqueCaptureDescriptorDataEXT,
+    .GetImageOpaqueCaptureDescriptorDataEXT = vk_tramp_GetImageOpaqueCaptureDescriptorDataEXT,
+    .GetImageViewOpaqueCaptureDescriptorDataEXT = vk_tramp_GetImageViewOpaqueCaptureDescriptorDataEXT,
+    .GetSamplerOpaqueCaptureDescriptorDataEXT = vk_tramp_GetSamplerOpaqueCaptureDescriptorDataEXT,
+    .GetAccelerationStructureOpaqueCaptureDescriptorDataEXT = vk_tramp_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT,
     .SetDeviceMemoryPriorityEXT = vk_tramp_SetDeviceMemoryPriorityEXT,
             .WaitForPresentKHR = vk_tramp_WaitForPresentKHR,
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -3809,4 +3928,11 @@ struct vk_device_dispatch_table vk_device_trampolines = {
     .BindOpticalFlowSessionImageNV = vk_tramp_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = vk_tramp_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = vk_tramp_GetDeviceFaultInfoEXT,
+    .ReleaseSwapchainImagesEXT = vk_tramp_ReleaseSwapchainImagesEXT,
+    .MapMemory2KHR = vk_tramp_MapMemory2KHR,
+    .UnmapMemory2KHR = vk_tramp_UnmapMemory2KHR,
+    .CreateShadersEXT = vk_tramp_CreateShadersEXT,
+    .DestroyShaderEXT = vk_tramp_DestroyShaderEXT,
+    .GetShaderBinaryDataEXT = vk_tramp_GetShaderBinaryDataEXT,
+    .CmdBindShadersEXT = vk_tramp_CmdBindShadersEXT,
 };

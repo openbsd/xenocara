@@ -456,7 +456,7 @@ r600_lower_tess_io_impl(nir_builder *b, nir_instr *instr, enum pipe_prim_type pr
       tf->src[0] = nir_src_for_ssa(addr_outer);
       nir_ssa_dest_init(&tf->instr, &tf->dest, tf->num_components, 32, NULL);
       nir_builder_instr_insert(b, &tf->instr);
-      if (ncomps < 4) {
+      if (ncomps < 4 && b->shader->info.stage != MESA_SHADER_TESS_EVAL) {
          auto undef = nir_ssa_undef(b, 1, 32);
          nir_ssa_def *srcs[4] = {undef, undef, undef, undef};
          for (unsigned i = 0; i < ncomps; ++i)
@@ -588,23 +588,28 @@ r600_append_tcs_TF_emission(nir_shader *shader, enum pipe_prim_type prim_type)
    if (prim_type == PIPE_PRIM_LINES)
       std::swap(chanx, chany);
 
-   auto v0 = nir_vec4(b,
-                      out_addr0,
-                      nir_channel(b, &tf_outer->dest.ssa, chanx),
-                      nir_iadd(b, out_addr0, nir_imm_int(b, 4)),
-                      nir_channel(b, &tf_outer->dest.ssa, chany));
+   int inner_base = 12;
 
-   tf_out.push_back(v0);
+   tf_out.push_back(nir_vec2(b,
+                             out_addr0,
+                             nir_channel(b, &tf_outer->dest.ssa, chanx)));
+
+   tf_out.push_back(nir_vec2(b, nir_iadd(b, out_addr0, nir_imm_int(b, 4)),
+                             nir_channel(b, &tf_outer->dest.ssa, chany)));
+
+
    if (outer_comps > 2) {
-      auto v1 = (outer_comps > 3) ? nir_vec4(b,
-                                             nir_iadd(b, out_addr0, nir_imm_int(b, 8)),
-                                             nir_channel(b, &tf_outer->dest.ssa, 2),
-                                             nir_iadd(b, out_addr0, nir_imm_int(b, 12)),
-                                             nir_channel(b, &tf_outer->dest.ssa, 3))
-                                  : nir_vec2(b,
-                                             nir_iadd(b, out_addr0, nir_imm_int(b, 8)),
-                                             nir_channel(b, &tf_outer->dest.ssa, 2));
-      tf_out.push_back(v1);
+      tf_out.push_back(nir_vec2(b,
+                                nir_iadd(b, out_addr0, nir_imm_int(b, 8)),
+                                nir_channel(b, &tf_outer->dest.ssa, 2)));
+   }
+
+   if (outer_comps > 3) {
+      tf_out.push_back(nir_vec2(b,
+                                nir_iadd(b, out_addr0, nir_imm_int(b, 12)),
+                                nir_channel(b, &tf_outer->dest.ssa, 3)));
+      inner_base = 16;
+
    }
 
    if (inner_comps) {
@@ -617,15 +622,17 @@ r600_append_tcs_TF_emission(nir_shader *shader, enum pipe_prim_type prim_type)
          &tf_inner->instr, &tf_inner->dest, tf_inner->num_components, 32, NULL);
       nir_builder_instr_insert(b, &tf_inner->instr);
 
-      auto v2 = (inner_comps > 1) ? nir_vec4(b,
-                                             nir_iadd(b, out_addr0, nir_imm_int(b, 16)),
-                                             nir_channel(b, &tf_inner->dest.ssa, 0),
-                                             nir_iadd(b, out_addr0, nir_imm_int(b, 20)),
-                                             nir_channel(b, &tf_inner->dest.ssa, 1))
-                                  : nir_vec2(b,
-                                             nir_iadd(b, out_addr0, nir_imm_int(b, 12)),
-                                             nir_channel(b, &tf_inner->dest.ssa, 0));
-      tf_out.push_back(v2);
+      tf_out.push_back(nir_vec2(b,
+                                nir_iadd(b, out_addr0, nir_imm_int(b, inner_base)),
+                                nir_channel(b, &tf_inner->dest.ssa, 0)));
+
+
+      if (inner_comps > 1) {
+         tf_out.push_back(nir_vec2(b,
+                                   nir_iadd(b, out_addr0, nir_imm_int(b, inner_base + 4)),
+                                   nir_channel(b, &tf_inner->dest.ssa, 1)));
+
+      }
    }
 
    for (auto tf : tf_out)

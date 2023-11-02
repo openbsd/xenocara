@@ -27,8 +27,8 @@
  * This file has been generated, do not hand edit.
  */
 
-#ifndef GFX5_PACK_H
-#define GFX5_PACK_H
+#ifndef GFX5_ILK_PACK_H
+#define GFX5_ILK_PACK_H
 
 #include <stdio.h>
 
@@ -3051,4 +3051,4 @@ GFX5_XY_TEXT_IMMEDIATE_BLT_pack(__attribute__((unused)) __gen_user_data *data,
       util_bitpack_sint(values->DestinationY2Coordinate, 16, 31);
 }
 
-#endif /* GFX5_PACK_H */
+#endif /* GFX5_ILK_PACK_H */

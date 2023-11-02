@@ -806,14 +806,7 @@ add_output(struct vc4_compile *c,
 static bool
 ntq_src_is_only_ssa_def_user(nir_src *src)
 {
-        if (!src->is_ssa)
-                return false;
-
-        if (!list_is_empty(&src->ssa->if_uses))
-                return false;
-
-        return (src->ssa->uses.next == &src->use_link &&
-                src->ssa->uses.next->next == &src->ssa->uses);
+        return src->is_ssa && list_is_singular(&src->ssa->uses);
 }
 
 /**
@@ -1145,13 +1138,6 @@ ntq_emit_alu(struct vc4_compile *c, nir_alu_instr *instr)
                 break;
         case nir_op_b2i32:
                 result = qir_AND(c, src[0], qir_uniform_ui(c, 1));
-                break;
-        case nir_op_i2b32:
-        case nir_op_f2b32:
-                qir_SF(c, src[0]);
-                result = qir_MOV(c, qir_SEL(c, QPU_COND_ZC,
-                                            qir_uniform_ui(c, ~0),
-                                            qir_uniform_ui(c, 0)));
                 break;
 
         case nir_op_iadd:
@@ -2057,6 +2043,7 @@ static void ntq_emit_cf_list(struct vc4_compile *c, struct exec_list *list);
 static void
 ntq_emit_loop(struct vc4_compile *c, nir_loop *loop)
 {
+        assert(!nir_loop_has_continue_construct(loop));
         if (!c->vc4->screen->has_control_flow) {
                 fprintf(stderr,
                         "loop support requires updated kernel.\n");

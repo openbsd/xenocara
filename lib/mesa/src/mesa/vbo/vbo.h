@@ -32,7 +32,7 @@
 #define _VBO_H
 
 #include <stdbool.h>
-#include "main/glheader.h"
+#include "util/glheader.h"
 #include "main/dd.h"
 #include "main/draw.h"
 #include "main/macros.h"
@@ -226,6 +226,13 @@ vbo_get_minmax_index_mapped(unsigned count, unsigned index_size,
                             unsigned restartIndex, bool restart,
                             const void *indices,
                             unsigned *min_index, unsigned *max_index);
+
+void
+vbo_get_minmax_index(struct gl_context *ctx, struct gl_buffer_object *obj,
+                     const void *ptr, GLintptr offset, unsigned count,
+                     unsigned index_size, bool primitive_restart,
+                     unsigned restart_index, GLuint *min_index,
+                     GLuint *max_index);
 
 bool
 vbo_get_minmax_indices_gallium(struct gl_context *ctx,

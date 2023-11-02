@@ -34,7 +34,195 @@ extern "C" {
 #endif
 
 
+enum intel_gpu_tracepoint {
+   INTEL_GPU_TRACEPOINT_FRAME = 1ull << 0,
+   INTEL_GPU_TRACEPOINT_QUEUE_ANNOTATION = 1ull << 1,
+   INTEL_GPU_TRACEPOINT_BATCH = 1ull << 2,
+   INTEL_GPU_TRACEPOINT_CMD_BUFFER = 1ull << 3,
+   INTEL_GPU_TRACEPOINT_CMD_BUFFER_ANNOTATION = 1ull << 4,
+   INTEL_GPU_TRACEPOINT_XFB = 1ull << 5,
+   INTEL_GPU_TRACEPOINT_RENDER_PASS = 1ull << 6,
+   INTEL_GPU_TRACEPOINT_BLORP = 1ull << 7,
+   INTEL_GPU_TRACEPOINT_GENERATE_DRAWS = 1ull << 8,
+   INTEL_GPU_TRACEPOINT_DRAW = 1ull << 9,
+   INTEL_GPU_TRACEPOINT_DRAW_MULTI = 1ull << 10,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED = 1ull << 11,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI = 1ull << 12,
+   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT = 1ull << 13,
+   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT = 1ull << 14,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT = 1ull << 15,
+   INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT = 1ull << 16,
+   INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT = 1ull << 17,
+   INTEL_GPU_TRACEPOINT_DRAW_MESH = 1ull << 18,
+   INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT = 1ull << 19,
+   INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT = 1ull << 20,
+   INTEL_GPU_TRACEPOINT_COMPUTE = 1ull << 21,
+   INTEL_GPU_TRACEPOINT_TRACE_COPY = 1ull << 22,
+   INTEL_GPU_TRACEPOINT_STALL = 1ull << 23,
+};
 
+extern uint64_t intel_gpu_tracepoint;
+
+void intel_gpu_tracepoint_config_variable(void);
+
+
+/*
+ * intel_begin_frame
+ */
+struct trace_intel_begin_frame {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_frame) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_frame(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_begin_frame *payload);
+#endif
+void __trace_intel_begin_frame(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , void *cs
+);
+static ALWAYS_INLINE void trace_intel_begin_frame(
+     struct u_trace *ut
+   , void *cs
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_FRAME)))
+      return;
+   __trace_intel_begin_frame(
+        ut
+      , enabled_traces
+      , cs
+   );
+}
+
+/*
+ * intel_end_frame
+ */
+struct trace_intel_end_frame {
+   uint32_t frame;
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_frame(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_end_frame *payload);
+#endif
+void __trace_intel_end_frame(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , void *cs
+     , uint32_t frame
+);
+static ALWAYS_INLINE void trace_intel_end_frame(
+     struct u_trace *ut
+   , void *cs
+   , uint32_t frame
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_FRAME)))
+      return;
+   __trace_intel_end_frame(
+        ut
+      , enabled_traces
+      , cs
+      , frame
+   );
+}
+
+/*
+ * intel_begin_queue_annotation
+ */
+struct trace_intel_begin_queue_annotation {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_queue_annotation) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_queue_annotation(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_begin_queue_annotation *payload);
+#endif
+void __trace_intel_begin_queue_annotation(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , void *cs
+);
+static ALWAYS_INLINE void trace_intel_begin_queue_annotation(
+     struct u_trace *ut
+   , void *cs
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUEUE_ANNOTATION)))
+      return;
+   __trace_intel_begin_queue_annotation(
+        ut
+      , enabled_traces
+      , cs
+   );
+}
+
+/*
+ * intel_end_queue_annotation
+ */
+struct trace_intel_end_queue_annotation {
+   uint8_t dummy;
+   char str[0];
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_queue_annotation(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_end_queue_annotation *payload);
+#endif
+void __trace_intel_end_queue_annotation(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , void *cs
+     , unsigned len
+     , const char * str
+);
+static ALWAYS_INLINE void trace_intel_end_queue_annotation(
+     struct u_trace *ut
+   , void *cs
+   , unsigned len
+   , const char * str
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_QUEUE_ANNOTATION)))
+      return;
+   __trace_intel_end_queue_annotation(
+        ut
+      , enabled_traces
+      , cs
+      , len
+      , str
+   );
+}
 
 /*
  * intel_begin_batch
@@ -59,15 +247,18 @@ void intel_ds_begin_batch(
 #endif
 void __trace_intel_begin_batch(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_batch(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_BATCH)))
       return;
    __trace_intel_begin_batch(
         ut
+      , enabled_traces
    );
 }
 
@@ -86,17 +277,20 @@ void intel_ds_end_batch(
 #endif
 void __trace_intel_end_batch(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint8_t name
 );
 static ALWAYS_INLINE void trace_intel_end_batch(
      struct u_trace *ut
    , uint8_t name
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_BATCH)))
       return;
    __trace_intel_end_batch(
         ut
+      , enabled_traces
       , name
    );
 }
@@ -124,15 +318,18 @@ void intel_ds_begin_cmd_buffer(
 #endif
 void __trace_intel_begin_cmd_buffer(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_cmd_buffer(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_CMD_BUFFER)))
       return;
    __trace_intel_begin_cmd_buffer(
         ut
+      , enabled_traces
    );
 }
 
@@ -151,18 +348,96 @@ void intel_ds_end_cmd_buffer(
 #endif
 void __trace_intel_end_cmd_buffer(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint8_t level
 );
 static ALWAYS_INLINE void trace_intel_end_cmd_buffer(
      struct u_trace *ut
    , uint8_t level
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_CMD_BUFFER)))
       return;
    __trace_intel_end_cmd_buffer(
         ut
+      , enabled_traces
       , level
+   );
+}
+
+/*
+ * intel_begin_cmd_buffer_annotation
+ */
+struct trace_intel_begin_cmd_buffer_annotation {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_cmd_buffer_annotation) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_cmd_buffer_annotation(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_begin_cmd_buffer_annotation *payload);
+#endif
+void __trace_intel_begin_cmd_buffer_annotation(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_cmd_buffer_annotation(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_CMD_BUFFER_ANNOTATION)))
+      return;
+   __trace_intel_begin_cmd_buffer_annotation(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_cmd_buffer_annotation
+ */
+struct trace_intel_end_cmd_buffer_annotation {
+   uint8_t dummy;
+   char str[0];
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_cmd_buffer_annotation(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_end_cmd_buffer_annotation *payload);
+#endif
+void __trace_intel_end_cmd_buffer_annotation(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+     , unsigned len
+     , const char * str
+);
+static ALWAYS_INLINE void trace_intel_end_cmd_buffer_annotation(
+     struct u_trace *ut
+   , unsigned len
+   , const char * str
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_CMD_BUFFER_ANNOTATION)))
+      return;
+   __trace_intel_end_cmd_buffer_annotation(
+        ut
+      , enabled_traces
+      , len
+      , str
    );
 }
 
@@ -189,15 +464,18 @@ void intel_ds_begin_xfb(
 #endif
 void __trace_intel_begin_xfb(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_xfb(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_XFB)))
       return;
    __trace_intel_begin_xfb(
         ut
+      , enabled_traces
    );
 }
 
@@ -224,15 +502,18 @@ void intel_ds_end_xfb(
 #endif
 void __trace_intel_end_xfb(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_end_xfb(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_XFB)))
       return;
    __trace_intel_end_xfb(
         ut
+      , enabled_traces
    );
 }
 
@@ -259,15 +540,18 @@ void intel_ds_begin_render_pass(
 #endif
 void __trace_intel_begin_render_pass(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_render_pass(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_RENDER_PASS)))
       return;
    __trace_intel_begin_render_pass(
         ut
+      , enabled_traces
    );
 }
 
@@ -289,6 +573,7 @@ void intel_ds_end_render_pass(
 #endif
 void __trace_intel_end_render_pass(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint16_t width
      , uint16_t height
      , uint8_t att_count
@@ -301,100 +586,17 @@ static ALWAYS_INLINE void trace_intel_end_render_pass(
    , uint8_t att_count
    , uint8_t msaa
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_RENDER_PASS)))
       return;
    __trace_intel_end_render_pass(
         ut
+      , enabled_traces
       , width
       , height
       , att_count
       , msaa
-   );
-}
-
-/*
- * intel_begin_dyn_render_pass
- */
-struct trace_intel_begin_dyn_render_pass {
-#ifdef __cplusplus
-   /* avoid warnings about empty struct size mis-match in C vs C++..
-    * the size mis-match is harmless because (a) nothing will deref
-    * the empty struct, and (b) the code that cares about allocating
-    * sizeof(struct trace_intel_begin_dyn_render_pass) (and wants this to be zero
-    * if there is no payload) is C
-    */
-   uint8_t dummy;
-#endif
-};
-#ifdef HAVE_PERFETTO
-void intel_ds_begin_dyn_render_pass(
-   struct intel_ds_device *dev,
-   uint64_t ts_ns,
-   const void *flush_data,
-   const struct trace_intel_begin_dyn_render_pass *payload);
-#endif
-void __trace_intel_begin_dyn_render_pass(
-       struct u_trace *ut
-);
-static ALWAYS_INLINE void trace_intel_begin_dyn_render_pass(
-     struct u_trace *ut
-) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
-      return;
-   __trace_intel_begin_dyn_render_pass(
-        ut
-   );
-}
-
-/*
- * intel_end_dyn_render_pass
- */
-struct trace_intel_end_dyn_render_pass {
-   uint16_t width;
-   uint16_t height;
-   uint8_t att_count;
-   uint8_t msaa;
-   uint8_t suspend;
-   uint8_t resume;
-};
-#ifdef HAVE_PERFETTO
-void intel_ds_end_dyn_render_pass(
-   struct intel_ds_device *dev,
-   uint64_t ts_ns,
-   const void *flush_data,
-   const struct trace_intel_end_dyn_render_pass *payload);
-#endif
-void __trace_intel_end_dyn_render_pass(
-       struct u_trace *ut
-     , uint16_t width
-     , uint16_t height
-     , uint8_t att_count
-     , uint8_t msaa
-     , uint8_t suspend
-     , uint8_t resume
-);
-static ALWAYS_INLINE void trace_intel_end_dyn_render_pass(
-     struct u_trace *ut
-   , uint16_t width
-   , uint16_t height
-   , uint8_t att_count
-   , uint8_t msaa
-   , uint8_t suspend
-   , uint8_t resume
-) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
-      return;
-   __trace_intel_end_dyn_render_pass(
-        ut
-      , width
-      , height
-      , att_count
-      , msaa
-      , suspend
-      , resume
    );
 }
 
@@ -421,15 +623,18 @@ void intel_ds_begin_blorp(
 #endif
 void __trace_intel_begin_blorp(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_blorp(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_BLORP)))
       return;
    __trace_intel_begin_blorp(
         ut
+      , enabled_traces
    );
 }
 
@@ -454,6 +659,7 @@ void intel_ds_end_blorp(
 #endif
 void __trace_intel_end_blorp(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , enum blorp_op op
      , uint32_t width
      , uint32_t height
@@ -472,11 +678,13 @@ static ALWAYS_INLINE void trace_intel_end_blorp(
    , enum isl_format dst_fmt
    , enum isl_format src_fmt
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_BLORP)))
       return;
    __trace_intel_end_blorp(
         ut
+      , enabled_traces
       , op
       , width
       , height
@@ -484,6 +692,82 @@ static ALWAYS_INLINE void trace_intel_end_blorp(
       , shader_pipe
       , dst_fmt
       , src_fmt
+   );
+}
+
+/*
+ * intel_begin_generate_draws
+ */
+struct trace_intel_begin_generate_draws {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_generate_draws) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_generate_draws(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_begin_generate_draws *payload);
+#endif
+void __trace_intel_begin_generate_draws(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_generate_draws(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_GENERATE_DRAWS)))
+      return;
+   __trace_intel_begin_generate_draws(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_generate_draws
+ */
+struct trace_intel_end_generate_draws {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_end_generate_draws) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_generate_draws(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_end_generate_draws *payload);
+#endif
+void __trace_intel_end_generate_draws(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_end_generate_draws(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_GENERATE_DRAWS)))
+      return;
+   __trace_intel_end_generate_draws(
+        ut
+      , enabled_traces
    );
 }
 
@@ -510,15 +794,18 @@ void intel_ds_begin_draw(
 #endif
 void __trace_intel_begin_draw(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW)))
       return;
    __trace_intel_begin_draw(
         ut
+      , enabled_traces
    );
 }
 
@@ -537,17 +824,20 @@ void intel_ds_end_draw(
 #endif
 void __trace_intel_end_draw(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t count
 );
 static ALWAYS_INLINE void trace_intel_end_draw(
      struct u_trace *ut
    , uint32_t count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW)))
       return;
    __trace_intel_end_draw(
         ut
+      , enabled_traces
       , count
    );
 }
@@ -575,15 +865,18 @@ void intel_ds_begin_draw_multi(
 #endif
 void __trace_intel_begin_draw_multi(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_multi(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MULTI)))
       return;
    __trace_intel_begin_draw_multi(
         ut
+      , enabled_traces
    );
 }
 
@@ -602,17 +895,20 @@ void intel_ds_end_draw_multi(
 #endif
 void __trace_intel_end_draw_multi(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_multi(
      struct u_trace *ut
    , uint32_t count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MULTI)))
       return;
    __trace_intel_end_draw_multi(
         ut
+      , enabled_traces
       , count
    );
 }
@@ -640,15 +936,18 @@ void intel_ds_begin_draw_indexed(
 #endif
 void __trace_intel_begin_draw_indexed(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indexed(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED)))
       return;
    __trace_intel_begin_draw_indexed(
         ut
+      , enabled_traces
    );
 }
 
@@ -667,17 +966,20 @@ void intel_ds_end_draw_indexed(
 #endif
 void __trace_intel_end_draw_indexed(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indexed(
      struct u_trace *ut
    , uint32_t count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED)))
       return;
    __trace_intel_end_draw_indexed(
         ut
+      , enabled_traces
       , count
    );
 }
@@ -705,15 +1007,18 @@ void intel_ds_begin_draw_indexed_multi(
 #endif
 void __trace_intel_begin_draw_indexed_multi(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indexed_multi(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI)))
       return;
    __trace_intel_begin_draw_indexed_multi(
         ut
+      , enabled_traces
    );
 }
 
@@ -732,17 +1037,20 @@ void intel_ds_end_draw_indexed_multi(
 #endif
 void __trace_intel_end_draw_indexed_multi(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indexed_multi(
      struct u_trace *ut
    , uint32_t count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED_MULTI)))
       return;
    __trace_intel_end_draw_indexed_multi(
         ut
+      , enabled_traces
       , count
    );
 }
@@ -770,15 +1078,18 @@ void intel_ds_begin_draw_indirect_byte_count(
 #endif
 void __trace_intel_begin_draw_indirect_byte_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indirect_byte_count(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT)))
       return;
    __trace_intel_begin_draw_indirect_byte_count(
         ut
+      , enabled_traces
    );
 }
 
@@ -797,17 +1108,20 @@ void intel_ds_end_draw_indirect_byte_count(
 #endif
 void __trace_intel_end_draw_indirect_byte_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t instance_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indirect_byte_count(
      struct u_trace *ut
    , uint32_t instance_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_BYTE_COUNT)))
       return;
    __trace_intel_end_draw_indirect_byte_count(
         ut
+      , enabled_traces
       , instance_count
    );
 }
@@ -835,15 +1149,18 @@ void intel_ds_begin_draw_indirect(
 #endif
 void __trace_intel_begin_draw_indirect(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indirect(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDIRECT)))
       return;
    __trace_intel_begin_draw_indirect(
         ut
+      , enabled_traces
    );
 }
 
@@ -862,17 +1179,20 @@ void intel_ds_end_draw_indirect(
 #endif
 void __trace_intel_end_draw_indirect(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t draw_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indirect(
      struct u_trace *ut
    , uint32_t draw_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDIRECT)))
       return;
    __trace_intel_end_draw_indirect(
         ut
+      , enabled_traces
       , draw_count
    );
 }
@@ -900,15 +1220,18 @@ void intel_ds_begin_draw_indexed_indirect(
 #endif
 void __trace_intel_begin_draw_indexed_indirect(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indexed_indirect(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT)))
       return;
    __trace_intel_begin_draw_indexed_indirect(
         ut
+      , enabled_traces
    );
 }
 
@@ -927,17 +1250,20 @@ void intel_ds_end_draw_indexed_indirect(
 #endif
 void __trace_intel_end_draw_indexed_indirect(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t draw_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indexed_indirect(
      struct u_trace *ut
    , uint32_t draw_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT)))
       return;
    __trace_intel_end_draw_indexed_indirect(
         ut
+      , enabled_traces
       , draw_count
    );
 }
@@ -965,15 +1291,18 @@ void intel_ds_begin_draw_indirect_count(
 #endif
 void __trace_intel_begin_draw_indirect_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indirect_count(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT)))
       return;
    __trace_intel_begin_draw_indirect_count(
         ut
+      , enabled_traces
    );
 }
 
@@ -992,17 +1321,20 @@ void intel_ds_end_draw_indirect_count(
 #endif
 void __trace_intel_end_draw_indirect_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t max_draw_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indirect_count(
      struct u_trace *ut
    , uint32_t max_draw_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDIRECT_COUNT)))
       return;
    __trace_intel_end_draw_indirect_count(
         ut
+      , enabled_traces
       , max_draw_count
    );
 }
@@ -1030,15 +1362,18 @@ void intel_ds_begin_draw_indexed_indirect_count(
 #endif
 void __trace_intel_begin_draw_indexed_indirect_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_indexed_indirect_count(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT)))
       return;
    __trace_intel_begin_draw_indexed_indirect_count(
         ut
+      , enabled_traces
    );
 }
 
@@ -1057,17 +1392,20 @@ void intel_ds_end_draw_indexed_indirect_count(
 #endif
 void __trace_intel_end_draw_indexed_indirect_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t max_draw_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_indexed_indirect_count(
      struct u_trace *ut
    , uint32_t max_draw_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_INDEXED_INDIRECT_COUNT)))
       return;
    __trace_intel_end_draw_indexed_indirect_count(
         ut
+      , enabled_traces
       , max_draw_count
    );
 }
@@ -1095,15 +1433,18 @@ void intel_ds_begin_draw_mesh(
 #endif
 void __trace_intel_begin_draw_mesh(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_mesh(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MESH)))
       return;
    __trace_intel_begin_draw_mesh(
         ut
+      , enabled_traces
    );
 }
 
@@ -1124,6 +1465,7 @@ void intel_ds_end_draw_mesh(
 #endif
 void __trace_intel_end_draw_mesh(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t group_x
      , uint32_t group_y
      , uint32_t group_z
@@ -1134,11 +1476,13 @@ static ALWAYS_INLINE void trace_intel_end_draw_mesh(
    , uint32_t group_y
    , uint32_t group_z
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MESH)))
       return;
    __trace_intel_end_draw_mesh(
         ut
+      , enabled_traces
       , group_x
       , group_y
       , group_z
@@ -1168,15 +1512,18 @@ void intel_ds_begin_draw_mesh_indirect(
 #endif
 void __trace_intel_begin_draw_mesh_indirect(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_mesh_indirect(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT)))
       return;
    __trace_intel_begin_draw_mesh_indirect(
         ut
+      , enabled_traces
    );
 }
 
@@ -1195,17 +1542,20 @@ void intel_ds_end_draw_mesh_indirect(
 #endif
 void __trace_intel_end_draw_mesh_indirect(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t draw_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_mesh_indirect(
      struct u_trace *ut
    , uint32_t draw_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT)))
       return;
    __trace_intel_end_draw_mesh_indirect(
         ut
+      , enabled_traces
       , draw_count
    );
 }
@@ -1233,15 +1583,18 @@ void intel_ds_begin_draw_mesh_indirect_count(
 #endif
 void __trace_intel_begin_draw_mesh_indirect_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_draw_mesh_indirect_count(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT)))
       return;
    __trace_intel_begin_draw_mesh_indirect_count(
         ut
+      , enabled_traces
    );
 }
 
@@ -1260,17 +1613,20 @@ void intel_ds_end_draw_mesh_indirect_count(
 #endif
 void __trace_intel_end_draw_mesh_indirect_count(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t max_draw_count
 );
 static ALWAYS_INLINE void trace_intel_end_draw_mesh_indirect_count(
      struct u_trace *ut
    , uint32_t max_draw_count
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_DRAW_MESH_INDIRECT_COUNT)))
       return;
    __trace_intel_end_draw_mesh_indirect_count(
         ut
+      , enabled_traces
       , max_draw_count
    );
 }
@@ -1298,15 +1654,18 @@ void intel_ds_begin_compute(
 #endif
 void __trace_intel_begin_compute(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_compute(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_COMPUTE)))
       return;
    __trace_intel_begin_compute(
         ut
+      , enabled_traces
    );
 }
 
@@ -1327,6 +1686,7 @@ void intel_ds_end_compute(
 #endif
 void __trace_intel_end_compute(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t group_x
      , uint32_t group_y
      , uint32_t group_z
@@ -1337,14 +1697,92 @@ static ALWAYS_INLINE void trace_intel_end_compute(
    , uint32_t group_y
    , uint32_t group_z
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_COMPUTE)))
       return;
    __trace_intel_end_compute(
         ut
+      , enabled_traces
       , group_x
       , group_y
       , group_z
+   );
+}
+
+/*
+ * intel_begin_trace_copy
+ */
+struct trace_intel_begin_trace_copy {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_begin_trace_copy) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_begin_trace_copy(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_begin_trace_copy *payload);
+#endif
+void __trace_intel_begin_trace_copy(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_begin_trace_copy(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_TRACE_COPY)))
+      return;
+   __trace_intel_begin_trace_copy(
+        ut
+      , enabled_traces
+   );
+}
+
+/*
+ * intel_end_trace_copy
+ */
+struct trace_intel_end_trace_copy {
+#ifdef __cplusplus
+   /* avoid warnings about empty struct size mis-match in C vs C++..
+    * the size mis-match is harmless because (a) nothing will deref
+    * the empty struct, and (b) the code that cares about allocating
+    * sizeof(struct trace_intel_end_trace_copy) (and wants this to be zero
+    * if there is no payload) is C
+    */
+   uint8_t dummy;
+#endif
+};
+#ifdef HAVE_PERFETTO
+void intel_ds_end_trace_copy(
+   struct intel_ds_device *dev,
+   uint64_t ts_ns,
+   const void *flush_data,
+   const struct trace_intel_end_trace_copy *payload);
+#endif
+void __trace_intel_end_trace_copy(
+       struct u_trace *ut
+     , enum u_trace_type enabled_traces
+);
+static ALWAYS_INLINE void trace_intel_end_trace_copy(
+     struct u_trace *ut
+) {
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_TRACE_COPY)))
+      return;
+   __trace_intel_end_trace_copy(
+        ut
+      , enabled_traces
    );
 }
 
@@ -1371,15 +1809,18 @@ void intel_ds_begin_stall(
 #endif
 void __trace_intel_begin_stall(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
 );
 static ALWAYS_INLINE void trace_intel_begin_stall(
      struct u_trace *ut
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_STALL)))
       return;
    __trace_intel_begin_stall(
         ut
+      , enabled_traces
    );
 }
 
@@ -1399,6 +1840,7 @@ void intel_ds_end_stall(
 #endif
 void __trace_intel_end_stall(
        struct u_trace *ut
+     , enum u_trace_type enabled_traces
      , uint32_t flags
      , intel_ds_stall_cb_t decode_cb
      , const char * reason
@@ -1409,11 +1851,13 @@ static ALWAYS_INLINE void trace_intel_end_stall(
    , intel_ds_stall_cb_t decode_cb
    , const char * reason
 ) {
-   if (!unlikely(u_trace_instrument() &&
-                 true))
+   enum u_trace_type enabled_traces = p_atomic_read_relaxed(&ut->utctx->enabled_traces);
+   if (!unlikely(enabled_traces != 0 &&
+                 (intel_gpu_tracepoint & INTEL_GPU_TRACEPOINT_STALL)))
       return;
    __trace_intel_end_stall(
         ut
+      , enabled_traces
       , flags
       , decode_cb
       , reason

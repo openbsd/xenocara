@@ -29,7 +29,7 @@
 #define PIPE_VIDEO_STATE_H
 
 #include "pipe/p_defines.h"
-#include "pipe/p_format.h"
+#include "util/format/u_formats.h"
 #include "pipe/p_state.h"
 #include "pipe/p_screen.h"
 #include "util/u_hash_table.h"
@@ -44,6 +44,7 @@ extern "C" {
 #define PIPE_DEFAULT_FRAME_RATE_DEN   1
 #define PIPE_DEFAULT_FRAME_RATE_NUM   30
 #define PIPE_H2645_EXTENDED_SAR       255
+#define PIPE_DEFAULT_DECODER_FEEDBACK_TIMEOUT_NS 1000000000
 
 /*
  * see table 6-12 in the spec
@@ -166,6 +167,8 @@ struct pipe_picture_desc
    uint32_t key_size;
    enum pipe_format input_format;
    enum pipe_format output_format;
+   /* A fence used on PIPE_VIDEO_ENTRYPOINT_DECODE to signal job completion */
+   struct pipe_fence_handle **fence;
 };
 
 struct pipe_quant_matrix
@@ -354,10 +357,6 @@ struct pipe_h264_pps
    int8_t   second_chroma_qp_index_offset;
 };
 
-struct h264_private {
-   struct pipe_video_buffer *past_ref[16];
-};
-
 struct pipe_h264_picture_desc
 {
    struct pipe_picture_desc base;
@@ -383,9 +382,6 @@ struct pipe_h264_picture_desc
    uint32_t frame_num_list[16];
 
    struct pipe_video_buffer *ref[16];
-
-   /* using private as a parameter name conflicts with C++ keywords */
-   void    *priv;
 };
 
 struct pipe_enc_quality_modes
@@ -498,6 +494,8 @@ struct pipe_h264_enc_picture_desc
    struct pipe_h264_enc_motion_estimation motion_est;
    struct pipe_h264_enc_pic_control pic_ctrl;
    struct pipe_h264_enc_dbk_param dbk;
+
+   unsigned intra_idr_period;
 
    unsigned quant_i_frames;
    unsigned quant_p_frames;
@@ -788,6 +786,10 @@ struct pipe_mjpeg_picture_desc
       } components[255];
 
       uint8_t num_components;
+      uint16_t crop_x;
+      uint16_t crop_y;
+      uint16_t crop_width;
+      uint16_t crop_height;
    } picture_parameter;
 
    struct
@@ -1036,6 +1038,7 @@ struct pipe_av1_picture_desc
          uint32_t disable_frame_end_update_cdf:1;
          uint32_t uniform_tile_spacing_flag:1;
          uint32_t allow_warped_motion:1;
+         uint32_t large_scale_tile:1;
       } pic_info_fields;
 
       uint8_t superres_scale_denominator;

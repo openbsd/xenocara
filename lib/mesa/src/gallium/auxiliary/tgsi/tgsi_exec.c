@@ -73,17 +73,26 @@
 #define TILE_BOTTOM_LEFT  2
 #define TILE_BOTTOM_RIGHT 3
 
+static_assert(alignof(union tgsi_exec_channel) == 16, "");
+static_assert(alignof(struct tgsi_exec_vector) == 16, "");
+static_assert(alignof(struct tgsi_exec_machine) == 16, "");
+
 union tgsi_double_channel {
+   alignas(16)
    double d[TGSI_QUAD_SIZE];
    unsigned u[TGSI_QUAD_SIZE][2];
    uint64_t u64[TGSI_QUAD_SIZE];
    int64_t i64[TGSI_QUAD_SIZE];
-} ALIGN16;
+};
 
-struct ALIGN16 tgsi_double_vector {
+struct tgsi_double_vector {
+   alignas(16)
    union tgsi_double_channel xy;
    union tgsi_double_channel zw;
 };
+
+static_assert(alignof(union tgsi_double_channel) == 16, "");
+static_assert(alignof(struct tgsi_double_vector) == 16, "");
 
 static void
 micro_abs(union tgsi_exec_channel *dst,
@@ -396,17 +405,6 @@ micro_dldexp(union tgsi_double_channel *dst,
    dst->d[1] = ldexp(src0->d[1], src1->i[1]);
    dst->d[2] = ldexp(src0->d[2], src1->i[2]);
    dst->d[3] = ldexp(src0->d[3], src1->i[3]);
-}
-
-static void
-micro_dfracexp(union tgsi_double_channel *dst,
-               union tgsi_exec_channel *dst_exp,
-               const union tgsi_double_channel *src)
-{
-   dst->d[0] = frexp(src->d[0], &dst_exp->i[0]);
-   dst->d[1] = frexp(src->d[1], &dst_exp->i[1]);
-   dst->d[2] = frexp(src->d[2], &dst_exp->i[2]);
-   dst->d[3] = frexp(src->d[3], &dst_exp->i[3]);
 }
 
 static void
@@ -3559,26 +3557,6 @@ exec_dldexp(struct tgsi_exec_machine *mach,
 }
 
 static void
-exec_dfracexp(struct tgsi_exec_machine *mach,
-              const struct tgsi_full_instruction *inst)
-{
-   union tgsi_double_channel src;
-   union tgsi_double_channel dst;
-   union tgsi_exec_channel dst_exp;
-
-   fetch_double_channel(mach, &src, &inst->Src[0], TGSI_CHAN_X, TGSI_CHAN_Y);
-   micro_dfracexp(&dst, &dst_exp, &src);
-   if ((inst->Dst[0].Register.WriteMask & TGSI_WRITEMASK_XY) == TGSI_WRITEMASK_XY)
-      store_double_channel(mach, &dst, &inst->Dst[0], inst, TGSI_CHAN_X, TGSI_CHAN_Y);
-   if ((inst->Dst[0].Register.WriteMask & TGSI_WRITEMASK_ZW) == TGSI_WRITEMASK_ZW)
-      store_double_channel(mach, &dst, &inst->Dst[0], inst, TGSI_CHAN_Z, TGSI_CHAN_W);
-   for (unsigned chan = 0; chan < TGSI_NUM_CHANNELS; chan++) {
-      if (inst->Dst[1].Register.WriteMask & (1 << chan))
-         store_dest(mach, &dst_exp, &inst->Dst[1], inst, chan);
-   }
-}
-
-static void
 exec_arg0_64_arg1_32(struct tgsi_exec_machine *mach,
             const struct tgsi_full_instruction *inst,
             micro_dop_sop op)
@@ -5793,10 +5771,6 @@ exec_instruction(
 
    case TGSI_OPCODE_DLDEXP:
       exec_dldexp(mach, inst);
-      break;
-
-   case TGSI_OPCODE_DFRACEXP:
-      exec_dfracexp(mach, inst);
       break;
 
    case TGSI_OPCODE_I2D:

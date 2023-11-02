@@ -34,6 +34,7 @@
 #include "compiler/glsl_types.h"
 #include "util/u_string.h"
 #include "util/format/u_format.h"
+#include "main/consts_exts.h"
 
 #ifdef _MSC_VER
 #pragma warning( disable : 4065 ) // switch statement contains 'default' but no 'case' labels
@@ -1438,10 +1439,10 @@ layout_qualifier_id:
                                 "valid in fragment shaders");
             }
 
-	    if (state->INTEL_conservative_rasterization_enable) {
-	       $$.flags.q.inner_coverage = 1;
-	    } else {
-	       _mesa_glsl_error(& @1, state,
+            if (state->INTEL_conservative_rasterization_enable) {
+               $$.flags.q.inner_coverage = 1;
+            } else {
+               _mesa_glsl_error(& @1, state,
                                 "inner_coverage layout qualifier present, "
                                 "but the INTEL_conservative_rasterization extension "
                                 "is not enabled.");
@@ -1456,7 +1457,7 @@ layout_qualifier_id:
             }
 
             if (state->ARB_post_depth_coverage_enable ||
-		state->INTEL_conservative_rasterization_enable) {
+                state->INTEL_conservative_rasterization_enable) {
                $$.flags.q.post_depth_coverage = 1;
             } else {
                _mesa_glsl_error(& @1, state,
@@ -2211,7 +2212,7 @@ storage_qualifier:
           $$.stream = state->out_qualifier->stream;
       }
 
-      if (state->has_enhanced_layouts()) {
+      if (state->has_enhanced_layouts() && state->exts->ARB_transform_feedback3) {
           $$.flags.q.xfb_buffer = 1;
           $$.flags.q.explicit_xfb_buffer = 0;
           $$.xfb_buffer = state->out_qualifier->xfb_buffer;
@@ -3105,5 +3106,7 @@ layout_defaults:
       if (!state->out_qualifier->push_to_global(& @1, state)) {
          YYERROR;
       }
+
+      (void)yynerrs;
    }
    ;

@@ -168,6 +168,18 @@ brw_nir_apply_trig_workarounds(nir_shader *shader)
    (void) options;
    (void) info;
 
+   /* This is not a great place for this, but it seems to be the best place
+    * for it. Check that at most one kind of lowering is requested for
+    * bitfield extract and bitfield insert. Otherwise the lowering can fight
+    * with each other and optimizations.
+    */
+   assert((int)options->lower_bitfield_extract +
+          (int)options->lower_bitfield_extract_to_shifts <= 1);
+   assert((int)options->lower_bitfield_insert +
+          (int)options->lower_bitfield_insert_to_shifts +
+          (int)options->lower_bitfield_insert_to_bitfield_select <= 1);
+
+
    STATIC_ASSERT(9 == ARRAY_SIZE(brw_nir_apply_trig_workarounds_values));
    condition_flags[0] = true;
 
@@ -340,6 +352,18 @@ brw_nir_limit_trig_input_range_workaround(nir_shader *shader)
    const shader_info *info = &shader->info;
    (void) options;
    (void) info;
+
+   /* This is not a great place for this, but it seems to be the best place
+    * for it. Check that at most one kind of lowering is requested for
+    * bitfield extract and bitfield insert. Otherwise the lowering can fight
+    * with each other and optimizations.
+    */
+   assert((int)options->lower_bitfield_extract +
+          (int)options->lower_bitfield_extract_to_shifts <= 1);
+   assert((int)options->lower_bitfield_insert +
+          (int)options->lower_bitfield_insert_to_shifts +
+          (int)options->lower_bitfield_insert_to_bitfield_select <= 1);
+
 
    STATIC_ASSERT(8 == ARRAY_SIZE(brw_nir_limit_trig_input_range_workaround_values));
    condition_flags[0] = true;

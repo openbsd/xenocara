@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.5 2023/01/28 08:56:33 jsg Exp $
+#	$OpenBSD: Makefile,v 1.6 2023/11/02 04:53:30 jsg Exp $
 
 LIB=	amd_common
 
@@ -20,10 +20,13 @@ SRCS=	ac_binary.c \
 	ac_nir_cull.c \
 	ac_nir_lower_esgs_io_to_mem.c \
 	ac_nir_lower_global_access.c \
+	ac_nir_lower_image_opcodes_cdna.c \
 	ac_nir_lower_resinfo.c \
+	ac_nir_lower_subdword_loads.c \
 	ac_nir_lower_taskmesh_io_to_mem.c \
 	ac_nir_lower_tess_io_to_mem.c \
 	ac_nir_lower_ngg.c \
+	ac_nir_lower_ps.c \
 	amd_family.c \
 	ac_perfcounter.c
 

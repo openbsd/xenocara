@@ -1551,7 +1551,7 @@ _mesa_uniform(GLint location, GLsizei count, const GLvoid *values,
                 */
                if (sampler->unit != value || !sampler->bound) {
                   if (!flushed) {
-                     FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT | _NEW_PROGRAM, 0);
+                     FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT, 0);
                      flushed = true;
                   }
                   sampler->unit = value;
@@ -1562,7 +1562,7 @@ _mesa_uniform(GLint location, GLsizei count, const GLvoid *values,
             } else {
                if (sh->Program->SamplerUnits[unit] != value) {
                   if (!flushed) {
-                     FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT | _NEW_PROGRAM, 0);
+                     FLUSH_VERTICES(ctx, _NEW_TEXTURE_OBJECT, 0);
                      flushed = true;
                   }
                   sh->Program->SamplerUnits[unit] = value;
@@ -1854,7 +1854,7 @@ _mesa_uniform_matrix(GLint location, GLsizei count,
     * http://www.khronos.org/opengles/sdk/docs/man/xhtml/glUniform.xml
     */
    if (transpose) {
-      if (ctx->API == API_OPENGLES2 && ctx->Version < 30) {
+      if (_mesa_is_gles2(ctx) && ctx->Version < 30) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "glUniformMatrix(matrix transpose is not GL_FALSE)");
          return;

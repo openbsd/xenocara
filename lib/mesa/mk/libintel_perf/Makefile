@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.2 2022/02/24 02:29:49 jsg Exp $
+#	$OpenBSD: Makefile,v 1.3 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	intel_perf
 
@@ -14,6 +14,7 @@ SRCS+=	intel_perf_metrics.c
 
 CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} -msse2
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel
 
 install:

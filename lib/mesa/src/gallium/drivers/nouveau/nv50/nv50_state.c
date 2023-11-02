@@ -861,8 +861,7 @@ nv50_cp_state_create(struct pipe_context *pipe,
       return NULL;
    }
 
-   prog->cp.smem_size = cso->req_local_mem;
-   prog->cp.lmem_size = cso->req_private_mem;
+   prog->cp.smem_size = cso->static_shared_mem;
    prog->parm_size = cso->req_input_mem;
 
    return (void *)prog;
@@ -875,6 +874,21 @@ nv50_cp_state_bind(struct pipe_context *pipe, void *hwcso)
 
    nv50->compprog = hwcso;
    nv50->dirty_cp |= NV50_NEW_CP_PROGRAM;
+}
+
+static void
+nv50_get_compute_state_info(struct pipe_context *pipe, void *hwcso,
+                            struct pipe_compute_state_object_info *info)
+{
+   struct nv50_context *nv50 = nv50_context(pipe);
+   struct nv50_program *prog = (struct nv50_program *)hwcso;
+   uint16_t obj_class = nv50->screen->compute->oclass;
+   uint32_t smregs = obj_class >= NVA3_COMPUTE_CLASS ? 16384 : 8192;
+   uint32_t threads = smregs / align(prog->max_gpr, 4);
+
+   info->max_threads = MIN2(ROUND_DOWN_TO(threads, 32), 512);
+   info->private_memory = prog->tls_space;
+   info->preferred_simd_size = 32;
 }
 
 static void
@@ -1496,6 +1510,8 @@ nv50_init_state_functions(struct nv50_context *nv50)
    pipe->delete_fs_state = nv50_sp_state_delete;
    pipe->delete_gs_state = nv50_sp_state_delete;
    pipe->delete_compute_state = nv50_sp_state_delete;
+
+   pipe->get_compute_state_info = nv50_get_compute_state_info;
 
    pipe->set_blend_color = nv50_set_blend_color;
    pipe->set_stencil_ref = nv50_set_stencil_ref;

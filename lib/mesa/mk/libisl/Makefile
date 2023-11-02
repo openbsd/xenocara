@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.3 2021/07/22 11:10:11 jsg Exp $
+#	$OpenBSD: Makefile,v 1.4 2023/11/02 04:53:31 jsg Exp $
 
 LIB=	isl
 
@@ -19,6 +19,7 @@ CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/mapi \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel
 
 install:

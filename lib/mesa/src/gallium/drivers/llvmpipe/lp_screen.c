@@ -41,6 +41,7 @@
 #include "util/disk_cache.h"
 #include "util/os_misc.h"
 #include "util/os_time.h"
+#include "util/u_helpers.h"
 #include "lp_texture.h"
 #include "lp_fence.h"
 #include "lp_jit.h"
@@ -58,7 +59,6 @@
 #include "nir.h"
 
 
-#ifdef DEBUG
 int LP_DEBUG = 0;
 
 static const struct debug_named_value lp_debug_flags[] = {
@@ -79,11 +79,9 @@ static const struct debug_named_value lp_debug_flags[] = {
    { "fs", DEBUG_FS, NULL },
    { "cs", DEBUG_CS, NULL },
    { "tgsi_ir", DEBUG_TGSI_IR, NULL },
-   { "cache_stats", DEBUG_CACHE_STATS, NULL },
    { "accurate_a0", DEBUG_ACCURATE_A0 },
    DEBUG_NAMED_VALUE_END
 };
-#endif
 
 int LP_PERF = 0;
 static const struct debug_named_value lp_perf_flags[] = {
@@ -104,7 +102,7 @@ static const struct debug_named_value lp_perf_flags[] = {
 static const char *
 llvmpipe_get_vendor(struct pipe_screen *screen)
 {
-   return "Mesa/X.org";
+   return "Mesa";
 }
 
 
@@ -228,9 +226,13 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
       return 64;
    case PIPE_CAP_TEXTURE_BUFFER_OBJECTS:
       return 1;
+   case PIPE_CAP_LINEAR_IMAGE_PITCH_ALIGNMENT:
+      return 1;
+   case PIPE_CAP_LINEAR_IMAGE_BASE_ADDRESS_ALIGNMENT:
+      return 1;
    /* Adressing that many 64bpp texels fits in an i32 so this is a reasonable value */
    case PIPE_CAP_MAX_TEXEL_BUFFER_ELEMENTS_UINT:
-      return 134217728;
+      return LP_MAX_TEXEL_BUFFER_ELEMENTS;
    case PIPE_CAP_TEXTURE_BUFFER_OFFSET_ALIGNMENT:
       return 16;
    case PIPE_CAP_TEXTURE_TRANSFER_MODES:
@@ -286,6 +288,8 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
       return (int)(system_memory >> 20);
    }
    case PIPE_CAP_UMA:
+      return 1;
+   case PIPE_CAP_QUERY_MEMORY_INFO:
       return 1;
    case PIPE_CAP_CLIP_HALFZ:
       return 1;
@@ -818,6 +822,9 @@ llvmpipe_is_format_supported(struct pipe_screen *_screen,
        format != PIPE_FORMAT_ETC1_RGB8)
       return false;
 
+   if (format_desc->layout == UTIL_FORMAT_LAYOUT_SUBSAMPLED && target == PIPE_BUFFER)
+      return false;
+
    /*
     * Everything can be supported by u_format
     * (those without fetch_rgba_float might be not but shouldn't hit that)
@@ -855,7 +862,6 @@ static void
 llvmpipe_destroy_screen(struct pipe_screen *_screen)
 {
    struct llvmpipe_screen *screen = llvmpipe_screen(_screen);
-   struct sw_winsys *winsys = screen->winsys;
 
    if (screen->cs_tpool)
       lp_cs_tpool_destroy(screen->cs_tpool);
@@ -865,13 +871,7 @@ llvmpipe_destroy_screen(struct pipe_screen *_screen)
 
    lp_jit_screen_cleanup(screen);
 
-   if (LP_DEBUG & DEBUG_CACHE_STATS)
-      printf("disk shader cache:   hits = %u, misses = %u\n",
-             screen->num_disk_shader_cache_hits,
-             screen->num_disk_shader_cache_misses);
    disk_cache_destroy(screen->disk_shader_cache);
-   if (winsys->destroy)
-      winsys->destroy(winsys);
 
    glsl_type_singleton_decref();
 
@@ -964,6 +964,18 @@ lp_get_disk_shader_cache(struct pipe_screen *_screen)
    return screen->disk_shader_cache;
 }
 
+static int
+llvmpipe_screen_get_fd(struct pipe_screen *_screen)
+{
+   struct llvmpipe_screen *screen = llvmpipe_screen(_screen);
+   struct sw_winsys *winsys = screen->winsys;
+
+   if (winsys->get_fd)
+      return winsys->get_fd(winsys);
+   else
+      return -1;
+}
+
 
 void
 lp_disk_cache_find_shader(struct llvmpipe_screen *screen,
@@ -982,12 +994,10 @@ lp_disk_cache_find_shader(struct llvmpipe_screen *screen,
                                     sha1, &binary_size);
    if (!buffer) {
       cache->data_size = 0;
-      p_atomic_inc(&screen->num_disk_shader_cache_misses);
       return;
    }
    cache->data_size = binary_size;
    cache->data = buffer;
-   p_atomic_inc(&screen->num_disk_shader_cache_hits);
 }
 
 
@@ -1029,6 +1039,13 @@ llvmpipe_screen_late_init(struct llvmpipe_screen *screen)
       goto out;
    }
 
+   if (!lp_jit_screen_init(screen)) {
+      ret = false;
+      goto out;
+   }
+
+   lp_build_init(); /* get lp_native_vector_width initialised */
+
    lp_disk_cache_create(screen);
    screen->late_init_done = true;
 out:
@@ -1048,20 +1065,13 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
 
    glsl_type_singleton_init_or_ref();
 
-#ifdef DEBUG
    LP_DEBUG = debug_get_flags_option("LP_DEBUG", lp_debug_flags, 0 );
-#endif
 
    LP_PERF = debug_get_flags_option("LP_PERF", lp_perf_flags, 0 );
 
    screen = CALLOC_STRUCT(llvmpipe_screen);
    if (!screen)
       return NULL;
-
-   if (!lp_jit_screen_init(screen)) {
-      FREE(screen);
-      return NULL;
-   }
 
    screen->winsys = winsys;
 
@@ -1070,6 +1080,7 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
    screen->base.get_name = llvmpipe_get_name;
    screen->base.get_vendor = llvmpipe_get_vendor;
    screen->base.get_device_vendor = llvmpipe_get_vendor; // TODO should be the CPU vendor
+   screen->base.get_screen_fd = llvmpipe_screen_get_fd;
    screen->base.get_param = llvmpipe_get_param;
    screen->base.get_shader_param = llvmpipe_get_shader_param;
    screen->base.get_compute_param = llvmpipe_get_compute_param;
@@ -1084,6 +1095,8 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
 
    screen->base.get_timestamp = u_default_get_timestamp;
 
+   screen->base.query_memory_info = util_sw_query_memory_info;
+
    screen->base.get_driver_uuid = llvmpipe_get_driver_uuid;
    screen->base.get_device_uuid = llvmpipe_get_device_uuid;
 
@@ -1096,18 +1109,14 @@ llvmpipe_create_screen(struct sw_winsys *winsys)
    screen->use_tgsi = (LP_DEBUG & DEBUG_TGSI_IR);
    screen->num_threads = util_get_cpu_caps()->nr_cpus > 1
       ? util_get_cpu_caps()->nr_cpus : 0;
-#ifdef EMBEDDED_DEVICE
-   screen->num_threads = MIN2(screen->num_threads, 2);
-#endif
    screen->num_threads = debug_get_num_option("LP_NUM_THREADS",
                                               screen->num_threads);
    screen->num_threads = MIN2(screen->num_threads, LP_MAX_THREADS);
 
-   lp_build_init(); /* get lp_native_vector_width initialised */
 
    snprintf(screen->renderer_string, sizeof(screen->renderer_string),
             "llvmpipe (LLVM " MESA_LLVM_VERSION_STRING ", %u bits)",
-            lp_native_vector_width );
+            lp_build_init_native_width() );
 
    list_inithead(&screen->ctx_list);
    (void) mtx_init(&screen->ctx_mutex, mtx_plain);

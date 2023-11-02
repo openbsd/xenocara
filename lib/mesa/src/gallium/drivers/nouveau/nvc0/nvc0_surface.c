@@ -31,7 +31,7 @@
 
 #include "tgsi/tgsi_ureg.h"
 
-#include "os/os_thread.h"
+#include "util/u_thread.h"
 
 #include "nvc0/nvc0_context.h"
 #include "nvc0/nvc0_resource.h"
@@ -969,7 +969,7 @@ nvc0_blit_set_src(struct nvc0_blitctx *ctx,
 {
    struct nvc0_context *nvc0 = ctx->nvc0;
    struct pipe_context *pipe = &nvc0->base.pipe;
-   struct pipe_sampler_view templ;
+   struct pipe_sampler_view templ = {0};
    uint32_t flags;
    unsigned s;
    enum pipe_texture_target target;

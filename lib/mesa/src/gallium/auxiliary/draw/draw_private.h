@@ -184,6 +184,7 @@ struct draw_context
       enum pipe_prim_type prim;
       unsigned opt;     /**< bitmask of PT_x flags */
       unsigned eltSize; /* saved eltSize for flushing */
+      unsigned viewid; /* saved viewid for flushing */
       ubyte vertices_per_patch;
       boolean rebind_parameters;
 
@@ -586,23 +587,6 @@ static inline unsigned
 draw_clamp_viewport_idx(int idx)
 {
    return ((PIPE_MAX_VIEWPORTS > idx && idx >= 0) ? idx : 0);
-}
-
-
-/**
- * Adds two unsigned integers and if the addition
- * overflows then it returns the value from
- * the overflow_value variable.
- */
-static inline unsigned
-draw_overflow_uadd(unsigned a, unsigned b,
-                   unsigned overflow_value)
-{
-   unsigned res = a + b;
-   if (res < a) {
-      res = overflow_value;
-   }
-   return res;
 }
 
 #endif /* DRAW_PRIVATE_H */

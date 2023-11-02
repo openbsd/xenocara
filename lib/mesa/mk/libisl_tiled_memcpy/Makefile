@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.1 2020/08/26 06:02:39 jsg Exp $
+#	$OpenBSD: Makefile,v 1.2 2023/11/02 04:53:32 jsg Exp $
 
 LIB=	isl_tiled_memcpy
 
@@ -12,6 +12,7 @@ CFLAGS+=	${C_VIS_ARGS} ${NO_OVERRIDE_INIT_ARGS} -msse2
 CPPFLAGS+=	-I${MESA_SRC}/src/intel \
 		-I${MESA_SRC}/src/mesa \
 		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/generated/src \
 		-I${MESA_SRC}/generated/src/intel
 
 install:

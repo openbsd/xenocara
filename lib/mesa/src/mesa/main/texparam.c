@@ -30,7 +30,7 @@
  */
 
 #include <stdbool.h>
-#include "main/glheader.h"
+#include "util/glheader.h"
 #include "main/blend.h"
 #include "main/context.h"
 #include "main/enums.h"
@@ -72,7 +72,7 @@ validate_texture_wrap_mode(struct gl_context * ctx, GLenum target, GLenum wrap)
       /* GL_CLAMP was removed in the core profile, and it has never existed in
        * OpenGL ES.
        */
-      supported = (ctx->API == API_OPENGL_COMPAT)
+      supported = _mesa_is_desktop_gl_compat(ctx)
          && (target != GL_TEXTURE_EXTERNAL_OES);
       break;
 
@@ -102,8 +102,9 @@ validate_texture_wrap_mode(struct gl_context * ctx, GLenum target, GLenum wrap)
       supported = (target != GL_TEXTURE_RECTANGLE_NV)
          && (target != GL_TEXTURE_EXTERNAL_OES)
          && (_mesa_has_ARB_texture_mirror_clamp_to_edge(ctx) ||
-            _mesa_has_ATI_texture_mirror_once(ctx) ||
-            _mesa_has_EXT_texture_mirror_clamp(ctx));
+             _mesa_has_EXT_texture_mirror_clamp_to_edge(ctx) ||
+             _mesa_has_ATI_texture_mirror_once(ctx) ||
+             _mesa_has_EXT_texture_mirror_clamp(ctx));
       break;
 
    case GL_MIRROR_CLAMP_TO_BORDER_EXT:
@@ -513,7 +514,7 @@ set_tex_parameteri(struct gl_context *ctx,
       /* GL_DEPTH_TEXTURE_MODE_ARB is removed in core-profile and it has never
        * existed in OpenGL ES.
        */
-      if (ctx->API == API_OPENGL_COMPAT) {
+      if (_mesa_is_desktop_gl_compat(ctx)) {
          if (texObj->Attrib.DepthMode == params[0])
             return GL_FALSE;
          if (params[0] == GL_LUMINANCE ||
@@ -848,7 +849,7 @@ set_tex_parameterf(struct gl_context *ctx,
        * OpenGL ES 2.0+, it only exists in when GL_OES_texture_border_clamp is
        * enabled.  It is never available in OpenGL ES 1.x.
        */
-      if (ctx->API == API_OPENGLES)
+      if (_mesa_is_gles1(ctx))
          goto invalid_pname;
 
       if (!_mesa_target_allows_setting_sampler_parameters(texObj->Target))
@@ -2303,7 +2304,7 @@ get_tex_parameterfv(struct gl_context *ctx,
          *params = ENUM_TO_FLOAT(obj->Sampler.Attrib.WrapR);
          break;
       case GL_TEXTURE_BORDER_COLOR:
-         if (ctx->API == API_OPENGLES)
+         if (_mesa_is_gles1(ctx))
             goto invalid_pname;
 
          if (_mesa_get_clamp_fragment_color(ctx, ctx->DrawBuffer)) {
@@ -2566,7 +2567,7 @@ get_tex_parameteriv(struct gl_context *ctx,
          *params = (GLint) obj->Sampler.Attrib.WrapR;
          break;
       case GL_TEXTURE_BORDER_COLOR:
-         if (ctx->API == API_OPENGLES)
+         if (_mesa_is_gles1(ctx))
             goto invalid_pname;
 
          {

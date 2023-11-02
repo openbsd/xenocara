@@ -62,11 +62,15 @@ static const struct u_tracepoint __tp_surface = {
 };
 void __trace_surface(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , void *cs
    , const struct pipe_surface * psurf
 ) {
-   struct trace_surface *__entry =
-      (struct trace_surface *)u_trace_append(ut, cs, &__tp_surface);
+   struct trace_surface entry;
+   UNUSED struct trace_surface *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_surface *)u_trace_append(ut, cs, &__tp_surface) :
+      &entry;
    __entry->width = psurf->width;
    __entry->height = psurf->height;
    __entry->nr_samples = psurf->nr_samples;
@@ -109,11 +113,15 @@ static const struct u_tracepoint __tp_framebuffer = {
 };
 void __trace_framebuffer(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , void *cs
    , const struct pipe_framebuffer_state * pfb
 ) {
-   struct trace_framebuffer *__entry =
-      (struct trace_framebuffer *)u_trace_append(ut, cs, &__tp_framebuffer);
+   struct trace_framebuffer entry;
+   UNUSED struct trace_framebuffer *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_framebuffer *)u_trace_append(ut, cs, &__tp_framebuffer) :
+      &entry;
    __entry->width = pfb->width;
    __entry->height = pfb->height;
    __entry->layers = pfb->layers;
@@ -161,11 +169,15 @@ static const struct u_tracepoint __tp_grid_info = {
 };
 void __trace_grid_info(
      struct u_trace *ut
+   , enum u_trace_type enabled_traces
    , void *cs
    , const struct pipe_grid_info * pgrid
 ) {
-   struct trace_grid_info *__entry =
-      (struct trace_grid_info *)u_trace_append(ut, cs, &__tp_grid_info);
+   struct trace_grid_info entry;
+   UNUSED struct trace_grid_info *__entry =
+      enabled_traces & U_TRACE_TYPE_REQUIRE_QUEUING ?
+      (struct trace_grid_info *)u_trace_append(ut, cs, &__tp_grid_info) :
+      &entry;
    __entry->work_dim = pgrid->work_dim;
    __entry->block_x = pgrid->block[0];
    __entry->block_y = pgrid->block[1];

@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.11 2023/03/19 10:24:26 jsg Exp $
+#	$OpenBSD: Makefile,v 1.12 2023/11/02 04:53:30 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -37,7 +37,12 @@ CPPFLAGS+=	-I${MESA_SRC}/src/egl/main \
 		-I${MESA_SRC}/src/loader \
 		-I${MESA_SRC}/src/gbm/main \
 		-I${MESA_SRC}/src/gbm/backends/dri \
-		-D_EGL_NATIVE_PLATFORM=_EGL_PLATFORM_X11
+		-I${MESA_SRC}/src/mesa \
+		-I${MESA_SRC}/src/gallium/include \
+		-I${MESA_SRC}/src/gallium/auxiliary \
+		-I${MESA_SRC}/src/gallium/frontends/dri \
+		-D_EGL_NATIVE_PLATFORM=_EGL_PLATFORM_X11 \
+		-DGALLIUM_SOFTPIPE
 
 LDADD+= -Wl,--as-needed -Wl,--allow-shlib-undefined -Wl,--start-group
 

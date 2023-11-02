@@ -61,7 +61,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateInstance(const VkInstanceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkInstance* pInstance) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyInstance@4=_vk_entrypoint_stub@0")
@@ -86,7 +88,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyInstance(VkInstance instance, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumeratePhysicalDevices@4=_vk_entrypoint_stub@0")
@@ -111,7 +115,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumeratePhysicalDevices(VkInstance instance, uint32_t* pPhysicalDeviceCount, VkPhysicalDevice* pPhysicalDevices) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetInstanceProcAddr@4=_vk_entrypoint_stub@0")
@@ -136,7 +142,9 @@
 #endif
 #else
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_common_GetInstanceProcAddr(VkInstance instance, const char* pName) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumerateInstanceVersion@4=_vk_entrypoint_stub@0")
@@ -161,7 +169,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumerateInstanceVersion(uint32_t* pApiVersion) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumerateInstanceLayerProperties@4=_vk_entrypoint_stub@0")
@@ -186,7 +196,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumerateInstanceLayerProperties(uint32_t* pPropertyCount, VkLayerProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumerateInstanceExtensionProperties@4=_vk_entrypoint_stub@0")
@@ -211,7 +223,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumerateInstanceExtensionProperties(const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -237,7 +251,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateAndroidSurfaceKHR(VkInstance instance, const VkAndroidSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -263,7 +279,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDisplayPlaneSurfaceKHR(VkInstance instance, const VkDisplaySurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroySurfaceKHR@4=_vk_entrypoint_stub@0")
@@ -288,7 +306,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroySurfaceKHR(VkInstance instance, VkSurfaceKHR surface, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_VI_NN
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -314,7 +334,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateViSurfaceNN(VkInstance instance, const VkViSurfaceCreateInfoNN* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_VI_NN
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef _MSC_VER
@@ -341,7 +363,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateWaylandSurfaceKHR(VkInstance instance, const VkWaylandSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -368,7 +392,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateWin32SurfaceKHR(VkInstance instance, const VkWin32SurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_XLIB_KHR
 #ifdef _MSC_VER
@@ -395,7 +421,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateXlibSurfaceKHR(VkInstance instance, const VkXlibSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_KHR
 #ifdef VK_USE_PLATFORM_XCB_KHR
 #ifdef _MSC_VER
@@ -422,7 +450,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateXcbSurfaceKHR(VkInstance instance, const VkXcbSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XCB_KHR
 #ifdef VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef _MSC_VER
@@ -449,7 +479,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDirectFBSurfaceEXT(VkInstance instance, const VkDirectFBSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -476,7 +508,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateImagePipeSurfaceFUCHSIA(VkInstance instance, const VkImagePipeSurfaceCreateInfoFUCHSIA* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_GGP
 #ifdef _MSC_VER
@@ -503,7 +537,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateStreamDescriptorSurfaceGGP(VkInstance instance, const VkStreamDescriptorSurfaceCreateInfoGGP* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_GGP
 #ifdef VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
@@ -530,7 +566,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateScreenSurfaceQNX(VkInstance instance, const VkScreenSurfaceCreateInfoQNX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -556,7 +594,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDebugReportCallbackEXT(VkInstance instance, const VkDebugReportCallbackCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugReportCallbackEXT* pCallback) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDebugReportCallbackEXT@4=_vk_entrypoint_stub@0")
@@ -581,7 +621,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDebugReportCallbackEXT(VkInstance instance, VkDebugReportCallbackEXT callback, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DebugReportMessageEXT@4=_vk_entrypoint_stub@0")
@@ -606,7 +648,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DebugReportMessageEXT(VkInstance instance, VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object, size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumeratePhysicalDeviceGroups@4=_vk_entrypoint_stub@0")
@@ -631,7 +675,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumeratePhysicalDeviceGroups(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupProperties* pPhysicalDeviceGroupProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumeratePhysicalDeviceGroupsKHR@4=_vk_entrypoint_stub@0")
@@ -656,7 +702,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumeratePhysicalDeviceGroupsKHR(VkInstance instance, uint32_t* pPhysicalDeviceGroupCount, VkPhysicalDeviceGroupProperties* pPhysicalDeviceGroupProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_IOS_MVK
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -682,7 +730,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateIOSSurfaceMVK(VkInstance instance, const VkIOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_IOS_MVK
 #ifdef VK_USE_PLATFORM_MACOS_MVK
 #ifdef _MSC_VER
@@ -709,7 +759,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateMacOSSurfaceMVK(VkInstance instance, const VkMacOSSurfaceCreateInfoMVK* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_MACOS_MVK
 #ifdef VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
@@ -736,7 +788,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateMetalSurfaceEXT(VkInstance instance, const VkMetalSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -762,7 +816,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pMessenger) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDebugUtilsMessengerEXT@4=_vk_entrypoint_stub@0")
@@ -787,7 +843,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT messenger, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SubmitDebugUtilsMessageEXT@4=_vk_entrypoint_stub@0")
@@ -812,7 +870,9 @@
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_SubmitDebugUtilsMessageEXT(VkInstance instance, VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageTypes, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateHeadlessSurfaceEXT@4=_vk_entrypoint_stub@0")
@@ -837,7 +897,9 @@
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateHeadlessSurfaceEXT(VkInstance instance, const VkHeadlessSurfaceCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface) __attribute__ ((weak));
+
 #endif
+
 
 const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
     .CreateInstance = vk_common_CreateInstance,
@@ -926,6 +988,7 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 };
 
 
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceProperties@4=_vk_entrypoint_stub@0")
@@ -950,7 +1013,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceQueueFamilyProperties@4=_vk_entrypoint_stub@0")
@@ -975,7 +1040,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceMemoryProperties@4=_vk_entrypoint_stub@0")
@@ -1000,7 +1067,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceMemoryProperties(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties* pMemoryProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFeatures@4=_vk_entrypoint_stub@0")
@@ -1025,7 +1094,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceFeatures(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures* pFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFormatProperties@4=_vk_entrypoint_stub@0")
@@ -1050,7 +1121,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties* pFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceImageFormatProperties@4=_vk_entrypoint_stub@0")
@@ -1075,7 +1148,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceImageFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkImageFormatProperties* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDevice@4=_vk_entrypoint_stub@0")
@@ -1100,7 +1175,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDevice(VkPhysicalDevice physicalDevice, const VkDeviceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDevice* pDevice) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumerateDeviceLayerProperties@4=_vk_entrypoint_stub@0")
@@ -1125,7 +1202,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumerateDeviceLayerProperties(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkLayerProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EnumerateDeviceExtensionProperties@4=_vk_entrypoint_stub@0")
@@ -1150,7 +1229,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumerateDeviceExtensionProperties(VkPhysicalDevice physicalDevice, const char* pLayerName, uint32_t* pPropertyCount, VkExtensionProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSparseImageFormatProperties@4=_vk_entrypoint_stub@0")
@@ -1175,7 +1256,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceSparseImageFormatProperties(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkSampleCountFlagBits samples, VkImageUsageFlags usage, VkImageTiling tiling, uint32_t* pPropertyCount, VkSparseImageFormatProperties* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceDisplayPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -1200,7 +1283,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceDisplayPropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceDisplayPlanePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -1225,7 +1310,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceDisplayPlanePropertiesKHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlanePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDisplayPlaneSupportedDisplaysKHR@4=_vk_entrypoint_stub@0")
@@ -1250,7 +1337,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDisplayPlaneSupportedDisplaysKHR(VkPhysicalDevice physicalDevice, uint32_t planeIndex, uint32_t* pDisplayCount, VkDisplayKHR* pDisplays) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDisplayModePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -1275,7 +1364,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDisplayModePropertiesKHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDisplayModeKHR@4=_vk_entrypoint_stub@0")
@@ -1300,7 +1391,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDisplayModeKHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, const VkDisplayModeCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDisplayModeKHR* pMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDisplayPlaneCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -1325,7 +1418,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDisplayPlaneCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkDisplayModeKHR mode, uint32_t planeIndex, VkDisplayPlaneCapabilitiesKHR* pCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSurfaceSupportKHR@4=_vk_entrypoint_stub@0")
@@ -1350,7 +1445,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfaceSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, VkSurfaceKHR surface, VkBool32* pSupported) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSurfaceCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -1375,7 +1472,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfaceCapabilitiesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilitiesKHR* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSurfaceFormatsKHR@4=_vk_entrypoint_stub@0")
@@ -1400,7 +1499,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pSurfaceFormatCount, VkSurfaceFormatKHR* pSurfaceFormats) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSurfacePresentModesKHR@4=_vk_entrypoint_stub@0")
@@ -1425,7 +1526,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfacePresentModesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1451,7 +1554,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_common_GetPhysicalDeviceWaylandPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, struct wl_display* display) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WAYLAND_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -1478,7 +1583,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_common_GetPhysicalDeviceWin32PresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_XLIB_KHR
 #ifdef _MSC_VER
@@ -1505,7 +1612,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_common_GetPhysicalDeviceXlibPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, Display* dpy, VisualID visualID) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_KHR
 #ifdef VK_USE_PLATFORM_XCB_KHR
 #ifdef _MSC_VER
@@ -1532,7 +1641,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_common_GetPhysicalDeviceXcbPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, xcb_connection_t* connection, xcb_visualid_t visual_id) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XCB_KHR
 #ifdef VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef _MSC_VER
@@ -1559,7 +1670,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_common_GetPhysicalDeviceDirectFBPresentationSupportEXT(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, IDirectFB* dfb) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_DIRECTFB_EXT
 #ifdef VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
@@ -1586,7 +1699,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkBool32 VKAPI_CALL vk_common_GetPhysicalDeviceScreenPresentationSupportQNX(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, struct _screen_window* window) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_SCREEN_QNX
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -1612,7 +1727,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceExternalImageFormatPropertiesNV(VkPhysicalDevice physicalDevice, VkFormat format, VkImageType type, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkExternalMemoryHandleTypeFlagsNV externalHandleType, VkExternalImageFormatPropertiesNV* pExternalImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFeatures2@4=_vk_entrypoint_stub@0")
@@ -1637,7 +1754,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceFeatures2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFeatures2KHR@4=_vk_entrypoint_stub@0")
@@ -1662,7 +1781,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceFeatures2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceFeatures2* pFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceProperties2@4=_vk_entrypoint_stub@0")
@@ -1687,7 +1808,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceProperties2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -1712,7 +1835,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceProperties2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFormatProperties2@4=_vk_entrypoint_stub@0")
@@ -1737,7 +1862,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceFormatProperties2(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2* pFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFormatProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -1762,7 +1889,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceFormatProperties2KHR(VkPhysicalDevice physicalDevice, VkFormat format, VkFormatProperties2* pFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceImageFormatProperties2@4=_vk_entrypoint_stub@0")
@@ -1787,7 +1916,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceImageFormatProperties2(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceImageFormatProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -1812,7 +1943,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceImageFormatProperties2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceImageFormatInfo2* pImageFormatInfo, VkImageFormatProperties2* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceQueueFamilyProperties2@4=_vk_entrypoint_stub@0")
@@ -1837,7 +1970,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceQueueFamilyProperties2(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceQueueFamilyProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -1862,7 +1997,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceQueueFamilyProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pQueueFamilyPropertyCount, VkQueueFamilyProperties2* pQueueFamilyProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceMemoryProperties2@4=_vk_entrypoint_stub@0")
@@ -1887,7 +2024,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceMemoryProperties2(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceMemoryProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -1912,7 +2051,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceMemoryProperties2KHR(VkPhysicalDevice physicalDevice, VkPhysicalDeviceMemoryProperties2* pMemoryProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSparseImageFormatProperties2@4=_vk_entrypoint_stub@0")
@@ -1937,7 +2078,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceSparseImageFormatProperties2(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSparseImageFormatProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -1962,7 +2105,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceSparseImageFormatProperties2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSparseImageFormatInfo2* pFormatInfo, uint32_t* pPropertyCount, VkSparseImageFormatProperties2* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceExternalBufferProperties@4=_vk_entrypoint_stub@0")
@@ -1987,7 +2132,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceExternalBufferProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfo* pExternalBufferInfo, VkExternalBufferProperties* pExternalBufferProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceExternalBufferPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2012,7 +2159,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceExternalBufferPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalBufferInfo* pExternalBufferInfo, VkExternalBufferProperties* pExternalBufferProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceExternalSemaphoreProperties@4=_vk_entrypoint_stub@0")
@@ -2037,7 +2186,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceExternalSemaphoreProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfo* pExternalSemaphoreInfo, VkExternalSemaphoreProperties* pExternalSemaphoreProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceExternalSemaphorePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2062,7 +2213,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceExternalSemaphorePropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalSemaphoreInfo* pExternalSemaphoreInfo, VkExternalSemaphoreProperties* pExternalSemaphoreProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceExternalFenceProperties@4=_vk_entrypoint_stub@0")
@@ -2087,7 +2240,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceExternalFenceProperties(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalFenceInfo* pExternalFenceInfo, VkExternalFenceProperties* pExternalFenceProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceExternalFencePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2112,7 +2267,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceExternalFencePropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceExternalFenceInfo* pExternalFenceInfo, VkExternalFenceProperties* pExternalFenceProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ReleaseDisplayEXT@4=_vk_entrypoint_stub@0")
@@ -2137,7 +2294,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ReleaseDisplayEXT(VkPhysicalDevice physicalDevice, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2163,7 +2322,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireXlibDisplayEXT(VkPhysicalDevice physicalDevice, Display* dpy, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef _MSC_VER
@@ -2190,7 +2351,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetRandROutputDisplayEXT(VkPhysicalDevice physicalDevice, Display* dpy, RROutput rrOutput, VkDisplayKHR* pDisplay) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_XLIB_XRANDR_EXT
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -2217,7 +2380,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireWinrtDisplayNV(VkPhysicalDevice physicalDevice, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -2244,7 +2409,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetWinrtDisplayNV(VkPhysicalDevice physicalDevice, uint32_t deviceRelativeId, VkDisplayKHR* pDisplay) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2270,7 +2437,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfaceCapabilities2EXT(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VkSurfaceCapabilities2EXT* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDevicePresentRectanglesKHR@4=_vk_entrypoint_stub@0")
@@ -2295,7 +2464,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDevicePresentRectanglesKHR(VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, uint32_t* pRectCount, VkRect2D* pRects) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceMultisamplePropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -2320,7 +2491,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceMultisamplePropertiesEXT(VkPhysicalDevice physicalDevice, VkSampleCountFlagBits samples, VkMultisamplePropertiesEXT* pMultisampleProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSurfaceCapabilities2KHR@4=_vk_entrypoint_stub@0")
@@ -2345,7 +2518,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfaceCapabilities2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, VkSurfaceCapabilities2KHR* pSurfaceCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSurfaceFormats2KHR@4=_vk_entrypoint_stub@0")
@@ -2370,7 +2545,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfaceFormats2KHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, uint32_t* pSurfaceFormatCount, VkSurfaceFormat2KHR* pSurfaceFormats) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceDisplayProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -2395,7 +2572,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceDisplayProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceDisplayPlaneProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -2420,7 +2599,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceDisplayPlaneProperties2KHR(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkDisplayPlaneProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDisplayModeProperties2KHR@4=_vk_entrypoint_stub@0")
@@ -2445,7 +2626,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDisplayModeProperties2KHR(VkPhysicalDevice physicalDevice, VkDisplayKHR display, uint32_t* pPropertyCount, VkDisplayModeProperties2KHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDisplayPlaneCapabilities2KHR@4=_vk_entrypoint_stub@0")
@@ -2470,7 +2653,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDisplayPlaneCapabilities2KHR(VkPhysicalDevice physicalDevice, const VkDisplayPlaneInfo2KHR* pDisplayPlaneInfo, VkDisplayPlaneCapabilities2KHR* pCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceCalibrateableTimeDomainsEXT@4=_vk_entrypoint_stub@0")
@@ -2495,7 +2680,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceCalibrateableTimeDomainsEXT(VkPhysicalDevice physicalDevice, uint32_t* pTimeDomainCount, VkTimeDomainEXT* pTimeDomains) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceCooperativeMatrixPropertiesNV@4=_vk_entrypoint_stub@0")
@@ -2520,7 +2707,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceCooperativeMatrixPropertiesNV(VkPhysicalDevice physicalDevice, uint32_t* pPropertyCount, VkCooperativeMatrixPropertiesNV* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2546,7 +2735,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSurfacePresentModes2EXT(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, uint32_t* pPresentModeCount, VkPresentModeKHR* pPresentModes) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -2572,7 +2763,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EnumeratePhysicalDeviceQueueFamilyPerformanceQueryCountersKHR(VkPhysicalDevice physicalDevice, uint32_t queueFamilyIndex, uint32_t* pCounterCount, VkPerformanceCounterKHR* pCounters, VkPerformanceCounterDescriptionKHR* pCounterDescriptions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR@4=_vk_entrypoint_stub@0")
@@ -2597,7 +2790,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPhysicalDeviceQueueFamilyPerformanceQueryPassesKHR(VkPhysicalDevice physicalDevice, const VkQueryPoolPerformanceCreateInfoKHR* pPerformanceQueryCreateInfo, uint32_t* pNumPasses) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV@4=_vk_entrypoint_stub@0")
@@ -2622,7 +2817,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceSupportedFramebufferMixedSamplesCombinationsNV(VkPhysicalDevice physicalDevice, uint32_t* pCombinationCount, VkFramebufferMixedSamplesCombinationNV* pCombinations) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceToolProperties@4=_vk_entrypoint_stub@0")
@@ -2647,7 +2844,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceToolProperties(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceToolPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -2672,7 +2871,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceToolPropertiesEXT(VkPhysicalDevice physicalDevice, uint32_t* pToolCount, VkPhysicalDeviceToolProperties* pToolProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceFragmentShadingRatesKHR@4=_vk_entrypoint_stub@0")
@@ -2697,8 +2898,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceFragmentShadingRatesKHR(VkPhysicalDevice physicalDevice, uint32_t* pFragmentShadingRateCount, VkPhysicalDeviceFragmentShadingRateKHR* pFragmentShadingRates) __attribute__ ((weak));
+
 #endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceVideoCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -2723,9 +2925,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceVideoCapabilitiesKHR(VkPhysicalDevice physicalDevice, const VkVideoProfileInfoKHR* pVideoProfile, VkVideoCapabilitiesKHR* pCapabilities) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceVideoFormatPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -2750,8 +2952,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceVideoFormatPropertiesKHR(VkPhysicalDevice physicalDevice, const VkPhysicalDeviceVideoFormatInfoKHR* pVideoFormatInfo, uint32_t* pVideoFormatPropertyCount, VkVideoFormatPropertiesKHR* pVideoFormatProperties) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AcquireDrmDisplayEXT@4=_vk_entrypoint_stub@0")
@@ -2776,7 +2979,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, VkDisplayKHR display) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDrmDisplayEXT@4=_vk_entrypoint_stub@0")
@@ -2801,7 +3006,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDrmDisplayEXT(VkPhysicalDevice physicalDevice, int32_t drmFd, uint32_t connectorId, VkDisplayKHR* display) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPhysicalDeviceOpticalFlowImageFormatsNV@4=_vk_entrypoint_stub@0")
@@ -2826,7 +3033,9 @@ const struct vk_instance_entrypoint_table vk_common_instance_entrypoints = {
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPhysicalDeviceOpticalFlowImageFormatsNV(VkPhysicalDevice physicalDevice, const VkOpticalFlowImageFormatInfoNV* pOpticalFlowImageFormatInfo, uint32_t* pFormatCount, VkOpticalFlowImageFormatPropertiesNV* pImageFormatProperties) __attribute__ ((weak));
+
 #endif
+
 
 const struct vk_physical_device_entrypoint_table vk_common_physical_device_entrypoints = {
     .GetPhysicalDeviceProperties = vk_common_GetPhysicalDeviceProperties,
@@ -2943,20 +3152,13 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
     .GetPhysicalDeviceToolProperties = vk_common_GetPhysicalDeviceToolProperties,
     .GetPhysicalDeviceToolPropertiesEXT = vk_common_GetPhysicalDeviceToolPropertiesEXT,
     .GetPhysicalDeviceFragmentShadingRatesKHR = vk_common_GetPhysicalDeviceFragmentShadingRatesKHR,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetPhysicalDeviceVideoCapabilitiesKHR = vk_common_GetPhysicalDeviceVideoCapabilitiesKHR,
-#elif defined(_MSC_VER)
-    .GetPhysicalDeviceVideoCapabilitiesKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetPhysicalDeviceVideoFormatPropertiesKHR = vk_common_GetPhysicalDeviceVideoFormatPropertiesKHR,
-#elif defined(_MSC_VER)
-    .GetPhysicalDeviceVideoFormatPropertiesKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
     .AcquireDrmDisplayEXT = vk_common_AcquireDrmDisplayEXT,
     .GetDrmDisplayEXT = vk_common_GetDrmDisplayEXT,
     .GetPhysicalDeviceOpticalFlowImageFormatsNV = vk_common_GetPhysicalDeviceOpticalFlowImageFormatsNV,
 };
+
 
 
 #ifdef _MSC_VER
@@ -2983,7 +3185,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR PFN_vkVoidFunction VKAPI_CALL vk_common_GetDeviceProcAddr(VkDevice device, const char* pName) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDevice@4=_vk_entrypoint_stub@0")
@@ -3008,7 +3212,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDevice(VkDevice device, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceQueue@4=_vk_entrypoint_stub@0")
@@ -3033,7 +3239,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceQueue(VkDevice device, uint32_t queueFamilyIndex, uint32_t queueIndex, VkQueue* pQueue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueSubmit@4=_vk_entrypoint_stub@0")
@@ -3058,7 +3266,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueSubmit(VkQueue queue, uint32_t submitCount, const VkSubmitInfo* pSubmits, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueWaitIdle@4=_vk_entrypoint_stub@0")
@@ -3083,7 +3293,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueWaitIdle(VkQueue queue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DeviceWaitIdle@4=_vk_entrypoint_stub@0")
@@ -3108,7 +3320,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_DeviceWaitIdle(VkDevice device) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AllocateMemory@4=_vk_entrypoint_stub@0")
@@ -3133,7 +3347,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AllocateMemory(VkDevice device, const VkMemoryAllocateInfo* pAllocateInfo, const VkAllocationCallbacks* pAllocator, VkDeviceMemory* pMemory) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_FreeMemory@4=_vk_entrypoint_stub@0")
@@ -3158,7 +3374,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_FreeMemory(VkDevice device, VkDeviceMemory memory, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_MapMemory@4=_vk_entrypoint_stub@0")
@@ -3183,7 +3401,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_MapMemory(VkDevice device, VkDeviceMemory memory, VkDeviceSize offset, VkDeviceSize size, VkMemoryMapFlags flags, void** ppData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory@4=_vk_entrypoint_stub@0")
@@ -3208,7 +3428,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_UnmapMemory(VkDevice device, VkDeviceMemory memory) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_FlushMappedMemoryRanges@4=_vk_entrypoint_stub@0")
@@ -3233,7 +3455,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_FlushMappedMemoryRanges(VkDevice device, uint32_t memoryRangeCount, const VkMappedMemoryRange* pMemoryRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_InvalidateMappedMemoryRanges@4=_vk_entrypoint_stub@0")
@@ -3258,7 +3482,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_InvalidateMappedMemoryRanges(VkDevice device, uint32_t memoryRangeCount, const VkMappedMemoryRange* pMemoryRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceMemoryCommitment@4=_vk_entrypoint_stub@0")
@@ -3283,7 +3509,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceMemoryCommitment(VkDevice device, VkDeviceMemory memory, VkDeviceSize* pCommittedMemoryInBytes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -3308,7 +3536,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetBufferMemoryRequirements(VkDevice device, VkBuffer buffer, VkMemoryRequirements* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindBufferMemory@4=_vk_entrypoint_stub@0")
@@ -3333,7 +3563,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindBufferMemory(VkDevice device, VkBuffer buffer, VkDeviceMemory memory, VkDeviceSize memoryOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -3358,7 +3590,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageMemoryRequirements(VkDevice device, VkImage image, VkMemoryRequirements* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindImageMemory@4=_vk_entrypoint_stub@0")
@@ -3383,7 +3617,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindImageMemory(VkDevice device, VkImage image, VkDeviceMemory memory, VkDeviceSize memoryOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -3408,7 +3644,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageSparseMemoryRequirements(VkDevice device, VkImage image, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueBindSparse@4=_vk_entrypoint_stub@0")
@@ -3433,7 +3671,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueBindSparse(VkQueue queue, uint32_t bindInfoCount, const VkBindSparseInfo* pBindInfo, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateFence@4=_vk_entrypoint_stub@0")
@@ -3458,7 +3698,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateFence(VkDevice device, const VkFenceCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyFence@4=_vk_entrypoint_stub@0")
@@ -3483,7 +3725,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyFence(VkDevice device, VkFence fence, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetFences@4=_vk_entrypoint_stub@0")
@@ -3508,7 +3752,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ResetFences(VkDevice device, uint32_t fenceCount, const VkFence* pFences) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetFenceStatus@4=_vk_entrypoint_stub@0")
@@ -3533,7 +3779,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetFenceStatus(VkDevice device, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_WaitForFences@4=_vk_entrypoint_stub@0")
@@ -3558,7 +3806,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_WaitForFences(VkDevice device, uint32_t fenceCount, const VkFence* pFences, VkBool32 waitAll, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateSemaphore@4=_vk_entrypoint_stub@0")
@@ -3583,7 +3833,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateSemaphore(VkDevice device, const VkSemaphoreCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSemaphore* pSemaphore) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroySemaphore@4=_vk_entrypoint_stub@0")
@@ -3608,7 +3860,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroySemaphore(VkDevice device, VkSemaphore semaphore, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateEvent@4=_vk_entrypoint_stub@0")
@@ -3633,7 +3887,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateEvent(VkDevice device, const VkEventCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkEvent* pEvent) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyEvent@4=_vk_entrypoint_stub@0")
@@ -3658,7 +3914,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyEvent(VkDevice device, VkEvent event, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetEventStatus@4=_vk_entrypoint_stub@0")
@@ -3683,7 +3941,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetEventStatus(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetEvent@4=_vk_entrypoint_stub@0")
@@ -3708,7 +3968,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetEvent(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetEvent@4=_vk_entrypoint_stub@0")
@@ -3733,7 +3995,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ResetEvent(VkDevice device, VkEvent event) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateQueryPool@4=_vk_entrypoint_stub@0")
@@ -3758,7 +4022,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateQueryPool(VkDevice device, const VkQueryPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkQueryPool* pQueryPool) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyQueryPool@4=_vk_entrypoint_stub@0")
@@ -3783,7 +4049,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyQueryPool(VkDevice device, VkQueryPool queryPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetQueryPoolResults@4=_vk_entrypoint_stub@0")
@@ -3808,7 +4076,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetQueryPoolResults(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, size_t dataSize, void* pData, VkDeviceSize stride, VkQueryResultFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetQueryPool@4=_vk_entrypoint_stub@0")
@@ -3833,7 +4103,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_ResetQueryPool(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetQueryPoolEXT@4=_vk_entrypoint_stub@0")
@@ -3858,7 +4130,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_ResetQueryPoolEXT(VkDevice device, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateBuffer@4=_vk_entrypoint_stub@0")
@@ -3883,7 +4157,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateBuffer(VkDevice device, const VkBufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBuffer* pBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyBuffer@4=_vk_entrypoint_stub@0")
@@ -3908,7 +4184,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyBuffer(VkDevice device, VkBuffer buffer, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateBufferView@4=_vk_entrypoint_stub@0")
@@ -3933,7 +4211,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateBufferView(VkDevice device, const VkBufferViewCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBufferView* pView) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyBufferView@4=_vk_entrypoint_stub@0")
@@ -3958,7 +4238,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyBufferView(VkDevice device, VkBufferView bufferView, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateImage@4=_vk_entrypoint_stub@0")
@@ -3983,7 +4265,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateImage(VkDevice device, const VkImageCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImage* pImage) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyImage@4=_vk_entrypoint_stub@0")
@@ -4008,7 +4292,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyImage(VkDevice device, VkImage image, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageSubresourceLayout@4=_vk_entrypoint_stub@0")
@@ -4033,7 +4319,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageSubresourceLayout(VkDevice device, VkImage image, const VkImageSubresource* pSubresource, VkSubresourceLayout* pLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateImageView@4=_vk_entrypoint_stub@0")
@@ -4058,7 +4346,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateImageView(VkDevice device, const VkImageViewCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkImageView* pView) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyImageView@4=_vk_entrypoint_stub@0")
@@ -4083,7 +4373,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyImageView(VkDevice device, VkImageView imageView, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateShaderModule@4=_vk_entrypoint_stub@0")
@@ -4108,7 +4400,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateShaderModule(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkShaderModule* pShaderModule) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderModule@4=_vk_entrypoint_stub@0")
@@ -4133,7 +4427,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyShaderModule(VkDevice device, VkShaderModule shaderModule, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreatePipelineCache@4=_vk_entrypoint_stub@0")
@@ -4158,7 +4454,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreatePipelineCache(VkDevice device, const VkPipelineCacheCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineCache* pPipelineCache) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyPipelineCache@4=_vk_entrypoint_stub@0")
@@ -4183,7 +4481,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyPipelineCache(VkDevice device, VkPipelineCache pipelineCache, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPipelineCacheData@4=_vk_entrypoint_stub@0")
@@ -4208,7 +4508,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPipelineCacheData(VkDevice device, VkPipelineCache pipelineCache, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_MergePipelineCaches@4=_vk_entrypoint_stub@0")
@@ -4233,7 +4535,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_MergePipelineCaches(VkDevice device, VkPipelineCache dstCache, uint32_t srcCacheCount, const VkPipelineCache* pSrcCaches) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateGraphicsPipelines@4=_vk_entrypoint_stub@0")
@@ -4258,7 +4562,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateGraphicsPipelines(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkGraphicsPipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateComputePipelines@4=_vk_entrypoint_stub@0")
@@ -4283,7 +4589,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateComputePipelines(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkComputePipelineCreateInfo* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI@4=_vk_entrypoint_stub@0")
@@ -4308,7 +4616,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDeviceSubpassShadingMaxWorkgroupSizeHUAWEI(VkDevice device, VkRenderPass renderpass, VkExtent2D* pMaxWorkgroupSize) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyPipeline@4=_vk_entrypoint_stub@0")
@@ -4333,7 +4643,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyPipeline(VkDevice device, VkPipeline pipeline, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreatePipelineLayout@4=_vk_entrypoint_stub@0")
@@ -4358,7 +4670,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreatePipelineLayout(VkDevice device, const VkPipelineLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPipelineLayout* pPipelineLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyPipelineLayout@4=_vk_entrypoint_stub@0")
@@ -4383,7 +4697,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyPipelineLayout(VkDevice device, VkPipelineLayout pipelineLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateSampler@4=_vk_entrypoint_stub@0")
@@ -4408,7 +4724,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateSampler(VkDevice device, const VkSamplerCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSampler* pSampler) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroySampler@4=_vk_entrypoint_stub@0")
@@ -4433,7 +4751,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroySampler(VkDevice device, VkSampler sampler, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDescriptorSetLayout@4=_vk_entrypoint_stub@0")
@@ -4458,7 +4778,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDescriptorSetLayout(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorSetLayout* pSetLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDescriptorSetLayout@4=_vk_entrypoint_stub@0")
@@ -4483,7 +4805,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDescriptorSetLayout(VkDevice device, VkDescriptorSetLayout descriptorSetLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDescriptorPool@4=_vk_entrypoint_stub@0")
@@ -4508,7 +4832,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDescriptorPool(VkDevice device, const VkDescriptorPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorPool* pDescriptorPool) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDescriptorPool@4=_vk_entrypoint_stub@0")
@@ -4533,7 +4859,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetDescriptorPool@4=_vk_entrypoint_stub@0")
@@ -4558,7 +4886,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ResetDescriptorPool(VkDevice device, VkDescriptorPool descriptorPool, VkDescriptorPoolResetFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AllocateDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -4583,7 +4913,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AllocateDescriptorSets(VkDevice device, const VkDescriptorSetAllocateInfo* pAllocateInfo, VkDescriptorSet* pDescriptorSets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_FreeDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -4608,7 +4940,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_FreeDescriptorSets(VkDevice device, VkDescriptorPool descriptorPool, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_UpdateDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -4633,7 +4967,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_UpdateDescriptorSets(VkDevice device, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites, uint32_t descriptorCopyCount, const VkCopyDescriptorSet* pDescriptorCopies) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateFramebuffer@4=_vk_entrypoint_stub@0")
@@ -4658,7 +4994,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateFramebuffer(VkDevice device, const VkFramebufferCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkFramebuffer* pFramebuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyFramebuffer@4=_vk_entrypoint_stub@0")
@@ -4683,7 +5021,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyFramebuffer(VkDevice device, VkFramebuffer framebuffer, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateRenderPass@4=_vk_entrypoint_stub@0")
@@ -4708,7 +5048,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateRenderPass(VkDevice device, const VkRenderPassCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyRenderPass@4=_vk_entrypoint_stub@0")
@@ -4733,7 +5075,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyRenderPass(VkDevice device, VkRenderPass renderPass, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetRenderAreaGranularity@4=_vk_entrypoint_stub@0")
@@ -4758,7 +5102,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetRenderAreaGranularity(VkDevice device, VkRenderPass renderPass, VkExtent2D* pGranularity) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateCommandPool@4=_vk_entrypoint_stub@0")
@@ -4783,7 +5129,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateCommandPool(VkDevice device, const VkCommandPoolCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCommandPool* pCommandPool) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyCommandPool@4=_vk_entrypoint_stub@0")
@@ -4808,7 +5156,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyCommandPool(VkDevice device, VkCommandPool commandPool, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetCommandPool@4=_vk_entrypoint_stub@0")
@@ -4833,7 +5183,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ResetCommandPool(VkDevice device, VkCommandPool commandPool, VkCommandPoolResetFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AllocateCommandBuffers@4=_vk_entrypoint_stub@0")
@@ -4858,7 +5210,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AllocateCommandBuffers(VkDevice device, const VkCommandBufferAllocateInfo* pAllocateInfo, VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_FreeCommandBuffers@4=_vk_entrypoint_stub@0")
@@ -4883,7 +5237,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_FreeCommandBuffers(VkDevice device, VkCommandPool commandPool, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BeginCommandBuffer@4=_vk_entrypoint_stub@0")
@@ -4908,7 +5264,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BeginCommandBuffer(VkCommandBuffer commandBuffer, const VkCommandBufferBeginInfo* pBeginInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_EndCommandBuffer@4=_vk_entrypoint_stub@0")
@@ -4933,7 +5291,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_EndCommandBuffer(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ResetCommandBuffer@4=_vk_entrypoint_stub@0")
@@ -4958,7 +5318,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ResetCommandBuffer(VkCommandBuffer commandBuffer, VkCommandBufferResetFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindPipeline@4=_vk_entrypoint_stub@0")
@@ -4983,7 +5345,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindPipeline(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewport@4=_vk_entrypoint_stub@0")
@@ -5008,7 +5372,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewport(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetScissor@4=_vk_entrypoint_stub@0")
@@ -5033,7 +5399,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetScissor(VkCommandBuffer commandBuffer, uint32_t firstScissor, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetLineWidth@4=_vk_entrypoint_stub@0")
@@ -5058,7 +5426,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetLineWidth(VkCommandBuffer commandBuffer, float lineWidth) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthBias@4=_vk_entrypoint_stub@0")
@@ -5083,7 +5453,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthBias(VkCommandBuffer commandBuffer, float depthBiasConstantFactor, float depthBiasClamp, float depthBiasSlopeFactor) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetBlendConstants@4=_vk_entrypoint_stub@0")
@@ -5108,7 +5480,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetBlendConstants(VkCommandBuffer commandBuffer, const float blendConstants[4]) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthBounds@4=_vk_entrypoint_stub@0")
@@ -5133,7 +5507,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthBounds(VkCommandBuffer commandBuffer, float minDepthBounds, float maxDepthBounds) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilCompareMask@4=_vk_entrypoint_stub@0")
@@ -5158,7 +5534,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilCompareMask(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t compareMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilWriteMask@4=_vk_entrypoint_stub@0")
@@ -5183,7 +5561,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilWriteMask(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t writeMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilReference@4=_vk_entrypoint_stub@0")
@@ -5208,7 +5588,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilReference(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, uint32_t reference) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorSets@4=_vk_entrypoint_stub@0")
@@ -5233,7 +5615,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindDescriptorSets(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t descriptorSetCount, const VkDescriptorSet* pDescriptorSets, uint32_t dynamicOffsetCount, const uint32_t* pDynamicOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindIndexBuffer@4=_vk_entrypoint_stub@0")
@@ -5258,7 +5642,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindIndexBuffer(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkIndexType indexType) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindVertexBuffers@4=_vk_entrypoint_stub@0")
@@ -5283,7 +5669,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindVertexBuffers(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDraw@4=_vk_entrypoint_stub@0")
@@ -5308,7 +5696,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDraw(VkCommandBuffer commandBuffer, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndexed@4=_vk_entrypoint_stub@0")
@@ -5333,7 +5723,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndexed(VkCommandBuffer commandBuffer, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t vertexOffset, uint32_t firstInstance) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMultiEXT@4=_vk_entrypoint_stub@0")
@@ -5358,7 +5750,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMultiEXT(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawInfoEXT* pVertexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMultiIndexedEXT@4=_vk_entrypoint_stub@0")
@@ -5383,7 +5777,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMultiIndexedEXT(VkCommandBuffer commandBuffer, uint32_t drawCount, const VkMultiDrawIndexedInfoEXT* pIndexInfo, uint32_t instanceCount, uint32_t firstInstance, uint32_t stride, const int32_t* pVertexOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndirect@4=_vk_entrypoint_stub@0")
@@ -5408,7 +5804,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndexedIndirect@4=_vk_entrypoint_stub@0")
@@ -5433,7 +5831,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndexedIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDispatch@4=_vk_entrypoint_stub@0")
@@ -5458,7 +5858,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDispatch(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDispatchIndirect@4=_vk_entrypoint_stub@0")
@@ -5483,7 +5885,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDispatchIndirect(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSubpassShadingHUAWEI@4=_vk_entrypoint_stub@0")
@@ -5508,7 +5912,63 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSubpassShadingHUAWEI(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterHUAWEI@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdDrawClusterHUAWEI=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdDrawClusterHUAWEI=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawClusterHUAWEI(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDrawClusterIndirectHUAWEI@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdDrawClusterIndirectHUAWEI=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdDrawClusterIndirectHUAWEI=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawClusterIndirectHUAWEI(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyBuffer@4=_vk_entrypoint_stub@0")
@@ -5533,7 +5993,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyBuffer(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyImage@4=_vk_entrypoint_stub@0")
@@ -5558,7 +6020,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBlitImage@4=_vk_entrypoint_stub@0")
@@ -5583,7 +6047,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBlitImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageBlit* pRegions, VkFilter filter) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyBufferToImage@4=_vk_entrypoint_stub@0")
@@ -5608,7 +6074,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyBufferToImage(VkCommandBuffer commandBuffer, VkBuffer srcBuffer, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkBufferImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyImageToBuffer@4=_vk_entrypoint_stub@0")
@@ -5633,7 +6101,63 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyImageToBuffer(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkBuffer dstBuffer, uint32_t regionCount, const VkBufferImageCopy* pRegions) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryIndirectNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdCopyMemoryIndirectNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdCopyMemoryIndirectNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyMemoryIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToImageIndirectNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdCopyMemoryToImageIndirectNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdCopyMemoryToImageIndirectNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyMemoryToImageIndirectNV(VkCommandBuffer commandBuffer, VkDeviceAddress copyBufferAddress, uint32_t copyCount, uint32_t stride, VkImage dstImage, VkImageLayout dstImageLayout, const VkImageSubresourceLayers* pImageSubresources) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdUpdateBuffer@4=_vk_entrypoint_stub@0")
@@ -5658,7 +6182,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdUpdateBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize dataSize, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdFillBuffer@4=_vk_entrypoint_stub@0")
@@ -5683,7 +6209,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdFillBuffer(VkCommandBuffer commandBuffer, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize size, uint32_t data) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdClearColorImage@4=_vk_entrypoint_stub@0")
@@ -5708,7 +6236,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdClearColorImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearColorValue* pColor, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdClearDepthStencilImage@4=_vk_entrypoint_stub@0")
@@ -5733,7 +6263,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdClearDepthStencilImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout imageLayout, const VkClearDepthStencilValue* pDepthStencil, uint32_t rangeCount, const VkImageSubresourceRange* pRanges) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdClearAttachments@4=_vk_entrypoint_stub@0")
@@ -5758,7 +6290,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdClearAttachments(VkCommandBuffer commandBuffer, uint32_t attachmentCount, const VkClearAttachment* pAttachments, uint32_t rectCount, const VkClearRect* pRects) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResolveImage@4=_vk_entrypoint_stub@0")
@@ -5783,7 +6317,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResolveImage(VkCommandBuffer commandBuffer, VkImage srcImage, VkImageLayout srcImageLayout, VkImage dstImage, VkImageLayout dstImageLayout, uint32_t regionCount, const VkImageResolve* pRegions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetEvent@4=_vk_entrypoint_stub@0")
@@ -5808,7 +6344,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResetEvent@4=_vk_entrypoint_stub@0")
@@ -5833,7 +6371,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResetEvent(VkCommandBuffer commandBuffer, VkEvent event, VkPipelineStageFlags stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWaitEvents@4=_vk_entrypoint_stub@0")
@@ -5858,7 +6398,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWaitEvents(VkCommandBuffer commandBuffer, uint32_t eventCount, const VkEvent* pEvents, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPipelineBarrier@4=_vk_entrypoint_stub@0")
@@ -5883,7 +6425,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPipelineBarrier(VkCommandBuffer commandBuffer, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask, VkDependencyFlags dependencyFlags, uint32_t memoryBarrierCount, const VkMemoryBarrier* pMemoryBarriers, uint32_t bufferMemoryBarrierCount, const VkBufferMemoryBarrier* pBufferMemoryBarriers, uint32_t imageMemoryBarrierCount, const VkImageMemoryBarrier* pImageMemoryBarriers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginQuery@4=_vk_entrypoint_stub@0")
@@ -5908,7 +6452,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndQuery@4=_vk_entrypoint_stub@0")
@@ -5933,7 +6479,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndQuery(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginConditionalRenderingEXT@4=_vk_entrypoint_stub@0")
@@ -5958,7 +6506,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginConditionalRenderingEXT(VkCommandBuffer commandBuffer, const VkConditionalRenderingBeginInfoEXT* pConditionalRenderingBegin) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndConditionalRenderingEXT@4=_vk_entrypoint_stub@0")
@@ -5983,7 +6533,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndConditionalRenderingEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResetQueryPool@4=_vk_entrypoint_stub@0")
@@ -6008,7 +6560,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResetQueryPool(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteTimestamp@4=_vk_entrypoint_stub@0")
@@ -6033,7 +6587,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteTimestamp(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkQueryPool queryPool, uint32_t query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyQueryPoolResults@4=_vk_entrypoint_stub@0")
@@ -6058,7 +6614,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t firstQuery, uint32_t queryCount, VkBuffer dstBuffer, VkDeviceSize dstOffset, VkDeviceSize stride, VkQueryResultFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPushConstants@4=_vk_entrypoint_stub@0")
@@ -6083,7 +6641,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPushConstants(VkCommandBuffer commandBuffer, VkPipelineLayout layout, VkShaderStageFlags stageFlags, uint32_t offset, uint32_t size, const void* pValues) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginRenderPass@4=_vk_entrypoint_stub@0")
@@ -6108,7 +6668,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginRenderPass(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo* pRenderPassBegin, VkSubpassContents contents) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdNextSubpass@4=_vk_entrypoint_stub@0")
@@ -6133,7 +6695,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdNextSubpass(VkCommandBuffer commandBuffer, VkSubpassContents contents) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndRenderPass@4=_vk_entrypoint_stub@0")
@@ -6158,7 +6722,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndRenderPass(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdExecuteCommands@4=_vk_entrypoint_stub@0")
@@ -6183,7 +6749,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdExecuteCommands(VkCommandBuffer commandBuffer, uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffers) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateSharedSwapchainsKHR@4=_vk_entrypoint_stub@0")
@@ -6208,7 +6776,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateSharedSwapchainsKHR(VkDevice device, uint32_t swapchainCount, const VkSwapchainCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchains) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateSwapchainKHR@4=_vk_entrypoint_stub@0")
@@ -6233,7 +6803,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateSwapchainKHR(VkDevice device, const VkSwapchainCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSwapchainKHR* pSwapchain) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroySwapchainKHR@4=_vk_entrypoint_stub@0")
@@ -6258,7 +6830,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroySwapchainKHR(VkDevice device, VkSwapchainKHR swapchain, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetSwapchainImagesKHR@4=_vk_entrypoint_stub@0")
@@ -6283,7 +6857,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pSwapchainImageCount, VkImage* pSwapchainImages) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AcquireNextImageKHR@4=_vk_entrypoint_stub@0")
@@ -6308,7 +6884,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireNextImageKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t timeout, VkSemaphore semaphore, VkFence fence, uint32_t* pImageIndex) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueuePresentKHR@4=_vk_entrypoint_stub@0")
@@ -6333,7 +6911,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueuePresentKHR(VkQueue queue, const VkPresentInfoKHR* pPresentInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DebugMarkerSetObjectNameEXT@4=_vk_entrypoint_stub@0")
@@ -6358,7 +6938,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_DebugMarkerSetObjectNameEXT(VkDevice device, const VkDebugMarkerObjectNameInfoEXT* pNameInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DebugMarkerSetObjectTagEXT@4=_vk_entrypoint_stub@0")
@@ -6383,7 +6965,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_DebugMarkerSetObjectTagEXT(VkDevice device, const VkDebugMarkerObjectTagInfoEXT* pTagInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDebugMarkerBeginEXT@4=_vk_entrypoint_stub@0")
@@ -6408,7 +6992,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDebugMarkerBeginEXT(VkCommandBuffer commandBuffer, const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDebugMarkerEndEXT@4=_vk_entrypoint_stub@0")
@@ -6433,7 +7019,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDebugMarkerEndEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDebugMarkerInsertEXT@4=_vk_entrypoint_stub@0")
@@ -6458,7 +7046,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDebugMarkerInsertEXT(VkCommandBuffer commandBuffer, const VkDebugMarkerMarkerInfoEXT* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6484,7 +7074,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryWin32HandleNV(VkDevice device, VkDeviceMemory memory, VkExternalMemoryHandleTypeFlagsNV handleType, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6510,7 +7102,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdExecuteGeneratedCommandsNV(VkCommandBuffer commandBuffer, VkBool32 isPreprocessed, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPreprocessGeneratedCommandsNV@4=_vk_entrypoint_stub@0")
@@ -6535,7 +7129,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPreprocessGeneratedCommandsNV(VkCommandBuffer commandBuffer, const VkGeneratedCommandsInfoNV* pGeneratedCommandsInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindPipelineShaderGroupNV@4=_vk_entrypoint_stub@0")
@@ -6560,7 +7156,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindPipelineShaderGroupNV(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipeline pipeline, uint32_t groupIndex) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetGeneratedCommandsMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
@@ -6585,7 +7183,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetGeneratedCommandsMemoryRequirementsNV(VkDevice device, const VkGeneratedCommandsMemoryRequirementsInfoNV* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateIndirectCommandsLayoutNV@4=_vk_entrypoint_stub@0")
@@ -6610,7 +7210,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateIndirectCommandsLayoutNV(VkDevice device, const VkIndirectCommandsLayoutCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkIndirectCommandsLayoutNV* pIndirectCommandsLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyIndirectCommandsLayoutNV@4=_vk_entrypoint_stub@0")
@@ -6635,7 +7237,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyIndirectCommandsLayoutNV(VkDevice device, VkIndirectCommandsLayoutNV indirectCommandsLayout, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPushDescriptorSetKHR@4=_vk_entrypoint_stub@0")
@@ -6660,7 +7264,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set, uint32_t descriptorWriteCount, const VkWriteDescriptorSet* pDescriptorWrites) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_TrimCommandPool@4=_vk_entrypoint_stub@0")
@@ -6685,7 +7291,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_TrimCommandPool(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_TrimCommandPoolKHR@4=_vk_entrypoint_stub@0")
@@ -6710,7 +7318,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_TrimCommandPoolKHR(VkDevice device, VkCommandPool commandPool, VkCommandPoolTrimFlags flags) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6736,7 +7346,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryWin32HandleKHR(VkDevice device, const VkMemoryGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -6763,7 +7375,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryWin32HandlePropertiesKHR(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, HANDLE handle, VkMemoryWin32HandlePropertiesKHR* pMemoryWin32HandleProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6789,7 +7403,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryFdKHR(VkDevice device, const VkMemoryGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetMemoryFdPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -6814,7 +7430,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryFdPropertiesKHR(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, int fd, VkMemoryFdPropertiesKHR* pMemoryFdProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6840,7 +7458,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryZirconHandleFUCHSIA(VkDevice device, const VkMemoryGetZirconHandleInfoFUCHSIA* pGetZirconHandleInfo, zx_handle_t* pZirconHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -6867,7 +7487,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryZirconHandlePropertiesFUCHSIA(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, zx_handle_t zirconHandle, VkMemoryZirconHandlePropertiesFUCHSIA* pMemoryZirconHandleProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6893,7 +7515,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryRemoteAddressNV(VkDevice device, const VkMemoryGetRemoteAddressInfoNV* pMemoryGetRemoteAddressInfo, VkRemoteAddressNV* pAddress) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6919,7 +7543,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSemaphoreWin32HandleKHR(VkDevice device, const VkSemaphoreGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -6946,7 +7572,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ImportSemaphoreWin32HandleKHR(VkDevice device, const VkImportSemaphoreWin32HandleInfoKHR* pImportSemaphoreWin32HandleInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -6972,7 +7600,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSemaphoreFdKHR(VkDevice device, const VkSemaphoreGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ImportSemaphoreFdKHR@4=_vk_entrypoint_stub@0")
@@ -6997,7 +7627,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ImportSemaphoreFdKHR(VkDevice device, const VkImportSemaphoreFdInfoKHR* pImportSemaphoreFdInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7023,7 +7655,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSemaphoreZirconHandleFUCHSIA(VkDevice device, const VkSemaphoreGetZirconHandleInfoFUCHSIA* pGetZirconHandleInfo, zx_handle_t* pZirconHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -7050,7 +7684,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ImportSemaphoreZirconHandleFUCHSIA(VkDevice device, const VkImportSemaphoreZirconHandleInfoFUCHSIA* pImportSemaphoreZirconHandleInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -7077,7 +7713,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetFenceWin32HandleKHR(VkDevice device, const VkFenceGetWin32HandleInfoKHR* pGetWin32HandleInfo, HANDLE* pHandle) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -7104,7 +7742,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ImportFenceWin32HandleKHR(VkDevice device, const VkImportFenceWin32HandleInfoKHR* pImportFenceWin32HandleInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -7130,7 +7770,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetFenceFdKHR(VkDevice device, const VkFenceGetFdInfoKHR* pGetFdInfo, int* pFd) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ImportFenceFdKHR@4=_vk_entrypoint_stub@0")
@@ -7155,7 +7797,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ImportFenceFdKHR(VkDevice device, const VkImportFenceFdInfoKHR* pImportFenceFdInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DisplayPowerControlEXT@4=_vk_entrypoint_stub@0")
@@ -7180,7 +7824,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_DisplayPowerControlEXT(VkDevice device, VkDisplayKHR display, const VkDisplayPowerInfoEXT* pDisplayPowerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_RegisterDeviceEventEXT@4=_vk_entrypoint_stub@0")
@@ -7205,7 +7851,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_RegisterDeviceEventEXT(VkDevice device, const VkDeviceEventInfoEXT* pDeviceEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_RegisterDisplayEventEXT@4=_vk_entrypoint_stub@0")
@@ -7230,7 +7878,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_RegisterDisplayEventEXT(VkDevice device, VkDisplayKHR display, const VkDisplayEventInfoEXT* pDisplayEventInfo, const VkAllocationCallbacks* pAllocator, VkFence* pFence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetSwapchainCounterEXT@4=_vk_entrypoint_stub@0")
@@ -7255,7 +7905,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSwapchainCounterEXT(VkDevice device, VkSwapchainKHR swapchain, VkSurfaceCounterFlagBitsEXT counter, uint64_t* pCounterValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceGroupPeerMemoryFeatures@4=_vk_entrypoint_stub@0")
@@ -7280,7 +7932,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceGroupPeerMemoryFeatures(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlags* pPeerMemoryFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceGroupPeerMemoryFeaturesKHR@4=_vk_entrypoint_stub@0")
@@ -7305,7 +7959,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceGroupPeerMemoryFeaturesKHR(VkDevice device, uint32_t heapIndex, uint32_t localDeviceIndex, uint32_t remoteDeviceIndex, VkPeerMemoryFeatureFlags* pPeerMemoryFeatures) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindBufferMemory2@4=_vk_entrypoint_stub@0")
@@ -7330,7 +7986,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindBufferMemory2(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindBufferMemory2KHR@4=_vk_entrypoint_stub@0")
@@ -7355,7 +8013,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindBufferMemory2KHR(VkDevice device, uint32_t bindInfoCount, const VkBindBufferMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindImageMemory2@4=_vk_entrypoint_stub@0")
@@ -7380,7 +8040,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindImageMemory2(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindImageMemory2KHR@4=_vk_entrypoint_stub@0")
@@ -7405,7 +8067,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindImageMemory2KHR(VkDevice device, uint32_t bindInfoCount, const VkBindImageMemoryInfo* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDeviceMask@4=_vk_entrypoint_stub@0")
@@ -7430,7 +8094,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDeviceMask(VkCommandBuffer commandBuffer, uint32_t deviceMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDeviceMaskKHR@4=_vk_entrypoint_stub@0")
@@ -7455,7 +8121,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDeviceMaskKHR(VkCommandBuffer commandBuffer, uint32_t deviceMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceGroupPresentCapabilitiesKHR@4=_vk_entrypoint_stub@0")
@@ -7480,7 +8148,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDeviceGroupPresentCapabilitiesKHR(VkDevice device, VkDeviceGroupPresentCapabilitiesKHR* pDeviceGroupPresentCapabilities) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceGroupSurfacePresentModesKHR@4=_vk_entrypoint_stub@0")
@@ -7505,7 +8175,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDeviceGroupSurfacePresentModesKHR(VkDevice device, VkSurfaceKHR surface, VkDeviceGroupPresentModeFlagsKHR* pModes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AcquireNextImage2KHR@4=_vk_entrypoint_stub@0")
@@ -7530,7 +8202,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireNextImage2KHR(VkDevice device, const VkAcquireNextImageInfoKHR* pAcquireInfo, uint32_t* pImageIndex) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDispatchBase@4=_vk_entrypoint_stub@0")
@@ -7555,7 +8229,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDispatchBase(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDispatchBaseKHR@4=_vk_entrypoint_stub@0")
@@ -7580,7 +8256,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDispatchBaseKHR(VkCommandBuffer commandBuffer, uint32_t baseGroupX, uint32_t baseGroupY, uint32_t baseGroupZ, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDescriptorUpdateTemplate@4=_vk_entrypoint_stub@0")
@@ -7605,7 +8283,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDescriptorUpdateTemplate(VkDevice device, const VkDescriptorUpdateTemplateCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorUpdateTemplate* pDescriptorUpdateTemplate) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDescriptorUpdateTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -7630,7 +8310,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDescriptorUpdateTemplateKHR(VkDevice device, const VkDescriptorUpdateTemplateCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDescriptorUpdateTemplate* pDescriptorUpdateTemplate) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDescriptorUpdateTemplate@4=_vk_entrypoint_stub@0")
@@ -7655,7 +8337,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDescriptorUpdateTemplate(VkDevice device, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDescriptorUpdateTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -7680,7 +8364,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDescriptorUpdateTemplateKHR(VkDevice device, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_UpdateDescriptorSetWithTemplate@4=_vk_entrypoint_stub@0")
@@ -7705,7 +8391,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_UpdateDescriptorSetWithTemplate(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_UpdateDescriptorSetWithTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -7730,7 +8418,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_UpdateDescriptorSetWithTemplateKHR(VkDevice device, VkDescriptorSet descriptorSet, VkDescriptorUpdateTemplate descriptorUpdateTemplate, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPushDescriptorSetWithTemplateKHR@4=_vk_entrypoint_stub@0")
@@ -7755,7 +8445,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPushDescriptorSetWithTemplateKHR(VkCommandBuffer commandBuffer, VkDescriptorUpdateTemplate descriptorUpdateTemplate, VkPipelineLayout layout, uint32_t set, const void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetHdrMetadataEXT@4=_vk_entrypoint_stub@0")
@@ -7780,7 +8472,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_SetHdrMetadataEXT(VkDevice device, uint32_t swapchainCount, const VkSwapchainKHR* pSwapchains, const VkHdrMetadataEXT* pMetadata) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetSwapchainStatusKHR@4=_vk_entrypoint_stub@0")
@@ -7805,7 +8499,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSwapchainStatusKHR(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetRefreshCycleDurationGOOGLE@4=_vk_entrypoint_stub@0")
@@ -7830,7 +8526,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetRefreshCycleDurationGOOGLE(VkDevice device, VkSwapchainKHR swapchain, VkRefreshCycleDurationGOOGLE* pDisplayTimingProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPastPresentationTimingGOOGLE@4=_vk_entrypoint_stub@0")
@@ -7855,7 +8553,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPastPresentationTimingGOOGLE(VkDevice device, VkSwapchainKHR swapchain, uint32_t* pPresentationTimingCount, VkPastPresentationTimingGOOGLE* pPresentationTimings) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewportWScalingNV@4=_vk_entrypoint_stub@0")
@@ -7880,7 +8580,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewportWScalingNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportWScalingNV* pViewportWScalings) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEXT@4=_vk_entrypoint_stub@0")
@@ -7905,7 +8607,63 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDiscardRectangleEXT(VkCommandBuffer commandBuffer, uint32_t firstDiscardRectangle, uint32_t discardRectangleCount, const VkRect2D* pDiscardRectangles) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleEnableEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdSetDiscardRectangleEnableEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdSetDiscardRectangleEnableEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDiscardRectangleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 discardRectangleEnable) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDiscardRectangleModeEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdSetDiscardRectangleModeEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdSetDiscardRectangleModeEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDiscardRectangleModeEXT(VkCommandBuffer commandBuffer, VkDiscardRectangleModeEXT discardRectangleMode) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetSampleLocationsEXT@4=_vk_entrypoint_stub@0")
@@ -7930,7 +8688,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetSampleLocationsEXT(VkCommandBuffer commandBuffer, const VkSampleLocationsInfoEXT* pSampleLocationsInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferMemoryRequirements2@4=_vk_entrypoint_stub@0")
@@ -7955,7 +8715,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetBufferMemoryRequirements2(VkDevice device, const VkBufferMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
@@ -7980,7 +8742,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetBufferMemoryRequirements2KHR(VkDevice device, const VkBufferMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageMemoryRequirements2@4=_vk_entrypoint_stub@0")
@@ -8005,7 +8769,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageMemoryRequirements2(VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
@@ -8030,7 +8796,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageMemoryRequirements2KHR(VkDevice device, const VkImageMemoryRequirementsInfo2* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageSparseMemoryRequirements2@4=_vk_entrypoint_stub@0")
@@ -8055,7 +8823,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageSparseMemoryRequirements2(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageSparseMemoryRequirements2KHR@4=_vk_entrypoint_stub@0")
@@ -8080,7 +8850,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageSparseMemoryRequirements2KHR(VkDevice device, const VkImageSparseMemoryRequirementsInfo2* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceBufferMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -8105,7 +8877,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceBufferMemoryRequirements(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceBufferMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -8130,7 +8904,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceBufferMemoryRequirementsKHR(VkDevice device, const VkDeviceBufferMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceImageMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -8155,7 +8931,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceImageMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceImageMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -8180,7 +8958,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceImageMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, VkMemoryRequirements2* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceImageSparseMemoryRequirements@4=_vk_entrypoint_stub@0")
@@ -8205,7 +8985,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceImageSparseMemoryRequirements(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceImageSparseMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -8230,7 +9012,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceImageSparseMemoryRequirementsKHR(VkDevice device, const VkDeviceImageMemoryRequirements* pInfo, uint32_t* pSparseMemoryRequirementCount, VkSparseImageMemoryRequirements2* pSparseMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateSamplerYcbcrConversion@4=_vk_entrypoint_stub@0")
@@ -8255,7 +9039,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateSamplerYcbcrConversion(VkDevice device, const VkSamplerYcbcrConversionCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSamplerYcbcrConversion* pYcbcrConversion) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateSamplerYcbcrConversionKHR@4=_vk_entrypoint_stub@0")
@@ -8280,7 +9066,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateSamplerYcbcrConversionKHR(VkDevice device, const VkSamplerYcbcrConversionCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSamplerYcbcrConversion* pYcbcrConversion) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroySamplerYcbcrConversion@4=_vk_entrypoint_stub@0")
@@ -8305,7 +9093,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroySamplerYcbcrConversion(VkDevice device, VkSamplerYcbcrConversion ycbcrConversion, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroySamplerYcbcrConversionKHR@4=_vk_entrypoint_stub@0")
@@ -8330,7 +9120,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroySamplerYcbcrConversionKHR(VkDevice device, VkSamplerYcbcrConversion ycbcrConversion, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceQueue2@4=_vk_entrypoint_stub@0")
@@ -8355,7 +9147,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceQueue2(VkDevice device, const VkDeviceQueueInfo2* pQueueInfo, VkQueue* pQueue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateValidationCacheEXT@4=_vk_entrypoint_stub@0")
@@ -8380,7 +9174,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateValidationCacheEXT(VkDevice device, const VkValidationCacheCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkValidationCacheEXT* pValidationCache) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyValidationCacheEXT@4=_vk_entrypoint_stub@0")
@@ -8405,7 +9201,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyValidationCacheEXT(VkDevice device, VkValidationCacheEXT validationCache, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetValidationCacheDataEXT@4=_vk_entrypoint_stub@0")
@@ -8430,7 +9228,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetValidationCacheDataEXT(VkDevice device, VkValidationCacheEXT validationCache, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_MergeValidationCachesEXT@4=_vk_entrypoint_stub@0")
@@ -8455,7 +9255,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_MergeValidationCachesEXT(VkDevice device, VkValidationCacheEXT dstCache, uint32_t srcCacheCount, const VkValidationCacheEXT* pSrcCaches) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSupport@4=_vk_entrypoint_stub@0")
@@ -8480,7 +9282,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorSetLayoutSupport(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSupportKHR@4=_vk_entrypoint_stub@0")
@@ -8505,7 +9309,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorSetLayoutSupportKHR(VkDevice device, const VkDescriptorSetLayoutCreateInfo* pCreateInfo, VkDescriptorSetLayoutSupport* pSupport) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8531,7 +9337,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSwapchainGrallocUsageANDROID(VkDevice device, VkFormat format, VkImageUsageFlags imageUsage, int* grallocUsage) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -8558,7 +9366,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSwapchainGrallocUsage2ANDROID(VkDevice device, VkFormat format, VkImageUsageFlags imageUsage, VkSwapchainImageUsageFlagsANDROID swapchainImageUsage, uint64_t* grallocConsumerUsage, uint64_t* grallocProducerUsage) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -8585,7 +9395,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireImageANDROID(VkDevice device, VkImage image, int nativeFenceFd, VkSemaphore semaphore, VkFence fence) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -8612,7 +9424,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueSignalReleaseImageANDROID(VkQueue queue, uint32_t waitSemaphoreCount, const VkSemaphore* pWaitSemaphores, VkImage image, int* pNativeFenceFd) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -8638,7 +9452,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetShaderInfoAMD(VkDevice device, VkPipeline pipeline, VkShaderStageFlagBits shaderStage, VkShaderInfoTypeAMD infoType, size_t* pInfoSize, void* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetLocalDimmingAMD@4=_vk_entrypoint_stub@0")
@@ -8663,7 +9479,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_SetLocalDimmingAMD(VkDevice device, VkSwapchainKHR swapChain, VkBool32 localDimmingEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetCalibratedTimestampsEXT@4=_vk_entrypoint_stub@0")
@@ -8688,7 +9506,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetCalibratedTimestampsEXT(VkDevice device, uint32_t timestampCount, const VkCalibratedTimestampInfoEXT* pTimestampInfos, uint64_t* pTimestamps, uint64_t* pMaxDeviation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetDebugUtilsObjectNameEXT@4=_vk_entrypoint_stub@0")
@@ -8713,7 +9533,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetDebugUtilsObjectNameEXT(VkDevice device, const VkDebugUtilsObjectNameInfoEXT* pNameInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetDebugUtilsObjectTagEXT@4=_vk_entrypoint_stub@0")
@@ -8738,7 +9560,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetDebugUtilsObjectTagEXT(VkDevice device, const VkDebugUtilsObjectTagInfoEXT* pTagInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueBeginDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -8763,7 +9587,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_QueueBeginDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueEndDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -8788,7 +9614,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_QueueEndDebugUtilsLabelEXT(VkQueue queue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueInsertDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -8813,7 +9641,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_QueueInsertDebugUtilsLabelEXT(VkQueue queue, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -8838,7 +9668,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -8863,7 +9695,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndDebugUtilsLabelEXT(VkCommandBuffer commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdInsertDebugUtilsLabelEXT@4=_vk_entrypoint_stub@0")
@@ -8888,7 +9722,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdInsertDebugUtilsLabelEXT(VkCommandBuffer commandBuffer, const VkDebugUtilsLabelEXT* pLabelInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetMemoryHostPointerPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -8913,7 +9749,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryHostPointerPropertiesEXT(VkDevice device, VkExternalMemoryHandleTypeFlagBits handleType, const void* pHostPointer, VkMemoryHostPointerPropertiesEXT* pMemoryHostPointerProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteBufferMarkerAMD@4=_vk_entrypoint_stub@0")
@@ -8938,7 +9776,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteBufferMarkerAMD(VkCommandBuffer commandBuffer, VkPipelineStageFlagBits pipelineStage, VkBuffer dstBuffer, VkDeviceSize dstOffset, uint32_t marker) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateRenderPass2@4=_vk_entrypoint_stub@0")
@@ -8963,7 +9803,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateRenderPass2(VkDevice device, const VkRenderPassCreateInfo2* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateRenderPass2KHR@4=_vk_entrypoint_stub@0")
@@ -8988,7 +9830,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateRenderPass2KHR(VkDevice device, const VkRenderPassCreateInfo2* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkRenderPass* pRenderPass) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginRenderPass2@4=_vk_entrypoint_stub@0")
@@ -9013,7 +9857,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginRenderPass2(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfo*      pSubpassBeginInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginRenderPass2KHR@4=_vk_entrypoint_stub@0")
@@ -9038,7 +9884,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginRenderPass2KHR(VkCommandBuffer commandBuffer, const VkRenderPassBeginInfo*      pRenderPassBegin, const VkSubpassBeginInfo*      pSubpassBeginInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdNextSubpass2@4=_vk_entrypoint_stub@0")
@@ -9063,7 +9911,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdNextSubpass2(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo*      pSubpassBeginInfo, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdNextSubpass2KHR@4=_vk_entrypoint_stub@0")
@@ -9088,7 +9938,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdNextSubpass2KHR(VkCommandBuffer commandBuffer, const VkSubpassBeginInfo*      pSubpassBeginInfo, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndRenderPass2@4=_vk_entrypoint_stub@0")
@@ -9113,7 +9965,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndRenderPass2(VkCommandBuffer commandBuffer, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndRenderPass2KHR@4=_vk_entrypoint_stub@0")
@@ -9138,7 +9992,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndRenderPass2KHR(VkCommandBuffer commandBuffer, const VkSubpassEndInfo*        pSubpassEndInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetSemaphoreCounterValue@4=_vk_entrypoint_stub@0")
@@ -9163,7 +10019,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSemaphoreCounterValue(VkDevice device, VkSemaphore semaphore, uint64_t* pValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetSemaphoreCounterValueKHR@4=_vk_entrypoint_stub@0")
@@ -9188,7 +10046,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSemaphoreCounterValueKHR(VkDevice device, VkSemaphore semaphore, uint64_t* pValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_WaitSemaphores@4=_vk_entrypoint_stub@0")
@@ -9213,7 +10073,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_WaitSemaphores(VkDevice device, const VkSemaphoreWaitInfo* pWaitInfo, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_WaitSemaphoresKHR@4=_vk_entrypoint_stub@0")
@@ -9238,7 +10100,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_WaitSemaphoresKHR(VkDevice device, const VkSemaphoreWaitInfo* pWaitInfo, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SignalSemaphore@4=_vk_entrypoint_stub@0")
@@ -9263,7 +10127,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SignalSemaphore(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SignalSemaphoreKHR@4=_vk_entrypoint_stub@0")
@@ -9288,7 +10154,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SignalSemaphoreKHR(VkDevice device, const VkSemaphoreSignalInfo* pSignalInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9314,7 +10182,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetAndroidHardwareBufferPropertiesANDROID(VkDevice device, const struct AHardwareBuffer* buffer, VkAndroidHardwareBufferPropertiesANDROID* pProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
@@ -9341,7 +10211,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetMemoryAndroidHardwareBufferANDROID(VkDevice device, const VkMemoryGetAndroidHardwareBufferInfoANDROID* pInfo, struct AHardwareBuffer** pBuffer) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_ANDROID_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -9367,7 +10239,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndirectCountKHR@4=_vk_entrypoint_stub@0")
@@ -9392,7 +10266,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndirectCountKHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndirectCountAMD@4=_vk_entrypoint_stub@0")
@@ -9417,7 +10293,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndirectCountAMD(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndexedIndirectCount@4=_vk_entrypoint_stub@0")
@@ -9442,7 +10320,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndexedIndirectCount(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndexedIndirectCountKHR@4=_vk_entrypoint_stub@0")
@@ -9467,7 +10347,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndexedIndirectCountKHR(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndexedIndirectCountAMD@4=_vk_entrypoint_stub@0")
@@ -9492,7 +10374,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndexedIndirectCountAMD(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCheckpointNV@4=_vk_entrypoint_stub@0")
@@ -9517,7 +10401,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCheckpointNV(VkCommandBuffer commandBuffer, const void* pCheckpointMarker) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetQueueCheckpointDataNV@4=_vk_entrypoint_stub@0")
@@ -9542,7 +10428,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetQueueCheckpointDataNV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointDataNV* pCheckpointData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindTransformFeedbackBuffersEXT@4=_vk_entrypoint_stub@0")
@@ -9567,7 +10455,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindTransformFeedbackBuffersEXT(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginTransformFeedbackEXT@4=_vk_entrypoint_stub@0")
@@ -9592,7 +10482,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_t firstCounterBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers, const VkDeviceSize* pCounterBufferOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndTransformFeedbackEXT@4=_vk_entrypoint_stub@0")
@@ -9617,7 +10509,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndTransformFeedbackEXT(VkCommandBuffer commandBuffer, uint32_t firstCounterBuffer, uint32_t counterBufferCount, const VkBuffer* pCounterBuffers, const VkDeviceSize* pCounterBufferOffsets) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginQueryIndexedEXT@4=_vk_entrypoint_stub@0")
@@ -9642,7 +10536,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, VkQueryControlFlags flags, uint32_t index) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndQueryIndexedEXT@4=_vk_entrypoint_stub@0")
@@ -9667,7 +10563,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndQueryIndexedEXT(VkCommandBuffer commandBuffer, VkQueryPool queryPool, uint32_t query, uint32_t index) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawIndirectByteCountEXT@4=_vk_entrypoint_stub@0")
@@ -9692,7 +10590,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawIndirectByteCountEXT(VkCommandBuffer commandBuffer, uint32_t instanceCount, uint32_t firstInstance, VkBuffer counterBuffer, VkDeviceSize counterBufferOffset, uint32_t counterOffset, uint32_t vertexStride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorNV@4=_vk_entrypoint_stub@0")
@@ -9717,7 +10617,36 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetExclusiveScissorNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkRect2D* pExclusiveScissors) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetExclusiveScissorEnableNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdSetExclusiveScissorEnableNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdSetExclusiveScissorEnableNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetExclusiveScissorEnableNV(VkCommandBuffer commandBuffer, uint32_t firstExclusiveScissor, uint32_t exclusiveScissorCount, const VkBool32* pExclusiveScissorEnables) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadingRateImageNV@4=_vk_entrypoint_stub@0")
@@ -9742,7 +10671,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindShadingRateImageNV(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewportShadingRatePaletteNV@4=_vk_entrypoint_stub@0")
@@ -9767,7 +10698,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewportShadingRatePaletteNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkShadingRatePaletteNV* pShadingRatePalettes) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoarseSampleOrderNV@4=_vk_entrypoint_stub@0")
@@ -9792,7 +10725,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoarseSampleOrderNV(VkCommandBuffer commandBuffer, VkCoarseSampleOrderTypeNV sampleOrderType, uint32_t customSampleOrderCount, const VkCoarseSampleOrderCustomNV* pCustomSampleOrders) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMeshTasksNV@4=_vk_entrypoint_stub@0")
@@ -9817,7 +10752,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMeshTasksNV(VkCommandBuffer commandBuffer, uint32_t taskCount, uint32_t firstTask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMeshTasksIndirectNV@4=_vk_entrypoint_stub@0")
@@ -9842,7 +10779,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMeshTasksIndirectNV(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMeshTasksIndirectCountNV@4=_vk_entrypoint_stub@0")
@@ -9867,7 +10806,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMeshTasksIndirectCountNV(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMeshTasksEXT@4=_vk_entrypoint_stub@0")
@@ -9892,7 +10833,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMeshTasksEXT(VkCommandBuffer commandBuffer, uint32_t groupCountX, uint32_t groupCountY, uint32_t groupCountZ) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMeshTasksIndirectEXT@4=_vk_entrypoint_stub@0")
@@ -9917,7 +10860,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMeshTasksIndirectEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, uint32_t drawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDrawMeshTasksIndirectCountEXT@4=_vk_entrypoint_stub@0")
@@ -9942,7 +10887,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDrawMeshTasksIndirectCountEXT(VkCommandBuffer commandBuffer, VkBuffer buffer, VkDeviceSize offset, VkBuffer countBuffer, VkDeviceSize countBufferOffset, uint32_t maxDrawCount, uint32_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CompileDeferredNV@4=_vk_entrypoint_stub@0")
@@ -9967,7 +10914,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CompileDeferredNV(VkDevice device, VkPipeline pipeline, uint32_t shader) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -9992,7 +10941,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateAccelerationStructureNV(VkDevice device, const VkAccelerationStructureCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkAccelerationStructureNV* pAccelerationStructure) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindInvocationMaskHUAWEI@4=_vk_entrypoint_stub@0")
@@ -10017,7 +10968,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindInvocationMaskHUAWEI(VkCommandBuffer commandBuffer, VkImageView imageView, VkImageLayout imageLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -10042,7 +10995,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyAccelerationStructureKHR(VkDevice device, VkAccelerationStructureKHR accelerationStructure, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -10067,7 +11022,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyAccelerationStructureNV(VkDevice device, VkAccelerationStructureNV accelerationStructure, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureMemoryRequirementsNV@4=_vk_entrypoint_stub@0")
@@ -10092,7 +11049,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetAccelerationStructureMemoryRequirementsNV(VkDevice device, const VkAccelerationStructureMemoryRequirementsInfoNV* pInfo, VkMemoryRequirements2KHR* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindAccelerationStructureMemoryNV@4=_vk_entrypoint_stub@0")
@@ -10117,7 +11076,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindAccelerationStructureMemoryNV(VkDevice device, uint32_t bindInfoCount, const VkBindAccelerationStructureMemoryInfoNV* pBindInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -10142,7 +11103,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyAccelerationStructureNV(VkCommandBuffer commandBuffer, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkCopyAccelerationStructureModeKHR mode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -10167,7 +11130,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyAccelerationStructureKHR(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CopyAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -10192,7 +11157,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CopyAccelerationStructureKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyAccelerationStructureToMemoryKHR@4=_vk_entrypoint_stub@0")
@@ -10217,7 +11184,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyAccelerationStructureToMemoryKHR(VkCommandBuffer commandBuffer, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CopyAccelerationStructureToMemoryKHR@4=_vk_entrypoint_stub@0")
@@ -10242,7 +11211,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CopyAccelerationStructureToMemoryKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyAccelerationStructureToMemoryInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -10267,7 +11238,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyMemoryToAccelerationStructureKHR(VkCommandBuffer commandBuffer, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CopyMemoryToAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -10292,7 +11265,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CopyMemoryToAccelerationStructureKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMemoryToAccelerationStructureInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteAccelerationStructuresPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -10317,7 +11292,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteAccelerationStructuresPropertiesKHR(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteAccelerationStructuresPropertiesNV@4=_vk_entrypoint_stub@0")
@@ -10342,7 +11319,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteAccelerationStructuresPropertiesNV(VkCommandBuffer commandBuffer, uint32_t accelerationStructureCount, const VkAccelerationStructureNV* pAccelerationStructures, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBuildAccelerationStructureNV@4=_vk_entrypoint_stub@0")
@@ -10367,7 +11346,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBuildAccelerationStructureNV(VkCommandBuffer commandBuffer, const VkAccelerationStructureInfoNV* pInfo, VkBuffer instanceData, VkDeviceSize instanceOffset, VkBool32 update, VkAccelerationStructureNV dst, VkAccelerationStructureNV src, VkBuffer scratch, VkDeviceSize scratchOffset) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_WriteAccelerationStructuresPropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -10392,7 +11373,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_WriteAccelerationStructuresPropertiesKHR(VkDevice device, uint32_t accelerationStructureCount, const VkAccelerationStructureKHR* pAccelerationStructures, VkQueryType  queryType, size_t       dataSize, void* pData, size_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdTraceRaysKHR@4=_vk_entrypoint_stub@0")
@@ -10417,7 +11400,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdTraceRaysKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, uint32_t width, uint32_t height, uint32_t depth) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdTraceRaysNV@4=_vk_entrypoint_stub@0")
@@ -10442,7 +11427,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdTraceRaysNV(VkCommandBuffer commandBuffer, VkBuffer raygenShaderBindingTableBuffer, VkDeviceSize raygenShaderBindingOffset, VkBuffer missShaderBindingTableBuffer, VkDeviceSize missShaderBindingOffset, VkDeviceSize missShaderBindingStride, VkBuffer hitShaderBindingTableBuffer, VkDeviceSize hitShaderBindingOffset, VkDeviceSize hitShaderBindingStride, VkBuffer callableShaderBindingTableBuffer, VkDeviceSize callableShaderBindingOffset, VkDeviceSize callableShaderBindingStride, uint32_t width, uint32_t height, uint32_t depth) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetRayTracingShaderGroupHandlesKHR@4=_vk_entrypoint_stub@0")
@@ -10467,7 +11454,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetRayTracingShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetRayTracingShaderGroupHandlesNV@4=_vk_entrypoint_stub@0")
@@ -10492,7 +11481,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetRayTracingShaderGroupHandlesNV(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetRayTracingCaptureReplayShaderGroupHandlesKHR@4=_vk_entrypoint_stub@0")
@@ -10517,7 +11508,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetRayTracingCaptureReplayShaderGroupHandlesKHR(VkDevice device, VkPipeline pipeline, uint32_t firstGroup, uint32_t groupCount, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureHandleNV@4=_vk_entrypoint_stub@0")
@@ -10542,7 +11535,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetAccelerationStructureHandleNV(VkDevice device, VkAccelerationStructureNV accelerationStructure, size_t dataSize, void* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateRayTracingPipelinesNV@4=_vk_entrypoint_stub@0")
@@ -10567,7 +11562,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateRayTracingPipelinesNV(VkDevice device, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoNV* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateRayTracingPipelinesKHR@4=_vk_entrypoint_stub@0")
@@ -10592,7 +11589,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateRayTracingPipelinesKHR(VkDevice device, VkDeferredOperationKHR deferredOperation, VkPipelineCache pipelineCache, uint32_t createInfoCount, const VkRayTracingPipelineCreateInfoKHR* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkPipeline* pPipelines) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdTraceRaysIndirectKHR@4=_vk_entrypoint_stub@0")
@@ -10617,7 +11616,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdTraceRaysIndirectKHR(VkCommandBuffer commandBuffer, const VkStridedDeviceAddressRegionKHR* pRaygenShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pMissShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pHitShaderBindingTable, const VkStridedDeviceAddressRegionKHR* pCallableShaderBindingTable, VkDeviceAddress indirectDeviceAddress) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdTraceRaysIndirect2KHR@4=_vk_entrypoint_stub@0")
@@ -10642,7 +11643,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdTraceRaysIndirect2KHR(VkCommandBuffer commandBuffer, VkDeviceAddress indirectDeviceAddress) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceAccelerationStructureCompatibilityKHR@4=_vk_entrypoint_stub@0")
@@ -10667,7 +11670,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceAccelerationStructureCompatibilityKHR(VkDevice device, const VkAccelerationStructureVersionInfoKHR* pVersionInfo, VkAccelerationStructureCompatibilityKHR* pCompatibility) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetRayTracingShaderGroupStackSizeKHR@4=_vk_entrypoint_stub@0")
@@ -10692,7 +11697,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkDeviceSize VKAPI_CALL vk_common_GetRayTracingShaderGroupStackSizeKHR(VkDevice device, VkPipeline pipeline, uint32_t group, VkShaderGroupShaderKHR groupShader) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetRayTracingPipelineStackSizeKHR@4=_vk_entrypoint_stub@0")
@@ -10717,7 +11724,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetRayTracingPipelineStackSizeKHR(VkCommandBuffer commandBuffer, uint32_t pipelineStackSize) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageViewHandleNVX@4=_vk_entrypoint_stub@0")
@@ -10742,7 +11751,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR uint32_t VKAPI_CALL vk_common_GetImageViewHandleNVX(VkDevice device, const VkImageViewHandleInfoNVX* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageViewAddressNVX@4=_vk_entrypoint_stub@0")
@@ -10767,7 +11778,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetImageViewAddressNVX(VkDevice device, VkImageView imageView, VkImageViewAddressPropertiesNVX* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10793,7 +11806,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDeviceGroupSurfacePresentModes2EXT(VkDevice device, const VkPhysicalDeviceSurfaceInfo2KHR* pSurfaceInfo, VkDeviceGroupPresentModeFlagsKHR* pModes) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -10820,7 +11835,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireFullScreenExclusiveModeEXT(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
@@ -10847,7 +11864,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ReleaseFullScreenExclusiveModeEXT(VkDevice device, VkSwapchainKHR swapchain) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_WIN32_KHR
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -10873,7 +11892,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquireProfilingLockKHR(VkDevice device, const VkAcquireProfilingLockInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ReleaseProfilingLockKHR@4=_vk_entrypoint_stub@0")
@@ -10898,7 +11919,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_ReleaseProfilingLockKHR(VkDevice device) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageDrmFormatModifierPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -10923,7 +11946,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetImageDrmFormatModifierPropertiesEXT(VkDevice device, VkImage image, VkImageDrmFormatModifierPropertiesEXT* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureAddress@4=_vk_entrypoint_stub@0")
@@ -10948,7 +11973,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_common_GetBufferOpaqueCaptureAddress(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureAddressKHR@4=_vk_entrypoint_stub@0")
@@ -10973,7 +12000,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_common_GetBufferOpaqueCaptureAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferDeviceAddress@4=_vk_entrypoint_stub@0")
@@ -10998,7 +12027,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_common_GetBufferDeviceAddress(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferDeviceAddressKHR@4=_vk_entrypoint_stub@0")
@@ -11023,7 +12054,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_common_GetBufferDeviceAddressKHR(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetBufferDeviceAddressEXT@4=_vk_entrypoint_stub@0")
@@ -11048,7 +12081,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_common_GetBufferDeviceAddressEXT(VkDevice device, const VkBufferDeviceAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_InitializePerformanceApiINTEL@4=_vk_entrypoint_stub@0")
@@ -11073,7 +12108,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_InitializePerformanceApiINTEL(VkDevice device, const VkInitializePerformanceApiInfoINTEL* pInitializeInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_UninitializePerformanceApiINTEL@4=_vk_entrypoint_stub@0")
@@ -11098,7 +12135,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_UninitializePerformanceApiINTEL(VkDevice device) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPerformanceMarkerINTEL@4=_vk_entrypoint_stub@0")
@@ -11123,7 +12162,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CmdSetPerformanceMarkerINTEL(VkCommandBuffer commandBuffer, const VkPerformanceMarkerInfoINTEL* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPerformanceStreamMarkerINTEL@4=_vk_entrypoint_stub@0")
@@ -11148,7 +12189,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CmdSetPerformanceStreamMarkerINTEL(VkCommandBuffer commandBuffer, const VkPerformanceStreamMarkerInfoINTEL* pMarkerInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPerformanceOverrideINTEL@4=_vk_entrypoint_stub@0")
@@ -11173,7 +12216,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CmdSetPerformanceOverrideINTEL(VkCommandBuffer commandBuffer, const VkPerformanceOverrideInfoINTEL* pOverrideInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_AcquirePerformanceConfigurationINTEL@4=_vk_entrypoint_stub@0")
@@ -11198,7 +12243,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_AcquirePerformanceConfigurationINTEL(VkDevice device, const VkPerformanceConfigurationAcquireInfoINTEL* pAcquireInfo, VkPerformanceConfigurationINTEL* pConfiguration) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_ReleasePerformanceConfigurationINTEL@4=_vk_entrypoint_stub@0")
@@ -11223,7 +12270,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_ReleasePerformanceConfigurationINTEL(VkDevice device, VkPerformanceConfigurationINTEL configuration) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueSetPerformanceConfigurationINTEL@4=_vk_entrypoint_stub@0")
@@ -11248,7 +12297,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueSetPerformanceConfigurationINTEL(VkQueue queue, VkPerformanceConfigurationINTEL configuration) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPerformanceParameterINTEL@4=_vk_entrypoint_stub@0")
@@ -11273,7 +12324,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPerformanceParameterINTEL(VkDevice device, VkPerformanceParameterTypeINTEL parameter, VkPerformanceValueINTEL* pValue) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceMemoryOpaqueCaptureAddress@4=_vk_entrypoint_stub@0")
@@ -11298,7 +12351,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_common_GetDeviceMemoryOpaqueCaptureAddress(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceMemoryOpaqueCaptureAddressKHR@4=_vk_entrypoint_stub@0")
@@ -11323,7 +12378,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR uint64_t VKAPI_CALL vk_common_GetDeviceMemoryOpaqueCaptureAddressKHR(VkDevice device, const VkDeviceMemoryOpaqueCaptureAddressInfo* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPipelineExecutablePropertiesKHR@4=_vk_entrypoint_stub@0")
@@ -11348,7 +12405,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPipelineExecutablePropertiesKHR(VkDevice                        device, const VkPipelineInfoKHR*        pPipelineInfo, uint32_t* pExecutableCount, VkPipelineExecutablePropertiesKHR* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPipelineExecutableStatisticsKHR@4=_vk_entrypoint_stub@0")
@@ -11373,7 +12432,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPipelineExecutableStatisticsKHR(VkDevice                        device, const VkPipelineExecutableInfoKHR*  pExecutableInfo, uint32_t* pStatisticCount, VkPipelineExecutableStatisticKHR* pStatistics) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPipelineExecutableInternalRepresentationsKHR@4=_vk_entrypoint_stub@0")
@@ -11398,7 +12459,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPipelineExecutableInternalRepresentationsKHR(VkDevice                        device, const VkPipelineExecutableInfoKHR*  pExecutableInfo, uint32_t* pInternalRepresentationCount, VkPipelineExecutableInternalRepresentationKHR* pInternalRepresentations) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetLineStippleEXT@4=_vk_entrypoint_stub@0")
@@ -11423,7 +12486,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetLineStippleEXT(VkCommandBuffer commandBuffer, uint32_t lineStippleFactor, uint16_t lineStipplePattern) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateAccelerationStructureKHR@4=_vk_entrypoint_stub@0")
@@ -11448,7 +12513,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateAccelerationStructureKHR(VkDevice                                           device, const VkAccelerationStructureCreateInfoKHR*        pCreateInfo, const VkAllocationCallbacks*       pAllocator, VkAccelerationStructureKHR*                        pAccelerationStructure) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBuildAccelerationStructuresKHR@4=_vk_entrypoint_stub@0")
@@ -11473,7 +12540,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBuildAccelerationStructuresKHR(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBuildAccelerationStructuresIndirectKHR@4=_vk_entrypoint_stub@0")
@@ -11498,7 +12567,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBuildAccelerationStructuresIndirectKHR(VkCommandBuffer                  commandBuffer, uint32_t                                           infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkDeviceAddress*             pIndirectDeviceAddresses, const uint32_t*                    pIndirectStrides, const uint32_t* const*             ppMaxPrimitiveCounts) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BuildAccelerationStructuresKHR@4=_vk_entrypoint_stub@0")
@@ -11523,7 +12594,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BuildAccelerationStructuresKHR(VkDevice                                           device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkAccelerationStructureBuildGeometryInfoKHR* pInfos, const VkAccelerationStructureBuildRangeInfoKHR* const* ppBuildRangeInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureDeviceAddressKHR@4=_vk_entrypoint_stub@0")
@@ -11548,7 +12621,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkDeviceAddress VKAPI_CALL vk_common_GetAccelerationStructureDeviceAddressKHR(VkDevice device, const VkAccelerationStructureDeviceAddressInfoKHR* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateDeferredOperationKHR@4=_vk_entrypoint_stub@0")
@@ -11573,7 +12648,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateDeferredOperationKHR(VkDevice device, const VkAllocationCallbacks* pAllocator, VkDeferredOperationKHR* pDeferredOperation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyDeferredOperationKHR@4=_vk_entrypoint_stub@0")
@@ -11598,7 +12675,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyDeferredOperationKHR(VkDevice device, VkDeferredOperationKHR operation, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeferredOperationMaxConcurrencyKHR@4=_vk_entrypoint_stub@0")
@@ -11623,7 +12702,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR uint32_t VKAPI_CALL vk_common_GetDeferredOperationMaxConcurrencyKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeferredOperationResultKHR@4=_vk_entrypoint_stub@0")
@@ -11648,7 +12729,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDeferredOperationResultKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DeferredOperationJoinKHR@4=_vk_entrypoint_stub@0")
@@ -11673,7 +12756,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_DeferredOperationJoinKHR(VkDevice device, VkDeferredOperationKHR operation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCullMode@4=_vk_entrypoint_stub@0")
@@ -11698,7 +12783,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCullMode(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCullModeEXT@4=_vk_entrypoint_stub@0")
@@ -11723,7 +12810,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCullModeEXT(VkCommandBuffer commandBuffer, VkCullModeFlags cullMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetFrontFace@4=_vk_entrypoint_stub@0")
@@ -11748,7 +12837,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetFrontFace(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetFrontFaceEXT@4=_vk_entrypoint_stub@0")
@@ -11773,7 +12864,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetFrontFaceEXT(VkCommandBuffer commandBuffer, VkFrontFace frontFace) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPrimitiveTopology@4=_vk_entrypoint_stub@0")
@@ -11798,7 +12891,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetPrimitiveTopology(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPrimitiveTopologyEXT@4=_vk_entrypoint_stub@0")
@@ -11823,7 +12918,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetPrimitiveTopologyEXT(VkCommandBuffer commandBuffer, VkPrimitiveTopology primitiveTopology) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewportWithCount@4=_vk_entrypoint_stub@0")
@@ -11848,7 +12945,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewportWithCount(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewportWithCountEXT@4=_vk_entrypoint_stub@0")
@@ -11873,7 +12972,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewportWithCountEXT(VkCommandBuffer commandBuffer, uint32_t viewportCount, const VkViewport* pViewports) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetScissorWithCount@4=_vk_entrypoint_stub@0")
@@ -11898,7 +12999,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetScissorWithCount(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetScissorWithCountEXT@4=_vk_entrypoint_stub@0")
@@ -11923,7 +13026,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetScissorWithCountEXT(VkCommandBuffer commandBuffer, uint32_t scissorCount, const VkRect2D* pScissors) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindVertexBuffers2@4=_vk_entrypoint_stub@0")
@@ -11948,7 +13053,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindVertexBuffers2(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBindVertexBuffers2EXT@4=_vk_entrypoint_stub@0")
@@ -11973,7 +13080,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindVertexBuffers2EXT(VkCommandBuffer commandBuffer, uint32_t firstBinding, uint32_t bindingCount, const VkBuffer* pBuffers, const VkDeviceSize* pOffsets, const VkDeviceSize* pSizes, const VkDeviceSize* pStrides) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthTestEnable@4=_vk_entrypoint_stub@0")
@@ -11998,7 +13107,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthTestEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12023,7 +13134,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthWriteEnable@4=_vk_entrypoint_stub@0")
@@ -12048,7 +13161,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthWriteEnable(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthWriteEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12073,7 +13188,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthWriteEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthWriteEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthCompareOp@4=_vk_entrypoint_stub@0")
@@ -12098,7 +13215,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthCompareOp(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthCompareOpEXT@4=_vk_entrypoint_stub@0")
@@ -12123,7 +13242,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthCompareOpEXT(VkCommandBuffer commandBuffer, VkCompareOp depthCompareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthBoundsTestEnable@4=_vk_entrypoint_stub@0")
@@ -12148,7 +13269,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthBoundsTestEnable(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthBoundsTestEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12173,7 +13296,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthBoundsTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthBoundsTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilTestEnable@4=_vk_entrypoint_stub@0")
@@ -12198,7 +13323,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilTestEnable(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilTestEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12223,7 +13350,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilTestEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stencilTestEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilOp@4=_vk_entrypoint_stub@0")
@@ -12248,7 +13377,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilOp(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetStencilOpEXT@4=_vk_entrypoint_stub@0")
@@ -12273,7 +13404,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetStencilOpEXT(VkCommandBuffer commandBuffer, VkStencilFaceFlags faceMask, VkStencilOp failOp, VkStencilOp passOp, VkStencilOp depthFailOp, VkCompareOp compareOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPatchControlPointsEXT@4=_vk_entrypoint_stub@0")
@@ -12298,7 +13431,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetPatchControlPointsEXT(VkCommandBuffer commandBuffer, uint32_t patchControlPoints) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetRasterizerDiscardEnable@4=_vk_entrypoint_stub@0")
@@ -12323,7 +13458,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetRasterizerDiscardEnable(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetRasterizerDiscardEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12348,7 +13485,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetRasterizerDiscardEnableEXT(VkCommandBuffer commandBuffer, VkBool32 rasterizerDiscardEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthBiasEnable@4=_vk_entrypoint_stub@0")
@@ -12373,7 +13512,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthBiasEnable(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthBiasEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12398,7 +13539,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthBiasEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthBiasEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetLogicOpEXT@4=_vk_entrypoint_stub@0")
@@ -12423,7 +13566,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetLogicOpEXT(VkCommandBuffer commandBuffer, VkLogicOp logicOp) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPrimitiveRestartEnable@4=_vk_entrypoint_stub@0")
@@ -12448,7 +13593,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetPrimitiveRestartEnable(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPrimitiveRestartEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12473,32 +13620,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetPrimitiveRestartEnableEXT(VkCommandBuffer commandBuffer, VkBool32 primitiveRestartEnable) __attribute__ ((weak));
+
 #endif
-#ifdef _MSC_VER
-#ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
-#else
-    #pragma comment(linker, "/alternatename:vk_common_CreatePrivateDataSlot=vk_entrypoint_stub")
-#if defined(_M_ARM64EC)
-    #pragma comment(linker, "/alternatename:#vk_common_CreatePrivateDataSlot=#vk_entrypoint_stub")
-#endif
-#endif
-#else
-    VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
-#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetTessellationDomainOriginEXT@4=_vk_entrypoint_stub@0")
@@ -12523,7 +13647,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetTessellationDomainOriginEXT(VkCommandBuffer commandBuffer, VkTessellationDomainOrigin domainOrigin) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthClampEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12548,7 +13674,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthClampEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClampEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetPolygonModeEXT@4=_vk_entrypoint_stub@0")
@@ -12573,7 +13701,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetPolygonModeEXT(VkCommandBuffer commandBuffer, VkPolygonMode polygonMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetRasterizationSamplesEXT@4=_vk_entrypoint_stub@0")
@@ -12598,7 +13728,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetRasterizationSamplesEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  rasterizationSamples) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetSampleMaskEXT@4=_vk_entrypoint_stub@0")
@@ -12623,7 +13755,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetSampleMaskEXT(VkCommandBuffer commandBuffer, VkSampleCountFlagBits  samples, const VkSampleMask*    pSampleMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetAlphaToCoverageEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12648,7 +13782,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetAlphaToCoverageEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToCoverageEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetAlphaToOneEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12673,7 +13809,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetAlphaToOneEnableEXT(VkCommandBuffer commandBuffer, VkBool32 alphaToOneEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetLogicOpEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12698,7 +13836,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetLogicOpEnableEXT(VkCommandBuffer commandBuffer, VkBool32 logicOpEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetColorBlendEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12723,7 +13863,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetColorBlendEnableEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkBool32* pColorBlendEnables) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetColorBlendEquationEXT@4=_vk_entrypoint_stub@0")
@@ -12748,7 +13890,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetColorBlendEquationEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendEquationEXT* pColorBlendEquations) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetColorWriteMaskEXT@4=_vk_entrypoint_stub@0")
@@ -12773,7 +13917,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetColorWriteMaskEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorComponentFlags* pColorWriteMasks) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetRasterizationStreamEXT@4=_vk_entrypoint_stub@0")
@@ -12798,7 +13944,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetRasterizationStreamEXT(VkCommandBuffer commandBuffer, uint32_t rasterizationStream) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetConservativeRasterizationModeEXT@4=_vk_entrypoint_stub@0")
@@ -12823,7 +13971,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetConservativeRasterizationModeEXT(VkCommandBuffer commandBuffer, VkConservativeRasterizationModeEXT conservativeRasterizationMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetExtraPrimitiveOverestimationSizeEXT@4=_vk_entrypoint_stub@0")
@@ -12848,7 +13998,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetExtraPrimitiveOverestimationSizeEXT(VkCommandBuffer commandBuffer, float extraPrimitiveOverestimationSize) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthClipEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12873,7 +14025,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthClipEnableEXT(VkCommandBuffer commandBuffer, VkBool32 depthClipEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetSampleLocationsEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12898,7 +14052,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetSampleLocationsEnableEXT(VkCommandBuffer commandBuffer, VkBool32 sampleLocationsEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetColorBlendAdvancedEXT@4=_vk_entrypoint_stub@0")
@@ -12923,7 +14079,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetColorBlendAdvancedEXT(VkCommandBuffer commandBuffer, uint32_t firstAttachment, uint32_t attachmentCount, const VkColorBlendAdvancedEXT* pColorBlendAdvanced) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetProvokingVertexModeEXT@4=_vk_entrypoint_stub@0")
@@ -12948,7 +14106,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetProvokingVertexModeEXT(VkCommandBuffer commandBuffer, VkProvokingVertexModeEXT provokingVertexMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetLineRasterizationModeEXT@4=_vk_entrypoint_stub@0")
@@ -12973,7 +14133,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetLineRasterizationModeEXT(VkCommandBuffer commandBuffer, VkLineRasterizationModeEXT lineRasterizationMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetLineStippleEnableEXT@4=_vk_entrypoint_stub@0")
@@ -12998,7 +14160,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetLineStippleEnableEXT(VkCommandBuffer commandBuffer, VkBool32 stippledLineEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetDepthClipNegativeOneToOneEXT@4=_vk_entrypoint_stub@0")
@@ -13023,7 +14187,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDepthClipNegativeOneToOneEXT(VkCommandBuffer commandBuffer, VkBool32 negativeOneToOne) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewportWScalingEnableNV@4=_vk_entrypoint_stub@0")
@@ -13048,7 +14214,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewportWScalingEnableNV(VkCommandBuffer commandBuffer, VkBool32 viewportWScalingEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetViewportSwizzleNV@4=_vk_entrypoint_stub@0")
@@ -13073,7 +14241,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetViewportSwizzleNV(VkCommandBuffer commandBuffer, uint32_t firstViewport, uint32_t viewportCount, const VkViewportSwizzleNV* pViewportSwizzles) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoverageToColorEnableNV@4=_vk_entrypoint_stub@0")
@@ -13098,7 +14268,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoverageToColorEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageToColorEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoverageToColorLocationNV@4=_vk_entrypoint_stub@0")
@@ -13123,7 +14295,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoverageToColorLocationNV(VkCommandBuffer commandBuffer, uint32_t coverageToColorLocation) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoverageModulationModeNV@4=_vk_entrypoint_stub@0")
@@ -13148,7 +14322,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoverageModulationModeNV(VkCommandBuffer commandBuffer, VkCoverageModulationModeNV coverageModulationMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoverageModulationTableEnableNV@4=_vk_entrypoint_stub@0")
@@ -13173,7 +14349,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoverageModulationTableEnableNV(VkCommandBuffer commandBuffer, VkBool32 coverageModulationTableEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoverageModulationTableNV@4=_vk_entrypoint_stub@0")
@@ -13198,7 +14376,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoverageModulationTableNV(VkCommandBuffer commandBuffer, uint32_t coverageModulationTableCount, const float* pCoverageModulationTable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetShadingRateImageEnableNV@4=_vk_entrypoint_stub@0")
@@ -13223,7 +14403,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetShadingRateImageEnableNV(VkCommandBuffer commandBuffer, VkBool32 shadingRateImageEnable) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetCoverageReductionModeNV@4=_vk_entrypoint_stub@0")
@@ -13248,7 +14430,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetCoverageReductionModeNV(VkCommandBuffer commandBuffer, VkCoverageReductionModeNV coverageReductionMode) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetRepresentativeFragmentTestEnableNV@4=_vk_entrypoint_stub@0")
@@ -13273,7 +14457,36 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetRepresentativeFragmentTestEnableNV(VkCommandBuffer commandBuffer, VkBool32 representativeFragmentTestEnable) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlot@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CreatePrivateDataSlot=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CreatePrivateDataSlot=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreatePrivateDataSlot(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreatePrivateDataSlotEXT@4=_vk_entrypoint_stub@0")
@@ -13298,7 +14511,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreatePrivateDataSlotEXT(VkDevice device, const VkPrivateDataSlotCreateInfo* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkPrivateDataSlot* pPrivateDataSlot) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyPrivateDataSlot@4=_vk_entrypoint_stub@0")
@@ -13323,7 +14538,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyPrivateDataSlot(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyPrivateDataSlotEXT@4=_vk_entrypoint_stub@0")
@@ -13348,7 +14565,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyPrivateDataSlotEXT(VkDevice device, VkPrivateDataSlot privateDataSlot, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetPrivateData@4=_vk_entrypoint_stub@0")
@@ -13373,7 +14592,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetPrivateDataEXT@4=_vk_entrypoint_stub@0")
@@ -13398,7 +14619,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t data) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPrivateData@4=_vk_entrypoint_stub@0")
@@ -13423,7 +14646,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPrivateData(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPrivateDataEXT@4=_vk_entrypoint_stub@0")
@@ -13448,7 +14673,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetPrivateDataEXT(VkDevice device, VkObjectType objectType, uint64_t objectHandle, VkPrivateDataSlot privateDataSlot, uint64_t* pData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyBuffer2@4=_vk_entrypoint_stub@0")
@@ -13473,7 +14700,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyBuffer2(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyBuffer2KHR@4=_vk_entrypoint_stub@0")
@@ -13498,7 +14727,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferInfo2* pCopyBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyImage2@4=_vk_entrypoint_stub@0")
@@ -13523,7 +14754,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyImage2(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyImage2KHR@4=_vk_entrypoint_stub@0")
@@ -13548,7 +14781,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyImage2KHR(VkCommandBuffer commandBuffer, const VkCopyImageInfo2* pCopyImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBlitImage2@4=_vk_entrypoint_stub@0")
@@ -13573,7 +14808,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBlitImage2(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBlitImage2KHR@4=_vk_entrypoint_stub@0")
@@ -13598,7 +14835,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBlitImage2KHR(VkCommandBuffer commandBuffer, const VkBlitImageInfo2* pBlitImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyBufferToImage2@4=_vk_entrypoint_stub@0")
@@ -13623,7 +14862,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyBufferToImage2(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyBufferToImage2KHR@4=_vk_entrypoint_stub@0")
@@ -13648,7 +14889,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyBufferToImage2KHR(VkCommandBuffer commandBuffer, const VkCopyBufferToImageInfo2* pCopyBufferToImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyImageToBuffer2@4=_vk_entrypoint_stub@0")
@@ -13673,7 +14916,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyImageToBuffer2(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyImageToBuffer2KHR@4=_vk_entrypoint_stub@0")
@@ -13698,7 +14943,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyImageToBuffer2KHR(VkCommandBuffer commandBuffer, const VkCopyImageToBufferInfo2* pCopyImageToBufferInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResolveImage2@4=_vk_entrypoint_stub@0")
@@ -13723,7 +14970,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResolveImage2(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResolveImage2KHR@4=_vk_entrypoint_stub@0")
@@ -13748,7 +14997,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResolveImage2KHR(VkCommandBuffer commandBuffer, const VkResolveImageInfo2* pResolveImageInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetFragmentShadingRateKHR@4=_vk_entrypoint_stub@0")
@@ -13773,7 +15024,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetFragmentShadingRateKHR(VkCommandBuffer           commandBuffer, const VkExtent2D*                           pFragmentSize, const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetFragmentShadingRateEnumNV@4=_vk_entrypoint_stub@0")
@@ -13798,7 +15051,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetFragmentShadingRateEnumNV(VkCommandBuffer           commandBuffer, VkFragmentShadingRateNV                     shadingRate, const VkFragmentShadingRateCombinerOpKHR    combinerOps[2]) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureBuildSizesKHR@4=_vk_entrypoint_stub@0")
@@ -13823,7 +15078,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetAccelerationStructureBuildSizesKHR(VkDevice                                            device, VkAccelerationStructureBuildTypeKHR                 buildType, const VkAccelerationStructureBuildGeometryInfoKHR*  pBuildInfo, const uint32_t*  pMaxPrimitiveCounts, VkAccelerationStructureBuildSizesInfoKHR*           pSizeInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetVertexInputEXT@4=_vk_entrypoint_stub@0")
@@ -13848,7 +15105,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetVertexInputEXT(VkCommandBuffer commandBuffer, uint32_t vertexBindingDescriptionCount, const VkVertexInputBindingDescription2EXT* pVertexBindingDescriptions, uint32_t vertexAttributeDescriptionCount, const VkVertexInputAttributeDescription2EXT* pVertexAttributeDescriptions) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetColorWriteEnableEXT@4=_vk_entrypoint_stub@0")
@@ -13873,7 +15132,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetColorWriteEnableEXT(VkCommandBuffer       commandBuffer, uint32_t                                attachmentCount, const VkBool32*   pColorWriteEnables) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetEvent2@4=_vk_entrypoint_stub@0")
@@ -13898,7 +15159,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdSetEvent2KHR@4=_vk_entrypoint_stub@0")
@@ -13923,7 +15186,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResetEvent2@4=_vk_entrypoint_stub@0")
@@ -13948,7 +15213,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResetEvent2(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdResetEvent2KHR@4=_vk_entrypoint_stub@0")
@@ -13973,7 +15240,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdResetEvent2KHR(VkCommandBuffer                   commandBuffer, VkEvent                                             event, VkPipelineStageFlags2               stageMask) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWaitEvents2@4=_vk_entrypoint_stub@0")
@@ -13998,7 +15267,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWaitEvents2(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWaitEvents2KHR@4=_vk_entrypoint_stub@0")
@@ -14023,7 +15294,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWaitEvents2KHR(VkCommandBuffer                   commandBuffer, uint32_t                                            eventCount, const VkEvent*                     pEvents, const VkDependencyInfo*            pDependencyInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPipelineBarrier2@4=_vk_entrypoint_stub@0")
@@ -14048,7 +15321,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPipelineBarrier2(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdPipelineBarrier2KHR@4=_vk_entrypoint_stub@0")
@@ -14073,7 +15348,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdPipelineBarrier2KHR(VkCommandBuffer                   commandBuffer, const VkDependencyInfo*                             pDependencyInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueSubmit2@4=_vk_entrypoint_stub@0")
@@ -14098,7 +15375,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueSubmit2(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_QueueSubmit2KHR@4=_vk_entrypoint_stub@0")
@@ -14123,7 +15402,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_QueueSubmit2KHR(VkQueue                           queue, uint32_t                            submitCount, const VkSubmitInfo2*              pSubmits, VkFence           fence) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteTimestamp2@4=_vk_entrypoint_stub@0")
@@ -14148,7 +15429,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteTimestamp2(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteTimestamp2KHR@4=_vk_entrypoint_stub@0")
@@ -14173,7 +15456,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteTimestamp2KHR(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkQueryPool                                         queryPool, uint32_t                                            query) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteBufferMarker2AMD@4=_vk_entrypoint_stub@0")
@@ -14198,7 +15483,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteBufferMarker2AMD(VkCommandBuffer                   commandBuffer, VkPipelineStageFlags2               stage, VkBuffer                                            dstBuffer, VkDeviceSize                                        dstOffset, uint32_t                                            marker) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetQueueCheckpointData2NV@4=_vk_entrypoint_stub@0")
@@ -14223,8 +15510,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetQueueCheckpointData2NV(VkQueue queue, uint32_t* pCheckpointDataCount, VkCheckpointData2NV* pCheckpointData) __attribute__ ((weak));
+
 #endif
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateVideoSessionKHR@4=_vk_entrypoint_stub@0")
@@ -14249,9 +15537,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateVideoSessionKHR(VkDevice device, const VkVideoSessionCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionKHR* pVideoSession) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyVideoSessionKHR@4=_vk_entrypoint_stub@0")
@@ -14276,9 +15564,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyVideoSessionKHR(VkDevice device, VkVideoSessionKHR videoSession, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateVideoSessionParametersKHR@4=_vk_entrypoint_stub@0")
@@ -14303,9 +15591,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateVideoSessionParametersKHR(VkDevice device, const VkVideoSessionParametersCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkVideoSessionParametersKHR* pVideoSessionParameters) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_UpdateVideoSessionParametersKHR@4=_vk_entrypoint_stub@0")
@@ -14330,9 +15618,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_UpdateVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkVideoSessionParametersUpdateInfoKHR* pUpdateInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyVideoSessionParametersKHR@4=_vk_entrypoint_stub@0")
@@ -14357,9 +15645,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyVideoSessionParametersKHR(VkDevice device, VkVideoSessionParametersKHR videoSessionParameters, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetVideoSessionMemoryRequirementsKHR@4=_vk_entrypoint_stub@0")
@@ -14384,9 +15672,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetVideoSessionMemoryRequirementsKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t* pMemoryRequirementsCount, VkVideoSessionMemoryRequirementsKHR* pMemoryRequirements) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindVideoSessionMemoryKHR@4=_vk_entrypoint_stub@0")
@@ -14411,9 +15699,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindVideoSessionMemoryKHR(VkDevice device, VkVideoSessionKHR videoSession, uint32_t bindSessionMemoryInfoCount, const VkBindVideoSessionMemoryInfoKHR* pBindSessionMemoryInfos) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdDecodeVideoKHR@4=_vk_entrypoint_stub@0")
@@ -14438,9 +15726,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdDecodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoDecodeInfoKHR* pDecodeInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginVideoCodingKHR@4=_vk_entrypoint_stub@0")
@@ -14465,9 +15753,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoBeginCodingInfoKHR* pBeginInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdControlVideoCodingKHR@4=_vk_entrypoint_stub@0")
@@ -14492,9 +15780,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdControlVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoCodingControlInfoKHR* pCodingControlInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndVideoCodingKHR@4=_vk_entrypoint_stub@0")
@@ -14519,35 +15807,63 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndVideoCodingKHR(VkCommandBuffer commandBuffer, const VkVideoEndCodingInfoKHR* pEndCodingInfo) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@4=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@8=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@12=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@16=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@20=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@24=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@28=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@32=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@36=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@40=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@44=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@48=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@60=_vk_entrypoint_stub@0")
-    #pragma comment(linker, "/alternatename:_vk_common_CmdEncodeVideoKHR@104=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryNV@104=_vk_entrypoint_stub@0")
 #else
-    #pragma comment(linker, "/alternatename:vk_common_CmdEncodeVideoKHR=vk_entrypoint_stub")
+    #pragma comment(linker, "/alternatename:vk_common_CmdDecompressMemoryNV=vk_entrypoint_stub")
 #if defined(_M_ARM64EC)
-    #pragma comment(linker, "/alternatename:#vk_common_CmdEncodeVideoKHR=#vk_entrypoint_stub")
+    #pragma comment(linker, "/alternatename:#vk_common_CmdDecompressMemoryNV=#vk_entrypoint_stub")
 #endif
 #endif
 #else
-    VKAPI_ATTR void VKAPI_CALL vk_common_CmdEncodeVideoKHR(VkCommandBuffer commandBuffer, const VkVideoEncodeInfoKHR* pEncodeInfo) __attribute__ ((weak));
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdDecompressMemoryNV(VkCommandBuffer commandBuffer, uint32_t decompressRegionCount, const VkDecompressMemoryRegionNV* pDecompressMemoryRegions) __attribute__ ((weak));
+
 #endif
-#endif // VK_ENABLE_BETA_EXTENSIONS
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdDecompressMemoryIndirectCountNV@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdDecompressMemoryIndirectCountNV=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdDecompressMemoryIndirectCountNV=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdDecompressMemoryIndirectCountNV(VkCommandBuffer commandBuffer, VkDeviceAddress indirectCommandsAddress, VkDeviceAddress indirectCommandsCountAddress, uint32_t stride) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateCuModuleNVX@4=_vk_entrypoint_stub@0")
@@ -14572,7 +15888,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateCuModuleNVX(VkDevice device, const VkCuModuleCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuModuleNVX* pModule) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateCuFunctionNVX@4=_vk_entrypoint_stub@0")
@@ -14597,7 +15915,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateCuFunctionNVX(VkDevice device, const VkCuFunctionCreateInfoNVX* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkCuFunctionNVX* pFunction) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyCuModuleNVX@4=_vk_entrypoint_stub@0")
@@ -14622,7 +15942,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyCuModuleNVX(VkDevice device, VkCuModuleNVX module, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyCuFunctionNVX@4=_vk_entrypoint_stub@0")
@@ -14647,7 +15969,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyCuFunctionNVX(VkDevice device, VkCuFunctionNVX function, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCuLaunchKernelNVX@4=_vk_entrypoint_stub@0")
@@ -14672,7 +15996,306 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCuLaunchKernelNVX(VkCommandBuffer commandBuffer, const VkCuLaunchInfoNVX* pLaunchInfo) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutSizeEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetDescriptorSetLayoutSizeEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetDescriptorSetLayoutSizeEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorSetLayoutSizeEXT(VkDevice device, VkDescriptorSetLayout layout, VkDeviceSize* pLayoutSizeInBytes) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutBindingOffsetEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetDescriptorSetLayoutBindingOffsetEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetDescriptorSetLayoutBindingOffsetEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorSetLayoutBindingOffsetEXT(VkDevice device, VkDescriptorSetLayout layout, uint32_t binding, VkDeviceSize* pOffset) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetDescriptorEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetDescriptorEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorEXT(VkDevice device, const VkDescriptorGetInfoEXT* pDescriptorInfo, size_t dataSize, void* pDescriptor) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBuffersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdBindDescriptorBuffersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdBindDescriptorBuffersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindDescriptorBuffersEXT(VkCommandBuffer commandBuffer, uint32_t bufferCount, const VkDescriptorBufferBindingInfoEXT* pBindingInfos) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdSetDescriptorBufferOffsetsEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdSetDescriptorBufferOffsetsEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdSetDescriptorBufferOffsetsEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdSetDescriptorBufferOffsetsEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t firstSet, uint32_t setCount, const uint32_t* pBufferIndices, const VkDeviceSize* pOffsets) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT(VkCommandBuffer commandBuffer, VkPipelineBindPoint pipelineBindPoint, VkPipelineLayout layout, uint32_t set) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetBufferOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetBufferOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetBufferOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetBufferOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkBufferCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetImageOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetImageOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetImageOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkImageViewCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkSamplerCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT(VkDevice device, const VkAccelerationStructureCaptureDescriptorDataInfoEXT* pInfo, void* pData) __attribute__ ((weak));
+
+#endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_SetDeviceMemoryPriorityEXT@4=_vk_entrypoint_stub@0")
@@ -14697,7 +16320,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_SetDeviceMemoryPriorityEXT(VkDevice       device, VkDeviceMemory memory, float          priority) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_WaitForPresentKHR@4=_vk_entrypoint_stub@0")
@@ -14722,7 +16347,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_WaitForPresentKHR(VkDevice device, VkSwapchainKHR swapchain, uint64_t presentId, uint64_t timeout) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14748,7 +16375,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateBufferCollectionFUCHSIA(VkDevice device, const VkBufferCollectionCreateInfoFUCHSIA* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkBufferCollectionFUCHSIA* pCollection) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -14775,7 +16404,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetBufferCollectionBufferConstraintsFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkBufferConstraintsInfoFUCHSIA* pBufferConstraintsInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -14802,7 +16433,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_SetBufferCollectionImageConstraintsFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkImageConstraintsInfoFUCHSIA* pImageConstraintsInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -14829,7 +16462,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyBufferCollectionFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
@@ -14856,7 +16491,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetBufferCollectionPropertiesFUCHSIA(VkDevice device, VkBufferCollectionFUCHSIA collection, VkBufferCollectionPropertiesFUCHSIA* pProperties) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_FUCHSIA
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -14882,7 +16519,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginRendering(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBeginRenderingKHR@4=_vk_entrypoint_stub@0")
@@ -14907,7 +16546,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBeginRenderingKHR(VkCommandBuffer                   commandBuffer, const VkRenderingInfo*                              pRenderingInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndRendering@4=_vk_entrypoint_stub@0")
@@ -14932,7 +16573,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndRendering(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdEndRenderingKHR@4=_vk_entrypoint_stub@0")
@@ -14957,7 +16600,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdEndRenderingKHR(VkCommandBuffer                   commandBuffer) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetLayoutHostMappingInfoVALVE@4=_vk_entrypoint_stub@0")
@@ -14982,7 +16627,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorSetLayoutHostMappingInfoVALVE(VkDevice device, const VkDescriptorSetBindingReferenceVALVE* pBindingReference, VkDescriptorSetLayoutHostMappingInfoVALVE* pHostMapping) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDescriptorSetHostMappingVALVE@4=_vk_entrypoint_stub@0")
@@ -15007,7 +16654,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDescriptorSetHostMappingVALVE(VkDevice device, VkDescriptorSet descriptorSet, void** ppData) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -15032,7 +16681,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateMicromapEXT(VkDevice                                           device, const VkMicromapCreateInfoEXT*        pCreateInfo, const VkAllocationCallbacks*       pAllocator, VkMicromapEXT*                        pMicromap) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdBuildMicromapsEXT@4=_vk_entrypoint_stub@0")
@@ -15057,7 +16708,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdBuildMicromapsEXT(VkCommandBuffer                                    commandBuffer, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BuildMicromapsEXT@4=_vk_entrypoint_stub@0")
@@ -15082,7 +16735,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BuildMicromapsEXT(VkDevice                                           device, VkDeferredOperationKHR deferredOperation, uint32_t infoCount, const VkMicromapBuildInfoEXT* pInfos) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -15107,7 +16762,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyMicromapEXT(VkDevice device, VkMicromapEXT micromap, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -15132,7 +16789,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CopyMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -15157,7 +16816,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CopyMicromapEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMicromapToMemoryEXT@4=_vk_entrypoint_stub@0")
@@ -15182,7 +16843,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyMicromapToMemoryEXT(VkCommandBuffer commandBuffer, const VkCopyMicromapToMemoryInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CopyMicromapToMemoryEXT@4=_vk_entrypoint_stub@0")
@@ -15207,7 +16870,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CopyMicromapToMemoryEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMicromapToMemoryInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdCopyMemoryToMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -15232,7 +16897,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdCopyMemoryToMicromapEXT(VkCommandBuffer commandBuffer, const VkCopyMemoryToMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CopyMemoryToMicromapEXT@4=_vk_entrypoint_stub@0")
@@ -15257,7 +16924,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CopyMemoryToMicromapEXT(VkDevice device, VkDeferredOperationKHR deferredOperation, const VkCopyMemoryToMicromapInfoEXT* pInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdWriteMicromapsPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -15282,7 +16951,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdWriteMicromapsPropertiesEXT(VkCommandBuffer commandBuffer, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType queryType, VkQueryPool queryPool, uint32_t firstQuery) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_WriteMicromapsPropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -15307,7 +16978,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_WriteMicromapsPropertiesEXT(VkDevice device, uint32_t micromapCount, const VkMicromapEXT* pMicromaps, VkQueryType  queryType, size_t       dataSize, void* pData, size_t stride) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceMicromapCompatibilityEXT@4=_vk_entrypoint_stub@0")
@@ -15332,7 +17005,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetDeviceMicromapCompatibilityEXT(VkDevice device, const VkMicromapVersionInfoEXT* pVersionInfo, VkAccelerationStructureCompatibilityKHR* pCompatibility) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetMicromapBuildSizesEXT@4=_vk_entrypoint_stub@0")
@@ -15357,7 +17032,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetMicromapBuildSizesEXT(VkDevice                                            device, VkAccelerationStructureBuildTypeKHR                 buildType, const VkMicromapBuildInfoEXT*  pBuildInfo, VkMicromapBuildSizesInfoEXT*           pSizeInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetShaderModuleIdentifierEXT@4=_vk_entrypoint_stub@0")
@@ -15382,7 +17059,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetShaderModuleIdentifierEXT(VkDevice device, VkShaderModule shaderModule, VkShaderModuleIdentifierEXT* pIdentifier) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetShaderModuleCreateInfoIdentifierEXT@4=_vk_entrypoint_stub@0")
@@ -15407,7 +17086,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetShaderModuleCreateInfoIdentifierEXT(VkDevice device, const VkShaderModuleCreateInfo* pCreateInfo, VkShaderModuleIdentifierEXT* pIdentifier) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetImageSubresourceLayout2EXT@4=_vk_entrypoint_stub@0")
@@ -15432,7 +17113,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_GetImageSubresourceLayout2EXT(VkDevice device, VkImage image, const VkImageSubresource2EXT* pSubresource, VkSubresourceLayout2EXT* pLayout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetPipelinePropertiesEXT@4=_vk_entrypoint_stub@0")
@@ -15457,7 +17140,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetPipelinePropertiesEXT(VkDevice device, const VkPipelineInfoEXT* pPipelineInfo, VkBaseOutStructure* pPipelineProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15483,7 +17168,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_ExportMetalObjectsEXT(VkDevice device, VkExportMetalObjectsInfoEXT* pMetalObjectsInfo) __attribute__ ((weak));
+
 #endif
+
 #endif // VK_USE_PLATFORM_METAL_EXT
 #ifdef _MSC_VER
 #ifdef _M_IX86
@@ -15509,7 +17196,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetFramebufferTilePropertiesQCOM(VkDevice device, VkFramebuffer framebuffer, uint32_t* pPropertiesCount, VkTilePropertiesQCOM* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDynamicRenderingTilePropertiesQCOM@4=_vk_entrypoint_stub@0")
@@ -15534,7 +17223,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDynamicRenderingTilePropertiesQCOM(VkDevice device, const VkRenderingInfo* pRenderingInfo, VkTilePropertiesQCOM* pProperties) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CreateOpticalFlowSessionNV@4=_vk_entrypoint_stub@0")
@@ -15559,7 +17250,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateOpticalFlowSessionNV(VkDevice device, const VkOpticalFlowSessionCreateInfoNV* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkOpticalFlowSessionNV* pSession) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_DestroyOpticalFlowSessionNV@4=_vk_entrypoint_stub@0")
@@ -15584,7 +17277,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_DestroyOpticalFlowSessionNV(VkDevice device, VkOpticalFlowSessionNV session, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_BindOpticalFlowSessionImageNV@4=_vk_entrypoint_stub@0")
@@ -15609,7 +17304,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_BindOpticalFlowSessionImageNV(VkDevice device, VkOpticalFlowSessionNV session, VkOpticalFlowSessionBindingPointNV bindingPoint, VkImageView view, VkImageLayout layout) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_CmdOpticalFlowExecuteNV@4=_vk_entrypoint_stub@0")
@@ -15634,7 +17331,9 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR void VKAPI_CALL vk_common_CmdOpticalFlowExecuteNV(VkCommandBuffer commandBuffer, VkOpticalFlowSessionNV session, const VkOpticalFlowExecuteInfoNV* pExecuteInfo) __attribute__ ((weak));
+
 #endif
+
 #ifdef _MSC_VER
 #ifdef _M_IX86
     #pragma comment(linker, "/alternatename:_vk_common_GetDeviceFaultInfoEXT@4=_vk_entrypoint_stub@0")
@@ -15659,7 +17358,198 @@ const struct vk_physical_device_entrypoint_table vk_common_physical_device_entry
 #endif
 #else
     VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetDeviceFaultInfoEXT(VkDevice device, VkDeviceFaultCountsEXT* pFaultCounts, VkDeviceFaultInfoEXT* pFaultInfo) __attribute__ ((weak));
+
 #endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_ReleaseSwapchainImagesEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_ReleaseSwapchainImagesEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_ReleaseSwapchainImagesEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_ReleaseSwapchainImagesEXT(VkDevice device, const VkReleaseSwapchainImagesInfoEXT* pReleaseInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_MapMemory2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_MapMemory2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_MapMemory2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_MapMemory2KHR(VkDevice device, const VkMemoryMapInfoKHR* pMemoryMapInfo, void** ppData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_UnmapMemory2KHR@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_UnmapMemory2KHR=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_UnmapMemory2KHR=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_UnmapMemory2KHR(VkDevice device, const VkMemoryUnmapInfoKHR* pMemoryUnmapInfo) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CreateShadersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CreateShadersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CreateShadersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_CreateShadersEXT(VkDevice device, uint32_t createInfoCount, const VkShaderCreateInfoEXT* pCreateInfos, const VkAllocationCallbacks* pAllocator, VkShaderEXT* pShaders) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_DestroyShaderEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_DestroyShaderEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_DestroyShaderEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_DestroyShaderEXT(VkDevice device, VkShaderEXT shader, const VkAllocationCallbacks* pAllocator) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_GetShaderBinaryDataEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_GetShaderBinaryDataEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_GetShaderBinaryDataEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR VkResult VKAPI_CALL vk_common_GetShaderBinaryDataEXT(VkDevice device, VkShaderEXT shader, size_t* pDataSize, void* pData) __attribute__ ((weak));
+
+#endif
+
+#ifdef _MSC_VER
+#ifdef _M_IX86
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@4=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@8=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@12=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@16=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@20=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@24=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@28=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@32=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@36=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@40=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@44=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@48=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@60=_vk_entrypoint_stub@0")
+    #pragma comment(linker, "/alternatename:_vk_common_CmdBindShadersEXT@104=_vk_entrypoint_stub@0")
+#else
+    #pragma comment(linker, "/alternatename:vk_common_CmdBindShadersEXT=vk_entrypoint_stub")
+#if defined(_M_ARM64EC)
+    #pragma comment(linker, "/alternatename:#vk_common_CmdBindShadersEXT=#vk_entrypoint_stub")
+#endif
+#endif
+#else
+    VKAPI_ATTR void VKAPI_CALL vk_common_CmdBindShadersEXT(VkCommandBuffer commandBuffer, uint32_t stageCount, const VkShaderStageFlagBits* pStages, const VkShaderEXT* pShaders) __attribute__ ((weak));
+
+#endif
+
 
 const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .GetDeviceProcAddr = vk_common_GetDeviceProcAddr,
@@ -15764,11 +17654,15 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .CmdDispatch = vk_common_CmdDispatch,
     .CmdDispatchIndirect = vk_common_CmdDispatchIndirect,
     .CmdSubpassShadingHUAWEI = vk_common_CmdSubpassShadingHUAWEI,
+    .CmdDrawClusterHUAWEI = vk_common_CmdDrawClusterHUAWEI,
+    .CmdDrawClusterIndirectHUAWEI = vk_common_CmdDrawClusterIndirectHUAWEI,
     .CmdCopyBuffer = vk_common_CmdCopyBuffer,
     .CmdCopyImage = vk_common_CmdCopyImage,
     .CmdBlitImage = vk_common_CmdBlitImage,
     .CmdCopyBufferToImage = vk_common_CmdCopyBufferToImage,
     .CmdCopyImageToBuffer = vk_common_CmdCopyImageToBuffer,
+    .CmdCopyMemoryIndirectNV = vk_common_CmdCopyMemoryIndirectNV,
+    .CmdCopyMemoryToImageIndirectNV = vk_common_CmdCopyMemoryToImageIndirectNV,
     .CmdUpdateBuffer = vk_common_CmdUpdateBuffer,
     .CmdFillBuffer = vk_common_CmdFillBuffer,
     .CmdClearColorImage = vk_common_CmdClearColorImage,
@@ -15903,6 +17797,8 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .GetPastPresentationTimingGOOGLE = vk_common_GetPastPresentationTimingGOOGLE,
     .CmdSetViewportWScalingNV = vk_common_CmdSetViewportWScalingNV,
     .CmdSetDiscardRectangleEXT = vk_common_CmdSetDiscardRectangleEXT,
+    .CmdSetDiscardRectangleEnableEXT = vk_common_CmdSetDiscardRectangleEnableEXT,
+    .CmdSetDiscardRectangleModeEXT = vk_common_CmdSetDiscardRectangleModeEXT,
     .CmdSetSampleLocationsEXT = vk_common_CmdSetSampleLocationsEXT,
     .GetBufferMemoryRequirements2 = vk_common_GetBufferMemoryRequirements2,
     .GetBufferMemoryRequirements2KHR = vk_common_GetBufferMemoryRequirements2KHR,
@@ -15999,6 +17895,7 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .CmdEndQueryIndexedEXT = vk_common_CmdEndQueryIndexedEXT,
     .CmdDrawIndirectByteCountEXT = vk_common_CmdDrawIndirectByteCountEXT,
     .CmdSetExclusiveScissorNV = vk_common_CmdSetExclusiveScissorNV,
+    .CmdSetExclusiveScissorEnableNV = vk_common_CmdSetExclusiveScissorEnableNV,
     .CmdBindShadingRateImageNV = vk_common_CmdBindShadingRateImageNV,
     .CmdSetViewportShadingRatePaletteNV = vk_common_CmdSetViewportShadingRatePaletteNV,
     .CmdSetCoarseSampleOrderNV = vk_common_CmdSetCoarseSampleOrderNV,
@@ -16121,7 +18018,6 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .CmdSetLogicOpEXT = vk_common_CmdSetLogicOpEXT,
     .CmdSetPrimitiveRestartEnable = vk_common_CmdSetPrimitiveRestartEnable,
     .CmdSetPrimitiveRestartEnableEXT = vk_common_CmdSetPrimitiveRestartEnableEXT,
-    .CreatePrivateDataSlot = vk_common_CreatePrivateDataSlot,
     .CmdSetTessellationDomainOriginEXT = vk_common_CmdSetTessellationDomainOriginEXT,
     .CmdSetDepthClampEnableEXT = vk_common_CmdSetDepthClampEnableEXT,
     .CmdSetPolygonModeEXT = vk_common_CmdSetPolygonModeEXT,
@@ -16153,6 +18049,7 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .CmdSetShadingRateImageEnableNV = vk_common_CmdSetShadingRateImageEnableNV,
     .CmdSetCoverageReductionModeNV = vk_common_CmdSetCoverageReductionModeNV,
     .CmdSetRepresentativeFragmentTestEnableNV = vk_common_CmdSetRepresentativeFragmentTestEnableNV,
+    .CreatePrivateDataSlot = vk_common_CreatePrivateDataSlot,
     .CreatePrivateDataSlotEXT = vk_common_CreatePrivateDataSlotEXT,
     .DestroyPrivateDataSlot = vk_common_DestroyPrivateDataSlot,
     .DestroyPrivateDataSlotEXT = vk_common_DestroyPrivateDataSlotEXT,
@@ -16191,71 +18088,35 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .CmdWriteTimestamp2KHR = vk_common_CmdWriteTimestamp2KHR,
     .CmdWriteBufferMarker2AMD = vk_common_CmdWriteBufferMarker2AMD,
     .GetQueueCheckpointData2NV = vk_common_GetQueueCheckpointData2NV,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionKHR = vk_common_CreateVideoSessionKHR,
-#elif defined(_MSC_VER)
-    .CreateVideoSessionKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionKHR = vk_common_DestroyVideoSessionKHR,
-#elif defined(_MSC_VER)
-    .DestroyVideoSessionKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CreateVideoSessionParametersKHR = vk_common_CreateVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .CreateVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .UpdateVideoSessionParametersKHR = vk_common_UpdateVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .UpdateVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .DestroyVideoSessionParametersKHR = vk_common_DestroyVideoSessionParametersKHR,
-#elif defined(_MSC_VER)
-    .DestroyVideoSessionParametersKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .GetVideoSessionMemoryRequirementsKHR = vk_common_GetVideoSessionMemoryRequirementsKHR,
-#elif defined(_MSC_VER)
-    .GetVideoSessionMemoryRequirementsKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .BindVideoSessionMemoryKHR = vk_common_BindVideoSessionMemoryKHR,
-#elif defined(_MSC_VER)
-    .BindVideoSessionMemoryKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdDecodeVideoKHR = vk_common_CmdDecodeVideoKHR,
-#elif defined(_MSC_VER)
-    .CmdDecodeVideoKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdBeginVideoCodingKHR = vk_common_CmdBeginVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdBeginVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdControlVideoCodingKHR = vk_common_CmdControlVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdControlVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
     .CmdEndVideoCodingKHR = vk_common_CmdEndVideoCodingKHR,
-#elif defined(_MSC_VER)
-    .CmdEndVideoCodingKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
-#ifdef VK_ENABLE_BETA_EXTENSIONS
-    .CmdEncodeVideoKHR = vk_common_CmdEncodeVideoKHR,
-#elif defined(_MSC_VER)
-    .CmdEncodeVideoKHR = (PFN_vkVoidFunction)vk_entrypoint_stub,
-#endif // VK_ENABLE_BETA_EXTENSIONS
+    .CmdDecompressMemoryNV = vk_common_CmdDecompressMemoryNV,
+    .CmdDecompressMemoryIndirectCountNV = vk_common_CmdDecompressMemoryIndirectCountNV,
     .CreateCuModuleNVX = vk_common_CreateCuModuleNVX,
     .CreateCuFunctionNVX = vk_common_CreateCuFunctionNVX,
     .DestroyCuModuleNVX = vk_common_DestroyCuModuleNVX,
     .DestroyCuFunctionNVX = vk_common_DestroyCuFunctionNVX,
     .CmdCuLaunchKernelNVX = vk_common_CmdCuLaunchKernelNVX,
+    .GetDescriptorSetLayoutSizeEXT = vk_common_GetDescriptorSetLayoutSizeEXT,
+    .GetDescriptorSetLayoutBindingOffsetEXT = vk_common_GetDescriptorSetLayoutBindingOffsetEXT,
+    .GetDescriptorEXT = vk_common_GetDescriptorEXT,
+    .CmdBindDescriptorBuffersEXT = vk_common_CmdBindDescriptorBuffersEXT,
+    .CmdSetDescriptorBufferOffsetsEXT = vk_common_CmdSetDescriptorBufferOffsetsEXT,
+    .CmdBindDescriptorBufferEmbeddedSamplersEXT = vk_common_CmdBindDescriptorBufferEmbeddedSamplersEXT,
+    .GetBufferOpaqueCaptureDescriptorDataEXT = vk_common_GetBufferOpaqueCaptureDescriptorDataEXT,
+    .GetImageOpaqueCaptureDescriptorDataEXT = vk_common_GetImageOpaqueCaptureDescriptorDataEXT,
+    .GetImageViewOpaqueCaptureDescriptorDataEXT = vk_common_GetImageViewOpaqueCaptureDescriptorDataEXT,
+    .GetSamplerOpaqueCaptureDescriptorDataEXT = vk_common_GetSamplerOpaqueCaptureDescriptorDataEXT,
+    .GetAccelerationStructureOpaqueCaptureDescriptorDataEXT = vk_common_GetAccelerationStructureOpaqueCaptureDescriptorDataEXT,
     .SetDeviceMemoryPriorityEXT = vk_common_SetDeviceMemoryPriorityEXT,
     .WaitForPresentKHR = vk_common_WaitForPresentKHR,
 #ifdef VK_USE_PLATFORM_FUCHSIA
@@ -16319,5 +18180,13 @@ const struct vk_device_entrypoint_table vk_common_device_entrypoints = {
     .BindOpticalFlowSessionImageNV = vk_common_BindOpticalFlowSessionImageNV,
     .CmdOpticalFlowExecuteNV = vk_common_CmdOpticalFlowExecuteNV,
     .GetDeviceFaultInfoEXT = vk_common_GetDeviceFaultInfoEXT,
+    .ReleaseSwapchainImagesEXT = vk_common_ReleaseSwapchainImagesEXT,
+    .MapMemory2KHR = vk_common_MapMemory2KHR,
+    .UnmapMemory2KHR = vk_common_UnmapMemory2KHR,
+    .CreateShadersEXT = vk_common_CreateShadersEXT,
+    .DestroyShaderEXT = vk_common_DestroyShaderEXT,
+    .GetShaderBinaryDataEXT = vk_common_GetShaderBinaryDataEXT,
+    .CmdBindShadersEXT = vk_common_CmdBindShadersEXT,
 };
+
 

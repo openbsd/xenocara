@@ -1,6 +1,6 @@
 /**************************************************************************
  *
- * Copyright 2007 VMware, Inc.
+ * Copyright 2007-2023 VMware, Inc.
  * All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -584,12 +584,13 @@ get_emit_func(enum pipe_format format)
    }
 }
 
-static ALWAYS_INLINE void PIPE_CDECL
+static ALWAYS_INLINE void UTIL_CDECL
 generic_run_one(struct translate_generic *tg,
                 unsigned elt,
                 unsigned start_instance,
                 unsigned instance_id,
-                void *vert)
+                void *vert,
+                unsigned index_size)
 {
    unsigned nr_attrs = tg->nr_attrib;
    unsigned attr;
@@ -613,8 +614,10 @@ generic_run_one(struct translate_generic *tg,
          }
          else {
             index = elt;
-            /* clamp to avoid going out of bounds */
-            index = MIN2(index, tg->attrib[attr].max_index);
+            if (index_size > 0) {
+               /* clamp to avoid going out of bounds */
+               index = MIN2(index, tg->attrib[attr].max_index);
+            }
          }
 
          src = tg->attrib[attr].input_ptr +
@@ -651,7 +654,7 @@ generic_run_one(struct translate_generic *tg,
 /**
  * Fetch vertex attributes for 'count' vertices.
  */
-static void PIPE_CDECL
+static void UTIL_CDECL
 generic_run_elts(struct translate *translate,
                  const unsigned *elts,
                  unsigned count,
@@ -664,12 +667,12 @@ generic_run_elts(struct translate *translate,
    unsigned i;
 
    for (i = 0; i < count; i++) {
-      generic_run_one(tg, *elts++, start_instance, instance_id, vert);
+      generic_run_one(tg, *elts++, start_instance, instance_id, vert, 4);
       vert += tg->translate.key.output_stride;
    }
 }
 
-static void PIPE_CDECL
+static void UTIL_CDECL
 generic_run_elts16(struct translate *translate,
                    const uint16_t *elts,
                    unsigned count,
@@ -682,12 +685,12 @@ generic_run_elts16(struct translate *translate,
    unsigned i;
 
    for (i = 0; i < count; i++) {
-      generic_run_one(tg, *elts++, start_instance, instance_id, vert);
+      generic_run_one(tg, *elts++, start_instance, instance_id, vert, 2);
       vert += tg->translate.key.output_stride;
    }
 }
 
-static void PIPE_CDECL
+static void UTIL_CDECL
 generic_run_elts8(struct translate *translate,
                   const uint8_t *elts,
                   unsigned count,
@@ -700,12 +703,12 @@ generic_run_elts8(struct translate *translate,
    unsigned i;
 
    for (i = 0; i < count; i++) {
-      generic_run_one(tg, *elts++, start_instance, instance_id, vert);
+      generic_run_one(tg, *elts++, start_instance, instance_id, vert, 1);
       vert += tg->translate.key.output_stride;
    }
 }
 
-static void PIPE_CDECL
+static void UTIL_CDECL
 generic_run(struct translate *translate,
             unsigned start,
             unsigned count,
@@ -718,7 +721,7 @@ generic_run(struct translate *translate,
    unsigned i;
 
    for (i = 0; i < count; i++) {
-      generic_run_one(tg, start + i, start_instance, instance_id, vert);
+      generic_run_one(tg, start + i, start_instance, instance_id, vert, 0);
       vert += tg->translate.key.output_stride;
    }
 }

@@ -103,9 +103,9 @@ draw_pt_arrays(struct draw_context *draw,
           */
          draw_do_flush(draw, DRAW_FLUSH_STATE_CHANGE);
          frontend = NULL;
-      } else if (draw->pt.eltSize != draw->pt.user.eltSize) {
-         /* Flush draw state if eltSize changed.
-          * This could be improved so only the frontend is flushed since it
+      } else if (draw->pt.eltSize != draw->pt.user.eltSize || draw->pt.viewid != draw->pt.user.viewid) {
+         /* Flush draw state if eltSize or viewid changed.
+          * eltSize changes could be improved so only the frontend is flushed since it
           * converts all indices to ushorts and the fetch part of the middle
           * always prepares both linear and indexed.
           */
@@ -121,6 +121,7 @@ draw_pt_arrays(struct draw_context *draw,
 
       draw->pt.frontend = frontend;
       draw->pt.eltSize = draw->pt.user.eltSize;
+      draw->pt.viewid = draw->pt.user.viewid;
       draw->pt.prim = prim;
       draw->pt.opt = opt;
    }
@@ -360,28 +361,26 @@ prim_restart_loop(struct draw_context *draw,
    struct pipe_draw_start_count_bias cur = *draw_info;
    cur.count = 0;
 
-   /* The largest index within a loop using the i variable as the index.
-    * Used for overflow detection */
-   const unsigned MAX_LOOP_IDX = 0xffffffff;
-
    for (unsigned j = 0; j < draw_info->count; j++) {
-      unsigned restart_idx = 0;
-      unsigned i = draw_overflow_uadd(draw_info->start, j, MAX_LOOP_IDX);
-      switch (draw->pt.user.eltSize) {
-      case 1:
-         restart_idx = ((const uint8_t*)elements)[i];
-         break;
-      case 2:
-         restart_idx = ((const uint16_t*)elements)[i];
-         break;
-      case 4:
-         restart_idx = ((const uint32_t*)elements)[i];
-         break;
-      default:
-         assert(0 && "bad eltSize in draw_arrays()");
+      unsigned index = 0;
+      unsigned i = util_clamped_uadd(draw_info->start, j);
+      if (i < elt_max) {
+         switch (draw->pt.user.eltSize) {
+         case 1:
+            index = ((const uint8_t*)elements)[i];
+            break;
+         case 2:
+            index = ((const uint16_t*)elements)[i];
+            break;
+         case 4:
+            index = ((const uint32_t*)elements)[i];
+            break;
+         default:
+            assert(0 && "bad eltSize in draw_arrays()");
+         }
       }
 
-      if (i < elt_max && restart_idx == info->restart_index) {
+      if (index == info->restart_index) {
          if (cur.count > 0) {
             /* draw elts up to prev pos */
             draw_pt_arrays(draw, info->mode, info->index_bias_varies, &cur, 1);
