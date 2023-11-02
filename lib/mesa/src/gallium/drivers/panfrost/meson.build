@@ -21,6 +21,7 @@
 
 files_panfrost = files(
   'pan_disk_cache.c',
+  'pan_fence.c',
   'pan_helpers.c',
   'pan_public.h',
   'pan_screen.c',
@@ -33,6 +34,8 @@ files_panfrost = files(
   'pan_shader.c',
   'pan_mempool.c',
   'pan_mempool.h',
+  'pan_nir_remove_fragcolor_stores.c',
+  'pan_nir_lower_sysvals.c',
 )
 
 panfrost_includes = [

@@ -37,6 +37,8 @@
 
 #include "ir3_compiler.h"
 
+BEGINC;
+
 /* driver param indices: */
 enum ir3_driver_param {
    /* compute shader driver params: */
@@ -263,6 +265,7 @@ struct ir3_stream_output_info {
  */
 struct ir3_sampler_prefetch {
    uint8_t src;
+   bool bindless;
    uint8_t samp_id;
    uint8_t tex_id;
    uint16_t samp_bindless_id;
@@ -270,7 +273,7 @@ struct ir3_sampler_prefetch {
    uint8_t dst;
    uint8_t wrmask;
    uint8_t half_precision;
-   uint8_t cmd;
+   opc_t tex_opc;
 };
 
 /* Configuration key used to identify a shader variant.. different
@@ -679,7 +682,7 @@ struct ir3_shader_variant {
    /* do we need derivatives: */
    bool need_pixlod;
 
-   bool need_fine_derivatives;
+   bool need_full_quad;
 
    /* do we need VS driver params? */
    bool need_driver_params;
@@ -695,6 +698,8 @@ struct ir3_shader_variant {
    bool has_kill;
 
    bool per_samp;
+
+   bool post_depth_coverage;
 
    /* Are we using split or merged register file? */
    bool mergedregs;
@@ -741,7 +746,7 @@ struct ir3_shader_variant {
 
          /** The number of vertices in the TCS output patch. */
          uint8_t tcs_vertices_out;
-         unsigned spacing:2; /*gl_tess_spacing*/
+         enum gl_tess_spacing spacing:2; /*gl_tess_spacing*/
 
          /** Is the vertex order counterclockwise? */
          bool ccw:1;
@@ -763,6 +768,8 @@ struct ir3_shader_variant {
       struct {
          bool early_fragment_tests : 1;
          bool color_is_dual_source : 1;
+         bool uses_fbfetch_output  : 1;
+         bool fbfetch_coherent     : 1;
       } fs;
       struct {
          unsigned req_input_mem;
@@ -1099,7 +1106,7 @@ ir3_link_shaders(struct ir3_shader_linkage *l,
       if (fs->inputs[j].inloc >= fs->total_in)
          continue;
 
-      k = ir3_find_output(vs, fs->inputs[j].slot);
+      k = ir3_find_output(vs, (gl_varying_slot)fs->inputs[j].slot);
 
       if (k < 0 && fs->inputs[j].slot == VARYING_SLOT_PRIMITIVE_ID) {
          l->primid_loc = fs->inputs[j].inloc;
@@ -1135,6 +1142,8 @@ ir3_find_output_regid(const struct ir3_shader_variant *so, unsigned slot)
       }
    return regid(63, 0);
 }
+
+void print_raw(FILE *out, const BITSET_WORD *data, size_t size);
 
 void ir3_link_stream_out(struct ir3_shader_linkage *l,
                          const struct ir3_shader_variant *v);
@@ -1186,5 +1195,7 @@ ir3_shader_branchstack_hw(const struct ir3_shader_variant *v)
       return 0;
    }
 }
+
+ENDC;
 
 #endif /* IR3_SHADER_H_ */

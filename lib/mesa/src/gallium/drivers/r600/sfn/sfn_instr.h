@@ -98,16 +98,9 @@ public:
       m_instr_flags.set(scheduled);
       forward_set_scheduled();
    }
-   void add_use() { ++m_use_count; }
-   void dec_use()
-   {
-      assert(m_use_count > 0);
-      --m_use_count;
-   }
    bool is_dead() const { return m_instr_flags.test(dead); }
    bool is_scheduled() const { return m_instr_flags.test(scheduled); }
    bool keep() const { return m_instr_flags.test(always_keep); }
-   bool has_uses() const { return m_use_count > 0; }
 
    bool has_instr_flag(Flags f) const { return m_instr_flags.test(f); }
    void set_instr_flag(Flags f) { m_instr_flags.set(f); }
@@ -136,7 +129,7 @@ public:
    const InstrList& dependend_instr() { return m_dependend_instr; }
 
    virtual AluInstr *as_alu() { return nullptr; }
-   virtual uint8_t allowed_dest_chan_mask() const { return 0; }
+   virtual uint8_t allowed_src_chan_mask() const { return 0; }
 
 protected:
    const InstrList& required_instr() const { return m_required_instr; }

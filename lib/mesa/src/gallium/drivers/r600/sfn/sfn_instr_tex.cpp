@@ -49,7 +49,7 @@ TexInstr::TexInstr(Opcode op,
     m_inst_mode(0),
     m_resource_id(rid)
 {
-   memset(m_offset, 0, sizeof(m_offset));
+   memset(m_coord_offset, 0, sizeof(m_coord_offset));
    m_src.add_use(this);
 }
 
@@ -69,14 +69,14 @@ void
 TexInstr::set_offset(unsigned index, int32_t val)
 {
    assert(index < 3);
-   m_offset[index] = val;
+   m_coord_offset[index] = val;
 }
 
 int
 TexInstr::get_offset(unsigned index) const
 {
    assert(index < 3);
-   return m_offset[index] << 1;
+   return m_coord_offset[index] << 1;
 }
 
 void
@@ -108,7 +108,7 @@ TexInstr::is_equal_to(const TexInstr& lhs) const
       return false;
 
    for (int i = 0; i < 3; ++i) {
-      if (m_offset[i] != lhs.m_offset[i])
+      if (m_coord_offset[i] != lhs.m_coord_offset[i])
          return false;
    }
    return m_inst_mode == lhs.m_inst_mode && resource_base() == lhs.resource_base() &&
@@ -120,6 +120,12 @@ TexInstr::propagate_death()
 {
    m_src.del_use(this);
    return true;
+}
+
+void TexInstr::forward_set_blockid(int id, int index)
+{
+   for (auto p : m_prepare_instr)
+      p->set_blockid(id, index);
 }
 
 bool
@@ -158,12 +164,12 @@ TexInstr::do_print(std::ostream& os) const
    if (resource_offset())
       os << " SO:" << *resource_offset();
 
-   if (m_offset[0])
-      os << " OX:" << m_offset[0];
-   if (m_offset[1])
-      os << " OY:" << m_offset[1];
-   if (m_offset[2])
-      os << " OZ:" << m_offset[2];
+   if (m_coord_offset[0])
+      os << " OX:" << m_coord_offset[0];
+   if (m_coord_offset[1])
+      os << " OY:" << m_coord_offset[1];
+   if (m_coord_offset[2])
+      os << " OZ:" << m_coord_offset[2];
 
    if (m_inst_mode || is_gather(m_opcode))
       os << " MODE:" << m_inst_mode;
@@ -423,7 +429,7 @@ TexInstr::replace_source(PRegister old_src, PVirtualValue new_src)
 }
 
 uint8_t
-TexInstr::allowed_dest_chan_mask() const
+TexInstr::allowed_src_chan_mask() const
 {
    return m_src.free_chan_mask();
 }
@@ -488,10 +494,6 @@ TexInstr::emit_set_offsets(
 
    for (int i = 0; i < src_components; ++i)
       swizzle[i] = i;
-
-   int noffsets = tex->coord_components;
-   if (tex->is_array)
-      --noffsets;
 
    auto ofs = shader.value_factory().src_vec4(*src.offset, pin_group, swizzle);
    RegisterVec4 empty_dst(0, false, {0, 0, 0, 0}, pin_group);
@@ -960,7 +962,10 @@ private:
    nir_ssa_def *
    finalize(nir_tex_instr *tex, nir_ssa_def *backend1, nir_ssa_def *backend2);
 
+   nir_ssa_def *get_undef();
+
    amd_gfx_level m_chip_class;
+   nir_ssa_def *m_undef {nullptr};
 };
 
 bool
@@ -997,6 +1002,13 @@ LowerTexToBackend::filter(const nir_instr *instr) const
    }
 
    return nir_tex_instr_src_index(tex, nir_tex_src_backend1) == -1;
+}
+
+nir_ssa_def *LowerTexToBackend::get_undef()
+{
+   if (!m_undef)
+      m_undef = nir_ssa_undef(b, 1, 32);
+   return m_undef;
 }
 
 nir_ssa_def *
@@ -1156,14 +1168,16 @@ LowerTexToBackend::finalize(nir_tex_instr *tex,
 nir_ssa_def *
 LowerTexToBackend::prep_src(std::array<nir_ssa_def *, 4>& coord, int& used_coord_mask)
 {
+   int max_coord = 0;
    for (int i = 0; i < 4; ++i) {
-      if (coord[i])
+      if (coord[i]) {
          used_coord_mask |= 1 << i;
-      else
-         coord[i] = nir_ssa_undef(b, 1, 32);
+         max_coord = i;
+      } else
+         coord[i] = get_undef();
    }
 
-   return nir_vec(b, coord.data(), 4);
+   return nir_vec(b, coord.data(), max_coord + 1);
 }
 
 nir_ssa_def *

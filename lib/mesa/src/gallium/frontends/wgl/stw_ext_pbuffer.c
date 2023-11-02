@@ -48,6 +48,7 @@
 static LRESULT CALLBACK
 WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+#ifndef _GAMING_XBOX
     MINMAXINFO *pMMI;
     switch (uMsg) {
     case WM_GETMINMAXINFO:
@@ -61,12 +62,13 @@ WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     default:
         break;
     }
+#endif /* _GAMING_XBOX */
 
     return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
 struct stw_framebuffer *
-stw_pbuffer_create(const struct stw_pixelformat_info *pfi, int iWidth, int iHeight, struct st_manager *smapi)
+stw_pbuffer_create(const struct stw_pixelformat_info *pfi, int iWidth, int iHeight, struct pipe_frontend_screen *fscreen)
 {
    static boolean first = TRUE;
 
@@ -78,8 +80,10 @@ stw_pbuffer_create(const struct stw_pixelformat_info *pfi, int iWidth, int iHeig
       WNDCLASS wc;
       memset(&wc, 0, sizeof wc);
       wc.hbrBackground = (HBRUSH) (COLOR_BTNFACE + 1);
+#ifndef _GAMING_XBOX
       wc.hCursor = LoadCursor(NULL, IDC_ARROW);
       wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+#endif
       wc.lpfnWndProc = WndProc;
       wc.lpszClassName = "wglpbuffer";
       wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
@@ -143,7 +147,7 @@ stw_pbuffer_create(const struct stw_pixelformat_info *pfi, int iWidth, int iHeig
    assert(rect.bottom - rect.top == iHeight);
 #endif
 
-   return stw_framebuffer_create(hWnd, pfi, STW_FRAMEBUFFER_PBUFFER, smapi);
+   return stw_framebuffer_create(hWnd, pfi, STW_FRAMEBUFFER_PBUFFER, fscreen);
 }
 
 
@@ -242,7 +246,7 @@ wglCreatePbufferARB(HDC hCurrentDC,
     * We can't pass non-displayable pixel formats to GDI, which is why we
     * create the framebuffer object before calling SetPixelFormat().
     */
-   fb = stw_pbuffer_create(pfi, iWidth, iHeight, stw_dev->smapi);
+   fb = stw_pbuffer_create(pfi, iWidth, iHeight, stw_dev->fscreen);
    if (!fb) {
       SetLastError(ERROR_NO_SYSTEM_RESOURCES);
       return NULL;

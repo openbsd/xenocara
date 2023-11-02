@@ -31,6 +31,8 @@ rage2_CmdBeginRenderPass(VkCommandBuffer commandBuffer,
                          VkSubpassContents contents)
 {
    VK_FROM_HANDLE(vk_framebuffer, framebuffer, pRenderPassBegin->framebuffer);
+   RADV_FROM_HANDLE(radv_cmd_buffer, cmd_buffer, commandBuffer);
+   struct radv_device *device = cmd_buffer->device;
 
    VkRenderPassBeginInfo render_pass_begin = {
       .sType = pRenderPassBegin->sType,
@@ -50,5 +52,5 @@ rage2_CmdBeginRenderPass(VkCommandBuffer commandBuffer,
    render_pass_begin.renderArea.extent.width = framebuffer->width;
    render_pass_begin.renderArea.extent.height = framebuffer->height;
 
-   vk_common_CmdBeginRenderPass(commandBuffer, &render_pass_begin, contents);
+   device->layer_dispatch.app.CmdBeginRenderPass(commandBuffer, &render_pass_begin, contents);
 }

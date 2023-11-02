@@ -21,7 +21,7 @@
  * IN THE SOFTWARE.
  */
 
-#include "u_math.h"
+#include "util/u_math.h"
 #include "nir.h"
 #include "glsl_types.h"
 #include "nir_types.h"
@@ -43,7 +43,8 @@ lower_load_base_global_invocation_id(nir_builder *b, nir_intrinsic_instr *intr,
                                       offsetof(struct clc_work_properties_data,
                                                global_offset_x)),
                           nir_dest_num_components(intr->dest),
-                          nir_dest_bit_size(intr->dest));
+                          nir_dest_bit_size(intr->dest),
+                          sizeof(uint32_t) * 4);
    nir_ssa_def_rewrite_uses(&intr->dest.ssa, offset);
    nir_instr_remove(&intr->instr);
    return true;
@@ -61,7 +62,8 @@ lower_load_work_dim(nir_builder *b, nir_intrinsic_instr *intr,
                                       offsetof(struct clc_work_properties_data,
                                                work_dim)),
                           nir_dest_num_components(intr->dest),
-                          nir_dest_bit_size(intr->dest));
+                          nir_dest_bit_size(intr->dest),
+                          sizeof(uint32_t));
    nir_ssa_def_rewrite_uses(&intr->dest.ssa, dim);
    nir_instr_remove(&intr->instr);
    return true;
@@ -79,7 +81,8 @@ lower_load_num_workgroups(nir_builder *b, nir_intrinsic_instr *intr,
                                      offsetof(struct clc_work_properties_data,
                                               group_count_total_x)),
                          nir_dest_num_components(intr->dest),
-                         nir_dest_bit_size(intr->dest));
+                         nir_dest_bit_size(intr->dest),
+                         sizeof(uint32_t) * 4);
    nir_ssa_def_rewrite_uses(&intr->dest.ssa, count);
    nir_instr_remove(&intr->instr);
    return true;
@@ -97,7 +100,8 @@ lower_load_base_workgroup_id(nir_builder *b, nir_intrinsic_instr *intr,
                                      offsetof(struct clc_work_properties_data,
                                               group_id_offset_x)),
                          nir_dest_num_components(intr->dest),
-                         nir_dest_bit_size(intr->dest));
+                         nir_dest_bit_size(intr->dest),
+                         sizeof(uint32_t) * 4);
    nir_ssa_def_rewrite_uses(&intr->dest.ssa, offset);
    nir_instr_remove(&intr->instr);
    return true;
@@ -172,7 +176,7 @@ lower_load_kernel_input(nir_builder *b, nir_intrinsic_instr *intr,
    const struct glsl_type *type =
       glsl_vector_type(base_type, nir_dest_num_components(intr->dest));
    nir_ssa_def *ptr = nir_vec2(b, nir_imm_int(b, var->data.binding),
-                                  nir_u2u(b, intr->src[0].ssa, 32));
+                                  nir_u2uN(b, intr->src[0].ssa, 32));
    nir_deref_instr *deref = nir_build_deref_cast(b, ptr, nir_var_mem_ubo, type,
                                                     bit_size / 8);
    deref->cast.align_mul = nir_intrinsic_align_mul(intr);

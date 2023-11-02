@@ -113,7 +113,7 @@ Italo Nicola (1):
 
 - panfrost: fix off-by-one when exporting format modifiers
 
-Jason Ekstrand (1):
+Faith Ekstrand (1):
 
 - gallium,util: Pull u_indices and u_primconvert back into gallium
 

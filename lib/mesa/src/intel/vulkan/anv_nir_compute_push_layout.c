@@ -67,12 +67,13 @@ anv_nir_compute_push_layout(nir_shader *nir,
                break;
             }
 
-            case nir_intrinsic_load_desc_set_address_intel:
-               push_start = MIN2(push_start,
-                  offsetof(struct anv_push_constants, desc_sets));
-               push_end = MAX2(push_end, push_start +
+            case nir_intrinsic_load_desc_set_address_intel: {
+               unsigned base = offsetof(struct anv_push_constants, desc_sets);
+               push_start = MIN2(push_start, base);
+               push_end = MAX2(push_end, base +
                   sizeof_field(struct anv_push_constants, desc_sets));
                break;
+            }
 
             default:
                break;
@@ -117,7 +118,7 @@ anv_nir_compute_push_layout(nir_shader *nir,
     * push_end (no push constants is indicated by push_start = UINT_MAX).
     */
    push_start = MIN2(push_start, push_end);
-   push_start = align_down_u32(push_start, 32);
+   push_start = ROUND_DOWN_TO(push_start, 32);
 
    /* For vec4 our push data size needs to be aligned to a vec4 and for
     * scalar, it needs to be aligned to a DWORD.

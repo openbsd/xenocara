@@ -830,12 +830,6 @@ update_uniforms_shader_info(struct gl_shader_program *prog,
       /* Set image access qualifiers */
       enum gl_access_qualifier image_access =
          state->current_var->data.access;
-      const GLenum access =
-         (image_access & ACCESS_NON_WRITEABLE) ?
-         ((image_access & ACCESS_NON_READABLE) ? GL_NONE :
-                                                 GL_READ_ONLY) :
-         ((image_access & ACCESS_NON_READABLE) ? GL_WRITE_ONLY :
-                                                 GL_READ_WRITE);
 
       int image_index;
       if (state->current_var->data.bindless) {
@@ -850,7 +844,7 @@ update_uniforms_shader_info(struct gl_shader_program *prog,
 
          for (unsigned j = sh->Program->sh.NumBindlessImages;
               j < state->next_bindless_image_index; j++) {
-            sh->Program->sh.BindlessImages[j].access = access;
+            sh->Program->sh.BindlessImages[j].image_access = image_access;
          }
 
          sh->Program->sh.NumBindlessImages = state->next_bindless_image_index;
@@ -866,7 +860,7 @@ update_uniforms_shader_info(struct gl_shader_program *prog,
 
          for (unsigned i = image_index;
               i < MIN2(state->next_image_index, MAX_IMAGE_UNIFORMS); i++) {
-            sh->Program->sh.ImageAccess[i] = access;
+            sh->Program->sh.image_access[i] = image_access;
          }
       }
 
@@ -1541,7 +1535,7 @@ gl_nir_link_uniforms(const struct gl_constants *consts,
    /* Iterate through all linked shaders */
    struct nir_link_uniforms_state state = {0,};
 
-   if (!prog->data->spirv && !consts->DisableUniformArrayResize) {
+   if (!prog->data->spirv) {
       /* Gather information on uniform use */
       for (unsigned stage = 0; stage < MESA_SHADER_STAGES; stage++) {
          struct gl_linked_shader *sh = prog->_LinkedShaders[stage];
@@ -1556,14 +1550,16 @@ gl_nir_link_uniforms(const struct gl_constants *consts,
          add_var_use_shader(nir, state.referenced_uniforms[stage]);
       }
 
-      /* Resize uniform arrays based on the maximum array index */
-      for (unsigned stage = 0; stage < MESA_SHADER_STAGES; stage++) {
-         struct gl_linked_shader *sh = prog->_LinkedShaders[stage];
-         if (!sh)
-            continue;
+      if(!consts->DisableUniformArrayResize) {
+         /* Resize uniform arrays based on the maximum array index */
+         for (unsigned stage = 0; stage < MESA_SHADER_STAGES; stage++) {
+            struct gl_linked_shader *sh = prog->_LinkedShaders[stage];
+            if (!sh)
+               continue;
 
-         nir_foreach_gl_uniform_variable(var, sh->Program->nir)
-            update_array_sizes(prog, var, state.referenced_uniforms, stage);
+            nir_foreach_gl_uniform_variable(var, sh->Program->nir)
+               update_array_sizes(prog, var, state.referenced_uniforms, stage);
+         }
       }
    }
 

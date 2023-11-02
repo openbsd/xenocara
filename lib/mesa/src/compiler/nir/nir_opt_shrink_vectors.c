@@ -192,49 +192,62 @@ opt_shrink_vectors_alu(nir_builder *b, nir_alu_instr *instr)
       return false;
 
    unsigned mask = nir_ssa_def_components_read(def);
-   unsigned last_bit = util_last_bit(mask);
-   unsigned num_components = util_bitcount(mask);
-
-   unsigned rounded = round_up_components(num_components);
-   assert(rounded <= def->num_components);
-   num_components = rounded;
-
    /* return, if there is nothing to do */
-   if (mask == 0 || num_components == def->num_components)
+   if (mask == 0)
       return false;
 
-   const bool is_bitfield_mask = last_bit == num_components;
-   if (is_bitfield_mask) {
-      /* just reduce the number of components and return */
-      def->num_components = num_components;
-      instr->dest.write_mask = mask;
-      return true;
-   }
-
    uint8_t reswizzle[NIR_MAX_VEC_COMPONENTS] = { 0 };
-   unsigned index = 0;
-   for (unsigned i = 0; i < last_bit; i++) {
+   unsigned num_components = 0;
+   bool progress = false;
+   for (unsigned i = 0; i < def->num_components; i++) {
       /* skip unused components */
       if (!((mask >> i) & 0x1))
          continue;
 
-      /* reswizzle the sources */
-      for (int k = 0; k < nir_op_infos[instr->op].num_inputs; k++) {
-         instr->src[k].swizzle[index] = instr->src[k].swizzle[i];
-         reswizzle[i] = index;
-      }
-      index++;
-   }
-   assert(index == num_components);
+      /* Try reuse a component with the same swizzles */
+      unsigned j;
+      for (j = 0; j < num_components; j++) {
+         bool duplicate_channel = true;
+         for (unsigned k = 0; k < nir_op_infos[instr->op].num_inputs; k++) {
+            if (nir_op_infos[instr->op].input_sizes[k] != 0 ||
+                instr->src[k].swizzle[i] != instr->src[k].swizzle[j]) {
+               duplicate_channel = false;
+               break;
+            }
+         }
 
-   /* update dest */
-   def->num_components = num_components;
-   instr->dest.write_mask = BITFIELD_MASK(num_components);
+         if (duplicate_channel) {
+            reswizzle[i] = j;
+            progress = true;
+            break;
+         }
+      }
+
+      /* Otherwise, just append the value */
+      if (j == num_components) {
+         for (int k = 0; k < nir_op_infos[instr->op].num_inputs; k++) {
+            instr->src[k].swizzle[num_components] = instr->src[k].swizzle[i];
+         }
+         if (i != num_components)
+            progress = true;
+         reswizzle[i] = num_components++;
+      }
+   }
 
    /* update uses */
-   reswizzle_alu_uses(def, reswizzle);
+   if (progress)
+      reswizzle_alu_uses(def, reswizzle);
 
-   return true;
+   unsigned rounded = round_up_components(num_components);
+   assert(rounded <= def->num_components);
+   if (rounded < def->num_components)
+      progress = true;
+
+   /* update dest */
+   def->num_components = rounded;
+   instr->dest.write_mask = BITFIELD_MASK(rounded);
+
+   return progress;
 }
 
 static bool
@@ -293,6 +306,7 @@ opt_shrink_vectors_load_const(nir_load_const_instr *instr)
 
    uint8_t reswizzle[NIR_MAX_VEC_COMPONENTS] = { 0 };
    unsigned num_components = 0;
+   bool progress = false;
    for (unsigned i = 0; i < def->num_components; i++) {
       if (!((mask >> i) & 0x1))
          continue;
@@ -302,6 +316,7 @@ opt_shrink_vectors_load_const(nir_load_const_instr *instr)
       for (j = 0; j < num_components; j++) {
          if (instr->value[i].u64 == instr->value[j].u64) {
             reswizzle[i] = j;
+            progress = true;
             break;
          }
       }
@@ -309,27 +324,126 @@ opt_shrink_vectors_load_const(nir_load_const_instr *instr)
       /* Otherwise, just append the value */
       if (j == num_components) {
          instr->value[num_components] = instr->value[i];
+         if (i != num_components)
+            progress = true;
          reswizzle[i] = num_components++;
       }
    }
 
+   if (progress)
+      reswizzle_alu_uses(def, reswizzle);
+
    unsigned rounded = round_up_components(num_components);
    assert(rounded <= def->num_components);
-   num_components = rounded;
+   if (rounded < def->num_components)
+      progress = true;
 
-   if (num_components == def->num_components)
-      return false;
+   def->num_components = rounded;
 
-   def->num_components = num_components;
-   reswizzle_alu_uses(def, reswizzle);
-
-   return true;
+   return progress;
 }
 
 static bool
 opt_shrink_vectors_ssa_undef(nir_ssa_undef_instr *instr)
 {
    return shrink_dest_to_read_mask(&instr->def);
+}
+
+static bool
+opt_shrink_vectors_phi(nir_builder *b, nir_phi_instr *instr)
+{
+   nir_ssa_def *def = &instr->dest.ssa;
+
+   /* early out if there's nothing to do. */
+   if (def->num_components == 1)
+      return false;
+
+   /* Ignore large vectors for now. */
+   if (def->num_components > 4)
+      return false;
+
+
+   /* Check the uses. */
+   nir_component_mask_t mask = 0;
+   nir_foreach_use(src, def) {
+      if (src->parent_instr->type != nir_instr_type_alu)
+         return false;
+
+      nir_alu_instr *alu = nir_instr_as_alu(src->parent_instr);
+
+      nir_alu_src *alu_src = exec_node_data(nir_alu_src, src, src);
+      int src_idx = alu_src - &alu->src[0];
+      nir_component_mask_t src_read_mask = nir_alu_instr_src_read_mask(alu, src_idx);
+
+      nir_ssa_def *alu_def = &alu->dest.dest.ssa;
+
+      /* We don't mark the channels used if the only reader is the original phi.
+       * This can happen in the case of loops.
+       */
+      nir_foreach_use(alu_use_src, alu_def) {
+         if (alu_use_src->parent_instr != &instr->instr) {
+            mask |= src_read_mask;
+         }
+      }
+
+      /* However, even if the instruction only points back at the phi, we still
+       * need to check that the swizzles are trivial.
+       */
+      if (nir_op_is_vec(alu->op) && alu->op != nir_op_mov) {
+         if (src_idx != alu->src[src_idx].swizzle[0]) {
+            mask |= src_read_mask;
+         }
+      } else if (!nir_alu_src_is_trivial_ssa(alu, src_idx)) {
+         mask |= src_read_mask;
+      }
+   }
+
+   /* DCE will handle this. */
+   if (mask == 0)
+      return false;
+
+   /* Nothing to shrink? */
+   if (BITFIELD_MASK(def->num_components) == mask)
+      return false;
+
+   /* Set up the reswizzles. */
+   unsigned num_components = 0;
+   uint8_t reswizzle[NIR_MAX_VEC_COMPONENTS] = { 0 };
+   uint8_t src_reswizzle[NIR_MAX_VEC_COMPONENTS] = { 0 };
+   for (unsigned i = 0; i < def->num_components; i++) {
+      if (!((mask >> i) & 0x1))
+         continue;
+      src_reswizzle[num_components] = i;
+      reswizzle[i] = num_components++;
+   }
+
+   /* Shrink the phi, this part is simple. */
+   def->num_components = num_components;
+
+   /* We can't swizzle phi sources directly so just insert extra mov
+    * with the correct swizzle and let the other parts of nir_shrink_vectors
+    * do its job on the original source instruction. If the original source was
+    * used only in the phi, the movs will disappear later after copy propagate.
+    */
+   nir_foreach_phi_src(phi_src, instr) {
+      b->cursor = nir_after_instr_and_phis(phi_src->src.ssa->parent_instr);
+
+      nir_alu_src alu_src = {
+         .src = nir_src_for_ssa(phi_src->src.ssa)
+      };
+
+      for (unsigned i = 0; i < num_components; i++)
+         alu_src.swizzle[i] = src_reswizzle[i];
+      nir_ssa_def *mov = nir_mov_alu(b, alu_src, num_components);
+
+      nir_instr_rewrite_src_ssa(&instr->instr, &phi_src->src, mov);
+   }
+   b->cursor = nir_before_instr(&instr->instr);
+
+   /* Reswizzle readers. */
+   reswizzle_alu_uses(def, reswizzle);
+
+   return true;
 }
 
 static bool
@@ -349,6 +463,9 @@ opt_shrink_vectors_instr(nir_builder *b, nir_instr *instr)
 
    case nir_instr_type_ssa_undef:
       return opt_shrink_vectors_ssa_undef(nir_instr_as_ssa_undef(instr));
+
+   case nir_instr_type_phi:
+      return opt_shrink_vectors_phi(b, nir_instr_as_phi(instr));
 
    default:
       return false;

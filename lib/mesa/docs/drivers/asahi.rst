@@ -3,32 +3,14 @@ Asahi
 
 The Asahi driver aims to provide an OpenGL implementation for the Apple M1.
 
-Testing on macOS
------------------
-
-On macOS, the experimental Asahi driver may built with options:
-
-    -Dosmesa=true -Dglx=xlib -Dgallium-drivers=asahi,swrast
-
-To use, set the ``DYLD_LIBRARY_PATH`` environment variable:
-
-   DYLD_LIBRARY_PATH=/Users/nobody/mesa/build/src/gallium/targets/libgl-xlib/ glmark2 --reuse-context
-
-Only X11 apps are supported. XQuartz must be setup separately.
-
 Wrap (macOS only)
 -----------------
 
 Mesa includes a library that wraps the key IOKit entrypoints used in the macOS
 UABI for AGX. The wrapped routines print information about the kernel calls made
-and dump work submitted to the GPU using agxdecode.
-
-This library allows debugging Mesa, particularly around the undocumented macOS
-user-kernel interface. Logs from Mesa may compared to Metal to check that the
-UABI is being used correctly.
-
-Furthermore, it allows reverse-engineering the hardware, as glue to get at the
-"interesting" GPU memory.
+and dump work submitted to the GPU using agxdecode. This facilitates
+reverse-engineering the hardware, as glue to get at the "interesting" GPU
+memory.
 
 The library is only built if ``-Dtools=asahi`` is passed. It builds a single
 ``wrap.dylib`` file, which should be inserted into a process with the
@@ -36,7 +18,7 @@ The library is only built if ``-Dtools=asahi`` is passed. It builds a single
 
 For example, to trace an app ``./app``, run:
 
-    DYLD_INSERT_LIBRARIES=~/mesa/build/src/asahi/lib/libwrap.dylib ./app
+   DYLD_INSERT_LIBRARIES=~/mesa/build/src/asahi/lib/libwrap.dylib ./app
 
 Hardware varyings
 -----------------
@@ -58,7 +40,12 @@ consist of a single 32-bit value or an aligned 16-bit register pair, depending
 on whether interpolation should happen at 32-bit or 16-bit. Vertex outputs are
 indexed starting from 0, with the *vertex position* always coming first, the
 32-bit user varyings coming next, then 16-bit user varyings, and finally *point
-size* at the end if present.
+size* and *clip distances* at the end if present. Note that *clip distances* are
+not accessible from the fragment shader; if the fragment shader needs to read
+the interpolated clip distance, the vertex shader must *also* write the clip
+distance values to a user varying for the fragment shader to interpolate. Also
+note there is no clip plane enable mask anywhere; that must lowered for APIs
+that require this (OpenGL but not Vulkan).
 
 .. list-table:: Ordering of vertex outputs with all outputs used
    :widths: 25 75
@@ -82,6 +69,12 @@ size* at the end if present.
      - Packed pair of 16-bit varyings n
    * - 4 + m + 1 + n + 1
      - Point size
+   * - 4 + m + 1 + n + 2 + 0
+     - Clip distance for plane 0
+   * -
+     - ...
+   * - 4 + m + 1 + n + 2 + 15
+     - Clip distance for plane 15
 
 Remapping
 `````````
@@ -90,7 +83,7 @@ Vertex outputs are remapped to varying slots to be interpolated.
 The output of remapping consists of the following items: the *W* fragment
 coordinate, the *Z* fragment coordinate, user varyings in the vertex
 output order. *Z* may be omitted, but *W* may not be. This remapping is
-configured by the "Linkage" packet.
+configured by the "Output select" word.
 
 .. list-table:: Ordering of remapped slots
    :widths: 25 75
@@ -150,15 +143,15 @@ within the compiler.
 Fragment shader
 ```````````````
 
-In the fragment shader, coefficient registers, identified by the prefix `cf`
+In the fragment shader, coefficient registers, identified by the prefix ``cf``
 followed by a decimal index, act as opaque handles to varyings. For flat
 shading, coefficient registers may be loaded into general registers with the
-`ldcf` instruction. For smooth shading, the coefficient register corresponding
+``ldcf`` instruction. For smooth shading, the coefficient register corresponding
 to the desired varying is passed as an argument to the "iterate" instruction
-`iter` in order to "iterate" (interpolate) a varying. As perspective correct
+``iter`` in order to "iterate" (interpolate) a varying. As perspective correct
 interpolation also requires the W component of the fragment coordinate, the
 coefficient register for W is passed as a second argument. As an example, if
-there's a single varying to interpolate, an instruction like `iter r0, cf1, cf0`
+there's a single varying to interpolate, an instruction like ``iter r0, cf1, cf0``
 is used.
 
 Iterator
@@ -275,3 +268,30 @@ logically. These extra levels pad out layers of 3D images to the size of the
 first layer, simplifying layout calculations for both software and hardware.
 Although the padding is logically unnecessary, it wastes little space compared
 to the sizes of large mipmapped 3D textures.
+
+drm-shim (Linux only)
+---------------------
+
+Mesa includes a library that mocks out the DRM UABI used by the Asahi driver
+stack, allowing the Mesa driver to run on non-M1 Linux hardware. This can be
+useful for exercising the compiler. To build, use options:
+
+::
+
+   -Dgallium-drivers=asahi -Dtools=drm-shim
+
+Then run an OpenGL workload with environment variable:
+
+.. code-block:: console
+
+   LD_PRELOAD=~/mesa/build/src/asahi/drm-shim/libasahi_noop_drm_shim.so
+
+For example to compile a shader with shaderdb and print some statistics along
+with the IR:
+
+.. code-block:: console
+
+   ~/shader-db$ AGX_MESA_DEBUG=shaders,shaderdb ASAHI_MESA_DEBUG=precompile LIBGL_DRIVERS_PATH=~/lib/dri/ LD_PRELOAD=~/mesa/build/src/asahi/drm-shim/libasahi_noop_drm_shim.so ./run shaders/glmark/1-12.shader_test
+
+The drm-shim implementation for Asahi is located in ``src/asahi/drm-shim``. The
+drm-shim implementation there should be updated as new UABI is added.

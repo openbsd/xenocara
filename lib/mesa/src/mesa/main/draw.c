@@ -28,7 +28,7 @@
 
 #include <stdio.h>
 #include "arrayobj.h"
-#include "glheader.h"
+#include "util/glheader.h"
 #include "c99_alloca.h"
 #include "context.h"
 #include "state.h"
@@ -45,6 +45,7 @@
 
 #include "state_tracker/st_context.h"
 #include "state_tracker/st_draw.h"
+#include "util/u_threaded_context.h"
 
 typedef struct {
    GLuint count;
@@ -104,45 +105,67 @@ _mesa_set_varying_vp_inputs(struct gl_context *ctx, GLbitfield varying_inputs)
  * enabled arrays when a fixed function array draw is executed.
  */
 void
-_mesa_set_draw_vao(struct gl_context *ctx, struct gl_vertex_array_object *vao,
-                   GLbitfield filter)
+_mesa_set_draw_vao(struct gl_context *ctx, struct gl_vertex_array_object *vao)
 {
    struct gl_vertex_array_object **ptr = &ctx->Array._DrawVAO;
-   bool new_vertex_buffers = false, new_vertex_elements = false;
 
    if (*ptr != vao) {
       _mesa_reference_vao_(ctx, ptr, vao);
-      new_vertex_buffers = true;
-      new_vertex_elements = true;
-   }
-
-   if (vao->NewVertexBuffers || vao->NewVertexElements) {
-      _mesa_update_vao_derived_arrays(ctx, vao);
-      new_vertex_buffers |= vao->NewVertexBuffers;
-      new_vertex_elements |= vao->NewVertexElements;
-      vao->NewVertexBuffers = false;
-      vao->NewVertexElements = false;
-   }
-
-   assert(vao->_EnabledWithMapMode ==
-          _mesa_vao_enable_to_vp_inputs(vao->_AttributeMapMode, vao->Enabled));
-
-   /* Filter out unwanted arrays. */
-   const GLbitfield enabled = filter & vao->_EnabledWithMapMode;
-   if (ctx->Array._DrawVAOEnabledAttribs != enabled) {
-      ctx->Array._DrawVAOEnabledAttribs = enabled;
-      new_vertex_buffers = true;
-      new_vertex_elements = true;
-   }
-
-   if (new_vertex_buffers || new_vertex_elements) {
+      _mesa_update_edgeflag_state_vao(ctx);
       ctx->NewDriverState |= ST_NEW_VERTEX_ARRAYS;
-      ctx->Array.NewVertexElements |= new_vertex_elements;
+      ctx->Array.NewVertexElements = true;
    }
-
-   _mesa_set_varying_vp_inputs(ctx, enabled);
 }
 
+/**
+ * Other than setting the new VAO, this returns a VAO reference to
+ * the previously-bound VAO and the previous _VPModeInputFilter value through
+ * parameters. The caller must call _mesa_restore_draw_vao to ensure
+ * reference counting is done properly and the affected states are restored.
+ *
+ * \param ctx  GL context
+ * \param vao  VAO to set.
+ * \param vp_input_filter  Mask of enabled vertex attribs.
+ *        Possible values that can also be OR'd with each other:
+ *        - VERT_BIT_FF_ALL
+ *        - VERT_BIT_MAT_ALL
+ *        - VERT_BIT_ALL
+ *        - VERT_BIT_SELECT_RESULT_OFFSET
+ * \param old_vao  Previous bound VAO.
+ * \param old_vp_input_filter  Previous value of vp_input_filter.
+ */
+void
+_mesa_save_and_set_draw_vao(struct gl_context *ctx,
+                            struct gl_vertex_array_object *vao,
+                            GLbitfield vp_input_filter,
+                            struct gl_vertex_array_object **old_vao,
+                            GLbitfield *old_vp_input_filter)
+{
+   *old_vao = ctx->Array._DrawVAO;
+   *old_vp_input_filter = ctx->VertexProgram._VPModeInputFilter;
+
+   ctx->Array._DrawVAO = NULL;
+   ctx->VertexProgram._VPModeInputFilter = vp_input_filter;
+   _mesa_set_draw_vao(ctx, vao);
+}
+
+void
+_mesa_restore_draw_vao(struct gl_context *ctx,
+                       struct gl_vertex_array_object *saved,
+                       GLbitfield saved_vp_input_filter)
+{
+   /* Restore states. */
+   _mesa_reference_vao(ctx, &ctx->Array._DrawVAO, NULL);
+   ctx->Array._DrawVAO = saved;
+   ctx->VertexProgram._VPModeInputFilter = saved_vp_input_filter;
+
+   /* Update states. */
+   ctx->NewDriverState |= ST_NEW_VERTEX_ARRAYS;
+   ctx->Array.NewVertexElements = true;
+
+   /* Restore original states. */
+   _mesa_update_edgeflag_state_vao(ctx);
+}
 
 /**
  * Is 'mode' a valid value for glBegin(), glDrawArrays(), glDrawElements(),
@@ -267,7 +290,8 @@ static GLboolean
 _mesa_validate_MultiDrawElements(struct gl_context *ctx,
                                  GLenum mode, const GLsizei *count,
                                  GLenum type, const GLvoid * const *indices,
-                                 GLsizei primcount)
+                                 GLsizei primcount,
+                                 struct gl_buffer_object *index_bo)
 {
    GLenum error;
 
@@ -309,7 +333,7 @@ _mesa_validate_MultiDrawElements(struct gl_context *ctx,
 
    /* Not using a VBO for indices, so avoid NULL pointer derefs later.
     */
-   if (!ctx->Array.VAO->IndexBufferObj) {
+   if (!index_bo) {
       for (int i = 0; i < primcount; i++) {
          if (!indices[i])
             return GL_FALSE;
@@ -963,18 +987,18 @@ check_array_data(struct gl_context *ctx, struct gl_vertex_array_object *vao,
          data = ADD_POINTERS(_mesa_vertex_attrib_address(array, binding),
                              bo->Mappings[MAP_INTERNAL].Pointer);
       }
-      switch (array->Format.Type) {
+      switch (array->Format.User.Type) {
       case GL_FLOAT:
          {
             GLfloat *f = (GLfloat *) ((GLubyte *) data + binding->Stride * j);
             GLint k;
-            for (k = 0; k < array->Format.Size; k++) {
+            for (k = 0; k < array->Format.User.Size; k++) {
                if (util_is_inf_or_nan(f[k]) || f[k] >= 1.0e20F || f[k] <= -1.0e10F) {
                   printf("Bad array data:\n");
                   printf("  Element[%u].%u = %f\n", j, k, f[k]);
                   printf("  Array %u at %p\n", attrib, (void *) array);
                   printf("  Type 0x%x, Size %d, Stride %d\n",
-                         array->Format.Type, array->Format.Size,
+                         array->Format.User.Type, array->Format.User.Size,
                          binding->Stride);
                   printf("  Address/offset %p in Buffer Object %u\n",
                          array->Ptr, bo ? bo->Name : 0);
@@ -1088,7 +1112,7 @@ print_draw_arrays(struct gl_context *ctx,
       printf("attr %s: size %d stride %d  "
              "ptr %p  Bufobj %u\n",
              gl_vert_attrib_name((gl_vert_attrib) i),
-             array->Format.Size, binding->Stride,
+             array->Format.User.Size, binding->Stride,
              array->Ptr, bufObj ? bufObj->Name : 0);
 
       if (bufObj) {
@@ -1097,7 +1121,7 @@ print_draw_arrays(struct gl_context *ctx,
             _mesa_vertex_attrib_address(array, binding);
 
          unsigned multiplier;
-         switch (array->Format.Type) {
+         switch (array->Format.User.Type) {
          case GL_DOUBLE:
          case GL_INT64_ARB:
          case GL_UNSIGNED_INT64_ARB:
@@ -1111,7 +1135,7 @@ print_draw_arrays(struct gl_context *ctx,
          int *k = (int *) f;
          int i = 0;
          int n = (count - 1) * (binding->Stride / (4 * multiplier))
-            + array->Format.Size;
+            + array->Format.User.Size;
          if (n > 32)
             n = 32;
          printf("  Data at offset %d:\n", offset);
@@ -1172,7 +1196,7 @@ _mesa_draw_arrays(struct gl_context *ctx, GLenum mode, GLint start,
    draw.start = start;
    draw.count = count;
 
-   ctx->Driver.DrawGallium(ctx, &info, 0, &draw, 1);
+   ctx->Driver.DrawGallium(ctx, &info, ctx->DrawID, &draw, 1);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH) {
       _mesa_flush(ctx);
@@ -1189,9 +1213,9 @@ _mesa_Rectf(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   CALL_Begin(ctx->CurrentServerDispatch, (GL_QUADS));
-   /* Begin can change CurrentServerDispatch. */
-   struct _glapi_table *dispatch = ctx->CurrentServerDispatch;
+   CALL_Begin(ctx->Dispatch.Current, (GL_QUADS));
+   /* Begin can change Dispatch.Current. */
+   struct _glapi_table *dispatch = ctx->Dispatch.Current;
    CALL_Vertex2f(dispatch, (x1, y1));
    CALL_Vertex2f(dispatch, (x2, y1));
    CALL_Vertex2f(dispatch, (x2, y2));
@@ -1272,9 +1296,9 @@ _mesa_EvalMesh1(GLenum mode, GLint i1, GLint i2)
    u = ctx->Eval.MapGrid1u1 + i1 * du;
 
 
-   CALL_Begin(ctx->CurrentServerDispatch, (prim));
-   /* Begin can change CurrentServerDispatch. */
-   struct _glapi_table *dispatch = ctx->CurrentServerDispatch;
+   CALL_Begin(ctx->Dispatch.Current, (prim));
+   /* Begin can change Dispatch.Current. */
+   struct _glapi_table *dispatch = ctx->Dispatch.Current;
    for (i = i1; i <= i2; i++, u += du) {
       CALL_EvalCoord1f(dispatch, (u));
    }
@@ -1313,9 +1337,9 @@ _mesa_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
 
    switch (mode) {
    case GL_POINT:
-      CALL_Begin(ctx->CurrentServerDispatch, (GL_POINTS));
-      /* Begin can change CurrentServerDispatch. */
-      dispatch = ctx->CurrentServerDispatch;
+      CALL_Begin(ctx->Dispatch.Current, (GL_POINTS));
+      /* Begin can change Dispatch.Current. */
+      dispatch = ctx->Dispatch.Current;
       for (v = v1, j = j1; j <= j2; j++, v += dv) {
          for (u = u1, i = i1; i <= i2; i++, u += du) {
             CALL_EvalCoord2f(dispatch, (u, v));
@@ -1325,18 +1349,18 @@ _mesa_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
       break;
    case GL_LINE:
       for (v = v1, j = j1; j <= j2; j++, v += dv) {
-         CALL_Begin(ctx->CurrentServerDispatch, (GL_LINE_STRIP));
-         /* Begin can change CurrentServerDispatch. */
-         dispatch = ctx->CurrentServerDispatch;
+         CALL_Begin(ctx->Dispatch.Current, (GL_LINE_STRIP));
+         /* Begin can change Dispatch.Current. */
+         dispatch = ctx->Dispatch.Current;
          for (u = u1, i = i1; i <= i2; i++, u += du) {
             CALL_EvalCoord2f(dispatch, (u, v));
          }
          CALL_End(dispatch, ());
       }
       for (u = u1, i = i1; i <= i2; i++, u += du) {
-         CALL_Begin(ctx->CurrentServerDispatch, (GL_LINE_STRIP));
-         /* Begin can change CurrentServerDispatch. */
-         dispatch = ctx->CurrentServerDispatch;
+         CALL_Begin(ctx->Dispatch.Current, (GL_LINE_STRIP));
+         /* Begin can change Dispatch.Current. */
+         dispatch = ctx->Dispatch.Current;
          for (v = v1, j = j1; j <= j2; j++, v += dv) {
             CALL_EvalCoord2f(dispatch, (u, v));
          }
@@ -1345,9 +1369,9 @@ _mesa_EvalMesh2(GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2)
       break;
    case GL_FILL:
       for (v = v1, j = j1; j < j2; j++, v += dv) {
-         CALL_Begin(ctx->CurrentServerDispatch, (GL_TRIANGLE_STRIP));
-         /* Begin can change CurrentServerDispatch. */
-         dispatch = ctx->CurrentServerDispatch;
+         CALL_Begin(ctx->Dispatch.Current, (GL_TRIANGLE_STRIP));
+         /* Begin can change Dispatch.Current. */
+         dispatch = ctx->Dispatch.Current;
          for (u = u1, i = i1; i <= i2; i++, u += du) {
             CALL_EvalCoord2f(dispatch, (u, v));
             CALL_EvalCoord2f(dispatch, (u, v + dv));
@@ -1368,9 +1392,8 @@ _mesa_DrawArrays(GLenum mode, GLint start, GLsizei count)
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1399,9 +1422,8 @@ _mesa_DrawArraysInstanced(GLenum mode, GLint start, GLsizei count,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1431,9 +1453,8 @@ _mesa_DrawArraysInstancedBaseInstance(GLenum mode, GLint first,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1462,9 +1483,8 @@ _mesa_MultiDrawArrays(GLenum mode, const GLint *first,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1574,7 +1594,9 @@ dump_element_buffer(struct gl_context *ctx, GLenum type)
  * we've validated buffer bounds, etc.
  */
 static void
-_mesa_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
+_mesa_validated_drawrangeelements(struct gl_context *ctx,
+                                  struct gl_buffer_object *index_bo,
+                                  GLenum mode,
                                   bool index_bounds_valid,
                                   GLuint start, GLuint end,
                                   GLsizei count, GLenum type,
@@ -1596,7 +1618,6 @@ _mesa_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
    struct pipe_draw_info info;
    struct pipe_draw_start_count_bias draw;
    unsigned index_size_shift = get_index_size_shift(type);
-   struct gl_buffer_object *index_bo = ctx->Array.VAO->IndexBufferObj;
 
    if (index_bo && !indices_aligned(index_size_shift, indices))
       return;
@@ -1622,14 +1643,23 @@ _mesa_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
       draw.start = 0;
    } else {
       uintptr_t start = (uintptr_t) indices;
-      if (unlikely(index_bo->Size < start)) {
+      if (unlikely(index_bo->Size < start || !index_bo->buffer)) {
          _mesa_warning(ctx, "Invalid indices offset 0x%" PRIxPTR
-                            " (indices buffer size is %ld bytes)."
-                            " Draw skipped.", start, index_bo->Size);
+                            " (indices buffer size is %ld bytes)"
+                            " or unallocated buffer (%u). Draw skipped.",
+                            start, (long)index_bo->Size, !!index_bo->buffer);
          return;
       }
-      info.index.gl_bo = index_bo;
+
       draw.start = start >> index_size_shift;
+
+      if (ctx->st->pipe->draw_vbo == tc_draw_vbo) {
+         /* Fast path for u_threaded_context to eliminate atomics. */
+         info.index.resource = _mesa_get_bufferobj_reference(ctx, index_bo);
+         info.take_index_buffer_ownership = true;
+      } else {
+         info.index.resource = index_bo->buffer;
+      }
    }
    draw.index_bias = basevertex;
 
@@ -1668,7 +1698,7 @@ _mesa_validated_drawrangeelements(struct gl_context *ctx, GLenum mode,
     * for the latter case elsewhere.
     */
 
-   ctx->Driver.DrawGallium(ctx, &info, 0, &draw, 1);
+   ctx->Driver.DrawGallium(ctx, &info, ctx->DrawID, &draw, 1);
 
    if (MESA_DEBUG_FLAGS & DEBUG_ALWAYS_FLUSH) {
       _mesa_flush(ctx);
@@ -1695,9 +1725,8 @@ _mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1764,7 +1793,8 @@ _mesa_DrawRangeElementsBaseVertex(GLenum mode, GLuint start, GLuint end,
       end = ~0;
    }
 
-   _mesa_validated_drawrangeelements(ctx, mode, index_bounds_valid, start, end,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, index_bounds_valid, start, end,
                                      count, type, indices, basevertex, 1, 0);
 }
 
@@ -1791,9 +1821,8 @@ _mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1801,7 +1830,8 @@ _mesa_DrawElements(GLenum mode, GLsizei count, GLenum type,
        !_mesa_validate_DrawElements(ctx, mode, count, type))
       return;
 
-   _mesa_validated_drawrangeelements(ctx, mode, false, 0, ~0,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, false, 0, ~0,
                                      count, type, indices, 0, 1, 0);
 }
 
@@ -1816,9 +1846,8 @@ _mesa_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1826,7 +1855,8 @@ _mesa_DrawElementsBaseVertex(GLenum mode, GLsizei count, GLenum type,
        !_mesa_validate_DrawElements(ctx, mode, count, type))
       return;
 
-   _mesa_validated_drawrangeelements(ctx, mode, false, 0, ~0,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, false, 0, ~0,
                                      count, type, indices, basevertex, 1, 0);
 }
 
@@ -1841,9 +1871,8 @@ _mesa_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1852,7 +1881,8 @@ _mesa_DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
                                              numInstances))
       return;
 
-   _mesa_validated_drawrangeelements(ctx, mode, false, 0, ~0,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, false, 0, ~0,
                                      count, type, indices, 0, numInstances, 0);
 }
 
@@ -1869,9 +1899,8 @@ _mesa_DrawElementsInstancedBaseVertex(GLenum mode, GLsizei count,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1880,7 +1909,8 @@ _mesa_DrawElementsInstancedBaseVertex(GLenum mode, GLsizei count,
                                              numInstances))
       return;
 
-   _mesa_validated_drawrangeelements(ctx, mode, false, 0, ~0,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, false, 0, ~0,
                                      count, type, indices,
                                      basevertex, numInstances, 0);
 }
@@ -1899,9 +1929,8 @@ _mesa_DrawElementsInstancedBaseInstance(GLenum mode, GLsizei count,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1910,7 +1939,8 @@ _mesa_DrawElementsInstancedBaseInstance(GLenum mode, GLsizei count,
                                              numInstances))
       return;
 
-   _mesa_validated_drawrangeelements(ctx, mode, false, 0, ~0,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, false, 0, ~0,
                                      count, type, indices, 0, numInstances,
                                      baseInstance);
 }
@@ -1931,9 +1961,8 @@ _mesa_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -1942,7 +1971,42 @@ _mesa_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode,
                                              numInstances))
       return;
 
-   _mesa_validated_drawrangeelements(ctx, mode, false, 0, ~0,
+   _mesa_validated_drawrangeelements(ctx, ctx->Array.VAO->IndexBufferObj,
+                                     mode, false, 0, ~0,
+                                     count, type, indices, basevertex,
+                                     numInstances, baseInstance);
+}
+
+/**
+ * Same as glDrawElementsInstancedBaseVertexBaseInstance, but the index
+ * buffer is set by the indexBuf parameter instead of using the bound
+ * GL_ELEMENT_ARRAY_BUFFER if indexBuf != NULL.
+ */
+void GLAPIENTRY
+_mesa_DrawElementsUserBuf(GLintptr indexBuf, GLenum mode,
+                          GLsizei count, GLenum type,
+                          const GLvoid *indices, GLsizei numInstances,
+                          GLint basevertex, GLuint baseInstance)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_FOR_DRAW(ctx);
+
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
+   if (ctx->NewState)
+      _mesa_update_state(ctx);
+
+   if (!_mesa_is_no_error_enabled(ctx) &&
+       !_mesa_validate_DrawElementsInstanced(ctx, mode, count, type,
+                                             numInstances))
+      return;
+
+   struct gl_buffer_object *index_bo =
+      indexBuf ? (struct gl_buffer_object*)indexBuf :
+                 ctx->Array.VAO->IndexBufferObj;
+
+   _mesa_validated_drawrangeelements(ctx, index_bo,
+                                     mode, false, 0, ~0,
                                      count, type, indices, basevertex,
                                      numInstances, baseInstance);
 }
@@ -1954,9 +2018,10 @@ _mesa_DrawElementsInstancedBaseVertexBaseInstance(GLenum mode,
  * This does the actual rendering after we've checked array indexes, etc.
  */
 static void
-_mesa_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
-                                  const GLsizei *count, GLenum type,
-                                  const GLvoid * const *indices,
+_mesa_validated_multidrawelements(struct gl_context *ctx,
+                                  struct gl_buffer_object *index_bo,
+                                  GLenum mode, const GLsizei *count,
+                                  GLenum type, const GLvoid * const *indices,
                                   GLsizei primcount, const GLint *basevertex)
 {
    uintptr_t min_index_ptr, max_index_ptr;
@@ -1995,7 +2060,6 @@ _mesa_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
       }
    }
 
-   struct gl_buffer_object *index_bo = ctx->Array.VAO->IndexBufferObj;
    struct pipe_draw_info info;
 
    info.mode = mode;
@@ -2014,10 +2078,21 @@ _mesa_validated_multidrawelements(struct gl_context *ctx, GLenum mode,
    info.view_mask = 0;
    info.restart_index = ctx->Array._RestartIndex[index_size_shift];
 
-   if (info.has_user_indices)
+   if (info.has_user_indices) {
       info.index.user = (void*)min_index_ptr;
-   else
-      info.index.gl_bo = index_bo;
+   } else {
+      if (ctx->st->pipe->draw_vbo == tc_draw_vbo) {
+         /* Fast path for u_threaded_context to eliminate atomics. */
+         info.index.resource = _mesa_get_bufferobj_reference(ctx, index_bo);
+         info.take_index_buffer_ownership = true;
+      } else {
+         info.index.resource = index_bo->buffer;
+      }
+
+      /* No index buffer storage allocated - nothing to do. */
+      if (!info.index.resource)
+         return;
+   }
 
    if (!fallback &&
        (!info.has_user_indices ||
@@ -2085,19 +2160,20 @@ _mesa_MultiDrawElements(GLenum mode, const GLsizei *count, GLenum type,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
+   struct gl_buffer_object *index_bo = ctx->Array.VAO->IndexBufferObj;
+
    if (!_mesa_is_no_error_enabled(ctx) &&
        !_mesa_validate_MultiDrawElements(ctx, mode, count, type, indices,
-                                         primcount))
+                                         primcount, index_bo))
       return;
 
-   _mesa_validated_multidrawelements(ctx, mode, count, type, indices, primcount,
-                                     NULL);
+   _mesa_validated_multidrawelements(ctx, index_bo, mode, count, type,
+                                     indices, primcount, NULL);
 }
 
 
@@ -2111,19 +2187,53 @@ _mesa_MultiDrawElementsBaseVertex(GLenum mode,
    GET_CURRENT_CONTEXT(ctx);
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
+   struct gl_buffer_object *index_bo = ctx->Array.VAO->IndexBufferObj;
+
    if (!_mesa_is_no_error_enabled(ctx) &&
        !_mesa_validate_MultiDrawElements(ctx, mode, count, type, indices,
-                                         primcount))
+                                         primcount, index_bo))
       return;
 
-   _mesa_validated_multidrawelements(ctx, mode, count, type, indices, primcount,
-                                     basevertex);
+   _mesa_validated_multidrawelements(ctx, index_bo, mode, count, type,
+                                     indices, primcount, basevertex);
+}
+
+
+/**
+ * Same as glMultiDrawElementsBaseVertex, but the index buffer is set by
+ * the indexBuf parameter instead of using the bound GL_ELEMENT_ARRAY_BUFFER
+ * if indexBuf != NULL.
+ */
+void GLAPIENTRY
+_mesa_MultiDrawElementsUserBuf(GLintptr indexBuf, GLenum mode,
+                               const GLsizei *count, GLenum type,
+                               const GLvoid * const * indices,
+                               GLsizei primcount, const GLint * basevertex)
+{
+   GET_CURRENT_CONTEXT(ctx);
+   FLUSH_FOR_DRAW(ctx);
+
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
+   if (ctx->NewState)
+      _mesa_update_state(ctx);
+
+   struct gl_buffer_object *index_bo =
+      indexBuf ? (struct gl_buffer_object*)indexBuf :
+                 ctx->Array.VAO->IndexBufferObj;
+
+   if (!_mesa_is_no_error_enabled(ctx) &&
+       !_mesa_validate_MultiDrawElements(ctx, mode, count, type, indices,
+                                         primcount, index_bo))
+      return;
+
+   _mesa_validated_multidrawelements(ctx, index_bo, mode, count, type,
+                                     indices, primcount, basevertex);
 }
 
 
@@ -2142,9 +2252,8 @@ _mesa_draw_transform_feedback(struct gl_context *ctx, GLenum mode,
 {
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2236,7 +2345,7 @@ _mesa_DrawArraysIndirect(GLenum mode, const GLvoid *indirect)
     *    DrawElementsIndirect are to source their arguments directly from the
     *    pointer passed as their <indirect> parameters."
     */
-   if (ctx->API == API_OPENGL_COMPAT &&
+   if (_mesa_is_desktop_gl_compat(ctx) &&
        !ctx->DrawIndirectBuffer) {
       DrawArraysIndirectCommand *cmd = (DrawArraysIndirectCommand *) indirect;
 
@@ -2248,9 +2357,8 @@ _mesa_DrawArraysIndirect(GLenum mode, const GLvoid *indirect)
 
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2274,7 +2382,7 @@ _mesa_DrawElementsIndirect(GLenum mode, GLenum type, const GLvoid *indirect)
     *    DrawElementsIndirect are to source their arguments directly from the
     *    pointer passed as their <indirect> parameters."
     */
-   if (ctx->API == API_OPENGL_COMPAT &&
+   if (_mesa_is_desktop_gl_compat(ctx) &&
        !ctx->DrawIndirectBuffer) {
       /*
        * Unlike regular DrawElementsInstancedBaseVertex commands, the indices
@@ -2306,9 +2414,8 @@ _mesa_DrawElementsIndirect(GLenum mode, GLenum type, const GLvoid *indirect)
 
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2332,9 +2439,8 @@ _mesa_MultiDrawArraysIndirect(GLenum mode, const GLvoid *indirect,
 
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2345,7 +2451,7 @@ _mesa_MultiDrawArraysIndirect(GLenum mode, const GLvoid *indirect,
     *    DrawElementsIndirect are to source their arguments directly from the
     *    pointer passed as their <indirect> parameters."
     */
-   if (ctx->API == API_OPENGL_COMPAT &&
+   if (_mesa_is_desktop_gl_compat(ctx) &&
        !ctx->DrawIndirectBuffer) {
 
       if (!_mesa_is_no_error_enabled(ctx) &&
@@ -2404,9 +2510,8 @@ _mesa_MultiDrawElementsIndirect(GLenum mode, GLenum type,
 
    FLUSH_FOR_DRAW(ctx);
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2421,7 +2526,7 @@ _mesa_MultiDrawElementsIndirect(GLenum mode, GLenum type,
     *    DrawElementsIndirect are to source their arguments directly from the
     *    pointer passed as their <indirect> parameters."
     */
-   if (ctx->API == API_OPENGL_COMPAT &&
+   if (_mesa_is_desktop_gl_compat(ctx) &&
        !ctx->DrawIndirectBuffer) {
       /*
        * Unlike regular DrawElementsInstancedBaseVertex commands, the indices
@@ -2460,11 +2565,29 @@ _mesa_MultiDrawElementsIndirect(GLenum mode, GLenum type,
       /* Packed section end. */
       info.restart_index = ctx->Array._RestartIndex[index_size_shift];
 
+      struct gl_buffer_object *index_bo = ctx->Array.VAO->IndexBufferObj;
+
+      if (ctx->st->pipe->draw_vbo == tc_draw_vbo) {
+         /* Fast path for u_threaded_context to eliminate atomics. */
+         info.index.resource = _mesa_get_bufferobj_reference(ctx, index_bo);
+         info.take_index_buffer_ownership = true;
+         /* Increase refcount so be able to use take_index_buffer_ownership with
+          * multiple draws.
+          */
+         if (primcount > 1 && info.index.resource)
+            p_atomic_add(&info.index.resource->reference.count, primcount - 1);
+      } else {
+         info.index.resource = index_bo->buffer;
+      }
+
+      /* No index buffer storage allocated - nothing to do. */
+      if (!info.index.resource)
+         return;
+
       const uint8_t *ptr = (const uint8_t *) indirect;
       for (unsigned i = 0; i < primcount; i++) {
          DrawElementsIndirectCommand *cmd = (DrawElementsIndirectCommand*)ptr;
 
-         info.index.gl_bo = ctx->Array.VAO->IndexBufferObj;
          info.start_instance = cmd->baseInstance;
          info.instance_count = cmd->primCount;
 
@@ -2501,9 +2624,8 @@ _mesa_MultiDrawArraysIndirectCountARB(GLenum mode, GLintptr indirect,
    if (stride == 0)
       stride = 4 * sizeof(GLuint);      /* sizeof(DrawArraysIndirectCommand) */
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2531,9 +2653,8 @@ _mesa_MultiDrawElementsIndirectCountARB(GLenum mode, GLenum type,
    if (stride == 0)
       stride = 5 * sizeof(GLuint);      /* sizeof(DrawElementsIndirectCommand) */
 
-   _mesa_set_draw_vao(ctx, ctx->Array.VAO,
-                      ctx->VertexProgram._VPModeInputFilter);
-
+   _mesa_set_varying_vp_inputs(ctx, ctx->VertexProgram._VPModeInputFilter &
+                               ctx->Array._DrawVAO->_EnabledWithMapMode);
    if (ctx->NewState)
       _mesa_update_state(ctx);
 
@@ -2561,7 +2682,7 @@ _mesa_MultiModeDrawArraysIBM( const GLenum * mode, const GLint * first,
    for ( i = 0 ; i < primcount ; i++ ) {
       if ( count[i] > 0 ) {
          GLenum m = *((GLenum *) ((GLubyte *) mode + i * modestride));
-         CALL_DrawArrays(ctx->CurrentServerDispatch, ( m, first[i], count[i] ));
+         CALL_DrawArrays(ctx->Dispatch.Current, ( m, first[i], count[i] ));
       }
    }
 }
@@ -2579,7 +2700,7 @@ _mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
    for ( i = 0 ; i < primcount ; i++ ) {
       if ( count[i] > 0 ) {
          GLenum m = *((GLenum *) ((GLubyte *) mode + i * modestride));
-         CALL_DrawElements(ctx->CurrentServerDispatch, ( m, count[i], type,
+         CALL_DrawElements(ctx->Dispatch.Current, ( m, count[i], type,
                                                          indices[i] ));
       }
    }

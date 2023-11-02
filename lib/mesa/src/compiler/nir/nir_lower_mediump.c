@@ -456,9 +456,13 @@ nir_lower_mediump_vars_impl(nir_function_impl *impl, nir_variable_mode modes,
                   break;
 
                nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
-               nir_ssa_def *replace = NULL;
+               if (glsl_get_bit_size(deref->type) != 16)
+                  break;
+
+               intrin->dest.ssa.bit_size = 16;
 
                b.cursor = nir_after_instr(&intrin->instr);
+               nir_ssa_def *replace = NULL;
                switch (glsl_get_base_type(deref->type)) {
                case GLSL_TYPE_FLOAT16:
                   replace = nir_f2f32(&b, &intrin->dest.ssa);
@@ -470,12 +474,9 @@ nir_lower_mediump_vars_impl(nir_function_impl *impl, nir_variable_mode modes,
                   replace = nir_u2u32(&b, &intrin->dest.ssa);
                   break;
                default:
-                  break;
+                  unreachable("Invalid 16-bit type");
                }
-               if (!replace)
-                  break;
 
-               intrin->dest.ssa.bit_size = 16;
                nir_ssa_def_rewrite_uses_after(&intrin->dest.ssa,
                                               replace,
                                               replace->parent_instr);
@@ -488,8 +489,11 @@ nir_lower_mediump_vars_impl(nir_function_impl *impl, nir_variable_mode modes,
                if (data->bit_size != 32)
                   break;
 
-               b.cursor = nir_before_instr(&intrin->instr);
                nir_deref_instr *deref = nir_src_as_deref(intrin->src[0]);
+               if (glsl_get_bit_size(deref->type) != 16)
+                  break;
+
+               b.cursor = nir_before_instr(&intrin->instr);
                nir_ssa_def *replace = NULL;
                switch (glsl_get_base_type(deref->type)) {
                case GLSL_TYPE_FLOAT16:
@@ -500,10 +504,8 @@ nir_lower_mediump_vars_impl(nir_function_impl *impl, nir_variable_mode modes,
                   replace = nir_i2imp(&b, data);
                   break;
                default:
-                  break;
+                  unreachable("Invalid 16-bit type");
                }
-               if (!replace)
-                  break;
 
                nir_instr_rewrite_src(&intrin->instr, &intrin->src[1],
                                      nir_src_for_ssa(replace));
@@ -513,7 +515,7 @@ nir_lower_mediump_vars_impl(nir_function_impl *impl, nir_variable_mode modes,
 
             case nir_intrinsic_copy_deref: {
                nir_deref_instr *dst = nir_src_as_deref(intrin->src[0]);
-               nir_deref_instr *src = nir_src_as_deref(intrin->src[0]);
+               nir_deref_instr *src = nir_src_as_deref(intrin->src[1]);
                /* If we convert once side of a copy and not the other, that
                 * would be very bad.
                 */
@@ -747,7 +749,9 @@ static bool
 const_is_f16(nir_ssa_scalar scalar)
 {
    double value = nir_ssa_scalar_as_float(scalar);
-   return value == _mesa_half_to_float(_mesa_float_to_half(value));
+   uint16_t fp16_val = _mesa_float_to_half(value);
+   bool is_denorm = (fp16_val & 0x7fff) != 0 && (fp16_val & 0x7fff) <= 0x3ff;
+   return value == _mesa_half_to_float(fp16_val) && !is_denorm;
 }
 
 static bool
@@ -884,10 +888,13 @@ fold_16bit_destination(nir_ssa_def *ssa, nir_alu_type dest_type,
 }
 
 static bool
-fold_16bit_load_data(nir_builder *b, nir_intrinsic_instr *instr,
-                     unsigned exec_mode, nir_rounding_mode rdm)
+fold_16bit_image_dest(nir_intrinsic_instr *instr, unsigned exec_mode,
+                      nir_alu_type allowed_types, nir_rounding_mode rdm)
 {
    nir_alu_type dest_type = nir_intrinsic_dest_type(instr);
+
+   if (!(nir_alu_type_get_base_type(dest_type) & allowed_types))
+      return false;
 
    if (!fold_16bit_destination(&instr->dest.ssa, dest_type, exec_mode, rdm))
       return false;
@@ -899,7 +906,7 @@ fold_16bit_load_data(nir_builder *b, nir_intrinsic_instr *instr,
 
 static bool
 fold_16bit_tex_dest(nir_tex_instr *tex, unsigned exec_mode,
-                    nir_rounding_mode rdm)
+                    nir_alu_type allowed_types, nir_rounding_mode rdm)
 {
    /* Skip sparse residency */
    if (tex->is_sparse)
@@ -914,6 +921,9 @@ fold_16bit_tex_dest(nir_tex_instr *tex, unsigned exec_mode,
        tex->op != nir_texop_tg4 &&
        tex->op != nir_texop_tex_prefetch &&
        tex->op != nir_texop_fragment_fetch_amd)
+      return false;
+
+   if (!(nir_alu_type_get_base_type(tex->dest_type) & allowed_types))
       return false;
 
    if (!fold_16bit_destination(&tex->dest.ssa, tex->dest_type, exec_mode, rdm))
@@ -1011,7 +1021,7 @@ fold_16bit_tex_image(nir_builder *b, nir_instr *instr, void *params)
       case nir_intrinsic_bindless_image_store:
       case nir_intrinsic_image_deref_store:
       case nir_intrinsic_image_store:
-         if (options->fold_image_load_store_data)
+         if (options->fold_image_store_data)
             progress |= fold_16bit_store_data(b, intrinsic);
          if (options->fold_image_srcs)
             progress |= fold_16bit_image_srcs(b, intrinsic, 4);
@@ -1019,8 +1029,10 @@ fold_16bit_tex_image(nir_builder *b, nir_instr *instr, void *params)
       case nir_intrinsic_bindless_image_load:
       case nir_intrinsic_image_deref_load:
       case nir_intrinsic_image_load:
-         if (options->fold_image_load_store_data)
-            progress |= fold_16bit_load_data(b, intrinsic, exec_mode, options->rounding_mode);
+         if (options->fold_image_dest_types)
+            progress |= fold_16bit_image_dest(intrinsic, exec_mode,
+                                              options->fold_image_dest_types,
+                                              options->rounding_mode);
          if (options->fold_image_srcs)
             progress |= fold_16bit_image_srcs(b, intrinsic, 3);
          break;
@@ -1084,8 +1096,9 @@ fold_16bit_tex_image(nir_builder *b, nir_instr *instr, void *params)
    } else if (instr->type == nir_instr_type_tex) {
       nir_tex_instr *tex = nir_instr_as_tex(instr);
 
-      if (options->fold_tex_dest)
-         progress |= fold_16bit_tex_dest(tex, exec_mode, options->rounding_mode);
+      if (options->fold_tex_dest_types)
+         progress |= fold_16bit_tex_dest(tex, exec_mode, options->fold_tex_dest_types,
+                                         options->rounding_mode);
 
       for (unsigned i = 0; i < options->fold_srcs_options_count; i++) {
          progress |= fold_16bit_tex_srcs(b, tex, &options->fold_srcs_options[i]);

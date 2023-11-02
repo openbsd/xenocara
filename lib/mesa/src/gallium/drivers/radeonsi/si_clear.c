@@ -28,9 +28,8 @@
 #include "util/u_pack_color.h"
 #include "util/u_surface.h"
 
-enum
-{
-   SI_CLEAR = SI_SAVE_FRAGMENT_STATE,
+enum {
+   SI_CLEAR = SI_SAVE_FRAGMENT_STATE | SI_SAVE_FRAGMENT_CONSTANT,
    SI_CLEAR_SURFACE = SI_SAVE_FRAMEBUFFER | SI_SAVE_FRAGMENT_STATE,
 };
 
@@ -123,6 +122,9 @@ static bool si_alloc_separate_cmask(struct si_screen *sscreen, struct si_texture
    if (tex->cmask_buffer == NULL)
       return false;
 
+   /* These 2 fields are part of the framebuffer state but dirtying the atom
+    * will be done by the caller.
+    */
    tex->cmask_base_address_reg = tex->cmask_buffer->gpu_address >> 8;
    tex->cb_color_info |= S_028C70_FAST_CLEAR(1);
 
@@ -169,6 +171,9 @@ enum pipe_format si_simplify_cb_format(enum pipe_format format)
 
 bool vi_alpha_is_on_msb(struct si_screen *sscreen, enum pipe_format format)
 {
+   if (sscreen->info.gfx_level >= GFX11)
+      return false;
+
    format = si_simplify_cb_format(format);
    const struct util_format_description *desc = util_format_description(format);
    unsigned comp_swap = si_translate_colorswap(sscreen->info.gfx_level, format, false);
@@ -382,35 +387,33 @@ static bool gfx11_get_dcc_clear_parameters(struct si_screen *sscreen, enum pipe_
    }
 
    /* Check 0001 and 1110 cases. */
-   if (vi_alpha_is_on_msb(sscreen, surface_format)) {
-      if (desc->nr_channels == 2 && desc->channel[0].size == 8) {
-         if (value.ub[0] == 0x00 && value.ub[1] == 0xff) {
-            *clear_value = GFX11_DCC_CLEAR_0001_UNORM;
-            return true;
-         } else if (value.ub[0] == 0xff && value.ub[1] == 0x00) {
-            *clear_value = GFX11_DCC_CLEAR_1110_UNORM;
-            return true;
-         }
-      } else if (desc->nr_channels == 4 && desc->channel[0].size == 8) {
-         if (value.ub[0] == 0x00 && value.ub[1] == 0x00 &&
-             value.ub[2] == 0x00 && value.ub[3] == 0xff) {
-            *clear_value = GFX11_DCC_CLEAR_0001_UNORM;
-            return true;
-         } else if (value.ub[0] == 0xff && value.ub[1] == 0xff &&
-                    value.ub[2] == 0xff && value.ub[3] == 0x00) {
-            *clear_value = GFX11_DCC_CLEAR_1110_UNORM;
-            return true;
-         }
-      } else if (desc->nr_channels == 4 && desc->channel[0].size == 16) {
-         if (value.us[0] == 0x0000 && value.us[1] == 0x0000 &&
-             value.us[2] == 0x0000 && value.us[3] == 0xffff) {
-            *clear_value = GFX11_DCC_CLEAR_0001_UNORM;
-            return true;
-         } else if (value.us[0] == 0xffff && value.us[1] == 0xffff &&
-                    value.us[2] == 0xffff && value.us[3] == 0x0000) {
-            *clear_value = GFX11_DCC_CLEAR_1110_UNORM;
-            return true;
-         }
+   if (desc->nr_channels == 2 && desc->channel[0].size == 8) {
+      if (value.ub[0] == 0x00 && value.ub[1] == 0xff) {
+         *clear_value = GFX11_DCC_CLEAR_0001_UNORM;
+         return true;
+      } else if (value.ub[0] == 0xff && value.ub[1] == 0x00) {
+         *clear_value = GFX11_DCC_CLEAR_1110_UNORM;
+         return true;
+      }
+   } else if (desc->nr_channels == 4 && desc->channel[0].size == 8) {
+      if (value.ub[0] == 0x00 && value.ub[1] == 0x00 &&
+          value.ub[2] == 0x00 && value.ub[3] == 0xff) {
+         *clear_value = GFX11_DCC_CLEAR_0001_UNORM;
+         return true;
+      } else if (value.ub[0] == 0xff && value.ub[1] == 0xff &&
+                 value.ub[2] == 0xff && value.ub[3] == 0x00) {
+         *clear_value = GFX11_DCC_CLEAR_1110_UNORM;
+         return true;
+      }
+   } else if (desc->nr_channels == 4 && desc->channel[0].size == 16) {
+      if (value.us[0] == 0x0000 && value.us[1] == 0x0000 &&
+          value.us[2] == 0x0000 && value.us[3] == 0xffff) {
+         *clear_value = GFX11_DCC_CLEAR_0001_UNORM;
+         return true;
+      } else if (value.us[0] == 0xffff && value.us[1] == 0xffff &&
+                 value.us[2] == 0xffff && value.us[3] == 0x0000) {
+         *clear_value = GFX11_DCC_CLEAR_1110_UNORM;
+         return true;
       }
    }
 
@@ -723,6 +726,7 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
       bool too_small = tex->buffer.b.b.nr_samples <= 1 && fb_too_small;
       bool eliminate_needed = false;
       bool fmask_decompress_needed = false;
+      bool need_dirtying_fb = false;
 
       /* Try to clear DCC first, otherwise try CMASK. */
       if (vi_dcc_enabled(tex, level)) {
@@ -819,6 +823,7 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
 
          uint64_t cmask_offset = 0;
          unsigned clear_size = 0;
+         bool had_cmask_buffer = tex->cmask_buffer != NULL;
 
          if (sctx->gfx_level >= GFX10) {
             assert(level == 0);
@@ -871,6 +876,10 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
                               cmask_offset, clear_size, 0);
          clear_types |= SI_CLEAR_TYPE_CMASK;
          eliminate_needed = true;
+         /* If we allocated a cmask buffer for this tex we need to re-emit
+          * the fb state.
+          */
+         need_dirtying_fb = !had_cmask_buffer;
       }
 
       if ((eliminate_needed || fmask_decompress_needed) &&
@@ -892,7 +901,7 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
       /* There are no clear color registers on GFX11. */
       assert(sctx->gfx_level < GFX11);
 
-      if (si_set_clear_color(tex, fb->cbufs[i]->format, color)) {
+      if (si_set_clear_color(tex, fb->cbufs[i]->format, color) || need_dirtying_fb) {
          sctx->framebuffer.dirty_cbufs |= 1 << i;
          si_mark_atom_dirty(sctx, &sctx->atoms.s.framebuffer);
       }
@@ -1077,22 +1086,22 @@ static void si_fast_clear(struct si_context *sctx, unsigned *buffers,
          }
 
          zstex->need_flush_after_depth_decompression = update_db_depth_clear && sctx->gfx_level == GFX10_3;
+      }
 
-         /* Update DB_DEPTH_CLEAR. */
-         if (update_db_depth_clear &&
-             zstex->depth_clear_value[level] != (float)depth) {
-            zstex->depth_clear_value[level] = depth;
-            sctx->framebuffer.dirty_zsbuf = true;
-            si_mark_atom_dirty(sctx, &sctx->atoms.s.framebuffer);
-         }
+      /* Update DB_DEPTH_CLEAR. */
+      if (update_db_depth_clear &&
+          zstex->depth_clear_value[level] != (float)depth) {
+         zstex->depth_clear_value[level] = depth;
+         sctx->framebuffer.dirty_zsbuf = true;
+         si_mark_atom_dirty(sctx, &sctx->atoms.s.framebuffer);
+      }
 
-         /* Update DB_STENCIL_CLEAR. */
-         if (update_db_stencil_clear &&
-             zstex->stencil_clear_value[level] != stencil) {
-            zstex->stencil_clear_value[level] = stencil;
-            sctx->framebuffer.dirty_zsbuf = true;
-            si_mark_atom_dirty(sctx, &sctx->atoms.s.framebuffer);
-         }
+      /* Update DB_STENCIL_CLEAR. */
+      if (update_db_stencil_clear &&
+          zstex->stencil_clear_value[level] != stencil) {
+         zstex->stencil_clear_value[level] = stencil;
+         sctx->framebuffer.dirty_zsbuf = true;
+         si_mark_atom_dirty(sctx, &sctx->atoms.s.framebuffer);
       }
    }
 

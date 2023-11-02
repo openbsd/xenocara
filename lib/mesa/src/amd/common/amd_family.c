@@ -78,10 +78,12 @@ const char *ac_get_family_name(enum radeon_family family)
       return "RAVEN2";
    case CHIP_RENOIR:
       return "RENOIR";
-   case CHIP_ARCTURUS:
-      return "ARCTURUS";
-   case CHIP_ALDEBARAN:
-      return "ALDEBARAN";
+   case CHIP_MI100:
+      return "MI100";
+   case CHIP_MI200:
+      return "MI200";
+   case CHIP_GFX940:
+      return "GFX940";
    case CHIP_NAVI10:
       return "NAVI10";
    case CHIP_NAVI12:
@@ -100,8 +102,8 @@ const char *ac_get_family_name(enum radeon_family family)
       return "NAVI24";
    case CHIP_REMBRANDT:
       return "REMBRANDT";
-   case CHIP_GFX1036:
-      return "GFX1036";
+   case CHIP_RAPHAEL_MENDOCINO:
+      return "RAPHAEL_MENDOCINO";
    case CHIP_GFX1100:
       return "GFX1100";
    case CHIP_GFX1101:

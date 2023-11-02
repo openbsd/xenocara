@@ -67,7 +67,13 @@ clear_image_tlb(struct v3dv_cmd_buffer *cmd_buffer,
 {
    const VkOffset3D origin = { 0, 0, 0 };
    VkFormat fb_format;
-   if (!v3dv_meta_can_use_tlb(image, &origin, &fb_format))
+
+   /* From vkCmdClearColorImage spec:
+    *  "image must not use any of the formats that require a sampler YCBCR
+    *   conversion"
+    */
+   assert(image->plane_count == 1);
+   if (!v3dv_meta_can_use_tlb(image, 0, &origin, &fb_format))
       return false;
 
    uint32_t internal_type, internal_bpp;
@@ -566,7 +572,7 @@ create_color_clear_pipeline(struct v3dv_device *device,
                             uint32_t subpass_idx,
                             uint32_t rt_idx,
                             VkFormat format,
-                            uint32_t samples,
+                            VkSampleCountFlagBits samples,
                             uint32_t components,
                             bool is_layered,
                             VkPipelineLayout pipeline_layout,
@@ -683,7 +689,7 @@ static VkResult
 create_color_clear_render_pass(struct v3dv_device *device,
                                uint32_t rt_idx,
                                VkFormat format,
-                               uint32_t samples,
+                               VkSampleCountFlagBits samples,
                                VkRenderPass *pass)
 {
    VkAttachmentDescription2 att = {
@@ -731,7 +737,7 @@ create_color_clear_render_pass(struct v3dv_device *device,
 static inline uint64_t
 get_color_clear_pipeline_cache_key(uint32_t rt_idx,
                                    VkFormat format,
-                                   uint32_t samples,
+                                   VkSampleCountFlagBits samples,
                                    uint32_t components,
                                    bool is_layered)
 {
@@ -796,7 +802,7 @@ get_color_clear_pipeline(struct v3dv_device *device,
                          uint32_t rt_idx,
                          uint32_t attachment_idx,
                          VkFormat format,
-                         uint32_t samples,
+                         VkSampleCountFlagBits samples,
                          uint32_t components,
                          bool is_layered,
                          struct v3dv_meta_color_clear_pipeline **pipeline)
@@ -989,7 +995,7 @@ emit_subpass_color_clear_rects(struct v3dv_cmd_buffer *cmd_buffer,
    assert(attachment_idx < cmd_buffer->state.pass->attachment_count);
    const VkFormat format =
       cmd_buffer->state.pass->attachments[attachment_idx].desc.format;
-   const VkFormat samples =
+   const VkSampleCountFlagBits samples =
       cmd_buffer->state.pass->attachments[attachment_idx].desc.samples;
    const uint32_t components = VK_COLOR_COMPONENT_R_BIT |
                                VK_COLOR_COMPONENT_G_BIT |
@@ -1196,6 +1202,9 @@ v3dv_CmdClearAttachments(VkCommandBuffer commandBuffer,
     * framebuffers, we use a geometry shader to redirect clears to the
     * appropriate layers.
     */
+
+   v3dv_cmd_buffer_pause_occlusion_query(cmd_buffer);
+
    bool is_layered, all_rects_same_layers;
    gather_layering_info(rectCount, pRects, &is_layered, &all_rects_same_layers);
    for (uint32_t i = 0; i < attachmentCount; i++) {
@@ -1213,4 +1222,6 @@ v3dv_CmdClearAttachments(VkCommandBuffer commandBuffer,
                                      rectCount, pRects);
       }
    }
+
+   v3dv_cmd_buffer_resume_occlusion_query(cmd_buffer);
 }

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Make sure to kill itself and all the children process from this script on
 # exiting, since any console output may interfere with LAVA signals handling,
@@ -36,7 +36,10 @@ BACKGROUND_PIDS=
 # Second-stage init, used to set up devices and our job environment before
 # running tests.
 
-. /set-job-env-vars.sh
+for path in '/set-job-env-vars.sh' './set-job-env-vars.sh'; do
+    [ -f "$path" ] && source "$path"
+done
+. "$SCRIPTS_DIR"/setup-test-env.sh
 
 set -ex
 
@@ -44,6 +47,16 @@ set -ex
 [ -z "$HWCI_KERNEL_MODULES" ] || {
     echo -n $HWCI_KERNEL_MODULES | xargs -d, -n1 /usr/sbin/modprobe
 }
+
+# Set up ZRAM
+HWCI_ZRAM_SIZE=2G
+if zramctl --find --size $HWCI_ZRAM_SIZE -a zstd; then
+    mkswap /dev/zram0
+    swapon /dev/zram0
+    echo "zram: $HWCI_ZRAM_SIZE activated"
+else
+    echo "zram: skipping, not supported"
+fi
 
 #
 # Load the KVM module specific to the detected CPU virtualization extensions:
@@ -63,7 +76,8 @@ if [ "$HWCI_KVM" = "true" ]; then
         modprobe ${KVM_KERNEL_MODULE}
 
     mkdir -p /lava-files
-    wget -S --progress=dot:giga -O /lava-files/${KERNEL_IMAGE_NAME} \
+    curl -L --retry 4 -f --retry-all-errors --retry-delay 60 \
+	-o "/lava-files/${KERNEL_IMAGE_NAME}" \
         "${KERNEL_IMAGE_BASE_URL}/${KERNEL_IMAGE_NAME}"
 fi
 
@@ -118,6 +132,7 @@ BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
 if [ -n "$HWCI_START_XORG" ]; then
   echo "touch /xorg-started; sleep 100000" > /xorg-script
   env \
+    VK_ICD_FILENAMES=/install/share/vulkan/icd.d/${VK_DRIVER}_icd.`uname -m`.json \
     xinit /bin/sh /xorg-script -- /usr/bin/Xorg -noreset -s 0 -dpms -logfile /Xorg.0.log &
   BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
 
@@ -131,9 +146,28 @@ if [ -n "$HWCI_START_XORG" ]; then
   export DISPLAY=:0
 fi
 
-RESULT=fail
+if [ -n "$HWCI_START_WESTON" ]; then
+  WESTON_X11_SOCK="/tmp/.X11-unix/X0"
+  if [ -n "$HWCI_START_XORG" ]; then
+    echo "Please consider dropping HWCI_START_XORG and instead using Weston XWayland for testing."
+    WESTON_X11_SOCK="/tmp/.X11-unix/X1"
+  fi
+  export WAYLAND_DISPLAY=wayland-0
+
+  # Display server is Weston Xwayland when HWCI_START_XORG is not set or Xorg when it's
+  export DISPLAY=:0
+  mkdir -p /tmp/.X11-unix
+
+  env \
+    VK_ICD_FILENAMES="/install/share/vulkan/icd.d/${VK_DRIVER}_icd.$(uname -m).json" \
+    weston -Bheadless-backend.so --use-gl -Swayland-0 --xwayland --idle-time=0 &
+  BACKGROUND_PIDS="$! $BACKGROUND_PIDS"
+
+  while [ ! -S "$WESTON_X11_SOCK" ]; do sleep 1; done
+fi
+
 set +e
-sh -c "$HWCI_TEST_SCRIPT"
+bash -c ". $SCRIPTS_DIR/setup-test-env.sh && $HWCI_TEST_SCRIPT"
 EXIT_CODE=$?
 set -e
 
@@ -155,7 +189,7 @@ fi
 
 # We still need to echo the hwci: mesa message, as some scripts rely on it, such
 # as the python ones inside the bare-metal folder
-[ ${EXIT_CODE} -eq 0 ] && RESULT=pass
+[ ${EXIT_CODE} -eq 0 ] && RESULT=pass || RESULT=fail
 
 set +x
 echo "hwci: mesa: $RESULT"

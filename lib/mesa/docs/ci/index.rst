@@ -59,7 +59,7 @@ The CI replays application traces with various drivers in two different jobs. Th
 job replays traces listed in ``src/<driver>/ci/traces-<driver>.yml`` files and if any
 of those traces fail the pipeline fails as well. The second job replays traces listed in
 ``src/<driver>/ci/restricted-traces-<driver>.yml`` and it is allowed to fail. This second
-job is only created when the pipeline is triggered by `marge-bot` or any other user that
+job is only created when the pipeline is triggered by ``marge-bot`` or any other user that
 has been granted access to these traces.
 
 A traces YAML file also includes a ``download-url`` pointing to a MinIO
@@ -148,7 +148,7 @@ artifacts.  Or, you can add the following to your job to only run some fraction
 
 .. code-block:: yaml
 
-    variables:
+   variables:
       DEQP_FRACTION: 10
 
 to just run 1/10th of the test list.
@@ -173,16 +173,18 @@ faster personal machine as a runner.  You can find the gitlab-runner
 package in Debian, or use GitLab's own builds.
 
 To do so, follow `GitLab's instructions
-<https://docs.gitlab.com/ce/ci/runners/#create-a-specific-runner>`__ to
+<https://docs.gitlab.com/ee/ci/runners/runners_scope.html#create-a-specific-runner>`__ to
 register your personal GitLab runner in your Mesa fork.  Then, tell
 Mesa how many jobs it should serve (``concurrent=``) and how many
 cores those jobs should use (``FDO_CI_CONCURRENT=``) by editing these
-lines in ``/etc/gitlab-runner/config.toml``, for example::
+lines in ``/etc/gitlab-runner/config.toml``, for example:
 
-  concurrent = 2
+.. code-block:: toml
 
-  [[runners]]
-    environment = ["FDO_CI_CONCURRENT=16"]
+   concurrent = 2
+
+   [[runners]]
+     environment = ["FDO_CI_CONCURRENT=16"]
 
 
 Docker caching
@@ -191,7 +193,7 @@ Docker caching
 The CI system uses Docker images extensively to cache
 infrequently-updated build content like the CTS.  The `freedesktop.org
 CI templates
-<https://gitlab.freedesktop.org/freedesktop/ci-templates/>`_ help us
+<https://gitlab.freedesktop.org/freedesktop/ci-templates/>`__ help us
 manage the building of the images to reduce how frequently rebuilds
 happen, and trim down the images (stripping out manpages, cleaning the
 apt cache, and other such common pitfalls of building Docker images).
@@ -199,7 +201,7 @@ apt cache, and other such common pitfalls of building Docker images).
 When running a container job, the templates will look for an existing
 build of that image in the container registry under
 ``MESA_IMAGE_TAG``.  If it's found it will be reused, and if
-not, the associated `.gitlab-ci/containers/<jobname>.sh`` will be run
+not, the associated ``.gitlab-ci/containers/<jobname>.sh`` will be run
 to build it.  So, when developing any change to container build
 scripts, you need to update the associated ``MESA_IMAGE_TAG`` to
 a new unique string.  We recommend using the current date plus some
@@ -211,7 +213,7 @@ When developing a given change to your Docker image, you would have to
 bump the tag on each ``git commit --amend`` to your development
 branch, which can get tedious.  Instead, you can navigate to the
 `container registry
-<https://gitlab.freedesktop.org/mesa/mesa/container_registry>`_ for
+<https://gitlab.freedesktop.org/mesa/mesa/container_registry>`__ for
 your repository and delete the tag to force a rebuild.  When your code
 is eventually merged to main, a full image rebuild will occur again
 (forks inherit images from the main repo, but MRs don't propagate
@@ -225,7 +227,7 @@ don't personally have.  If you're experiencing this with the CI
 builds, you can use Docker to use their build environment locally.  Go
 to your job log, and at the top you'll see a line like::
 
-    Pulling docker image registry.freedesktop.org/anholt/mesa/debian/android_build:2020-09-11
+   Pulling docker image registry.freedesktop.org/anholt/mesa/debian/android_build:2020-09-11
 
 We'll use a volume mount to make our current Mesa tree be what the
 Docker container uses, so they'll share everything (their build will
@@ -237,17 +239,29 @@ useful for debug).  Extract your build setup variables from
 
 .. code-block:: console
 
-    IMAGE=registry.freedesktop.org/anholt/mesa/debian/android_build:2020-09-11
-    sudo docker pull $IMAGE
-    sudo docker run --rm -v `pwd`:/mesa -w /mesa $IMAGE env PKG_CONFIG_PATH=/usr/local/lib/aarch64-linux-android/pkgconfig/:/android-ndk-r21d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/pkgconfig/ GALLIUM_DRIVERS=freedreno UNWIND=disabled EXTRA_OPTION="-D android-stub=true -D llvm=disabled" DRI_LOADERS="-D glx=disabled -D gbm=disabled -D egl=enabled -D platforms=android" CROSS=aarch64-linux-android ./.gitlab-ci/meson-build.sh
+   IMAGE=registry.freedesktop.org/anholt/mesa/debian/android_build:2020-09-11
+   sudo docker pull $IMAGE
+   sudo docker run --rm -v `pwd`:/mesa -w /mesa $IMAGE env PKG_CONFIG_PATH=/usr/local/lib/aarch64-linux-android/pkgconfig/:/android-ndk-r21d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/pkgconfig/ GALLIUM_DRIVERS=freedreno UNWIND=disabled EXTRA_OPTION="-D android-stub=true -D llvm=disabled" DRI_LOADERS="-D glx=disabled -D gbm=disabled -D egl=enabled -D platforms=android" CROSS=aarch64-linux-android ./.gitlab-ci/meson-build.sh
 
 All you have left over from the build is its output, and a _build
 directory.  You can hack on mesa and iterate testing the build with:
 
 .. code-block:: console
 
-    sudo docker run --rm -v `pwd`:/mesa $IMAGE ninja -C /mesa/_build
+   sudo docker run --rm -v `pwd`:/mesa $IMAGE ninja -C /mesa/_build
 
+Running specific CI jobs
+------------------------
+
+You can use ``bin/ci/ci_run_n_monitor.py`` to run specific CI jobs. It
+will automatically take care of running all the jobs yours depends on,
+and cancel the rest to avoid wasting resources.
+
+See ``bin/ci/ci_run_n_monitor.py --help`` for all the options.
+
+The ``--target`` argument takes a regex that you can use to select the
+jobs names you want to run, eg. ``--target 'zink.*'`` will run all the
+zink jobs, leaving the other drivers' jobs free for others to use.
 
 Conformance Tests
 -----------------

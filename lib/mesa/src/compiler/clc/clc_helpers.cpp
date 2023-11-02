@@ -23,6 +23,7 @@
 // ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 // OTHER DEALINGS IN THE SOFTWARE.
 
+#include <filesystem>
 #include <sstream>
 #include <mutex>
 
@@ -38,6 +39,7 @@
 #include <llvm-c/Target.h>
 #include <LLVMSPIRVLib/LLVMSPIRVLib.h>
 
+#include <clang/Driver/Driver.h>
 #include <clang/CodeGen/CodeGenAction.h>
 #include <clang/Lex/PreprocessorOptions.h>
 #include <clang/Frontend/CompilerInstance.h>
@@ -62,6 +64,8 @@
 #endif
 
 #include "clc_helpers.h"
+
+namespace fs = std::filesystem;
 
 /* Use the highest version of SPIRV supported by SPIRV-Tools. */
 constexpr spv_target_env spirv_target = SPV_ENV_UNIVERSAL_1_5;
@@ -334,7 +338,6 @@ public:
          uint32_t spec_id = ins->words[ins->operands[2].offset];
          for (auto &c : specConstants) {
             if (c.second.id == spec_id) {
-               assert(c.first == id);
                return;
             }
          }
@@ -845,20 +848,31 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
       ::llvm::sys::path::append(system_header_path, "opencl-c.h");
       c->getPreprocessorOpts().addRemappedFile(system_header_path.str(),
          ::llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(opencl_c_source, ARRAY_SIZE(opencl_c_source) - 1)).release());
+      ::llvm::sys::path::remove_filename(system_header_path);
 #endif
 
-      ::llvm::sys::path::remove_filename(system_header_path);
       ::llvm::sys::path::append(system_header_path, "opencl-c-base.h");
       c->getPreprocessorOpts().addRemappedFile(system_header_path.str(),
          ::llvm::MemoryBuffer::getMemBuffer(llvm::StringRef(opencl_c_base_source, ARRAY_SIZE(opencl_c_base_source) - 1)).release());
+
+#if LLVM_VERSION_MAJOR >= 15
+      c->getPreprocessorOpts().Includes.push_back("opencl-c-base.h");
+#endif
    }
 #else
+   // GetResourcePath is a way to retrive the actual libclang resource dir based on a given binary
+   // or library. The path doesn't even need to exist, we just have to put something in there,
+   // because we might have linked clang statically.
+   auto libclang_path = fs::path(LLVM_LIB_DIR) / "libclang.so";
+   auto clang_res_path =
+      fs::path(clang::driver::Driver::GetResourcesPath(libclang_path.string())) / "include";
+
    c->getHeaderSearchOpts().UseBuiltinIncludes = true;
    c->getHeaderSearchOpts().UseStandardSystemIncludes = true;
-   c->getHeaderSearchOpts().ResourceDir = CLANG_RESOURCE_DIR;
+   c->getHeaderSearchOpts().ResourceDir = clang_res_path.string();
 
    // Add opencl-c generic search path
-   c->getHeaderSearchOpts().AddPath(CLANG_RESOURCE_DIR,
+   c->getHeaderSearchOpts().AddPath(clang_res_path.string(),
                                     clang::frontend::Angled,
                                     false, false);
    // Add opencl include
@@ -1132,6 +1146,17 @@ clc_link_spirv_binaries(const struct clc_linker_args *args,
    memcpy(out_spirv->data, linkingResult.data(), out_spirv->size);
 
    return 0;
+}
+
+bool
+clc_validate_spirv(const struct clc_binary *spirv,
+                   const struct clc_logger *logger)
+{
+   SPIRVMessageConsumer msgconsumer(logger);
+   spvtools::SpirvTools tools(spirv_target);
+   tools.SetMessageConsumer(msgconsumer);
+   const uint32_t *data = static_cast<const uint32_t *>(spirv->data);
+   return tools.Validate(data, spirv->size / 4);
 }
 
 int

@@ -148,6 +148,17 @@ v3d_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
         case PIPE_CAP_INDEP_BLEND_FUNC:
                 return 1;
 
+        /*
+         * This feature is supported, but enabling it accidentally enables
+         * OpenGL 3.0 & 3.1, which are not supported.
+         * The feature is enabled in main and discussion to fix the issue is
+         * underway, but we're disabling it in releases until we find a better
+         * solution.
+         */
+        case PIPE_CAP_CONDITIONAL_RENDER:
+        case PIPE_CAP_CONDITIONAL_RENDER_INVERTED:
+                return 0;
+
         case PIPE_CAP_POLYGON_OFFSET_CLAMP:
                 return screen->devinfo.ver >= 41;
 
@@ -429,8 +440,6 @@ v3d_screen_get_shader_param(struct pipe_screen *pscreen, enum pipe_shader_type s
         case PIPE_SHADER_CAP_INT16:
         case PIPE_SHADER_CAP_GLSL_16BIT_CONSTS:
         case PIPE_SHADER_CAP_DROUND_SUPPORTED:
-        case PIPE_SHADER_CAP_DFRACEXP_DLDEXP_SUPPORTED:
-        case PIPE_SHADER_CAP_LDEXP_SUPPORTED:
         case PIPE_SHADER_CAP_TGSI_ANY_INOUT_DECL_RANGE:
         case PIPE_SHADER_CAP_TGSI_SQRT_SUPPORTED:
         case PIPE_SHADER_CAP_MAX_HW_ATOMIC_COUNTERS:
@@ -587,12 +596,15 @@ v3d_screen_is_format_supported(struct pipe_screen *pscreen,
                 case PIPE_FORMAT_R32G32_SSCALED:
                 case PIPE_FORMAT_R32_SSCALED:
                 case PIPE_FORMAT_R16G16B16A16_UNORM:
+                case PIPE_FORMAT_R16G16B16A16_FLOAT:
                 case PIPE_FORMAT_R16G16B16_UNORM:
                 case PIPE_FORMAT_R16G16_UNORM:
                 case PIPE_FORMAT_R16_UNORM:
+                case PIPE_FORMAT_R16_FLOAT:
                 case PIPE_FORMAT_R16G16B16A16_SNORM:
                 case PIPE_FORMAT_R16G16B16_SNORM:
                 case PIPE_FORMAT_R16G16_SNORM:
+                case PIPE_FORMAT_R16G16_FLOAT:
                 case PIPE_FORMAT_R16_SNORM:
                 case PIPE_FORMAT_R16G16B16A16_USCALED:
                 case PIPE_FORMAT_R16G16B16_USCALED:
@@ -763,9 +775,39 @@ v3d_screen_query_dmabuf_modifiers(struct pipe_screen *pscreen,
         int i;
         int num_modifiers = ARRAY_SIZE(v3d_available_modifiers);
 
-        /* Expose DRM_FORMAT_MOD_BROADCOM_SAND128 only for PIPE_FORMAT_NV12 */
-        if (format != PIPE_FORMAT_NV12)
+        switch (format) {
+        case PIPE_FORMAT_P030:
+                /* Expose SAND128, but not LINEAR or UIF */
+                *count = 1;
+                if (modifiers && max > 0) {
+                        modifiers[0] = DRM_FORMAT_MOD_BROADCOM_SAND128;
+                        if (external_only)
+                                external_only[0] = true;
+                }
+                return;
+
+        case PIPE_FORMAT_NV12:
+                /* Expose UIF, LINEAR and SAND128 */
+                break;
+        
+        case PIPE_FORMAT_R8_UNORM:
+        case PIPE_FORMAT_R8G8_UNORM:
+        case PIPE_FORMAT_R16_UNORM:
+        case PIPE_FORMAT_R16G16_UNORM:
+                /* Expose UIF, LINEAR and SAND128 */
+		if (!modifiers) break;
+                *count = MIN2(max, num_modifiers);
+                for (i = 0; i < *count; i++) {
+                        modifiers[i] = v3d_available_modifiers[i];
+                        if (external_only)
+                                external_only[i] = modifiers[i] == DRM_FORMAT_MOD_BROADCOM_SAND128;
+                }
+                return;
+
+        default:
+                /* Expose UIF and LINEAR, but not SAND128 */
                 num_modifiers--;
+        }
 
         if (!modifiers) {
                 *count = num_modifiers;
@@ -787,18 +829,28 @@ v3d_screen_is_dmabuf_modifier_supported(struct pipe_screen *pscreen,
                                         bool *external_only)
 {
         int i;
-        bool is_sand_col128 = (format == PIPE_FORMAT_NV12) &&
-                (fourcc_mod_broadcom_mod(modifier) == DRM_FORMAT_MOD_BROADCOM_SAND128);
-
-        if (is_sand_col128) {
-                if (external_only)
-                        *external_only = true;
-                return true;
+        if (fourcc_mod_broadcom_mod(modifier) == DRM_FORMAT_MOD_BROADCOM_SAND128) {
+                switch(format) {
+                case PIPE_FORMAT_NV12:
+                case PIPE_FORMAT_P030:
+                case PIPE_FORMAT_R8_UNORM:
+                case PIPE_FORMAT_R8G8_UNORM:
+                case PIPE_FORMAT_R16_UNORM:
+                case PIPE_FORMAT_R16G16_UNORM:
+                        if (external_only)
+                                *external_only = true;
+                        return true;
+                default:
+                        return false;
+                }
+        } else if (format == PIPE_FORMAT_P030) {
+                /* For PIPE_FORMAT_P030 we don't expose LINEAR or UIF. */
+                return false;
         }
 
         /* We don't want to generally allow DRM_FORMAT_MOD_BROADCOM_SAND128
          * modifier, that is the last v3d_available_modifiers. We only accept
-         * it in the case of having a PIPE_FORMAT_NV12.
+         * it in the case of having a PIPE_FORMAT_NV12 or PIPE_FORMAT_P030.
          */
         assert(v3d_available_modifiers[ARRAY_SIZE(v3d_available_modifiers) - 1] ==
                DRM_FORMAT_MOD_BROADCOM_SAND128);
@@ -834,6 +886,14 @@ v3d_screen_get_disk_shader_cache(struct pipe_screen *pscreen)
         return screen->disk_cache;
 }
 
+static int
+v3d_screen_get_fd(struct pipe_screen *pscreen)
+{
+        struct v3d_screen *screen = v3d_screen(pscreen);
+
+        return screen->fd;
+}
+
 struct pipe_screen *
 v3d_screen_create(int fd, const struct pipe_screen_config *config,
                   struct renderonly *ro)
@@ -844,6 +904,7 @@ v3d_screen_create(int fd, const struct pipe_screen_config *config,
         pscreen = &screen->base;
 
         pscreen->destroy = v3d_screen_destroy;
+        pscreen->get_screen_fd = v3d_screen_get_fd;
         pscreen->get_param = v3d_screen_get_param;
         pscreen->get_paramf = v3d_screen_get_paramf;
         pscreen->get_shader_param = v3d_screen_get_shader_param;

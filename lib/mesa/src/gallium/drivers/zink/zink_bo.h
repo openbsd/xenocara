@@ -30,6 +30,7 @@
 #include "zink_batch.h"
 
 #define VK_VIS_VRAM (VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT)
+#define VK_STAGING_RAM (VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT)
 #define VK_LAZY_VRAM (VK_MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT | VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT)
 
 
@@ -66,7 +67,7 @@ vk_domain_from_heap(enum zink_heap heap)
       domains = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
       break;
    case ZINK_HEAP_HOST_VISIBLE_CACHED:
-      domains = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
+      domains = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT;
       break;
    default:
       break;
@@ -168,6 +169,16 @@ zink_bo_usage_check_completion(struct zink_screen *screen, struct zink_bo *bo, e
    if (access & ZINK_RESOURCE_ACCESS_READ && !zink_screen_usage_check_completion(screen, bo->reads))
       return false;
    if (access & ZINK_RESOURCE_ACCESS_WRITE && !zink_screen_usage_check_completion(screen, bo->writes))
+      return false;
+   return true;
+}
+
+static inline bool
+zink_bo_usage_check_completion_fast(struct zink_screen *screen, struct zink_bo *bo, enum zink_resource_access access)
+{
+   if (access & ZINK_RESOURCE_ACCESS_READ && !zink_screen_usage_check_completion_fast(screen, bo->reads))
+      return false;
+   if (access & ZINK_RESOURCE_ACCESS_WRITE && !zink_screen_usage_check_completion_fast(screen, bo->writes))
       return false;
    return true;
 }

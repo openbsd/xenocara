@@ -1018,12 +1018,12 @@ void anv_CmdClearColorImage(
 
       for (uint32_t i = 0; i < level_count; i++) {
          const unsigned level = pRanges[r].baseMipLevel + i;
-         const unsigned level_width = anv_minify(image->vk.extent.width, level);
-         const unsigned level_height = anv_minify(image->vk.extent.height, level);
+         const unsigned level_width = u_minify(image->vk.extent.width, level);
+         const unsigned level_height = u_minify(image->vk.extent.height, level);
 
          if (image->vk.image_type == VK_IMAGE_TYPE_3D) {
             base_layer = 0;
-            layer_count = anv_minify(image->vk.extent.depth, level);
+            layer_count = u_minify(image->vk.extent.depth, level);
          }
 
          anv_cmd_buffer_mark_image_written(cmd_buffer, image,
@@ -1097,11 +1097,11 @@ void anv_CmdClearDepthStencilImage(
 
       for (uint32_t i = 0; i < level_count; i++) {
          const unsigned level = pRanges[r].baseMipLevel + i;
-         const unsigned level_width = anv_minify(image->vk.extent.width, level);
-         const unsigned level_height = anv_minify(image->vk.extent.height, level);
+         const unsigned level_width = u_minify(image->vk.extent.width, level);
+         const unsigned level_height = u_minify(image->vk.extent.height, level);
 
          if (image->vk.image_type == VK_IMAGE_TYPE_3D)
-            layer_count = anv_minify(image->vk.extent.depth, level);
+            layer_count = u_minify(image->vk.extent.depth, level);
 
          blorp_clear_depth_stencil(&batch, &depth, &stencil,
                                    level, base_layer, layer_count,
@@ -1341,12 +1341,6 @@ void anv_CmdClearAttachments(
    anv_blorp_batch_finish(&batch);
 }
 
-enum subpass_stage {
-   SUBPASS_STAGE_LOAD,
-   SUBPASS_STAGE_DRAW,
-   SUBPASS_STAGE_RESOLVE,
-};
-
 void
 anv_image_msaa_resolve(struct anv_cmd_buffer *cmd_buffer,
                        const struct anv_image *src_image,
@@ -1486,7 +1480,12 @@ anv_image_copy_to_shadow(struct anv_cmd_buffer *cmd_buffer,
                          uint32_t base_layer, uint32_t layer_count)
 {
    struct blorp_batch batch;
-   anv_blorp_batch_init(cmd_buffer, &batch, 0);
+   anv_blorp_batch_init(cmd_buffer, &batch,
+                        /* If the sample count is set, we are in a render pass
+                         * and don't want blorp to overwrite depth/stencil
+                         * state
+                         */
+                        cmd_buffer->state.gfx.samples ? BLORP_BATCH_NO_EMIT_DEPTH_STENCIL : 0);
 
    /* We don't know who touched the main surface last so flush a bunch of
     * caches to ensure we get good data.
@@ -1737,25 +1736,6 @@ anv_image_hiz_clear(struct anv_cmd_buffer *cmd_buffer,
                              ANV_PIPE_DEPTH_STALL_BIT,
                              "before clear hiz");
 
-   if ((aspects & VK_IMAGE_ASPECT_DEPTH_BIT) &&
-       depth.aux_usage == ISL_AUX_USAGE_HIZ_CCS_WT) {
-      /* From Bspec 47010 (Depth Buffer Clear):
-       *
-       *    Since the fast clear cycles to CCS are not cached in TileCache,
-       *    any previous depth buffer writes to overlapping pixels must be
-       *    flushed out of TileCache before a succeeding Depth Buffer Clear.
-       *    This restriction only applies to Depth Buffer with write-thru
-       *    enabled, since fast clears to CCS only occur for write-thru mode.
-       *
-       * There may have been a write to this depth buffer. Flush it from the
-       * tile cache just in case.
-       */
-      anv_add_pending_pipe_bits(cmd_buffer,
-                                ANV_PIPE_DEPTH_CACHE_FLUSH_BIT |
-                                ANV_PIPE_TILE_CACHE_FLUSH_BIT,
-                                "before clear hiz_ccs_wt");
-   }
-
    blorp_hiz_clear_depth_stencil(&batch, &depth, &stencil,
                                  level, base_layer, layer_count,
                                  area.offset.x, area.offset.y,
@@ -1806,7 +1786,6 @@ anv_image_mcs_op(struct anv_cmd_buffer *cmd_buffer,
    /* Multisampling with multi-planar formats is not supported */
    assert(image->n_planes == 1);
 
-   const struct intel_device_info *devinfo = cmd_buffer->device->info;
    struct blorp_batch batch;
    anv_blorp_batch_init(cmd_buffer, &batch,
                         BLORP_BATCH_PREDICATE_ENABLE * predicate +
@@ -1843,14 +1822,15 @@ anv_image_mcs_op(struct anv_cmd_buffer *cmd_buffer,
    anv_add_pending_pipe_bits(cmd_buffer,
                              ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
                              ANV_PIPE_TILE_CACHE_FLUSH_BIT |
-                             (devinfo->verx10 == 120 ?
-                                ANV_PIPE_DEPTH_STALL_BIT : 0) |
-                             (devinfo->verx10 == 125 ?
-                                ANV_PIPE_HDC_PIPELINE_FLUSH_BIT |
-                                ANV_PIPE_DATA_CACHE_FLUSH_BIT : 0) |
                              ANV_PIPE_PSS_STALL_SYNC_BIT |
                              ANV_PIPE_END_OF_PIPE_SYNC_BIT,
                              "before fast clear mcs");
+
+   if (!blorp_address_is_null(surf.clear_color_addr)) {
+      anv_add_pending_pipe_bits(cmd_buffer,
+                                ANV_PIPE_STATE_CACHE_INVALIDATE_BIT,
+                                "before blorp clear color edit");
+   }
 
    switch (mcs_op) {
    case ISL_AUX_OP_FAST_CLEAR:
@@ -1870,9 +1850,6 @@ anv_image_mcs_op(struct anv_cmd_buffer *cmd_buffer,
 
    anv_add_pending_pipe_bits(cmd_buffer,
                              ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
-                             (devinfo->verx10 == 120 ?
-                                ANV_PIPE_TILE_CACHE_FLUSH_BIT |
-                                ANV_PIPE_DEPTH_STALL_BIT : 0) |
                              ANV_PIPE_PSS_STALL_SYNC_BIT |
                              ANV_PIPE_END_OF_PIPE_SYNC_BIT,
                              "after fast clear mcs");
@@ -1898,7 +1875,6 @@ anv_image_ccs_op(struct anv_cmd_buffer *cmd_buffer,
           anv_image_aux_layers(image, aspect, level));
 
    const uint32_t plane = anv_image_aspect_to_plane(image, aspect);
-   const struct intel_device_info *devinfo = cmd_buffer->device->info;
 
    struct blorp_batch batch;
    anv_blorp_batch_init(cmd_buffer, &batch,
@@ -1912,8 +1888,8 @@ anv_image_ccs_op(struct anv_cmd_buffer *cmd_buffer,
                                 image->planes[plane].aux_usage,
                                 &surf);
 
-   uint32_t level_width = anv_minify(surf.surf->logical_level0_px.w, level);
-   uint32_t level_height = anv_minify(surf.surf->logical_level0_px.h, level);
+   uint32_t level_width = u_minify(surf.surf->logical_level0_px.w, level);
+   uint32_t level_height = u_minify(surf.surf->logical_level0_px.h, level);
 
    /* Blorp will store the clear color for us if we provide the clear color
     * address and we are doing a fast clear. So we save the clear value into
@@ -1940,14 +1916,15 @@ anv_image_ccs_op(struct anv_cmd_buffer *cmd_buffer,
    anv_add_pending_pipe_bits(cmd_buffer,
                              ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
                              ANV_PIPE_TILE_CACHE_FLUSH_BIT |
-                             (devinfo->verx10 == 120 ?
-                                ANV_PIPE_DEPTH_STALL_BIT : 0) |
-                             (devinfo->verx10 == 125 ?
-                                ANV_PIPE_HDC_PIPELINE_FLUSH_BIT |
-                                ANV_PIPE_DATA_CACHE_FLUSH_BIT : 0) |
                              ANV_PIPE_PSS_STALL_SYNC_BIT |
                              ANV_PIPE_END_OF_PIPE_SYNC_BIT,
                              "before fast clear ccs");
+
+   if (!blorp_address_is_null(surf.clear_color_addr)) {
+      anv_add_pending_pipe_bits(cmd_buffer,
+                                ANV_PIPE_STATE_CACHE_INVALIDATE_BIT,
+                                "before blorp clear color edit");
+   }
 
    switch (ccs_op) {
    case ISL_AUX_OP_FAST_CLEAR:
@@ -1972,9 +1949,6 @@ anv_image_ccs_op(struct anv_cmd_buffer *cmd_buffer,
 
    anv_add_pending_pipe_bits(cmd_buffer,
                              ANV_PIPE_RENDER_TARGET_CACHE_FLUSH_BIT |
-                             (devinfo->verx10 == 120 ?
-                                ANV_PIPE_TILE_CACHE_FLUSH_BIT |
-                                ANV_PIPE_DEPTH_STALL_BIT : 0) |
                              ANV_PIPE_PSS_STALL_SYNC_BIT |
                              ANV_PIPE_END_OF_PIPE_SYNC_BIT,
                              "after fast clear ccs");

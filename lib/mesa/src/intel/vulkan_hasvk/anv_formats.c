@@ -28,6 +28,10 @@
 #include "vk_format.h"
 #include "vk_util.h"
 
+#if defined(ANDROID) && ANDROID_API_LEVEL >= 26
+#include "vk_android.h"
+#endif
+
 /*
  * gcc-4 and earlier don't allow compound literals where a constant
  * is required in -std=c99/gnu99 mode, so we can't use ISL_SWIZZLE()
@@ -576,9 +580,6 @@ anv_get_image_format_features2(const struct intel_device_info *devinfo,
       if (aspects & VK_IMAGE_ASPECT_DEPTH_BIT)
          flags |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
 
-      if ((aspects & VK_IMAGE_ASPECT_DEPTH_BIT) && devinfo->ver >= 9)
-         flags |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_MINMAX_BIT;
-
       if (aspects & VK_IMAGE_ASPECT_DEPTH_BIT)
          flags |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_DEPTH_COMPARISON_BIT;
 
@@ -611,9 +612,6 @@ anv_get_image_format_features2(const struct intel_device_info *devinfo,
                 VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT;
 
       flags |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT;
-
-      if (devinfo->ver >= 9)
-         flags |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_MINMAX_BIT;
 
       if (isl_format_supports_filtering(devinfo, plane_format.isl_format))
          flags |= VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_FILTER_LINEAR_BIT;
@@ -795,11 +793,6 @@ anv_get_image_format_features2(const struct intel_device_info *devinfo,
          }
       }
 
-      if (isl_mod_info->aux_usage == ISL_AUX_USAGE_CCS_E &&
-          !isl_format_supports_ccs_e(devinfo, plane_format.isl_format)) {
-         return 0;
-      }
-
       if (isl_mod_info->aux_usage != ISL_AUX_USAGE_NONE) {
          /* Rejection DISJOINT for consistency with the GL driver. In
           * eglCreateImage, we require that the dma_buf for the primary surface
@@ -815,11 +808,6 @@ anv_get_image_format_features2(const struct intel_device_info *devinfo,
          flags &= ~VK_FORMAT_FEATURE_2_STORAGE_IMAGE_ATOMIC_BIT;
       }
    }
-
-   if (devinfo->has_coarse_pixel_primitive_and_cb &&
-       vk_format == VK_FORMAT_R8_UINT &&
-       vk_tiling == VK_IMAGE_TILING_OPTIMAL)
-      flags |= VK_FORMAT_FEATURE_FRAGMENT_SHADING_RATE_ATTACHMENT_BIT_KHR;
 
    return flags;
 }
@@ -855,7 +843,7 @@ get_buffer_format_features2(const struct intel_device_info *devinfo,
    if (isl_format_supports_vertex_fetch(devinfo, isl_format))
       flags |= VK_FORMAT_FEATURE_2_VERTEX_BUFFER_BIT;
 
-   if (isl_is_storage_image_format(isl_format))
+   if (isl_is_storage_image_format(devinfo, isl_format))
       flags |= VK_FORMAT_FEATURE_2_STORAGE_TEXEL_BUFFER_BIT;
 
    if (isl_format == ISL_FORMAT_R32_SINT || isl_format == ISL_FORMAT_R32_UINT)
@@ -867,12 +855,6 @@ get_buffer_format_features2(const struct intel_device_info *devinfo,
       flags |= VK_FORMAT_FEATURE_2_STORAGE_WRITE_WITHOUT_FORMAT_BIT;
 
    return flags;
-}
-
-static VkFormatFeatureFlags
-features2_to_features(VkFormatFeatureFlags2 features2)
-{
-   return features2 & VK_ALL_FORMAT_FEATURE_FLAG_BITS;
 }
 
 static void
@@ -892,7 +874,7 @@ get_drm_format_modifier_properties_list(const struct anv_physical_device *physic
          anv_get_image_format_features2(devinfo, vk_format, anv_format,
                                         VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT,
                                         isl_mod_info);
-      VkFormatFeatureFlags features = features2_to_features(features2);
+      VkFormatFeatureFlags features = vk_format_features2_to_features(features2);
       if (!features)
          continue;
 
@@ -963,9 +945,9 @@ void anv_GetPhysicalDeviceFormatProperties2(
    buffer2 = get_buffer_format_features2(devinfo, vk_format, anv_format);
 
    pFormatProperties->formatProperties = (VkFormatProperties) {
-      .linearTilingFeatures = features2_to_features(linear2),
-      .optimalTilingFeatures = features2_to_features(optimal2),
-      .bufferFeatures = features2_to_features(buffer2),
+      .linearTilingFeatures = vk_format_features2_to_features(linear2),
+      .optimalTilingFeatures = vk_format_features2_to_features(optimal2),
+      .bufferFeatures = vk_format_features2_to_features(buffer2),
    };
 
    vk_foreach_struct(ext, pFormatProperties->pNext) {
@@ -1000,7 +982,8 @@ anv_get_image_format_properties(
    struct anv_physical_device *physical_device,
    const VkPhysicalDeviceImageFormatInfo2 *info,
    VkImageFormatProperties *pImageFormatProperties,
-   VkSamplerYcbcrConversionImageFormatProperties *pYcbcrImageFormatProperties)
+   VkSamplerYcbcrConversionImageFormatProperties *pYcbcrImageFormatProperties,
+   bool from_wsi)
 {
    VkFormatFeatureFlags2 format_feature_flags;
    VkExtent3D maxExtent;
@@ -1120,13 +1103,6 @@ anv_get_image_format_properties(
       maxArraySize = 1;
       maxMipLevels = 1;
       sampleCounts = VK_SAMPLE_COUNT_1_BIT;
-
-      if (isl_mod_info->aux_usage == ISL_AUX_USAGE_CCS_E &&
-          !anv_formats_ccs_e_compatible(devinfo, info->flags, info->format,
-                                        info->tiling, image_usage,
-                                        format_list_info)) {
-         goto unsupported;
-      }
    }
 
    /* Our hardware doesn't support 1D compressed textures.
@@ -1148,6 +1124,12 @@ anv_get_image_format_properties(
        !(image_usage & VK_IMAGE_USAGE_STORAGE_BIT) &&
        isl_format_supports_multisampling(devinfo, format->planes[0].isl_format)) {
       sampleCounts = isl_device_get_sample_counts(&physical_device->isl_dev);
+      /* Gfx7 doesn't support 8xMSAA with depth/stencil images when their width
+       * is greater than 8192 pixels. */
+      if (devinfo->ver == 7 &&
+         (format_feature_flags & VK_FORMAT_FEATURE_2_DEPTH_STENCIL_ATTACHMENT_BIT)) {
+         maxExtent.width = 8192;
+      }
    }
 
    if (view_usage & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
@@ -1233,7 +1215,7 @@ anv_get_image_format_properties(
       }
    }
 
-   if (info->flags & VK_IMAGE_CREATE_ALIAS_BIT) {
+   if (info->flags & VK_IMAGE_CREATE_ALIAS_BIT && !from_wsi) {
       /* Reject aliasing of images with non-linear DRM format modifiers because:
        *
        * 1. For modifiers with compression, we store aux tracking state in
@@ -1243,6 +1225,9 @@ anv_get_image_format_properties(
        * 2. For tiled modifiers without compression, we may attempt to compress
        *    them behind the scenes, in which case both the aux tracking state
        *    and the CCS data are bound to ANV_IMAGE_MEMORY_BINDING_PRIVATE.
+       *
+       * 3. For WSI we should ignore ALIAS_BIT because we have the ability to
+       *    bind the ANV_MEMORY_BINDING_PRIVATE from the other WSI image.
        */
       if (info->tiling == VK_IMAGE_TILING_DRM_FORMAT_MODIFIER_EXT &&
           isl_mod_info->modifier != DRM_FORMAT_MOD_LINEAR) {
@@ -1326,7 +1311,7 @@ VkResult anv_GetPhysicalDeviceImageFormatProperties(
    };
 
    return anv_get_image_format_properties(physical_device, &info,
-                                          pImageFormatProperties, NULL);
+                                          pImageFormatProperties, NULL, false);
 }
 
 
@@ -1390,12 +1375,13 @@ VkResult anv_GetPhysicalDeviceImageFormatProperties2(
    const VkPhysicalDeviceExternalImageFormatInfo *external_info = NULL;
    VkExternalImageFormatProperties *external_props = NULL;
    VkSamplerYcbcrConversionImageFormatProperties *ycbcr_props = NULL;
-   VkAndroidHardwareBufferUsageANDROID *android_usage = NULL;
+   UNUSED VkAndroidHardwareBufferUsageANDROID *android_usage = NULL;
    VkResult result;
+   bool from_wsi = false;
 
    /* Extract input structs */
    vk_foreach_struct_const(s, base_info->pNext) {
-      switch (s->sType) {
+      switch ((unsigned)s->sType) {
       case VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO:
          external_info = (const void *) s;
          break;
@@ -1405,6 +1391,9 @@ VkResult anv_GetPhysicalDeviceImageFormatProperties2(
          break;
       case VK_STRUCTURE_TYPE_IMAGE_STENCIL_USAGE_CREATE_INFO:
          /* Ignore but don't warn */
+         break;
+      case VK_STRUCTURE_TYPE_WSI_IMAGE_CREATE_INFO_MESA:
+         from_wsi = true;
          break;
       default:
          anv_debug_ignored_stype(s->sType);
@@ -1431,21 +1420,23 @@ VkResult anv_GetPhysicalDeviceImageFormatProperties2(
    }
 
    result = anv_get_image_format_properties(physical_device, base_info,
-               &base_props->imageFormatProperties, ycbcr_props);
+               &base_props->imageFormatProperties, ycbcr_props, from_wsi);
    if (result != VK_SUCCESS)
       goto fail;
 
    bool ahw_supported =
       physical_device->vk.supported_extensions.ANDROID_external_memory_android_hardware_buffer;
 
+#if defined(ANDROID) && ANDROID_API_LEVEL >= 26
    if (ahw_supported && android_usage) {
       android_usage->androidHardwareBufferUsage =
-         anv_ahw_usage_from_vk_usage(base_info->flags,
+         vk_image_usage_to_ahb_usage(base_info->flags,
                                      base_info->usage);
 
       /* Limit maxArrayLayers to 1 for AHardwareBuffer based images for now. */
       base_props->imageFormatProperties.maxArrayLayers = 1;
    }
+#endif
 
    /* From the Vulkan 1.0.42 spec:
     *
@@ -1599,7 +1590,7 @@ void anv_GetPhysicalDeviceSparseImageFormatProperties(
     VkPhysicalDevice                            physicalDevice,
     VkFormat                                    format,
     VkImageType                                 type,
-    uint32_t                                    samples,
+    VkSampleCountFlagBits                       samples,
     VkImageUsageFlags                           usage,
     VkImageTiling                               tiling,
     uint32_t*                                   pNumProperties,

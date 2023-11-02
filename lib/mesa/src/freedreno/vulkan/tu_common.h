@@ -94,6 +94,9 @@
    (MAX_DYNAMIC_UNIFORM_BUFFERS + 2 * MAX_DYNAMIC_STORAGE_BUFFERS) *         \
    A6XX_TEX_CONST_DWORDS
 
+#define SAMPLE_LOCATION_MIN 0.f
+#define SAMPLE_LOCATION_MAX 0.9375f
+
 #define TU_MAX_DRM_DEVICES 8
 #define MAX_VIEWS 16
 #define MAX_BIND_POINTS 2 /* compute + graphics */
@@ -106,11 +109,36 @@
  */
 #define MAX_UNIFORM_BUFFER_RANGE 0x10000
 
+/* Use the minimum maximum to guarantee that it can always fit in the safe
+ * const file size, even with maximum push constant usage and driver params.
+ */
+#define MAX_INLINE_UBO_RANGE 256
+#define MAX_INLINE_UBOS 4
+
 #define A6XX_TEX_CONST_DWORDS 16
 #define A6XX_TEX_SAMP_DWORDS 4
 
 #define TU_FROM_HANDLE(__tu_type, __name, __handle)                          \
    VK_FROM_HANDLE(__tu_type, __name, __handle)
+
+#define ACT_0(ACTION)
+#define ACT_1(ACTION, X) ACTION(X)
+#define ACT_2(ACTION, X, ...) ACTION(X) ACT_1(ACTION, __VA_ARGS__)
+#define ACT_3(ACTION, X, ...) ACTION(X) ACT_2(ACTION, __VA_ARGS__)
+#define ACT_4(ACTION, X, ...) ACTION(X) ACT_3(ACTION, __VA_ARGS__)
+#define ACT_5(ACTION, X, ...) ACTION(X) ACT_4(ACTION, __VA_ARGS__)
+#define ACT_6(ACTION, X, ...) ACTION(X) ACT_5(ACTION, __VA_ARGS__)
+
+#define GET_ACT_MACRO(_0, _1, _2, _3, _4, _5, _6, NAME, ...) NAME
+
+/* Do the action for the each vararg. It could be macro, function call, etc. */
+#define ACTION_FOR_EACH(action, ...)                                               \
+   GET_ACT_MACRO(_0, __VA_ARGS__, ACT_6, ACT_5, ACT_4, ACT_3, ACT_2, ACT_1, ACT_0) \
+   (action, __VA_ARGS__)
+
+#define TU_GPU_GENS A6XX, A7XX
+#define TU_GENX(entrypoint) \
+  ACTION_FOR_EACH(entrypoint ## _GENS, TU_GPU_GENS)
 
 /* vk object types */
 struct tu_buffer;

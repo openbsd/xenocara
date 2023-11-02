@@ -1,27 +1,9 @@
 #encoding=utf-8
 
-# Copyright (C) 2016 Intel Corporation
-# Copyright (C) 2016 Broadcom
-# Copyright (C) 2020 Collabora, Ltd.
-#
-# Permission is hereby granted, free of charge, to any person obtaining a
-# copy of this software and associated documentation files (the "Software"),
-# to deal in the Software without restriction, including without limitation
-# the rights to use, copy, modify, merge, publish, distribute, sublicense,
-# and/or sell copies of the Software, and to permit persons to whom the
-# Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice (including the next
-# paragraph) shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-# IN THE SOFTWARE.
+# Copyright 2016 Intel Corporation
+# Copyright 2016 Broadcom
+# Copyright 2020 Collabora, Ltd.
+# SPDX-License-Identifier: MIT
 
 import xml.parsers.expat
 import sys
@@ -129,6 +111,16 @@ __gen_from_groups(uint32_t value, uint32_t group_size, uint32_t length)
 #define agx_print(fp, T, var, indent)                   \\
         AGX_ ## T ## _print(fp, &(var), indent)
 
+static inline void agx_merge_helper(uint32_t *dst, const uint32_t *src, size_t bytes)
+{
+        assert((bytes & 3) == 0);
+
+        for (unsigned i = 0; i < (bytes / 4); ++i)
+                dst[i] |= src[i];
+}
+
+#define agx_merge(packed1, packed2, type) \
+        agx_merge_helper((packed1).opaque, (packed2).opaque, AGX_##type##_LENGTH)
 """
 
 def to_alphanum(name):

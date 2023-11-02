@@ -12,6 +12,7 @@ use mesa_rust::compiler::clc::*;
 use mesa_rust::compiler::nir::*;
 use mesa_rust::pipe::context::RWFlags;
 use mesa_rust::pipe::context::ResourceMapType;
+use mesa_rust::pipe::resource::*;
 use mesa_rust::pipe::screen::ResourceType;
 use mesa_rust_gen::*;
 use mesa_rust_util::math::*;
@@ -67,7 +68,10 @@ pub struct KernelArg {
     spirv: spirv::SPIRVKernelArg,
     pub kind: KernelArgType,
     pub size: usize,
+    /// The offset into the input buffer
     pub offset: usize,
+    /// The actual binding slot
+    pub binding: u32,
     pub dead: bool,
 }
 
@@ -126,6 +130,7 @@ impl KernelArg {
                 // we'll update it later in the 2nd pass
                 kind: kind,
                 offset: 0,
+                binding: 0,
                 dead: true,
             });
         }
@@ -142,6 +147,7 @@ impl KernelArg {
         ) {
             if let Some(arg) = args.get_mut(var.data.location as usize) {
                 arg.offset = var.data.driver_location as usize;
+                arg.binding = var.data.binding;
                 arg.dead = false;
             } else {
                 internal_args
@@ -158,6 +164,7 @@ impl KernelArg {
         bin.append(&mut self.spirv.serialize());
         bin.extend_from_slice(&self.size.to_ne_bytes());
         bin.extend_from_slice(&self.offset.to_ne_bytes());
+        bin.extend_from_slice(&self.binding.to_ne_bytes());
         bin.extend_from_slice(&(self.dead as u8).to_ne_bytes());
         bin.extend_from_slice(&(self.kind as u8).to_ne_bytes());
 
@@ -168,6 +175,7 @@ impl KernelArg {
         let spirv = spirv::SPIRVKernelArg::deserialize(bin)?;
         let size = read_ne_usize(bin);
         let offset = read_ne_usize(bin);
+        let binding = read_ne_u32(bin);
         let dead = read_ne_u8(bin) == 1;
 
         let kind = match read_ne_u8(bin) {
@@ -187,6 +195,7 @@ impl KernelArg {
             kind: kind,
             size: size,
             offset: offset,
+            binding: binding,
             dead: dead,
         })
     }
@@ -245,6 +254,84 @@ impl InternalKernelArg {
     }
 }
 
+struct KernelDevStateInner {
+    nir: NirShader,
+    constant_buffer: Option<Arc<PipeResource>>,
+    cso: *mut c_void,
+    info: pipe_compute_state_object_info,
+}
+
+struct KernelDevState {
+    states: HashMap<Arc<Device>, KernelDevStateInner>,
+}
+
+impl Drop for KernelDevState {
+    fn drop(&mut self) {
+        self.states.iter().for_each(|(dev, dev_state)| {
+            if !dev_state.cso.is_null() {
+                dev.helper_ctx().delete_compute_state(dev_state.cso);
+            }
+        })
+    }
+}
+
+impl KernelDevState {
+    fn new(nirs: HashMap<Arc<Device>, NirShader>) -> Arc<Self> {
+        let states = nirs
+            .into_iter()
+            .map(|(dev, nir)| {
+                let mut cso = dev
+                    .helper_ctx()
+                    .create_compute_state(&nir, nir.shared_size());
+                let info = dev.helper_ctx().compute_state_info(cso);
+                let cb = Self::create_nir_constant_buffer(&dev, &nir);
+
+                // if we can't share the cso between threads, destroy it now.
+                if !dev.shareable_shaders() {
+                    dev.helper_ctx().delete_compute_state(cso);
+                    cso = ptr::null_mut();
+                };
+
+                (
+                    dev,
+                    KernelDevStateInner {
+                        nir: nir,
+                        constant_buffer: cb,
+                        cso: cso,
+                        info: info,
+                    },
+                )
+            })
+            .collect();
+
+        Arc::new(Self { states: states })
+    }
+
+    fn create_nir_constant_buffer(dev: &Device, nir: &NirShader) -> Option<Arc<PipeResource>> {
+        let buf = nir.get_constant_buffer();
+        let len = buf.len() as u32;
+
+        if len > 0 {
+            let res = dev
+                .screen()
+                .resource_create_buffer(len, ResourceType::Normal)
+                .unwrap();
+
+            dev.helper_ctx()
+                .exec(|ctx| ctx.buffer_subdata(&res, 0, buf.as_ptr().cast(), len))
+                .wait();
+
+            Some(Arc::new(res))
+        } else {
+            None
+        }
+    }
+
+    fn get(&self, dev: &Device) -> &KernelDevStateInner {
+        self.states.get(dev).unwrap()
+    }
+}
+
 #[repr(C)]
 pub struct Kernel {
     pub base: CLObjectBase<CL_INVALID_KERNEL>,
@@ -255,7 +342,7 @@ pub struct Kernel {
     pub work_group_size: [usize; 3],
     pub attributes_string: String,
     internal_args: Vec<InternalKernelArg>,
-    nirs: HashMap<Arc<Device>, NirShader>,
+    dev_state: Arc<KernelDevState>,
 }
 
 impl_cl_type_trait!(cl_kernel, Kernel, CL_INVALID_KERNEL);
@@ -357,12 +444,7 @@ fn lower_and_optimize_nir_pre_inputs(dev: &Device, nir: &mut NirShader, lib_clc:
     nir.pass0(nir_dedup_inline_samplers);
     nir.pass2(
         nir_lower_vars_to_explicit_types,
-        nir_variable_mode::nir_var_uniform
-            | nir_variable_mode::nir_var_function_temp
-            | nir_variable_mode::nir_var_shader_temp
-            | nir_variable_mode::nir_var_mem_shared
-            | nir_variable_mode::nir_var_mem_generic
-            | nir_variable_mode::nir_var_mem_global,
+        nir_variable_mode::nir_var_function_temp,
         Some(glsl_get_cl_type_size_align),
     );
 
@@ -378,6 +460,8 @@ extern "C" fn can_remove_var(var: *mut nir_variable, _: *mut c_void) -> bool {
     unsafe {
         let var = var.as_ref().unwrap();
         !glsl_type_is_image(var.type_)
+            && !glsl_type_is_texture(var.type_)
+            && !glsl_type_is_sampler(var.type_)
     }
 }
 
@@ -449,8 +533,12 @@ fn lower_and_optimize_nir_late(
         }
     }
 
-    nir.pass1(nir_lower_readonly_images_to_tex, false);
-    nir.pass0(nir_lower_cl_images);
+    nir.pass1(nir_lower_readonly_images_to_tex, true);
+    nir.pass2(
+        nir_lower_cl_images,
+        !dev.images_as_deref(),
+        !dev.samplers_as_deref(),
+    );
 
     nir.reset_scratch_size();
     nir.pass2(
@@ -507,30 +595,30 @@ fn lower_and_optimize_nir_late(
     compute_options.set_has_base_global_invocation_id(true);
     nir.pass1(nir_lower_compute_system_values, &compute_options);
     nir.pass1(nir_shader_gather_info, nir.entrypoint());
-
-    if nir.num_images() > 0 {
+    if nir.num_images() > 0 || nir.num_textures() > 0 {
+        let count = nir.num_images() + nir.num_textures();
         res.push(InternalKernelArg {
             kind: InternalKernelArgType::FormatArray,
             offset: 0,
-            size: 2 * nir.num_images() as usize,
+            size: 2 * count as usize,
         });
 
         res.push(InternalKernelArg {
             kind: InternalKernelArgType::OrderArray,
             offset: 0,
-            size: 2 * nir.num_images() as usize,
+            size: 2 * count as usize,
         });
 
         lower_state.format_arr = nir.add_var(
             nir_variable_mode::nir_var_uniform,
-            unsafe { glsl_array_type(glsl_int16_t_type(), nir.num_images() as u32, 2) },
+            unsafe { glsl_array_type(glsl_int16_t_type(), count as u32, 2) },
             args.len() + res.len() - 2,
             "image_formats",
         );
 
         lower_state.order_arr = nir.add_var(
             nir_variable_mode::nir_var_uniform,
-            unsafe { glsl_array_type(glsl_int16_t_type(), nir.num_images() as u32, 2) },
+            unsafe { glsl_array_type(glsl_int16_t_type(), count as u32, 2) },
             args.len() + res.len() - 1,
             "image_orders",
         );
@@ -554,10 +642,14 @@ fn lower_and_optimize_nir_late(
         nir_lower_vars_to_explicit_types,
         nir_variable_mode::nir_var_mem_shared
             | nir_variable_mode::nir_var_function_temp
+            | nir_variable_mode::nir_var_shader_temp
             | nir_variable_mode::nir_var_uniform
-            | nir_variable_mode::nir_var_mem_global,
+            | nir_variable_mode::nir_var_mem_global
+            | nir_variable_mode::nir_var_mem_generic,
         Some(glsl_get_cl_type_size_align),
     );
+
+    opt_nir(nir, dev);
 
     let global_address_format;
     let shared_address_format;
@@ -588,6 +680,10 @@ fn lower_and_optimize_nir_late(
         nir.pass0(nir_lower_int64);
     }
 
+    if nir_options.lower_uniforms_to_ubo {
+        nir.pass0(rusticl_lower_inputs);
+    }
+
     nir.pass1(nir_lower_convert_alu_types, None);
 
     opt_nir(nir, dev);
@@ -596,6 +692,12 @@ fn lower_and_optimize_nir_late(
      * other things we depend on
      */
     KernelArg::assign_locations(args, &mut res, nir);
+
+    /* update the has_variable_shared_mem info as we might have DCEed all of them */
+    nir.set_has_variable_shared_mem(
+        args.iter()
+            .any(|arg| arg.kind == KernelArgType::MemLocal && !arg.dead),
+    );
     dev.screen.finalize_nir(nir);
 
     nir.pass0(nir_opt_dce);
@@ -711,7 +813,14 @@ fn convert_spirv_to_nir(
     assert!(attributes_string_set.len() == 1);
     let args = args_set.into_iter().next().unwrap();
     let internal_args = internal_args_set.into_iter().next().unwrap();
-    let attributes_string = attributes_string_set.into_iter().next().unwrap();
+
+    // spec: For kernels not created from OpenCL C source and the clCreateProgramWithSource API call
+    // the string returned from this query [CL_KERNEL_ATTRIBUTES] will be empty.
+    let attributes_string = if p.is_src() {
+        attributes_string_set.into_iter().next().unwrap()
+    } else {
+        String::new()
+    };
 
     (nirs, args, internal_args, attributes_string)
 }
@@ -722,44 +831,6 @@ fn extract<'a, const S: usize>(buf: &'a mut &[u8]) -> &'a [u8; S] {
     // we split of 4 bytes and convert to [u8; 4], so this should be safe
     // use split_array_ref once it's stable
     val.try_into().unwrap()
-}
-
-fn optimize_local_size(d: &Device, grid: &mut [u32; 3], block: &mut [u32; 3]) {
-    let mut threads = d.max_threads_per_block() as u32;
-    let dim_threads = d.max_block_sizes();
-    let subgroups = d.subgroups();
-
-    if !block.contains(&0) {
-        for i in 0..3 {
-            // we already made sure everything is fine
-            grid[i] /= block[i];
-        }
-        return;
-    }
-
-    for i in 0..3 {
-        let t = cmp::min(threads, dim_threads[i] as u32);
-        let gcd = gcd(t, grid[i]);
-
-        block[i] = gcd;
-        grid[i] /= gcd;
-
-        // update limits
-        threads /= block[i];
-    }
-
-    // if we didn't fill the subgroup we can do a bit better if we have threads remaining
-    let total_threads = block[0] * block[1] * block[2];
-    if threads != 1 && total_threads < subgroups {
-        for i in 0..3 {
-            if grid[i] * total_threads < threads {
-                block[i] *= grid[i];
-                grid[i] = 1;
-                // can only do it once as nothing is cleanly divisible
-                break;
-            }
-        }
-    }
 }
 
 impl Kernel {
@@ -786,9 +857,46 @@ impl Kernel {
             attributes_string: attributes_string,
             values: values,
             internal_args: internal_args,
-            // caller has to verify all kernels have the same sig
-            nirs: nirs,
+            dev_state: KernelDevState::new(nirs),
         })
+    }
+
+    fn optimize_local_size(&self, d: &Device, grid: &mut [u32; 3], block: &mut [u32; 3]) {
+        let mut threads = self.max_threads_per_block(d) as u32;
+        let dim_threads = d.max_block_sizes();
+        let subgroups = self.preferred_simd_size(d) as u32;
+
+        if !block.contains(&0) {
+            for i in 0..3 {
+                // we already made sure everything is fine
+                grid[i] /= block[i];
+            }
+            return;
+        }
+
+        for i in 0..3 {
+            let t = cmp::min(threads, dim_threads[i] as u32);
+            let gcd = gcd(t, grid[i]);
+
+            block[i] = gcd;
+            grid[i] /= gcd;
+
+            // update limits
+            threads /= block[i];
+        }
+
+        // if we didn't fill the subgroup we can do a bit better if we have threads remaining
+        let total_threads = block[0] * block[1] * block[2];
+        if threads != 1 && total_threads < subgroups {
+            for i in 0..3 {
+                if grid[i] * total_threads < threads {
+                    block[i] *= grid[i];
+                    grid[i] = 1;
+                    // can only do it once as nothing is cleanly divisible
+                    break;
+                }
+            }
+        }
     }
 
     // the painful part is, that host threads are allowed to modify the kernel object once it was
@@ -801,13 +909,15 @@ impl Kernel {
         grid: &[usize],
         offsets: &[usize],
     ) -> CLResult<EventSig> {
-        let nir = self.nirs.get(&q.device).unwrap();
+        let dev_state = self.dev_state.get(&q.device);
         let mut block = create_kernel_arr::<u32>(block, 1);
         let mut grid = create_kernel_arr::<u32>(grid, 1);
         let offsets = create_kernel_arr::<u64>(offsets, 0);
         let mut input: Vec<u8> = Vec::new();
         let mut resource_info = Vec::new();
-        let mut local_size: u64 = nir.shared_size() as u64;
+        // Set it once so we get the alignment padding right
+        let static_local_size: u64 = dev_state.nir.shared_size() as u64;
+        let mut variable_local_size: u64 = static_local_size;
         let printf_size = q.device.printf_buffer_size() as u32;
         let mut samplers = Vec::new();
         let mut iviews = Vec::new();
@@ -822,7 +932,7 @@ impl Kernel {
             &[0; 4]
         };
 
-        optimize_local_size(&q.device, &mut grid, &mut block);
+        self.optimize_local_size(&q.device, &mut grid, &mut block);
 
         for (arg, val) in self.args.iter().zip(&self.values) {
             if arg.dead {
@@ -840,30 +950,43 @@ impl Kernel {
                 KernelArgValue::Constant(c) => input.extend_from_slice(c),
                 KernelArgValue::MemObject(mem) => {
                     let res = mem.get_res_of_dev(&q.device)?;
+                    // If resource is a buffer and mem a 2D image, the 2d image was created from a
+                    // buffer. Use strides and dimensions of 2d image
+                    let app_img_info =
+                        if res.as_ref().is_buffer() && mem.mem_type == CL_MEM_OBJECT_IMAGE2D {
+                            Some(AppImgInfo::new(
+                                mem.image_desc.row_pitch()? / mem.image_elem_size as u32,
+                                mem.image_desc.width()?,
+                                mem.image_desc.height()?,
+                            ))
+                        } else {
+                            None
+                        };
                     if mem.is_buffer() {
                         if q.device.address_bits() == 64 {
                             input.extend_from_slice(&mem.offset.to_ne_bytes());
                         } else {
                             input.extend_from_slice(&(mem.offset as u32).to_ne_bytes());
                         }
-                        resource_info.push((Some(res.clone()), arg.offset));
+                        resource_info.push((res.clone(), arg.offset));
                     } else {
                         let format = mem.image_format.to_pipe_format().unwrap();
                         let (formats, orders) = if arg.kind == KernelArgType::Image {
-                            iviews.push(res.pipe_image_view(format, false));
+                            iviews.push(res.pipe_image_view(format, false, app_img_info.as_ref()));
                             (&mut img_formats, &mut img_orders)
                         } else if arg.kind == KernelArgType::RWImage {
-                            iviews.push(res.pipe_image_view(format, true));
+                            iviews.push(res.pipe_image_view(format, true, app_img_info.as_ref()));
                             (&mut img_formats, &mut img_orders)
                         } else {
-                            sviews.push((res.clone(), format));
+                            sviews.push((res.clone(), format, app_img_info));
                             (&mut tex_formats, &mut tex_orders)
                         };
 
-                        assert!(arg.offset >= formats.len());
+                        let binding = arg.binding as usize;
+                        assert!(binding >= formats.len());
 
-                        formats.resize(arg.offset, 0);
-                        orders.resize(arg.offset, 0);
+                        formats.resize(binding, 0);
+                        orders.resize(binding, 0);
 
                         formats.push(mem.image_format.image_channel_data_type as u16);
                         orders.push(mem.image_format.image_channel_order as u16);
@@ -872,13 +995,14 @@ impl Kernel {
                 KernelArgValue::LocalMem(size) => {
                     // TODO 32 bit
                     let pot = cmp::min(*size, 0x80);
-                    local_size = align(local_size, pot.next_power_of_two() as u64);
+                    variable_local_size =
+                        align(variable_local_size, pot.next_power_of_two() as u64);
                     if q.device.address_bits() == 64 {
-                        input.extend_from_slice(&local_size.to_ne_bytes());
+                        input.extend_from_slice(&variable_local_size.to_ne_bytes());
                     } else {
-                        input.extend_from_slice(&(local_size as u32).to_ne_bytes());
+                        input.extend_from_slice(&(variable_local_size as u32).to_ne_bytes());
                     }
-                    local_size += *size as u64;
+                    variable_local_size += *size as u64;
                 }
                 KernelArgValue::Sampler(sampler) => {
                     samplers.push(sampler.pipe());
@@ -893,6 +1017,9 @@ impl Kernel {
             }
         }
 
+        // subtract the shader local_size as we only request something on top of that.
+        variable_local_size -= dev_state.nir.shared_size() as u64;
+
         let mut printf_buf = None;
         for arg in &self.internal_args {
             if arg.offset > input.len() {
@@ -900,21 +1027,9 @@ impl Kernel {
             }
             match arg.kind {
                 InternalKernelArgType::ConstantBuffer => {
+                    assert!(dev_state.constant_buffer.is_some());
                     input.extend_from_slice(null_ptr);
-                    let buf = nir.get_constant_buffer();
-                    let res = Arc::new(
-                        q.device
-                            .screen()
-                            .resource_create_buffer(buf.len() as u32, ResourceType::Normal)
-                            .unwrap(),
-                    );
-                    q.device
-                        .helper_ctx()
-                        .exec(|ctx| {
-                            ctx.buffer_subdata(&res, 0, buf.as_ptr().cast(), buf.len() as u32)
-                        })
-                        .wait();
-                    resource_info.push((Some(res), arg.offset));
+                    resource_info.push((dev_state.constant_buffer.clone().unwrap(), arg.offset));
                 }
                 InternalKernelArgType::GlobalWorkOffsets => {
                     if q.device.address_bits() == 64 {
@@ -931,12 +1046,12 @@ impl Kernel {
                     let buf = Arc::new(
                         q.device
                             .screen
-                            .resource_create_buffer(printf_size, ResourceType::Normal)
+                            .resource_create_buffer(printf_size, ResourceType::Staging)
                             .unwrap(),
                     );
 
                     input.extend_from_slice(null_ptr);
-                    resource_info.push((Some(buf.clone()), arg.offset));
+                    resource_info.push((buf.clone(), arg.offset));
 
                     printf_buf = Some(buf);
                 }
@@ -959,15 +1074,15 @@ impl Kernel {
 
         let k = Arc::clone(self);
         Ok(Box::new(move |q, ctx| {
-            let nir = k.nirs.get(&q.device).unwrap();
+            let dev_state = k.dev_state.get(&q.device);
             let mut input = input.clone();
             let mut resources = Vec::with_capacity(resource_info.len());
             let mut globals: Vec<*mut u32> = Vec::new();
-            let printf_format = nir.printf_format();
+            let printf_format = dev_state.nir.printf_format();
 
             let mut sviews: Vec<_> = sviews
                 .iter()
-                .map(|(s, f)| ctx.create_sampler_view(s, *f))
+                .map(|(s, f, aii)| ctx.create_sampler_view(s, *f, aii.as_ref()))
                 .collect();
             let samplers: Vec<_> = samplers
                 .iter()
@@ -988,21 +1103,32 @@ impl Kernel {
                     init_data.len() as u32,
                 );
             }
-            let cso = ctx.create_compute_state(nir, input.len() as u32, local_size as u32);
+
+            let cso = if dev_state.cso.is_null() {
+                ctx.create_compute_state(&dev_state.nir, static_local_size as u32)
+            } else {
+                dev_state.cso
+            };
 
             ctx.bind_compute_state(cso);
             ctx.bind_sampler_states(&samplers);
             ctx.set_sampler_views(&mut sviews);
             ctx.set_shader_images(&iviews);
             ctx.set_global_binding(resources.as_slice(), &mut globals);
+            ctx.set_constant_buffer(0, &input);
 
-            ctx.launch_grid(work_dim, block, grid, &input);
+            ctx.launch_grid(work_dim, block, grid, variable_local_size as u32);
 
             ctx.clear_global_binding(globals.len() as u32);
             ctx.clear_shader_images(iviews.len() as u32);
             ctx.clear_sampler_views(sviews.len() as u32);
             ctx.clear_sampler_states(samplers.len() as u32);
-            ctx.delete_compute_state(cso);
+
+            ctx.bind_compute_state(ptr::null_mut());
+            if dev_state.cso.is_null() {
+                ctx.delete_compute_state(cso);
+            }
+
             ctx.memory_barrier(PIPE_BARRIER_GLOBAL_BUFFER);
 
             samplers.iter().for_each(|s| ctx.delete_sampler_state(*s));
@@ -1103,12 +1229,20 @@ impl Kernel {
     }
 
     pub fn priv_mem_size(&self, dev: &Arc<Device>) -> cl_ulong {
-        self.nirs.get(dev).unwrap().scratch_size() as cl_ulong
+        self.dev_state.get(dev).info.private_memory.into()
+    }
+
+    pub fn max_threads_per_block(&self, dev: &Device) -> usize {
+        self.dev_state.get(dev).info.max_threads as usize
+    }
+
+    pub fn preferred_simd_size(&self, dev: &Device) -> usize {
+        self.dev_state.get(dev).info.preferred_simd_size as usize
     }
 
     pub fn local_mem_size(&self, dev: &Arc<Device>) -> cl_ulong {
         // TODO include args
-        self.nirs.get(dev).unwrap().shared_size() as cl_ulong
+        self.dev_state.get(dev).nir.shared_size() as cl_ulong
     }
 }
 
@@ -1123,7 +1257,7 @@ impl Clone for Kernel {
             work_group_size: self.work_group_size,
             attributes_string: self.attributes_string.clone(),
             internal_args: self.internal_args.clone(),
-            nirs: self.nirs.clone(),
+            dev_state: self.dev_state.clone(),
         }
     }
 }

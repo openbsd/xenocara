@@ -64,14 +64,15 @@ cull_face_triangle(nir_builder *b, nir_ssa_def *pos[3][4], const position_w_info
 
    det = nir_bcsel(b, w_info->w_reflection, nir_fneg(b, det), det);
 
-   nir_ssa_def *front_facing_cw = nir_flt(b, det, nir_imm_float(b, 0.0f));
    nir_ssa_def *front_facing_ccw = nir_flt(b, nir_imm_float(b, 0.0f), det);
+   nir_ssa_def *zero_area = nir_feq(b, nir_imm_float(b, 0.0f), det);
    nir_ssa_def *ccw = nir_load_cull_ccw_amd(b);
-   nir_ssa_def *front_facing = nir_bcsel(b, ccw, front_facing_ccw, front_facing_cw);
+   nir_ssa_def *front_facing = nir_ieq(b, front_facing_ccw, ccw);
    nir_ssa_def *cull_front = nir_load_cull_front_face_enabled_amd(b);
    nir_ssa_def *cull_back = nir_load_cull_back_face_enabled_amd(b);
 
    nir_ssa_def *face_culled = nir_bcsel(b, front_facing, cull_front, cull_back);
+   face_culled = nir_ior(b, face_culled, zero_area);
 
    /* Don't reject NaN and +/-infinity, these are tricky.
     * Just trust fixed-function HW to handle these cases correctly.
@@ -209,7 +210,7 @@ calc_bbox_line(nir_builder *b, nir_ssa_def *pos[3][4], nir_ssa_def *bbox_min[2],
 
       nir_ssa_def *width = nir_channel(b, clip_half_line_width, chan);
       bbox_min[chan] = nir_fsub(b, bbox_min[chan], width);
-      bbox_max[chan] = nir_fsub(b, bbox_max[chan], width);
+      bbox_max[chan] = nir_fadd(b, bbox_max[chan], width);
    }
 }
 
@@ -268,8 +269,8 @@ cull_small_primitive_line(nir_builder *b, nir_ssa_def *pos[3][4],
       rotate_45degrees(b, v1);
 
       nir_ssa_def *small_prim_precision = nir_load_cull_small_prim_precision_amd(b);
-      prim_is_small = prim_is_small_else;
 
+      nir_ssa_def *rounded_to_eq[2];
       for (unsigned chan = 0; chan < 2; chan++) {
          /* The width of each square is sqrt(0.5), so scale it to 1 because we want
           * round() to give us the position of the closest center of a square (diamond).
@@ -293,9 +294,11 @@ cull_small_primitive_line(nir_builder *b, nir_ssa_def *pos[3][4],
          min = nir_fround_even(b, min);
          max = nir_fround_even(b, max);
 
-         nir_ssa_def *rounded_to_eq = nir_feq(b, min, max);
-         prim_is_small = nir_ior(b, prim_is_small, rounded_to_eq);
+         rounded_to_eq[chan] = nir_feq(b, min, max);
       }
+
+      prim_is_small = nir_iand(b, rounded_to_eq[0], rounded_to_eq[1]);
+      prim_is_small = nir_ior(b, prim_is_small, prim_is_small_else);
    }
    nir_pop_if(b, if_cull_small_prims);
 
@@ -311,7 +314,7 @@ ac_nir_cull_line(nir_builder *b,
                  void *state)
 {
    nir_ssa_def *accepted = initially_accepted;
-   accepted = nir_iand(b, accepted, nir_inot(b, w_info->any_w_negative));
+   accepted = nir_iand(b, accepted, nir_inot(b, w_info->all_w_negative));
 
    nir_ssa_def *bbox_accepted = NULL;
 
@@ -325,7 +328,7 @@ ac_nir_cull_line(nir_builder *b,
       nir_ssa_def *prim_invisible =
          cull_small_primitive_line(b, pos, bbox_min, bbox_max, prim_outside_view);
 
-      bbox_accepted = nir_inot(b, prim_invisible);
+      bbox_accepted = nir_ior(b, nir_inot(b, prim_invisible), w_info->any_w_negative);
 
       /* for caller which need to react when primitive is accepted */
       if (accept_func) {

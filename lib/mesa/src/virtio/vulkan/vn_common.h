@@ -89,6 +89,7 @@ struct vn_command_buffer;
 
 struct vn_cs_encoder;
 struct vn_cs_decoder;
+struct vn_ring;
 
 struct vn_renderer;
 struct vn_renderer_shmem;
@@ -101,6 +102,8 @@ enum vn_debug {
    VN_DEBUG_VTEST = 1ull << 2,
    VN_DEBUG_WSI = 1ull << 3,
    VN_DEBUG_NO_ABORT = 1ull << 4,
+   VN_DEBUG_LOG_CTX_INFO = 1ull << 5,
+   VN_DEBUG_CACHE = 1ull << 6,
 };
 
 enum vn_perf {
@@ -109,6 +112,9 @@ enum vn_perf {
    VN_PERF_NO_ASYNC_QUEUE_SUBMIT = 1ull << 2,
    VN_PERF_NO_EVENT_FEEDBACK = 1ull << 3,
    VN_PERF_NO_FENCE_FEEDBACK = 1ull << 4,
+   VN_PERF_NO_MEMORY_SUBALLOC = 1ull << 5,
+   VN_PERF_NO_CMD_BATCHING = 1ull << 6,
+   VN_PERF_NO_TIMELINE_SEM_FEEDBACK = 1ull << 7,
 };
 
 typedef uint64_t vn_object_id;
@@ -150,6 +156,12 @@ struct vn_env {
 };
 extern struct vn_env vn_env;
 
+struct vn_relax_state {
+   struct vn_ring *ring;
+   uint32_t iter;
+   const char *reason;
+};
+
 void
 vn_env_init(void);
 
@@ -166,10 +178,7 @@ vn_log_result(struct vn_instance *instance,
               const char *where);
 
 #define VN_REFCOUNT_INIT(val)                                                \
-   (struct vn_refcount)                                                      \
-   {                                                                         \
-      .count = (val),                                                        \
-   }
+   (struct vn_refcount) { .count = (val), }
 
 static inline int
 vn_refcount_load_relaxed(const struct vn_refcount *ref)
@@ -221,7 +230,19 @@ uint32_t
 vn_extension_get_spec_version(const char *name);
 
 void
-vn_relax(uint32_t *iter, const char *reason);
+vn_ring_monitor_release(struct vn_ring *ring);
+
+struct vn_relax_state
+vn_relax_init(struct vn_ring *ring, const char *reason);
+
+void
+vn_relax(struct vn_relax_state *state);
+
+static inline void
+vn_relax_fini(struct vn_relax_state *state)
+{
+   vn_ring_monitor_release(state->ring);
+}
 
 static_assert(sizeof(vn_object_id) >= sizeof(uintptr_t), "");
 

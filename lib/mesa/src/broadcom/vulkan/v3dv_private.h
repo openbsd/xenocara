@@ -36,6 +36,7 @@
 #include <vulkan/vk_icd.h>
 #include <vk_enum_to_str.h>
 
+#include "vk_descriptor_update_template.h"
 #include "vk_device.h"
 #include "vk_format.h"
 #include "vk_instance.h"
@@ -46,6 +47,7 @@
 #include "vk_sync.h"
 #include "vk_sync_timeline.h"
 #include "vk_util.h"
+#include "vk_ycbcr_conversion.h"
 
 #include "vk_command_buffer.h"
 #include "vk_command_pool.h"
@@ -79,7 +81,7 @@
 #include "util/hash_table.h"
 #include "util/sparse_array.h"
 #include "util/xmlconfig.h"
-#include "u_atomic.h"
+#include "util/u_atomic.h"
 
 #include "v3dv_entrypoints.h"
 #include "v3dv_bo.h"
@@ -177,10 +179,10 @@ struct v3dv_physical_device {
     * Specifically, when self-importing (i.e. importing a BO into the same
     * device that created it), the kernel will give us the same BO handle
     * for both BOs and we must only free it once when  both references are
-    * freed. Otherwise, if we are not self-importing, we get two differnt BO
+    * freed. Otherwise, if we are not self-importing, we get two different BO
     * handles, and we want to free each one individually.
     *
-    * The BOs in this map all have a refcnt with the referece counter and
+    * The BOs in this map all have a refcnt with the reference counter and
     * only self-imported BOs will ever have a refcnt > 1.
     */
    struct util_sparse_array bo_map;
@@ -195,8 +197,7 @@ struct v3dv_physical_device {
    } caps;
 };
 
-VkResult v3dv_physical_device_acquire_display(struct v3dv_instance *instance,
-                                              struct v3dv_physical_device *pdevice,
+VkResult v3dv_physical_device_acquire_display(struct v3dv_physical_device *pdevice,
                                               VkIcdSurfaceBase *surface);
 
 static inline struct v3dv_bo *
@@ -220,6 +221,7 @@ void v3dv_meta_texel_buffer_copy_init(struct v3dv_device *device);
 void v3dv_meta_texel_buffer_copy_finish(struct v3dv_device *device);
 
 bool v3dv_meta_can_use_tlb(struct v3dv_image *image,
+                           uint8_t plane,
                            const VkOffset3D *offset,
                            VkFormat *compat_format);
 
@@ -316,7 +318,6 @@ struct v3dv_pipeline_key {
    uint8_t topology;
    uint8_t logicop_func;
    bool msaa;
-   bool sample_coverage;
    bool sample_alpha_to_coverage;
    bool sample_alpha_to_one;
    uint8_t cbufs;
@@ -454,15 +455,6 @@ struct v3dv_pipeline_cache {
    bool externally_synchronized;
 };
 
-/* This is used to implement a list of free events in the BO we use
- * hold event states. The index here is used to calculate the offset
- * within that BO.
- */
-struct v3dv_event_desc {
-   struct list_head link;
-   uint32_t index;
-};
-
 struct v3dv_device {
    struct vk_device vk;
 
@@ -531,14 +523,13 @@ struct v3dv_device {
       /* BO for the event states: signaled (1) or reset (0) */
       struct v3dv_bo *bo;
 
-      /* Events can be created and destroyed. Since we have a dedicated BO for
-       * all events we use, we need to keep track of the free slots within that
-       * BO. For that we use a free list where we link together available event
-       * slots in the form of "descriptors" that include an index (which is
-       * basically an offset into the BO that is available).
+      /* We pre-allocate all the events we can fit for the size of the BO we
+       * create to track their states, where each event has an index which is
+       * basically the offset of its state in that BO. We keep a free list with
+       * the pre-allocated events that are available.
        */
-      uint32_t desc_count;
-      struct v3dv_event_desc *desc;
+      uint32_t event_count;
+      struct v3dv_event *events;
       struct list_head free_list;
 
       /* Vulkan resources to access the event BO from shaders. We have a
@@ -556,9 +547,34 @@ struct v3dv_device {
       VkPipeline wait_event_pipeline;
    } events;
 
+   /* Query handling resources.
+    *
+    * Our implementation of occlusion queries uses a BO per pool to keep track
+    * of the per-query availability state and dispatches compute shaders to
+    * handle GPU query functions that read and write that state. This struct
+    * holds Vulkan resources that can be shared across all query pools to
+    * implement this. This framework may be extended in the future to handle
+    * more query types.
+    */
+   struct {
+      VkDescriptorSetLayout buf_descriptor_set_layout;
+
+      /* Set query availability */
+      VkPipelineLayout avail_pipeline_layout;
+      VkPipeline avail_pipeline;
+
+      /* Reset query availability and clear occlusion counters */
+      VkPipelineLayout reset_occlusion_pipeline_layout;
+      VkPipeline reset_occlusion_pipeline;
+
+      /* Copy query results */
+      VkPipelineLayout copy_pipeline_layout;
+      VkPipeline copy_pipeline[8];
+   } queries;
+
    struct v3dv_pipeline_cache default_pipeline_cache;
 
-   /* GL_SHADER_STATE_RECORD needs to speficy default attribute values. The
+   /* GL_SHADER_STATE_RECORD needs to specify default attribute values. The
     * following covers the most common case, that is all attributes format
     * being float being float, allowing us to reuse the same BO for all
     * pipelines matching this requirement. Pipelines that need integer
@@ -591,9 +607,8 @@ struct v3dv_device_memory {
 #define V3D_OUTPUT_IMAGE_FORMAT_NO 255
 #define TEXTURE_DATA_FORMAT_NO     255
 
-struct v3dv_format {
-   bool supported;
-
+#define V3DV_MAX_PLANE_COUNT 3
+struct v3dv_format_plane {
    /* One of V3D33_OUTPUT_IMAGE_FORMAT_*, or OUTPUT_IMAGE_FORMAT_NO */
    uint8_t rt_type;
 
@@ -609,10 +624,47 @@ struct v3dv_format {
 
    /* Whether the return value is 16F/I/UI or 32F/I/UI. */
    uint8_t return_size;
+};
+
+struct v3dv_format {
+   /* Non 0 plane count implies supported */
+   uint8_t plane_count;
+
+   struct v3dv_format_plane planes[V3DV_MAX_PLANE_COUNT];
 
    /* If the format supports (linear) filtering when texturing. */
    bool supports_filtering;
 };
+
+/* Note that although VkImageAspectFlags would allow to combine more than one
+ * PLANE bit, for all the use cases we implement that use VkImageAspectFlags,
+ * only one plane is allowed, like for example vkCmdCopyImage:
+ *
+ *   "If srcImage has a VkFormat with two planes then for each element of
+ *    pRegions, srcSubresource.aspectMask must be VK_IMAGE_ASPECT_PLANE_0_BIT
+ *    or VK_IMAGE_ASPECT_PLANE_1_BIT"
+ *
+ */
+static uint8_t v3dv_plane_from_aspect(VkImageAspectFlags aspect)
+{
+   switch (aspect) {
+   case VK_IMAGE_ASPECT_COLOR_BIT:
+   case VK_IMAGE_ASPECT_DEPTH_BIT:
+   case VK_IMAGE_ASPECT_STENCIL_BIT:
+   case VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT:
+   case VK_IMAGE_ASPECT_PLANE_0_BIT:
+   case VK_IMAGE_ASPECT_MEMORY_PLANE_0_BIT_EXT:
+      return 0;
+   case VK_IMAGE_ASPECT_PLANE_1_BIT:
+   case VK_IMAGE_ASPECT_MEMORY_PLANE_1_BIT_EXT:
+      return 1;
+   case VK_IMAGE_ASPECT_PLANE_2_BIT:
+   case VK_IMAGE_ASPECT_MEMORY_PLANE_2_BIT_EXT:
+      return 2;
+   default:
+      unreachable("invalid image aspect");
+   }
+}
 
 struct v3d_resource_slice {
    uint32_t offset;
@@ -635,16 +687,42 @@ struct v3dv_image {
    struct vk_image vk;
 
    const struct v3dv_format *format;
-   uint32_t cpp;
    bool tiled;
 
-   struct v3d_resource_slice slices[V3D_MAX_MIP_LEVELS];
-   uint64_t size; /* Total size in bytes */
-   uint32_t cube_map_stride;
+   uint8_t plane_count;
 
-   struct v3dv_device_memory *mem;
-   VkDeviceSize mem_offset;
-   uint32_t alignment;
+   /* If 0, this is a multi-plane image with use disjoint memory, where each
+    * plane binds a different device memory. Otherwise, all the planes share
+    * the same device memory and this stores the total size of the image in
+    * bytes.
+    */
+   uint32_t non_disjoint_size;
+
+   struct {
+      uint32_t cpp;
+
+      struct v3d_resource_slice slices[V3D_MAX_MIP_LEVELS];
+      /* Total size of the plane in bytes. */
+      uint64_t size;
+      uint32_t cube_map_stride;
+
+      /* If not using disjoint memory, mem and mem_offset is the same for all
+       * planes, in which case mem_offset is the offset of plane 0.
+       */
+      struct v3dv_device_memory *mem;
+      VkDeviceSize mem_offset;
+      uint32_t alignment;
+
+      /* Pre-subsampled per plane width and height
+       */
+      uint32_t width;
+      uint32_t height;
+
+      /* Even if we can get it from the parent image format, we keep the
+       * format here for convenience
+       */
+      VkFormat vk_format;
+   } planes[V3DV_MAX_PLANE_COUNT];
 
 #ifdef ANDROID
    /* Image is backed by VK_ANDROID_native_buffer, */
@@ -659,6 +737,18 @@ v3dv_image_init(struct v3dv_device *device,
                 struct v3dv_image *image);
 
 VkImageViewType v3dv_image_type_to_view_type(VkImageType type);
+
+static uint32_t
+v3dv_image_aspect_to_plane(const struct v3dv_image *image,
+                           VkImageAspectFlagBits aspect)
+{
+   assert(util_bitcount(aspect) == 1 && (aspect & image->vk.aspects));
+
+   /* Because we always put image and view planes in aspect-bit-order, the
+    * plane index is the number of bits in the image aspect before aspect.
+    */
+   return util_bitcount(image->vk.aspects & (aspect - 1));
+}
 
 /* Pre-generating packets needs to consider changes in packet sizes across hw
  * versions. Keep things simple and allocate enough space for any supported
@@ -677,36 +767,43 @@ struct v3dv_image_view {
    struct vk_image_view vk;
 
    const struct v3dv_format *format;
-   bool swap_rb;
-   bool channel_reverse;
-   uint32_t internal_bpp;
-   uint32_t internal_type;
-   uint32_t offset;
 
-   /* Precomputed (composed from createinfo->components and formar swizzle)
-    * swizzles to pass in to the shader key.
-    *
-    * This could be also included on the descriptor bo, but the shader state
-    * packet doesn't need it on a bo, so we can just avoid a memory copy
-    */
-   uint8_t swizzle[4];
+   uint8_t plane_count;
+   struct {
+      uint8_t image_plane;
 
-   /* Prepacked TEXTURE_SHADER_STATE. It will be copied to the descriptor info
-    * during UpdateDescriptorSets.
-    *
-    * Empirical tests show that cube arrays need a different shader state
-    * depending on whether they are used with a sampler or not, so for these
-    * we generate two states and select the one to use based on the descriptor
-    * type.
-    */
-   uint8_t texture_shader_state[2][V3DV_TEXTURE_SHADER_STATE_LENGTH];
+      bool swap_rb;
+      bool channel_reverse;
+      uint32_t internal_bpp;
+      uint32_t internal_type;
+      uint32_t offset;
+
+      /* Precomputed (composed from createinfo->components and formar swizzle)
+       * swizzles to pass in to the shader key.
+       *
+       * This could be also included on the descriptor bo, but the shader state
+       * packet doesn't need it on a bo, so we can just avoid a memory copy
+       */
+      uint8_t swizzle[4];
+
+      /* Prepacked TEXTURE_SHADER_STATE. It will be copied to the descriptor info
+       * during UpdateDescriptorSets.
+       *
+       * Empirical tests show that cube arrays need a different shader state
+       * depending on whether they are used with a sampler or not, so for these
+       * we generate two states and select the one to use based on the descriptor
+       * type.
+       */
+      uint8_t texture_shader_state[2][V3DV_TEXTURE_SHADER_STATE_LENGTH];
+   } planes[V3DV_MAX_PLANE_COUNT];
 };
 
 VkResult v3dv_create_image_view(struct v3dv_device *device,
                                 const VkImageViewCreateInfo *pCreateInfo,
                                 VkImageView *pView);
 
-uint32_t v3dv_layer_offset(const struct v3dv_image *image, uint32_t level, uint32_t layer);
+uint32_t v3dv_layer_offset(const struct v3dv_image *image, uint32_t level, uint32_t layer,
+                           uint8_t plane);
 
 struct v3dv_buffer {
    struct vk_object_base base;
@@ -718,6 +815,15 @@ struct v3dv_buffer {
    struct v3dv_device_memory *mem;
    VkDeviceSize mem_offset;
 };
+
+void
+v3dv_buffer_init(struct v3dv_device *device,
+                 const VkBufferCreateInfo *pCreateInfo,
+                 struct v3dv_buffer *buffer,
+                 uint32_t alignment);
+
+void
+v3dv_buffer_bind_memory(const VkBindBufferMemoryInfo *info);
 
 struct v3dv_buffer_view {
    struct vk_object_base base;
@@ -1026,7 +1132,7 @@ struct v3dv_reset_query_cpu_job_info {
    uint32_t count;
 };
 
-struct v3dv_end_query_cpu_job_info {
+struct v3dv_end_query_info {
    struct v3dv_query_pool *pool;
    uint32_t query;
 
@@ -1065,6 +1171,7 @@ struct v3dv_copy_buffer_to_image_cpu_job_info {
    uint32_t mip_level;
    uint32_t base_layer;
    uint32_t layer_count;
+   uint8_t plane;
 };
 
 struct v3dv_csd_indirect_cpu_job_info {
@@ -1218,7 +1325,7 @@ struct v3dv_job {
    /* Job specs for CPU jobs */
    union {
       struct v3dv_reset_query_cpu_job_info          query_reset;
-      struct v3dv_end_query_cpu_job_info            query_end;
+      struct v3dv_end_query_info                    query_end;
       struct v3dv_copy_query_results_cpu_job_info   query_copy_results;
       struct v3dv_copy_buffer_to_image_cpu_job_info copy_buffer_to_image;
       struct v3dv_csd_indirect_cpu_job_info         csd_indirect;
@@ -1449,7 +1556,7 @@ struct v3dv_cmd_buffer_state {
       struct {
          uint32_t used_count;
          uint32_t alloc_count;
-         struct v3dv_end_query_cpu_job_info *states;
+         struct v3dv_end_query_info *states;
       } end;
 
       struct {
@@ -1458,6 +1565,14 @@ struct v3dv_cmd_buffer_state {
           */
          struct v3dv_bo *bo;
          uint32_t offset;
+         /* When the driver emits draw calls to implement other operations in
+          * the middle of a render pass (such as an attachment clear), we need
+          * to pause occlusion query recording and resume it later so that
+          * these draw calls don't register in occlussion counters. We use
+          * this to store the BO reference in which we should resume occlusion
+          * query counters after the driver is done emitting its draw calls.
+           */
+         struct v3dv_bo *paused_bo;
 
          /* This pointer is not NULL if we have an active performance query */
          struct v3dv_perf_query *perf;
@@ -1498,13 +1613,19 @@ struct v3dv_descriptor {
 };
 
 struct v3dv_query {
+   /* Used by queries where we implement result copying in the CPU so we can
+    * tell if the relevant jobs have been submitted for execution. Currently
+    * these are all but occlusion queries.
+    */
    bool maybe_available;
+
    union {
-      /* Used by GPU queries (occlusion) */
+      /* Used by occlusion queries */
       struct {
-         struct v3dv_bo *bo;
+         /* Offset of this query in the occlusion query counter BO */
          uint32_t offset;
-      };
+      } occlusion;
+
       /* Used by CPU queries (timestamp) */
       uint64_t value;
 
@@ -1516,7 +1637,28 @@ struct v3dv_query {
 struct v3dv_query_pool {
    struct vk_object_base base;
 
-   struct v3dv_bo *bo; /* Only used with GPU queries (occlusion) */
+   /* Per-pool Vulkan resources required to implement GPU-side query
+    * functions (only occlusion queries for now).
+    */
+   struct {
+      /* Buffer to access the BO with the occlusion query results and
+       * availability info.
+       */
+      VkBuffer buf;
+      VkDeviceMemory mem;
+
+      /* Descriptor set for accessing the buffer from a pipeline. */
+      VkDescriptorPool descriptor_pool;
+      VkDescriptorSet descriptor_set;
+   } meta;
+
+   /* Only used with occlusion queries */
+   struct {
+      /* BO with the occlusion counters and query availability */
+      struct v3dv_bo *bo;
+      /* Offset of the availability info in the BO */
+      uint32_t avail_offset;
+   } occlusion;
 
    /* Only used with performance queries */
    struct {
@@ -1537,18 +1679,29 @@ struct v3dv_query_pool {
    struct v3dv_query *queries;
 };
 
-VkResult v3dv_get_query_pool_results(struct v3dv_device *device,
-                                     struct v3dv_query_pool *pool,
-                                     uint32_t first,
-                                     uint32_t count,
-                                     void *data,
-                                     VkDeviceSize stride,
-                                     VkQueryResultFlags flags);
+VkResult
+v3dv_query_allocate_resources(struct v3dv_device *decice);
 
-void v3dv_reset_query_pools(struct v3dv_device *device,
-                            struct v3dv_query_pool *query_pool,
-                            uint32_t first,
-                            uint32_t last);
+void
+v3dv_query_free_resources(struct v3dv_device *decice);
+
+VkResult v3dv_get_query_pool_results_cpu(struct v3dv_device *device,
+                                         struct v3dv_query_pool *pool,
+                                         uint32_t first,
+                                         uint32_t count,
+                                         void *data,
+                                         VkDeviceSize stride,
+                                         VkQueryResultFlags flags);
+
+void v3dv_reset_query_pool_cpu(struct v3dv_device *device,
+                               struct v3dv_query_pool *query_pool,
+                               uint32_t first,
+                               uint32_t last);
+
+void v3dv_cmd_buffer_emit_set_query_availability(struct v3dv_cmd_buffer *cmd_buffer,
+                                                 struct v3dv_query_pool *pool,
+                                                 uint32_t query, uint32_t count,
+                                                 uint8_t availability);
 
 typedef void (*v3dv_cmd_buffer_private_obj_destroy_cb)(VkDevice device,
                                                        uint64_t pobj,
@@ -1565,12 +1718,6 @@ struct v3dv_cmd_buffer {
    struct vk_command_buffer vk;
 
    struct v3dv_device *device;
-
-   /* Used at submit time to link command buffers in the submission that have
-    * spawned wait threads, so we can then wait on all of them to complete
-    * before we process any signal sempahores or fences.
-    */
-   struct list_head list_link;
 
    VkCommandBufferUsageFlags usage_flags;
 
@@ -1597,6 +1744,10 @@ struct v3dv_cmd_buffer {
          /* The current descriptor pool for texel buffer copy sources */
          VkDescriptorPool dspool;
       } texel_buffer_copy;
+      struct {
+         /* The current descriptor pool for the copy query results output buffer */
+         VkDescriptorPool dspool;
+      } query;
    } meta;
 
    /* List of jobs in the command buffer. For primary command buffers it
@@ -1624,15 +1775,13 @@ void v3dv_cmd_buffer_meta_state_push(struct v3dv_cmd_buffer *cmd_buffer,
 void v3dv_cmd_buffer_meta_state_pop(struct v3dv_cmd_buffer *cmd_buffer,
                                     bool needs_subpass_resume);
 
-void v3dv_cmd_buffer_reset_queries(struct v3dv_cmd_buffer *cmd_buffer,
-                                   struct v3dv_query_pool *pool,
-                                   uint32_t first,
-                                   uint32_t count);
-
 void v3dv_cmd_buffer_begin_query(struct v3dv_cmd_buffer *cmd_buffer,
                                  struct v3dv_query_pool *pool,
                                  uint32_t query,
                                  VkQueryControlFlags flags);
+
+void v3dv_cmd_buffer_pause_occlusion_query(struct v3dv_cmd_buffer *cmd_buffer);
+void v3dv_cmd_buffer_resume_occlusion_query(struct v3dv_cmd_buffer *cmd_buffer);
 
 void v3dv_cmd_buffer_end_query(struct v3dv_cmd_buffer *cmd_buffer,
                                struct v3dv_query_pool *pool,
@@ -1680,6 +1829,9 @@ void v3dv_cmd_buffer_emit_pipeline_barrier(struct v3dv_cmd_buffer *cmd_buffer,
 
 struct v3dv_event {
    struct vk_object_base base;
+
+   /* Link in the device list of pre-allocated free events */
+   struct list_head link;
 
    /* Each event gets a different index, which we use to compute the offset
     * in the BO we use to track their state (signaled vs reset).
@@ -1829,7 +1981,7 @@ struct v3dv_descriptor_set_binding_layout {
    /* Number of array elements in this binding */
    uint32_t array_size;
 
-   /* Index into the flattend descriptor set */
+   /* Index into the flattened descriptor set */
    uint32_t descriptor_index;
 
    uint32_t dynamic_offset_count;
@@ -1844,6 +1996,11 @@ struct v3dv_descriptor_set_binding_layout {
     * if there are no immutable samplers.
     */
    uint32_t immutable_samplers_offset;
+
+   /* Descriptors for multiplanar combined image samplers are larger.
+    * For mutable descriptors, this is always 1.
+    */
+   uint8_t plane_stride;
 };
 
 struct v3dv_descriptor_set_layout {
@@ -1961,6 +2118,7 @@ struct v3dv_descriptor_map {
    int binding[DESCRIPTOR_MAP_SIZE];
    int array_index[DESCRIPTOR_MAP_SIZE];
    int array_size[DESCRIPTOR_MAP_SIZE];
+   uint8_t plane[DESCRIPTOR_MAP_SIZE];
    bool used[DESCRIPTOR_MAP_SIZE];
 
    /* NOTE: the following is only for sampler, but this is the easier place to
@@ -1971,55 +2129,18 @@ struct v3dv_descriptor_map {
 
 struct v3dv_sampler {
    struct vk_object_base base;
+   struct vk_ycbcr_conversion *conversion;
 
    bool compare_enable;
    bool unnormalized_coordinates;
 
-   /* Prepacked SAMPLER_STATE, that is referenced as part of the tmu
+   /* Prepacked per plane SAMPLER_STATE, that is referenced as part of the tmu
     * configuration. If needed it will be copied to the descriptor info during
     * UpdateDescriptorSets
     */
+   uint8_t plane_count;
    uint8_t sampler_state[V3DV_SAMPLER_STATE_LENGTH];
 };
-
-struct v3dv_descriptor_template_entry {
-   /* The type of descriptor in this entry */
-   VkDescriptorType type;
-
-   /* Binding in the descriptor set */
-   uint32_t binding;
-
-   /* Offset at which to write into the descriptor set binding */
-   uint32_t array_element;
-
-   /* Number of elements to write into the descriptor set binding */
-   uint32_t array_count;
-
-   /* Offset into the user provided data */
-   size_t offset;
-
-   /* Stride between elements into the user provided data */
-   size_t stride;
-};
-
-struct v3dv_descriptor_update_template {
-   struct vk_object_base base;
-
-   VkPipelineBindPoint bind_point;
-
-   /* The descriptor set this template corresponds to. This value is only
-    * valid if the template was created with the templateType
-    * VK_DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET.
-    */
-   uint8_t set;
-
-   /* Number of entries in this template */
-   uint32_t entry_count;
-
-   /* Entries of the template */
-   struct v3dv_descriptor_template_entry entries[0];
-};
-
 
 /* We keep two special values for the sampler idx that represents exactly when a
  * sampler is not needed/provided. The main use is that even if we don't have
@@ -2240,8 +2361,8 @@ uint32_t v3dv_physical_device_device_id(struct v3dv_physical_device *dev);
 #define v3dv_debug_ignored_stype(sType) \
    mesa_logd("%s: ignored VkStructureType %u:%s\n\n", __func__, (sType), vk_StructureType_to_str(sType))
 
-const uint8_t *v3dv_get_format_swizzle(struct v3dv_device *device, VkFormat f);
-uint8_t v3dv_get_tex_return_size(const struct v3dv_format *vf, bool compare_enable);
+const uint8_t *v3dv_get_format_swizzle(struct v3dv_device *device, VkFormat f,
+                                       uint8_t plane);
 const struct v3dv_format *
 v3dv_get_compatible_tfu_format(struct v3dv_device *device,
                                uint32_t bpp, VkFormat *out_vk_format);
@@ -2379,6 +2500,12 @@ struct v3dv_bo *
 v3dv_pipeline_create_default_attribute_values(struct v3dv_device *device,
                                               struct v3dv_pipeline *pipeline);
 
+VkResult
+v3dv_create_compute_pipeline_from_nir(struct v3dv_device *device,
+                                      nir_shader *nir,
+                                      VkPipelineLayout pipeline_layout,
+                                      VkPipeline *pipeline);
+
 #define V3DV_FROM_HANDLE(__v3dv_type, __name, __handle)			\
    VK_FROM_HANDLE(__v3dv_type, __name, __handle)
 
@@ -2404,9 +2531,6 @@ VK_DEFINE_NONDISP_HANDLE_CASTS(v3dv_descriptor_set, base, VkDescriptorSet,
 VK_DEFINE_NONDISP_HANDLE_CASTS(v3dv_descriptor_set_layout, base,
                                VkDescriptorSetLayout,
                                VK_OBJECT_TYPE_DESCRIPTOR_SET_LAYOUT)
-VK_DEFINE_NONDISP_HANDLE_CASTS(v3dv_descriptor_update_template, base,
-                               VkDescriptorUpdateTemplate,
-                               VK_OBJECT_TYPE_DESCRIPTOR_UPDATE_TEMPLATE)
 VK_DEFINE_NONDISP_HANDLE_CASTS(v3dv_event, base, VkEvent, VK_OBJECT_TYPE_EVENT)
 VK_DEFINE_NONDISP_HANDLE_CASTS(v3dv_framebuffer, base, VkFramebuffer,
                                VK_OBJECT_TYPE_FRAMEBUFFER)
@@ -2473,7 +2597,7 @@ u64_compare(const void *key1, const void *key2)
    return memcmp(key1, key2, sizeof(uint64_t)) == 0;
 }
 
-/* Helper to call hw ver speficic functions */
+/* Helper to call hw ver specific functions */
 #define v3dv_X(device, thing) ({                      \
    __typeof(&v3d42_##thing) v3d_X_thing;              \
    switch (device->devinfo.ver) {                     \

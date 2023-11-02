@@ -61,9 +61,9 @@ type_map = {
 
 def bool_map(value):
     if value:
-        return "TRUE"
+        return "true"
     else:
-        return "FALSE"
+        return "false"
 
 
 swizzle_map = {
@@ -90,6 +90,7 @@ def has_access(format):
         'p010',
         'p012',
         'p016',
+        'p030',
         'y210',
         'y212',
         'y216',
@@ -142,7 +143,16 @@ def write_format_table(formats):
 
     write_format_table_header(sys.stdout2)
 
+    print('#ifdef __cplusplus', file=sys.stdout2)
+    print('extern "C" {', file=sys.stdout2)
+    print('#endif', file=sys.stdout2)
+    print(file=sys.stdout2)
+
     u_format_pack.generate(formats)
+
+    print('#ifdef __cplusplus', file=sys.stdout2)
+    print('} /* extern "C" */', file=sys.stdout2)
+    print('#endif', file=sys.stdout2)
 
     def do_channel_array(channels, swizzles):
         print("   {")

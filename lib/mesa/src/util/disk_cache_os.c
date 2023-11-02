@@ -124,7 +124,7 @@ mkdir_if_needed(const char *path)
       }
    }
 
-   int ret = mkdir(path, 0755);
+   int ret = mkdir(path, 0700);
    if (ret == 0 || (ret == -1 && errno == EEXIST))
      return 0;
 
@@ -841,12 +841,13 @@ disk_cache_write_item_to_disk(struct disk_cache_put_job *dc_job,
  */
 char *
 disk_cache_generate_cache_dir(void *mem_ctx, const char *gpu_name,
-                              const char *driver_id)
+                              const char *driver_id,
+                              enum disk_cache_type cache_type)
 {
    char *cache_dir_name = CACHE_DIR_NAME;
-   if (debug_get_bool_option("MESA_DISK_CACHE_SINGLE_FILE", false))
+   if (cache_type == DISK_CACHE_SINGLE_FILE)
       cache_dir_name = CACHE_DIR_NAME_SF;
-   else if (debug_get_bool_option("MESA_DISK_CACHE_DATABASE", false))
+   else if (cache_type == DISK_CACHE_DATABASE)
       cache_dir_name = CACHE_DIR_NAME_DB;
 
    char *path = getenv("MESA_SHADER_CACHE_DIR");
@@ -916,7 +917,7 @@ disk_cache_generate_cache_dir(void *mem_ctx, const char *gpu_name,
          return NULL;
    }
 
-   if (debug_get_bool_option("MESA_DISK_CACHE_SINGLE_FILE", false)) {
+   if (cache_type == DISK_CACHE_SINGLE_FILE) {
       path = concatenate_and_mkdir(mem_ctx, path, driver_id);
       if (!path)
          return NULL;
@@ -1018,8 +1019,20 @@ disk_cache_mmap_cache_index(void *mem_ctx, struct disk_cache *cache,
    /* Force the index file to be the expected size. */
    size_t size = sizeof(*cache->size) + CACHE_INDEX_MAX_KEYS * CACHE_KEY_SIZE;
    if (sb.st_size != size) {
+#if HAVE_POSIX_FALLOCATE
+      /* posix_fallocate() ensures disk space is allocated otherwise it
+       * fails if there is not enough space on the disk.
+       */
+      if (posix_fallocate(fd, 0, size) != 0)
+         goto path_fail;
+#else
+      /* ftruncate() allocates disk space lazily. If the disk is full
+       * and it is unable to allocate disk space when accessed via
+       * mmap, it will crash with a SIGBUS.
+       */
       if (ftruncate(fd, size) == -1)
          goto path_fail;
+#endif
    }
 
    /* We map this shared so that other processes see updates that we
@@ -1065,8 +1078,8 @@ disk_cache_db_load_item(struct disk_cache *cache, const cache_key key,
                         size_t *size)
 {
    size_t cache_tem_size = 0;
-   void *cache_item = mesa_cache_db_read_entry(&cache->cache_db, key,
-                                               &cache_tem_size);
+   void *cache_item = mesa_cache_db_multipart_read_entry(&cache->cache_db,
+                                                         key, &cache_tem_size);
    if (!cache_item)
       return NULL;
 
@@ -1086,8 +1099,9 @@ disk_cache_db_write_item_to_disk(struct disk_cache_put_job *dc_job)
    if (!create_cache_item_header_and_blob(dc_job, &cache_blob))
       return false;
 
-   bool r = mesa_cache_db_entry_write(&dc_job->cache->cache_db, dc_job->key,
-                                      cache_blob.data, cache_blob.size);
+   bool r = mesa_cache_db_multipart_entry_write(&dc_job->cache->cache_db,
+                                                dc_job->key, cache_blob.data,
+                                                cache_blob.size);
 
    blob_finish(&cache_blob);
    return r;
@@ -1096,7 +1110,7 @@ disk_cache_db_write_item_to_disk(struct disk_cache_put_job *dc_job)
 bool
 disk_cache_db_load_cache_index(void *mem_ctx, struct disk_cache *cache)
 {
-   return mesa_cache_db_open(&cache->cache_db, cache->path);
+   return mesa_cache_db_multipart_open(&cache->cache_db, cache->path);
 }
 #endif
 

@@ -49,6 +49,10 @@ raw_data_object_create(struct vk_device *device,
                        const void *key_data, size_t key_size,
                        const void *data, size_t data_size);
 
+#define vk_pipeline_cache_log(cache, ...)                                      \
+   if (cache->base.client_visible)                                             \
+      vk_logw(VK_LOG_OBJS(cache), __VA_ARGS__)
+
 static bool
 raw_data_object_serialize(struct vk_pipeline_cache_object *object,
                           struct blob *blob)
@@ -62,7 +66,7 @@ raw_data_object_serialize(struct vk_pipeline_cache_object *object,
 }
 
 static struct vk_pipeline_cache_object *
-raw_data_object_deserialize(struct vk_device *device,
+raw_data_object_deserialize(struct vk_pipeline_cache *cache,
                             const void *key_data,
                             size_t key_size,
                             struct blob_reader *blob)
@@ -77,18 +81,20 @@ raw_data_object_deserialize(struct vk_device *device,
    const void *data = blob_read_bytes(blob, data_size);
 
    struct raw_data_object *data_obj =
-      raw_data_object_create(device, key_data, key_size, data, data_size);
+      raw_data_object_create(cache->base.device, key_data, key_size, data,
+                             data_size);
 
    return data_obj ? &data_obj->base : NULL;
 }
 
 static void
-raw_data_object_destroy(struct vk_pipeline_cache_object *object)
+raw_data_object_destroy(struct vk_device *device,
+                        struct vk_pipeline_cache_object *object)
 {
    struct raw_data_object *data_obj =
       container_of(object, struct raw_data_object, base);
 
-   vk_free(&data_obj->base.device->alloc, data_obj);
+   vk_free(&device->alloc, data_obj);
 }
 
 static const struct vk_pipeline_cache_object_ops raw_data_object_ops = {
@@ -165,14 +171,14 @@ vk_pipeline_cache_remove_object(struct vk_pipeline_cache *cache,
       _mesa_set_search_pre_hashed(cache->object_cache, hash, object);
    if (entry && entry->key == (const void *)object) {
       /* Drop the reference owned by the cache */
-      vk_pipeline_cache_object_unref(object);
+      vk_pipeline_cache_object_unref(cache->base.device, object);
 
       _mesa_set_remove(cache->object_cache, entry);
    }
    vk_pipeline_cache_unlock(cache);
 
    /* Drop our reference */
-   vk_pipeline_cache_object_unref(object);
+   vk_pipeline_cache_object_unref(cache->base.device, object);
 }
 
 /* Consumes references to both search and replace and produces a reference */
@@ -192,7 +198,7 @@ vk_pipeline_cache_replace_object(struct vk_pipeline_cache *cache,
    if (entry) {
       if (entry->key == (const void *)search) {
          /* Drop the reference owned by the cache */
-         vk_pipeline_cache_object_unref(search);
+         vk_pipeline_cache_object_unref(cache->base.device, search);
 
          entry->key = vk_pipeline_cache_object_ref(replace);
       } else {
@@ -205,10 +211,10 @@ vk_pipeline_cache_replace_object(struct vk_pipeline_cache *cache,
    }
    vk_pipeline_cache_unlock(cache);
 
-   vk_pipeline_cache_object_unref(search);
+   vk_pipeline_cache_object_unref(cache->base.device, search);
 
    if (found) {
-      vk_pipeline_cache_object_unref(replace);
+      vk_pipeline_cache_object_unref(cache->base.device, replace);
       return found;
    } else {
       return replace;
@@ -241,21 +247,19 @@ vk_pipeline_cache_object_serialize(struct vk_pipeline_cache *cache,
    }
 
    if (!object->ops->serialize(object, blob)) {
-      vk_logw(VK_LOG_OBJS(cache),
-              "Failed to serialize pipeline cache object");
+      vk_pipeline_cache_log(cache, "Failed to serialize pipeline cache object");
       return false;
    }
 
    size_t size = blob->size - start;
    if (size > UINT32_MAX) {
-      vk_logw(VK_LOG_OBJS(cache),
-              "Skipping giant (4 GiB or larger) object");
+      vk_pipeline_cache_log(cache, "Skipping giant (4 GiB or larger) object");
       return false;
    }
 
    if (blob->out_of_memory) {
-      vk_logw(VK_LOG_OBJS(cache),
-              "Insufficient memory for pipeline cache data");
+      vk_pipeline_cache_log(cache,
+                            "Insufficient memory for pipeline cache data");
       return false;
    }
 
@@ -275,8 +279,8 @@ vk_pipeline_cache_object_deserialize(struct vk_pipeline_cache *cache,
       ops = &raw_data_object_ops;
 
    if (unlikely(ops->deserialize == NULL)) {
-      vk_logw(VK_LOG_OBJS(cache),
-              "Pipeline cache object cannot be deserialized");
+      vk_pipeline_cache_log(cache,
+                            "Pipeline cache object cannot be deserialized");
       return NULL;
    }
 
@@ -284,22 +288,58 @@ vk_pipeline_cache_object_deserialize(struct vk_pipeline_cache *cache,
    blob_reader_init(&reader, data, data_size);
 
    struct vk_pipeline_cache_object *object =
-      ops->deserialize(cache->base.device, key_data, key_size, &reader);
+      ops->deserialize(cache, key_data, key_size, &reader);
 
-   if (object == NULL) {
-      vk_logw(VK_LOG_OBJS(cache),
-              "Deserializing pipeline cache object failed");
+   if (object == NULL)
       return NULL;
-   }
 
    assert(reader.current == reader.end && !reader.overrun);
-   assert(object->device == cache->base.device);
    assert(object->ops == ops);
    assert(object->ref_cnt == 1);
    assert(object->key_size == key_size);
    assert(memcmp(object->key_data, key_data, key_size) == 0);
 
    return object;
+}
+
+static struct vk_pipeline_cache_object *
+vk_pipeline_cache_insert_object(struct vk_pipeline_cache *cache,
+                                struct vk_pipeline_cache_object *object)
+{
+   assert(object->ops != NULL);
+
+   if (cache->object_cache == NULL)
+      return object;
+
+   uint32_t hash = object_key_hash(object);
+
+   vk_pipeline_cache_lock(cache);
+   bool found = false;
+   struct set_entry *entry = _mesa_set_search_or_add_pre_hashed(
+       cache->object_cache, hash, object, &found);
+
+   struct vk_pipeline_cache_object *result = NULL;
+   /* add reference to either the found or inserted object */
+   if (found) {
+       struct vk_pipeline_cache_object *found_object = (void *)entry->key;
+       if (found_object->ops != object->ops) {
+          /* The found object in the cache isn't fully formed. Replace it. */
+          assert(found_object->ops == &raw_data_object_ops);
+          assert(object->ref_cnt == 1);
+          entry->key = object;
+          object = found_object;
+       }
+
+      result = vk_pipeline_cache_object_ref((void *)entry->key);
+   } else {
+      result = vk_pipeline_cache_object_ref(object);
+   }
+   vk_pipeline_cache_unlock(cache);
+
+   if (found) {
+      vk_pipeline_cache_object_unref(cache->base.device, object);
+   }
+   return result;
 }
 
 struct vk_pipeline_cache_object *
@@ -349,8 +389,9 @@ vk_pipeline_cache_lookup_object(struct vk_pipeline_cache *cache,
                                                           data, data_size,
                                                           ops);
             free(data);
-            if (object != NULL)
-               return vk_pipeline_cache_add_object(cache, object);
+            if (object != NULL) {
+               return vk_pipeline_cache_insert_object(cache, object);
+            }
          }
       }
 #endif
@@ -373,6 +414,9 @@ vk_pipeline_cache_lookup_object(struct vk_pipeline_cache *cache,
                                               data_obj->data,
                                               data_obj->data_size, ops);
       if (real_object == NULL) {
+         vk_pipeline_cache_log(cache,
+                               "Deserializing pipeline cache object failed");
+
          vk_pipeline_cache_remove_object(cache, hash, object);
          return NULL;
       }
@@ -390,37 +434,15 @@ struct vk_pipeline_cache_object *
 vk_pipeline_cache_add_object(struct vk_pipeline_cache *cache,
                              struct vk_pipeline_cache_object *object)
 {
-   assert(object->ops != NULL);
+   struct vk_pipeline_cache_object *inserted =
+       vk_pipeline_cache_insert_object(cache, object);
 
-   if (cache->object_cache == NULL)
-      return object;
-
-   uint32_t hash = object_key_hash(object);
-
-   vk_pipeline_cache_lock(cache);
-   bool found = false;
-   struct set_entry *entry =
-      _mesa_set_search_or_add_pre_hashed(cache->object_cache,
-                                         hash, object, &found);
-
-   struct vk_pipeline_cache_object *found_object = NULL;
-   if (found) {
-      found_object = vk_pipeline_cache_object_ref((void *)entry->key);
-   } else {
-      /* The cache now owns a reference */
-      vk_pipeline_cache_object_ref(object);
-   }
-   vk_pipeline_cache_unlock(cache);
-
-   if (found) {
-      vk_pipeline_cache_object_unref(object);
-      return found_object;
-   } else {
+#ifdef ENABLE_SHADER_CACHE
+   if (object == inserted) {
       /* If it wasn't in the object cache, it might not be in the disk cache
        * either.  Better try and add it.
        */
 
-#ifdef ENABLE_SHADER_CACHE
       struct disk_cache *disk_cache = cache->base.device->physical->disk_cache;
       if (object->ops->serialize != NULL && disk_cache) {
          struct blob blob;
@@ -436,10 +458,35 @@ vk_pipeline_cache_add_object(struct vk_pipeline_cache *cache,
 
          blob_finish(&blob);
       }
+   }
 #endif
 
-      return object;
+   return inserted;
+}
+
+struct vk_pipeline_cache_object *
+vk_pipeline_cache_create_and_insert_object(struct vk_pipeline_cache *cache,
+                                           const void *key_data, uint32_t key_size,
+                                           const void *data, size_t data_size,
+                                           const struct vk_pipeline_cache_object_ops *ops)
+{
+#ifdef ENABLE_SHADER_CACHE
+   struct disk_cache *disk_cache = cache->base.device->physical->disk_cache;
+   if (disk_cache) {
+      cache_key cache_key;
+      disk_cache_compute_key(disk_cache, key_data, key_size, cache_key);
+      disk_cache_put(disk_cache, cache_key, data, data_size, NULL);
    }
+#endif
+
+   struct vk_pipeline_cache_object *object =
+       vk_pipeline_cache_object_deserialize(cache, key_data, key_size, data,
+                                            data_size, ops);
+
+   if (object)
+      object = vk_pipeline_cache_insert_object(cache, object);
+
+   return object;
 }
 
 nir_shader *
@@ -461,7 +508,7 @@ vk_pipeline_cache_lookup_nir(struct vk_pipeline_cache *cache,
    blob_reader_init(&blob, data_obj->data, data_obj->data_size);
 
    nir_shader *nir = nir_deserialize(mem_ctx, nir_options, &blob);
-   vk_pipeline_cache_object_unref(object);
+   vk_pipeline_cache_object_unref(cache->base.device, object);
 
    if (blob.overrun) {
       ralloc_free(nir);
@@ -481,7 +528,7 @@ vk_pipeline_cache_add_nir(struct vk_pipeline_cache *cache,
 
    nir_serialize(&blob, nir, false);
    if (blob.out_of_memory) {
-      vk_logw(VK_LOG_OBJS(cache), "Ran out of memory serializing NIR shader");
+      vk_pipeline_cache_log(cache, "Ran out of memory serializing NIR shader");
       blob_finish(&blob);
       return;
    }
@@ -494,7 +541,7 @@ vk_pipeline_cache_add_nir(struct vk_pipeline_cache *cache,
 
    struct vk_pipeline_cache_object *cached =
       vk_pipeline_cache_add_object(cache, &data_obj->base);
-   vk_pipeline_cache_object_unref(cached);
+   vk_pipeline_cache_object_unref(cache->base.device, cached);
 }
 
 static int32_t
@@ -558,14 +605,15 @@ vk_pipeline_cache_load(struct vk_pipeline_cache *cache,
          find_ops_for_type(cache->base.device->physical, type);
 
       struct vk_pipeline_cache_object *object =
-         vk_pipeline_cache_object_deserialize(cache,
-                                              key_data, key_size,
-                                              data, data_size, ops);
-      if (object == NULL)
-         continue;
+         vk_pipeline_cache_create_and_insert_object(cache, key_data, key_size,
+                                                    data, data_size, ops);
 
-      object = vk_pipeline_cache_add_object(cache, object);
-      vk_pipeline_cache_object_unref(object);
+      if (object == NULL) {
+         vk_pipeline_cache_log(cache, "Failed to load pipeline cache object");
+         continue;
+      }
+
+      vk_pipeline_cache_object_unref(cache->base.device, object);
    }
 }
 
@@ -619,18 +667,17 @@ vk_pipeline_cache_create(struct vk_device *device,
    return cache;
 }
 
-static void
-object_unref_cb(struct set_entry *entry)
-{
-   vk_pipeline_cache_object_unref((void *)entry->key);
-}
-
 void
 vk_pipeline_cache_destroy(struct vk_pipeline_cache *cache,
                           const VkAllocationCallbacks *pAllocator)
 {
-   if (cache->object_cache)
-      _mesa_set_destroy(cache->object_cache, object_unref_cb);
+   if (cache->object_cache) {
+      set_foreach_remove(cache->object_cache, entry) {
+         vk_pipeline_cache_object_unref(cache->base.device,
+                                        (void *)entry->key);
+      }
+      _mesa_set_destroy(cache->object_cache, NULL);
+   }
    simple_mtx_destroy(&cache->lock);
    vk_object_free(cache->base.device, pAllocator, cache);
 }
@@ -714,7 +761,10 @@ vk_common_GetPipelineCacheData(VkDevice _device,
          intptr_t data_size_resv = blob_reserve_uint32(&blob);
          blob_write_bytes(&blob, object->key_data, object->key_size);
 
-         blob_align(&blob, VK_PIPELINE_CACHE_BLOB_ALIGN);
+         if (!blob_align(&blob, VK_PIPELINE_CACHE_BLOB_ALIGN)) {
+            result = VK_INCOMPLETE;
+            break;
+         }
 
          uint32_t data_size;
          if (!vk_pipeline_cache_object_serialize(cache, object,
@@ -734,6 +784,8 @@ vk_common_GetPipelineCacheData(VkDevice _device,
 
          assert(data_size_resv >= 0);
          blob_overwrite_uint32(&blob, data_size_resv, data_size);
+
+         count++;
       }
    }
 
@@ -749,12 +801,14 @@ vk_common_GetPipelineCacheData(VkDevice _device,
 }
 
 VKAPI_ATTR VkResult VKAPI_CALL
-vk_common_MergePipelineCaches(VkDevice device,
+vk_common_MergePipelineCaches(VkDevice _device,
                               VkPipelineCache dstCache,
                               uint32_t srcCacheCount,
                               const VkPipelineCache *pSrcCaches)
 {
    VK_FROM_HANDLE(vk_pipeline_cache, dst, dstCache);
+   VK_FROM_HANDLE(vk_device, device, _device);
+   assert(dst->base.device == device);
 
    if (!dst->object_cache)
       return VK_SUCCESS;
@@ -763,6 +817,7 @@ vk_common_MergePipelineCaches(VkDevice device,
 
    for (uint32_t i = 0; i < srcCacheCount; i++) {
       VK_FROM_HANDLE(vk_pipeline_cache, src, pSrcCaches[i]);
+      assert(src->base.device == device);
 
       if (!src->object_cache)
          continue;
@@ -788,7 +843,7 @@ vk_common_MergePipelineCaches(VkDevice device,
                /* Even though dst has the object, it only has the blob version
                 * which isn't as useful.  Replace it with the real object.
                 */
-               vk_pipeline_cache_object_unref(dst_object);
+               vk_pipeline_cache_object_unref(device, dst_object);
                dst_entry->key = vk_pipeline_cache_object_ref(src_object);
             }
          } else {

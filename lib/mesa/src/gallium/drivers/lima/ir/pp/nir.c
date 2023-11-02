@@ -552,7 +552,7 @@ static bool ppir_emit_tex(ppir_block *block, nir_instr *ni)
       load->num_components = instr->coord_components;
 
       ppir_debug("%s create load_coords node %d for %d\n",
-                 __FUNCTION__, load->index, node->node.index);
+                 __func__, load->index, node->node.index);
 
       ppir_node_foreach_pred_safe((&node->node), dep) {
          ppir_node *pred = dep->pred;
@@ -733,6 +733,7 @@ static bool ppir_emit_if(ppir_compiler *comp, nir_if *if_stmt)
 
 static bool ppir_emit_loop(ppir_compiler *comp, nir_loop *nloop)
 {
+   assert(!nir_loop_has_continue_construct(nloop));
    ppir_block *save_loop_cont_block = comp->loop_cont_block;
    ppir_block *block;
    ppir_branch_node *loop_branch;

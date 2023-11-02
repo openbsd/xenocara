@@ -12,7 +12,7 @@ $depsInstallPath="C:\mesa-deps"
 
 Get-Date
 Write-Host "Cloning DirectX-Headers"
-git clone -b v1.606.4 --depth=1 https://github.com/microsoft/DirectX-Headers deps/DirectX-Headers
+git clone -b v1.710.0-preview --depth=1 https://github.com/microsoft/DirectX-Headers deps/DirectX-Headers
 if (!$?) {
   Write-Host "Failed to clone DirectX-Headers repository"
   Exit 1
@@ -64,10 +64,9 @@ if (!$?) {
 }
 
 Push-Location -Path ".\deps\libva"
-Write-Host "Checking out libva commit 2579eb0f77897dc01a02c1e43defc63c40fd2988"
-# Checking out commit hash with libva-win32 support
-# This feature will be released with libva version 2.17
-git checkout 2579eb0f77897dc01a02c1e43defc63c40fd2988
+Write-Host "Checking out libva df3c584bb79d1a1e521372d62fa62e8b1c52ce6c"
+# libva-win32 is released with libva version 2.17 (see https://github.com/intel/libva/releases/tag/2.17.0)
+git checkout 2.17.0
 Pop-Location
 
 Write-Host "Building libva"
@@ -85,26 +84,20 @@ if (!$buildstatus) {
 }
 
 Get-Date
-Write-Host "Cloning LLVM release/12.x"
-git clone -b release/12.x --depth=1 https://github.com/llvm/llvm-project deps/llvm-project
+Write-Host "Cloning LLVM release/15.x"
+git clone -b release/15.x --depth=1 https://github.com/llvm/llvm-project deps/llvm-project
 if (!$?) {
   Write-Host "Failed to clone LLVM repository"
   Exit 1
 }
 
-# ideally we want to use a tag here insted of a sha,
-# but as of today, SPIRV-LLVM-Translator doesn't have
-# a tag matching LLVM 12.0.0
 Get-Date
 Write-Host "Cloning SPIRV-LLVM-Translator"
-git clone https://github.com/KhronosGroup/SPIRV-LLVM-Translator deps/llvm-project/llvm/projects/SPIRV-LLVM-Translator
+git clone -b llvm_release_150 https://github.com/KhronosGroup/SPIRV-LLVM-Translator deps/llvm-project/llvm/projects/SPIRV-LLVM-Translator
 if (!$?) {
   Write-Host "Failed to clone SPIRV-LLVM-Translator repository"
   Exit 1
 }
-Push-Location deps/llvm-project/llvm/projects/SPIRV-LLVM-Translator
-git checkout 5b641633b3bcc3251a52260eee11db13a79d7258
-Pop-Location
 
 Get-Date
 # slightly convoluted syntax but avoids the CWD being under the PS filesystem meta-path

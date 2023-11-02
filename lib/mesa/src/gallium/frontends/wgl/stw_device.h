@@ -35,6 +35,7 @@
 #include "util/u_dynarray.h"
 #include "util/xmlconfig.h"
 #include <GL/gl.h>
+#include "stw_gdishim.h"
 #include "gldrv.h"
 #include "stw_pixelformat.h"
 
@@ -43,7 +44,7 @@ extern "C" {
 #endif
 
 struct pipe_screen;
-struct st_manager;
+struct pipe_frontend_screen;
 struct stw_framebuffer;
 
 struct stw_device
@@ -57,7 +58,7 @@ struct stw_device
    /* Cache some PIPE_CAP_* */
    unsigned max_2d_length;
 
-   struct st_manager *smapi;
+   struct pipe_frontend_screen *fscreen;
 
    LUID AdapterLuid;
 

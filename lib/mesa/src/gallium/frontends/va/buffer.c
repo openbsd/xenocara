@@ -57,7 +57,11 @@ vlVaCreateBuffer(VADriverContextP ctx, VAContextID context, VABufferType type,
    buf->type = type;
    buf->size = size;
    buf->num_elements = num_elements;
-   buf->data = MALLOC(size * num_elements);
+
+   if (buf->type == VAEncCodedBufferType)
+      buf->data = CALLOC(1, sizeof(VACodedBufferSegment));
+   else
+      buf->data = MALLOC(size * num_elements);
 
    if (!buf->data) {
       FREE(buf);
@@ -149,7 +153,9 @@ vlVaMapBuffer(VADriverContextP ctx, VABufferID buf_id, void **pbuff)
       else
          map_func = drv->pipe->texture_map;
 
-      *pbuff = map_func(drv->pipe, resource, 0, PIPE_MAP_WRITE,
+      *pbuff = map_func(drv->pipe, resource, 0,
+                        buf->type == VAEncCodedBufferType ?
+                        PIPE_MAP_READ : PIPE_MAP_WRITE,
                         &box, &buf->derived_surface.transfer);
       mtx_unlock(&drv->mutex);
 
@@ -159,7 +165,6 @@ vlVaMapBuffer(VADriverContextP ctx, VABufferID buf_id, void **pbuff)
       if (buf->type == VAEncCodedBufferType) {
          ((VACodedBufferSegment*)buf->data)->buf = *pbuff;
          ((VACodedBufferSegment*)buf->data)->size = buf->coded_size;
-         ((VACodedBufferSegment*)buf->data)->next = NULL;
          *pbuff = buf->data;
       }
    } else {
@@ -208,6 +213,9 @@ vlVaUnmapBuffer(VADriverContextP ctx, VABufferID buf_id)
 
       unmap_func(drv->pipe, buf->derived_surface.transfer);
       buf->derived_surface.transfer = NULL;
+
+      if (buf->type == VAImageBufferType)
+         drv->pipe->flush(drv->pipe, NULL, 0);
    }
    mtx_unlock(&drv->mutex);
 

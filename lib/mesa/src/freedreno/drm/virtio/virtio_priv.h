@@ -131,12 +131,6 @@ struct virtio_pipe {
    struct slab_parent_pool ring_pool;
 
    /**
-    * If we *ever* see an in-fence-fd, assume that userspace is
-    * not relying on implicit fences.
-    */
-   bool no_implicit_sync;
-
-   /**
     * We know that the kernel allocated fence seqno's sequentially per-
     * submitqueue in a range 1..INT_MAX, which is incremented *after* any
     * point where the submit ioctl could be restarted.  So we just *guess*
@@ -191,6 +185,7 @@ int virtio_execbuf_fenced(struct fd_device *dev, struct msm_ccmd_req *req,
                           uint32_t *handles, uint32_t num_handles,
                           int in_fence_fd, int *out_fence_fd, int ring_idx);
 int virtio_execbuf_flush(struct fd_device *dev);
+int virtio_execbuf_flush_locked(struct fd_device *dev);
 int virtio_execbuf(struct fd_device *dev, struct msm_ccmd_req *req, bool sync);
 void virtio_host_sync(struct fd_device *dev, const struct msm_ccmd_req *req);
 int virtio_simple_ioctl(struct fd_device *dev, unsigned cmd, void *req);

@@ -110,8 +110,11 @@ emit_split_buffer_store(nir_builder *b, nir_ssa_def *d, nir_ssa_def *desc, nir_s
             store_bytes = MIN2(store_bytes, 2);
 
          nir_ssa_def *store_val = nir_extract_bits(b, &d, 1, start_byte * 8u, 1, store_bytes * 8u);
-         nir_store_buffer_amd(b, store_val, desc, v_off, s_off, zero, .is_swizzled = swizzled, .slc_amd = slc,
-                              .base = start_byte, .memory_modes = nir_var_shader_out, .access = ACCESS_COHERENT);
+         nir_store_buffer_amd(b, store_val, desc, v_off, s_off, zero,
+                              .base = start_byte, .memory_modes = nir_var_shader_out,
+                              .access = ACCESS_COHERENT |
+                                        (slc ? ACCESS_STREAM_CACHE_POLICY : 0) |
+                                        (swizzled ? ACCESS_IS_SWIZZLED_AMD : 0));
 
          start_byte += store_bytes;
          bytes -= store_bytes;
@@ -265,6 +268,12 @@ gs_per_vertex_input_offset(nir_builder *b,
    nir_ssa_def *vertex_offset = st->gfx_level >= GFX9
       ? gs_per_vertex_input_vertex_offset_gfx9(b, st, vertex_src)
       : gs_per_vertex_input_vertex_offset_gfx6(b, st, vertex_src);
+
+   /* Gfx6-8 can't emulate VGT_ESGS_RING_ITEMSIZE because it uses the register to determine
+    * the allocation size of the ESGS ring buffer in memory.
+    */
+   if (st->gfx_level >= GFX9)
+      vertex_offset = nir_imul(b, vertex_offset, nir_load_esgs_vertex_stride_amd(b));
 
    unsigned base_stride = st->gfx_level >= GFX9 ? 1 : 64 /* Wave size on GFX6-8 */;
    nir_ssa_def *io_off = ac_nir_calc_io_offset(b, instr, nir_imm_int(b, base_stride * 4u), base_stride, st->map_io);

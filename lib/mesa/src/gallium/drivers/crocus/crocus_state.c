@@ -108,6 +108,7 @@
 #include "crocus_resource.h"
 
 #include "crocus_genx_macros.h"
+#include "intel/common/intel_genX_state.h"
 #include "intel/common/intel_guardband.h"
 #include "main/macros.h" /* UNCLAMPED_* */
 
@@ -1172,7 +1173,7 @@ setup_l3_config(struct crocus_batch *batch, const struct intel_l3_config *cfg)
    crocus_emit_lri(batch, L3CNTLREG2, l3cr2);
    crocus_emit_lri(batch, L3CNTLREG3, l3cr3);
 
-#if GFX_VERSIONx10 == 75
+#if GFX_VERx10 == 75
    /* TODO: Fail screen creation if command parser version < 4 */
    uint32_t scratch1, chicken3;
    crocus_pack_state(GENX(SCRATCH1), &scratch1, reg) {
@@ -2865,7 +2866,6 @@ crocus_create_surface(struct pipe_context *ctx,
    psurf->format = tmpl->format;
    psurf->width = tex->width0;
    psurf->height = tex->height0;
-   psurf->texture = tex;
    psurf->u.tex.first_layer = tmpl->u.tex.first_layer;
    psurf->u.tex.last_layer = tmpl->u.tex.last_layer;
    psurf->u.tex.level = tmpl->u.tex.level;
@@ -2953,6 +2953,7 @@ crocus_create_surface(struct pipe_context *ctx,
    assert(view->levels == 1);
 
    /* TODO: compressed pbo uploads aren't working here */
+   pipe_surface_reference(&psurf, NULL);
    return NULL;
 
    uint64_t offset_B = 0;
@@ -2973,8 +2974,10 @@ crocus_create_surface(struct pipe_context *ctx,
        * Return NULL to force the state tracker to take fallback paths.
        */
       // TODO: check if the gen7 check is right, originally gen8
-      if (view->array_len > 1 || GFX_VER == 7)
+      if (view->array_len > 1 || GFX_VER == 7) {
+         pipe_surface_reference(&psurf, NULL);
          return NULL;
+      }
 
       const bool is_3d = res->surf.dim == ISL_SURF_DIM_3D;
       isl_surf_get_image_surf(&screen->isl_dev, &res->surf,
@@ -4809,23 +4812,23 @@ crocus_populate_fs_key(const struct crocus_context *ice,
    key->stats_wm = ice->state.stats_wm;
 #endif
 
-   uint32_t line_aa = BRW_WM_AA_NEVER;
+   uint32_t line_aa = BRW_NEVER;
    if (rast->cso.line_smooth) {
       int reduced_prim = ice->state.reduced_prim_mode;
       if (reduced_prim == PIPE_PRIM_LINES)
-         line_aa = BRW_WM_AA_ALWAYS;
+         line_aa = BRW_ALWAYS;
       else if (reduced_prim == PIPE_PRIM_TRIANGLES) {
          if (rast->cso.fill_front == PIPE_POLYGON_MODE_LINE) {
-            line_aa = BRW_WM_AA_SOMETIMES;
+            line_aa = BRW_SOMETIMES;
 
             if (rast->cso.fill_back == PIPE_POLYGON_MODE_LINE ||
                 rast->cso.cull_face == PIPE_FACE_BACK)
-               line_aa = BRW_WM_AA_ALWAYS;
+               line_aa = BRW_ALWAYS;
          } else if (rast->cso.fill_back == PIPE_POLYGON_MODE_LINE) {
-            line_aa = BRW_WM_AA_SOMETIMES;
+            line_aa = BRW_SOMETIMES;
 
             if (rast->cso.cull_face == PIPE_FACE_FRONT)
-               line_aa = BRW_WM_AA_ALWAYS;
+               line_aa = BRW_ALWAYS;
          }
       }
    }
@@ -4835,17 +4838,20 @@ crocus_populate_fs_key(const struct crocus_context *ice,
 
    key->clamp_fragment_color = rast->cso.clamp_fragment_color;
 
-   key->alpha_to_coverage = blend->cso.alpha_to_coverage;
+   key->alpha_to_coverage = blend->cso.alpha_to_coverage ?
+      BRW_ALWAYS : BRW_NEVER;
 
    key->alpha_test_replicate_alpha = fb->nr_cbufs > 1 && zsa->cso.alpha_enabled;
 
    key->flat_shade = rast->cso.flatshade &&
       (info->inputs_read & (VARYING_BIT_COL0 | VARYING_BIT_COL1));
 
-   key->persample_interp = rast->cso.force_persample_interp;
-   key->multisample_fbo = rast->cso.multisample && fb->samples > 1;
+   const bool multisample_fbo = rast->cso.multisample && fb->samples > 1;
+   key->multisample_fbo = multisample_fbo ? BRW_ALWAYS : BRW_NEVER;
+   key->persample_interp =
+      rast->cso.force_persample_interp ? BRW_ALWAYS : BRW_NEVER;
 
-   key->ignore_sample_mask_out = !key->multisample_fbo;
+   key->ignore_sample_mask_out = !multisample_fbo;
    key->coherent_fb_fetch = false; // TODO: needed?
 
    key->force_dual_color_blend =
@@ -6152,7 +6158,7 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
       be.AlphaTestFunction = translate_compare_func(cso_zsa->cso.alpha_func);
       be.AlphaToCoverageEnable = cso_blend->cso.alpha_to_coverage;
       be.AlphaToOneEnable = cso_blend->cso.alpha_to_one;
-      be.AlphaToCoverageDitherEnable = GFX_VER >= 7 && cso_blend->cso.alpha_to_coverage;
+      be.AlphaToCoverageDitherEnable = GFX_VER >= 7 && cso_blend->cso.alpha_to_coverage_dither;
       be.ColorDitherEnable = cso_blend->cso.dither;
 
 #if GFX_VER >= 8
@@ -6446,11 +6452,10 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
           */
          ps.VectorMaskEnable = GFX_VER >= 8 && wm_prog_data->uses_vmask;
 
-         brw_fs_get_dispatch_enables(&batch->screen->devinfo, wm_prog_data,
+         intel_set_ps_dispatch_state(&ps, &batch->screen->devinfo,
+                                     wm_prog_data,
                                      ice->state.framebuffer.samples,
-                                     &ps._8PixelDispatchEnable,
-                                     &ps._16PixelDispatchEnable,
-                                     &ps._32PixelDispatchEnable);
+                                     0 /* msaa_flags */);
 
          ps.DispatchGRFStartRegisterForConstantSetupData0 =
             brw_wm_prog_data_dispatch_grf_start_reg(wm_prog_data, ps, 0);
@@ -6500,7 +6505,9 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
           * look useful at the moment.  We might need this in future.
           */
          ps.PositionXYOffsetSelect =
-            wm_prog_data->uses_pos_offset ? POSOFFSET_SAMPLE : POSOFFSET_NONE;
+            brw_wm_prog_data_uses_position_xy_offset(wm_prog_data,
+                                                     0 /* msaa_flags */) ?
+            POSOFFSET_SAMPLE : POSOFFSET_NONE;
 
          if (wm_prog_data->base.total_scratch) {
             struct crocus_bo *bo = crocus_get_scratch_space(ice, wm_prog_data->base.total_scratch, MESA_SHADER_FRAGMENT);
@@ -6518,7 +6525,8 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
          psx.AttributeEnable = wm_prog_data->num_varying_inputs != 0;
          psx.PixelShaderUsesSourceDepth = wm_prog_data->uses_src_depth;
          psx.PixelShaderUsesSourceW = wm_prog_data->uses_src_w;
-         psx.PixelShaderIsPerSample = wm_prog_data->persample_dispatch;
+         psx.PixelShaderIsPerSample =
+            brw_wm_prog_data_is_persample(wm_prog_data, 0);
 
          /* _NEW_MULTISAMPLE | BRW_NEW_CONSERVATIVE_RASTERIZATION */
          if (wm_prog_data->uses_sample_mask)
@@ -7172,11 +7180,9 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
 #endif
      {
 #if GFX_VER <= 6
-         brw_fs_get_dispatch_enables(&batch->screen->devinfo, wm_prog_data,
-                                     ice->state.framebuffer.samples,
-                                     &wm._8PixelDispatchEnable,
-                                     &wm._16PixelDispatchEnable,
-                                     &wm._32PixelDispatchEnable);
+         wm._8PixelDispatchEnable = wm_prog_data->dispatch_8;
+         wm._16PixelDispatchEnable = wm_prog_data->dispatch_16;
+         wm._32PixelDispatchEnable = wm_prog_data->dispatch_32;
 #endif
 #if GFX_VER == 4
       /* On gen4, we only have one shader kernel */
@@ -7268,10 +7274,10 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
        * We only require XY sample offsets. So, this recommendation doesn't
        * look useful at the moment. We might need this in future.
        */
-      if (wm_prog_data->uses_pos_offset)
-         wm.PositionXYOffsetSelect = POSOFFSET_SAMPLE;
-      else
-         wm.PositionXYOffsetSelect = POSOFFSET_NONE;
+      wm.PositionXYOffsetSelect =
+         brw_wm_prog_data_uses_position_xy_offset(wm_prog_data,
+                                                  0 /* msaa_flags */) ?
+         POSOFFSET_SAMPLE : POSOFFSET_NONE;
 #endif
          wm.LineStippleEnable = cso->cso.line_stipple_enable;
          wm.PolygonStippleEnable = cso->cso.poly_stipple_enable;
@@ -7294,7 +7300,7 @@ crocus_upload_dirty_render_state(struct crocus_context *ice,
             else
                wm.MultisampleRasterizationMode = MSRASTMODE_OFF_PIXEL;
 
-            if (wm_prog_data->persample_dispatch)
+            if (brw_wm_prog_data_is_persample(wm_prog_data, 0))
                wm.MultisampleDispatchMode = MSDISPMODE_PERSAMPLE;
             else
                wm.MultisampleDispatchMode = MSDISPMODE_PERPIXEL;
@@ -8283,6 +8289,8 @@ crocus_upload_compute_state(struct crocus_context *ice,
 static void
 crocus_destroy_state(struct crocus_context *ice)
 {
+   struct pipe_framebuffer_state *cso = &ice->state.framebuffer;
+
    pipe_resource_reference(&ice->draw.draw_params.res, NULL);
    pipe_resource_reference(&ice->draw.derived_draw_params.res, NULL);
 
@@ -8292,10 +8300,7 @@ crocus_destroy_state(struct crocus_context *ice)
       pipe_so_target_reference(&ice->state.so_target[i], NULL);
    }
 
-   for (unsigned i = 0; i < ice->state.framebuffer.nr_cbufs; i++) {
-      pipe_surface_reference(&ice->state.framebuffer.cbufs[i], NULL);
-   }
-   pipe_surface_reference(&ice->state.framebuffer.zsbuf, NULL);
+   util_unreference_framebuffer_state(cso);
 
    for (int stage = 0; stage < MESA_SHADER_STAGES; stage++) {
       struct crocus_shader_state *shs = &ice->state.shaders[stage];

@@ -220,6 +220,8 @@ public:
 
    void set_virtual_register_base(int base);
 
+   int new_register_index();
+
    bool allocate_registers(const exec_list *registers);
    PRegister allocate_pinned_register(int sel, int chan);
    RegisterVec4 allocate_pinned_vec4(int sel, bool is_ssa);
@@ -283,6 +285,8 @@ public:
 
    int next_register_index() const { return m_next_register_index; }
 
+   uint32_t array_registers() const { return m_required_array_registers; }
+
 private:
    PVirtualValue ssa_src(const nir_ssa_def& dest, int chan);
 
@@ -324,6 +328,7 @@ private:
       126, pin_chan, {0, 1, 2, 3}
    };
    ChannelCounts m_channel_counts;
+   uint32_t m_required_array_registers{0};
 };
 
 } // namespace r600

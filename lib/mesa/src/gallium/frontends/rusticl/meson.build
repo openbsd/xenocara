@@ -24,6 +24,7 @@ libmesa_rust_util_files = files(
   'util/lib.rs',
   'util/assert.rs',
   'util/bitset.rs',
+  'util/feature.rs',
   'util/properties.rs',
   'util/ptr.rs',
   'util/string.rs',
@@ -63,6 +64,7 @@ rusticl_files = files(
   'core/format.rs',
   'core/kernel.rs',
   'core/memory.rs',
+  'core/platform.rs',
   'core/program.rs',
   'core/queue.rs',
   'core/util.rs',
@@ -91,7 +93,6 @@ rusticl_gen_args = [
 rusticl_bindgen_args = [
   '--no-convert-floats',
   '--use-array-pointers-in-arguments',
-  '--size_t-is-usize',
   '--default-enum-style', 'rust',
   '--with-derive-partialeq',
   '--with-derive-eq',
@@ -101,6 +102,12 @@ rusticl_bindgen_args = [
   '--with-derive-default',
   '--anon-fields-prefix', 'anon_',
 ]
+
+if find_program('bindgen').version().version_compare('< 0.65')
+  rusticl_bindgen_args += [
+    '--size_t-is-usize',
+  ]
+endif
 
 rusticl_bindgen_c_args = [
   '-fno-builtin-malloc',
@@ -179,6 +186,7 @@ rusticl_mesa_bindings_inline_wrapper = static_library(
     'rusticl_mesa_inline_bindings_wrapper.h',
     'rusticl_nir.c',
     'rusticl_nir.h',
+    sha1_h,
   ],
   gnu_symbol_visibility : 'hidden',
   include_directories : [
@@ -194,6 +202,7 @@ rusticl_mesa_bindings_inline_wrapper = static_library(
   ],
   dependencies: [
     idep_nir_headers,
+    dep_valgrind,
   ],
 )
 
@@ -207,6 +216,9 @@ rusticl_mesa_bindings_rs = rust.bindgen(
     inc_include,
     inc_nir,
     inc_src,
+  ],
+  dependencies: [
+    dep_valgrind,
   ],
   c_args : [
     rusticl_bindgen_c_args,

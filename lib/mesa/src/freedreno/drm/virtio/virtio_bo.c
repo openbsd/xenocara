@@ -91,6 +91,7 @@ virtio_bo_cpu_prep_guest(struct fd_bo *bo)
 static int
 virtio_bo_cpu_prep(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op)
 {
+   MESA_TRACE_FUNC();
    int ret;
 
    /*
@@ -104,17 +105,11 @@ virtio_bo_cpu_prep(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op)
    if (ret)
       goto out;
 
-   /* If buffer is not shared, then it is not shared with host,
-    * so we don't need to worry about implicit sync in host:
+   /*
+    * The buffer could be shared with other things on the host side
+    * so have to poll the host.  But we only get here with the shared
+    * buffers plus implicit sync.  Hopefully that is rare enough.
     */
-   if (!bo->shared)
-      goto out;
-
-   /* If buffer is shared, but we are using explicit sync, no
-    * need to fallback to implicit sync in host:
-    */
-   if (pipe && to_virtio_pipe(pipe)->no_implicit_sync)
-      goto out;
 
    struct msm_ccmd_gem_cpu_prep_req req = {
          .hdr = MSM_CCMD(GEM_CPU_PREP, sizeof(req)),
@@ -136,12 +131,6 @@ virtio_bo_cpu_prep(struct fd_bo *bo, struct fd_pipe *pipe, uint32_t op)
 
 out:
    return ret;
-}
-
-static void
-virtio_bo_cpu_fini(struct fd_bo *bo)
-{
-   /* no-op */
 }
 
 static int
@@ -199,6 +188,7 @@ virtio_bo_set_name(struct fd_bo *bo, const char *fmt, va_list ap)
 static void
 bo_upload(struct fd_bo *bo, unsigned off, void *src, unsigned len)
 {
+   MESA_TRACE_FUNC();
    unsigned req_len = sizeof(struct msm_ccmd_gem_upload_req) + align(len, 4);
    struct virtio_bo *virtio_bo = to_virtio_bo(bo);
 
@@ -271,36 +261,26 @@ set_iova(struct fd_bo *bo, uint64_t iova)
 }
 
 static void
-virtio_bo_destroy(struct fd_bo *bo)
+virtio_bo_finalize(struct fd_bo *bo)
 {
-   struct virtio_bo *virtio_bo = to_virtio_bo(bo);
-
    /* Release iova by setting to zero: */
    if (bo->iova) {
       set_iova(bo, 0);
 
       virtio_dev_free_iova(bo->dev, bo->iova, bo->size);
-
-      /* Need to flush batched ccmds to ensure the host sees the iova
-       * release before the GEM handle is closed (ie. detach_resource()
-       * on the host side)
-       */
-      virtio_execbuf_flush(bo->dev);
    }
-
-   free(virtio_bo);
 }
 
 static const struct fd_bo_funcs funcs = {
    .offset = virtio_bo_offset,
    .cpu_prep = virtio_bo_cpu_prep,
-   .cpu_fini = virtio_bo_cpu_fini,
    .madvise = virtio_bo_madvise,
    .iova = virtio_bo_iova,
    .set_name = virtio_bo_set_name,
    .upload = virtio_bo_upload,
    .prefer_upload = virtio_bo_prefer_upload,
-   .destroy = virtio_bo_destroy,
+   .finalize = virtio_bo_finalize,
+   .destroy = fd_bo_fini_common,
 };
 
 static struct fd_bo *
@@ -367,7 +347,8 @@ virtio_bo_from_handle(struct fd_device *dev, uint32_t size, uint32_t handle)
    return bo;
 
 fail:
-   virtio_bo_destroy(bo);
+   virtio_bo_finalize(bo);
+   fd_bo_fini_common(bo);
    return NULL;
 }
 
@@ -428,8 +409,10 @@ virtio_bo_new(struct fd_device *dev, uint32_t size, uint32_t flags)
    }
 
    simple_mtx_lock(&virtio_dev->eb_lock);
-   if (args.cmd)
+   if (args.cmd) {
+      virtio_execbuf_flush_locked(dev);
       req.hdr.seqno = ++virtio_dev->next_seqno;
+   }
    ret = virtio_ioctl(dev->fd, VIRTGPU_RESOURCE_CREATE_BLOB, &args);
    simple_mtx_unlock(&virtio_dev->eb_lock);
    if (ret)

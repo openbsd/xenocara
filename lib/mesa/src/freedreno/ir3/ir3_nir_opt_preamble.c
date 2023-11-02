@@ -47,11 +47,10 @@ def_size(nir_ssa_def *def, unsigned *size, unsigned *align)
 static bool
 all_uses_float(nir_ssa_def *def, bool allow_src2)
 {
-   nir_foreach_if_use (use, def) {
-      return false;
-   }
+   nir_foreach_use_including_if (use, def) {
+      if (use->is_if)
+         return false;
 
-   nir_foreach_use (use, def) {
       nir_instr *use_instr = use->parent_instr;
       if (use_instr->type != nir_instr_type_alu)
          return false;
@@ -78,11 +77,10 @@ all_uses_float(nir_ssa_def *def, bool allow_src2)
 static bool
 all_uses_bit(nir_ssa_def *def)
 {
-   nir_foreach_if_use (use, def) {
-      return false;
-   }
+   nir_foreach_use_including_if (use, def) {
+      if (use->is_if)
+         return false;
 
-   nir_foreach_use (use, def) {
       nir_instr *use_instr = use->parent_instr;
       if (use_instr->type != nir_instr_type_alu)
          return false;
@@ -284,7 +282,7 @@ ir3_nir_opt_preamble(nir_shader *nir, struct ir3_shader_variant *v)
       .rewrite_cost_cb = rewrite_cost,
    };
 
-   unsigned size;
+   unsigned size = 0;
    bool progress = nir_opt_preamble(nir, &options, &size);
 
    if (!v->binning_pass)
@@ -335,7 +333,7 @@ ir3_nir_lower_preamble(nir_shader *nir, struct ir3_shader_variant *v)
                              .base = offset);
 
          if (dest->bit_size == 1) {
-            new_dest = nir_i2b1(b, new_dest);
+            new_dest = nir_i2b(b, new_dest);
          } else if (dest->bit_size != 32) {
             assert(dest->bit_size == 16);
             if (all_uses_float(dest, true)) {

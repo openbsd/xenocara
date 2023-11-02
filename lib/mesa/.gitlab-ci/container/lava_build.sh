@@ -11,7 +11,8 @@ export DEBIAN_FRONTEND=noninteractive
 check_minio()
 {
     MINIO_PATH="${MINIO_HOST}/mesa-lava/$1/${DISTRIBUTION_TAG}/${DEBIAN_ARCH}"
-    if wget -q --method=HEAD "https://${MINIO_PATH}/done"; then
+    if curl -L --retry 4 -f --retry-all-errors --retry-delay 60 -s -X HEAD \
+      "https://${MINIO_PATH}/done"; then
         exit
     fi
 }
@@ -40,7 +41,9 @@ if [[ "$DEBIAN_ARCH" = "arm64" ]]; then
     DEVICE_TREES+=" arch/arm64/boot/dts/mediatek/mt8183-kukui-jacuzzi-juniper-sku16.dtb"
     DEVICE_TREES+=" arch/arm64/boot/dts/nvidia/tegra210-p3450-0000.dtb"
     DEVICE_TREES+=" arch/arm64/boot/dts/qcom/sc7180-trogdor-lazor-limozeen-nots-r5.dtb"
+    DEVICE_TREES+=" arch/arm64/boot/dts/qcom/sc7180-trogdor-kingoftown-r1.dtb"
     DEVICE_TREES+=" arch/arm64/boot/dts/freescale/imx8mq-nitrogen.dtb"
+    DEVICE_TREES+=" arch/arm64/boot/dts/mediatek/mt8192-asurada-spherion-r0.dtb"
     KERNEL_IMAGE_NAME="Image"
 
 elif [[ "$DEBIAN_ARCH" = "armhf" ]]; then
@@ -83,11 +86,13 @@ fi
 
 apt-get update
 apt-get install -y --no-remove \
+		   -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' \
                    ${ARCH_PACKAGES} \
                    automake \
                    bc \
                    clang \
                    cmake \
+		   curl \
                    debootstrap \
                    git \
                    glslang-tools \
@@ -109,6 +114,7 @@ apt-get install -y --no-remove \
                    libx11-xcb-dev \
                    libxcb-dri2-0-dev \
                    libxkbcommon-dev \
+                   libwayland-dev \
                    ninja-build \
                    patch \
                    protobuf-compiler \
@@ -118,7 +124,6 @@ apt-get install -y --no-remove \
                    python3-numpy \
                    python3-serial \
                    unzip \
-                   wget \
                    zstd
 
 
@@ -184,7 +189,7 @@ if [[ "$DEBIAN_ARCH" = "arm64" ]] \
 fi
 
 ############### Build piglit
-PIGLIT_OPTS="-DPIGLIT_BUILD_DMA_BUF_TESTS=ON" . .gitlab-ci/container/build-piglit.sh
+PIGLIT_OPTS="-DPIGLIT_BUILD_DMA_BUF_TESTS=ON -DPIGLIT_BUILD_GLX_TESTS=ON" . .gitlab-ci/container/build-piglit.sh
 mv /piglit /lava-files/rootfs-${DEBIAN_ARCH}/.
 
 ############### Build libva tests
@@ -198,6 +203,8 @@ if [[ ${DEBIAN_ARCH} = "amd64" ]]; then
     . .gitlab-ci/container/build-crosvm.sh
     mv /usr/local/bin/crosvm /lava-files/rootfs-${DEBIAN_ARCH}/usr/bin/
     mv /usr/local/lib/$GCC_ARCH/libvirglrenderer.* /lava-files/rootfs-${DEBIAN_ARCH}/usr/lib/$GCC_ARCH/
+    mkdir -p /lava-files/rootfs-${DEBIAN_ARCH}/usr/local/libexec/
+    mv /usr/local/libexec/virgl* /lava-files/rootfs-${DEBIAN_ARCH}/usr/local/libexec/
 fi
 
 ############### Build libdrm
@@ -240,6 +247,7 @@ cp .gitlab-ci/container/debian/winehq.gpg.key /lava-files/rootfs-${DEBIAN_ARCH}/
 chroot /lava-files/rootfs-${DEBIAN_ARCH} sh /create-rootfs.sh
 rm /lava-files/rootfs-${DEBIAN_ARCH}/{llvm-snapshot,winehq}.gpg.key
 rm /lava-files/rootfs-${DEBIAN_ARCH}/create-rootfs.sh
+cp /etc/wgetrc /lava-files/rootfs-${DEBIAN_ARCH}/etc/.
 
 
 ############### Install the built libdrm

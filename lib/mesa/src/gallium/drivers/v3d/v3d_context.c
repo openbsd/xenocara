@@ -282,10 +282,7 @@ v3d_context_destroy(struct pipe_context *pctx)
 
         slab_destroy_child(&v3d->transfer_pool);
 
-        for (int i = 0; i < v3d->framebuffer.nr_cbufs; i++)
-                pipe_surface_reference(&v3d->framebuffer.cbufs[i], NULL);
-
-        pipe_surface_reference(&v3d->framebuffer.zsbuf, NULL);
+        util_unreference_framebuffer_state(&v3d->framebuffer);
 
         if (v3d->sand8_blit_vs)
                 pctx->delete_vs_state(pctx, v3d->sand8_blit_vs);
@@ -293,6 +290,10 @@ v3d_context_destroy(struct pipe_context *pctx)
                 pctx->delete_fs_state(pctx, v3d->sand8_blit_fs_luma);
         if (v3d->sand8_blit_fs_chroma)
                 pctx->delete_fs_state(pctx, v3d->sand8_blit_fs_chroma);
+        if (v3d->sand30_blit_vs)
+                pctx->delete_vs_state(pctx, v3d->sand30_blit_vs);
+        if (v3d->sand30_blit_fs)
+                pctx->delete_fs_state(pctx, v3d->sand30_blit_fs);
 
         v3d_program_fini(pctx);
 
@@ -318,6 +319,26 @@ v3d_get_sample_position(struct pipe_context *pctx,
                 xy[0] = 0.5 + xoffsets[sample_index] * .125;
                 xy[1] = .125 + sample_index * .25;
         }
+}
+
+bool
+v3d_render_condition_check(struct v3d_context *v3d)
+{
+        if (!v3d->cond_query)
+                return true;
+
+        perf_debug("Implementing conditional rendering on the CPU\n");
+
+        union pipe_query_result res = { 0 };
+        bool wait =
+                v3d->cond_mode != PIPE_RENDER_COND_NO_WAIT &&
+                v3d->cond_mode != PIPE_RENDER_COND_BY_REGION_NO_WAIT;
+
+        struct pipe_context *pctx = (struct pipe_context *)v3d;
+        if (pctx->get_query_result(pctx, v3d->cond_query, wait, &res))
+                return ((bool)res.u64) != v3d->cond_cond;
+
+        return true;
 }
 
 struct pipe_context *

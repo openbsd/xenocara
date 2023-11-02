@@ -33,6 +33,7 @@
 #include "pvr_srv.h"
 #include "pvr_srv_bo.h"
 #include "pvr_srv_bridge.h"
+#include "pvr_srv_job_common.h"
 #include "pvr_srv_job_compute.h"
 #include "pvr_srv_job_render.h"
 #include "pvr_srv_job_transfer.h"
@@ -46,9 +47,30 @@
 #include "util/macros.h"
 #include "util/os_misc.h"
 #include "vk_log.h"
+#include "vk_sync.h"
+#include "vk_sync_timeline.h"
 
 /* Amount of space used to hold sync prim values (in bytes). */
 #define PVR_SRV_SYNC_PRIM_VALUE_SIZE 4U
+
+/**
+ * Maximum PB free list size supported by RGX and Services.
+ *
+ * Maximum PB free list size must ensure that no PM address space can be fully
+ * used, because if the full address space was used it would wrap and corrupt
+ * itself. Since there are two freelists (local is always minimum sized) this
+ * can be described as following three conditions being met:
+ *
+ *  Minimum PB + Maximum PB < ALIST PM address space size (16GB)
+ *  Minimum PB + Maximum PB < TE PM address space size (16GB) / NUM_TE_PIPES
+ *  Minimum PB + Maximum PB < VCE PM address space size (16GB) / NUM_VCE_PIPES
+ *
+ * Since the max of NUM_TE_PIPES and NUM_VCE_PIPES is 4, we have a hard limit
+ * of 4GB minus the Minimum PB. For convenience we take the smaller power-of-2
+ * value of 2GB. This is far more than any normal application would request
+ * or use.
+ */
+#define PVR_SRV_FREE_LIST_MAX_SIZE (2ULL * 1024ULL * 1024ULL * 1024ULL)
 
 static VkResult pvr_srv_heap_init(
    struct pvr_srv_winsys *srv_ws,
@@ -373,6 +395,11 @@ static void pvr_srv_winsys_destroy(struct pvr_winsys *ws)
    struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(ws);
    int fd = srv_ws->render_fd;
 
+   if (srv_ws->presignaled_sync) {
+      vk_sync_destroy(&srv_ws->presignaled_sync_device->vk,
+                      &srv_ws->presignaled_sync->base);
+   }
+
    pvr_srv_sync_prim_block_finish(srv_ws);
    pvr_srv_memctx_finish(srv_ws);
    vk_free(srv_ws->alloc, srv_ws);
@@ -518,6 +545,7 @@ pvr_srv_winsys_device_info_init(struct pvr_winsys *ws,
    }
 
    runtime_info->min_free_list_size = pvr_srv_get_min_free_list_size(dev_info);
+   runtime_info->max_free_list_size = PVR_SRV_FREE_LIST_MAX_SIZE;
    runtime_info->reserved_shared_size =
       pvr_srv_get_reserved_shared_size(dev_info);
    runtime_info->total_reserved_partition_size =
@@ -650,7 +678,16 @@ struct pvr_winsys *pvr_srv_winsys_create(int master_fd,
 
    srv_ws->base.syncobj_type = pvr_srv_sync_type;
    srv_ws->base.sync_types[0] = &srv_ws->base.syncobj_type;
-   srv_ws->base.sync_types[1] = NULL;
+
+   srv_ws->base.timeline_syncobj_type =
+      vk_sync_timeline_get_type(srv_ws->base.sync_types[0]);
+   srv_ws->base.sync_types[1] = &srv_ws->base.timeline_syncobj_type.sync;
+   srv_ws->base.sync_types[2] = NULL;
+
+   /* Threaded submit requires VK_SYNC_FEATURE_WAIT_PENDING which pvrsrv
+    * doesn't support.
+    */
+   srv_ws->base.features.supports_threaded_submit = false;
 
    result = pvr_srv_memctx_init(srv_ws);
    if (result != VK_SUCCESS)
@@ -720,4 +757,84 @@ void pvr_srv_sync_prim_free(struct pvr_srv_sync_prim *sync_prim)
 
       vk_free(srv_ws->alloc, sync_prim);
    }
+}
+
+static VkResult pvr_srv_create_presignaled_sync(struct pvr_device *device,
+                                                struct pvr_srv_sync **out_sync)
+{
+   struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(device->ws);
+   struct vk_sync *sync;
+
+   int timeline_fd;
+   int sync_fd;
+
+   VkResult result;
+
+   result = pvr_srv_create_timeline(srv_ws->render_fd, &timeline_fd);
+   if (result != VK_SUCCESS)
+      return result;
+
+   result = pvr_srv_set_timeline_sw_only(timeline_fd);
+   if (result != VK_SUCCESS)
+      goto err_close_timeline;
+
+   result = pvr_srv_create_sw_fence(timeline_fd, &sync_fd, NULL);
+   if (result != VK_SUCCESS)
+      goto err_close_timeline;
+
+   result = pvr_srv_sw_sync_timeline_increment(timeline_fd, NULL);
+   if (result != VK_SUCCESS)
+      goto err_close_sw_fence;
+
+   result = vk_sync_create(&device->vk,
+                           &device->pdevice->ws->syncobj_type,
+                           0U,
+                           0UL,
+                           &sync);
+   if (result != VK_SUCCESS)
+      goto err_close_sw_fence;
+
+   result = vk_sync_import_sync_file(&device->vk, sync, sync_fd);
+   if (result != VK_SUCCESS)
+      goto err_destroy_sync;
+
+   *out_sync = to_srv_sync(sync);
+   (*out_sync)->signaled = true;
+
+   close(timeline_fd);
+
+   return VK_SUCCESS;
+
+err_destroy_sync:
+   vk_sync_destroy(&device->vk, sync);
+
+err_close_sw_fence:
+   close(sync_fd);
+
+err_close_timeline:
+   close(timeline_fd);
+
+   return result;
+}
+
+VkResult pvr_srv_sync_get_presignaled_sync(struct pvr_device *device,
+                                           struct pvr_srv_sync **out_sync)
+{
+   struct pvr_srv_winsys *srv_ws = to_pvr_srv_winsys(device->ws);
+   VkResult result;
+
+   if (!srv_ws->presignaled_sync) {
+      result =
+         pvr_srv_create_presignaled_sync(device, &srv_ws->presignaled_sync);
+      if (result != VK_SUCCESS)
+         return result;
+
+      srv_ws->presignaled_sync_device = device;
+   }
+
+   assert(device == srv_ws->presignaled_sync_device);
+
+   *out_sync = srv_ws->presignaled_sync;
+
+   return VK_SUCCESS;
 }

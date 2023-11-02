@@ -36,7 +36,9 @@ struct cs_viewport {
    float scale_x;
    float scale_y;
    struct u_rect area;
-   int translate_x;
+   int crop_x; /* src */
+   int crop_y;
+   int translate_x; /* dst */
    int translate_y;
    float sampler0_w;
    float sampler0_h;
@@ -584,6 +586,117 @@ static const char *compute_shader_yuv_bob_uv =
 
       "END\n";
 
+static const char *compute_shader_yuv_y =
+      "COMP\n"
+      "PROPERTY CS_FIXED_BLOCK_WIDTH 8\n"
+      "PROPERTY CS_FIXED_BLOCK_HEIGHT 8\n"
+      "PROPERTY CS_FIXED_BLOCK_DEPTH 1\n"
+
+      "DCL SV[0], THREAD_ID\n"
+      "DCL SV[1], BLOCK_ID\n"
+
+      "DCL CONST[0..6]\n"
+      "DCL SVIEW[0..2], RECT, FLOAT\n"
+      "DCL SAMP[0..2]\n"
+
+      "DCL IMAGE[0], 2D, WR\n"
+      "DCL TEMP[0..4]\n"
+
+      "IMM[0] UINT32 { 8, 8, 1, 0}\n"
+      "IMM[1] FLT32 { 1.0, 2.0, 0.0, 0.0}\n"
+
+      "UMAD TEMP[0], SV[1], IMM[0], SV[0]\n"
+
+      /* Drawn area check */
+      "USGE TEMP[1].xy, TEMP[0].xyxy, CONST[4].xyxy\n"
+      "USLT TEMP[1].zw, TEMP[0].xyxy, CONST[4].zwzw\n"
+      "AND TEMP[1].x, TEMP[1].xxxx, TEMP[1].yyyy\n"
+      "AND TEMP[1].x, TEMP[1].xxxx, TEMP[1].zzzz\n"
+      "AND TEMP[1].x, TEMP[1].xxxx, TEMP[1].wwww\n"
+
+      "UIF TEMP[1]\n"
+         "MOV TEMP[2], TEMP[0]\n"
+
+         /* Translate */
+         "UADD TEMP[2].xy, TEMP[2], -CONST[5].xyxy\n"
+         "U2F TEMP[2], TEMP[2]\n"
+
+         /* Scale */
+         "DIV TEMP[2], TEMP[2], CONST[3].zwzw\n"
+
+         /* Crop */
+         "MOV TEMP[4].xy, CONST[6].zwww\n"
+         "I2F TEMP[4], TEMP[4]\n"
+         "ADD TEMP[2], TEMP[2], TEMP[4]\n"
+         "ADD TEMP[2].y, TEMP[2].yyyy, IMM[1].xxxx\n"
+
+         /* Fetch texels */
+         "TEX_LZ TEMP[4].x, TEMP[2], SAMP[0], RECT\n"
+
+         "MOV TEMP[4].yzw, IMM[1].xxxx\n"
+
+         "STORE IMAGE[0], TEMP[0], TEMP[4], 2D\n"
+      "ENDIF\n"
+
+      "END\n";
+
+static const char *compute_shader_yuv_uv =
+      "COMP\n"
+      "PROPERTY CS_FIXED_BLOCK_WIDTH 8\n"
+      "PROPERTY CS_FIXED_BLOCK_HEIGHT 8\n"
+      "PROPERTY CS_FIXED_BLOCK_DEPTH 1\n"
+
+      "DCL SV[0], THREAD_ID\n"
+      "DCL SV[1], BLOCK_ID\n"
+
+      "DCL CONST[0..6]\n"
+      "DCL SVIEW[0..2], RECT, FLOAT\n"
+      "DCL SAMP[0..2]\n"
+
+      "DCL IMAGE[0], 2D, WR\n"
+      "DCL TEMP[0..5]\n"
+
+      "IMM[0] UINT32 { 8, 8, 1, 0}\n"
+      "IMM[1] FLT32 { 1.0, 2.0, 0.0, 0.0}\n"
+
+      "UMAD TEMP[0], SV[1], IMM[0], SV[0]\n"
+
+      /* Drawn area check */
+      "USGE TEMP[1].xy, TEMP[0].xyxy, CONST[4].xyxy\n"
+      "USLT TEMP[1].zw, TEMP[0].xyxy, CONST[4].zwzw\n"
+      "AND TEMP[1].x, TEMP[1].xxxx, TEMP[1].yyyy\n"
+      "AND TEMP[1].x, TEMP[1].xxxx, TEMP[1].zzzz\n"
+      "AND TEMP[1].x, TEMP[1].xxxx, TEMP[1].wwww\n"
+
+      "UIF TEMP[1]\n"
+         "MOV TEMP[2], TEMP[0]\n"
+
+         /* Translate */
+         "UADD TEMP[2].xy, TEMP[2], -CONST[5].xyxy\n"
+         "U2F TEMP[2], TEMP[2]\n"
+
+         /* Scale */
+         "DIV TEMP[2], TEMP[2], CONST[3].zwzw\n"
+
+         /* Crop */
+         "MOV TEMP[4].xy, CONST[6].zwww\n"
+         "I2F TEMP[4], TEMP[4]\n"
+         "ADD TEMP[2], TEMP[2], TEMP[4]\n"
+         "ADD TEMP[2].y, TEMP[2].yyyy, IMM[1].xxxx\n"
+
+         /* Fetch texels */
+         "TEX_LZ TEMP[4].y, TEMP[2], SAMP[1], RECT\n"
+         "TEX_LZ TEMP[4].z, TEMP[2], SAMP[2], RECT\n"
+
+         "MOV TEMP[4].w, IMM[1].xxxx\n"
+
+         "MOV TEMP[5].xy, TEMP[4].yzww\n"
+
+         "STORE IMAGE[0], TEMP[0], TEMP[5], 2D\n"
+      "ENDIF\n"
+
+      "END\n";
+
 static void
 cs_launch(struct vl_compositor *c,
           void                 *cs,
@@ -688,6 +801,14 @@ set_viewport(struct vl_compositor_state *s,
                      (float) samplers[0]->texture->height0;
       *ptr_float++ = v_ratio;
    }
+   else {
+      ptr_float++;
+      ptr_float++;
+   }
+   ptr_int = (int *)ptr_float;
+   *ptr_int++ = drawn->crop_x;
+   *ptr_int++ = drawn->crop_y;
+
    pipe_buffer_unmap(s->pipe, buf_transfer);
 
    return true;
@@ -711,15 +832,16 @@ draw_layers(struct vl_compositor       *c,
 
          drawn.area = calc_drawn_area(s, layer);
          drawn.scale_x = layer->viewport.scale[0] /
-                  (float)layer->sampler_views[0]->texture->width0 * 
-                  (layer->src.br.x - layer->src.tl.x);
-         drawn.scale_y = layer->viewport.scale[1] /
-                  ((float)layer->sampler_views[0]->texture->height0 * 
-                   (s->interlaced ? 2.0 : 1.0) * 
-                   (layer->src.br.y - layer->src.tl.y));
-
-         drawn.translate_x = (int)layer->viewport.translate[0];
-         drawn.translate_y = (int)layer->viewport.translate[1];
+            ((float)layer->sampler_views[0]->texture->width0 *
+             (layer->src.br.x - layer->src.tl.x));
+         drawn.scale_y  = layer->viewport.scale[1] /
+            ((float)layer->sampler_views[0]->texture->height0 *
+             (s->interlaced ? 2.0 : 1.0) *
+             (layer->src.br.y - layer->src.tl.y));
+         drawn.crop_x = (int)(layer->src.tl.x * layer->sampler_views[0]->texture->width0);
+         drawn.translate_x = layer->viewport.translate[0];
+         drawn.crop_y = (int)(layer->src.tl.y * layer->sampler_views[0]->texture->height0);
+         drawn.translate_y = layer->viewport.translate[1];
          drawn.sampler0_w = (float)layer->sampler_views[0]->texture->width0;
          drawn.sampler0_h = (float)layer->sampler_views[0]->texture->height0;
          set_viewport(s, &drawn, samplers);
@@ -826,9 +948,15 @@ bool vl_compositor_cs_init_shaders(struct vl_compositor *c)
         c->cs_yuv.weave.uv = vl_compositor_cs_create_shader(c, compute_shader_yuv_weave_uv);
         c->cs_yuv.bob.y = vl_compositor_cs_create_shader(c, compute_shader_yuv_bob_y);
         c->cs_yuv.bob.uv = vl_compositor_cs_create_shader(c, compute_shader_yuv_bob_uv);
+        c->cs_yuv.progressive.y = vl_compositor_cs_create_shader(c, compute_shader_yuv_y);
+        c->cs_yuv.progressive.uv = vl_compositor_cs_create_shader(c, compute_shader_yuv_uv);
         if (!c->cs_yuv.weave.y || !c->cs_yuv.weave.uv ||
             !c->cs_yuv.bob.y || !c->cs_yuv.bob.uv) {
                 debug_printf("Unable to create YCbCr i-to-YCbCr p deint compute shader.\n");
+                return false;
+        }
+        if (!c->cs_yuv.progressive.y || !c->cs_yuv.progressive.uv) {
+                debug_printf("Unable to create YCbCr p-to-NV12 compute shader.\n");
                 return false;
         }
 
@@ -851,4 +979,8 @@ void vl_compositor_cs_cleanup_shaders(struct vl_compositor *c)
                 c->pipe->delete_compute_state(c->pipe, c->cs_yuv.bob.y);
         if (c->cs_yuv.bob.uv)
                 c->pipe->delete_compute_state(c->pipe, c->cs_yuv.bob.uv);
+        if (c->cs_yuv.progressive.y)
+                c->pipe->delete_compute_state(c->pipe, c->cs_yuv.progressive.y);
+        if (c->cs_yuv.progressive.uv)
+                c->pipe->delete_compute_state(c->pipe, c->cs_yuv.progressive.uv);
 }

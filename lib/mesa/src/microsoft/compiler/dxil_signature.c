@@ -130,12 +130,12 @@ get_additional_semantic_info(nir_shader *s, nir_variable *var, struct semantic_i
 
    bool is_depth = is_depth_output(info->kind);
 
-   if (!glsl_type_is_struct(type)) {
+   if (!glsl_type_is_struct(glsl_without_array(type))) {
       info->sig_comp_type = dxil_get_comp_type(type);
-   } else if (var->data.interpolation == INTERP_MODE_FLAT) {
-      info->sig_comp_type = DXIL_COMP_TYPE_U32;
-      info->comp_type = DXIL_PROG_SIG_COMP_TYPE_UINT32;
    } else {
+      /* For structs, just emit them as float registers. This way, they can be
+       * interpolated or not, and it doesn't matter, and it avoids linking issues
+       * that we'd see if the type here tried to depend on (e.g.) interp mode. */
       info->sig_comp_type = DXIL_COMP_TYPE_F32;
       info->comp_type = DXIL_PROG_SIG_COMP_TYPE_FLOAT32;
    }
@@ -163,12 +163,8 @@ get_additional_semantic_info(nir_shader *s, nir_variable *var, struct semantic_i
       info->cols = 1;
       next_row += info->rows;
    } else if (var->data.compact) {
-      if (var->data.location_frac) {
-         info->start_row = next_row - 1;
-      } else {
-         info->start_row = next_row;
-         next_row++;
-      }
+      info->start_row = next_row;
+      next_row++;
 
       assert(glsl_type_is_array(type) && info->kind == DXIL_SEM_CLIP_DISTANCE);
       unsigned num_floats = glsl_get_aoa_size(type);
@@ -573,7 +569,16 @@ get_input_signature_group(struct dxil_module *mod,
       struct semantic_info semantic = {0};
       get_semantics(var, &semantic, s->info.stage);
       mod->inputs[num_inputs].sysvalue = semantic.sysvalue_name;
-      *row_iter = get_additional_semantic_info(s, var, &semantic, *row_iter, input_clip_size);
+      nir_variable *base_var = var;
+      if (var->data.location_frac)
+         base_var = nir_find_variable_with_location(s, modes, var->data.location);
+      if (base_var != var)
+         /* Combine fractional vars into any already existing row */
+         get_additional_semantic_info(s, var, &semantic,
+                                      mod->psv_inputs[mod->input_mappings[base_var->data.driver_location]].start_row,
+                                      input_clip_size);
+      else
+         *row_iter = get_additional_semantic_info(s, var, &semantic, *row_iter, input_clip_size);
 
       mod->input_mappings[var->data.driver_location] = num_inputs;
       struct dxil_psv_signature_element *psv_elm = &mod->psv_inputs[num_inputs];
@@ -648,7 +653,17 @@ process_output_signature(struct dxil_module *mod, nir_shader *s)
          get_semantic_name(var, &semantic, type);
          mod->outputs[num_outputs].sysvalue = out_sysvalue_name(var);
       }
-      next_row = get_additional_semantic_info(s, var, &semantic, next_row, s->info.clip_distance_array_size);
+      nir_variable *base_var = var;
+      if (var->data.location_frac)
+         base_var = nir_find_variable_with_location(s, nir_var_shader_out, var->data.location);
+      if (base_var != var &&
+          base_var->data.stream == var->data.stream)
+         /* Combine fractional vars into any already existing row */
+         get_additional_semantic_info(s, var, &semantic,
+                                      mod->psv_outputs[base_var->data.driver_location].start_row,
+                                      s->info.clip_distance_array_size);
+      else
+         next_row = get_additional_semantic_info(s, var, &semantic, next_row, s->info.clip_distance_array_size);
 
       mod->info.has_out_position |= semantic.kind== DXIL_SEM_POSITION;
       mod->info.has_out_depth |= semantic.kind == DXIL_SEM_DEPTH;

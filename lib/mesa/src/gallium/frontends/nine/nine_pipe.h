@@ -24,7 +24,7 @@
 #define _NINE_PIPE_H_
 
 #include "d3d9.h"
-#include "pipe/p_format.h"
+#include "util/format/u_formats.h"
 #include "pipe/p_screen.h"
 #include "pipe/p_state.h" /* pipe_box */
 #include "util/macros.h"
@@ -346,6 +346,14 @@ d3d9_to_pipe_format_checked(struct pipe_screen *screen,
          * is precised in the name), so it is ok to match to another similar
          * format. In all cases, if the app reads the texture with a shader,
          * it gets depth on r and doesn't get stencil.*/
+        case D3DFMT_D16:
+            /* D16 support is a requirement, but as it cannot be locked,
+             * it is ok to revert to D24 */
+            if (format_check_internal(PIPE_FORMAT_Z24X8_UNORM))
+                return PIPE_FORMAT_Z24X8_UNORM;
+            if (format_check_internal(PIPE_FORMAT_X8Z24_UNORM))
+                return PIPE_FORMAT_X8Z24_UNORM;
+            break;
         case D3DFMT_INTZ:
         case D3DFMT_D24S8:
             if (format_check_internal(PIPE_FORMAT_Z24_UNORM_S8_UINT))

@@ -21,10 +21,6 @@
     # 4 CPUs, but spawn a couple extra threads to make sure they stay busy while
     # some are waiting for the GPU.
     FDO_CI_CONCURRENT: 6
-  needs:
-    - debian/arm_test
-    - job: debian-armhf
-      artifacts: false
   tags:
     - anholt-nouveau-jetson-tk1
 
@@ -54,19 +50,19 @@ gk20a-gles:
     DEQP_SUITE: nouveau-gk20a
 
 # Single Jetson Nano board at anholt's house.
-gm20b-gles-full:
+.gm20b-gles-full:
   extends:
     - .gm20b-test
-    - .test-manual-mr
+    - .nouveau-manual-rules
   timeout: 2h
   variables:
     HWCI_TEST_SCRIPT: "/install/deqp-runner.sh"
     DEQP_SUITE: nouveau-gm20b
     TEST_PHASE_TIMEOUT: 120
 
-gm20b-gles:
+.gm20b-gles:
   extends:
-    - gm20b-gles-full
+    - .gm20b-gles-full
   timeout: 60m
   variables:
     DEQP_FRACTION: 10

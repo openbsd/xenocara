@@ -29,6 +29,7 @@
 #define PVR_WINSYS_H
 
 #include <pthread.h>
+#include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <vulkan/vulkan.h>
@@ -40,6 +41,7 @@
 #include "util/macros.h"
 #include "util/vma.h"
 #include "vk_sync.h"
+#include "vk_sync_timeline.h"
 
 struct pvr_device_info;
 struct pvr_device_runtime_info;
@@ -121,6 +123,10 @@ struct pvr_winsys_bo {
    uint64_t size;
 
    bool is_imported;
+
+#if defined(HAVE_VALGRIND)
+   char *vbits;
+#endif /* defined(HAVE_VALGRIND) */
 };
 
 struct pvr_winsys_vma {
@@ -245,9 +251,6 @@ struct pvr_winsys_transfer_ctx {
    struct pvr_winsys *ws;
 };
 
-#define PVR_WINSYS_TRANSFER_FLAG_START BITFIELD_BIT(0U)
-#define PVR_WINSYS_TRANSFER_FLAG_END BITFIELD_BIT(1U)
-
 #define PVR_TRANSFER_MAX_PREPARES_PER_SUBMIT 16U
 #define PVR_TRANSFER_MAX_RENDER_TARGETS 3U
 
@@ -275,24 +278,25 @@ struct pvr_winsys_transfer_regs {
    uint32_t usc_pixel_output_ctrl;
 };
 
+struct pvr_winsys_transfer_cmd {
+   /* Firmware stream buffer. This is the maximum possible size taking into
+    * consideration all HW features.
+    */
+   uint8_t fw_stream[172];
+   uint32_t fw_stream_len;
+
+   /* Must be 0 or a combination of PVR_WINSYS_TRANSFER_FLAG_* flags. */
+   uint32_t flags;
+};
+
 struct pvr_winsys_transfer_submit_info {
    uint32_t frame_num;
    uint32_t job_num;
 
-   struct vk_sync *barrier;
-
-   /* waits and stage_flags are arrays of length wait_count. */
-   struct vk_sync **waits;
-   uint32_t wait_count;
-   uint32_t *stage_flags;
+   struct vk_sync *wait;
 
    uint32_t cmd_count;
-   struct {
-      struct pvr_winsys_transfer_regs regs;
-
-      /* Must be 0 or a combination of PVR_WINSYS_TRANSFER_FLAG_* flags. */
-      uint32_t flags;
-   } cmds[PVR_TRANSFER_MAX_PREPARES_PER_SUBMIT];
+   struct pvr_winsys_transfer_cmd cmds[PVR_TRANSFER_MAX_PREPARES_PER_SUBMIT];
 };
 
 #define PVR_WINSYS_COMPUTE_FLAG_PREVENT_ALL_OVERLAP BITFIELD_BIT(0U)
@@ -302,22 +306,19 @@ struct pvr_winsys_compute_submit_info {
    uint32_t frame_num;
    uint32_t job_num;
 
-   struct vk_sync *barrier;
+   struct vk_sync *wait;
 
-   /* waits and stage_flags are arrays of length wait_count. */
-   struct vk_sync **waits;
-   uint32_t wait_count;
-   uint32_t *stage_flags;
+   /* Firmware stream buffer. This is the maximum possible size taking into
+    * consideration all HW features.
+    */
+   uint8_t fw_stream[92];
+   uint32_t fw_stream_len;
 
-   struct {
-      uint64_t tpu_border_colour_table;
-      uint64_t cdm_ctrl_stream_base;
-      uint64_t cdm_ctx_state_base_addr;
-      uint32_t tpu;
-      uint32_t cdm_resume_pds1;
-      uint32_t cdm_item;
-      uint32_t compute_cluster;
-   } regs;
+   /* Firmware extension stream buffer. This is the maximum possible size taking
+    * into considation all quirks and enhancements.
+    */
+   uint8_t fw_ext_stream[8];
+   uint32_t fw_ext_stream_len;
 
    /* Must be 0 or a combination of PVR_WINSYS_COMPUTE_FLAG_* flags. */
    uint32_t flags;
@@ -331,6 +332,8 @@ struct pvr_winsys_compute_submit_info {
 #define PVR_WINSYS_FRAG_FLAG_STENCIL_BUFFER_PRESENT BITFIELD_BIT(1U)
 #define PVR_WINSYS_FRAG_FLAG_PREVENT_CDM_OVERLAP BITFIELD_BIT(2U)
 #define PVR_WINSYS_FRAG_FLAG_SINGLE_CORE BITFIELD_BIT(3U)
+#define PVR_WINSYS_FRAG_FLAG_GET_VIS_RESULTS BITFIELD_BIT(4U)
+#define PVR_WINSYS_FRAG_FLAG_SPMSCRATCHBUFFER (5U)
 
 struct pvr_winsys_render_submit_info {
    struct pvr_winsys_rt_dataset *rt_dataset;
@@ -342,58 +345,42 @@ struct pvr_winsys_render_submit_info {
    /* FIXME: should this be flags instead? */
    bool run_frag;
 
-   struct vk_sync *barrier_geom;
-   struct vk_sync *barrier_frag;
-
-   /* waits and stage_flags are arrays of length wait_count. */
-   struct vk_sync **waits;
-   uint32_t wait_count;
-   uint32_t *stage_flags;
-
    struct pvr_winsys_geometry_state {
-      struct {
-         uint64_t pds_ctrl;
-         uint32_t ppp_ctrl;
-         uint32_t te_psg;
-         uint32_t tpu;
-         uint64_t tpu_border_colour_table;
-         uint64_t vdm_ctrl_stream_base;
-         uint32_t vdm_ctx_resume_task0_size;
-      } regs;
+      /* Firmware stream buffer. This is the maximum possible size taking into
+       * consideration all HW features.
+       */
+      uint8_t fw_stream[52];
+      uint32_t fw_stream_len;
+
+      /* Firmware extension stream buffer. This is the maximum possible size
+       * taking into considation all quirks and enhancements.
+       */
+      uint8_t fw_ext_stream[12];
+      uint32_t fw_ext_stream_len;
 
       /* Must be 0 or a combination of PVR_WINSYS_GEOM_FLAG_* flags. */
       uint32_t flags;
+
+      struct vk_sync *wait;
    } geometry;
 
    struct pvr_winsys_fragment_state {
-      struct {
-         uint32_t event_pixel_pds_data;
-         uint32_t event_pixel_pds_info;
-         uint32_t isp_aa;
-         uint32_t isp_bgobjdepth;
-         uint32_t isp_bgobjvals;
-         uint32_t isp_ctl;
-         uint64_t isp_dbias_base;
-         uint64_t isp_oclqry_base;
-         uint64_t isp_scissor_base;
-         uint64_t isp_stencil_load_store_base;
-         uint64_t isp_zload_store_base;
-         uint64_t isp_zlsctl;
-         uint32_t isp_zls_pixels;
-         uint64_t pbe_word[PVR_MAX_COLOR_ATTACHMENTS]
-                          [ROGUE_NUM_PBESTATE_REG_WORDS];
-         uint32_t pixel_phantom;
-         uint64_t pds_bgnd[ROGUE_NUM_CR_PDS_BGRND_WORDS];
-         uint64_t pds_pr_bgnd[ROGUE_NUM_CR_PDS_BGRND_WORDS];
-         uint32_t tpu;
-         uint64_t tpu_border_colour_table;
-         uint32_t usc_pixel_output_ctrl;
-      } regs;
+      /* Firmware stream buffer. This is the maximum possible size taking into
+       * consideration all HW features.
+       */
+      uint8_t fw_stream[432];
+      uint32_t fw_stream_len;
+
+      /* Firmware extension stream buffer. This is the maximum possible size
+       * taking into considation all quirks and enhancements.
+       */
+      uint8_t fw_ext_stream[8];
+      uint32_t fw_ext_stream_len;
 
       /* Must be 0 or a combination of PVR_WINSYS_FRAG_FLAG_* flags. */
       uint32_t flags;
-      uint32_t zls_stride;
-      uint32_t sls_stride;
+
+      struct vk_sync *wait;
    } fragment;
 };
 
@@ -458,6 +445,7 @@ struct pvr_winsys_ops {
    VkResult (*render_submit)(
       const struct pvr_winsys_render_ctx *ctx,
       const struct pvr_winsys_render_submit_info *submit_info,
+      const struct pvr_device_info *dev_info,
       struct vk_sync *signal_sync_geom,
       struct vk_sync *signal_sync_frag);
 
@@ -469,6 +457,7 @@ struct pvr_winsys_ops {
    VkResult (*compute_submit)(
       const struct pvr_winsys_compute_ctx *ctx,
       const struct pvr_winsys_compute_submit_info *submit_info,
+      const struct pvr_device_info *dev_info,
       struct vk_sync *signal_sync);
 
    VkResult (*transfer_ctx_create)(
@@ -479,20 +468,26 @@ struct pvr_winsys_ops {
    VkResult (*transfer_submit)(
       const struct pvr_winsys_transfer_ctx *ctx,
       const struct pvr_winsys_transfer_submit_info *submit_info,
+      const struct pvr_device_info *dev_info,
       struct vk_sync *signal_sync);
 
    VkResult (*null_job_submit)(struct pvr_winsys *ws,
-                               struct vk_sync **waits,
+                               struct vk_sync_wait *waits,
                                uint32_t wait_count,
-                               struct vk_sync *signal_sync);
+                               struct vk_sync_signal *signal_sync);
 };
 
 struct pvr_winsys {
    uint64_t page_size;
    uint32_t log2_page_size;
 
-   const struct vk_sync_type *sync_types[2];
+   const struct vk_sync_type *sync_types[3];
    struct vk_sync_type syncobj_type;
+   struct vk_sync_timeline_type timeline_syncobj_type;
+
+   struct {
+      bool supports_threaded_submit : 1;
+   } features;
 
    const struct pvr_winsys_ops *ops;
 };

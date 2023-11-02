@@ -29,6 +29,7 @@
 
 #include "util/memstream.h"
 
+#include "ac_shader_util.h"
 #include <algorithm>
 #include <map>
 #include <vector>
@@ -68,7 +69,8 @@ get_mimg_nsa_dwords(const Instruction* instr)
 {
    unsigned addr_dwords = instr->operands.size() - 3;
    for (unsigned i = 1; i < addr_dwords; i++) {
-      if (instr->operands[3 + i].physReg() != instr->operands[3].physReg().advance(i * 4))
+      if (instr->operands[3 + i].physReg() !=
+          instr->operands[3 + (i - 1)].physReg().advance(instr->operands[3 + (i - 1)].bytes()))
          return DIV_ROUND_UP(addr_dwords - 1, 4);
    }
    return 0;
@@ -98,6 +100,25 @@ reg(asm_context& ctx, Definition def, unsigned width = 32)
    return reg(ctx, def.physReg()) & BITFIELD_MASK(width);
 }
 
+bool
+needs_vop3_gfx11(asm_context& ctx, Instruction* instr)
+{
+   if (ctx.gfx_level <= GFX10_3)
+      return false;
+
+   uint8_t mask = get_gfx11_true16_mask(instr->opcode);
+   if (!mask)
+      return false;
+
+   u_foreach_bit (i, mask & 0x3) {
+      if (instr->operands[i].physReg().reg() >= (256 + 128))
+         return true;
+   }
+   if ((mask & 0x8) && instr->definitions[0].physReg().reg() >= (256 + 128))
+      return true;
+   return false;
+}
+
 void
 emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* instr)
 {
@@ -115,6 +136,21 @@ emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* inst
       assert(instr->operands[1].isConstant());
       /* in case it's an inline constant, make it a literal */
       instr->operands[1] = Operand::literal32(instr->operands[1].constantValue());
+   }
+
+   /* Promote VOP12C to VOP3 if necessary. */
+   if ((instr->isVOP1() || instr->isVOP2() || instr->isVOPC()) && !instr->isVOP3() &&
+       needs_vop3_gfx11(ctx, instr)) {
+      instr->format = asVOP3(instr->format);
+      if (instr->opcode == aco_opcode::v_fmaak_f16) {
+         instr->opcode = aco_opcode::v_fma_f16;
+         instr->format = (Format)((uint32_t)instr->format & ~(uint32_t)Format::VOP2);
+      } else if (instr->opcode == aco_opcode::v_fmamk_f16) {
+         std::swap(instr->operands[1], instr->operands[2]);
+         instr->valu().opsel[1].swap(instr->valu().opsel[2]);
+         instr->opcode = aco_opcode::v_fma_f16;
+         instr->format = (Format)((uint32_t)instr->format & ~(uint32_t)Format::VOP2);
+      }
    }
 
    uint32_t opcode = ctx.opcode[(int)instr->opcode];
@@ -298,29 +334,41 @@ emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* inst
       return;
    }
    case Format::VOP2: {
+      VALU_instruction& valu = instr->valu();
       uint32_t encoding = 0;
       encoding |= opcode << 25;
       encoding |= reg(ctx, instr->definitions[0], 8) << 17;
+      encoding |= (valu.opsel[3] ? 128 : 0) << 17;
       encoding |= reg(ctx, instr->operands[1], 8) << 9;
+      encoding |= (valu.opsel[1] ? 128 : 0) << 9;
       encoding |= reg(ctx, instr->operands[0]);
+      encoding |= valu.opsel[0] ? 128 : 0;
       out.push_back(encoding);
       break;
    }
    case Format::VOP1: {
+      VALU_instruction& valu = instr->valu();
       uint32_t encoding = (0b0111111 << 25);
-      if (!instr->definitions.empty())
+      if (!instr->definitions.empty()) {
          encoding |= reg(ctx, instr->definitions[0], 8) << 17;
+         encoding |= (valu.opsel[3] ? 128 : 0) << 17;
+      }
       encoding |= opcode << 9;
-      if (!instr->operands.empty())
+      if (!instr->operands.empty()) {
          encoding |= reg(ctx, instr->operands[0]);
+         encoding |= valu.opsel[0] ? 128 : 0;
+      }
       out.push_back(encoding);
       break;
    }
    case Format::VOPC: {
+      VALU_instruction& valu = instr->valu();
       uint32_t encoding = (0b0111110 << 25);
       encoding |= opcode << 17;
       encoding |= reg(ctx, instr->operands[1], 8) << 9;
+      encoding |= (valu.opsel[1] ? 128 : 0) << 9;
       encoding |= reg(ctx, instr->operands[0]);
+      encoding |= valu.opsel[0] ? 128 : 0;
       out.push_back(encoding);
       break;
    }
@@ -706,8 +754,8 @@ emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* inst
       /* TODO: VOP3/VOP3P can use DPP8/16 on GFX11 (encoding of src0 and DPP8/16 word seems same
        * except abs/neg is ignored). src2 cannot be literal and src0/src1 must be VGPR.
        */
-      if (instr->isVOP3()) {
-         VOP3_instruction& vop3 = instr->vop3();
+      if (instr->isVOP3() && !instr->isDPP()) {
+         VALU_instruction& vop3 = instr->valu();
 
          if (instr->isVOP2()) {
             opcode = opcode + 0x100;
@@ -767,7 +815,7 @@ emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* inst
          out.push_back(encoding);
 
       } else if (instr->isVOP3P()) {
-         VOP3P_instruction& vop3 = instr->vop3p();
+         VALU_instruction& vop3 = instr->valu();
 
          uint32_t encoding;
          if (ctx.gfx_level == GFX9) {
@@ -810,10 +858,11 @@ emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* inst
          encoding |= dpp.abs[0] << 21;
          encoding |= dpp.neg[0] << 20;
          if (ctx.gfx_level >= GFX10)
-            encoding |= 1 << 18; /* set Fetch Inactive to match GFX9 behaviour */
+            encoding |= 1 << 18; /* set Fetch Inactive */
          encoding |= dpp.bound_ctrl << 19;
          encoding |= dpp.dpp_ctrl << 8;
          encoding |= reg(ctx, dpp_op, 8);
+         encoding |= dpp.opsel[0] && !instr->isVOP3() ? 128 : 0;
          out.push_back(encoding);
          return;
       } else if (instr->isDPP8()) {
@@ -826,6 +875,7 @@ emit_instruction(asm_context& ctx, std::vector<uint32_t>& out, Instruction* inst
          instr->format = (Format)((uint16_t)instr->format & ~(uint16_t)Format::DPP8);
          emit_instruction(ctx, out, instr);
          uint32_t encoding = reg(ctx, dpp_op, 8);
+         encoding |= dpp.opsel[0] && !instr->isVOP3() ? 128 : 0;
          for (unsigned i = 0; i < 8; ++i)
             encoding |= dpp.lane_sel[i] << (8 + i * 3);
          out.push_back(encoding);
@@ -1153,6 +1203,9 @@ emit_program(Program* program, std::vector<uint32_t>& code)
    /* Copy constant data */
    code.insert(code.end(), (uint32_t*)program->constant_data.data(),
                (uint32_t*)(program->constant_data.data() + program->constant_data.size()));
+
+   program->config->scratch_bytes_per_wave = align(
+      program->config->scratch_bytes_per_wave, program->dev.scratch_alloc_granule);
 
    return exec_size;
 }

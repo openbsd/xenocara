@@ -8,15 +8,13 @@
 #ifndef HGL_CONTEXT_H
 #define HGL_CONTEXT_H
 
-#include "os/os_thread.h"
-#include "pipe/p_format.h"
+#include "util/u_thread.h"
+#include "util/format/u_formats.h"
 #include "pipe/p_compiler.h"
 #include "pipe/p_screen.h"
 #include "postprocess/filters.h"
 
 #include "frontend/api.h"
-
-#include "bitmap_wrapper.h"
 
 
 #ifdef __cplusplus
@@ -31,11 +29,13 @@ typedef int64 context_id;
 
 struct hgl_buffer
 {
-	struct st_framebuffer_iface *stfbi;
-	struct st_visual* visual;
+	struct pipe_frontend_drawable base;
+	struct st_visual visual;
 
 	unsigned width;
 	unsigned height;
+	unsigned newWidth;
+	unsigned newHeight;
 	unsigned mask;
 
 	struct pipe_screen* screen;
@@ -43,8 +43,6 @@ struct hgl_buffer
 
 	enum pipe_texture_target target;
 	struct pipe_resource* textures[ST_ATTACHMENT_COUNT];
-
-	void *map;
 };
 
 
@@ -52,43 +50,29 @@ struct hgl_display
 {
 	mtx_t mutex;
 
-	struct st_manager* manager;
+	struct pipe_frontend_screen *fscreen;
 };
 
 
 struct hgl_context
 {
 	struct hgl_display* display;
-	struct st_context_iface* st;
-	struct st_visual* stVisual;
+	struct st_context* st;
 
 	// Post processing
 	struct pp_queue_t* postProcess;
 	unsigned int postProcessEnable[PP_FILTERS];
-
-	// Desired viewport size
-	unsigned width;
-	unsigned height;
-
-	mtx_t fbMutex;
-
-	struct hgl_buffer* buffer;
 };
 
-// hgl_buffer from statetracker interface
-struct hgl_buffer* hgl_st_framebuffer(struct st_framebuffer_iface *stfbi);
-
 // hgl framebuffer
-struct hgl_buffer* hgl_create_st_framebuffer(struct hgl_context* context, void *winsysContext);
+struct hgl_buffer* hgl_create_st_framebuffer(struct hgl_display *display, struct st_visual* visual, void *winsysContext);
 void hgl_destroy_st_framebuffer(struct hgl_buffer *buffer);
 
-// hgl manager
-struct st_manager* hgl_create_st_manager(struct hgl_context* screen);
-void hgl_destroy_st_manager(struct st_manager *manager);
+struct hgl_context* hgl_create_context(struct hgl_display *display, struct st_visual* visual, struct st_context* shared);
+void hgl_destroy_context(struct hgl_context* context);
 
 // hgl visual
-struct st_visual* hgl_create_st_visual(ulong options);
-void hgl_destroy_st_visual(struct st_visual* visual);
+void hgl_get_st_visual(struct st_visual* visual, ulong options);
 
 // hgl display
 struct hgl_display* hgl_create_display(struct pipe_screen* screen);

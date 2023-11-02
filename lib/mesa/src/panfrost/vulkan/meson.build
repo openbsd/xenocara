@@ -77,7 +77,7 @@ foreach arch : ['6', '7']
       inc_include,
       inc_src,
       inc_compiler,
-      inc_gallium, # XXX: pipe/p_format.h
+      inc_gallium, # XXX: util/format/u_formats.h
       inc_gallium_aux, # XXX: renderonly
       inc_panfrost,
     ],
@@ -95,7 +95,7 @@ foreach arch : ['6', '7']
 endforeach
 
 if with_platform_wayland
-  panvk_deps += [dep_wayland_client, dep_wl_protocols]
+  panvk_deps += dep_wayland_client
   libpanvk_files += [wayland_drm_client_protocol_h, wayland_drm_protocol_c]
 endif
 
@@ -106,7 +106,7 @@ libvulkan_panfrost = shared_library(
     inc_include,
     inc_src,
     inc_compiler,
-    inc_gallium, # XXX: pipe/p_format.h
+    inc_gallium, # XXX: util/format/u_formats.h
     inc_gallium_aux, # XXX: renderonly
     inc_panfrost,
   ],
@@ -155,20 +155,18 @@ panfrost_icd = custom_target(
   install : true,
 )
 
-if meson.version().version_compare('>= 0.58')
-  _dev_icdname = 'panfrost_devenv_icd.@0@.json'.format(host_machine.cpu())
-  custom_target(
-    'panfrost_devenv_icd',
-    input : [vk_icd_gen, vk_api_xml],
-    output : _dev_icdname,
-    command : [
-      prog_python, '@INPUT0@',
-      '--api-version', '1.1', '--xml', '@INPUT1@',
-      '--lib-path', meson.current_build_dir() / 'libvulkan_panfrost.so',
-      '--out', '@OUTPUT@',
-    ],
-    build_by_default : true,
-  )
+_dev_icdname = 'panfrost_devenv_icd.@0@.json'.format(host_machine.cpu())
+_dev_icd = custom_target(
+  'panfrost_devenv_icd',
+  input : [vk_icd_gen, vk_api_xml],
+  output : _dev_icdname,
+  command : [
+    prog_python, '@INPUT0@',
+    '--api-version', '1.1', '--xml', '@INPUT1@',
+    '--lib-path', meson.current_build_dir() / 'libvulkan_panfrost.so',
+    '--out', '@OUTPUT@',
+  ],
+  build_by_default : true,
+)
 
-  devenv.append('VK_ICD_FILENAMES', meson.current_build_dir() / _dev_icdname)
-endif
+devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())

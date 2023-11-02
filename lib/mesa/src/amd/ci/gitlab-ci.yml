@@ -17,14 +17,15 @@
   variables:
     GPU_VERSION: radeonsi-stoney
     DRIVER_NAME: radeonsi
-    # 12 devices (2022-11-30)
+    # 12 devices (2023-01-10)
     RUNNER_TAG: mesa-ci-x86-64-lava-acer-R721T-grunt
     DEVICE_TYPE: acer-R721T-grunt
+    PIGLIT_PLATFORM: mixed_glx_egl
 
 .radv-stoney-test:amd64:
   extends:
     - .stoney-test:amd64
-    - .radv-rules
+    - .radv-collabora-rules
   variables:
     DEQP_VER: vk
     DRIVER_NAME: radv
@@ -34,18 +35,18 @@
     DEVICE_TYPE: hp-14-db0003na-grunt
     RUNNER_TAG: mesa-ci-x86-64-lava-hp-14-db0003na-grunt
 
-# Run ten jobs in parallel each running 1/40th of the test suite
+# Run five jobs in parallel each running 1/55th of the test suite
 radv-stoney-vkcts:amd64:
   extends:
-    - .lava-test:amd64
+    - .lava-test-deqp:amd64
     - .radv-stoney-test:amd64
   parallel: 5
   variables:
-    DEQP_FRACTION: 8
+    DEQP_FRACTION: 11
 
 radeonsi-stoney-gl:amd64:
   extends:
-    - .lava-test:amd64
+    - .lava-test-deqp:amd64
     - .radeonsi-stoney-test:amd64
   parallel: 11
   variables:
@@ -61,8 +62,19 @@ radeonsi-stoney-traces:amd64:
     PIGLIT_REPLAY_DESCRIPTION_FILE: "/install/traces-amd.yml"
     PIGLIT_REPLAY_EXTRA_ARGS: --keep-image
 
-# 5 devices (2022-10-19)
-.raven-test:amd64:
+# 10 devices (2023-01-17)
+.lava-asus-CM1400CXA-dalboz:amd64:
+  variables:
+    BOOT_METHOD: depthcharge
+    DEVICE_TYPE: asus-CM1400CXA-dalboz
+    DTB: ""
+    HWCI_FREQ_MAX: "true"
+    HWCI_KERNEL_MODULES: amdgpu
+    KERNEL_IMAGE_TYPE: ""
+    RUNNER_TAG: mesa-ci-x86-64-lava-asus-CM1400CXA-dalboz
+
+# 5 devices (2023-04-10) # FIXME currently only 2 available
+.lava-lenovo-TPad-C13-Yoga-zork:amd64:
   variables:
     BOOT_METHOD: depthcharge
     DEVICE_TYPE: lenovo-TPad-C13-Yoga-zork
@@ -74,7 +86,6 @@ radeonsi-stoney-traces:amd64:
 
 .radeonsi-raven-test:amd64:
   extends:
-    - .raven-test:amd64
     - .radeonsi-rules
   variables:
     GPU_VERSION: radeonsi-raven
@@ -82,71 +93,83 @@ radeonsi-stoney-traces:amd64:
 
 .radv-raven-test:amd64:
   extends:
-    - .raven-test:amd64
-    - .radv-rules
+    - .radv-collabora-rules
   variables:
     GPU_VERSION: radv-raven
     VK_DRIVER: radeon
 
 .amd-raven-test:amd64:
   extends:
-    - .raven-test:amd64
     - .radeonsi+radv-rules
   variables:
     DRIVER_NAME: radeonsi
     GPU_VERSION: amd-raven
     VK_DRIVER: radeon
 
+radv-raven-vkcts:amd64:
+  extends:
+    - .lava-test-deqp:amd64
+    - .radv-raven-test:amd64
+    - .lava-asus-CM1400CXA-dalboz:amd64
+  parallel: 9
+  variables:
+    DEQP_VER: vk
+    DEQP_FRACTION: 6
+
 amd-raven-skqp:amd64:
   extends:
-    - .lava-test:amd64
+    - .lava-test-deqp:amd64
     - .amd-raven-test:amd64
-    - .skqp-test
+    - .lava-lenovo-TPad-C13-Yoga-zork:amd64
   variables:
-    # Possible skqp backends: gl, gles, unitTest and vk
-    SKQP_BACKENDS: gl gles vk unitTest  # space separated values
+    HWCI_START_WESTON: 1
+    DEQP_SUITE: amd-raven-skqp
 
 .radv-traces:
   extends:
     - .lava-piglit-traces:amd64
   variables:
-    HWCI_START_XORG: 1
     PIGLIT_PLATFORM: mixed_glx_egl  # TODO, take wine/VK in account
     PIGLIT_REPLAY_DESCRIPTION_FILE: "/install/traces-amd.yml"
     PIGLIT_REPLAY_EXTRA_ARGS: --keep-image
 
-radv-raven-traces:amd64:
+.radv-raven-traces:amd64:  # FIXME: when TPad-C13 gets back, restore
   extends:
     - .radv-traces
     - .radv-raven-test:amd64
+    - .lava-lenovo-TPad-C13-Yoga-zork:amd64
   variables:
+    HWCI_START_XORG: 1
     PIGLIT_REPLAY_DEVICE_NAME: "vk-${GPU_VERSION}"
 
 radeonsi-raven-piglit-quick_gl:amd64:
   extends:
     - .lava-piglit:amd64
     - .radeonsi-raven-test:amd64
+    - .lava-lenovo-TPad-C13-Yoga-zork:amd64
   variables:
     PIGLIT_PLATFORM: mixed_glx_egl
     PIGLIT_PROFILES: quick_gl
     HWCI_START_XORG: 1
 
-radeonsi-raven-piglit-quick_shader:amd64:
+radeonsi-raven-piglit-quick_shader:amd64:  # FIXME: when TPad-C13 gets back, restore
   extends:
     - radeonsi-raven-piglit-quick_gl:amd64
   variables:
     PIGLIT_PROFILES: quick_shader
+    PIGLIT_FRACTION: 2
 
-radeonsi-raven-va:amd64:
+.radeonsi-raven-va:amd64:  # FIXME: when TPad-C13 gets back, restore
   extends:
-    - .lava-test:amd64
+    - .lava-test-deqp:amd64
     - .radeonsi-raven-test:amd64
     - .radeonsi-vaapi-rules
+    - .lava-asus-CM1400CXA-dalboz:amd64
   variables:
     HWCI_TEST_SCRIPT: "/install/gtest-runner.sh"
     # While the tests don't need Xorg, it's an easy way to keep DRM open so we don't
     # spend all our time in drm_lastclose()'s modesetting.
-    HWCI_START_XORG: 1
+    HWCI_START_WESTON: 1
     GTEST: test_va_api
     # The big 10-surface 10k allocations oomkill us at around 2.5G of GPU memory
     # allocated if we run at the normal 4 threads.
@@ -159,8 +182,6 @@ radeonsi-raven-va:amd64:
 
 ############### Valve Infra
 .test-radv:
-  extends:
-    - .radv-rules
   variables:
     VK_DRIVER: radeon
     DRIVER_NAME: radv
@@ -172,29 +193,20 @@ radeonsi-raven-va:amd64:
     MESA_SPIRV_LOG_LEVEL: error
     ACO_DEBUG: validateir,validatera
     MESA_VK_IGNORE_CONFORMANCE_WARNING: 1
+    B2C_JOB_VOLUME_EXCLUSIONS: "*.shader_cache,install/*,*/install/*,*/vkd3d-proton.cache*,vkd3d-proton.cache*,*.qpa"
+    # Enable ETC2 emulation on non-native platforms (RENOIR,RDNA+, GFX6-8 dGPUs)
+    radv_require_etc2: 'true'
 
 .b2c-test-radv-vk:
   extends:
+    - .radv-valve-rules
     - .test-radv
     - .b2c-test-vk
 
-.b2c-test-radv-gl:
-  extends:
-    - .test-radv
-    - .b2c-test-gl
-  variables:
-    MESA_LOADER_DRIVER_OVERRIDE: zink
-
 .deqp-test-valve:
-  extends:
-    # Keep all the dEQP jobs as manual trigger jobs for now, until we
-    # have enough resources to meet the throughput requirements for
-    # automatic pre-merge in the Mesa CI.
-    - .test-manual-mr
   variables:
     B2C_JOB_SUCCESS_REGEX: '^\+ DEQP_EXITCODE=0\r$'
-    B2C_TEST_SCRIPT: ./install/deqp-runner.sh
-    B2C_JOB_VOLUME_EXCLUSIONS: "*.shader_cache"
+    HWCI_TEST_SCRIPT: ./install/deqp-runner.sh
 
 .kabini-test-valve:
   variables:
@@ -268,15 +280,14 @@ radeonsi-raven-va:amd64:
     - .deqp-test-valve
   variables:
     DEQP_VER: vk
-    RADV_PERFTEST: nv_ms,ext_ms
 
 # VKCTS never finishes on gfx7 due to all the GPU resets and hangs.
 # Hence, disable it for now.
-vkcts-kabini-valve:
+.vkcts-kabini-valve:
   extends:
     - .vkcts-test-valve
     - .kabini-test-valve
-    - .test-manual-mr  # Make sure this job is *always* run manually
+    - .radv-valve-manual-rules  # Make sure this job is *always* run manually
   timeout: 12h
   variables:
     GPU_VERSION: radv-kabini-aco
@@ -288,6 +299,7 @@ vkcts-kabini-valve:
 .vkcts-stoney-valve:
   extends:
     - .vkcts-test-valve
+    - .radv-valve-manual-rules
   parallel: 2
   # The thin clients can't manage a full run in less than an hour
   # currently.  Interpolation suggests four more thin clients (6
@@ -307,6 +319,7 @@ vkcts-kabini-valve:
   extends:
     - .vkcts-test-valve
     - .polaris10-test-valve
+    - .radv-valve-manual-rules
   variables:
     GPU_VERSION: radv-polaris10-aco
 
@@ -314,26 +327,37 @@ vkcts-vega10-valve:
   extends:
     - .vkcts-test-valve
     - .vega10-test-valve
+    - .radv-valve-manual-rules
+  timeout: 1h 15m
   variables:
     GPU_VERSION: radv-vega10-aco
+    B2C_TIMEOUT_BOOT_MINUTES: 70
+    B2C_TIMEOUT_OVERALL_MINUTES: 70
 
 vkcts-renoir-valve:
   extends:
     - .vkcts-test-valve
     - .renoir-test-valve
-  timeout: 2h 10m
+    - .radv-valve-manual-rules
+  timeout: 2h 15m
   variables:
     GPU_VERSION: radv-renoir-aco
+    B2C_TIMEOUT_BOOT_MINUTES: 130
+    B2C_TIMEOUT_OVERALL_MINUTES: 130
 
 vkcts-navi10-valve:
   extends:
     - .vkcts-test-valve
     - .navi10-test-valve
+    - .radv-valve-manual-rules
   variables:
     GPU_VERSION: radv-navi10-aco
+    # Use Linux 5.17 to work around hitting __vm_enough_memory then hanging on Linux 6.1
+    # See https://gitlab.freedesktop.org/mesa/mesa/-/issues/7888 for details
+    B2C_KERNEL_URL: 'https://gitlab.freedesktop.org/mupuf/valve-infra/-/package_files/144/download'  # 5.17.1
 
 vkcts-navi21-valve:
-  parallel: 2
+  parallel: 3
   extends:
     - .vkcts-test-valve
     - .navi21-test-valve
@@ -344,6 +368,7 @@ vkcts-navi21-llvm-valve:
   extends:
     - .vkcts-test-valve
     - .navi21-test-valve
+    - .radv-valve-manual-rules
   variables:
     GPU_VERSION: radv-navi21-llvm
     RADV_DEBUG: llvm,checkir
@@ -353,63 +378,15 @@ vkcts-vangogh-valve:
   extends:
     - .vkcts-test-valve
     - .vangogh-test-valve
+    - .radv-valve-manual-rules
   timeout: 2h 10m
   variables:
     GPU_VERSION: radv-vangogh-aco
 
-############### gles/GLCTS
-.glcts-test-valve:
-  extends:
-    - .b2c-test-radv-gl
-    - .deqp-test-valve
-  variables:
-    DEQP_VER: gl46
-
-glcts-navi10-valve:
-  extends:
-    - .glcts-test-valve
-    - .navi10-test-valve
-  variables:
-    GPU_VERSION: zink-radv
-
-.gles-test-valve:
-  extends:
-    - .b2c-test-radv-gl
-    - .deqp-test-valve
-  variables:
-    DEQP_SUITE: zink-radv
-
-gles-navi10-valve:
-  extends:
-    - .gles-test-valve
-    - .navi10-test-valve
-  variables:
-    GPU_VERSION: zink-radv
-
-############### piglit
-.piglit-test-valve:
-  extends:
-    - .b2c-test-radv-gl
-    # Keep all the piglit jobs as manual trigger jobs for now, until we
-    # have enough resources to meet the throughput requirements for
-    # automatic pre-merge in the Mesa CI.
-    - .test-manual-mr
-  variables:
-    B2C_JOB_SUCCESS_REGEX: '^\+ PIGLIT_EXITCODE=0\r$'
-    B2C_TEST_SCRIPT: ./install/piglit/piglit-runner.sh
-    PIGLIT_PROFILES: all
-    PIGLIT_PLATFORM: gbm
-
-piglit-navi10-valve:
-  extends:
-    - .piglit-test-valve
-    - .navi10-test-valve
-  variables:
-    GPU_VERSION: zink-radv
-
 ############### Fossilize
 radv-fossils:
   extends:
+    - .radv-valve-rules
     - .test-vk
     - .test-radv
     - .fossilize-test
@@ -440,18 +417,15 @@ radv-fossils:
 .vkd3d-test-valve:
   extends:
     - .b2c-test-radv-vk
-    # Keep all the vkd3d-proton jobs as manual trigger jobs for now, until we
-    # have enough resources to meet the throughput requirements for
-    # automatic pre-merge in the Mesa CI.
-    - .test-manual-mr
   variables:
     B2C_JOB_SUCCESS_REGEX: 'SUCCESS: No changes found!\r$'
-    B2C_TEST_SCRIPT: ./install/vkd3d-proton/run.sh
+    HWCI_TEST_SCRIPT: ./install/vkd3d-proton/run.sh
 
 .vkd3d-kabini-valve:
   extends:
     - .vkd3d-test-valve
     - .kabini-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-kabini-vkd3d
 
@@ -459,6 +433,7 @@ radv-fossils:
   extends:
     - .vkd3d-test-valve
     - .polaris10-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-polaris10-vkd3d
 
@@ -466,6 +441,7 @@ vkd3d-vega10-valve:
   extends:
     - .vkd3d-test-valve
     - .vega10-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-vega10-vkd3d
 
@@ -473,6 +449,7 @@ vkd3d-renoir-valve:
   extends:
     - .vkd3d-test-valve
     - .renoir-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-renoir-vkd3d
 
@@ -480,6 +457,7 @@ vkd3d-navi10-valve:
   extends:
     - .vkd3d-test-valve
     - .navi10-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-navi10-vkd3d
 
@@ -487,6 +465,7 @@ vkd3d-navi21-valve:
   extends:
     - .vkd3d-test-valve
     - .navi21-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-navi21-vkd3d
 
@@ -494,5 +473,6 @@ vkd3d-vangogh-valve:
   extends:
     - .vkd3d-test-valve
     - .vangogh-test-valve
+    - .radv-valve-manual-rules
   variables:
     VKD3D_PROTON_RESULTS: radv-vangogh-vkd3d

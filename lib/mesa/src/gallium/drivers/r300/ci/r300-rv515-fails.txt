@@ -5,9 +5,6 @@ dEQP-GLES2.functional.clipping.point.wide_point_clip_viewport_corner,Fail
 dEQP-GLES2.functional.clipping.line.wide_line_clip_viewport_center,Fail
 dEQP-GLES2.functional.clipping.line.wide_line_clip_viewport_corner,Fail
 
-# "r300: Skipping a draw command. There is a buffer  which is too small to be used for rendering."
-dEQP-GLES2.functional.draw.draw_elements.points.single_attribute,Fail
-dEQP-GLES2.functional.draw.draw_elements.points.multiple_attributes,Fail
 dEQP-GLES2.functional.draw.draw_elements.indices.user_ptr.index_byte,Fail
 
 # "Framebuffer checked as complete, expected incomplete"
@@ -28,8 +25,6 @@ dEQP-GLES2.functional.polygon_offset.fixed16_factor_1_slope,Fail
 # "Invalid line width at (119, 179) - (119, 180). Detected width of 2, expected 1"
 dEQP-GLES2.functional.rasterization.primitives.line_strip_wide,Fail,Fail
 dEQP-GLES2.functional.rasterization.primitives.line_loop_wide,Fail
-
-dEQP-GLES2.functional.shaders.random.texture.fragment.141,Fail
 
 dEQP-GLES2.functional.texture.format.a8_cube_npot,Fail
 dEQP-GLES2.functional.texture.format.l8_cube_npot,Fail

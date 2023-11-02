@@ -1,7 +1,7 @@
-# Failures likely due to lavapipe (i.e. the intersection of observed failures and lvp-fails.txt)
-dEQP-VK.glsl.crash_test.divbyzero_comp,Crash
-
 # Full Venus list
+dEQP-VK.multiview.dynamic_rendering.queries.15_15_15_15,Fail
+dEQP-VK.multiview.dynamic_rendering.queries.15,Fail
+dEQP-VK.multiview.dynamic_rendering.queries.5_10_5_10,Fail
 dEQP-VK.multiview.queries.15_15_15_15,Fail
 dEQP-VK.multiview.queries.15,Fail
 dEQP-VK.multiview.queries.5_10_5_10,Fail

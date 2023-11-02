@@ -19,6 +19,9 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
+ *
+ * 'pvr_write_query_to_buffer()' and 'pvr_wait_for_available()' based on anv:
+ * Copyright © 2015 Intel Corporation
  */
 
 #include <assert.h>
@@ -31,6 +34,7 @@
 #include "pvr_device_info.h"
 #include "pvr_private.h"
 #include "util/macros.h"
+#include "util/os_time.h"
 #include "vk_log.h"
 #include "vk_object.h"
 
@@ -65,6 +69,8 @@ VkResult pvr_CreateQueryPool(VkDevice _device,
 
    pool->result_stride =
       ALIGN_POT(query_size, PVRX(CR_ISP_OCLQRY_BASE_ADDR_ALIGNMENT));
+
+   pool->query_count = pCreateInfo->queryCount;
 
    /* Each Phantom writes to a separate offset within the vis test heap so
     * allocate space for the total number of Phantoms.
@@ -115,6 +121,70 @@ void pvr_DestroyQueryPool(VkDevice _device,
    vk_object_free(&device->vk, pAllocator, pool);
 }
 
+/* Note: make sure to make the availability buffer's memory defined in
+ * accordance to how the device is expected to fill it. We don't make it defined
+ * here since that would cover up usage of this function while the underlying
+ * buffer region being accessed wasn't expect to have been written by the
+ * device.
+ */
+static inline bool pvr_query_is_available(const struct pvr_query_pool *pool,
+                                          uint32_t query_idx)
+{
+   volatile uint32_t *available = pool->availability_buffer->bo->map;
+   return !!available[query_idx];
+}
+
+#define NSEC_PER_SEC UINT64_C(1000000000)
+#define PVR_WAIT_TIMEOUT UINT64_C(5)
+
+/* Note: make sure to make the availability buffer's memory defined in
+ * accordance to how the device is expected to fill it. We don't make it defined
+ * here since that would cover up usage of this function while the underlying
+ * buffer region being accessed wasn't expect to have been written by the
+ * device.
+ */
+/* TODO: Handle device loss scenario properly. */
+static bool pvr_wait_for_available(struct pvr_device *device,
+                                   const struct pvr_query_pool *pool,
+                                   uint32_t query_idx)
+{
+   const uint64_t abs_timeout =
+      os_time_get_absolute_timeout(PVR_WAIT_TIMEOUT * NSEC_PER_SEC);
+
+   /* From the Vulkan 1.0 spec:
+    *
+    *    Commands that wait indefinitely for device execution (namely
+    *    vkDeviceWaitIdle, vkQueueWaitIdle, vkWaitForFences or
+    *    vkAcquireNextImageKHR with a maximum timeout, and
+    *    vkGetQueryPoolResults with the VK_QUERY_RESULT_WAIT_BIT bit set in
+    *    flags) must return in finite time even in the case of a lost device,
+    *    and return either VK_SUCCESS or VK_ERROR_DEVICE_LOST.
+    */
+   while (os_time_get_nano() < abs_timeout) {
+      if (pvr_query_is_available(pool, query_idx) != 0)
+         return VK_SUCCESS;
+   }
+
+   return vk_error(device, VK_ERROR_DEVICE_LOST);
+}
+
+#undef NSEC_PER_SEC
+#undef PVR_WAIT_TIMEOUT
+
+static inline void pvr_write_query_to_buffer(uint8_t *buffer,
+                                             VkQueryResultFlags flags,
+                                             uint32_t idx,
+                                             uint64_t value)
+{
+   if (flags & VK_QUERY_RESULT_64_BIT) {
+      uint64_t *query_data = (uint64_t *)buffer;
+      query_data[idx] = value;
+   } else {
+      uint32_t *query_data = (uint32_t *)buffer;
+      query_data[idx] = value;
+   }
+}
+
 VkResult pvr_GetQueryPoolResults(VkDevice _device,
                                  VkQueryPool queryPool,
                                  uint32_t firstQuery,
@@ -124,8 +194,65 @@ VkResult pvr_GetQueryPoolResults(VkDevice _device,
                                  VkDeviceSize stride,
                                  VkQueryResultFlags flags)
 {
-   assert(!"Unimplemented");
-   return VK_SUCCESS;
+   PVR_FROM_HANDLE(pvr_query_pool, pool, queryPool);
+   PVR_FROM_HANDLE(pvr_device, device, _device);
+   const uint32_t core_count = device->pdevice->dev_runtime_info.core_count;
+   VG(volatile uint32_t *available = pool->availability_buffer->bo->map);
+   volatile uint32_t *query_results = pool->result_buffer->bo->map;
+   uint8_t *data = (uint8_t *)pData;
+   VkResult result = VK_SUCCESS;
+
+   /* TODO: Instead of making the memory defined here for valgrind, to better
+    * catch out of bounds access and other memory errors we should move them
+    * where where the query buffers are changed by the driver or device (e.g.
+    * "vkCmdResetQueryPool()", "vkGetQueryPoolResults()", etc.).
+    */
+
+   VG(VALGRIND_MAKE_MEM_DEFINED(&available[firstQuery],
+                                queryCount * sizeof(uint32_t)));
+
+   for (uint32_t i = 0; i < core_count; i++) {
+      VG(VALGRIND_MAKE_MEM_DEFINED(
+         &query_results[firstQuery + i * pool->result_stride],
+         queryCount * sizeof(uint32_t)));
+   }
+
+   for (uint32_t i = 0; i < queryCount; i++) {
+      bool is_available = pvr_query_is_available(pool, firstQuery + i);
+      uint64_t count = 0;
+
+      if (flags & VK_QUERY_RESULT_WAIT_BIT && !is_available) {
+         result = pvr_wait_for_available(device, pool, firstQuery + i);
+         if (result != VK_SUCCESS)
+            return result;
+
+         is_available = true;
+      }
+
+      for (uint32_t j = 0; j < core_count; j++)
+         count += query_results[pool->result_stride * j + firstQuery + i];
+
+      if (is_available || (flags & VK_QUERY_RESULT_PARTIAL_BIT))
+         pvr_write_query_to_buffer(data, flags, 0, count);
+      else
+         result = VK_NOT_READY;
+
+      if (flags & VK_QUERY_RESULT_WITH_AVAILABILITY_BIT)
+         pvr_write_query_to_buffer(data, flags, 1, is_available);
+
+      data += stride;
+   }
+
+   VG(VALGRIND_MAKE_MEM_UNDEFINED(&available[firstQuery],
+                                  queryCount * sizeof(uint32_t)));
+
+   for (uint32_t i = 0; i < core_count; i++) {
+      VG(VALGRIND_MAKE_MEM_UNDEFINED(
+         &query_results[firstQuery + i * pool->result_stride],
+         queryCount * sizeof(uint32_t)));
+   }
+
+   return result;
 }
 
 void pvr_CmdResetQueryPool(VkCommandBuffer commandBuffer,
@@ -133,7 +260,18 @@ void pvr_CmdResetQueryPool(VkCommandBuffer commandBuffer,
                            uint32_t firstQuery,
                            uint32_t queryCount)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_cmd_buffer, cmd_buffer, commandBuffer);
+   struct pvr_query_info query_info;
+
+   PVR_CHECK_COMMAND_BUFFER_BUILDING_STATE(cmd_buffer);
+
+   query_info.type = PVR_QUERY_TYPE_RESET_QUERY_POOL;
+
+   query_info.reset_query_pool.query_pool = queryPool;
+   query_info.reset_query_pool.first_query = firstQuery;
+   query_info.reset_query_pool.query_count = queryCount;
+
+   pvr_add_query_program(cmd_buffer, &query_info);
 }
 
 void pvr_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer,
@@ -145,7 +283,67 @@ void pvr_CmdCopyQueryPoolResults(VkCommandBuffer commandBuffer,
                                  VkDeviceSize stride,
                                  VkQueryResultFlags flags)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_cmd_buffer, cmd_buffer, commandBuffer);
+   struct pvr_query_info query_info;
+   struct pvr_sub_cmd_event *sub_cmd;
+   VkResult result;
+
+   PVR_CHECK_COMMAND_BUFFER_BUILDING_STATE(cmd_buffer);
+
+   query_info.type = PVR_QUERY_TYPE_COPY_QUERY_RESULTS;
+
+   query_info.copy_query_results.query_pool = queryPool;
+   query_info.copy_query_results.first_query = firstQuery;
+   query_info.copy_query_results.query_count = queryCount;
+   query_info.copy_query_results.dst_buffer = dstBuffer;
+   query_info.copy_query_results.dst_offset = dstOffset;
+   query_info.copy_query_results.stride = stride;
+   query_info.copy_query_results.flags = flags;
+
+   result = pvr_cmd_buffer_start_sub_cmd(cmd_buffer, PVR_SUB_CMD_TYPE_EVENT);
+   if (result != VK_SUCCESS)
+      return;
+
+   /* The Vulkan 1.3.231 spec says:
+    *
+    *    "vkCmdCopyQueryPoolResults is considered to be a transfer operation,
+    *    and its writes to buffer memory must be synchronized using
+    *    VK_PIPELINE_STAGE_TRANSFER_BIT and VK_ACCESS_TRANSFER_WRITE_BIT before
+    *    using the results."
+    *
+    */
+   /* We record barrier event sub commands to sync the compute job used for the
+    * copy query results program with transfer jobs to prevent an overlapping
+    * transfer job with the compute job.
+    */
+
+   sub_cmd = &cmd_buffer->state.current_sub_cmd->event;
+   *sub_cmd = (struct pvr_sub_cmd_event) {
+      .type = PVR_EVENT_TYPE_BARRIER,
+      .barrier = {
+         .wait_for_stage_mask = PVR_PIPELINE_STAGE_TRANSFER_BIT,
+         .wait_at_stage_mask = PVR_PIPELINE_STAGE_OCCLUSION_QUERY_BIT,
+      },
+   };
+
+   result = pvr_cmd_buffer_end_sub_cmd(cmd_buffer);
+   if (result != VK_SUCCESS)
+      return;
+
+   pvr_add_query_program(cmd_buffer, &query_info);
+
+   result = pvr_cmd_buffer_start_sub_cmd(cmd_buffer, PVR_SUB_CMD_TYPE_EVENT);
+   if (result != VK_SUCCESS)
+      return;
+
+   sub_cmd = &cmd_buffer->state.current_sub_cmd->event;
+   *sub_cmd = (struct pvr_sub_cmd_event) {
+      .type = PVR_EVENT_TYPE_BARRIER,
+      .barrier = {
+         .wait_for_stage_mask = PVR_PIPELINE_STAGE_OCCLUSION_QUERY_BIT,
+         .wait_at_stage_mask = PVR_PIPELINE_STAGE_TRANSFER_BIT,
+      },
+   };
 }
 
 void pvr_CmdBeginQuery(VkCommandBuffer commandBuffer,
@@ -153,12 +351,62 @@ void pvr_CmdBeginQuery(VkCommandBuffer commandBuffer,
                        uint32_t query,
                        VkQueryControlFlags flags)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_cmd_buffer, cmd_buffer, commandBuffer);
+   struct pvr_cmd_buffer_state *state = &cmd_buffer->state;
+   PVR_FROM_HANDLE(pvr_query_pool, pool, queryPool);
+
+   PVR_CHECK_COMMAND_BUFFER_BUILDING_STATE(cmd_buffer);
+
+   /* Occlusion queries can't be nested. */
+   assert(!state->vis_test_enabled);
+
+   if (state->current_sub_cmd) {
+      assert(state->current_sub_cmd->type == PVR_SUB_CMD_TYPE_GRAPHICS);
+
+      if (!state->current_sub_cmd->gfx.query_pool) {
+         state->current_sub_cmd->gfx.query_pool = pool;
+      } else if (state->current_sub_cmd->gfx.query_pool != pool) {
+         VkResult result;
+
+         /* Kick render. */
+         state->current_sub_cmd->gfx.barrier_store = true;
+
+         result = pvr_cmd_buffer_end_sub_cmd(cmd_buffer);
+         if (result != VK_SUCCESS)
+            return;
+
+         result =
+            pvr_cmd_buffer_start_sub_cmd(cmd_buffer, PVR_SUB_CMD_TYPE_GRAPHICS);
+         if (result != VK_SUCCESS)
+            return;
+
+         /* Use existing render setup, but load color attachments from HW
+          * BGOBJ.
+          */
+         state->current_sub_cmd->gfx.barrier_load = true;
+         state->current_sub_cmd->gfx.barrier_store = false;
+         state->current_sub_cmd->gfx.query_pool = pool;
+      }
+   }
+
+   state->query_pool = pool;
+   state->vis_test_enabled = true;
+   state->vis_reg = query;
+   state->dirty.vis_test = true;
+
+   /* Add the index to the list for this render. */
+   util_dynarray_append(&state->query_indices, __typeof__(query), query);
 }
 
 void pvr_CmdEndQuery(VkCommandBuffer commandBuffer,
                      VkQueryPool queryPool,
                      uint32_t query)
 {
-   assert(!"Unimplemented");
+   PVR_FROM_HANDLE(pvr_cmd_buffer, cmd_buffer, commandBuffer);
+   struct pvr_cmd_buffer_state *state = &cmd_buffer->state;
+
+   PVR_CHECK_COMMAND_BUFFER_BUILDING_STATE(cmd_buffer);
+
+   state->vis_test_enabled = false;
+   state->dirty.vis_test = true;
 }

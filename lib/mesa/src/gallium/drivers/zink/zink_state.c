@@ -407,12 +407,14 @@ zink_bind_blend_state(struct pipe_context *pctx, void *cso)
 
    if (state->blend_state != cso) {
       state->blend_state = cso;
-      state->blend_id = blend ? blend->hash : 0;
-      state->dirty |= !zink_screen(pctx->screen)->have_full_ds3;
+      if (!zink_screen(pctx->screen)->have_full_ds3) {
+         state->blend_id = blend ? blend->hash : 0;
+         state->dirty = true;
+      }
       bool force_dual_color_blend = zink_screen(pctx->screen)->driconf.dual_color_blend_by_location &&
                                     blend && blend->dual_src_blend && state->blend_state->attachments[0].blendEnable;
-      if (force_dual_color_blend != zink_get_fs_key(ctx)->force_dual_color_blend)
-         zink_set_fs_key(ctx)->force_dual_color_blend = force_dual_color_blend;
+      if (force_dual_color_blend != zink_get_fs_base_key(ctx)->force_dual_color_blend)
+         zink_set_fs_base_key(ctx)->force_dual_color_blend = force_dual_color_blend;
       ctx->blend_state_changed = true;
    }
 }
@@ -510,7 +512,7 @@ zink_bind_depth_stencil_alpha_state(struct pipe_context *pctx, void *cso)
 {
    struct zink_context *ctx = zink_context(pctx);
 
-   bool prev_zwrite = ctx->dsa_state ? ctx->dsa_state->hw_state.depth_write : false;
+   bool prev_zswrite = ctx->dsa_state ? ctx->dsa_state->hw_state.depth_write || ctx->dsa_state->hw_state.stencil_test : false;
    ctx->dsa_state = cso;
 
    if (cso) {
@@ -520,10 +522,15 @@ zink_bind_depth_stencil_alpha_state(struct pipe_context *pctx, void *cso)
          state->dirty |= !zink_screen(pctx->screen)->info.have_EXT_extended_dynamic_state;
          ctx->dsa_state_changed = true;
       }
+      if (!ctx->track_renderpasses && !ctx->blitting)
+         zink_parse_tc_info(ctx);
    }
-   if (prev_zwrite != (ctx->dsa_state ? ctx->dsa_state->hw_state.depth_write : false)) {
-      /* flag renderpass for re-check on next draw */
-      ctx->rp_layout_changed = true;
+   if (!ctx->track_renderpasses && !ctx->blitting) {
+      bool zs_write = ctx->dsa_state ? ctx->dsa_state->hw_state.depth_write || ctx->dsa_state->hw_state.stencil_test : false;
+      if (prev_zswrite != zs_write) {
+         /* flag renderpass for re-check on next draw */
+         ctx->rp_layout_changed = true;
+      }
    }
 }
 
@@ -564,7 +571,10 @@ zink_create_rasterizer_state(struct pipe_context *pctx,
 
    state->base = *rs_state;
    state->base.line_stipple_factor++;
-   state->hw_state.line_stipple_enable = rs_state->line_stipple_enable;
+
+   state->hw_state.line_stipple_enable =
+      rs_state->line_stipple_enable &&
+      !screen->driver_workarounds.no_linestipple;
 
    assert(rs_state->depth_clip_far == rs_state->depth_clip_near);
    state->hw_state.depth_clip = rs_state->depth_clip_near;
@@ -575,8 +585,15 @@ zink_create_rasterizer_state(struct pipe_context *pctx,
    assert(rs_state->fill_front <= PIPE_POLYGON_MODE_POINT);
    if (rs_state->fill_back != rs_state->fill_front)
       debug_printf("BUG: vulkan doesn't support different front and back fill modes\n");
-   state->hw_state.polygon_mode = rs_state->fill_front; // same values
-   state->cull_mode = rs_state->cull_face; // same bits
+
+   if (rs_state->fill_front == PIPE_POLYGON_MODE_POINT &&
+       screen->driver_workarounds.no_hw_gl_point) {
+      state->hw_state.polygon_mode = VK_POLYGON_MODE_FILL;
+      state->cull_mode = VK_CULL_MODE_NONE;
+   } else {
+      state->hw_state.polygon_mode = rs_state->fill_front; // same values
+      state->cull_mode = rs_state->cull_face; // same bits
+   }
 
    state->front_face = rs_state->front_ccw ?
                        VK_FRONT_FACE_COUNTER_CLOCKWISE :
@@ -584,12 +601,29 @@ zink_create_rasterizer_state(struct pipe_context *pctx,
 
    state->hw_state.line_mode = VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT;
    if (rs_state->line_rectangular) {
-      if (rs_state->line_smooth)
+      if (rs_state->line_smooth &&
+          !screen->driver_workarounds.no_linesmooth)
          state->hw_state.line_mode = VK_LINE_RASTERIZATION_MODE_RECTANGULAR_SMOOTH_EXT;
       else
          state->hw_state.line_mode = VK_LINE_RASTERIZATION_MODE_RECTANGULAR_EXT;
    } else {
       state->hw_state.line_mode = VK_LINE_RASTERIZATION_MODE_BRESENHAM_EXT;
+   }
+   state->dynamic_line_mode = state->hw_state.line_mode;
+   switch (state->hw_state.line_mode) {
+   case VK_LINE_RASTERIZATION_MODE_RECTANGULAR_EXT:
+      if (!screen->info.line_rast_feats.rectangularLines)
+         state->dynamic_line_mode = VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT;
+      break;
+   case VK_LINE_RASTERIZATION_MODE_RECTANGULAR_SMOOTH_EXT:
+      if (!screen->info.line_rast_feats.smoothLines)
+         state->dynamic_line_mode = VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT;
+      break;
+   case VK_LINE_RASTERIZATION_MODE_BRESENHAM_EXT:
+      if (!screen->info.line_rast_feats.bresenhamLines)
+         state->dynamic_line_mode = VK_LINE_RASTERIZATION_MODE_DEFAULT_EXT;
+      break;
+   default: break;
    }
 
    if (!rs_state->line_stipple_enable) {
@@ -638,7 +672,7 @@ zink_bind_rasterizer_state(struct pipe_context *pctx, void *cso)
       ctx->rast_state_changed = true;
 
       if (clip_halfz != ctx->rast_state->base.clip_halfz) {
-         if (!screen->driver_workarounds.depth_clip_control_missing)
+         if (screen->info.have_EXT_depth_clip_control)
             ctx->gfx_pipeline_state.dirty = true;
          else
             zink_set_last_vertex_key(ctx)->clip_halfz = ctx->rast_state->base.clip_halfz;
@@ -647,6 +681,11 @@ zink_bind_rasterizer_state(struct pipe_context *pctx, void *cso)
 
       if (fabs(ctx->rast_state->base.line_width - line_width) > FLT_EPSILON)
          ctx->line_width_changed = true;
+
+      bool lower_gl_point = screen->driver_workarounds.no_hw_gl_point;
+      lower_gl_point &= ctx->rast_state->base.fill_front == PIPE_POLYGON_MODE_POINT;
+      if (zink_get_gs_key(ctx)->lower_gl_point != lower_gl_point)
+         zink_set_gs_key(ctx)->lower_gl_point = lower_gl_point;
 
       if (ctx->gfx_pipeline_state.dyn_state1.front_face != ctx->rast_state->front_face) {
          ctx->gfx_pipeline_state.dyn_state1.front_face = ctx->rast_state->front_face;
@@ -661,19 +700,23 @@ zink_bind_rasterizer_state(struct pipe_context *pctx, void *cso)
       else if (rasterizer_discard != ctx->rast_state->base.rasterizer_discard)
          zink_set_color_write_enables(ctx);
 
-      if (ctx->rast_state->base.point_quad_rasterization != point_quad_rasterization)
+      if (ctx->rast_state->base.point_quad_rasterization ||
+          ctx->rast_state->base.point_quad_rasterization != point_quad_rasterization)
          zink_set_fs_point_coord_key(ctx);
       if (ctx->rast_state->base.scissor != scissor)
          ctx->scissor_changed = true;
 
       if (ctx->rast_state->base.force_persample_interp != force_persample_interp) {
-         zink_set_fs_key(ctx)->force_persample_interp = ctx->rast_state->base.force_persample_interp;
+         zink_set_fs_base_key(ctx)->force_persample_interp = ctx->rast_state->base.force_persample_interp;
          ctx->gfx_pipeline_state.dirty = true;
       }
       ctx->gfx_pipeline_state.force_persample_interp = ctx->rast_state->base.force_persample_interp;
 
       if (ctx->rast_state->base.half_pixel_center != half_pixel_center)
          ctx->vp_state_changed = true;
+
+      if (!screen->optimal_keys)
+         zink_update_gs_key_rectangular_line(ctx);
    }
 }
 
@@ -692,7 +735,6 @@ zink_create_vertex_state(struct pipe_screen *pscreen,
                           uint32_t full_velem_mask)
 {
    struct zink_vertex_state *zstate = CALLOC_STRUCT(zink_vertex_state);
-   _mesa_set_init(&zstate->masks, NULL, NULL, _mesa_key_pointer_equal);
 
    util_init_pipe_vertex_state(pscreen, buffer, elements, num_elements, indexbuf, full_velem_mask,
                                &zstate->b);
@@ -716,41 +758,9 @@ zink_create_vertex_state(struct pipe_screen *pscreen,
 void
 zink_vertex_state_destroy(struct pipe_screen *pscreen, struct pipe_vertex_state *vstate)
 {
-   struct zink_vertex_state *zstate = (struct zink_vertex_state *)vstate;
-   ralloc_free(zstate->masks.table);
    pipe_vertex_buffer_unreference(&vstate->input.vbuffer);
    pipe_resource_reference(&vstate->input.indexbuf, NULL);
    FREE(vstate);
-}
-
-const struct zink_vertex_elements_hw_state *
-zink_vertex_state_mask(struct pipe_vertex_state *vstate, uint32_t partial_velem_mask, bool have_EXT_vertex_input_dynamic_state)
-{
-   struct zink_vertex_state *zstate = (struct zink_vertex_state *)vstate;
-
-   if (partial_velem_mask == vstate->input.full_velem_mask)
-      return &zstate->velems.hw_state;
-   struct set_entry *he = _mesa_set_search_pre_hashed(&zstate->masks, partial_velem_mask, (void*)(uintptr_t)partial_velem_mask);
-   if (he)
-      return he->key;
-
-   struct zink_vertex_elements_hw_state *hw_state = rzalloc(zstate->masks.table, struct zink_vertex_elements_hw_state);
-   unsigned i = 0;
-   if (have_EXT_vertex_input_dynamic_state) {
-      u_foreach_bit(elem, vstate->input.full_velem_mask & partial_velem_mask) {
-         unsigned idx = util_bitcount(vstate->input.full_velem_mask & BITFIELD_MASK(elem));
-         hw_state->dynattribs[i] = zstate->velems.hw_state.dynattribs[idx];
-         hw_state->dynattribs[i].location = i;
-         i++;
-      }
-      memcpy(hw_state->dynbindings, zstate->velems.hw_state.dynbindings,
-             zstate->velems.hw_state.num_bindings * sizeof(VkVertexInputBindingDescription2EXT));
-   } else {
-   }
-   hw_state->num_attribs = i;
-   hw_state->num_bindings = zstate->velems.hw_state.num_bindings;
-   _mesa_set_add_pre_hashed(&zstate->masks, partial_velem_mask, hw_state);
-   return hw_state;
 }
 
 struct pipe_vertex_state *

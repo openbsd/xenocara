@@ -10,26 +10,24 @@
 .llvmpipe-piglit-cl:
   extends:
     - .test-cl
-    - .piglit-test
+    - .deqp-test
     - .llvmpipe-test
   variables:
     LP_NUM_THREADS: 1
     PIGLIT_PROFILES: cl
-    PIGLIT_TESTS: >
-      -x bswap -x phatk -x clz-optimizations
-  script:
-    - install/piglit/run_cl.sh
 
-llvmpipe-piglit-clover:
+# TODO: remove together with Clover
+.llvmpipe-piglit-clover:
   extends:
     - .llvmpipe-piglit-cl
     - .llvmpipe-clover-rules
   needs:
-    - debian-clover-testing
+    - .debian-clover-testing
     - debian/x86_test-gl
   variables:
     LP_CL: 1
-    PIGLIT_RESULTS: "llvmpipe-clover"
+    DEQP_SUITE: llvmpipe-clover
+    GPU_VERSION: llvmpipe-clover
 
 llvmpipe-piglit-rusticl:
   extends:
@@ -40,7 +38,9 @@ llvmpipe-piglit-rusticl:
     - debian/x86_test-gl
   variables:
     RUSTICL_ENABLE: "llvmpipe"
-    PIGLIT_RESULTS: "llvmpipe-rusticl"
+    DEQP_SUITE: llvmpipe-rusticl
+    DEQP_RUNNER_OPTIONS: "--timeout 120.0"
+    GPU_VERSION: llvmpipe-rusticl
 
 llvmpipe-traces:
   extends:
@@ -62,13 +62,17 @@ llvmpipe-traces:
     - .llvmpipe-test
 
 llvmpipe:
-  tags:
-    - mesa-swrast
   variables:
     DEQP_SUITE: llvmpipe
+    XVFB_SCRIPT: "install/deqp-runner.sh"
+    DEQP_FRACTION: 4
   extends: .llvmpipe-deqp-test
-  script:
-    - LD_LIBRARY_PATH=`pwd`/install xvfb-run --server-args='-noreset' install/deqp-runner.sh
+  script: |
+    . "$SCRIPTS_DIR"/setup-test-env.sh
+    section_start weston "weston: prepare"
+    LD_LIBRARY_PATH="$PWD/install" weston -Bheadless-backend.so -Swayland-0 --idle-time=0 &
+    section_end weston
+    LD_LIBRARY_PATH="$PWD/install" WAYLAND_DISPLAY=wayland-0 xvfb-run --server-args='-noreset' bash -c ". $SCRIPTS_DIR/setup-test-env.sh && ${XVFB_SCRIPT}"
 
 llvmpipe-deqp-asan:
   variables:

@@ -226,6 +226,10 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
       swap = WZYX;
    }
 
+   /* FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8 is broken without UBWC on a630.  We
+    * don't need it without UBWC anyway because the purpose of the format is
+    * UBWC-compatibility.
+    */
    if (texture_format == FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8 && !ubwc_enabled)
       texture_format = FMT6_8_8_8_8_UNORM;
 
@@ -371,12 +375,20 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
 
    enum a3xx_color_swap color_swap =
       fd6_color_swap(args->format, layout->tile_mode);
+   enum a6xx_format blit_format = color_format;
 
    if (is_d24s8)
       color_format = FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8;
 
    if (color_format == FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8 && !ubwc_enabled)
       color_format = FMT6_8_8_8_8_UNORM;
+
+   /* We don't need FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8 / FMT6_8_8_8_8_UNORM
+    * for event blits.  FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8 also does not
+    * support fast clears and is slower.
+    */
+   if (is_d24s8 || blit_format == FMT6_Z24_UNORM_S8_UINT_AS_R8G8B8A8)
+      blit_format = FMT6_Z24_UNORM_S8_UINT;
 
    memset(view->storage_descriptor, 0, sizeof(view->storage_descriptor));
 
@@ -423,7 +435,7 @@ fdl6_view_init(struct fdl6_view *view, const struct fdl_layout **layouts,
    view->RB_BLIT_DST_INFO =
       A6XX_RB_BLIT_DST_INFO_TILE_MODE(tile_mode) |
       A6XX_RB_BLIT_DST_INFO_SAMPLES(util_logbase2(layout->nr_samples)) |
-      A6XX_RB_BLIT_DST_INFO_COLOR_FORMAT(color_format) |
+      A6XX_RB_BLIT_DST_INFO_COLOR_FORMAT(blit_format) |
       A6XX_RB_BLIT_DST_INFO_COLOR_SWAP(color_swap) |
       COND(ubwc_enabled, A6XX_RB_BLIT_DST_INFO_FLAGS);
 }
@@ -432,7 +444,10 @@ void
 fdl6_buffer_view_init(uint32_t *descriptor, enum pipe_format format,
                       const uint8_t *swiz, uint64_t iova, uint32_t size)
 {
-   unsigned elements = size / util_format_get_blocksize(format);
+   unsigned elem_size = util_format_get_blocksize(format);
+   unsigned elements = size / elem_size;
+   uint64_t base_iova = iova & ~0x3full;
+   unsigned texel_offset = (iova & 0x3f) / elem_size;
 
    struct fdl_view_args args = {
       .format = format,
@@ -449,8 +464,9 @@ fdl6_buffer_view_init(uint32_t *descriptor, enum pipe_format format,
       COND(util_format_is_srgb(format), A6XX_TEX_CONST_0_SRGB);
    descriptor[1] = A6XX_TEX_CONST_1_WIDTH(elements & ((1 << 15) - 1)) |
                    A6XX_TEX_CONST_1_HEIGHT(elements >> 15);
-   descriptor[2] = A6XX_TEX_CONST_2_BUFFER |
+   descriptor[2] = A6XX_TEX_CONST_2_STRUCTSIZETEXELS(1) |
+                   A6XX_TEX_CONST_2_STARTOFFSETTEXELS(texel_offset) |
                    A6XX_TEX_CONST_2_TYPE(A6XX_TEX_BUFFER);
-   descriptor[4] = iova;
-   descriptor[5] = iova >> 32;
+   descriptor[4] = base_iova;
+   descriptor[5] = base_iova >> 32;
 }

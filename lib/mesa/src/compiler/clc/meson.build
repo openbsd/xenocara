@@ -19,36 +19,48 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
-clang_resource_dir = join_paths(llvm_libdir, 'clang', dep_llvm.version(), 'include')
-
-if dep_llvm.version().version_compare('< 15.0')
-  opencl_c_h = custom_target(
-    'opencl-c.h',
-    input : [files_xxd, join_paths(clang_resource_dir, 'opencl-c.h')],
-    output : 'opencl-c.h.h',
-    command : [prog_python, '@INPUT@', '@OUTPUT@', '-n', 'opencl_c_source'],
-  )
-endif
-
-opencl_c_base_h = custom_target(
-  'opencl-c-base.h',
-  input : [files_xxd, join_paths(clang_resource_dir, 'opencl-c-base.h')],
-  output : 'opencl-c-base.h.h',
-  command : [prog_python, '@INPUT@', '@OUTPUT@', '-n', 'opencl_c_base_source'],
-)
-
-_libclc_sources = [opencl_c_base_h]
-if dep_llvm.version().version_compare('< 15.0')
-  _libclc_sources += [opencl_c_h]
-endif
 
 files_libclc = files(
   'clc.c',
   'clc_helpers.cpp',
 )
 
-_libclc_cpp_args = ['-DCLANG_RESOURCE_DIR="@0@"'.format(clang_resource_dir)]
+_libclc_cpp_args = ['-DLLVM_LIB_DIR="@0@"'.format(llvm_libdir)]
+_libclc_sources = []
+
 if with_microsoft_clc
+
+  # LLVM 16 moved clang header path from using full version to only major version
+  if dep_llvm.version().version_compare('< 16')
+    # Prior to LLVM 16, this path used a full version
+    clang_version_dir = dep_llvm.version()
+  else
+    # LLVM 16 changed to only using a major version
+    clang_version_dir = dep_llvm.version().split('.')[0]
+  endif
+  clang_resource_dir = join_paths(llvm_libdir, 'clang', clang_version_dir, 'include')
+
+  if dep_llvm.version().version_compare('< 15.0')
+    opencl_c_h = custom_target(
+      'opencl-c.h',
+      input : [files_xxd, join_paths(clang_resource_dir, 'opencl-c.h')],
+      output : 'opencl-c.h.h',
+      command : [prog_python, '@INPUT@', '@OUTPUT@', '-n', 'opencl_c_source'],
+    )
+  endif
+
+  opencl_c_base_h = custom_target(
+    'opencl-c-base.h',
+    input : [files_xxd, join_paths(clang_resource_dir, 'opencl-c-base.h')],
+    output : 'opencl-c-base.h.h',
+    command : [prog_python, '@INPUT@', '@OUTPUT@', '-n', 'opencl_c_base_source'],
+  )
+
+  _libclc_sources += [opencl_c_base_h]
+  if dep_llvm.version().version_compare('< 15.0')
+    _libclc_sources += [opencl_c_h]
+  endif
+
   _libclc_cpp_args += ['-DUSE_STATIC_OPENCL_C_H=1']
 endif
 

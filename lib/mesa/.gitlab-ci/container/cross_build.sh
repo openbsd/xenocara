@@ -15,9 +15,11 @@ apt-get update
 
 apt-get install -y --no-remove \
         $STABLE_EPHEMERAL \
+	curl \
         crossbuild-essential-$arch \
         libelf-dev:$arch \
         libexpat1-dev:$arch \
+        libffi-dev:$arch \
         libpciaccess-dev:$arch \
         libstdc++6:$arch \
         libvulkan-dev:$arch \
@@ -35,7 +37,7 @@ apt-get install -y --no-remove \
         libxrandr-dev:$arch \
         libxshmfence-dev:$arch \
         libxxf86vm-dev:$arch \
-        wget
+        libwayland-dev:$arch
 
 if [[ $arch != "armhf" ]]; then
     # See the list of available architectures in https://apt.llvm.org/bullseye/dists/llvm-toolchain-bullseye-13/main/
@@ -45,12 +47,16 @@ if [[ $arch != "armhf" ]]; then
         LLVM=11
     fi
 
+    # We don't need clang-format for the crossbuilds, but the installed amd64
+    # package will conflict with libclang. Uninstall clang-format (and its
+    # problematic dependency) to fix.
+    apt-get remove -y clang-format-13 libclang-cpp13
+
     # llvm-*-tools:$arch conflicts with python3:amd64. Install dependencies only
     # with apt-get, then force-install llvm-*-{dev,tools}:$arch with dpkg to get
     # around this.
     apt-get install -y --no-remove --no-install-recommends \
             libclang-cpp${LLVM}:$arch \
-            libffi-dev:$arch \
             libgcc-s1:$arch \
             libtinfo-dev:$arch \
             libz3-dev:$arch \
@@ -67,6 +73,8 @@ fi
 # dependencies where we want a specific version
 EXTRA_MESON_ARGS="--cross-file=/cross_file-${arch}.txt -D libdir=lib/$(dpkg-architecture -A $arch -qDEB_TARGET_MULTIARCH)"
 . .gitlab-ci/container/build-libdrm.sh
+
+. .gitlab-ci/container/build-wayland.sh
 
 apt-get purge -y \
         $STABLE_EPHEMERAL

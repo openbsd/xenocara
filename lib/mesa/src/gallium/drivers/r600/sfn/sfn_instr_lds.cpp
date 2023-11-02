@@ -142,6 +142,7 @@ LDSReadInstr::split(std::vector<AluInstr *>& out_block, AluInstr *last_lds_instr
                                 AluInstr::last_write);
       instr->add_required_instr(last_lds_instr);
       instr->set_blockid(block_id(), index());
+      instr->set_always_keep();
       out_block.push_back(instr);
       last_lds_instr = instr;
    }
@@ -225,6 +226,48 @@ LDSReadInstr::from_string(istream& is, ValueFactory& value_factory) -> Pointer
    assert(srcs.size() == dests.size() && !dests.empty());
 
    return new LDSReadInstr(dests, srcs);
+}
+
+bool LDSReadInstr::replace_dest(PRegister new_dest, AluInstr *move_instr)
+{
+   if (new_dest->pin() == pin_array)
+      return false;
+
+   auto old_dest = move_instr->psrc(0);
+
+   bool success = false;
+
+   for (unsigned i = 0; i < m_dest_value.size(); ++i) {
+      auto& dest = m_dest_value[i];
+
+      if (!dest->equal_to(*old_dest))
+         continue;
+
+      if (dest->equal_to(*new_dest))
+         continue;
+
+      if (dest->uses().size() > 1)
+         continue;
+
+      if (dest->pin() == pin_fully)
+         continue;
+
+      if (dest->pin() == pin_group)
+         continue;
+
+      if (dest->pin() == pin_chan && new_dest->chan() != dest->chan())
+         continue;
+
+      if (dest->pin() == pin_chan) {
+         if (new_dest->pin() == pin_group)
+            new_dest->set_pin(pin_chgr);
+         else
+            new_dest->set_pin(pin_chan);
+      }
+      m_dest_value[i] = new_dest;
+      success = true;
+   }
+   return success;
 }
 
 LDSAtomicInstr::LDSAtomicInstr(ESDOp op,

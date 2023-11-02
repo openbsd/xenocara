@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 
-#include "drm-uapi/i915_drm.h"
+#include "intel/dev/intel_kmd.h"
 
 enum intel_engine_class {
    INTEL_ENGINE_CLASS_RENDER = 0,
@@ -46,10 +46,8 @@ struct intel_query_engine_info {
    struct intel_engine_class_instance engines[];
 };
 
-enum intel_engine_class i915_engine_class_to_intel(enum drm_i915_gem_engine_class i915);
-enum drm_i915_gem_engine_class intel_engine_class_to_i915(enum intel_engine_class intel);
-
-struct intel_query_engine_info *intel_engine_get_info(int fd);
+struct intel_query_engine_info *
+intel_engine_get_info(int fd, enum intel_kmd_type type);
 int intel_engines_count(const struct intel_query_engine_info *info,
                         enum intel_engine_class engine_class);
 const char *intel_engines_class_to_string(enum intel_engine_class engine_class);

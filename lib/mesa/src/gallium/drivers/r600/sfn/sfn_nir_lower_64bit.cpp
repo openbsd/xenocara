@@ -158,7 +158,6 @@ class LowerSplit64op : public NirLowerInstruction {
          switch (alu->op) {
          case nir_op_bcsel:
             return nir_dest_bit_size(alu->dest.dest) == 64;
-         case nir_op_f2b1:
          case nir_op_f2i32:
          case nir_op_f2u32:
          case nir_op_f2i64:
@@ -200,12 +199,6 @@ class LowerSplit64op : public NirLowerInstruction {
                          nir_unpack_64_2x32_split_y(b, nir_ssa_for_alu_src(b, alu, 2)));
             return nir_pack_64_2x32_split(b, lo, hi);
          }
-         case nir_op_f2b1: {
-            auto mask = nir_component_mask(nir_dest_num_components(alu->dest.dest));
-            return nir_fneu(b,
-                            nir_channels(b, nir_ssa_for_alu_src(b, alu, 0), mask),
-                            nir_imm_zero(b, nir_dest_num_components(alu->dest.dest), 64));
-         }
          case nir_op_f2i32: {
             auto src = nir_ssa_for_alu_src(b, alu, 0);
             auto gt0 = nir_flt(b, nir_imm_double(b, 0.0), src);
@@ -219,11 +212,11 @@ class LowerSplit64op : public NirLowerInstruction {
              * rounds, we have to remove the fractional part in the hi bits
              * For values > UINT_MAX the result is undefined */
             auto src = nir_ssa_for_alu_src(b, alu, 0);
-            src = nir_fsub(b, src, nir_ffract(b, src));
+            src = nir_fadd(b, src, nir_fneg(b, nir_ffract(b, src)));
             auto gt0 = nir_flt(b, nir_imm_double(b, 0.0), src);
             auto highval = nir_fmul_imm(b, src, 1.0 / 65536.0);
             auto fract = nir_ffract(b, highval);
-            auto high = nir_f2u32(b, nir_f2f32(b, nir_fsub(b, highval, fract)));
+            auto high = nir_f2u32(b, nir_f2f32(b, nir_fadd(b, highval, nir_fneg(b, fract))));
             auto lowval = nir_fmul_imm(b, fract, 65536.0);
             auto low = nir_f2u32(b, nir_f2f32(b, lowval));
             return nir_bcsel(b,
@@ -390,7 +383,7 @@ LowerSplit64BitVar::split_double_load_deref(nir_intrinsic_instr *intr)
    else if (deref->deref_type == nir_deref_type_array)
       return split_load_deref_array(intr, deref->arr.index);
    else {
-      unreachable(0 && "only splitting of loads from vars and arrays is supported");
+      unreachable("only splitting of loads from vars and arrays is supported");
    }
    m_old_stores.push_back(&intr->instr);
 }
@@ -1452,7 +1445,7 @@ r600_lower_64bit_load_const(nir_builder *b, nir_load_const_instr *instr)
 }
 
 static bool
-r600_lower_64bit_to_vec2_instr(nir_builder *b, nir_instr *instr, void *data)
+r600_lower_64bit_to_vec2_instr(nir_builder *b, nir_instr *instr, UNUSED void *data)
 {
    switch (instr->type) {
    case nir_instr_type_load_const:

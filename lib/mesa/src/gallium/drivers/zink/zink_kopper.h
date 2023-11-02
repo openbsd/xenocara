@@ -28,11 +28,13 @@
 #define ZINK_KOPPER_H
 
 #include "kopper_interface.h"
-#include "u_queue.h"
+#include "util/u_queue.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+struct zink_batch_usage;
 
 struct kopper_swapchain_image {
    bool init;
@@ -41,6 +43,7 @@ struct kopper_swapchain_image {
    int age;
    VkImage image;
    VkSemaphore acquire;
+   VkImageLayout layout;
 };
 
 struct kopper_swapchain {
@@ -55,6 +58,8 @@ struct kopper_swapchain {
    unsigned num_acquires;
    unsigned max_acquires;
    unsigned async_presents;
+   struct util_queue_fence present_fence;
+   struct zink_batch_usage *batch_uses;
    struct kopper_swapchain_image *images;
 };
 
@@ -79,7 +84,6 @@ struct kopper_displaytarget
    struct kopper_swapchain *old_swapchain;
 
    struct kopper_loader_info info;
-   struct util_queue_fence present_fence;
 
    VkSurfaceCapabilitiesKHR caps;
    VkImageFormatListCreateInfo format_list;
@@ -145,6 +149,8 @@ void
 zink_kopper_set_swap_interval(struct pipe_screen *pscreen, struct pipe_resource *pres, int interval);
 int
 zink_kopper_query_buffer_age(struct pipe_context *pctx, struct pipe_resource *pres);
+void
+zink_kopper_prune_batch_usage(struct kopper_displaytarget *cdt, const struct zink_batch_usage *u);
 
 #ifdef __cplusplus
 }

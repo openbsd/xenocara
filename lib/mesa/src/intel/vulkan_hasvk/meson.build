@@ -27,6 +27,7 @@ anv_hasvk_entrypoints = custom_target(
     '--out-h', '@OUTPUT0@', '--out-c', '@OUTPUT1@', '--prefix', 'anv',
     '--device-prefix', 'gfx7', '--device-prefix', 'gfx75',
     '--device-prefix', 'gfx8',
+    '--device-prefix', 'doom64',
   ],
   depend_files : vk_entrypoints_gen_depend_files,
 )
@@ -47,23 +48,21 @@ intel_hasvk_icd = custom_target(
   install : true,
 )
 
-if meson.version().version_compare('>= 0.58')
-  _dev_icdname = 'intel_hasvk_devenv_icd.@0@.json'.format(host_machine.cpu())
-  custom_target(
-    'intel_hasvk_devenv_icd',
-    input : [vk_icd_gen, vk_api_xml],
-    output : _dev_icdname,
-    command : [
-      prog_python, '@INPUT0@',
-      '--api-version', '1.3', '--xml', '@INPUT1@',
-      '--lib-path', meson.current_build_dir() / 'libvulkan_intel_hasvk.so',
-      '--out', '@OUTPUT@',
-    ],
-    build_by_default : true,
-  )
+_dev_icdname = 'intel_hasvk_devenv_icd.@0@.json'.format(host_machine.cpu())
+_dev_icd = custom_target(
+  'intel_hasvk_devenv_icd',
+  input : [vk_icd_gen, vk_api_xml],
+  output : _dev_icdname,
+  command : [
+    prog_python, '@INPUT0@',
+    '--api-version', '1.3', '--xml', '@INPUT1@',
+    '--lib-path', meson.current_build_dir() / 'libvulkan_intel_hasvk.so',
+    '--out', '@OUTPUT@',
+  ],
+  build_by_default : true,
+)
 
-  devenv.append('VK_ICD_FILENAMES', meson.current_build_dir() / _dev_icdname)
-endif
+devenv.append('VK_ICD_FILENAMES', _dev_icd.full_path())
 
 libanv_per_hw_ver_libs = []
 anv_per_hw_ver_files = files(
@@ -85,7 +84,7 @@ foreach g : [['70', ['gfx7_cmd_buffer.c']],
       inc_include, inc_src, inc_mapi, inc_mesa, inc_gallium, inc_compiler, inc_intel,
     ],
     c_args : [
-      no_override_init_args, c_sse2_args,
+      no_override_init_args, sse2_args,
       '-DGFX_VERx10=@0@'.format(_gfx_ver),
     ],
     gnu_symbol_visibility : 'hidden',
@@ -98,6 +97,7 @@ foreach g : [['70', ['gfx7_cmd_buffer.c']],
 endforeach
 
 libanv_files = files(
+  'layers/anv_doom64.c',
   'anv_allocator.c',
   'anv_android.h',
   'anv_batch_chain.c',
@@ -112,7 +112,6 @@ libanv_files = files(
   'anv_measure.c',
   'anv_measure.h',
   'anv_nir.h',
-  'anv_nir_add_base_work_group_id.c',
   'anv_nir_apply_pipeline_layout.c',
   'anv_nir_compute_push_layout.c',
   'anv_nir_lower_multiview.c',
@@ -139,7 +138,7 @@ anv_deps = [
 ]
 anv_flags = [
   no_override_init_args,
-  c_sse2_args,
+  sse2_args,
 ]
 
 anv_cpp_flags = []
@@ -188,13 +187,13 @@ libvulkan_intel_hasvk = shared_library(
   ],
   link_whole : [libanv_hasvk_common, libanv_per_hw_ver_libs],
   link_with : [
-    libintel_compiler, libintel_dev, libisl, libblorp, libintel_perf,
+    libintel_compiler, libisl, libblorp, libintel_perf,
   ],
   dependencies : [
     dep_thread, dep_dl, dep_m, anv_deps, idep_libintel_common,
     idep_nir, idep_genxml, idep_vulkan_util, idep_vulkan_wsi,
     idep_vulkan_runtime, idep_mesautil, idep_xmlconfig,
-    idep_intel_driver_ds,
+    idep_intel_driver_ds, idep_intel_dev,
   ],
   c_args : anv_flags,
   gnu_symbol_visibility : 'hidden',
@@ -224,13 +223,13 @@ if with_tests
     ],
     link_whole : libanv_hasvk_common,
     link_with : [
-      libanv_per_hw_ver_libs, libintel_compiler, libintel_common, libintel_dev,
+      libanv_per_hw_ver_libs, libintel_compiler, libintel_common,
       libisl, libblorp, libintel_perf,
     ],
     dependencies : [
       dep_thread, dep_dl, dep_m, anv_deps,
       idep_nir, idep_vulkan_util, idep_vulkan_wsi, idep_vulkan_runtime,
-      idep_mesautil,
+      idep_mesautil, idep_intel_dev,
     ],
     c_args : anv_flags,
     gnu_symbol_visibility : 'hidden',
@@ -244,7 +243,7 @@ if with_tests
       executable(
         t,
         ['tests/@0@.c'.format(t), anv_hasvk_entrypoints[0]],
-        c_args : [ c_sse2_args ],
+        c_args : [ sse2_args ],
         link_with : libvulkan_intel_hasvk_test,
         dependencies : [
           dep_libdrm, dep_thread, dep_m, dep_valgrind,

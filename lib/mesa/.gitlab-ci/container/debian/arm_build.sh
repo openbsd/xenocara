@@ -24,6 +24,7 @@ apt-get -y install \
 	bison \
 	ccache \
 	cmake \
+	curl \
 	debootstrap \
 	fastboot \
 	flex \
@@ -50,8 +51,9 @@ apt-get -y install \
 	libxrandr-dev \
 	libxshmfence-dev \
 	libxxf86vm-dev \
+	libwayland-dev \
 	llvm-11-dev \
-	meson \
+	ninja-build \
 	pkg-config \
 	python3-mako \
 	python3-pil \
@@ -59,7 +61,6 @@ apt-get -y install \
 	python3-requests \
 	python3-setuptools \
 	u-boot-tools \
-	wget \
 	xz-utils \
 	zlib1g-dev \
 	zstd
@@ -69,6 +70,9 @@ apt-get install -y --no-remove -t buster \
         android-sdk-ext4-utils
 
 pip3 install git+http://gitlab.freedesktop.org/freedesktop/ci-templates@ffe4d1b10aab7534489f0c4bbc4c5899df17d3f2
+
+# We need at least 0.61.4 for proper Rust; 0.62 for modern meson env2mfile
+pip3 install meson==0.63.3
 
 arch=armhf
 . .gitlab-ci/container/cross_build.sh
@@ -80,6 +84,8 @@ arch=armhf
 # dependencies where we want a specific version
 EXTRA_MESON_ARGS=
 . .gitlab-ci/container/build-libdrm.sh
+
+. .gitlab-ci/container/build-wayland.sh
 
 apt-get purge -y $STABLE_EPHEMERAL
 

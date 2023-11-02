@@ -20,6 +20,7 @@ namespace pps
 class FreedrenoDriver : public Driver
 {
 public:
+   bool is_dump_perfcnt_preemptible() const override;
    uint64_t get_min_sampling_period_ns() override;
    bool init_perfcnt() override;
    void enable_counter(uint32_t counter_id) override;
@@ -58,7 +59,7 @@ private:
     * The number of counters assigned per perfcntr group, the index
     * into this matches the index into perfcntrs
     */
-   std::vector<int> assigned_counters;
+   std::vector<unsigned> assigned_counters;
 
    /*
     * Values that can be used by derived counters evaluation

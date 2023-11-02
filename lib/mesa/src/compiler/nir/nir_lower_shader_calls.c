@@ -83,15 +83,15 @@ instr_is_shader_call(nir_instr *instr)
  * named bitset in sys/_bitset.h required by pthread_np.h which is included
  * from src/util/u_thread.h that is indirectly included by this file.
  */
-struct brw_bitset {
+struct sized_bitset {
    BITSET_WORD *set;
    unsigned size;
 };
 
-static struct brw_bitset
+static struct sized_bitset
 bitset_create(void *mem_ctx, unsigned size)
 {
-   return (struct brw_bitset) {
+   return (struct sized_bitset) {
       .set = rzalloc_array(mem_ctx, BITSET_WORD, BITSET_WORDS(size)),
       .size = size,
    };
@@ -100,7 +100,7 @@ bitset_create(void *mem_ctx, unsigned size)
 static bool
 src_is_in_bitset(nir_src *src, void *_set)
 {
-   struct brw_bitset *set = _set;
+   struct sized_bitset *set = _set;
    assert(src->is_ssa);
 
    /* Any SSA values which were added after we generated liveness information
@@ -115,7 +115,7 @@ src_is_in_bitset(nir_src *src, void *_set)
 }
 
 static void
-add_ssa_def_to_bitset(nir_ssa_def *def, struct brw_bitset *set)
+add_ssa_def_to_bitset(nir_ssa_def *def, struct sized_bitset *set)
 {
    if (def->index >= set->size)
       return;
@@ -124,7 +124,7 @@ add_ssa_def_to_bitset(nir_ssa_def *def, struct brw_bitset *set)
 }
 
 static bool
-can_remat_instr(nir_instr *instr, struct brw_bitset *remat)
+can_remat_instr(nir_instr *instr, struct sized_bitset *remat)
 {
    /* Set of all values which are trivially re-materializable and we shouldn't
     * ever spill them.  This includes:
@@ -212,14 +212,14 @@ can_remat_instr(nir_instr *instr, struct brw_bitset *remat)
 }
 
 static bool
-can_remat_ssa_def(nir_ssa_def *def, struct brw_bitset *remat)
+can_remat_ssa_def(nir_ssa_def *def, struct sized_bitset *remat)
 {
    return can_remat_instr(def->parent_instr, remat);
 }
 
 struct add_instr_data {
    struct util_dynarray *buf;
-   struct brw_bitset *remat;
+   struct sized_bitset *remat;
 };
 
 static bool
@@ -251,7 +251,7 @@ compare_instr_indexes(const void *_inst1, const void *_inst2)
 }
 
 static bool
-can_remat_chain_ssa_def(nir_ssa_def *def, struct brw_bitset *remat, struct util_dynarray *buf)
+can_remat_chain_ssa_def(nir_ssa_def *def, struct sized_bitset *remat, struct util_dynarray *buf)
 {
    assert(util_dynarray_num_elements(buf, nir_instr *) == 0);
 
@@ -282,7 +282,7 @@ can_remat_chain_ssa_def(nir_ssa_def *def, struct brw_bitset *remat, struct util_
     * through values that might not be in that set but that we can
     * rematerialize.
     */
-   struct brw_bitset potential_remat = bitset_create(mem_ctx, remat->size);
+   struct sized_bitset potential_remat = bitset_create(mem_ctx, remat->size);
    memcpy(potential_remat.set, remat->set, BITSET_WORDS(remat->size) * sizeof(BITSET_WORD));
 
    util_dynarray_foreach(buf, nir_instr *, instr_ptr) {
@@ -321,7 +321,7 @@ remat_ssa_def(nir_builder *b, nir_ssa_def *def, struct hash_table *remap_table)
 
 static nir_ssa_def *
 remat_chain_ssa_def(nir_builder *b, struct util_dynarray *buf,
-                    struct brw_bitset *remat, nir_ssa_def ***fill_defs,
+                    struct sized_bitset *remat, nir_ssa_def ***fill_defs,
                     unsigned call_idx, struct hash_table *remap_table)
 {
    nir_ssa_def *last_def = NULL;
@@ -454,7 +454,7 @@ spill_ssa_defs_and_lower_shader_calls(nir_shader *shader, uint32_t num_calls,
 
    const unsigned num_ssa_defs = impl->ssa_alloc;
    const unsigned live_words = BITSET_WORDS(num_ssa_defs);
-   struct brw_bitset trivial_remat = bitset_create(mem_ctx, num_ssa_defs);
+   struct sized_bitset trivial_remat = bitset_create(mem_ctx, num_ssa_defs);
 
    /* Array of all live SSA defs which are spill candidates */
    nir_ssa_def **spill_defs =
@@ -534,7 +534,7 @@ spill_ssa_defs_and_lower_shader_calls(nir_shader *shader, uint32_t num_calls,
          /* Make a copy of trivial_remat that we'll update as we crawl through
           * the live SSA defs and unspill them.
           */
-         struct brw_bitset remat = bitset_create(mem_ctx, num_ssa_defs);
+         struct sized_bitset remat = bitset_create(mem_ctx, num_ssa_defs);
          memcpy(remat.set, trivial_remat.set, live_words * sizeof(BITSET_WORD));
 
          /* Before the two builders are always separated by the call
@@ -790,6 +790,7 @@ duplicate_loop_bodies(nir_function_impl *impl, nir_instr *resume_instr)
          continue;
 
       nir_loop *loop = nir_cf_node_as_loop(node);
+      assert(!nir_loop_has_continue_construct(loop));
 
       if (resume_reg == NULL) {
          /* We only create resume_reg if we encounter a loop.  This way we can
@@ -964,7 +965,7 @@ flatten_resume_if_ladder(nir_builder *b,
                          struct exec_list *child_list,
                          bool child_list_contains_cursor,
                          nir_instr *resume_instr,
-                         struct brw_bitset *remat)
+                         struct sized_bitset *remat)
 {
    nir_cf_list cf_list;
 
@@ -1038,6 +1039,7 @@ flatten_resume_if_ladder(nir_builder *b,
       case nir_cf_node_loop: {
          assert(!before_cursor);
          nir_loop *loop = nir_cf_node_as_loop(child);
+         assert(!nir_loop_has_continue_construct(loop));
 
          if (cf_node_contains_block(&loop->cf_node, resume_instr->block)) {
             /* Thanks to our loop body duplication pass, every level of loop
@@ -1113,6 +1115,21 @@ found_resume:
                                nir_after_cf_list(child_list));
    }
 
+   /* If the resume instruction is in the first block of the child_list,
+    * and the cursor is still before that block, the nir_cf_extract() may
+    * extract the block object pointed by the cursor, and instead create
+    * a new one for the code before the resume. In such case the cursor
+    * will be broken, as it will point to a block which is no longer
+    * in a function.
+    *
+    * Luckily, in both cases when this is possible, the intended cursor
+    * position is right before the child_list, so we can fix the cursor here.
+    */
+   if (child_list_contains_cursor &&
+       b->cursor.option == nir_cursor_before_block &&
+       b->cursor.block->cf_node.parent == NULL)
+      b->cursor = nir_before_cf_list(child_list);
+
    if (cursor_is_after_jump(b->cursor)) {
       /* If the resume instruction is in a loop, it's possible cf_list ends
        * in a break or continue instruction, in which case we don't want to
@@ -1184,7 +1201,7 @@ lower_resume(nir_shader *shader, int call_idx)
 
    if (duplicate_loop_bodies(impl, resume_instr)) {
       nir_validate_shader(shader, "after duplicate_loop_bodies in "
-                                  "brw_nir_lower_shader_calls");
+                                  "nir_lower_shader_calls");
       /* If we duplicated the bodies of any loops, run regs_to_ssa to get rid
        * of all those pesky registers we just added.
        */
@@ -1204,7 +1221,7 @@ lower_resume(nir_shader *shader, int call_idx)
    /* Used to track which things may have been assumed to be re-materialized
     * by the spilling pass and which we shouldn't delete.
     */
-   struct brw_bitset remat = bitset_create(mem_ctx, impl->ssa_alloc);
+   struct sized_bitset remat = bitset_create(mem_ctx, impl->ssa_alloc);
 
    /* Create a nop instruction to use as a cursor as we extract and re-insert
     * stuff into the CFG.
@@ -1222,7 +1239,7 @@ lower_resume(nir_shader *shader, int call_idx)
    nir_metadata_preserve(impl, nir_metadata_none);
 
    nir_validate_shader(shader, "after flatten_resume_if_ladder in "
-                               "brw_nir_lower_shader_calls");
+                               "nir_lower_shader_calls");
 
    return resume_instr;
 }
@@ -1670,16 +1687,41 @@ nir_opt_sort_and_pack_stack(nir_shader *shader,
    return true;
 }
 
+static unsigned
+nir_block_loop_depth(nir_block *block)
+{
+   nir_cf_node *node = &block->cf_node;
+   unsigned loop_depth = 0;
+
+   while (node != NULL) {
+      if (node->type == nir_cf_node_loop)
+         loop_depth++;
+      node = node->parent;
+   }
+
+   return loop_depth;
+}
+
 /* Find the last block dominating all the uses of a SSA value. */
 static nir_block *
 find_last_dominant_use_block(nir_function_impl *impl, nir_ssa_def *value)
 {
+   nir_block *old_block = value->parent_instr->block;
+   unsigned old_block_loop_depth = nir_block_loop_depth(old_block);
+
    nir_foreach_block_reverse_safe(block, impl) {
       bool fits = true;
 
       /* Store on the current block of the value */
-      if (block == value->parent_instr->block)
+      if (block == old_block)
          return block;
+
+      /* Don't move instructions deeper into loops, this would generate more
+       * memory traffic.
+       */
+      unsigned block_loop_depth = nir_block_loop_depth(block);
+      if (block_loop_depth > old_block_loop_depth)
+         continue;
 
       nir_foreach_if_use(src, value) {
          nir_block *block_before_if =
@@ -1760,6 +1802,99 @@ nir_opt_stack_loads(nir_shader *shader)
    return progress;
 }
 
+static bool
+split_stack_components_instr(struct nir_builder *b, nir_instr *instr, void *data)
+{
+   if (instr->type != nir_instr_type_intrinsic)
+      return false;
+
+   nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+   if (intrin->intrinsic != nir_intrinsic_load_stack &&
+       intrin->intrinsic != nir_intrinsic_store_stack)
+      return false;
+
+   if (intrin->intrinsic == nir_intrinsic_load_stack &&
+       intrin->dest.ssa.num_components == 1)
+      return false;
+
+   if (intrin->intrinsic == nir_intrinsic_store_stack &&
+       intrin->src[0].ssa->num_components == 1)
+      return false;
+
+   b->cursor = nir_before_instr(instr);
+
+   if (intrin->intrinsic == nir_intrinsic_load_stack) {
+      nir_ssa_def *components[NIR_MAX_VEC_COMPONENTS] = { 0, };
+      for (unsigned c = 0; c < intrin->dest.ssa.num_components; c++) {
+         components[c] = nir_load_stack(b, 1, intrin->dest.ssa.bit_size,
+                                        .base = nir_intrinsic_base(intrin) +
+                                                c * intrin->dest.ssa.bit_size / 8,
+                                        .call_idx = nir_intrinsic_call_idx(intrin),
+                                        .value_id = nir_intrinsic_value_id(intrin),
+                                        .align_mul = nir_intrinsic_align_mul(intrin));
+      }
+
+      nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
+                               nir_vec(b, components,
+                                       intrin->dest.ssa.num_components));
+   } else {
+      assert(intrin->intrinsic == nir_intrinsic_store_stack);
+      for (unsigned c = 0; c < intrin->src[0].ssa->num_components; c++) {
+         nir_store_stack(b, nir_channel(b, intrin->src[0].ssa, c),
+                         .base = nir_intrinsic_base(intrin) +
+                                 c * intrin->src[0].ssa->bit_size / 8,
+                         .call_idx = nir_intrinsic_call_idx(intrin),
+                         .align_mul = nir_intrinsic_align_mul(intrin),
+                         .value_id = nir_intrinsic_value_id(intrin),
+                         .write_mask = 0x1);
+      }
+   }
+
+   nir_instr_remove(instr);
+
+   return true;
+}
+
+/* Break the load_stack/store_stack intrinsics into single compoments. This
+ * helps the vectorizer to pack components.
+ */
+static bool
+nir_split_stack_components(nir_shader *shader)
+{
+   return nir_shader_instructions_pass(shader,
+                                       split_stack_components_instr,
+                                       nir_metadata_block_index |
+                                       nir_metadata_dominance,
+                                       NULL);
+}
+
+struct stack_op_vectorizer_state {
+   nir_should_vectorize_mem_func     driver_callback;
+   void                             *driver_data;
+};
+
+static bool
+should_vectorize(unsigned align_mul,
+                 unsigned align_offset,
+                 unsigned bit_size,
+                 unsigned num_components,
+                 nir_intrinsic_instr *low, nir_intrinsic_instr *high,
+                 void *data)
+{
+   /* We only care about those intrinsics */
+   if ((low->intrinsic != nir_intrinsic_load_stack &&
+        low->intrinsic != nir_intrinsic_store_stack) ||
+       (high->intrinsic != nir_intrinsic_load_stack &&
+        high->intrinsic != nir_intrinsic_store_stack))
+      return false;
+
+   struct stack_op_vectorizer_state *state = data;
+
+   return state->driver_callback(align_mul, align_offset,
+                                 bit_size, num_components,
+                                 low, high, state->driver_data);
+}
+
 /** Lower shader call instructions to split shaders.
  *
  * Shader calls can be split into an initial shader and a series of "resume"
@@ -1819,6 +1954,13 @@ nir_lower_shader_calls(nir_shader *shader,
          NIR_PASS(progress, shader, nir_opt_cse);
    }
 
+   /* Deref chains contain metadata information that is needed by other passes
+    * after this one. If we don't rematerialize the derefs in the blocks where
+    * they're used here, the following lowerings will insert phis which can
+    * prevent other passes from chasing deref chains.
+    */
+   nir_rematerialize_derefs_in_use_blocks_impl(impl);
+
    /* Save the start point of the call stack in scratch */
    unsigned start_call_scratch = shader->scratch_size;
 
@@ -1850,11 +1992,11 @@ nir_lower_shader_calls(nir_shader *shader,
    for (unsigned i = 0; i < num_calls; i++) {
       nir_instr *resume_instr = lower_resume(resume_shaders[i], i);
       replace_resume_with_halt(resume_shaders[i], resume_instr);
-      nir_opt_remove_phis(resume_shaders[i]);
       /* Remove the dummy blocks added by flatten_resume_if_ladder() */
       nir_opt_if(resume_shaders[i], nir_opt_if_optimize_phi_true_false);
       nir_opt_dce(resume_shaders[i]);
       nir_opt_dead_cf(resume_shaders[i]);
+      nir_opt_remove_phis(resume_shaders[i]);
    }
 
    for (unsigned i = 0; i < num_calls; i++)
@@ -1868,9 +2010,27 @@ nir_lower_shader_calls(nir_shader *shader,
          NIR_PASS_V(resume_shaders[i], nir_opt_stack_loads);
    }
 
+   struct stack_op_vectorizer_state vectorizer_state = {
+      .driver_callback = options->vectorizer_callback,
+      .driver_data     = options->vectorizer_data,
+   };
+   nir_load_store_vectorize_options vect_opts = {
+      .modes = nir_var_shader_temp,
+      .callback = should_vectorize,
+      .cb_data = &vectorizer_state,
+   };
+
+   if (options->vectorizer_callback != NULL) {
+      NIR_PASS_V(shader, nir_split_stack_components);
+      NIR_PASS_V(shader, nir_opt_load_store_vectorize, &vect_opts);
+   }
    NIR_PASS_V(shader, nir_lower_stack_to_scratch, options->address_format);
    nir_opt_cse(shader);
    for (unsigned i = 0; i < num_calls; i++) {
+      if (options->vectorizer_callback != NULL) {
+         NIR_PASS_V(shader, nir_split_stack_components);
+         NIR_PASS_V(shader, nir_opt_load_store_vectorize, &vect_opts);
+      }
       NIR_PASS_V(resume_shaders[i], nir_lower_stack_to_scratch,
                  options->address_format);
       nir_opt_cse(resume_shaders[i]);

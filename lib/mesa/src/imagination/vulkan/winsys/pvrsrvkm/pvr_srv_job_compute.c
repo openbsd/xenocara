@@ -21,15 +21,18 @@
  * SOFTWARE.
  */
 
+#include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <unistd.h>
 #include <vulkan/vulkan.h>
 
 #include "fw-api/pvr_rogue_fwif.h"
 #include "fw-api/pvr_rogue_fwif_rf.h"
+#include "pvr_device_info.h"
 #include "pvr_private.h"
 #include "pvr_srv.h"
 #include "pvr_srv_bridge.h"
@@ -37,7 +40,6 @@
 #include "pvr_srv_job_compute.h"
 #include "pvr_srv_sync.h"
 #include "pvr_winsys.h"
-#include "util/libsync.h"
 #include "util/macros.h"
 #include "vk_alloc.h"
 #include "vk_log.h"
@@ -136,24 +138,86 @@ void pvr_srv_winsys_compute_ctx_destroy(struct pvr_winsys_compute_ctx *ctx)
    vk_free(srv_ws->alloc, srv_ctx);
 }
 
+static void
+pvr_srv_compute_cmd_stream_load(struct rogue_fwif_cmd_compute *const cmd,
+                                const uint8_t *const stream,
+                                const uint32_t stream_len,
+                                const struct pvr_device_info *const dev_info)
+{
+   const uint32_t *stream_ptr = (const uint32_t *)stream;
+   struct rogue_fwif_cdm_regs *const regs = &cmd->regs;
+
+   regs->tpu_border_colour_table = *(const uint64_t *)stream_ptr;
+   stream_ptr += pvr_cmd_length(CR_TPU_BORDER_COLOUR_TABLE_CDM);
+
+   regs->cdm_ctrl_stream_base = *(const uint64_t *)stream_ptr;
+   stream_ptr += pvr_cmd_length(CR_CDM_CTRL_STREAM_BASE);
+
+   regs->cdm_context_state_base_addr = *(const uint64_t *)stream_ptr;
+   stream_ptr += pvr_cmd_length(CR_CDM_CONTEXT_STATE_BASE);
+
+   regs->cdm_resume_pds1 = *stream_ptr;
+   stream_ptr += pvr_cmd_length(CR_CDM_CONTEXT_PDS1);
+
+   regs->cdm_item = *stream_ptr;
+   stream_ptr += pvr_cmd_length(CR_CDM_ITEM);
+
+   if (PVR_HAS_FEATURE(dev_info, cluster_grouping)) {
+      regs->compute_cluster = *stream_ptr;
+      stream_ptr += pvr_cmd_length(CR_COMPUTE_CLUSTER);
+   }
+
+   if (PVR_HAS_FEATURE(dev_info, gpu_multicore_support)) {
+      cmd->execute_count = *stream_ptr;
+      stream_ptr++;
+   }
+
+   assert((const uint8_t *)stream_ptr - stream == stream_len);
+}
+
+static void pvr_srv_compute_cmd_ext_stream_load(
+   struct rogue_fwif_cmd_compute *const cmd,
+   const uint8_t *const ext_stream,
+   const uint32_t ext_stream_len,
+   const struct pvr_device_info *const dev_info)
+{
+   const uint32_t *ext_stream_ptr = (const uint32_t *)ext_stream;
+   struct rogue_fwif_cdm_regs *const regs = &cmd->regs;
+
+   struct PVRX(FW_STREAM_EXTHDR_COMPUTE0) header0;
+
+   header0 = pvr_csb_unpack(ext_stream_ptr, FW_STREAM_EXTHDR_COMPUTE0);
+   ext_stream_ptr += pvr_cmd_length(FW_STREAM_EXTHDR_COMPUTE0);
+
+   assert(PVR_HAS_QUIRK(dev_info, 49927) == header0.has_brn49927);
+   if (header0.has_brn49927) {
+      regs->tpu = *ext_stream_ptr;
+      ext_stream_ptr += pvr_cmd_length(CR_TPU);
+   }
+
+   assert((const uint8_t *)ext_stream_ptr - ext_stream == ext_stream_len);
+}
+
 static void pvr_srv_compute_cmd_init(
    const struct pvr_winsys_compute_submit_info *submit_info,
-   struct rogue_fwif_cmd_compute *cmd)
+   struct rogue_fwif_cmd_compute *cmd,
+   const struct pvr_device_info *const dev_info)
 {
-   struct rogue_fwif_cdm_regs *fw_regs = &cmd->regs;
-
    memset(cmd, 0, sizeof(*cmd));
 
    cmd->cmn.frame_num = submit_info->frame_num;
 
-   fw_regs->tpu_border_colour_table = submit_info->regs.tpu_border_colour_table;
-   fw_regs->cdm_item = submit_info->regs.cdm_item;
-   fw_regs->compute_cluster = submit_info->regs.compute_cluster;
-   fw_regs->cdm_ctrl_stream_base = submit_info->regs.cdm_ctrl_stream_base;
-   fw_regs->cdm_context_state_base_addr =
-      submit_info->regs.cdm_ctx_state_base_addr;
-   fw_regs->tpu = submit_info->regs.tpu;
-   fw_regs->cdm_resume_pds1 = submit_info->regs.cdm_resume_pds1;
+   pvr_srv_compute_cmd_stream_load(cmd,
+                                   submit_info->fw_stream,
+                                   submit_info->fw_stream_len,
+                                   dev_info);
+
+   if (submit_info->fw_ext_stream_len) {
+      pvr_srv_compute_cmd_ext_stream_load(cmd,
+                                          submit_info->fw_ext_stream,
+                                          submit_info->fw_ext_stream_len,
+                                          dev_info);
+   }
 
    if (submit_info->flags & PVR_WINSYS_COMPUTE_FLAG_PREVENT_ALL_OVERLAP)
       cmd->flags |= ROGUE_FWIF_COMPUTE_FLAG_PREVENT_ALL_OVERLAP;
@@ -165,6 +229,7 @@ static void pvr_srv_compute_cmd_init(
 VkResult pvr_srv_winsys_compute_submit(
    const struct pvr_winsys_compute_ctx *ctx,
    const struct pvr_winsys_compute_submit_info *submit_info,
+   const struct pvr_device_info *const dev_info,
    struct vk_sync *signal_sync)
 {
    const struct pvr_srv_winsys_compute_ctx *srv_ctx =
@@ -176,36 +241,18 @@ VkResult pvr_srv_winsys_compute_submit(
    int in_fd = -1;
    int fence;
 
-   pvr_srv_compute_cmd_init(submit_info, &compute_cmd);
+   pvr_srv_compute_cmd_init(submit_info, &compute_cmd, dev_info);
 
-   for (uint32_t i = 0U; i < submit_info->wait_count; i++) {
-      struct pvr_srv_sync *srv_wait_sync = to_srv_sync(submit_info->waits[i]);
-      int ret;
-
-      if (!submit_info->waits[i] || srv_wait_sync->fd < 0)
-         continue;
-
-      if (submit_info->stage_flags[i] & PVR_PIPELINE_STAGE_COMPUTE_BIT) {
-         ret = sync_accumulate("", &in_fd, srv_wait_sync->fd);
-         if (ret) {
-            result = vk_error(NULL, VK_ERROR_OUT_OF_HOST_MEMORY);
-            goto end_close_in_fd;
-         }
-
-         submit_info->stage_flags[i] &= ~PVR_PIPELINE_STAGE_COMPUTE_BIT;
-      }
-   }
-
-   if (submit_info->barrier) {
-      struct pvr_srv_sync *srv_wait_sync = to_srv_sync(submit_info->barrier);
+   if (submit_info->wait) {
+      struct pvr_srv_sync *srv_wait_sync = to_srv_sync(submit_info->wait);
 
       if (srv_wait_sync->fd >= 0) {
-         int ret;
-
-         ret = sync_accumulate("", &in_fd, srv_wait_sync->fd);
-         if (ret) {
-            result = vk_error(NULL, VK_ERROR_OUT_OF_HOST_MEMORY);
-            goto end_close_in_fd;
+         in_fd = dup(srv_wait_sync->fd);
+         if (in_fd == -1) {
+            return vk_errorf(NULL,
+                             VK_ERROR_OUT_OF_HOST_MEMORY,
+                             "dup called on wait sync failed, Errno: %s",
+                             strerror(errno));
          }
       }
    }

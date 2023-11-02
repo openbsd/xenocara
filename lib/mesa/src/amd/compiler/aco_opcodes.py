@@ -315,8 +315,20 @@ opcode("p_demote_to_helper")
 opcode("p_is_helper")
 opcode("p_exit_early_if")
 
-# simulates proper bpermute behavior when it's unsupported, eg. GFX10 wave64
-opcode("p_bpermute")
+# simulates proper bpermute behavior on GFX6
+# definitions: result VGPR, temp EXEC, clobbered VCC
+# operands: index, input data
+opcode("p_bpermute_gfx6")
+
+# simulates proper bpermute behavior on GFX10
+# definitions: result VGPR, temp EXEC, clobbered SCC
+# operands: index * 4, input data, same half (bool)
+opcode("p_bpermute_gfx10w64")
+
+# simulates proper bpermute behavior on GFX11
+# definitions: result VGPR, temp EXEC, clobbered SCC
+# operands: linear VGPR, index * 4, input data, same half (bool)
+opcode("p_bpermute_gfx11w64")
 
 # creates a lane mask where only the first active lane is selected
 opcode("p_elect")
@@ -336,8 +348,8 @@ opcode("p_init_scratch")
 opcode("p_jump_to_epilog")
 
 # loads and interpolates a fragment shader input with a correct exec mask
-#dst0=result, dst1=exec_tmp, dst2=clobber_scc, src0=linear_vgpr, src1=attribute, src2=component, src3=coord1, src4=coord2, src5=m0
-#dst0=result, dst1=exec_tmp, dst2=clobber_scc, src0=linear_vgpr, src1=attribute, src2=component, src3=dpp_ctrl, src4=m0
+#dst0=result, src0=linear_vgpr, src1=attribute, src2=component, src3=coord1, src4=coord2, src5=m0
+#dst0=result, src0=linear_vgpr, src1=attribute, src2=component, src3=dpp_ctrl, src4=m0
 opcode("p_interp_gfx11")
 
 # performs dual source MRTs swizzling and emits exports on GFX11
@@ -588,12 +600,12 @@ SOPP = {
    (  -1,   -1,   -1,   -1, 0x1f, 0x1f, "s_code_end"),
    (  -1,   -1,   -1,   -1, 0x20, 0x04, "s_inst_prefetch"), #s_set_inst_prefetch_distance in GFX11
    (  -1,   -1,   -1,   -1, 0x21, 0x05, "s_clause"),
-   (  -1,   -1,   -1,   -1, 0x22, 0x0a, "s_wait_idle"),
-   (  -1,   -1,   -1,   -1, 0x23, 0x08, "s_waitcnt_depctr"),
+   (  -1,   -1,   -1,   -1, 0x22, 0x0a, "s_wait_idle", InstrClass.Waitcnt),
+   (  -1,   -1,   -1,   -1, 0x23, 0x08, "s_waitcnt_depctr", InstrClass.Waitcnt),
    (  -1,   -1,   -1,   -1, 0x24, 0x11, "s_round_mode"),
    (  -1,   -1,   -1,   -1, 0x25, 0x12, "s_denorm_mode"),
    (  -1,   -1,   -1,   -1, 0x26, 0x3b, "s_ttracedata_imm"),
-   (  -1,   -1,   -1,   -1,   -1, 0x07, "s_delay_alu"),
+   (  -1,   -1,   -1,   -1,   -1, 0x07, "s_delay_alu", InstrClass.Waitcnt),
    (  -1,   -1,   -1,   -1,   -1, 0x0b, "s_wait_event"),
 }
 for (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name, cls) in default_class(SOPP, InstrClass.Salu):
@@ -742,8 +754,8 @@ VOP2 = {
    (0x29, 0x29, 0x1d, 0x1d, 0x29, 0x21, "v_subb_co_u32", False, False), # v_sub_co_ci_u32 in RDNA
    (0x2a, 0x2a, 0x1e, 0x1e, 0x2a, 0x22, "v_subbrev_co_u32", False, False), # v_subrev_co_ci_u32 in RDNA
    (  -1,   -1,   -1,   -1, 0x2b, 0x2b, "v_fmac_f32", True, True),
-   (  -1,   -1,   -1,   -1, 0x2c, 0x2c, "v_fmamk_f32", True, True),
-   (  -1,   -1,   -1,   -1, 0x2d, 0x2d, "v_fmaak_f32", True, True),
+   (  -1,   -1,   -1,   -1, 0x2c, 0x2c, "v_fmamk_f32", False, False),
+   (  -1,   -1,   -1,   -1, 0x2d, 0x2d, "v_fmaak_f32", False, False),
    (0x2f, 0x2f,   -1,   -1, 0x2f, 0x2f, "v_cvt_pkrtz_f16_f32", True, False), #v_cvt_pk_rtz_f16_f32 in GFX11
    (  -1,   -1, 0x1f, 0x1f, 0x32, 0x32, "v_add_f16", True, True),
    (  -1,   -1, 0x20, 0x20, 0x33, 0x33, "v_sub_f16", True, True),
@@ -765,11 +777,11 @@ VOP2 = {
    (  -1,   -1, 0x30, 0x30,   -1,   -1, "v_max_i16", False, False),
    (  -1,   -1, 0x31, 0x31,   -1,   -1, "v_min_u16", False, False),
    (  -1,   -1, 0x32, 0x32,   -1,   -1, "v_min_i16", False, False),
-   (  -1,   -1, 0x33, 0x33, 0x3b, 0x3b, "v_ldexp_f16", False, False),
+   (  -1,   -1, 0x33, 0x33, 0x3b, 0x3b, "v_ldexp_f16", False, True),
    (  -1,   -1,   -1, 0x34, 0x25, 0x25, "v_add_u32", False, False), # called v_add_nc_u32 in RDNA
    (  -1,   -1,   -1, 0x35, 0x26, 0x26, "v_sub_u32", False, False), # called v_sub_nc_u32 in RDNA
    (  -1,   -1,   -1, 0x36, 0x27, 0x27, "v_subrev_u32", False, False), # called v_subrev_nc_u32 in RDNA
-   (  -1,   -1,   -1,   -1, 0x36, 0x36, "v_fmac_f16", False, False),
+   (  -1,   -1,   -1,   -1, 0x36, 0x36, "v_fmac_f16", True, True),
    (  -1,   -1,   -1,   -1, 0x37, 0x37, "v_fmamk_f16", False, False),
    (  -1,   -1,   -1,   -1, 0x38, 0x38, "v_fmaak_f16", False, False),
    (  -1,   -1,   -1,   -1, 0x3c, 0x3c, "v_pk_fmac_f16", False, False),
@@ -883,6 +895,7 @@ VOP1 = {
    (  -1,   -1,   -1,   -1,   -1, 0x69, "v_not_b16", False, False),
    (  -1,   -1,   -1,   -1,   -1, 0x6a, "v_cvt_i32_i16", False, False),
    (  -1,   -1,   -1,   -1,   -1, 0x6b, "v_cvt_u32_u16", False, False),
+   (  -1,   -1,   -1,   -1,   -1, 0x1c, "v_mov_b16", True, False),
 }
 for (gfx6, gfx7, gfx8, gfx9, gfx10, gfx11, name, in_mod, out_mod, cls) in default_class(VOP1, InstrClass.Valu32):
    opcode(name, gfx7, gfx9, gfx10, gfx11, Format.VOP1, cls, in_mod, out_mod)

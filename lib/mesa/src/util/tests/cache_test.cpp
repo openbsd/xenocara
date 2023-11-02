@@ -121,9 +121,28 @@ cache_exists(struct disk_cache *cache)
    disk_cache_put(cache, key, data, sizeof(data), NULL);
    disk_cache_wait_for_idle(cache);
    void *result = disk_cache_get(cache, key, NULL);
+   disk_cache_remove(cache, key);
 
    free(result);
    return result != NULL;
+}
+
+static void *
+poll_disk_cache_get(struct disk_cache *cache,
+                    const cache_key key,
+                    size_t *size)
+{
+   void *result;
+
+   for (int iter = 0; iter < 1000; ++iter) {
+      result = disk_cache_get(cache, key, size);
+      if (result)
+         return result;
+
+      usleep(1000);
+   }
+
+   return NULL;
 }
 
 #define CACHE_TEST_TMP "./cache-test-tmp"
@@ -743,6 +762,7 @@ TEST_F(Cache, Database)
 #ifndef ENABLE_SHADER_CACHE
    GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
 #else
+   setenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS", "1", 1);
    setenv("MESA_DISK_CACHE_DATABASE", "true", 1);
 
    test_disk_cache_create(mem_ctx, CACHE_DIR_NAME_DB, driver_id);
@@ -768,8 +788,491 @@ TEST_F(Cache, Database)
    test_put_and_get_between_instances_with_eviction(driver_id);
 
    setenv("MESA_DISK_CACHE_DATABASE", "false", 1);
+   unsetenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS");
 
    err = rmrf_local(CACHE_TEST_TMP);
+   EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
+#endif
+}
+
+TEST_F(Cache, Combined)
+{
+   const char *driver_id = "make_check";
+   char blob[] = "This is a RO blob";
+   char blob2[] = "This is a RW blob";
+   uint8_t dummy_key[20] = { 0 };
+   uint8_t blob_key[20];
+   uint8_t blob_key2[20];
+   char foz_rw_idx_file[1024];
+   char foz_ro_idx_file[1024];
+   char foz_rw_file[1024];
+   char foz_ro_file[1024];
+   char *result;
+   size_t size;
+
+#ifndef ENABLE_SHADER_CACHE
+   GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
+#else
+   setenv("MESA_DISK_CACHE_SINGLE_FILE", "true", 1);
+   setenv("MESA_DISK_CACHE_DATABASE", "false", 1);
+
+#ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
+   setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
+#endif /* SHADER_CACHE_DISABLE_BY_DEFAULT */
+
+   /* Enable Fossilize read-write cache. */
+   setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "true", 1);
+
+   test_disk_cache_create(mem_ctx, CACHE_DIR_NAME_SF, driver_id);
+
+   /* Create Fossilize writable cache. */
+   struct disk_cache *cache_sf_wr = disk_cache_create("combined_test",
+                                                      driver_id, 0);
+
+   disk_cache_compute_key(cache_sf_wr, blob, sizeof(blob), blob_key);
+   disk_cache_compute_key(cache_sf_wr, blob2, sizeof(blob2), blob_key2);
+
+   /* Ensure that disk_cache_get returns nothing before anything is added. */
+   result = (char *) disk_cache_get(cache_sf_wr, blob_key, &size);
+   EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Put blob entry to the cache. */
+   disk_cache_put(cache_sf_wr, blob_key, blob, sizeof(blob), NULL);
+   disk_cache_wait_for_idle(cache_sf_wr);
+
+   result = (char *) disk_cache_get(cache_sf_wr, blob_key, &size);
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   /* Rename file foz_cache.foz -> ro_cache.foz */
+   sprintf(foz_rw_file, "%s/foz_cache.foz", cache_sf_wr->path);
+   sprintf(foz_ro_file, "%s/ro_cache.foz", cache_sf_wr->path);
+   EXPECT_EQ(rename(foz_rw_file, foz_ro_file), 0) << "foz_cache.foz renaming failed";
+
+   /* Rename file foz_cache_idx.foz -> ro_cache_idx.foz */
+   sprintf(foz_rw_idx_file, "%s/foz_cache_idx.foz", cache_sf_wr->path);
+   sprintf(foz_ro_idx_file, "%s/ro_cache_idx.foz", cache_sf_wr->path);
+   EXPECT_EQ(rename(foz_rw_idx_file, foz_ro_idx_file), 0) << "foz_cache_idx.foz renaming failed";
+
+   disk_cache_destroy(cache_sf_wr);
+
+   /* Disable Fossilize read-write cache. */
+   setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "false", 1);
+
+   /* Set up Fossilize read-only cache. */
+   setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "true", 1);
+   setenv("MESA_DISK_CACHE_READ_ONLY_FOZ_DBS", "ro_cache", 1);
+
+   /* Create FOZ cache that fetches the RO cache. Note that this produces
+    * empty RW cache files. */
+   struct disk_cache *cache_sf_ro = disk_cache_create("combined_test",
+                                                      driver_id, 0);
+
+   /* Blob entry must present because it shall be retrieved from the
+    * ro_cache.foz */
+   result = (char *) disk_cache_get(cache_sf_ro, blob_key, &size);
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_sf_ro);
+
+   /* Remove empty FOZ RW cache files created above. We only need RO cache. */
+   EXPECT_EQ(unlink(foz_rw_file), 0);
+   EXPECT_EQ(unlink(foz_rw_idx_file), 0);
+
+   setenv("MESA_DISK_CACHE_SINGLE_FILE", "false", 1);
+   setenv("MESA_DISK_CACHE_DATABASE", "true", 1);
+
+   /* Create MESA-DB cache with enabled retrieval from the read-only
+    * cache. */
+   struct disk_cache *cache_mesa_db = disk_cache_create("combined_test",
+                                                        driver_id, 0);
+
+   /* Dummy entry must not present in any of the caches. Foz cache
+    * reloads index if cache entry is missing.  This is a sanity-check
+    * for foz_read_entry(), it should work properly with a disabled
+    * FOZ RW cache. */
+   result = (char *) disk_cache_get(cache_mesa_db, dummy_key, &size);
+   EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Blob entry must present because it shall be retrieved from the
+    * read-only cache. */
+   result = (char *) disk_cache_get(cache_mesa_db, blob_key, &size);
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   /* Blob2 entry must not present in any of the caches. */
+   result = (char *) disk_cache_get(cache_mesa_db, blob_key2, &size);
+   EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Put blob2 entry to the cache. */
+   disk_cache_put(cache_mesa_db, blob_key2, blob2, sizeof(blob2), NULL);
+   disk_cache_wait_for_idle(cache_mesa_db);
+
+   /* Blob2 entry must present because it shall be retrieved from the
+    * read-write cache. */
+   result = (char *) disk_cache_get(cache_mesa_db, blob_key2, &size);
+   EXPECT_STREQ(blob2, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob2)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_mesa_db);
+
+   /* Disable read-only cache. */
+   setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "false", 1);
+
+   /* Create MESA-DB cache with disabled retrieval from the
+    * read-only cache. */
+   cache_mesa_db = disk_cache_create("combined_test", driver_id, 0);
+
+   /* Blob2 entry must present because it shall be retrieved from the
+    * MESA-DB cache. */
+   result = (char *) disk_cache_get(cache_mesa_db, blob_key2, &size);
+   EXPECT_STREQ(blob2, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob2)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_mesa_db);
+
+   /* Create MESA-DB cache with disabled retrieval from the read-only
+    * cache. */
+   cache_mesa_db = disk_cache_create("combined_test", driver_id, 0);
+
+   /* Blob entry must not present in the cache because we disable the
+    * read-only cache. */
+   result = (char *) disk_cache_get(cache_mesa_db, blob_key, &size);
+   EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   disk_cache_destroy(cache_mesa_db);
+
+   /* Create default multi-file cache. */
+   setenv("MESA_DISK_CACHE_DATABASE", "false", 1);
+
+   /* Enable read-only cache. */
+   setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "true", 1);
+
+   /* Create multi-file cache with enabled retrieval from the
+    * read-only cache. */
+   struct disk_cache *cache_multifile = disk_cache_create("combined_test",
+                                                          driver_id, 0);
+
+   /* Blob entry must present because it shall be retrieved from the
+    * read-only cache. */
+   result = (char *) disk_cache_get(cache_multifile, blob_key, &size);
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   /* Blob2 entry must not present in any of the caches. */
+   result = (char *) disk_cache_get(cache_multifile, blob_key2, &size);
+   EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Put blob2 entry to the cache. */
+   disk_cache_put(cache_multifile, blob_key2, blob2, sizeof(blob2), NULL);
+   disk_cache_wait_for_idle(cache_multifile);
+
+   /* Blob2 entry must present because it shall be retrieved from the
+    * read-write cache. */
+   result = (char *) disk_cache_get(cache_multifile, blob_key2, &size);
+   EXPECT_STREQ(blob2, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob2)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_multifile);
+
+   /* Disable read-only cache. */
+   setenv("MESA_DISK_CACHE_COMBINE_RW_WITH_RO_FOZ", "false", 1);
+   unsetenv("MESA_DISK_CACHE_READ_ONLY_FOZ_DBS");
+
+   /* Create multi-file cache with disabled retrieval from the
+    * read-only cache. */
+   cache_multifile = disk_cache_create("combined_test", driver_id, 0);
+
+   /* Blob entry must not present in the cache because we disabled the
+    * read-only cache. */
+   result = (char *) disk_cache_get(cache_multifile, blob_key, &size);
+   EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Blob2 entry must present because it shall be retrieved from the
+    * read-write cache. */
+   result = (char *) disk_cache_get(cache_multifile, blob_key2, &size);
+   EXPECT_STREQ(blob2, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob2)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_multifile);
+
+   int err = rmrf_local(CACHE_TEST_TMP);
+   EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
+#endif
+}
+
+TEST_F(Cache, DISABLED_List)
+{
+   const char *driver_id = "make_check";
+   char blob[] = "This is a RO blob";
+   uint8_t blob_key[20];
+   char foz_rw_idx_file[1024];
+   char foz_ro_idx_file[1024];
+   char foz_rw_file[1024];
+   char foz_ro_file[1024];
+   char *result;
+   size_t size;
+
+#ifndef ENABLE_SHADER_CACHE
+   GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
+#else
+#ifndef FOZ_DB_UTIL_DYNAMIC_LIST
+   GTEST_SKIP() << "FOZ_DB_UTIL_DYNAMIC_LIST not supported";
+#else
+   setenv("MESA_DISK_CACHE_SINGLE_FILE", "true", 1);
+
+#ifdef SHADER_CACHE_DISABLE_BY_DEFAULT
+   setenv("MESA_SHADER_CACHE_DISABLE", "false", 1);
+#endif /* SHADER_CACHE_DISABLE_BY_DEFAULT */
+
+   test_disk_cache_create(mem_ctx, CACHE_DIR_NAME_SF, driver_id);
+
+   /* Create ro files for testing */
+   /* Create Fossilize writable cache. */
+   struct disk_cache *cache_sf_wr =
+      disk_cache_create("list_test", driver_id, 0);
+
+   disk_cache_compute_key(cache_sf_wr, blob, sizeof(blob), blob_key);
+
+   /* Ensure that disk_cache_get returns nothing before anything is added. */
+   result = (char *)disk_cache_get(cache_sf_wr, blob_key, &size);
+   EXPECT_EQ(result, nullptr)
+      << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Put blob entry to the cache. */
+   disk_cache_put(cache_sf_wr, blob_key, blob, sizeof(blob), NULL);
+   disk_cache_wait_for_idle(cache_sf_wr);
+
+   result = (char *)disk_cache_get(cache_sf_wr, blob_key, &size);
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   /* Rename file foz_cache.foz -> ro_cache.foz */
+   sprintf(foz_rw_file, "%s/foz_cache.foz", cache_sf_wr->path);
+   sprintf(foz_ro_file, "%s/ro_cache.foz", cache_sf_wr->path);
+   EXPECT_EQ(rename(foz_rw_file, foz_ro_file), 0)
+      << "foz_cache.foz renaming failed";
+
+   /* Rename file foz_cache_idx.foz -> ro_cache_idx.foz */
+   sprintf(foz_rw_idx_file, "%s/foz_cache_idx.foz", cache_sf_wr->path);
+   sprintf(foz_ro_idx_file, "%s/ro_cache_idx.foz", cache_sf_wr->path);
+   EXPECT_EQ(rename(foz_rw_idx_file, foz_ro_idx_file), 0)
+      << "foz_cache_idx.foz renaming failed";
+
+   disk_cache_destroy(cache_sf_wr);
+
+   const char *list_filename = CACHE_TEST_TMP "/foz_dbs_list.txt";
+   setenv("MESA_DISK_CACHE_READ_ONLY_FOZ_DBS_DYNAMIC_LIST", list_filename, 1);
+
+   /* Create new empty file */
+   FILE *list_file = fopen(list_filename, "w");
+   fputs("ro_cache\n", list_file);
+   fclose(list_file);
+
+   /* Create Fossilize writable cache. */
+   struct disk_cache *cache_sf = disk_cache_create("list_test", driver_id, 0);
+
+   /* Blob entry must present because it shall be retrieved from the
+    * ro_cache.foz loaded from list at creation time */
+   result = (char *)disk_cache_get(cache_sf, blob_key, &size);
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_sf);
+   remove(list_filename);
+
+   /* Test loading from a list populated at runtime */
+   /* Create new empty file */
+   list_file = fopen(list_filename, "w");
+   fclose(list_file);
+
+   /* Create Fossilize writable cache. */
+   cache_sf = disk_cache_create("list_test", driver_id, 0);
+
+   /* Ensure that disk_cache returns nothing before list file is populated */
+   result = (char *)disk_cache_get(cache_sf, blob_key, &size);
+   EXPECT_EQ(result, nullptr)
+      << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Add ro_cache to list file for loading */
+   list_file = fopen(list_filename, "a");
+   fputs("ro_cache\n", list_file);
+   fclose(list_file);
+
+   /* Poll result to give time for updater to load ro cache */
+   result = (char *)poll_disk_cache_get(cache_sf, blob_key, &size);
+
+   /* Blob entry must present because it shall be retrieved from the
+    * ro_cache.foz loaded from list at runtime */
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_sf);
+   remove(list_filename);
+
+   /* Test loading from a list with some invalid files */
+   /* Create new empty file */
+   list_file = fopen(list_filename, "w");
+   fclose(list_file);
+
+   /* Create Fossilize writable cache. */
+   cache_sf = disk_cache_create("list_test", driver_id, 0);
+
+   /* Ensure that disk_cache returns nothing before list file is populated */
+   result = (char *)disk_cache_get(cache_sf, blob_key, &size);
+   EXPECT_EQ(result, nullptr)
+      << "disk_cache_get with non-existent item (pointer)";
+   EXPECT_EQ(size, 0) << "disk_cache_get with non-existent item (size)";
+
+   /* Add non-existant list files for loading */
+   list_file = fopen(list_filename, "a");
+   fputs("no_cache\n", list_file);
+   fputs("no_cache2\n", list_file);
+   fputs("no_cache/no_cache3\n", list_file);
+   /* Add ro_cache to list file for loading */
+   fputs("ro_cache\n", list_file);
+   fclose(list_file);
+
+   /* Poll result to give time for updater to load ro cache */
+   result = (char *)poll_disk_cache_get(cache_sf, blob_key, &size);
+
+   /* Blob entry must present because it shall be retrieved from the
+    * ro_cache.foz loaded from list at runtime despite invalid files
+    * in the list */
+   EXPECT_STREQ(blob, result) << "disk_cache_get of existing item (pointer)";
+   EXPECT_EQ(size, sizeof(blob)) << "disk_cache_get of existing item (size)";
+   free(result);
+
+   disk_cache_destroy(cache_sf);
+   remove(list_filename);
+
+   int err = rmrf_local(CACHE_TEST_TMP);
+   EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
+
+   unsetenv("MESA_DISK_CACHE_SINGLE_FILE");
+   unsetenv("MESA_DISK_CACHE_READ_ONLY_FOZ_DBS_DYNAMIC_LIST");
+#endif /* FOZ_DB_UTIL_DYNAMIC_LIST */
+#endif /* ENABLE_SHADER_CACHE */
+}
+
+static void
+test_multipart_eviction(const char *driver_id)
+{
+   const unsigned int entry_size = 512;
+   uint8_t blobs[7][entry_size];
+   cache_key keys[7];
+   unsigned int i;
+   char *result;
+   size_t size;
+
+   setenv("MESA_SHADER_CACHE_MAX_SIZE", "3K", 1);
+   setenv("MESA_DISK_CACHE_DATABASE_EVICTION_SCORE_2X_PERIOD", "1", 1);
+
+   struct disk_cache *cache = disk_cache_create("test", driver_id, 0);
+
+   unsigned int entry_file_size = entry_size;
+   entry_file_size -= sizeof(struct cache_entry_file_data);
+   entry_file_size -= mesa_cache_db_file_entry_size();
+   entry_file_size -= cache->driver_keys_blob_size;
+   entry_file_size -= 4 + 8; /* cache_item_metadata size + room for alignment */
+
+   /*
+    * 1. Allocate 3KB cache in 3 parts, each part is 1KB
+    * 2. Fill up cache with six 512K entries
+    * 3. Touch entries of the first part, which will bump last_access_time
+    *    of the first two cache entries
+    * 4. Insert seventh 512K entry that will cause eviction of the second part
+    * 5. Check that second entry of the second part gone due to eviction and
+    *    others present
+    */
+
+   /* Fill up cache with six 512K entries. */
+   for (i = 0; i < 6; i++) {
+      memset(blobs[i], i, entry_file_size);
+
+      disk_cache_compute_key(cache,  blobs[i], entry_file_size, keys[i]);
+      disk_cache_put(cache, keys[i], blobs[i], entry_file_size, NULL);
+      disk_cache_wait_for_idle(cache);
+
+      result = (char *) disk_cache_get(cache, keys[i], &size);
+      EXPECT_NE(result, nullptr) << "disk_cache_get with existent item (pointer)";
+      EXPECT_EQ(size, entry_file_size) << "disk_cache_get with existent item (size)";
+      free(result);
+
+      /* Ensure that cache entries will have distinct last_access_time
+       * during testing.
+       */
+      if (i % 2 == 0)
+         usleep(100000);
+   }
+
+   /* Touch entries of the first part. Second part becomes outdated */
+   for (i = 0; i < 2; i++) {
+      result = (char *) disk_cache_get(cache, keys[i], &size);
+      EXPECT_NE(result, nullptr) << "disk_cache_get with existent item (pointer)";
+      EXPECT_EQ(size, entry_file_size) << "disk_cache_get with existent item (size)";
+      free(result);
+   }
+
+   /* Insert seventh entry. */
+   memset(blobs[6], 6, entry_file_size);
+   disk_cache_compute_key(cache,  blobs[6], entry_file_size, keys[6]);
+   disk_cache_put(cache, keys[6], blobs[6], entry_file_size, NULL);
+   disk_cache_wait_for_idle(cache);
+
+   /* Check whether third entry of the second part gone and others present. */
+   for (i = 0; i < ARRAY_SIZE(blobs); i++) {
+      result = (char *) disk_cache_get(cache, keys[i], &size);
+      if (i == 2) {
+         EXPECT_EQ(result, nullptr) << "disk_cache_get with non-existent item (pointer)";
+      } else {
+         EXPECT_NE(result, nullptr) << "disk_cache_get with existent item (pointer)";
+         EXPECT_EQ(size, entry_file_size) << "disk_cache_get with existent item (size)";
+      }
+      free(result);
+   }
+
+   disk_cache_destroy(cache);
+}
+
+TEST_F(Cache, DatabaseMultipartEviction)
+{
+   const char *driver_id = "make_check_uncompressed";
+
+#ifndef ENABLE_SHADER_CACHE
+   GTEST_SKIP() << "ENABLE_SHADER_CACHE not defined.";
+#else
+   setenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS", "3", 1);
+   setenv("MESA_DISK_CACHE_DATABASE", "true", 1);
+
+   test_disk_cache_create(mem_ctx, CACHE_DIR_NAME_DB, driver_id);
+
+   test_multipart_eviction(driver_id);
+
+   unsetenv("MESA_DISK_CACHE_DATABASE_NUM_PARTS");
+   unsetenv("MESA_DISK_CACHE_DATABASE");
+
+   int err = rmrf_local(CACHE_TEST_TMP);
    EXPECT_EQ(err, 0) << "Removing " CACHE_TEST_TMP " again";
 #endif
 }

@@ -36,7 +36,7 @@
 #define PATH_MAX MAX_PATH
 #endif
 
-bool error = false;
+static bool error = false;
 
 static void
 expect_equal_str(const char *expected, const char *actual, const char *test)
@@ -57,6 +57,10 @@ test_util_get_process_name (void)
 #else
    const char *expected = "process_test";
 #endif
+
+   const char *name_override = getenv("MESA_PROCESS_NAME");
+   if (name_override)
+      expected = name_override;
 
    const char *name = util_get_process_name();
    expect_equal_str(expected, name, "util_get_process_name");

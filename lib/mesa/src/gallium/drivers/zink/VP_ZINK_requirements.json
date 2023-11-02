@@ -15,7 +15,6 @@
                 "VK_KHR_imageless_framebuffer": 1,
                 "VK_KHR_timeline_semaphore": 1,
                 "VK_EXT_custom_border_color": 1,
-                "VK_EXT_provoking_vertex": 1,
                 "VK_EXT_line_rasterization": 1,
                 "VK_KHR_swapchain_mutable_format": 1,
                 "VK_EXT_border_color_swizzle": 1,
@@ -35,16 +34,7 @@
                     "borderColorSwizzleFromImage": true
                 },
                 "VkPhysicalDeviceLineRasterizationFeaturesEXT": {
-                    "rectangularLines": true,
-                    "bresenhamLines": true
-                },
-                "VkPhysicalDeviceProvokingVertexFeaturesEXT": {
-                    "provokingVertexLast": true
-                }
-            },
-            "properties": {
-                "VkPhysicalDeviceProperties": {
-
+                    "rectangularLines": true
                 }
             }
         },
@@ -74,6 +64,22 @@
                 }
             }
         },
+        "gl21_baseline_line_bresenham": {
+        	"features": {
+                "VkPhysicalDeviceLineRasterizationFeaturesEXT": {
+                    "bresenhamLines": true
+                }
+            }
+        },
+        "gl21_baseline_line_non_strict": {
+        	"properties": {
+                "VkPhysicalDeviceProperties": {
+                    "limits": {
+                        "strictLines": false
+                    }
+                }
+            }
+        },
         "gl21_optional": {
             "extensions": {
                 "VK_KHR_external_memory": 1
@@ -93,6 +99,15 @@
                 },
                 "VkPhysicalDeviceConditionalRenderingFeaturesEXT": {
                     "conditionalRendering": true
+                }
+            },
+            "formats": {
+                "VK_FORMAT_D32_SFLOAT_S8_UINT": {
+                    "VkFormatProperties": {
+                        "optimalTilingFeatures": [
+                            "VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT"
+                        ]
+                    }
                 }
             }
         },
@@ -126,7 +141,6 @@
             },
             "features": {
                 "VkPhysicalDeviceFeatures": {
-                    "occlusionQueryPrecise": true,
                     "dualSrcBlend": true
                 },
                 "VkPhysicalDeviceVertexAttributeDivisorFeaturesEXT": {
@@ -178,7 +192,11 @@
             "properties": {
                 "VkPhysicalDeviceProperties": {
                     "limits": {
+                        "maxImageDimension1D": 16384,
                         "maxImageDimension2D": 16384,
+                        "maxImageDimension3D": 2048,
+                        "maxImageDimensionCube": 16384,
+                        "maxImageArrayLayers": 2048,
                         "maxViewports": 16
                     }
                 }
@@ -214,6 +232,33 @@
             "features": {
                 "VkPhysicalDeviceVulkan11Features": {
                     "shaderDrawParameters": true
+                }
+            }
+        },
+        "gl43_baseline_rb2": {
+            "extensions": {
+                "VK_EXT_robustness2": 1
+            },
+            "features": {
+                "VkPhysicalDeviceRobustness2FeaturesEXT": {
+                    "robustImageAccess2": true
+                }
+            }
+        },
+        "gl43_baseline_rb_image_vk13": {
+            "features": {
+                "VkPhysicalDeviceVulkan13Features": {
+                    "robustImageAccess": true
+                }
+            }
+        },
+        "gl43_baseline_rb_image_ext": {
+            "extensions": {
+                "VK_EXT_image_robustness": 1
+            },
+            "features": {
+                "VkPhysicalDeviceImageRobustnessFeaturesEXT": {
+                    "robustImageAccess": true
                 }
             }
         },
@@ -334,7 +379,6 @@
             "features": {
                 "VkPhysicalDeviceFeatures": {
                     "samplerAnisotropy": true,
-                    "pipelineStatisticsQuery": true,
                     "depthBiasClamp": true
                 }
             }
@@ -365,13 +409,17 @@
                     "extendedDynamicState3DepthClampEnable": true,
                     "extendedDynamicState3DepthClipEnable": true,
                     "extendedDynamicState3ProvokingVertexMode": true,
-                    "extendedDynamicState3LineRasterizationMode": true
+                    "extendedDynamicState3LineRasterizationMode": true,
+                    "extendedDynamicState3DepthClipNegativeOneToOne": true
                 },
                 "VkPhysicalDeviceGraphicsPipelineLibraryFeaturesEXT": {
                     "graphicsPipelineLibrary": true
                 },
                 "VkPhysicalDeviceNonSeamlessCubeMapFeaturesEXT": {
                     "nonSeamlessCubeMap": true
+                },
+                "VkPhysicalDeviceProvokingVertexFeaturesEXT": {
+                    "provokingVertexLast": true
                 }
             },
             "properties": {
@@ -382,6 +430,7 @@
         },
         "gl46_optimal_ext": {
             "extensions": {
+                "VK_EXT_provoking_vertex": 1,
                 "VK_KHR_dynamic_rendering": 1
             },
             "features": {
@@ -401,7 +450,8 @@
             "extensions": {
                 "VK_EXT_primitives_generated_query": 1,
                 "VK_EXT_color_write_enable": 1,
-                "VK_EXT_extended_dynamic_state3": 1
+                "VK_EXT_extended_dynamic_state3": 1,
+                "VK_EXT_descriptor_buffer": 1
             },
             "features": {
                 "VkPhysicalDevicePrimitivesGeneratedQueryFeaturesEXT": {
@@ -418,6 +468,9 @@
                     "extendedDynamicState3RasterizationSamples": true,
                     "extendedDynamicState3ColorWriteMask": true,
                     "extendedDynamicState3LogicOpEnable": true
+                },
+                "VkPhysicalDeviceDescriptorBufferFeaturesEXT": {
+                    "descriptorBuffer": true
                 }
             }
         },
@@ -587,7 +640,8 @@
             "capabilities": [
                 "vulkan10requirements",
                 "gl21_baseline",
-                [ "gl21_baseline_vk10", "gl21_baseline_vk12" ]
+                [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ]
             ]
         },
         "VP_ZINK_gl30_baseline": {
@@ -599,6 +653,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline"
             ]
         },
@@ -611,6 +666,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline"
             ]
@@ -624,6 +680,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline"
@@ -638,6 +695,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -653,6 +711,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -669,6 +728,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -686,6 +746,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -705,6 +766,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -713,7 +775,8 @@
                 "gl41_baseline",
                 "gl42_baseline",
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
-                "gl43_baseline"
+                "gl43_baseline",
+                [ "gl43_baseline_rb2", "gl43_baseline_rb_image_vk13", "gl43_baseline_rb_image_ext" ]
             ]
         },
         "VP_ZINK_gl44_baseline": {
@@ -725,6 +788,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -734,6 +798,7 @@
                 "gl42_baseline",
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
+                [ "gl43_baseline_rb2", "gl43_baseline_rb_image_vk13", "gl43_baseline_rb_image_ext" ],
                 "gl44_baseline",
                 [ "gl44_baseline_ext", "gl44_baseline_vk12" ]
             ]
@@ -747,6 +812,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -756,6 +822,7 @@
                 "gl42_baseline",
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
+                [ "gl43_baseline_rb2", "gl43_baseline_rb_image_vk13", "gl43_baseline_rb_image_ext" ],
                 "gl44_baseline",
                 [ "gl44_baseline_ext", "gl44_baseline_vk12" ],
                 "gl45_baseline"
@@ -770,6 +837,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -779,6 +847,7 @@
                 "gl42_baseline",
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
+                [ "gl43_baseline_rb2", "gl43_baseline_rb_image_vk13", "gl43_baseline_rb_image_ext" ],
                 "gl44_baseline",
                 [ "gl44_baseline_ext", "gl44_baseline_vk12" ],
                 "gl45_baseline",
@@ -794,6 +863,7 @@
                 "vulkan10requirements",
                 "gl21_baseline",
                 [ "gl21_baseline_vk10", "gl21_baseline_vk12" ],
+                [ "gl21_baseline_line_bresenham", "gl21_baseline_line_non_strict" ],
                 "gl30_baseline",
                 "gl31_baseline",
                 "gl32_baseline",
@@ -803,6 +873,7 @@
                 "gl42_baseline",
                 [ "gl42_baseline_vk10", "gl42_baseline_vk12" ],
                 "gl43_baseline",
+                [ "gl43_baseline_rb2", "gl43_baseline_rb_image_vk13", "gl43_baseline_rb_image_ext" ],
                 "gl44_baseline",
                 [ "gl44_baseline_ext", "gl44_baseline_vk12" ],
                 "gl45_baseline",
@@ -837,13 +908,13 @@
             "company": "LunarG"
         },
         "Erik Faye-Lund": {
-            "company": "Zink"
+            "company": "Collabora"
         },
         "Soroush Faghihi": {
-            "company": "Zink"
+            "company": "Imagination Technologies"
         },
         "Connor Abbott": {
-            "company": "Zink"  
+            "company": "Valve"
         }
     },
     "history": [

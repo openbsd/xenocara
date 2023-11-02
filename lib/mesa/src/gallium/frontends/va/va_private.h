@@ -44,7 +44,7 @@
 #include "vl/vl_csc.h"
 
 #include "util/u_dynarray.h"
-#include "os/os_thread.h"
+#include "util/u_thread.h"
 #include "util/detect_os.h"
 
 #if DETECT_OS_WINDOWS
@@ -346,7 +346,6 @@ typedef struct {
       unsigned int slice_header_size;
    } mjpeg;
 
-   struct h264_private h264;
    struct vl_deint_filter *deint;
    vlVaBuffer *coded_buf;
    int target_id;
@@ -374,6 +373,7 @@ typedef struct {
    bool force_flushed;
    struct pipe_video_buffer *obsolete_buf;
    enum pipe_format encoder_format;
+   struct pipe_fence_handle *fence;
 } vlVaSurface;
 
 typedef struct {
@@ -512,7 +512,7 @@ void vlVaHandlePictureParameterBufferVP9(vlVaDriver *drv, vlVaContext *context, 
 void vlVaHandleSliceParameterBufferVP9(vlVaContext *context, vlVaBuffer *buf);
 void vlVaDecoderVP9BitstreamHeader(vlVaContext *context, vlVaBuffer *buf);
 void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, vlVaBuffer *buf);
-void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf, unsigned num_slice_buffers, unsigned num_slices);
+void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf, unsigned num_slices);
 void getEncParamPresetH264(vlVaContext *context);
 void getEncParamPresetH265(vlVaContext *context);
 void vlVaHandleVAEncMiscParameterTypeQualityLevel(struct pipe_enc_quality_modes *p, vlVaQualityBits *in);

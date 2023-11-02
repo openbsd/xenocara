@@ -178,6 +178,8 @@ void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, 
       av1->pic_info_fields.bits.allow_warped_motion;
    context->desc.av1.picture_parameter.pic_info_fields.uniform_tile_spacing_flag =
       av1->pic_info_fields.bits.uniform_tile_spacing_flag;
+   context->desc.av1.picture_parameter.pic_info_fields.large_scale_tile =
+      av1->pic_info_fields.bits.large_scale_tile;
 
    context->desc.av1.picture_parameter.matrix_coefficients =
       av1->matrix_coefficients;
@@ -386,7 +388,7 @@ void vlVaHandlePictureParameterBufferAV1(vlVaDriver *drv, vlVaContext *context, 
    }
 }
 
-void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf, unsigned num_slice_buffers, unsigned num_slices)
+void vlVaHandleSliceParameterBufferAV1(vlVaContext *context, vlVaBuffer *buf, unsigned num_slices)
 {
    for (uint32_t buffer_idx = 0; buffer_idx < buf->num_elements; buffer_idx++) {
       uint32_t slice_index =

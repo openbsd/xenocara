@@ -23,9 +23,11 @@
 #ifndef VK_DEVICE_H
 #define VK_DEVICE_H
 
+#include "rmv/vk_rmv_common.h"
 #include "vk_dispatch_table.h"
 #include "vk_extensions.h"
 #include "vk_object.h"
+#include "vk_physical_device_features.h"
 
 #include "util/list.h"
 #include "util/u_atomic.h"
@@ -104,12 +106,8 @@ struct vk_device {
    /** Table of enabled extensions */
    struct vk_device_extension_table enabled_extensions;
 
-   struct {
-      bool robustBufferAccess;
-      bool robustBufferAccess2;
-      bool robustImageAccess;
-      bool robustImageAccess2;
-   } enabled_features;
+   /** Table of enabled features */
+   struct vk_features enabled_features;
 
    /** Device-level dispatch table */
    struct vk_device_dispatch_table dispatch_table;
@@ -242,10 +240,12 @@ struct vk_device {
     */
    enum vk_queue_submit_mode submit_mode;
 
-#ifdef ANDROID
+   struct vk_memory_trace_data memory_trace_data;
+
    mtx_t swapchain_private_mtx;
    struct hash_table *swapchain_private;
-#endif
+   mtx_t swapchain_name_mtx;
+   struct hash_table *swapchain_name;
 };
 
 VK_DEFINE_HANDLE_CASTS(vk_device, base, VkDevice,

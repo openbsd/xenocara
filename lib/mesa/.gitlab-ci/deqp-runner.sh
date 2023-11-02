@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo -e "\e[0Ksection_start:$(date +%s):test_setup[collapsed=true]\r\e[0Kpreparing test setup"
+section_start test_setup "deqp: preparing test setup"
 
 set -ex
 
@@ -18,6 +18,7 @@ INSTALL=`pwd`/install
 export LD_LIBRARY_PATH=`pwd`/install/lib/
 export EGL_PLATFORM=surfaceless
 export VK_ICD_FILENAMES=`pwd`/install/share/vulkan/icd.d/"$VK_DRIVER"_icd.${VK_CPU:-`uname -m`}.json
+export OCL_ICD_VENDORS=`pwd`/install/etc/OpenCL/vendors/
 
 RESULTS=`pwd`/${DEQP_RESULTS_DIR:-results}
 mkdir -p $RESULTS
@@ -85,14 +86,6 @@ if [ -z "$DEQP_SUITE" ]; then
        sed -ni $CI_NODE_INDEX~$CI_NODE_TOTAL"p" /tmp/case-list.txt
     fi
 
-    if [ -n "$DEQP_CASELIST_FILTER" ]; then
-        sed -ni "/$DEQP_CASELIST_FILTER/p" /tmp/case-list.txt
-    fi
-
-    if [ -n "$DEQP_CASELIST_INV_FILTER" ]; then
-        sed -ni "/$DEQP_CASELIST_INV_FILTER/!p" /tmp/case-list.txt
-    fi
-
     if [ ! -s /tmp/case-list.txt ]; then
         echo "Caselist generation failed"
         exit 1
@@ -123,16 +116,17 @@ if [ -e "$INSTALL/$GPU_VERSION-skips.txt" ]; then
     DEQP_SKIPS="$DEQP_SKIPS $INSTALL/$GPU_VERSION-skips.txt"
 fi
 
+if [ "$PIGLIT_PLATFORM" != "gbm" ] ; then
+    DEQP_SKIPS="$DEQP_SKIPS $INSTALL/x11-skips.txt"
+fi
+
+if [ "$PIGLIT_PLATFORM" = "gbm" ]; then
+    DEQP_SKIPS="$DEQP_SKIPS $INSTALL/gbm-skips.txt"
+fi
+
 report_load() {
     echo "System load: $(cut -d' ' -f1-3 < /proc/loadavg)"
     echo "# of CPU cores: $(cat /proc/cpuinfo | grep processor | wc -l)"
-}
-
-# wrapper to supress +x to avoid spamming the log
-quiet() {
-    set +x
-    "$@"
-    set -x
 }
 
 if [ "$GALLIUM_DRIVER" = "virpipe" ]; then
@@ -159,11 +153,7 @@ if [ -z "$DEQP_SUITE" ]; then
     fi
 fi
 
-set +x
-echo -e "\e[0Ksection_end:$(date +%s):test_setup\r\e[0K"
-
-echo -e "\e[0Ksection_start:$(date +%s):deqp[collapsed=false]\r\e[0Kdeqp-runner"
-set -x
+uncollapsed_section_switch deqp "deqp: deqp-runner"
 
 set +e
 if [ -z "$DEQP_SUITE" ]; then
@@ -196,11 +186,10 @@ fi
 DEQP_EXITCODE=$?
 
 set +x
-echo -e "\e[0Ksection_end:$(date +%s):deqp\r\e[0K"
 
 report_load
 
-echo -e "\e[0Ksection_start:$(date +%s):test_post_process[collapsed=true]\r\e[0Kpost-processing test results"
+section_switch test_post_process "deqp: post-processing test results"
 set -x
 
 # Remove all but the first 50 individual XML files uploaded as artifacts, to
@@ -237,6 +226,11 @@ if [ -n "$FLAKES_CHANNEL" ]; then
          --branch-title "${CI_MERGE_REQUEST_TITLE:-$CI_COMMIT_TITLE}"
 fi
 
-echo -e "\e[0Ksection_end:$(date +%s):test_post_process\r\e[0K"
+# Compress results.csv to save on bandwidth during the upload of artifacts to
+# GitLab. This reduces the size in a VKCTS run from 135 to 7.6MB, and takes
+# 0.17s on a Ryzen 5950X (16 threads, 0.95s when limited to 1 thread).
+zstd --rm -T0 -8q "$RESULTS/results.csv" -o "$RESULTS/results.csv.zst"
+
+section_end test_post_process
 
 exit $DEQP_EXITCODE

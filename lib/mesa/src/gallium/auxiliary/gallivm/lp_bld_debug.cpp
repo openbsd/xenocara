@@ -35,8 +35,13 @@
 #include <llvm-c/Disassembler.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Support/Format.h>
-#include <llvm/Support/Host.h>
 #include <llvm/IR/Module.h>
+
+#if LLVM_VERSION_MAJOR >= 17
+#include <llvm/TargetParser/Host.h>
+#else
+#include <llvm/Support/Host.h>
+#endif
 
 #include "util/u_math.h"
 #include "util/u_debug.h"
@@ -160,7 +165,7 @@ disassemble(const void* func, std::ostream &buffer)
        * XXX: This currently assumes x86
        */
 
-#if defined(PIPE_ARCH_X86) || defined(PIPE_ARCH_X86_64)
+#if DETECT_ARCH_X86 || DETECT_ARCH_X86_64
       if (Size == 1 && bytes[pc] == 0xc3) {
          break;
       }

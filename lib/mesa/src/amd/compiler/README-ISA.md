@@ -113,6 +113,18 @@ Some instructions have a `_LEGACY` variant which implements "DX9 rules", in whic
 the zero "wins" in multiplications, ie. `0.0*x` is always `0.0`. The VEGA ISA
 mentions `V_MAC_LEGACY_F32` but this instruction is not really there on VEGA.
 
+## LDS size and allocation granule
+
+GFX7-8 ISA manuals are mistaken about the available LDS size.
+
+* GFX7+ workgroups can use 64KB LDS.
+  There is 64KB LDS per CU.
+* GFX6 workgroups can use 32KB LDS.
+  There is 64KB LDS per CU, but a single workgroup can only use half of it.
+
+ Regarding the LDS allocation granule, Mesa has the correct details and
+ the ISA manuals are mistaken.
+
 ## `m0` with LDS instructions on Vega and newer
 
 The Vega ISA doc (both the old one and the "7nm" one) claims that LDS instructions
@@ -193,6 +205,11 @@ Currently, we don't do this.
 [See this LLVM source.](https://github.com/llvm/llvm-project/blob/main/llvm/lib/Target/AMDGPU/Utils/AMDGPUBaseInfo.cpp#L1917-L1922)
 
 This leads to wrong bounds checking, using a VGPR offset fixes it.
+
+## unused VMEM/DS destination lanes can't be used without waiting
+
+On GFX11, we can't safely read/write unused lanes of VMEM/DS destination
+VGPRs without waiting for the load to finish.
 
 ## GCN / GFX6 hazards
 

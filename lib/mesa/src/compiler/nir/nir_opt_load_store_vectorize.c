@@ -154,6 +154,10 @@ case nir_intrinsic_##op: {\
    ATOMIC(nir_var_mem_task_payload, task_payload, fmin, -1, 0, -1, 1)
    ATOMIC(nir_var_mem_task_payload, task_payload, fmax, -1, 0, -1, 1)
    ATOMIC(nir_var_mem_task_payload, task_payload, fcomp_swap, -1, 0, -1, 1)
+   LOAD(nir_var_shader_temp, stack, -1, -1, -1)
+   STORE(nir_var_shader_temp, stack, -1, -1, -1, 0)
+   LOAD(nir_var_mem_ssbo, ssbo_uniform_block_intel, 0, 1, -1)
+   LOAD(nir_var_mem_shared, shared_uniform_block_intel, -1, 0, -1)
    default:
       break;
 #undef ATOMIC
@@ -807,6 +811,8 @@ vectorize_loads(nir_builder *b, struct vectorize_ctx *ctx,
 
       nir_intrinsic_set_range_base(first->intrin, low_base);
       nir_intrinsic_set_range(first->intrin, MAX2(low_end, high_end) - low_base);
+   } else if (nir_intrinsic_has_base(first->intrin) && info->base_src == -1 && info->deref_src == -1) {
+      nir_intrinsic_set_base(first->intrin, nir_intrinsic_base(low->intrin));
    }
 
    first->key = low->key;
@@ -846,8 +852,8 @@ vectorize_stores(nir_builder *b, struct vectorize_ctx *ctx,
    /* convert booleans */
    nir_ssa_def *low_val = low->intrin->src[low->info->value_src].ssa;
    nir_ssa_def *high_val = high->intrin->src[high->info->value_src].ssa;
-   low_val = low_val->bit_size == 1 ? nir_b2i(b, low_val, 32) : low_val;
-   high_val = high_val->bit_size == 1 ? nir_b2i(b, high_val, 32) : high_val;
+   low_val = low_val->bit_size == 1 ? nir_b2iN(b, low_val, 32) : low_val;
+   high_val = high_val->bit_size == 1 ? nir_b2iN(b, high_val, 32) : high_val;
 
    /* combine the data */
    nir_ssa_def *data_channels[NIR_MAX_VEC_COMPONENTS];

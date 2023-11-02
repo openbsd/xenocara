@@ -135,7 +135,7 @@ handle_reset_query_cpu_job(struct v3dv_queue *queue, struct v3dv_job *job,
     * we handle those in the CPU.
     */
    if (info->pool->query_type == VK_QUERY_TYPE_OCCLUSION)
-      v3dv_bo_wait(job->device, info->pool->bo, PIPE_TIMEOUT_INFINITE);
+      v3dv_bo_wait(job->device, info->pool->occlusion.bo, PIPE_TIMEOUT_INFINITE);
 
    if (info->pool->query_type == VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR) {
       struct vk_sync_wait waits[info->count];
@@ -160,7 +160,7 @@ handle_reset_query_cpu_job(struct v3dv_queue *queue, struct v3dv_job *job,
          return result;
    }
 
-   v3dv_reset_query_pools(job->device, info->pool, info->first, info->count);
+   v3dv_reset_query_pool_cpu(job->device, info->pool, info->first, info->count);
 
    return VK_SUCCESS;
 }
@@ -218,11 +218,14 @@ handle_end_query_cpu_job(struct v3dv_job *job, uint32_t counter_pass_idx)
 
    mtx_lock(&job->device->query_mutex);
 
-   struct v3dv_end_query_cpu_job_info *info = &job->cpu.query_end;
+   struct v3dv_end_query_info *info = &job->cpu.query_end;
    struct v3dv_queue *queue = &job->device->queue;
 
    int err = 0;
    int fd = -1;
+
+   assert(info->pool->query_type == VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR ||
+          info->pool->query_type == VK_QUERY_TYPE_TIMESTAMP);
 
    if (info->pool->query_type == VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR) {
       result = export_perfmon_last_job_sync(queue, job, &fd);
@@ -268,6 +271,9 @@ handle_copy_query_results_cpu_job(struct v3dv_job *job)
    struct v3dv_copy_query_results_cpu_job_info *info =
       &job->cpu.query_copy_results;
 
+   assert(info->pool->query_type == VK_QUERY_TYPE_PERFORMANCE_QUERY_KHR ||
+          info->pool->query_type == VK_QUERY_TYPE_TIMESTAMP);
+
    assert(info->dst && info->dst->mem && info->dst->mem->bo);
    struct v3dv_bo *bo = info->dst->mem->bo;
 
@@ -278,13 +284,13 @@ handle_copy_query_results_cpu_job(struct v3dv_job *job)
 
    uint8_t *offset = ((uint8_t *) bo->map) +
                      info->offset + info->dst->mem_offset;
-   v3dv_get_query_pool_results(job->device,
-                               info->pool,
-                               info->first,
-                               info->count,
-                               offset,
-                               info->stride,
-                               info->flags);
+   v3dv_get_query_pool_results_cpu(job->device,
+                                   info->pool,
+                                   info->first,
+                                   info->count,
+                                   offset,
+                                   info->stride,
+                                   info->flags);
 
    return VK_SUCCESS;
 }
@@ -306,7 +312,7 @@ handle_copy_buffer_to_image_cpu_job(struct v3dv_queue *queue,
       return result;
 
    /* Map BOs */
-   struct v3dv_bo *dst_bo = info->image->mem->bo;
+   struct v3dv_bo *dst_bo = info->image->planes[info->plane].mem->bo;
    assert(!dst_bo->map || dst_bo->map_size == dst_bo->size);
    if (!dst_bo->map && !v3dv_bo_map(job->device, dst_bo, dst_bo->size))
       return vk_error(job->device, VK_ERROR_OUT_OF_HOST_MEMORY);
@@ -319,7 +325,7 @@ handle_copy_buffer_to_image_cpu_job(struct v3dv_queue *queue,
    void *src_ptr = src_bo->map;
 
    const struct v3d_resource_slice *slice =
-      &info->image->slices[info->mip_level];
+      &info->image->planes[info->plane].slices[info->mip_level];
 
    const struct pipe_box box = {
       info->image_offset.x, info->image_offset.y, info->base_layer,
@@ -329,14 +335,15 @@ handle_copy_buffer_to_image_cpu_job(struct v3dv_queue *queue,
    /* Copy each layer */
    for (uint32_t i = 0; i < info->layer_count; i++) {
       const uint32_t dst_offset =
-         v3dv_layer_offset(info->image, info->mip_level, info->base_layer + i);
+         v3dv_layer_offset(info->image, info->mip_level,
+                           info->base_layer + i, info->plane);
       const uint32_t src_offset =
          info->buffer->mem_offset + info->buffer_offset +
          info->buffer_layer_stride * i;
       v3d_store_tiled_image(
          dst_ptr + dst_offset, slice->stride,
          src_ptr + src_offset, info->buffer_stride,
-         slice->tiling, info->image->cpp, slice->padded_height, &box);
+         slice->tiling, info->image->planes[info->plane].cpp, slice->padded_height, &box);
    }
 
    return VK_SUCCESS;
@@ -864,6 +871,8 @@ handle_tfu_job(struct v3dv_queue *queue,
                struct v3dv_submit_sync_info *sync_info,
                bool signal_syncs)
 {
+   assert(!V3D_DBG(DISABLE_TFU));
+
    struct v3dv_device *device = queue->device;
 
    const bool needs_sync = sync_info->wait_count || job->serialize;

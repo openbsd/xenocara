@@ -35,7 +35,7 @@
 
 
 #include "pipe/p_compiler.h"
-#include "pipe/p_format.h"
+#include "util/format/u_formats.h"
 
 struct pipe_resource;
 struct pipe_surface;
@@ -187,6 +187,14 @@ bool trace_dump_is_triggered(void);
    do { \
       trace_dump_member_begin(#_member); \
       trace_dump_##_type((_obj)->_member); \
+      trace_dump_member_end(); \
+   } while(0)
+
+
+#define trace_dump_member_enum(_obj, _member, _value) \
+   do { \
+      trace_dump_member_begin(#_member); \
+      trace_dump_enum(_value); \
       trace_dump_member_end(); \
    } while(0)
 

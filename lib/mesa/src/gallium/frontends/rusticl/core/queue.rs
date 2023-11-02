@@ -7,6 +7,7 @@ use crate::impl_cl_type_trait;
 use mesa_rust_util::properties::*;
 use rusticl_opencl_gen::*;
 
+use std::collections::HashSet;
 use std::sync::mpsc;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -81,17 +82,25 @@ impl Queue {
 
     pub fn flush(&self, wait: bool) -> CLResult<()> {
         let mut p = self.pending.lock().unwrap();
-        let last = p.last().cloned();
+        let events = p.clone();
         // This should never ever error, but if it does return an error
         self.chan_in
             .send((*p).drain(0..).collect())
             .map_err(|_| CL_OUT_OF_HOST_MEMORY)?;
         if wait {
-            if let Some(last) = last {
-                last.wait();
+            for e in events {
+                e.wait();
             }
         }
         Ok(())
+    }
+
+    pub fn dependencies_for_pending_events(&self) -> HashSet<Arc<Queue>> {
+        let p = self.pending.lock().unwrap();
+
+        let mut queues = Event::deep_unflushed_queues(&p);
+        queues.remove(self);
+        queues
     }
 }
 

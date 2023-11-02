@@ -75,6 +75,8 @@ struct tu_descriptor_set_layout
    bool has_variable_descriptors;
    bool has_inline_uniforms;
 
+   struct tu_bo *embedded_samplers;
+
    /* Bindings in this descriptor set */
    struct tu_descriptor_set_binding_layout binding[0];
 };
@@ -231,7 +233,8 @@ static inline const struct tu_sampler *
 tu_immutable_samplers(const struct tu_descriptor_set_layout *set,
                       const struct tu_descriptor_set_binding_layout *binding)
 {
-   return (void *) ((const char *) set + binding->immutable_samplers_offset);
+   return (struct tu_sampler *) ((const char *) set +
+                                 binding->immutable_samplers_offset);
 }
 
 static inline const struct tu_sampler_ycbcr_conversion *
@@ -241,7 +244,9 @@ tu_immutable_ycbcr_samplers(const struct tu_descriptor_set_layout *set,
    if (!binding->ycbcr_samplers_offset)
       return NULL;
 
-   return (void *) ((const char *) set + binding->ycbcr_samplers_offset);
+   return (
+      struct tu_sampler_ycbcr_conversion *) ((const char *) set +
+                                             binding->ycbcr_samplers_offset);
 }
 
 #endif /* TU_DESCRIPTOR_SET_H */

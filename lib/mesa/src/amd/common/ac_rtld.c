@@ -156,7 +156,7 @@ static bool layout_symbols(struct ac_rtld_symbol *symbols, unsigned num_symbols,
       s->offset = total_size;
 
       if (total_size + s->size < total_size) {
-         report_errorf("%s: size overflow", __FUNCTION__);
+         report_errorf("%s: size overflow", __func__);
          return false;
       }
 
@@ -295,11 +295,7 @@ bool ac_rtld_open(struct ac_rtld_binary *binary, struct ac_rtld_open_info i)
    util_dynarray_foreach (&binary->lds_symbols, struct ac_rtld_symbol, symbol)
       symbol->part_idx = ~0u;
 
-   unsigned max_lds_size = 64 * 1024;
-
-   if (i.info->gfx_level == GFX6 ||
-       (i.shader_type != MESA_SHADER_COMPUTE && i.shader_type != MESA_SHADER_FRAGMENT))
-      max_lds_size = 32 * 1024;
+   unsigned max_lds_size = i.info->gfx_level == GFX6 ? 32 * 1024 : 64 * 1024;
 
    uint64_t shared_lds_size = 0;
    if (!layout_symbols(binary->lds_symbols.data, i.num_shared_lds_symbols, &shared_lds_size))
@@ -454,7 +450,7 @@ bool ac_rtld_open(struct ac_rtld_binary *binary, struct ac_rtld_open_info i)
     */
    unsigned prefetch_distance = 0;
 
-   if (!i.info->has_graphics && i.info->family >= CHIP_ALDEBARAN)
+   if (!i.info->has_graphics && i.info->family >= CHIP_MI200)
       prefetch_distance = 16;
    else if (i.info->gfx_level >= GFX10)
       prefetch_distance = 3;

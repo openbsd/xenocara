@@ -36,7 +36,7 @@
 
 #include <windows.h>
 
-#include "pipe/p_format.h"
+#include "util/format/u_formats.h"
 #include "pipe/p_context.h"
 #include "util/u_inlines.h"
 #include "util/format/u_format.h"
@@ -44,6 +44,7 @@
 #include "util/u_memory.h"
 #include "frontend/sw_winsys.h"
 #include "gdi_sw_winsys.h"
+#include "wgl/stw_gdishim.h"
 
 
 struct gdi_sw_displaytarget

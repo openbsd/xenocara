@@ -190,7 +190,7 @@ void r300_translate_vertex_shader(struct r300_context *r300,
 
     /* Setup the compiler */
     memset(&compiler, 0, sizeof(compiler));
-    rc_init(&compiler.Base, NULL);
+    rc_init(&compiler.Base, &r300->vs_regalloc_state);
 
     DBG_ON(r300, DBG_VP) ? compiler.Base.Debug |= RC_DBG_LOG : 0;
     compiler.code = &vs->code;
@@ -201,7 +201,6 @@ void r300_translate_vertex_shader(struct r300_context *r300,
     compiler.Base.has_half_swizzles = FALSE;
     compiler.Base.has_presub = FALSE;
     compiler.Base.has_omod = FALSE;
-    compiler.Base.needs_trig_input_transform = DBG_ON(r300, DBG_USE_TGSI);
     compiler.Base.max_temp_regs = 32;
     compiler.Base.max_constants = 256;
     compiler.Base.max_alu_insts = r300->screen->caps.is_r500 ? 1024 : 256;
@@ -214,7 +213,6 @@ void r300_translate_vertex_shader(struct r300_context *r300,
     /* Translate TGSI to our internal representation */
     ttr.compiler = &compiler.Base;
     ttr.info = &vs->info;
-    ttr.use_half_swizzles = FALSE;
 
     r300_tgsi_to_rc(&ttr, shader->state.tokens);
 

@@ -20,7 +20,6 @@
 
 inc_include = [include_directories('.')]
 inc_d3d9 = include_directories('D3D9')
-inc_haikugl = include_directories('HaikuGL')
 
 # Most things assume that Android headers are in the default include
 # path when compiling for Android so add the stub headers to
@@ -111,13 +110,6 @@ if with_gallium_st_nine
   )
 endif
 
-if with_platform_haiku
-  install_headers(
-    'HaikuGL/GLRenderer.h', 'HaikuGL/GLView.h', 'HaikuGL/OpenGLKit.h',
-    subdir : 'opengl',
-  )
-endif
-
 opencl_headers = files(
   'CL/cl.h',
   'CL/cl.hpp',
@@ -136,6 +128,7 @@ opencl_headers = files(
   'CL/cl_va_api_media_sharing_intel.h',
   'CL/cl_version.h',
   'CL/opencl.h',
+  'CL/opencl.hpp',
 )
 # Only install the headers if we are building a stand alone implementation and
 # not an ICD enabled implementation

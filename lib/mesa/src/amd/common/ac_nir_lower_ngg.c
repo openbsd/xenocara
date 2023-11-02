@@ -26,18 +26,25 @@
 #include "amdgfxregs.h"
 #include "nir_builder.h"
 #include "nir_xfb_info.h"
-#include "u_math.h"
-#include "u_vector.h"
+#include "util/u_math.h"
+#include "util/u_vector.h"
 
 #define SPECIAL_MS_OUT_MASK \
    (BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_COUNT) | \
     BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_INDICES) | \
     BITFIELD64_BIT(VARYING_SLOT_CULL_PRIMITIVE))
 
-#define POS_EXPORT_MASK \
-   (VARYING_BIT_POS | VARYING_BIT_PSIZ | VARYING_BIT_LAYER | VARYING_BIT_VIEWPORT | \
-    VARYING_BIT_PRIMITIVE_SHADING_RATE | VARYING_BIT_CLIP_DIST0 | VARYING_BIT_CLIP_DIST1 | \
-    VARYING_BIT_EDGE | VARYING_BIT_CLIP_VERTEX)
+#define MS_PRIM_ARG_EXP_MASK \
+   (VARYING_BIT_LAYER | \
+    VARYING_BIT_VIEWPORT | \
+    VARYING_BIT_PRIMITIVE_SHADING_RATE)
+
+#define MS_VERT_ARG_EXP_MASK \
+   (VARYING_BIT_CULL_DIST0 | \
+    VARYING_BIT_CULL_DIST1 | \
+    VARYING_BIT_CLIP_DIST0 | \
+    VARYING_BIT_CLIP_DIST1 | \
+    VARYING_BIT_PSIZ)
 
 enum {
    nggc_passflag_used_by_pos = 1,
@@ -49,7 +56,7 @@ typedef struct
 {
    nir_ssa_def *ssa;
    nir_variable *var;
-} saved_uniform;
+} reusable_nondeferred_variable;
 
 typedef struct
 {
@@ -59,24 +66,30 @@ typedef struct
 
 typedef struct
 {
+   nir_alu_type types[VARYING_SLOT_MAX][4];
+   nir_alu_type types_16bit_lo[16][4];
+   nir_alu_type types_16bit_hi[16][4];
+} shader_output_types;
+
+typedef struct
+{
    const ac_nir_lower_ngg_options *options;
 
    nir_variable *position_value_var;
    nir_variable *prim_exp_arg_var;
    nir_variable *es_accepted_var;
    nir_variable *gs_accepted_var;
-   nir_variable *num_es_threads_var;
+   nir_variable *gs_exported_var;
    nir_variable *gs_vtx_indices_vars[3];
 
    nir_ssa_def *vtx_addr[3];
 
-   struct u_vector saved_uniforms;
+   struct u_vector reusable_nondeferred_variables;
 
    bool early_prim_export;
    bool streamout_enabled;
    bool has_user_edgeflags;
    unsigned max_num_waves;
-   unsigned position_store_base;
 
    /* LDS params */
    unsigned pervertex_lds_bytes;
@@ -86,24 +99,26 @@ typedef struct
 
    nir_instr *compact_arg_stores[4];
    nir_intrinsic_instr *overwrite_args;
+   nir_variable *repacked_rel_patch_id;
 
    /* clip distance */
    nir_variable *clip_vertex_var;
    nir_variable *clipdist_neg_mask_var;
    bool has_clipdist;
+
+   /* outputs */
+   nir_ssa_def *outputs[VARYING_SLOT_MAX][4];
+   nir_ssa_def *outputs_16bit_lo[16][4];
+   nir_ssa_def *outputs_16bit_hi[16][4];
+   shader_output_types output_types;
 } lower_ngg_nogs_state;
 
 typedef struct
 {
-   /* store output base (driver location) */
-   uint8_t base;
    /* output stream index, 2 bit per component */
    uint8_t stream;
    /* Bitmask of components used: 4 bits per slot, 1 bit per component. */
    uint8_t components_mask : 4;
-   /* These fields have the same meaning as in nir_io_semantics. */
-   unsigned no_varying : 1;
-   unsigned no_sysval_output : 1;
 } gs_output_info;
 
 typedef struct
@@ -111,8 +126,6 @@ typedef struct
    const ac_nir_lower_ngg_options *options;
 
    nir_function_impl *impl;
-   nir_variable *output_vars[VARYING_SLOT_MAX][4];
-   nir_variable *current_clear_primflag_idx_var;
    int const_out_vtxcnt[4];
    int const_out_prmcnt[4];
    unsigned max_num_waves;
@@ -121,10 +134,21 @@ typedef struct
    nir_ssa_def *lds_addr_gs_scratch;
    unsigned lds_bytes_per_gs_out_vertex;
    unsigned lds_offs_primflags;
-   bool found_out_vtxcnt[4];
    bool output_compile_time_known;
    bool streamout_enabled;
+   /* 32 bit outputs */
+   nir_ssa_def *outputs[VARYING_SLOT_MAX][4];
    gs_output_info output_info[VARYING_SLOT_MAX];
+   /* 16 bit outputs */
+   nir_ssa_def *outputs_16bit_hi[16][4];
+   nir_ssa_def *outputs_16bit_lo[16][4];
+   gs_output_info output_info_16bit_hi[16];
+   gs_output_info output_info_16bit_lo[16];
+   /* output types for both 32bit and 16bit */
+   shader_output_types output_types;
+   /* Count per stream. */
+   nir_ssa_def *vertex_count[4];
+   nir_ssa_def *primitive_count[4];
 } lower_ngg_gs_state;
 
 /* LDS layout of Mesh Shader workgroup info. */
@@ -142,7 +166,8 @@ enum {
 /* Potential location for Mesh Shader outputs. */
 typedef enum {
    ms_out_mode_lds,
-   ms_out_mode_vram,
+   ms_out_mode_scratch_ring,
+   ms_out_mode_attr_ring,
    ms_out_mode_var,
 } ms_out_mode;
 
@@ -163,11 +188,23 @@ typedef struct
       uint32_t cull_flags_addr;
       uint32_t total_size;
    } lds;
-   /* VRAM "mesh shader scratch ring" layout for outputs that don't fit into the LDS. */
+
+   /* VRAM "mesh shader scratch ring" layout for outputs that don't fit into the LDS.
+    * Not to be confused with scratch memory.
+    */
    struct {
       ms_out_part vtx_attr;
       ms_out_part prm_attr;
-   } vram;
+   } scratch_ring;
+
+   /* VRAM attributes ring (GFX11 only) for all non-position outputs.
+    * GFX11 doesn't have to reload attributes from this ring at the end of the shader.
+    */
+   struct {
+      ms_out_part vtx_attr;
+      ms_out_part prm_attr;
+   } attr_ring;
+
    /* Outputs without cross-invocation access can be stored in variables. */
    struct {
       ms_out_part vtx_attr;
@@ -177,6 +214,8 @@ typedef struct
 
 typedef struct
 {
+   enum amd_gfx_level gfx_level;
+
    ms_out_mem_layout layout;
    uint64_t per_vertex_outputs;
    uint64_t per_primitive_outputs;
@@ -200,6 +239,12 @@ typedef struct
       /* Bitmask of components used: 4 bits per slot, 1 bit per component. */
       uint32_t components_mask;
    } output_info[VARYING_SLOT_MAX];
+
+   /* Used by outputs export. */
+   nir_ssa_def *outputs[VARYING_SLOT_MAX][4];
+   uint32_t clipdist_enable_mask;
+   const uint8_t *vs_output_param_offset;
+   bool has_param_exports;
 } lower_ngg_ms_state;
 
 /* Per-vertex LDS layout of culling shaders */
@@ -221,15 +266,6 @@ enum {
 
    /* Repacked arguments - also listed separately for VS and TES */
    lds_es_arg_0 = 20,
-
-   /* VS arguments which need to be repacked */
-   lds_es_vs_vertex_id = 20,
-   lds_es_vs_instance_id = 24,
-
-   /* TES arguments which need to be repacked */
-   lds_es_tes_u = 20,
-   lds_es_tes_v = 24,
-   lds_es_tes_patch_id = 28,
 };
 
 typedef struct {
@@ -423,34 +459,78 @@ emit_pack_ngg_prim_exp_arg(nir_builder *b, unsigned num_vertices_per_primitives,
 }
 
 static void
-ngg_nogs_init_vertex_indices_vars(nir_builder *b, nir_function_impl *impl, lower_ngg_nogs_state *st)
+alloc_vertices_and_primitives_gfx10_workaround(nir_builder *b,
+                                               nir_ssa_def *num_vtx,
+                                               nir_ssa_def *num_prim)
 {
-   for (unsigned v = 0; v < st->options->num_vertices_per_primitive; ++v) {
-      st->gs_vtx_indices_vars[v] = nir_local_variable_create(impl, glsl_uint_type(), "gs_vtx_addr");
+   /* HW workaround for a GPU hang with 100% culling on GFX10.
+    * We always have to export at least 1 primitive.
+    * Export a degenerate triangle using vertex 0 for all 3 vertices.
+    *
+    * NOTE: We rely on the caller to set the vertex count also to 0 when the primitive count is 0.
+    */
+   nir_ssa_def *is_prim_cnt_0 = nir_ieq_imm(b, num_prim, 0);
+   nir_if *if_prim_cnt_0 = nir_push_if(b, is_prim_cnt_0);
+   {
+      nir_ssa_def *one = nir_imm_int(b, 1);
+      nir_alloc_vertices_and_primitives_amd(b, one, one);
 
-      nir_ssa_def *vtx = st->options->passthrough ?
+      nir_ssa_def *tid = nir_load_subgroup_invocation(b);
+      nir_ssa_def *is_thread_0 = nir_ieq_imm(b, tid, 0);
+      nir_if *if_thread_0 = nir_push_if(b, is_thread_0);
+      {
+         /* The vertex indices are 0, 0, 0. */
+         nir_export_amd(b, nir_imm_zero(b, 4, 32),
+                        .base = V_008DFC_SQ_EXP_PRIM,
+                        .flags = AC_EXP_FLAG_DONE,
+                        .write_mask = 1);
+
+         /* The HW culls primitives with NaN. -1 is also NaN and can save
+          * a dword in binary code by inlining constant.
+          */
+         nir_export_amd(b, nir_imm_ivec4(b, -1, -1, -1, -1),
+                        .base = V_008DFC_SQ_EXP_POS,
+                        .flags = AC_EXP_FLAG_DONE,
+                        .write_mask = 0xf);
+      }
+      nir_pop_if(b, if_thread_0);
+   }
+   nir_push_else(b, if_prim_cnt_0);
+   {
+      nir_alloc_vertices_and_primitives_amd(b, num_vtx, num_prim);
+   }
+   nir_pop_if(b, if_prim_cnt_0);
+}
+
+static void
+ngg_nogs_init_vertex_indices_vars(nir_builder *b, nir_function_impl *impl, lower_ngg_nogs_state *s)
+{
+   for (unsigned v = 0; v < s->options->num_vertices_per_primitive; ++v) {
+      s->gs_vtx_indices_vars[v] = nir_local_variable_create(impl, glsl_uint_type(), "gs_vtx_addr");
+
+      nir_ssa_def *vtx = s->options->passthrough ?
          nir_ubfe(b, nir_load_packed_passthrough_primitive_amd(b),
                   nir_imm_int(b, 10 * v), nir_imm_int(b, 9)) :
          nir_ubfe(b, nir_load_gs_vertex_offset_amd(b, .base = v / 2u),
                   nir_imm_int(b, (v & 1u) * 16u), nir_imm_int(b, 16u));
 
-      nir_store_var(b, st->gs_vtx_indices_vars[v], vtx, 0x1);
+      nir_store_var(b, s->gs_vtx_indices_vars[v], vtx, 0x1);
    }
 }
 
 static nir_ssa_def *
-emit_ngg_nogs_prim_exp_arg(nir_builder *b, lower_ngg_nogs_state *st)
+emit_ngg_nogs_prim_exp_arg(nir_builder *b, lower_ngg_nogs_state *s)
 {
-   if (st->options->passthrough) {
+   if (s->options->passthrough) {
       return nir_load_packed_passthrough_primitive_amd(b);
    } else {
       nir_ssa_def *vtx_idx[3] = {0};
 
-      for (unsigned v = 0; v < st->options->num_vertices_per_primitive; ++v)
-         vtx_idx[v] = nir_load_var(b, st->gs_vtx_indices_vars[v]);
+      for (unsigned v = 0; v < s->options->num_vertices_per_primitive; ++v)
+         vtx_idx[v] = nir_load_var(b, s->gs_vtx_indices_vars[v]);
 
-      return emit_pack_ngg_prim_exp_arg(b, st->options->num_vertices_per_primitive, vtx_idx, NULL,
-                                        st->options->use_edgeflags);
+      return emit_pack_ngg_prim_exp_arg(b, s->options->num_vertices_per_primitive, vtx_idx, NULL,
+                                        s->options->use_edgeflags);
    }
 }
 
@@ -491,18 +571,15 @@ nogs_prim_gen_query(nir_builder *b, lower_ngg_nogs_state *s)
 }
 
 static void
-emit_ngg_nogs_prim_export(nir_builder *b, lower_ngg_nogs_state *st, nir_ssa_def *arg)
+emit_ngg_nogs_prim_export(nir_builder *b, lower_ngg_nogs_state *s, nir_ssa_def *arg)
 {
-   nir_ssa_def *gs_thread =
-      st->gs_accepted_var ? nir_load_var(b, st->gs_accepted_var) : has_input_primitive(b);
-
-   nir_if *if_gs_thread = nir_push_if(b, gs_thread);
+   nir_if *if_gs_thread = nir_push_if(b, nir_load_var(b, s->gs_exported_var));
    {
       if (!arg)
-         arg = emit_ngg_nogs_prim_exp_arg(b, st);
+         arg = emit_ngg_nogs_prim_exp_arg(b, s);
 
       /* pack user edge flag info into arg */
-      if (st->has_user_edgeflags) {
+      if (s->has_user_edgeflags) {
          /* Workgroup barrier: wait for ES threads store user edge flags to LDS */
          nir_scoped_barrier(b, .execution_scope = NIR_SCOPE_WORKGROUP,
                             .memory_scope = NIR_SCOPE_WORKGROUP,
@@ -513,32 +590,32 @@ emit_ngg_nogs_prim_export(nir_builder *b, lower_ngg_nogs_state *st, nir_ssa_def 
          nir_ssa_def *mask = nir_imm_intN_t(b, ~edge_flag_bits, 32);
 
          unsigned edge_flag_offset = 0;
-         if (st->streamout_enabled) {
+         if (s->streamout_enabled) {
             unsigned packed_location =
                util_bitcount64(b->shader->info.outputs_written &
                                BITFIELD64_MASK(VARYING_SLOT_EDGE));
             edge_flag_offset = packed_location * 16;
          }
 
-         for (int i = 0; i < st->options->num_vertices_per_primitive; i++) {
-            nir_ssa_def *vtx_idx = nir_load_var(b, st->gs_vtx_indices_vars[i]);
-            nir_ssa_def *addr = pervertex_lds_addr(b, vtx_idx, st->pervertex_lds_bytes);
+         for (int i = 0; i < s->options->num_vertices_per_primitive; i++) {
+            nir_ssa_def *vtx_idx = nir_load_var(b, s->gs_vtx_indices_vars[i]);
+            nir_ssa_def *addr = pervertex_lds_addr(b, vtx_idx, s->pervertex_lds_bytes);
             nir_ssa_def *edge = nir_load_shared(b, 1, 32, addr, .base = edge_flag_offset);
             mask = nir_ior(b, mask, nir_ishl_imm(b, edge, 9 + i * 10));
          }
          arg = nir_iand(b, arg, mask);
       }
 
-      nir_export_primitive_amd(b, arg);
+      ac_nir_export_primitive(b, arg);
    }
    nir_pop_if(b, if_gs_thread);
 }
 
 static void
-emit_ngg_nogs_prim_id_store_shared(nir_builder *b, lower_ngg_nogs_state *st)
+emit_ngg_nogs_prim_id_store_shared(nir_builder *b, lower_ngg_nogs_state *s)
 {
    nir_ssa_def *gs_thread =
-      st->gs_accepted_var ? nir_load_var(b, st->gs_accepted_var) : has_input_primitive(b);
+      s->gs_accepted_var ? nir_load_var(b, s->gs_accepted_var) : has_input_primitive(b);
 
    nir_if *if_gs_thread = nir_push_if(b, gs_thread);
    {
@@ -547,24 +624,24 @@ emit_ngg_nogs_prim_id_store_shared(nir_builder *b, lower_ngg_nogs_state *st)
        * It will be exported as a per-vertex attribute.
        */
       nir_ssa_def *gs_vtx_indices[3];
-      for (unsigned i = 0; i < st->options->num_vertices_per_primitive; i++)
-         gs_vtx_indices[i] = nir_load_var(b, st->gs_vtx_indices_vars[i]);
+      for (unsigned i = 0; i < s->options->num_vertices_per_primitive; i++)
+         gs_vtx_indices[i] = nir_load_var(b, s->gs_vtx_indices_vars[i]);
 
       nir_ssa_def *provoking_vertex = nir_load_provoking_vtx_in_prim_amd(b);
       nir_ssa_def *provoking_vtx_idx = nir_select_from_ssa_def_array(
-         b, gs_vtx_indices, st->options->num_vertices_per_primitive, provoking_vertex);
+         b, gs_vtx_indices, s->options->num_vertices_per_primitive, provoking_vertex);
 
       nir_ssa_def *prim_id = nir_load_primitive_id(b);
-      nir_ssa_def *addr = pervertex_lds_addr(b, provoking_vtx_idx, st->pervertex_lds_bytes);
+      nir_ssa_def *addr = pervertex_lds_addr(b, provoking_vtx_idx, s->pervertex_lds_bytes);
 
       /* primitive id is always at last of a vertex */
-      nir_store_shared(b, prim_id, addr, .base = st->pervertex_lds_bytes - 4);
+      nir_store_shared(b, prim_id, addr, .base = s->pervertex_lds_bytes - 4);
    }
    nir_pop_if(b, if_gs_thread);
 }
 
 static void
-emit_store_ngg_nogs_es_primitive_id(nir_builder *b, lower_ngg_nogs_state *st)
+emit_store_ngg_nogs_es_primitive_id(nir_builder *b, lower_ngg_nogs_state *s)
 {
    nir_ssa_def *prim_id = NULL;
 
@@ -572,55 +649,26 @@ emit_store_ngg_nogs_es_primitive_id(nir_builder *b, lower_ngg_nogs_state *st)
       /* LDS address where the primitive ID is stored */
       nir_ssa_def *thread_id_in_threadgroup = nir_load_local_invocation_index(b);
       nir_ssa_def *addr =
-         pervertex_lds_addr(b, thread_id_in_threadgroup, st->pervertex_lds_bytes);
+         pervertex_lds_addr(b, thread_id_in_threadgroup, s->pervertex_lds_bytes);
 
       /* Load primitive ID from LDS */
-      prim_id = nir_load_shared(b, 1, 32, addr, .base = st->pervertex_lds_bytes - 4);
+      prim_id = nir_load_shared(b, 1, 32, addr, .base = s->pervertex_lds_bytes - 4);
    } else if (b->shader->info.stage == MESA_SHADER_TESS_EVAL) {
       /* Just use tess eval primitive ID, which is the same as the patch ID. */
       prim_id = nir_load_primitive_id(b);
    }
 
-   nir_io_semantics io_sem = {
-      .location = VARYING_SLOT_PRIMITIVE_ID,
-      .num_slots = 1,
-   };
+   s->outputs[VARYING_SLOT_PRIMITIVE_ID][0] = prim_id;
 
-   nir_store_output(b, prim_id, nir_imm_zero(b, 1, 32),
-                    .base = st->options->primitive_id_location,
-                    .src_type = nir_type_uint32, .io_semantics = io_sem);
-}
-
-static void
-store_var_components(nir_builder *b, nir_variable *var, nir_ssa_def *value,
-                     unsigned component, unsigned writemask)
-{
-   /* component store */
-   if (value->num_components != 4) {
-      nir_ssa_def *undef = nir_ssa_undef(b, 1, value->bit_size);
-
-      /* add undef component before and after value to form a vec4 */
-      nir_ssa_def *comp[4];
-      for (int i = 0; i < 4; i++) {
-         comp[i] = (i >= component && i < component + value->num_components) ?
-            nir_channel(b, value, i - component) : undef;
-      }
-
-      value = nir_vec(b, comp, 4);
-      writemask <<= component;
-   } else {
-      /* if num_component==4, there should be no component offset */
-      assert(component == 0);
-   }
-
-   nir_store_var(b, var, value, writemask);
+   /* Update outputs_written to reflect that the pass added a new output. */
+   b->shader->info.outputs_written |= VARYING_BIT_PRIMITIVE_ID;
 }
 
 static void
 add_clipdist_bit(nir_builder *b, nir_ssa_def *dist, unsigned index, nir_variable *mask)
 {
    nir_ssa_def *is_neg = nir_flt(b, dist, nir_imm_float(b, 0));
-   nir_ssa_def *neg_mask = nir_ishl_imm(b, nir_b2i8(b, is_neg), index);
+   nir_ssa_def *neg_mask = nir_ishl_imm(b, nir_b2i32(b, is_neg), index);
    neg_mask = nir_ior(b, neg_mask, nir_load_var(b, mask));
    nir_store_var(b, mask, neg_mask, 1);
 }
@@ -656,7 +704,7 @@ remove_culling_shader_output(nir_builder *b, nir_instr *instr, void *state)
    nir_io_semantics io_sem = nir_intrinsic_io_semantics(intrin);
    switch (io_sem.location) {
    case VARYING_SLOT_POS:
-      store_var_components(b, s->position_value_var, store_val, component, writemask);
+      ac_nir_store_var_components(b, s->position_value_var, store_val, component, writemask);
       break;
    case VARYING_SLOT_CLIP_DIST0:
    case VARYING_SLOT_CLIP_DIST1: {
@@ -673,7 +721,7 @@ remove_culling_shader_output(nir_builder *b, nir_instr *instr, void *state)
       break;
    }
    case VARYING_SLOT_CLIP_VERTEX:
-      store_var_components(b, s->clip_vertex_var, store_val, component, writemask);
+      ac_nir_store_var_components(b, s->clip_vertex_var, store_val, component, writemask);
       break;
    default:
       break;
@@ -685,10 +733,10 @@ remove_culling_shader_output(nir_builder *b, nir_instr *instr, void *state)
 }
 
 static void
-remove_culling_shader_outputs(nir_shader *culling_shader, lower_ngg_nogs_state *nogs_state)
+remove_culling_shader_outputs(nir_shader *culling_shader, lower_ngg_nogs_state *s)
 {
    nir_shader_instructions_pass(culling_shader, remove_culling_shader_output,
-                                nir_metadata_block_index | nir_metadata_dominance, nogs_state);
+                                nir_metadata_block_index | nir_metadata_dominance, s);
 
    /* Remove dead code resulting from the deleted outputs. */
    bool progress;
@@ -758,9 +806,6 @@ remove_extra_pos_output(nir_builder *b, nir_instr *instr, void *state)
    nir_ssa_def *store_val = intrin->src[0].ssa;
    unsigned store_pos_component = nir_intrinsic_component(intrin);
 
-   /* save the store base for re-construct store output instruction */
-   s->position_store_base = nir_intrinsic_base(intrin);
-
    nir_instr_remove(instr);
 
    if (store_val->parent_instr->type == nir_instr_type_alu) {
@@ -799,17 +844,17 @@ remove_extra_pos_output(nir_builder *b, nir_instr *instr, void *state)
 }
 
 static void
-remove_extra_pos_outputs(nir_shader *shader, lower_ngg_nogs_state *nogs_state)
+remove_extra_pos_outputs(nir_shader *shader, lower_ngg_nogs_state *s)
 {
    nir_shader_instructions_pass(shader, remove_extra_pos_output,
                                 nir_metadata_block_index | nir_metadata_dominance,
-                                nogs_state);
+                                s);
 }
 
 static bool
-remove_compacted_arg(lower_ngg_nogs_state *state, nir_builder *b, unsigned idx)
+remove_compacted_arg(lower_ngg_nogs_state *s, nir_builder *b, unsigned idx)
 {
-   nir_instr *store_instr = state->compact_arg_stores[idx];
+   nir_instr *store_instr = s->compact_arg_stores[idx];
    if (!store_instr)
       return false;
 
@@ -820,18 +865,18 @@ remove_compacted_arg(lower_ngg_nogs_state *state, nir_builder *b, unsigned idx)
     * and change its corresponding source.
     * This will cause NIR's DCE to recognize the load and its phis as dead.
     */
-   b->cursor = nir_before_instr(&state->overwrite_args->instr);
+   b->cursor = nir_before_instr(&s->overwrite_args->instr);
    nir_ssa_def *undef_arg = nir_ssa_undef(b, 1, 32);
-   nir_ssa_def_rewrite_uses(state->overwrite_args->src[idx].ssa, undef_arg);
+   nir_ssa_def_rewrite_uses(s->overwrite_args->src[idx].ssa, undef_arg);
 
-   state->compact_arg_stores[idx] = NULL;
+   s->compact_arg_stores[idx] = NULL;
    return true;
 }
 
 static bool
 cleanup_culling_shader_after_dce(nir_shader *shader,
                                  nir_function_impl *function_impl,
-                                 lower_ngg_nogs_state *state)
+                                 lower_ngg_nogs_state *s)
 {
    bool uses_vs_vertex_id = false;
    bool uses_vs_instance_id = false;
@@ -862,8 +907,7 @@ cleanup_culling_shader_after_dce(nir_shader *shader,
             uses_vs_instance_id = true;
             break;
          case nir_intrinsic_load_input:
-            if (state->options->instance_rate_inputs &
-                (1u << (nir_intrinsic_base(intrin) - VERT_ATTRIB_GENERIC0)))
+            if (s->options->instance_rate_inputs & BITFIELD_BIT(nir_intrinsic_base(intrin)))
                uses_vs_instance_id = true;
             else
                uses_vs_vertex_id = true;
@@ -888,18 +932,18 @@ cleanup_culling_shader_after_dce(nir_shader *shader,
 
    if (shader->info.stage == MESA_SHADER_VERTEX) {
       if (!uses_vs_vertex_id)
-         progress |= remove_compacted_arg(state, &b, 0);
+         progress |= remove_compacted_arg(s, &b, 0);
       if (!uses_vs_instance_id)
-         progress |= remove_compacted_arg(state, &b, 1);
+         progress |= remove_compacted_arg(s, &b, 1);
    } else if (shader->info.stage == MESA_SHADER_TESS_EVAL) {
       if (!uses_tes_u)
-         progress |= remove_compacted_arg(state, &b, 0);
+         progress |= remove_compacted_arg(s, &b, 0);
       if (!uses_tes_v)
-         progress |= remove_compacted_arg(state, &b, 1);
+         progress |= remove_compacted_arg(s, &b, 1);
       if (!uses_tes_rel_patch_id)
-         progress |= remove_compacted_arg(state, &b, 3);
+         progress |= remove_compacted_arg(s, &b, 3);
       if (!uses_tes_patch_id)
-         progress |= remove_compacted_arg(state, &b, 2);
+         progress |= remove_compacted_arg(s, &b, 2);
    }
 
    return progress;
@@ -916,21 +960,20 @@ cleanup_culling_shader_after_dce(nir_shader *shader,
  */
 static void
 compact_vertices_after_culling(nir_builder *b,
-                               lower_ngg_nogs_state *nogs_state,
-                               nir_variable **repacked_arg_vars,
+                               lower_ngg_nogs_state *s,
+                               nir_variable **repacked_variables,
                                nir_variable **gs_vtxaddr_vars,
                                nir_ssa_def *invocation_index,
                                nir_ssa_def *es_vertex_lds_addr,
                                nir_ssa_def *es_exporter_tid,
                                nir_ssa_def *num_live_vertices_in_workgroup,
-                               nir_ssa_def *fully_culled,
                                unsigned pervertex_lds_bytes,
-                               unsigned max_exported_args)
+                               unsigned num_repacked_variables)
 {
-   nir_variable *es_accepted_var = nogs_state->es_accepted_var;
-   nir_variable *gs_accepted_var = nogs_state->gs_accepted_var;
-   nir_variable *position_value_var = nogs_state->position_value_var;
-   nir_variable *prim_exp_arg_var = nogs_state->prim_exp_arg_var;
+   nir_variable *es_accepted_var = s->es_accepted_var;
+   nir_variable *gs_accepted_var = s->gs_accepted_var;
+   nir_variable *position_value_var = s->position_value_var;
+   nir_variable *prim_exp_arg_var = s->prim_exp_arg_var;
 
    nir_if *if_es_accepted = nir_push_if(b, nir_load_var(b, es_accepted_var));
    {
@@ -944,21 +987,21 @@ compact_vertices_after_culling(nir_builder *b,
       nir_store_shared(b, pos, exporter_addr, .base = lds_es_pos_x);
 
       /* Store the current thread's repackable arguments to the exporter thread's LDS space */
-      for (unsigned i = 0; i < max_exported_args; ++i) {
-         nir_ssa_def *arg_val = nir_load_var(b, repacked_arg_vars[i]);
+      for (unsigned i = 0; i < num_repacked_variables; ++i) {
+         nir_ssa_def *arg_val = nir_load_var(b, repacked_variables[i]);
          nir_intrinsic_instr *store = nir_store_shared(b, arg_val, exporter_addr, .base = lds_es_arg_0 + 4u * i);
 
-         nogs_state->compact_arg_stores[i] = &store->instr;
+         s->compact_arg_stores[i] = &store->instr;
       }
 
       /* TES rel patch id does not cost extra dword */
       if (b->shader->info.stage == MESA_SHADER_TESS_EVAL) {
-         nir_ssa_def *arg_val = nir_load_var(b, repacked_arg_vars[3]);
+         nir_ssa_def *arg_val = nir_load_var(b, s->repacked_rel_patch_id);
          nir_intrinsic_instr *store =
             nir_store_shared(b, nir_u2u8(b, arg_val), exporter_addr,
                              .base = lds_es_tes_rel_patch_id);
 
-         nogs_state->compact_arg_stores[3] = &store->instr;
+         s->compact_arg_stores[3] = &store->instr;
       }
    }
    nir_pop_if(b, if_es_accepted);
@@ -978,22 +1021,22 @@ compact_vertices_after_culling(nir_builder *b,
       nir_store_var(b, position_value_var, exported_pos, 0xfu);
 
       /* Read the repacked arguments */
-      for (unsigned i = 0; i < max_exported_args; ++i) {
+      for (unsigned i = 0; i < num_repacked_variables; ++i) {
          nir_ssa_def *arg_val = nir_load_shared(b, 1, 32, es_vertex_lds_addr, .base = lds_es_arg_0 + 4u * i);
-         nir_store_var(b, repacked_arg_vars[i], arg_val, 0x1u);
+         nir_store_var(b, repacked_variables[i], arg_val, 0x1u);
       }
 
       if (b->shader->info.stage == MESA_SHADER_TESS_EVAL) {
          nir_ssa_def *arg_val = nir_load_shared(b, 1, 8, es_vertex_lds_addr,
                                                 .base = lds_es_tes_rel_patch_id);
-         nir_store_var(b, repacked_arg_vars[3], nir_u2u32(b, arg_val), 0x1u);
+         nir_store_var(b, s->repacked_rel_patch_id, nir_u2u32(b, arg_val), 0x1u);
       }
    }
    nir_push_else(b, if_packed_es_thread);
    {
       nir_store_var(b, position_value_var, nir_ssa_undef(b, 4, 32), 0xfu);
-      for (unsigned i = 0; i < max_exported_args; ++i)
-         nir_store_var(b, repacked_arg_vars[i], nir_ssa_undef(b, 1, 32), 0x1u);
+      for (unsigned i = 0; i < num_repacked_variables; ++i)
+         nir_store_var(b, repacked_variables[i], nir_ssa_undef(b, 1, 32), 0x1u);
    }
    nir_pop_if(b, if_packed_es_thread);
 
@@ -1002,29 +1045,27 @@ compact_vertices_after_culling(nir_builder *b,
       nir_ssa_def *exporter_vtx_indices[3] = {0};
 
       /* Load the index of the ES threads that will export the current GS thread's vertices */
-      for (unsigned v = 0; v < nogs_state->options->num_vertices_per_primitive; ++v) {
+      for (unsigned v = 0; v < s->options->num_vertices_per_primitive; ++v) {
          nir_ssa_def *vtx_addr = nir_load_var(b, gs_vtxaddr_vars[v]);
          nir_ssa_def *exporter_vtx_idx = nir_load_shared(b, 1, 8, vtx_addr, .base = lds_es_exporter_tid);
          exporter_vtx_indices[v] = nir_u2u32(b, exporter_vtx_idx);
-         nir_store_var(b, nogs_state->gs_vtx_indices_vars[v], exporter_vtx_indices[v], 0x1);
+         nir_store_var(b, s->gs_vtx_indices_vars[v], exporter_vtx_indices[v], 0x1);
       }
 
       nir_ssa_def *prim_exp_arg =
-         emit_pack_ngg_prim_exp_arg(b, nogs_state->options->num_vertices_per_primitive,
-                                    exporter_vtx_indices, NULL, nogs_state->options->use_edgeflags);
+         emit_pack_ngg_prim_exp_arg(b, s->options->num_vertices_per_primitive,
+                                    exporter_vtx_indices, NULL, s->options->use_edgeflags);
       nir_store_var(b, prim_exp_arg_var, prim_exp_arg, 0x1u);
    }
    nir_pop_if(b, if_gs_accepted);
 
    nir_store_var(b, es_accepted_var, es_survived, 0x1u);
-   nir_store_var(b, gs_accepted_var, nir_iand(b, nir_inot(b, fully_culled), has_input_primitive(b)),
-                 0x1u);
 }
 
 static void
 analyze_shader_before_culling_walk(nir_ssa_def *ssa,
                                    uint8_t flag,
-                                   lower_ngg_nogs_state *nogs_state)
+                                   lower_ngg_nogs_state *s)
 {
    nir_instr *instr = ssa->parent_instr;
    uint8_t old_pass_flags = instr->pass_flags;
@@ -1043,9 +1084,9 @@ analyze_shader_before_culling_walk(nir_ssa_def *ssa,
          nir_io_semantics in_io_sem = nir_intrinsic_io_semantics(intrin);
          uint64_t in_mask = UINT64_C(1) << (uint64_t) in_io_sem.location;
          if (instr->pass_flags & nggc_passflag_used_by_pos)
-            nogs_state->inputs_needed_by_pos |= in_mask;
+            s->inputs_needed_by_pos |= in_mask;
          else if (instr->pass_flags & nggc_passflag_used_by_other)
-            nogs_state->inputs_needed_by_others |= in_mask;
+            s->inputs_needed_by_others |= in_mask;
          break;
       }
       default:
@@ -1059,7 +1100,7 @@ analyze_shader_before_culling_walk(nir_ssa_def *ssa,
       unsigned num_srcs = nir_op_infos[alu->op].num_inputs;
 
       for (unsigned i = 0; i < num_srcs; ++i) {
-         analyze_shader_before_culling_walk(alu->src[i].src.ssa, flag, nogs_state);
+         analyze_shader_before_culling_walk(alu->src[i].src.ssa, flag, s);
       }
 
       break;
@@ -1067,7 +1108,7 @@ analyze_shader_before_culling_walk(nir_ssa_def *ssa,
    case nir_instr_type_phi: {
       nir_phi_instr *phi = nir_instr_as_phi(instr);
       nir_foreach_phi_src_safe(phi_src, phi) {
-         analyze_shader_before_culling_walk(phi_src->src.ssa, flag, nogs_state);
+         analyze_shader_before_culling_walk(phi_src->src.ssa, flag, s);
       }
 
       break;
@@ -1078,8 +1119,13 @@ analyze_shader_before_culling_walk(nir_ssa_def *ssa,
 }
 
 static void
-analyze_shader_before_culling(nir_shader *shader, lower_ngg_nogs_state *nogs_state)
+analyze_shader_before_culling(nir_shader *shader, lower_ngg_nogs_state *s)
 {
+   /* LCSSA is needed to get correct results from divergence analysis. */
+   nir_convert_to_lcssa(shader, true, true);
+   /* We need divergence info for culling shaders. */
+   nir_divergence_analysis(shader);
+
    nir_foreach_function(func, shader) {
       nir_foreach_block(block, func->impl) {
          nir_foreach_instr(instr, block) {
@@ -1095,10 +1141,67 @@ analyze_shader_before_culling(nir_shader *shader, lower_ngg_nogs_state *nogs_sta
             nir_io_semantics io_sem = nir_intrinsic_io_semantics(intrin);
             nir_ssa_def *store_val = intrin->src[0].ssa;
             uint8_t flag = io_sem.location == VARYING_SLOT_POS ? nggc_passflag_used_by_pos : nggc_passflag_used_by_other;
-            analyze_shader_before_culling_walk(store_val, flag, nogs_state);
+            analyze_shader_before_culling_walk(store_val, flag, s);
          }
       }
    }
+}
+
+static nir_ssa_def *
+find_reusable_ssa_def(nir_instr *instr)
+{
+   /* Find instructions whose SSA definitions are used by both
+    * the top and bottom parts of the shader (before and after culling).
+    * Only in this case, it makes sense for the bottom part
+    * to try to reuse these from the top part.
+    */
+   if ((instr->pass_flags & nggc_passflag_used_by_both) != nggc_passflag_used_by_both)
+      return NULL;
+
+   switch (instr->type) {
+   case nir_instr_type_alu: {
+      nir_alu_instr *alu = nir_instr_as_alu(instr);
+      if (alu->dest.dest.ssa.divergent)
+         return NULL;
+      /* Ignore uniform floats because they regress VGPR usage too much */
+      if (nir_op_infos[alu->op].output_type & nir_type_float)
+         return NULL;
+      return &alu->dest.dest.ssa;
+   }
+   case nir_instr_type_intrinsic: {
+      nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
+      if (!nir_intrinsic_can_reorder(intrin) ||
+            !nir_intrinsic_infos[intrin->intrinsic].has_dest ||
+            intrin->dest.ssa.divergent)
+         return NULL;
+      return &intrin->dest.ssa;
+   }
+   case nir_instr_type_phi: {
+      nir_phi_instr *phi = nir_instr_as_phi(instr);
+      if (phi->dest.ssa.divergent)
+         return NULL;
+      return &phi->dest.ssa;
+   }
+   default:
+      return NULL;
+   }
+}
+
+static const struct glsl_type *
+glsl_uint_type_for_ssa(nir_ssa_def *ssa)
+{
+   enum glsl_base_type base_type = GLSL_TYPE_UINT;
+   switch (ssa->bit_size) {
+   case 8: base_type = GLSL_TYPE_UINT8; break;
+   case 16: base_type = GLSL_TYPE_UINT16; break;
+   case 32: base_type = GLSL_TYPE_UINT; break;
+   case 64: base_type = GLSL_TYPE_UINT64; break;
+   default: return NULL;
+   }
+
+   return ssa->num_components == 1
+          ? glsl_scalar_type(base_type)
+          : glsl_vector_type(base_type, ssa->num_components);
 }
 
 /**
@@ -1114,77 +1217,30 @@ analyze_shader_before_culling(nir_shader *shader, lower_ngg_nogs_state *nogs_sta
  *    the top part and DCE the redundant instructions.
  */
 static void
-save_reusable_variables(nir_builder *b, lower_ngg_nogs_state *nogs_state)
+save_reusable_variables(nir_builder *b, lower_ngg_nogs_state *s)
 {
-   ASSERTED int vec_ok = u_vector_init(&nogs_state->saved_uniforms, 4, sizeof(saved_uniform));
+   ASSERTED int vec_ok = u_vector_init(&s->reusable_nondeferred_variables, 4, sizeof(reusable_nondeferred_variable));
    assert(vec_ok);
 
    nir_block *block = nir_start_block(b->impl);
    while (block) {
       /* Process the instructions in the current block. */
       nir_foreach_instr_safe(instr, block) {
-         /* Find instructions whose SSA definitions are used by both
-          * the top and bottom parts of the shader (before and after culling).
-          * Only in this case, it makes sense for the bottom part
-          * to try to reuse these from the top part.
-          */
-         if ((instr->pass_flags & nggc_passflag_used_by_both) != nggc_passflag_used_by_both)
-            continue;
-
          /* Determine if we can reuse the current SSA value.
           * When vertex compaction is used, it is possible that the same shader invocation
           * processes a different vertex in the top and bottom part of the shader.
           * Therefore, we only reuse uniform values.
           */
-         nir_ssa_def *ssa = NULL;
-         switch (instr->type) {
-         case nir_instr_type_alu: {
-            nir_alu_instr *alu = nir_instr_as_alu(instr);
-            if (alu->dest.dest.ssa.divergent)
-               continue;
-            /* Ignore uniform floats because they regress VGPR usage too much */
-            if (nir_op_infos[alu->op].output_type & nir_type_float)
-               continue;
-            ssa = &alu->dest.dest.ssa;
-            break;
-         }
-         case nir_instr_type_intrinsic: {
-            nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
-            if (!nir_intrinsic_can_reorder(intrin) ||
-                !nir_intrinsic_infos[intrin->intrinsic].has_dest ||
-                intrin->dest.ssa.divergent)
-               continue;
-            ssa = &intrin->dest.ssa;
-            break;
-         }
-         case nir_instr_type_phi: {
-            nir_phi_instr *phi = nir_instr_as_phi(instr);
-            if (phi->dest.ssa.divergent)
-               continue;
-            ssa = &phi->dest.ssa;
-            break;
-         }
-         default:
+         nir_ssa_def *ssa = find_reusable_ssa_def(instr);
+         if (!ssa)
             continue;
-         }
-
-         assert(ssa);
 
          /* Determine a suitable type for the SSA value. */
-         enum glsl_base_type base_type = GLSL_TYPE_UINT;
-         switch (ssa->bit_size) {
-         case 8: base_type = GLSL_TYPE_UINT8; break;
-         case 16: base_type = GLSL_TYPE_UINT16; break;
-         case 32: base_type = GLSL_TYPE_UINT; break;
-         case 64: base_type = GLSL_TYPE_UINT64; break;
-         default: continue;
-         }
+         const struct glsl_type *t = glsl_uint_type_for_ssa(ssa);
+         if (!t)
+            continue;
 
-         const struct glsl_type *t = ssa->num_components == 1
-                                     ? glsl_scalar_type(base_type)
-                                     : glsl_vector_type(base_type, ssa->num_components);
-
-         saved_uniform *saved = (saved_uniform *) u_vector_add(&nogs_state->saved_uniforms);
+         reusable_nondeferred_variable *saved = (reusable_nondeferred_variable *) u_vector_add(&s->reusable_nondeferred_variables);
          assert(saved);
 
          /* Create a new NIR variable where we store the reusable value.
@@ -1238,10 +1294,10 @@ save_reusable_variables(nir_builder *b, lower_ngg_nogs_state *nogs_state)
  * by deleting their stores from the bottom part.
  */
 static void
-apply_reusable_variables(nir_builder *b, lower_ngg_nogs_state *nogs_state)
+apply_reusable_variables(nir_builder *b, lower_ngg_nogs_state *s)
 {
-   if (!u_vector_length(&nogs_state->saved_uniforms)) {
-      u_vector_finish(&nogs_state->saved_uniforms);
+   if (!u_vector_length(&s->reusable_nondeferred_variables)) {
+      u_vector_finish(&s->reusable_nondeferred_variables);
       return;
    }
 
@@ -1263,8 +1319,8 @@ apply_reusable_variables(nir_builder *b, lower_ngg_nogs_state *nogs_state)
          if (deref->deref_type != nir_deref_type_var)
             continue;
 
-         saved_uniform *saved;
-         u_vector_foreach(saved, &nogs_state->saved_uniforms) {
+         reusable_nondeferred_variable *saved;
+         u_vector_foreach(saved, &s->reusable_nondeferred_variables) {
             if (saved->var == deref->var) {
                nir_instr_remove(instr);
             }
@@ -1273,7 +1329,7 @@ apply_reusable_variables(nir_builder *b, lower_ngg_nogs_state *nogs_state)
    }
 
    done:
-   u_vector_finish(&nogs_state->saved_uniforms);
+   u_vector_finish(&s->reusable_nondeferred_variables);
 }
 
 static void
@@ -1289,34 +1345,35 @@ cull_primitive_accepted(nir_builder *b, void *state)
 }
 
 static void
-clipdist_culling_es_part(nir_builder *b, lower_ngg_nogs_state *nogs_state,
+clipdist_culling_es_part(nir_builder *b, lower_ngg_nogs_state *s,
                          nir_ssa_def *es_vertex_lds_addr)
 {
    /* no gl_ClipDistance used but we have user defined clip plane */
-   if (nogs_state->options->user_clip_plane_enable_mask && !nogs_state->has_clipdist) {
+   if (s->options->user_clip_plane_enable_mask && !s->has_clipdist) {
       /* use gl_ClipVertex if defined */
       nir_variable *clip_vertex_var =
          b->shader->info.outputs_written & BITFIELD64_BIT(VARYING_SLOT_CLIP_VERTEX) ?
-         nogs_state->clip_vertex_var : nogs_state->position_value_var;
+         s->clip_vertex_var : s->position_value_var;
       nir_ssa_def *clip_vertex = nir_load_var(b, clip_vertex_var);
 
       /* clip against user defined clip planes */
       for (unsigned i = 0; i < 8; i++) {
-         if (!(nogs_state->options->user_clip_plane_enable_mask & BITFIELD_BIT(i)))
+         if (!(s->options->user_clip_plane_enable_mask & BITFIELD_BIT(i)))
             continue;
 
          nir_ssa_def *plane = nir_load_user_clip_plane(b, .ucp_id = i);
          nir_ssa_def *dist = nir_fdot(b, clip_vertex, plane);
-         add_clipdist_bit(b, dist, i, nogs_state->clipdist_neg_mask_var);
+         add_clipdist_bit(b, dist, i, s->clipdist_neg_mask_var);
       }
 
-      nogs_state->has_clipdist = true;
+      s->has_clipdist = true;
    }
 
    /* store clipdist_neg_mask to LDS for culling latter in gs thread */
-   if (nogs_state->has_clipdist) {
-      nir_ssa_def *mask = nir_load_var(b, nogs_state->clipdist_neg_mask_var);
-      nir_store_shared(b, mask, es_vertex_lds_addr, .base = lds_es_clipdist_neg_mask);
+   if (s->has_clipdist) {
+      nir_ssa_def *mask = nir_load_var(b, s->clipdist_neg_mask_var);
+      nir_store_shared(b, nir_u2u8(b, mask), es_vertex_lds_addr,
+                       .base = lds_es_clipdist_neg_mask);
    }
 }
 
@@ -1324,64 +1381,77 @@ static unsigned
 ngg_nogs_get_culling_pervertex_lds_size(gl_shader_stage stage,
                                         bool uses_instance_id,
                                         bool uses_primitive_id,
-                                        unsigned *max_exported_args)
+                                        unsigned *num_repacked_variables)
 {
-   unsigned max_args;
+   /* Culling shaders must repack some variables because
+    * the same shader invocation may process different vertices
+    * before and after the culling algorithm.
+    */
+
+   unsigned num_repacked;
    if (stage == MESA_SHADER_VERTEX) {
-      max_args = uses_instance_id ? 2 : 1;
+      /* Vertex shaders repack:
+       * - Vertex ID
+       * - Instance ID (only if used)
+       */
+      num_repacked = uses_instance_id ? 2 : 1;
    } else {
+      /* Tess eval shaders repack:
+       * - U, V coordinates
+       * - primitive ID (aka. patch id, only if used)
+       * - relative patch id (not included here because doesn't need a dword)
+       */
       assert(stage == MESA_SHADER_TESS_EVAL);
-      max_args = uses_primitive_id ? 3 : 2;
+      num_repacked = uses_primitive_id ? 3 : 2;
    }
 
-   if (max_exported_args)
-      *max_exported_args = max_args;
+   if (num_repacked_variables)
+      *num_repacked_variables = num_repacked;
 
    /* one odd dword to reduce LDS bank conflict */
-   return (lds_es_arg_0 + max_args * 4u) | 4u;
+   return (lds_es_arg_0 + num_repacked * 4u) | 4u;
 }
 
 static void
-add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_cf, lower_ngg_nogs_state *nogs_state)
+add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_cf, lower_ngg_nogs_state *s)
 {
    bool uses_instance_id = BITSET_TEST(b->shader->info.system_values_read, SYSTEM_VALUE_INSTANCE_ID);
    bool uses_tess_primitive_id = BITSET_TEST(b->shader->info.system_values_read, SYSTEM_VALUE_PRIMITIVE_ID);
 
-   unsigned max_exported_args;
+   unsigned num_repacked_variables;
    unsigned pervertex_lds_bytes =
       ngg_nogs_get_culling_pervertex_lds_size(b->shader->info.stage,
                                               uses_instance_id,
                                               uses_tess_primitive_id,
-                                              &max_exported_args);
+                                              &num_repacked_variables);
 
    nir_function_impl *impl = nir_shader_get_entrypoint(b->shader);
 
    /* Create some helper variables. */
-   nir_variable *position_value_var = nogs_state->position_value_var;
-   nir_variable *prim_exp_arg_var = nogs_state->prim_exp_arg_var;
-   nir_variable *gs_accepted_var = nogs_state->gs_accepted_var;
-   nir_variable *es_accepted_var = nogs_state->es_accepted_var;
    nir_variable *gs_vtxaddr_vars[3] = {
       nir_local_variable_create(impl, glsl_uint_type(), "gs_vtx0_addr"),
       nir_local_variable_create(impl, glsl_uint_type(), "gs_vtx1_addr"),
       nir_local_variable_create(impl, glsl_uint_type(), "gs_vtx2_addr"),
    };
-   nir_variable *repacked_arg_vars[4] = {
-      nir_local_variable_create(impl, glsl_uint_type(), "repacked_arg_0"),
-      nir_local_variable_create(impl, glsl_uint_type(), "repacked_arg_1"),
-      nir_local_variable_create(impl, glsl_uint_type(), "repacked_arg_2"),
-      nir_local_variable_create(impl, glsl_uint_type(), "repacked_arg_3"),
+
+   nir_variable *repacked_variables[3] = {
+      nir_local_variable_create(impl, glsl_uint_type(), "repacked_var_0"),
+      nir_local_variable_create(impl, glsl_uint_type(), "repacked_var_1"),
+      nir_local_variable_create(impl, glsl_uint_type(), "repacked_var_2"),
    };
 
-   if (nogs_state->options->clipdist_enable_mask ||
-       nogs_state->options->user_clip_plane_enable_mask) {
-      nogs_state->clip_vertex_var =
+   /* Relative patch ID is a special case because it doesn't need an extra dword, repack separately. */
+   s->repacked_rel_patch_id = nir_local_variable_create(impl, glsl_uint_type(), "repacked_rel_patch_id");
+
+   if (s->options->clipdist_enable_mask ||
+       s->options->user_clip_plane_enable_mask) {
+      s->clip_vertex_var =
          nir_local_variable_create(impl, glsl_vec4_type(), "clip_vertex");
-      nogs_state->clipdist_neg_mask_var =
-         nir_local_variable_create(impl, glsl_uint8_t_type(), "clipdist_neg_mask");
+      s->clipdist_neg_mask_var =
+         nir_local_variable_create(impl, glsl_uint_type(), "clipdist_neg_mask");
 
       /* init mask to 0 */
-      nir_store_var(b, nogs_state->clipdist_neg_mask_var, nir_imm_intN_t(b, 0, 8), 1);
+      nir_store_var(b, s->clipdist_neg_mask_var, nir_imm_int(b, 0), 1);
    }
 
    /* Top part of the culling shader (aka. position shader part)
@@ -1397,7 +1467,7 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
       /* Initialize the position output variable to zeroes, in case not all VS/TES invocations store the output.
        * The spec doesn't require it, but we use (0, 0, 0, 1) because some games rely on that.
        */
-      nir_store_var(b, position_value_var, nir_imm_vec4(b, 0.0f, 0.0f, 0.0f, 1.0f), 0xfu);
+      nir_store_var(b, s->position_value_var, nir_imm_vec4(b, 0.0f, 0.0f, 0.0f, 1.0f), 0xfu);
 
       /* Now reinsert a clone of the shader code */
       struct hash_table *remap_table = _mesa_pointer_hash_table_create(NULL);
@@ -1407,29 +1477,29 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
 
       /* Remember the current thread's shader arguments */
       if (b->shader->info.stage == MESA_SHADER_VERTEX) {
-         nir_store_var(b, repacked_arg_vars[0], nir_load_vertex_id_zero_base(b), 0x1u);
+         nir_store_var(b, repacked_variables[0], nir_load_vertex_id_zero_base(b), 0x1u);
          if (uses_instance_id)
-            nir_store_var(b, repacked_arg_vars[1], nir_load_instance_id(b), 0x1u);
+            nir_store_var(b, repacked_variables[1], nir_load_instance_id(b), 0x1u);
       } else if (b->shader->info.stage == MESA_SHADER_TESS_EVAL) {
+         nir_store_var(b, s->repacked_rel_patch_id, nir_load_tess_rel_patch_id_amd(b), 0x1u);
          nir_ssa_def *tess_coord = nir_load_tess_coord(b);
-         nir_store_var(b, repacked_arg_vars[0], nir_channel(b, tess_coord, 0), 0x1u);
-         nir_store_var(b, repacked_arg_vars[1], nir_channel(b, tess_coord, 1), 0x1u);
-         nir_store_var(b, repacked_arg_vars[3], nir_load_tess_rel_patch_id_amd(b), 0x1u);
+         nir_store_var(b, repacked_variables[0], nir_channel(b, tess_coord, 0), 0x1u);
+         nir_store_var(b, repacked_variables[1], nir_channel(b, tess_coord, 1), 0x1u);
          if (uses_tess_primitive_id)
-            nir_store_var(b, repacked_arg_vars[2], nir_load_primitive_id(b), 0x1u);
+            nir_store_var(b, repacked_variables[2], nir_load_primitive_id(b), 0x1u);
       } else {
          unreachable("Should be VS or TES.");
       }
    }
    nir_pop_if(b, if_es_thread);
 
-   nir_store_var(b, es_accepted_var, es_thread, 0x1u);
+   nir_store_var(b, s->es_accepted_var, es_thread, 0x1u);
    nir_ssa_def *gs_thread = has_input_primitive(b);
-   nir_store_var(b, gs_accepted_var, gs_thread, 0x1u);
+   nir_store_var(b, s->gs_accepted_var, gs_thread, 0x1u);
 
    /* Remove all non-position outputs, and put the position output into the variable. */
    nir_metadata_preserve(impl, nir_metadata_none);
-   remove_culling_shader_outputs(b->shader, nogs_state);
+   remove_culling_shader_outputs(b->shader, s);
    b->cursor = nir_after_cf_list(&impl->body);
 
    nir_ssa_def *lds_scratch_base = nir_load_lds_ngg_scratch_base_amd(b);
@@ -1451,7 +1521,7 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
       if_es_thread->control = nir_selection_control_divergent_always_taken;
       {
          /* Store position components that are relevant to culling in LDS */
-         nir_ssa_def *pre_cull_pos = nir_load_var(b, position_value_var);
+         nir_ssa_def *pre_cull_pos = nir_load_var(b, s->position_value_var);
          nir_ssa_def *pre_cull_w = nir_channel(b, pre_cull_pos, 3);
          nir_store_shared(b, pre_cull_w, es_vertex_lds_addr, .base = lds_es_pos_w);
          nir_ssa_def *pre_cull_x_div_w = nir_fdiv(b, nir_channel(b, pre_cull_pos, 0), pre_cull_w);
@@ -1462,47 +1532,47 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
          nir_store_shared(b, nir_imm_zero(b, 1, 8), es_vertex_lds_addr, .align_mul = 4, .base = lds_es_vertex_accepted);
 
          /* For clipdist culling */
-         clipdist_culling_es_part(b, nogs_state, es_vertex_lds_addr);
+         clipdist_culling_es_part(b, s, es_vertex_lds_addr);
       }
       nir_pop_if(b, if_es_thread);
 
       nir_scoped_barrier(b, .execution_scope=NIR_SCOPE_WORKGROUP, .memory_scope=NIR_SCOPE_WORKGROUP,
                             .memory_semantics=NIR_MEMORY_ACQ_REL, .memory_modes=nir_var_mem_shared);
 
-      nir_store_var(b, gs_accepted_var, nir_imm_bool(b, false), 0x1u);
-      nir_store_var(b, prim_exp_arg_var, nir_imm_int(b, 1u << 31), 0x1u);
+      nir_store_var(b, s->gs_accepted_var, nir_imm_bool(b, false), 0x1u);
+      nir_store_var(b, s->prim_exp_arg_var, nir_imm_int(b, 1u << 31), 0x1u);
 
       /* GS invocations load the vertex data and perform the culling. */
       nir_if *if_gs_thread = nir_push_if(b, gs_thread);
       {
          /* Load vertex indices from input VGPRs */
          nir_ssa_def *vtx_idx[3] = {0};
-         for (unsigned vertex = 0; vertex < nogs_state->options->num_vertices_per_primitive;
+         for (unsigned vertex = 0; vertex < s->options->num_vertices_per_primitive;
               ++vertex)
-            vtx_idx[vertex] = nir_load_var(b, nogs_state->gs_vtx_indices_vars[vertex]);
+            vtx_idx[vertex] = nir_load_var(b, s->gs_vtx_indices_vars[vertex]);
 
          nir_ssa_def *pos[3][4] = {0};
 
          /* Load W positions of vertices first because the culling code will use these first */
-         for (unsigned vtx = 0; vtx < nogs_state->options->num_vertices_per_primitive; ++vtx) {
-            nogs_state->vtx_addr[vtx] = pervertex_lds_addr(b, vtx_idx[vtx], pervertex_lds_bytes);
-            pos[vtx][3] = nir_load_shared(b, 1, 32, nogs_state->vtx_addr[vtx], .base = lds_es_pos_w);
-            nir_store_var(b, gs_vtxaddr_vars[vtx], nogs_state->vtx_addr[vtx], 0x1u);
+         for (unsigned vtx = 0; vtx < s->options->num_vertices_per_primitive; ++vtx) {
+            s->vtx_addr[vtx] = pervertex_lds_addr(b, vtx_idx[vtx], pervertex_lds_bytes);
+            pos[vtx][3] = nir_load_shared(b, 1, 32, s->vtx_addr[vtx], .base = lds_es_pos_w);
+            nir_store_var(b, gs_vtxaddr_vars[vtx], s->vtx_addr[vtx], 0x1u);
          }
 
          /* Load the X/W, Y/W positions of vertices */
-         for (unsigned vtx = 0; vtx < nogs_state->options->num_vertices_per_primitive; ++vtx) {
-            nir_ssa_def *xy = nir_load_shared(b, 2, 32, nogs_state->vtx_addr[vtx], .base = lds_es_pos_x);
+         for (unsigned vtx = 0; vtx < s->options->num_vertices_per_primitive; ++vtx) {
+            nir_ssa_def *xy = nir_load_shared(b, 2, 32, s->vtx_addr[vtx], .base = lds_es_pos_x);
             pos[vtx][0] = nir_channel(b, xy, 0);
             pos[vtx][1] = nir_channel(b, xy, 1);
          }
 
          nir_ssa_def *accepted_by_clipdist;
-         if (nogs_state->has_clipdist) {
+         if (s->has_clipdist) {
             nir_ssa_def *clipdist_neg_mask = nir_imm_intN_t(b, 0xff, 8);
-            for (unsigned vtx = 0; vtx < nogs_state->options->num_vertices_per_primitive; ++vtx) {
+            for (unsigned vtx = 0; vtx < s->options->num_vertices_per_primitive; ++vtx) {
                nir_ssa_def *mask =
-                  nir_load_shared(b, 1, 8, nogs_state->vtx_addr[vtx],
+                  nir_load_shared(b, 1, 8, s->vtx_addr[vtx],
                                   .base = lds_es_clipdist_neg_mask);
                clipdist_neg_mask = nir_iand(b, clipdist_neg_mask, mask);
             }
@@ -1514,15 +1584,15 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
 
          /* See if the current primitive is accepted */
          ac_nir_cull_primitive(b, accepted_by_clipdist, pos,
-                               nogs_state->options->num_vertices_per_primitive,
-                               cull_primitive_accepted, nogs_state);
+                               s->options->num_vertices_per_primitive,
+                               cull_primitive_accepted, s);
       }
       nir_pop_if(b, if_gs_thread);
 
       nir_scoped_barrier(b, .execution_scope=NIR_SCOPE_WORKGROUP, .memory_scope=NIR_SCOPE_WORKGROUP,
                             .memory_semantics=NIR_MEMORY_ACQ_REL, .memory_modes=nir_var_mem_shared);
 
-      nir_store_var(b, es_accepted_var, nir_imm_bool(b, false), 0x1u);
+      nir_store_var(b, s->es_accepted_var, nir_imm_bool(b, false), 0x1u);
 
       /* ES invocations load their accepted flag from LDS. */
       if_es_thread = nir_push_if(b, es_thread);
@@ -1530,49 +1600,44 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
       {
          nir_ssa_def *accepted = nir_load_shared(b, 1, 8u, es_vertex_lds_addr, .base = lds_es_vertex_accepted, .align_mul = 4u);
          nir_ssa_def *accepted_bool = nir_ine(b, accepted, nir_imm_intN_t(b, 0, 8));
-         nir_store_var(b, es_accepted_var, accepted_bool, 0x1u);
+         nir_store_var(b, s->es_accepted_var, accepted_bool, 0x1u);
       }
       nir_pop_if(b, if_es_thread);
 
-      nir_ssa_def *es_accepted = nir_load_var(b, es_accepted_var);
+      nir_ssa_def *es_accepted = nir_load_var(b, s->es_accepted_var);
 
       /* Repack the vertices that survived the culling. */
       wg_repack_result rep = repack_invocations_in_workgroup(b, es_accepted, lds_scratch_base,
-                                                             nogs_state->max_num_waves,
-                                                             nogs_state->options->wave_size);
+                                                             s->max_num_waves,
+                                                             s->options->wave_size);
       nir_ssa_def *num_live_vertices_in_workgroup = rep.num_repacked_invocations;
       nir_ssa_def *es_exporter_tid = rep.repacked_invocation_index;
-
-      if (nogs_state->num_es_threads_var) {
-         nir_ssa_def *num_live_vertices_in_wave = num_live_vertices_in_workgroup;
-         if (nogs_state->max_num_waves > 1) {
-            num_live_vertices_in_wave =
-               nir_isub(b, num_live_vertices_in_wave,
-                        nir_imul_imm(b, nir_load_subgroup_id(b), nogs_state->options->wave_size));
-            num_live_vertices_in_wave = nir_umin(b, num_live_vertices_in_wave,
-                                                 nir_imm_int(b, nogs_state->options->wave_size));
-         }
-         nir_store_var(b, nogs_state->num_es_threads_var, num_live_vertices_in_wave, 0x1);
-      }
 
       /* If all vertices are culled, set primitive count to 0 as well. */
       nir_ssa_def *num_exported_prims = nir_load_workgroup_num_input_primitives_amd(b);
       nir_ssa_def *fully_culled = nir_ieq_imm(b, num_live_vertices_in_workgroup, 0u);
       num_exported_prims = nir_bcsel(b, fully_culled, nir_imm_int(b, 0u), num_exported_prims);
+      nir_store_var(b, s->gs_exported_var, nir_iand(b, nir_inot(b, fully_culled), has_input_primitive(b)), 0x1u);
 
       nir_if *if_wave_0 = nir_push_if(b, nir_ieq(b, nir_load_subgroup_id(b), nir_imm_int(b, 0)));
       {
          /* Tell the final vertex and primitive count to the HW. */
-         nir_alloc_vertices_and_primitives_amd(b, num_live_vertices_in_workgroup, num_exported_prims);
+         if (s->options->gfx_level == GFX10) {
+            alloc_vertices_and_primitives_gfx10_workaround(
+               b, num_live_vertices_in_workgroup, num_exported_prims);
+         } else {
+            nir_alloc_vertices_and_primitives_amd(
+               b, num_live_vertices_in_workgroup, num_exported_prims);
+         }
       }
       nir_pop_if(b, if_wave_0);
 
       /* Vertex compaction. */
-      compact_vertices_after_culling(b, nogs_state,
-                                     repacked_arg_vars, gs_vtxaddr_vars,
+      compact_vertices_after_culling(b, s,
+                                     repacked_variables, gs_vtxaddr_vars,
                                      invocation_index, es_vertex_lds_addr,
-                                     es_exporter_tid, num_live_vertices_in_workgroup, fully_culled,
-                                     pervertex_lds_bytes, max_exported_args);
+                                     es_exporter_tid, num_live_vertices_in_workgroup,
+                                     pervertex_lds_bytes, num_repacked_variables);
    }
    nir_push_else(b, if_cull_en);
    {
@@ -1584,10 +1649,7 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
          nir_alloc_vertices_and_primitives_amd(b, vtx_cnt, prim_cnt);
       }
       nir_pop_if(b, if_wave_0);
-      nir_store_var(b, prim_exp_arg_var, emit_ngg_nogs_prim_exp_arg(b, nogs_state), 0x1u);
-
-      if (nogs_state->num_es_threads_var)
-         nir_store_var(b, nogs_state->num_es_threads_var, nir_load_merged_wave_info_amd(b), 0x1);
+      nir_store_var(b, s->prim_exp_arg_var, emit_ngg_nogs_prim_exp_arg(b, s), 0x1u);
    }
    nir_pop_if(b, if_cull_en);
 
@@ -1609,76 +1671,138 @@ add_deferred_attribute_culling(nir_builder *b, nir_cf_list *original_extracted_c
     */
 
    if (b->shader->info.stage == MESA_SHADER_VERTEX)
-      nogs_state->overwrite_args =
+      s->overwrite_args =
          nir_overwrite_vs_arguments_amd(b,
-            nir_load_var(b, repacked_arg_vars[0]), nir_load_var(b, repacked_arg_vars[1]));
+            nir_load_var(b, repacked_variables[0]), nir_load_var(b, repacked_variables[1]));
    else if (b->shader->info.stage == MESA_SHADER_TESS_EVAL)
-      nogs_state->overwrite_args =
+      s->overwrite_args =
          nir_overwrite_tes_arguments_amd(b,
-            nir_load_var(b, repacked_arg_vars[0]), nir_load_var(b, repacked_arg_vars[1]),
-            nir_load_var(b, repacked_arg_vars[2]), nir_load_var(b, repacked_arg_vars[3]));
+            nir_load_var(b, repacked_variables[0]), nir_load_var(b, repacked_variables[1]),
+            nir_load_var(b, repacked_variables[2]), nir_load_var(b, s->repacked_rel_patch_id));
    else
       unreachable("Should be VS or TES.");
 }
 
-static bool
-do_ngg_nogs_store_output_to_lds(nir_builder *b, nir_instr *instr, void *state)
+static void
+ngg_nogs_store_edgeflag_to_lds(nir_builder *b, lower_ngg_nogs_state *s)
 {
-   lower_ngg_nogs_state *st = (lower_ngg_nogs_state *)state;
+   if (!s->outputs[VARYING_SLOT_EDGE][0])
+      return;
 
-   if (instr->type != nir_instr_type_intrinsic)
-      return false;
-
-   nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
-   if (intrin->intrinsic != nir_intrinsic_store_output)
-      return false;
-
-   b->cursor = nir_before_instr(instr);
-
-   unsigned component = nir_intrinsic_component(intrin);
-   unsigned write_mask = nir_intrinsic_write_mask(intrin);
-   nir_ssa_def *store_val = intrin->src[0].ssa;
-
-   if (nir_intrinsic_io_semantics(intrin).location == VARYING_SLOT_EDGE) {
-      if (st->has_user_edgeflags) {
-         /* clamp user edge flag to 1 for latter bit operations */
-         store_val = nir_umin(b, store_val, nir_imm_int(b, 1));
-         /* remove instr after cursor point to the new node */
-         nir_instr_remove(instr);
-      } else {
-         /* remove the edge flag output anyway as it should not be passed to next stage */
-         nir_instr_remove(instr);
-         return true;
-      }
-   } else {
-      write_mask = nir_instr_xfb_write_mask(intrin) >> component;
-      if (!(write_mask && st->streamout_enabled))
-         return false;
-   }
+   /* clamp user edge flag to 1 for latter bit operations */
+   nir_ssa_def *edgeflag = s->outputs[VARYING_SLOT_EDGE][0];
+   edgeflag = nir_umin(b, edgeflag, nir_imm_int(b, 1));
 
    /* user edge flag is stored at the beginning of a vertex if streamout is not enabled */
    unsigned offset = 0;
-   if (st->streamout_enabled) {
-      unsigned base_offset = nir_src_as_uint(intrin->src[1]);
-      unsigned location = nir_intrinsic_io_semantics(intrin).location + base_offset;
+   if (s->streamout_enabled) {
       unsigned packed_location =
-         util_bitcount64(b->shader->info.outputs_written & BITFIELD64_MASK(location));
-      offset = packed_location * 16 + component * 4;
+         util_bitcount64(b->shader->info.outputs_written & BITFIELD64_MASK(VARYING_SLOT_EDGE));
+      offset = packed_location * 16;
    }
 
    nir_ssa_def *tid = nir_load_local_invocation_index(b);
-   nir_ssa_def *addr = pervertex_lds_addr(b, tid, st->pervertex_lds_bytes);
+   nir_ssa_def *addr = pervertex_lds_addr(b, tid, s->pervertex_lds_bytes);
 
-   nir_store_shared(b, store_val, addr, .base = offset, .write_mask = write_mask);
-
-   return true;
+   nir_store_shared(b, edgeflag, addr, .base = offset);
 }
 
 static void
-ngg_nogs_store_all_outputs_to_lds(nir_shader *shader, lower_ngg_nogs_state *st)
+ngg_nogs_store_xfb_outputs_to_lds(nir_builder *b, lower_ngg_nogs_state *s)
 {
-   nir_shader_instructions_pass(shader, do_ngg_nogs_store_output_to_lds,
-                                nir_metadata_block_index | nir_metadata_dominance, st);
+   nir_xfb_info *info = b->shader->xfb_info;
+
+   uint64_t xfb_outputs = 0;
+   unsigned xfb_outputs_16bit = 0;
+   uint8_t xfb_mask[VARYING_SLOT_MAX] = {0};
+   uint8_t xfb_mask_16bit_lo[16] = {0};
+   uint8_t xfb_mask_16bit_hi[16] = {0};
+
+   /* Get XFB output mask for each slot. */
+   for (int i = 0; i < info->output_count; i++) {
+      nir_xfb_output_info *out = info->outputs + i;
+
+      if (out->location < VARYING_SLOT_VAR0_16BIT) {
+         xfb_outputs |= BITFIELD64_BIT(out->location);
+         xfb_mask[out->location] |= out->component_mask;
+      } else {
+         unsigned index = out->location - VARYING_SLOT_VAR0_16BIT;
+         xfb_outputs_16bit |= BITFIELD_BIT(index);
+
+         if (out->high_16bits)
+            xfb_mask_16bit_hi[index] |= out->component_mask;
+         else
+            xfb_mask_16bit_lo[index] |= out->component_mask;
+      }
+   }
+
+   nir_ssa_def *tid = nir_load_local_invocation_index(b);
+   nir_ssa_def *addr = pervertex_lds_addr(b, tid, s->pervertex_lds_bytes);
+
+   u_foreach_bit64(slot, xfb_outputs) {
+      unsigned packed_location =
+         util_bitcount64(b->shader->info.outputs_written & BITFIELD64_MASK(slot));
+
+      unsigned mask = xfb_mask[slot];
+
+      /* Clear unused components. */
+      for (unsigned i = 0; i < 4; i++) {
+         if (!s->outputs[slot][i])
+            mask &= ~BITFIELD_BIT(i);
+      }
+
+      while (mask) {
+         int start, count;
+         u_bit_scan_consecutive_range(&mask, &start, &count);
+         /* Outputs here are sure to be 32bit.
+          *
+          * 64bit outputs have been lowered to two 32bit. As 16bit outputs:
+          *   Vulkan does not allow streamout outputs less than 32bit.
+          *   OpenGL puts 16bit outputs in VARYING_SLOT_VAR0_16BIT.
+          */
+         nir_ssa_def *store_val = nir_vec(b, &s->outputs[slot][start], (unsigned)count);
+         nir_store_shared(b, store_val, addr, .base = packed_location * 16 + start * 4);
+      }
+   }
+
+   unsigned num_32bit_outputs = util_bitcount64(b->shader->info.outputs_written);
+   u_foreach_bit64(slot, xfb_outputs_16bit) {
+      unsigned packed_location = num_32bit_outputs +
+         util_bitcount(b->shader->info.outputs_written_16bit & BITFIELD_MASK(slot));
+
+      unsigned mask_lo = xfb_mask_16bit_lo[slot];
+      unsigned mask_hi = xfb_mask_16bit_hi[slot];
+
+      /* Clear unused components. */
+      for (unsigned i = 0; i < 4; i++) {
+         if (!s->outputs_16bit_lo[slot][i])
+            mask_lo &= ~BITFIELD_BIT(i);
+         if (!s->outputs_16bit_hi[slot][i])
+            mask_hi &= ~BITFIELD_BIT(i);
+      }
+
+      nir_ssa_def **outputs_lo = s->outputs_16bit_lo[slot];
+      nir_ssa_def **outputs_hi = s->outputs_16bit_hi[slot];
+      nir_ssa_def *undef = nir_ssa_undef(b, 1, 16);
+
+      unsigned mask = mask_lo | mask_hi;
+      while (mask) {
+         int start, count;
+         u_bit_scan_consecutive_range(&mask, &start, &count);
+
+         nir_ssa_def *values[4] = {0};
+         for (int c = start; c < start + count; ++c) {
+            nir_ssa_def *lo = mask_lo & BITFIELD_BIT(c) ? outputs_lo[c] : undef;
+            nir_ssa_def *hi = mask_hi & BITFIELD_BIT(c) ? outputs_hi[c] : undef;
+
+            /* extend 8/16 bit to 32 bit, 64 bit has been lowered */
+            values[c - start] = nir_pack_32_2x16_split(b, lo, hi);
+         }
+
+         nir_ssa_def *store_val = nir_vec(b, values, (unsigned)count);
+         nir_store_shared(b, store_val, addr, .base = packed_location * 16 + start * 4);
+      }
+   }
 }
 
 static void
@@ -1693,6 +1817,8 @@ ngg_build_streamout_buffer_info(nir_builder *b,
                                 nir_ssa_def *buffer_offsets_ret[4],
                                 nir_ssa_def *emit_prim_ret[4])
 {
+   nir_ssa_def *undef = nir_ssa_undef(b, 1, 32);
+
    /* For radeonsi which pass this value by arg when VS. Streamout need accurate
     * num-vert-per-prim for writing correct amount of data to buffer.
     */
@@ -1726,7 +1852,7 @@ ngg_build_streamout_buffer_info(nir_builder *b,
             workgroup_buffer_sizes[buffer] =
                nir_bcsel(b, buffer_valid, inc_buffer_size, nir_imm_int(b, 0));
          } else
-            workgroup_buffer_sizes[buffer] = nir_ssa_undef(b, 1, 32);
+            workgroup_buffer_sizes[buffer] = undef;
       }
 
       nir_ssa_def *ordered_id = nir_load_ordered_id_amd(b);
@@ -1742,6 +1868,9 @@ ngg_build_streamout_buffer_info(nir_builder *b,
       nir_ssa_def *emit_prim[4];
       memcpy(emit_prim, gen_prim, 4 * sizeof(nir_ssa_def *));
 
+      nir_ssa_def *any_overflow = nir_imm_bool(b, false);
+      nir_ssa_def *overflow_amount[4] = {undef, undef, undef, undef};
+
       for (unsigned buffer = 0; buffer < 4; buffer++) {
          if (!(info->buffers_written & BITFIELD_BIT(buffer)))
             continue;
@@ -1751,6 +1880,10 @@ ngg_build_streamout_buffer_info(nir_builder *b,
          nir_ssa_def *remain_size = nir_isub(b, buffer_size, buffer_offset);
          nir_ssa_def *remain_prim = nir_idiv(b, remain_size, prim_stride_ret[buffer]);
          nir_ssa_def *overflow = nir_ilt(b, buffer_size, buffer_offset);
+
+         any_overflow = nir_ior(b, any_overflow, overflow);
+         overflow_amount[buffer] = nir_imax(b, nir_imm_int(b, 0),
+                                            nir_isub(b, buffer_offset, buffer_size));
 
          unsigned stream = info->buffer_to_stream[buffer];
          /* when previous workgroup overflow, we can't emit any primitive */
@@ -1763,9 +1896,16 @@ ngg_build_streamout_buffer_info(nir_builder *b,
          nir_store_shared(b, buffer_offset, scratch_base, .base = buffer * 4);
       }
 
-      /* No need to fixup the global buffer offset once we overflowed,
-       * because following workgroups overflow for sure.
+      /* We have to fix up the streamout offsets if we overflowed because they determine
+       * the vertex count for DrawTransformFeedback.
        */
+      nir_if *if_any_overflow = nir_push_if(b, any_overflow);
+      {
+         nir_build_xfb_counter_sub_amd(b, nir_vec(b, overflow_amount, 4),
+                                       /* mask of buffers to update */
+                                       .write_mask = info->buffers_written);
+      }
+      nir_pop_if(b, if_any_overflow);
 
       /* Save to LDS for being accessed by other waves in this workgroup. */
       for (unsigned stream = 0; stream < 4; stream++) {
@@ -1817,7 +1957,8 @@ static void
 ngg_build_streamout_vertex(nir_builder *b, nir_xfb_info *info,
                            unsigned stream, nir_ssa_def *so_buffer[4],
                            nir_ssa_def *buffer_offsets[4],
-                           nir_ssa_def *vtx_buffer_idx, nir_ssa_def *vtx_lds_addr)
+                           nir_ssa_def *vtx_buffer_idx, nir_ssa_def *vtx_lds_addr,
+                           shader_output_types *output_types)
 {
    nir_ssa_def *vtx_buffer_offsets[4];
    for (unsigned buffer = 0; buffer < 4; buffer++) {
@@ -1833,7 +1974,18 @@ ngg_build_streamout_vertex(nir_builder *b, nir_xfb_info *info,
       if (!out->component_mask || info->buffer_to_stream[out->buffer] != stream)
          continue;
 
-      unsigned base = util_bitcount64(b->shader->info.outputs_written & BITFIELD64_MASK(out->location));
+      unsigned base;
+      if (out->location >= VARYING_SLOT_VAR0_16BIT) {
+         base =
+            util_bitcount64(b->shader->info.outputs_written) +
+            util_bitcount(b->shader->info.outputs_written_16bit &
+                          BITFIELD_MASK(out->location - VARYING_SLOT_VAR0_16BIT));
+      } else {
+         base =
+            util_bitcount64(b->shader->info.outputs_written &
+                            BITFIELD64_MASK(out->location));
+      }
+
       unsigned offset = (base * 4 + out->component_offset) * 4;
       unsigned count = util_bitcount(out->component_mask);
 
@@ -1842,12 +1994,43 @@ ngg_build_streamout_vertex(nir_builder *b, nir_xfb_info *info,
       nir_ssa_def *out_data =
          nir_load_shared(b, count, 32, vtx_lds_addr, .base = offset);
 
+      /* Up-scaling 16bit outputs to 32bit.
+       *
+       * OpenGL ES will put 16bit medium precision varyings to VARYING_SLOT_VAR0_16BIT.
+       * We need to up-scaling them to 32bit when streamout to buffer.
+       *
+       * Vulkan does not allow 8/16bit varyings to be streamout.
+       */
+      if (out->location >= VARYING_SLOT_VAR0_16BIT) {
+         unsigned index = out->location - VARYING_SLOT_VAR0_16BIT;
+         nir_ssa_def *values[4];
+
+         for (int j = 0; j < count; j++) {
+            unsigned c = out->component_offset + j;
+            nir_ssa_def *v = nir_channel(b, out_data, j);
+            nir_alu_type t;
+
+            if (out->high_16bits) {
+               v = nir_unpack_32_2x16_split_y(b, v);
+               t = output_types->types_16bit_hi[index][c];
+            } else {
+               v = nir_unpack_32_2x16_split_x(b, v);
+               t = output_types->types_16bit_lo[index][c];
+            }
+
+            t = nir_alu_type_get_base_type(t);
+            values[j] = nir_convert_to_bit_size(b, v, t, 32);
+         }
+
+         out_data = nir_vec(b, values, count);
+      }
+
       nir_ssa_def *zero = nir_imm_int(b, 0);
       nir_store_buffer_amd(b, out_data, so_buffer[out->buffer],
                            vtx_buffer_offsets[out->buffer],
                            zero, zero,
                            .base = out->offset,
-                           .slc_amd = true);
+                           .access = ACCESS_STREAM_CACHE_POLICY);
    }
 }
 
@@ -1887,7 +2070,7 @@ ngg_nogs_build_streamout(nir_builder *b, lower_ngg_nogs_state *s)
             nir_ssa_def *vtx_lds_addr = pervertex_lds_addr(b, vtx_lds_idx, vtx_lds_stride);
             ngg_build_streamout_vertex(b, info, 0, so_buffer, buffer_offsets,
                                        nir_iadd_imm(b, vtx_buffer_idx, i),
-                                       vtx_lds_addr);
+                                       vtx_lds_addr, &s->output_types);
          }
          nir_pop_if(b, if_valid_vertex);
       }
@@ -1942,24 +2125,17 @@ ngg_nogs_get_pervertex_lds_size(gl_shader_stage stage,
    return pervertex_lds_bytes;
 }
 
-static unsigned
-gather_vs_outputs(nir_builder *b, struct exec_list *cf_list, vs_output *outputs,
-                  const uint8_t *vs_output_param_offset)
+static void
+ngg_nogs_gather_outputs(nir_builder *b, struct exec_list *cf_list, lower_ngg_nogs_state *s)
 {
-   uint64_t output_mask32 = 0;
-   nir_ssa_def *outputs32[64][4] = {0};
-
-   uint64_t output_mask_lo = 0;
-   uint64_t output_mask_hi = 0;
-   nir_ssa_def *outputs_lo[64][4];
-   nir_ssa_def *outputs_hi[64][4];
-
    /* Assume:
     * - the shader used nir_lower_io_to_temporaries
     * - 64-bit outputs are lowered
     * - no indirect indexing is present
     */
-   struct nir_cf_node *first_node = exec_node_data(nir_cf_node, exec_list_get_head(cf_list), node);
+   struct nir_cf_node *first_node =
+      exec_node_data(nir_cf_node, exec_list_get_head(cf_list), node);
+
    for (nir_block *block = nir_cf_node_cf_tree_first(first_node); block != NULL;
         block = nir_block_cf_tree_next(block)) {
       nir_foreach_instr_safe (instr, block) {
@@ -1972,61 +2148,92 @@ gather_vs_outputs(nir_builder *b, struct exec_list *cf_list, vs_output *outputs,
 
          assert(nir_src_is_const(intrin->src[1]) && !nir_src_as_uint(intrin->src[1]));
 
-         unsigned slot = nir_intrinsic_io_semantics(intrin).location;
-         if (vs_output_param_offset[slot] > AC_EXP_PARAM_OFFSET_31)
-            continue;
+         nir_io_semantics sem = nir_intrinsic_io_semantics(intrin);
+         unsigned slot = sem.location;
 
-         bool is_hi = nir_intrinsic_io_semantics(intrin).high_16bits;
-         bool is_16bit = slot >= VARYING_SLOT_VAR0_16BIT;
-
-         u_foreach_bit (i, nir_intrinsic_write_mask(intrin)) {
-            unsigned comp = nir_intrinsic_component(intrin) + i;
-            nir_ssa_def *chan = nir_channel(b, intrin->src[0].ssa, i);
-            if (is_16bit && is_hi)
-               outputs_hi[slot - VARYING_SLOT_VAR0_16BIT][comp] = chan;
-            else if (is_16bit)
-               outputs_lo[slot - VARYING_SLOT_VAR0_16BIT][comp] = chan;
-            else
-               outputs32[slot][comp] = chan;
+         nir_ssa_def **output;
+         nir_alu_type *type;
+         if (slot >= VARYING_SLOT_VAR0_16BIT) {
+            unsigned index = slot - VARYING_SLOT_VAR0_16BIT;
+            if (sem.high_16bits) {
+               output = s->outputs_16bit_hi[index];
+               type = s->output_types.types_16bit_hi[index];
+            } else {
+               output = s->outputs_16bit_lo[index];
+               type = s->output_types.types_16bit_lo[index];
+            }
+         } else {
+            output = s->outputs[slot];
+            type = s->output_types.types[slot];
          }
 
-         if (is_16bit && is_hi)
-            output_mask_hi |= BITFIELD64_BIT(slot - VARYING_SLOT_VAR0_16BIT);
-         else if (is_16bit)
-            output_mask_lo |= BITFIELD64_BIT(slot - VARYING_SLOT_VAR0_16BIT);
-         else
-            output_mask32 |= BITFIELD64_BIT(slot);
+         unsigned component = nir_intrinsic_component(intrin);
+         unsigned write_mask = nir_intrinsic_write_mask(intrin);
+         nir_alu_type src_type = nir_intrinsic_src_type(intrin);
 
-         if (slot >= VARYING_SLOT_VAR0 || !(BITFIELD64_BIT(slot) & POS_EXPORT_MASK))
-            nir_instr_remove(&intrin->instr);
+         u_foreach_bit (i, write_mask) {
+            unsigned c = component + i;
+            output[c] = nir_channel(b, intrin->src[0].ssa, i);
+            type[c] = src_type;
+         }
+
+         /* remove all store output instructions */
+         nir_instr_remove(instr);
       }
    }
+}
 
+static unsigned
+gather_vs_outputs(nir_builder *b, vs_output *outputs,
+                  const uint8_t *param_offsets,
+                  nir_ssa_def *(*data)[4],
+                  nir_ssa_def *(*data_16bit_lo)[4],
+                  nir_ssa_def *(*data_16bit_hi)[4])
+{
    unsigned num_outputs = 0;
-   u_foreach_bit64 (i, output_mask32) {
-      outputs[num_outputs].slot = i;
-      for (unsigned j = 0; j < 4; j++) {
-         nir_ssa_def *chan = outputs32[i][j];
+   u_foreach_bit64 (slot, b->shader->info.outputs_written) {
+      if (param_offsets[slot] > AC_EXP_PARAM_OFFSET_31)
+         continue;
+
+      nir_ssa_def **output = data[slot];
+
+      /* skip output if no one written before */
+      if (!output[0] && !output[1] && !output[2] && !output[3])
+         continue;
+
+      outputs[num_outputs].slot = slot;
+      for (int i = 0; i < 4; i++) {
+         nir_ssa_def *chan = output[i];
          /* RADV implements 16-bit outputs as 32-bit with VARYING_SLOT_VAR0-31. */
-         outputs[num_outputs].chan[j] = chan && chan->bit_size == 16 ? nir_u2u32(b, chan) : chan;
+         outputs[num_outputs].chan[i] = chan && chan->bit_size == 16 ? nir_u2u32(b, chan) : chan;
       }
       num_outputs++;
    }
 
-   if (output_mask_lo | output_mask_hi) {
-      nir_ssa_def *undef = nir_ssa_undef(b, 1, 16);
-      u_foreach_bit64 (i, output_mask_lo | output_mask_hi) {
-         vs_output *output = &outputs[num_outputs++];
+   u_foreach_bit (i, b->shader->info.outputs_written_16bit) {
+      unsigned slot = VARYING_SLOT_VAR0_16BIT + i;
+      if (param_offsets[slot] > AC_EXP_PARAM_OFFSET_31)
+         continue;
 
-         output->slot = i + VARYING_SLOT_VAR0_16BIT;
-         for (unsigned j = 0; j < 4; j++) {
-            nir_ssa_def *lo = output_mask_lo & BITFIELD64_BIT(i) ? outputs_lo[i][j] : NULL;
-            nir_ssa_def *hi = output_mask_hi & BITFIELD64_BIT(i) ? outputs_hi[i][j] : NULL;
-            if (lo || hi)
-               output->chan[j] = nir_pack_32_2x16_split(b, lo ? lo : undef, hi ? hi : undef);
-            else
-               output->chan[j] = NULL;
-         }
+      nir_ssa_def **output_lo = data_16bit_lo[i];
+      nir_ssa_def **output_hi = data_16bit_hi[i];
+
+      /* skip output if no one written before */
+      if (!output_lo[0] && !output_lo[1] && !output_lo[2] && !output_lo[3] &&
+          !output_hi[0] && !output_hi[1] && !output_hi[2] && !output_hi[3])
+         continue;
+
+      vs_output *output = &outputs[num_outputs++];
+      output->slot = slot;
+
+      nir_ssa_def *undef = nir_ssa_undef(b, 1, 16);
+      for (int j = 0; j < 4; j++) {
+         nir_ssa_def *lo = output_lo[j] ? output_lo[j] : undef;
+         nir_ssa_def *hi = output_hi[j] ? output_hi[j] : undef;
+         if (output_lo[j] || output_hi[j])
+            output->chan[j] = nir_pack_32_2x16_split(b, lo, hi);
+         else
+            output->chan[j] = NULL;
       }
    }
 
@@ -2068,19 +2275,67 @@ export_vertex_params_gfx11(nir_builder *b, nir_ssa_def *export_tid, nir_ssa_def 
    nir_ssa_def *voffset = nir_imm_int(b, 0);
    nir_ssa_def *undef = nir_ssa_undef(b, 1, 32);
 
+   uint32_t exported_params = 0;
+
    for (unsigned i = 0; i < num_outputs; i++) {
       gl_varying_slot slot = outputs[i].slot;
-      nir_ssa_def *soffset = nir_iadd_imm(b, attr_offset, vs_output_param_offset[slot] * 16 * 32);
+      unsigned offset = vs_output_param_offset[slot];
+
+      /* Since vs_output_param_offset[] can map multiple varying slots to
+       * the same param export index (that's radeonsi-specific behavior),
+       * we need to do this so as not to emit duplicated exports.
+       */
+      if (exported_params & BITFIELD_BIT(offset))
+         continue;
 
       nir_ssa_def *comp[4];
       for (unsigned j = 0; j < 4; j++)
          comp[j] = outputs[i].chan[j] ? outputs[i].chan[j] : undef;
-      nir_store_buffer_amd(b, nir_vec(b, comp, 4), attr_rsrc, voffset, soffset, vindex,
-                           .is_swizzled = true, .memory_modes = nir_var_shader_out,
-                           .access = ACCESS_COHERENT);
+      nir_store_buffer_amd(b, nir_vec(b, comp, 4), attr_rsrc, voffset, attr_offset, vindex,
+                           .base = offset * 16,
+                           .memory_modes = nir_var_shader_out,
+                           .access = ACCESS_COHERENT | ACCESS_IS_SWIZZLED_AMD);
+      exported_params |= BITFIELD_BIT(offset);
    }
 
    nir_pop_if(b, NULL);
+}
+
+static void
+export_pos0_wait_attr_ring(nir_builder *b, nir_if *if_es_thread, nir_ssa_def *outputs[VARYING_SLOT_MAX][4], const ac_nir_lower_ngg_options *options)
+{
+   b->cursor = nir_after_cf_node(&if_es_thread->cf_node);
+
+   /* Create phi for the position output values. */
+   vs_output pos_output = {
+      .slot = VARYING_SLOT_POS,
+      .chan = {
+         outputs[VARYING_SLOT_POS][0],
+         outputs[VARYING_SLOT_POS][1],
+         outputs[VARYING_SLOT_POS][2],
+         outputs[VARYING_SLOT_POS][3],
+      },
+   };
+   create_vertex_param_phis(b, 1, &pos_output);
+
+   b->cursor = nir_after_cf_list(&b->impl->body);
+
+   /* Wait for attribute stores to finish. */
+   nir_scoped_barrier(b, .execution_scope = NIR_SCOPE_SUBGROUP,
+                         .memory_scope = NIR_SCOPE_DEVICE,
+                         .memory_semantics = NIR_MEMORY_RELEASE,
+                         .memory_modes = nir_var_mem_ssbo | nir_var_shader_out | nir_var_mem_global | nir_var_image);
+
+   /* Export just the pos0 output. */
+   nir_if *if_export_empty_pos = nir_push_if(b, if_es_thread->condition.ssa);
+   {
+      ac_nir_export_position(b, options->gfx_level,
+                             options->clipdist_enable_mask,
+                             !options->has_param_exports,
+                             options->force_vrs, true,
+                             VARYING_BIT_POS, &pos_output.chan);
+   }
+   nir_pop_if(b, if_export_empty_pos);
 }
 
 void
@@ -2097,10 +2352,7 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
       options->can_cull ? nir_local_variable_create(impl, glsl_bool_type(), "es_accepted") : NULL;
    nir_variable *gs_accepted_var =
       options->can_cull ? nir_local_variable_create(impl, glsl_bool_type(), "gs_accepted") : NULL;
-   nir_variable *num_es_threads_var =
-      options->can_cull && options->gfx_level >= GFX11
-         ? nir_local_variable_create(impl, glsl_uint_type(), "num_es_threads")
-         : NULL;
+   nir_variable *gs_exported_var = nir_local_variable_create(impl, glsl_bool_type(), "gs_exported");
 
    bool streamout_enabled = shader->xfb_info && !options->disable_streamout;
    bool has_user_edgeflags =
@@ -2124,15 +2376,15 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
       .prim_exp_arg_var = prim_exp_arg_var,
       .es_accepted_var = es_accepted_var,
       .gs_accepted_var = gs_accepted_var,
-      .num_es_threads_var = num_es_threads_var,
+      .gs_exported_var = gs_exported_var,
       .max_num_waves = DIV_ROUND_UP(options->max_workgroup_size, options->wave_size),
       .has_user_edgeflags = has_user_edgeflags,
    };
 
    const bool need_prim_id_store_shared =
-      options->primitive_id_location >= 0 && shader->info.stage == MESA_SHADER_VERTEX;
+      options->export_primitive_id && shader->info.stage == MESA_SHADER_VERTEX;
 
-   if (options->primitive_id_location >= 0) {
+   if (options->export_primitive_id) {
       nir_variable *prim_id_var = nir_variable_create(shader, nir_var_shader_out, glsl_uint_type(), "ngg_prim_id");
       prim_id_var->data.location = VARYING_SLOT_PRIMITIVE_ID;
       prim_id_var->data.driver_location = VARYING_SLOT_PRIMITIVE_ID;
@@ -2145,8 +2397,6 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
    nir_builder_init(b, impl);
 
    if (options->can_cull) {
-      /* We need divergence info for culling shaders. */
-      nir_divergence_analysis(shader);
       analyze_shader_before_culling(shader, &state);
       save_reusable_variables(b, &state);
    }
@@ -2161,6 +2411,11 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
     * it executes before culling and isn't in the extracted CF.
     */
    nogs_prim_gen_query(b, &state);
+
+   /* Whether a shader invocation should export a primitive,
+    * initialize to all invocations that have an input primitive.
+    */
+   nir_store_var(b, gs_exported_var, has_input_primitive(b), 0x1u);
 
    if (!options->can_cull) {
       /* Newer chips can use PRIMGEN_PASSTHRU_NO_MSG to skip gs_alloc_req for NGG passthrough. */
@@ -2201,7 +2456,7 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
       ngg_nogs_get_pervertex_lds_size(shader->info.stage,
                                       shader->num_outputs,
                                       state.streamout_enabled,
-                                      options->primitive_id_location >= 0,
+                                      options->export_primitive_id,
                                       state.has_user_edgeflags);
 
    if (need_prim_id_store_shared) {
@@ -2212,9 +2467,18 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
                             .memory_semantics = NIR_MEMORY_ACQ_REL, .memory_modes = nir_var_mem_shared);
    }
 
-   nir_intrinsic_instr *export_vertex_instr;
    nir_ssa_def *es_thread =
       options->can_cull ? nir_load_var(b, es_accepted_var) : has_input_vertex(b);
+
+   /* Calculate the bit count here instead of below for lower SGPR usage and better ALU
+    * scheduling.
+    */
+   nir_ssa_def *num_es_threads = NULL;
+   if (state.options->gfx_level >= GFX11 && options->can_cull) {
+      nir_ssa_def *es_accepted_mask =
+         nir_ballot(b, 1, options->wave_size, nir_load_var(b, es_accepted_var));
+      num_es_threads = nir_bit_count(b, es_accepted_mask);
+   }
 
    nir_if *if_es_thread = nir_push_if(b, es_thread);
    {
@@ -2222,51 +2486,10 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
       nir_cf_reinsert(&extracted, b->cursor);
       b->cursor = nir_after_cf_list(&if_es_thread->then_list);
 
-      if (options->primitive_id_location >= 0)
+      if (options->export_primitive_id)
          emit_store_ngg_nogs_es_primitive_id(b, &state);
-
-      /* Export all vertex attributes (including the primitive ID) */
-      export_vertex_instr = nir_export_vertex_amd(b);
    }
    nir_pop_if(b, if_es_thread);
-
-   if (state.streamout_enabled) {
-      /* TODO: support culling after streamout. */
-      assert(!options->can_cull);
-
-      ngg_nogs_build_streamout(b, &state);
-   }
-
-   if (state.streamout_enabled || has_user_edgeflags) {
-      ngg_nogs_store_all_outputs_to_lds(shader, &state);
-      b->cursor = nir_after_cf_list(&impl->body);
-   }
-
-   /* Take care of late primitive export */
-   if (!state.early_prim_export) {
-      emit_ngg_nogs_prim_export(b, &state, nir_load_var(b, prim_exp_arg_var));
-   }
-
-   /* Export varyings for GFX11+ */
-   if (state.options->gfx_level >= GFX11) {
-      vs_output outputs[64];
-
-      b->cursor = nir_after_cf_list(&if_es_thread->then_list);
-      unsigned num_outputs =
-         gather_vs_outputs(b, &if_es_thread->then_list, outputs, options->vs_output_param_offset);
-
-      if (num_outputs) {
-         b->cursor = nir_after_cf_node(&if_es_thread->cf_node);
-         create_vertex_param_phis(b, num_outputs, outputs);
-
-         b->cursor = nir_after_cf_list(&impl->body);
-
-         nir_ssa_def *num_threads = options->can_cull ? nir_load_var(b, num_es_threads_var)
-                                                      : nir_load_merged_wave_info_amd(b);
-         export_vertex_params_gfx11(b, NULL, num_threads, num_outputs, outputs,
-                                    options->vs_output_param_offset);
-      }
-   }
 
    if (options->can_cull) {
       /* Replace uniforms. */
@@ -2279,13 +2502,83 @@ ac_nir_lower_ngg_nogs(nir_shader *shader, const ac_nir_lower_ngg_options *option
        * it seems that it's best to put the position export always at the end, and
        * then let ACO schedule it up (slightly) only when early prim export is used.
        */
-      b->cursor = nir_before_instr(&export_vertex_instr->instr);
+      b->cursor = nir_after_cf_list(&if_es_thread->then_list);
 
       nir_ssa_def *pos_val = nir_load_var(b, state.position_value_var);
-      nir_io_semantics io_sem = { .location = VARYING_SLOT_POS, .num_slots = 1 };
-      nir_store_output(b, pos_val, nir_imm_int(b, 0), .base = state.position_store_base,
-                       .component = 0, .io_semantics = io_sem);
+      for (int i = 0; i < 4; i++)
+         state.outputs[VARYING_SLOT_POS][i] = nir_channel(b, pos_val, i);
    }
+
+   /* Gather outputs data and types */
+   b->cursor = nir_after_cf_list(&if_es_thread->then_list);
+   ngg_nogs_gather_outputs(b, &if_es_thread->then_list, &state);
+
+   if (state.has_user_edgeflags)
+      ngg_nogs_store_edgeflag_to_lds(b, &state);
+
+   if (state.streamout_enabled) {
+      /* TODO: support culling after streamout. */
+      assert(!options->can_cull);
+
+      ngg_nogs_store_xfb_outputs_to_lds(b, &state);
+
+      b->cursor = nir_after_cf_list(&impl->body);
+      ngg_nogs_build_streamout(b, &state);
+   }
+
+   /* Take care of late primitive export */
+   if (!state.early_prim_export) {
+      b->cursor = nir_after_cf_list(&impl->body);
+      emit_ngg_nogs_prim_export(b, &state, nir_load_var(b, prim_exp_arg_var));
+   }
+
+   uint64_t export_outputs = shader->info.outputs_written | VARYING_BIT_POS;
+   if (options->kill_pointsize)
+      export_outputs &= ~VARYING_BIT_PSIZ;
+
+   const bool wait_attr_ring = options->gfx_level == GFX11 && options->has_param_exports;
+   if (wait_attr_ring)
+      export_outputs &= ~VARYING_BIT_POS;
+
+   b->cursor = nir_after_cf_list(&if_es_thread->then_list);
+   ac_nir_export_position(b, options->gfx_level,
+                          options->clipdist_enable_mask,
+                          !options->has_param_exports,
+                          options->force_vrs, !wait_attr_ring,
+                          export_outputs, state.outputs);
+
+   if (options->has_param_exports) {
+      if (state.options->gfx_level >= GFX11) {
+         /* Export varyings for GFX11+ */
+         vs_output outputs[64];
+         unsigned num_outputs = gather_vs_outputs(b, outputs,
+                                                  state.options->vs_output_param_offset,
+                                                  state.outputs,
+                                                  state.outputs_16bit_lo,
+                                                  state.outputs_16bit_hi);
+
+         if (num_outputs) {
+            b->cursor = nir_after_cf_node(&if_es_thread->cf_node);
+            create_vertex_param_phis(b, num_outputs, outputs);
+
+            b->cursor = nir_after_cf_list(&impl->body);
+
+            if (!num_es_threads)
+               num_es_threads = nir_load_merged_wave_info_amd(b);
+            export_vertex_params_gfx11(b, NULL, num_es_threads, num_outputs, outputs,
+                                       options->vs_output_param_offset);
+         }
+      } else {
+         ac_nir_export_parameters(b, options->vs_output_param_offset,
+                                  shader->info.outputs_written,
+                                  shader->info.outputs_written_16bit,
+                                  state.outputs, state.outputs_16bit_lo,
+                                  state.outputs_16bit_hi);
+      }
+   }
+
+   if (wait_attr_ring)
+      export_pos0_wait_attr_ring(b, if_es_thread, state.outputs, options);
 
    nir_metadata_preserve(impl, nir_metadata_none);
    nir_validate_shader(shader, "after emitting NGG VS/TES");
@@ -2375,120 +2668,46 @@ ngg_gs_emit_vertex_addr(nir_builder *b, nir_ssa_def *gs_vtx_idx, lower_ngg_gs_st
 static void
 ngg_gs_clear_primflags(nir_builder *b, nir_ssa_def *num_vertices, unsigned stream, lower_ngg_gs_state *s)
 {
+   char name[32];
+   snprintf(name, sizeof(name), "clear_primflag_idx_%u", stream);
+   nir_variable *clear_primflag_idx_var = nir_local_variable_create(b->impl, glsl_uint_type(), name);
+
    nir_ssa_def *zero_u8 = nir_imm_zero(b, 1, 8);
-   nir_store_var(b, s->current_clear_primflag_idx_var, num_vertices, 0x1u);
+   nir_store_var(b, clear_primflag_idx_var, num_vertices, 0x1u);
 
    nir_loop *loop = nir_push_loop(b);
    {
-      nir_ssa_def *current_clear_primflag_idx = nir_load_var(b, s->current_clear_primflag_idx_var);
-      nir_if *if_break = nir_push_if(b, nir_uge(b, current_clear_primflag_idx, nir_imm_int(b, b->shader->info.gs.vertices_out)));
+      nir_ssa_def *clear_primflag_idx = nir_load_var(b, clear_primflag_idx_var);
+      nir_if *if_break = nir_push_if(
+         b, nir_uge(b, clear_primflag_idx, nir_imm_int(b, b->shader->info.gs.vertices_out)));
       {
          nir_jump(b, nir_jump_break);
       }
       nir_push_else(b, if_break);
       {
-         nir_ssa_def *emit_vtx_addr = ngg_gs_emit_vertex_addr(b, current_clear_primflag_idx, s);
+         nir_ssa_def *emit_vtx_addr = ngg_gs_emit_vertex_addr(b, clear_primflag_idx, s);
          nir_store_shared(b, zero_u8, emit_vtx_addr, .base = s->lds_offs_primflags + stream);
-         nir_store_var(b, s->current_clear_primflag_idx_var, nir_iadd_imm_nuw(b, current_clear_primflag_idx, 1), 0x1u);
+         nir_store_var(b, clear_primflag_idx_var, nir_iadd_imm_nuw(b, clear_primflag_idx, 1), 0x1u);
       }
       nir_pop_if(b, if_break);
    }
    nir_pop_loop(b, loop);
 }
 
-static void
-ngg_gs_shader_query(nir_builder *b, nir_intrinsic_instr *intrin, lower_ngg_gs_state *s)
-{
-   bool has_gen_prim_query = s->options->has_gen_prim_query;
-   bool has_pipeline_stats_query = s->options->gfx_level < GFX11;
-
-   nir_ssa_def *pipeline_query_enabled = NULL;
-   nir_ssa_def *prim_gen_query_enabled = NULL;
-   nir_ssa_def *shader_query_enabled = NULL;
-   if (has_gen_prim_query) {
-      prim_gen_query_enabled = nir_load_prim_gen_query_enabled_amd(b);
-      if (has_pipeline_stats_query) {
-         pipeline_query_enabled = nir_load_pipeline_stat_query_enabled_amd(b);
-         shader_query_enabled = nir_ior(b, pipeline_query_enabled, prim_gen_query_enabled);
-      } else {
-         shader_query_enabled = prim_gen_query_enabled;
-      }
-   } else if (has_pipeline_stats_query) {
-      pipeline_query_enabled = nir_load_pipeline_stat_query_enabled_amd(b);
-      shader_query_enabled = pipeline_query_enabled;
-   } else {
-      /* has no query */
-      return;
-   }
-
-   nir_if *if_shader_query = nir_push_if(b, shader_query_enabled);
-   nir_ssa_def *num_prims_in_wave = NULL;
-
-   /* Calculate the "real" number of emitted primitives from the emitted GS vertices and primitives.
-    * GS emits points, line strips or triangle strips.
-    * Real primitives are points, lines or triangles.
-    */
-   if (nir_src_is_const(intrin->src[0]) && nir_src_is_const(intrin->src[1])) {
-      unsigned gs_vtx_cnt = nir_src_as_uint(intrin->src[0]);
-      unsigned gs_prm_cnt = nir_src_as_uint(intrin->src[1]);
-      unsigned total_prm_cnt = gs_vtx_cnt - gs_prm_cnt * (s->num_vertices_per_primitive - 1u);
-      nir_ssa_def *num_threads =
-         nir_bit_count(b, nir_ballot(b, 1, s->options->wave_size, nir_imm_bool(b, true)));
-      num_prims_in_wave = nir_imul_imm(b, num_threads, total_prm_cnt);
-   } else {
-      nir_ssa_def *gs_vtx_cnt = intrin->src[0].ssa;
-      nir_ssa_def *prm_cnt = intrin->src[1].ssa;
-      if (s->num_vertices_per_primitive > 1)
-         prm_cnt = nir_iadd(b, nir_imul_imm(b, prm_cnt, -1u * (s->num_vertices_per_primitive - 1)), gs_vtx_cnt);
-      num_prims_in_wave = nir_reduce(b, prm_cnt, .reduction_op = nir_op_iadd);
-   }
-
-   /* Store the query result to query result using an atomic add. */
-   nir_if *if_first_lane = nir_push_if(b, nir_elect(b, 1));
-   {
-      if (has_pipeline_stats_query) {
-         nir_if *if_pipeline_query = nir_push_if(b, pipeline_query_enabled);
-         {
-            /* Add all streams' number to the same counter. */
-            nir_atomic_add_gs_emit_prim_count_amd(b, num_prims_in_wave);
-         }
-         nir_pop_if(b, if_pipeline_query);
-      }
-
-      if (has_gen_prim_query) {
-         nir_if *if_prim_gen_query = nir_push_if(b, prim_gen_query_enabled);
-         {
-            /* Add to the counter for this stream. */
-            nir_atomic_add_gen_prim_count_amd(
-               b, num_prims_in_wave, .stream_id = nir_intrinsic_stream_id(intrin));
-         }
-         nir_pop_if(b, if_prim_gen_query);
-      }
-   }
-   nir_pop_if(b, if_first_lane);
-
-   nir_pop_if(b, if_shader_query);
-}
-
 static bool
 lower_ngg_gs_store_output(nir_builder *b, nir_intrinsic_instr *intrin, lower_ngg_gs_state *s)
 {
-   assert(nir_src_is_const(intrin->src[1]));
+   assert(nir_src_is_const(intrin->src[1]) && !nir_src_as_uint(intrin->src[1]));
    b->cursor = nir_before_instr(&intrin->instr);
 
-   unsigned base = nir_intrinsic_base(intrin);
    unsigned writemask = nir_intrinsic_write_mask(intrin);
    unsigned component_offset = nir_intrinsic_component(intrin);
-   unsigned base_offset = nir_src_as_uint(intrin->src[1]);
    nir_io_semantics io_sem = nir_intrinsic_io_semantics(intrin);
 
-   unsigned location = io_sem.location + base_offset;
-   assert(location < VARYING_SLOT_MAX);
-
-   unsigned base_index = base + base_offset;
-   assert(base_index < VARYING_SLOT_MAX);
+   unsigned location = io_sem.location;
 
    nir_ssa_def *store_val = intrin->src[0].ssa;
+   nir_alu_type src_type = nir_intrinsic_src_type(intrin);
 
    /* Small bitsize components consume the same amount of space as 32-bit components,
     * but 64-bit ones consume twice as many. (Vulkan spec 15.1.5)
@@ -2496,9 +2715,31 @@ lower_ngg_gs_store_output(nir_builder *b, nir_intrinsic_instr *intrin, lower_ngg
     * 64-bit IO has been lowered to multi 32-bit IO.
     */
    assert(store_val->bit_size <= 32);
+   assert(nir_alu_type_get_type_size(src_type) == store_val->bit_size);
 
-   /* Save output usage info. */
-   gs_output_info *info = &s->output_info[location];
+   /* Get corresponding output variable and usage info. */
+   nir_ssa_def **output;
+   nir_alu_type *type;
+   gs_output_info *info;
+   if (location >= VARYING_SLOT_VAR0_16BIT) {
+      unsigned index = location - VARYING_SLOT_VAR0_16BIT;
+      assert(index < 16);
+
+      if (io_sem.high_16bits) {
+         output = s->outputs_16bit_hi[index];
+         type = s->output_types.types_16bit_hi[index];
+         info = s->output_info_16bit_hi + index;
+      } else {
+         output = s->outputs_16bit_lo[index];
+         type = s->output_types.types_16bit_lo[index];
+         info = s->output_info_16bit_lo + index;
+      }
+   } else {
+      assert(location < VARYING_SLOT_MAX);
+      output = s->outputs[location];
+      type = s->output_types.types[location];
+      info = s->output_info + location;
+   }
 
    for (unsigned comp = 0; comp < store_val->num_components; ++comp) {
       if (!(writemask & (1 << comp)))
@@ -2509,32 +2750,22 @@ lower_ngg_gs_store_output(nir_builder *b, nir_intrinsic_instr *intrin, lower_ngg
 
       unsigned component = component_offset + comp;
 
-      /* The same output should always belong to the same base. */
-      assert(!info->components_mask || info->base == base_index);
-      /* The same output should always have same kill state. */
-      assert(!info->components_mask ||
-             (info->no_varying == io_sem.no_varying &&
-              info->no_sysval_output == io_sem.no_sysval_output));
       /* The same output component should always belong to the same stream. */
       assert(!(info->components_mask & (1 << component)) ||
              ((info->stream >> (component * 2)) & 3) == stream);
 
-      info->base = base_index;
       /* Components of the same output slot may belong to different streams. */
       info->stream |= stream << (component * 2);
       info->components_mask |= BITFIELD_BIT(component);
-      info->no_varying = io_sem.no_varying;
-      info->no_sysval_output = io_sem.no_sysval_output;
 
-      nir_variable *var = s->output_vars[location][component];
-      if (!var) {
-         var = nir_local_variable_create(
-            s->impl, glsl_uintN_t_type(store_val->bit_size), "output");
-         s->output_vars[location][component] = var;
-      }
-      assert(glsl_base_type_bit_size(glsl_get_base_type(var->type)) == store_val->bit_size);
+      /* If type is set multiple times, the value must be same. */
+      assert(type[component] == nir_type_invalid || type[component] == src_type);
+      type[component] = src_type;
 
-      nir_store_var(b, var, nir_channel(b, store_val, comp), 0x1u);
+      /* Assume we have called nir_lower_io_to_temporaries which store output in the
+       * same block as EmitVertex, so we don't need to use nir_variable for outputs.
+       */
+      output[component] = nir_channel(b, store_val, comp);
    }
 
    nir_instr_remove(&intrin->instr);
@@ -2572,35 +2803,25 @@ lower_ngg_gs_emit_vertex_with_counter(nir_builder *b, nir_intrinsic_instr *intri
    nir_ssa_def *current_vtx_per_prim = intrin->src[1].ssa;
    nir_ssa_def *gs_emit_vtx_addr = ngg_gs_emit_vertex_addr(b, gs_emit_vtx_idx, s);
 
-   for (unsigned slot = 0; slot < VARYING_SLOT_MAX; ++slot) {
+   u_foreach_bit64(slot, b->shader->info.outputs_written) {
       unsigned packed_location = util_bitcount64((b->shader->info.outputs_written & BITFIELD64_MASK(slot)));
       gs_output_info *info = &s->output_info[slot];
+      nir_ssa_def **output = s->outputs[slot];
 
       unsigned mask = gs_output_component_mask_with_stream(info, stream);
-      if (!mask)
-         continue;
-
       while (mask) {
          int start, count;
          u_bit_scan_consecutive_range(&mask, &start, &count);
          nir_ssa_def *values[4] = {0};
          for (int c = start; c < start + count; ++c) {
-            nir_variable *var = s->output_vars[slot][c];
-            if (!var) {
+            if (!output[c]) {
                /* no one write to this output before */
                values[c - start] = nir_ssa_undef(b, 1, 32);
                continue;
             }
 
-            /* Load output from variable. */
-            nir_ssa_def *val = nir_load_var(b, var);
-
             /* extend 8/16 bit to 32 bit, 64 bit has been lowered */
-            unsigned bit_size = glsl_base_type_bit_size(glsl_get_base_type(var->type));
-            values[c - start] = bit_size == 32 ? val : nir_u2u32(b, val);
-
-            /* Clear the variable (it is undefined after emit_vertex) */
-            nir_store_var(b, s->output_vars[slot][c], nir_ssa_undef(b, 1, bit_size), 0x1);
+            values[c - start] = nir_u2uN(b, output[c], 32);
          }
 
          nir_ssa_def *store_val = nir_vec(b, values, (unsigned)count);
@@ -2608,11 +2829,51 @@ lower_ngg_gs_emit_vertex_with_counter(nir_builder *b, nir_intrinsic_instr *intri
                           .base = packed_location * 16 + start * 4,
                           .align_mul = 4);
       }
+
+      /* Clear all outputs (they are undefined after emit_vertex) */
+      memset(s->outputs[slot], 0, sizeof(s->outputs[slot]));
+   }
+
+   /* Store 16bit outputs to LDS. */
+   unsigned num_32bit_outputs = util_bitcount64(b->shader->info.outputs_written);
+   u_foreach_bit(slot, b->shader->info.outputs_written_16bit) {
+      unsigned packed_location = num_32bit_outputs +
+         util_bitcount(b->shader->info.outputs_written_16bit & BITFIELD_MASK(slot));
+
+      unsigned mask_lo = gs_output_component_mask_with_stream(s->output_info_16bit_lo + slot, stream);
+      unsigned mask_hi = gs_output_component_mask_with_stream(s->output_info_16bit_hi + slot, stream);
+      unsigned mask = mask_lo | mask_hi;
+
+      nir_ssa_def **output_lo = s->outputs_16bit_lo[slot];
+      nir_ssa_def **output_hi = s->outputs_16bit_hi[slot];
+      nir_ssa_def *undef = nir_ssa_undef(b, 1, 16);
+
+      while (mask) {
+         int start, count;
+         u_bit_scan_consecutive_range(&mask, &start, &count);
+         nir_ssa_def *values[4] = {0};
+         for (int c = start; c < start + count; ++c) {
+            nir_ssa_def *lo = output_lo[c] ? output_lo[c] : undef;
+            nir_ssa_def *hi = output_hi[c] ? output_hi[c] : undef;
+
+            values[c - start] = nir_pack_32_2x16_split(b, lo, hi);
+         }
+
+         nir_ssa_def *store_val = nir_vec(b, values, (unsigned)count);
+         nir_store_shared(b, store_val, gs_emit_vtx_addr,
+                          .base = packed_location * 16 + start * 4,
+                          .align_mul = 4);
+      }
+
+      /* Clear all outputs (they are undefined after emit_vertex) */
+      memset(s->outputs_16bit_lo[slot], 0, sizeof(s->outputs_16bit_lo[slot]));
+      memset(s->outputs_16bit_hi[slot], 0, sizeof(s->outputs_16bit_hi[slot]));
    }
 
    /* Calculate and store per-vertex primitive flags based on vertex counts:
     * - bit 0: whether this vertex finishes a primitive (a real primitive, not the strip)
     * - bit 1: whether the primitive index is odd (if we are emitting triangle strips, otherwise always 0)
+    *          only set when the vertex also finishes the primitive
     * - bit 2: whether vertex is live (if culling is enabled: set after culling, otherwise always 1)
     */
 
@@ -2626,11 +2887,15 @@ lower_ngg_gs_emit_vertex_with_counter(nir_builder *b, nir_intrinsic_instr *intri
 
    nir_ssa_def *prim_flag = nir_ior(b, vertex_live_flag, complete_flag);
    if (s->num_vertices_per_primitive == 3) {
-      nir_ssa_def *odd = nir_iand_imm(b, current_vtx_per_prim, 1);
-      prim_flag = nir_iadd_nuw(b, prim_flag, nir_ishl(b, odd, nir_imm_int(b, 1)));
+      nir_ssa_def *odd = nir_iand(b, current_vtx_per_prim, complete_flag);
+      nir_ssa_def *odd_flag = nir_ishl(b, odd, nir_imm_int(b, 1));
+      prim_flag = nir_ior(b, prim_flag, odd_flag);
    }
 
-   nir_store_shared(b, nir_u2u8(b, prim_flag), gs_emit_vtx_addr, .base = s->lds_offs_primflags + stream, .align_mul = 4u);
+   nir_store_shared(b, nir_u2u8(b, prim_flag), gs_emit_vtx_addr,
+                    .base = s->lds_offs_primflags + stream,
+                    .align_mul = 4, .align_offset = stream);
+
    nir_instr_remove(&intrin->instr);
    return true;
 }
@@ -2656,13 +2921,13 @@ lower_ngg_gs_set_vertex_and_primitive_count(nir_builder *b, nir_intrinsic_instr 
       return true;
    }
 
-   s->found_out_vtxcnt[stream] = true;
+   s->vertex_count[stream] = intrin->src[0].ssa;
+   s->primitive_count[stream] = intrin->src[1].ssa;
 
    /* Clear the primitive flags of non-emitted vertices */
    if (!nir_src_is_const(intrin->src[0]) || nir_src_as_uint(intrin->src[0]) < b->shader->info.gs.vertices_out)
       ngg_gs_clear_primflags(b, intrin->src[0].ssa, stream, s);
 
-   ngg_gs_shader_query(b, intrin, s);
    nir_instr_remove(&intrin->instr);
    return true;
 }
@@ -2732,7 +2997,7 @@ ngg_gs_export_primitives(nir_builder *b, nir_ssa_def *max_num_out_prims, nir_ssa
    }
 
    nir_ssa_def *arg = emit_pack_ngg_prim_exp_arg(b, s->num_vertices_per_primitive, vtx_indices, is_null_prim, false);
-   nir_export_primitive_amd(b, arg);
+   ac_nir_export_primitive(b, arg);
    nir_pop_if(b, if_prim_export_thread);
 }
 
@@ -2752,42 +3017,12 @@ ngg_gs_export_vertices(nir_builder *b, nir_ssa_def *max_num_out_vtx, nir_ssa_def
       exported_out_vtx_lds_addr = ngg_gs_out_vertex_addr(b, nir_u2u32(b, exported_vtx_idx), s);
    }
 
-   unsigned num_outputs = 0;
-   vs_output outputs[64];
-
-   for (unsigned slot = 0; slot < VARYING_SLOT_MAX; ++slot) {
-      if (!(b->shader->info.outputs_written & BITFIELD64_BIT(slot)))
-         continue;
+   u_foreach_bit64(slot, b->shader->info.outputs_written) {
+      unsigned packed_location =
+         util_bitcount64((b->shader->info.outputs_written & BITFIELD64_MASK(slot)));
 
       gs_output_info *info = &s->output_info[slot];
       unsigned mask = gs_output_component_mask_with_stream(info, 0);
-      if (!mask)
-         continue;
-
-      /* Output has been killed but kept only for xfb.
-       * We have done streamout, so no need to re-build store output.
-       */
-      if ((!nir_slot_is_varying(slot) || info->no_varying) &&
-          (!nir_slot_is_sysval_output(slot) || info->no_sysval_output))
-         continue;
-
-      unsigned packed_location = util_bitcount64((b->shader->info.outputs_written & BITFIELD64_MASK(slot)));
-      nir_io_semantics io_sem = {
-         .location = slot,
-         .num_slots = 1,
-         .no_varying = info->no_varying,
-         .no_sysval_output = info->no_sysval_output,
-      };
-
-      bool is_pos = BITFIELD64_BIT(slot) & POS_EXPORT_MASK;
-
-      vs_output *output = NULL;
-      if (s->options->gfx_level >= GFX11 &&
-          s->options->vs_output_param_offset[slot] <= AC_EXP_PARAM_OFFSET_31) {
-         output = &outputs[num_outputs++];
-         output->slot = slot;
-         memset(output->chan, 0, sizeof(output->chan));
-      }
 
       while (mask) {
          int start, count;
@@ -2797,36 +3032,88 @@ ngg_gs_export_vertices(nir_builder *b, nir_ssa_def *max_num_out_vtx, nir_ssa_def
                             .base = packed_location * 16 + start * 4,
                             .align_mul = 4);
 
-         for (int i = 0; i < count; i++) {
-            nir_variable *var = s->output_vars[slot][start + i];
-            assert(var);
+         for (int i = 0; i < count; i++)
+            s->outputs[slot][start + i] = nir_channel(b, load, i);
+      }
+   }
 
-            nir_ssa_def *val = nir_channel(b, load, i);
+   /* 16bit outputs */
+   unsigned num_32bit_outputs = util_bitcount64(b->shader->info.outputs_written);
+   u_foreach_bit(i, b->shader->info.outputs_written_16bit) {
+      unsigned packed_location = num_32bit_outputs +
+         util_bitcount(b->shader->info.outputs_written_16bit & BITFIELD_MASK(i));
 
-            if (s->options->gfx_level < GFX11 || is_pos) {
-               /* Convert to the expected bit size of the output variable. */
-               unsigned bit_size = glsl_base_type_bit_size(glsl_get_base_type(var->type));
-               if (bit_size != 32)
-                  val = nir_u2u(b, val, bit_size);
+      gs_output_info *info_lo = s->output_info_16bit_lo + i;
+      gs_output_info *info_hi = s->output_info_16bit_hi + i;
+      unsigned mask_lo = gs_output_component_mask_with_stream(info_lo, 0);
+      unsigned mask_hi = gs_output_component_mask_with_stream(info_hi, 0);
+      unsigned mask = mask_lo | mask_hi;
 
-               nir_store_output(b, val, nir_imm_int(b, 0), .base = info->base,
-                                .io_semantics = io_sem, .component = start + i, .write_mask = 1);
-            }
-            if (output)
-               output->chan[start + i] = val;
+      while (mask) {
+         int start, count;
+         u_bit_scan_consecutive_range(&mask, &start, &count);
+         nir_ssa_def *load =
+            nir_load_shared(b, count, 32, exported_out_vtx_lds_addr,
+                            .base = packed_location * 16 + start * 4,
+                            .align_mul = 4);
+
+         for (int j = 0; j < count; j++) {
+            nir_ssa_def *val = nir_channel(b, load, j);
+            unsigned comp = start + j;
+
+            if (mask_lo & BITFIELD_BIT(comp))
+               s->outputs_16bit_lo[i][comp] = nir_unpack_32_2x16_split_x(b, val);
+
+            if (mask_hi & BITFIELD_BIT(comp))
+               s->outputs_16bit_hi[i][comp] = nir_unpack_32_2x16_split_y(b, val);
          }
       }
    }
 
-   nir_export_vertex_amd(b);
+   uint64_t export_outputs = b->shader->info.outputs_written | VARYING_BIT_POS;
+   if (s->options->kill_pointsize)
+      export_outputs &= ~VARYING_BIT_PSIZ;
+
+   const bool wait_attr_ring = s->options->gfx_level == GFX11 && s->options->has_param_exports;
+   if (wait_attr_ring)
+      export_outputs &= ~VARYING_BIT_POS;
+
+   ac_nir_export_position(b, s->options->gfx_level,
+                          s->options->clipdist_enable_mask,
+                          !s->options->has_param_exports,
+                          s->options->force_vrs, !wait_attr_ring,
+                          export_outputs, s->outputs);
+
    nir_pop_if(b, if_vtx_export_thread);
 
-   if (num_outputs) {
-      create_vertex_param_phis(b, num_outputs, outputs);
+   if (s->options->has_param_exports) {
+      b->cursor = nir_after_cf_list(&if_vtx_export_thread->then_list);
 
-      export_vertex_params_gfx11(b, tid_in_tg, max_num_out_vtx, num_outputs, outputs,
-                                 s->options->vs_output_param_offset);
+      if (s->options->gfx_level >= GFX11) {
+         vs_output outputs[64];
+         unsigned num_outputs = gather_vs_outputs(b, outputs,
+                                                  s->options->vs_output_param_offset,
+                                                  s->outputs, s->outputs_16bit_lo,
+                                                  s->outputs_16bit_hi);
+
+         if (num_outputs) {
+            b->cursor = nir_after_cf_list(&s->impl->body);
+            create_vertex_param_phis(b, num_outputs, outputs);
+
+            export_vertex_params_gfx11(b, tid_in_tg, max_num_out_vtx, num_outputs, outputs,
+                                       s->options->vs_output_param_offset);
+         }
+      } else {
+         ac_nir_export_parameters(b, s->options->vs_output_param_offset,
+                                  b->shader->info.outputs_written,
+                                  b->shader->info.outputs_written_16bit,
+                                  s->outputs, s->outputs_16bit_lo,
+                                  s->outputs_16bit_hi);
+      }
    }
+
+   if (wait_attr_ring)
+      export_pos0_wait_attr_ring(b, if_vtx_export_thread, s->outputs, s->options);
 }
 
 static void
@@ -2986,13 +3273,13 @@ ngg_gs_cull_primitive(nir_builder *b, nir_ssa_def *tid_in_tg, nir_ssa_def *max_v
 }
 
 static void
-ngg_gs_build_streamout(nir_builder *b, lower_ngg_gs_state *st)
+ngg_gs_build_streamout(nir_builder *b, lower_ngg_gs_state *s)
 {
    nir_xfb_info *info = b->shader->xfb_info;
 
    nir_ssa_def *tid_in_tg = nir_load_local_invocation_index(b);
    nir_ssa_def *max_vtxcnt = nir_load_workgroup_num_input_vertices_amd(b);
-   nir_ssa_def *out_vtx_lds_addr = ngg_gs_out_vertex_addr(b, tid_in_tg, st);
+   nir_ssa_def *out_vtx_lds_addr = ngg_gs_out_vertex_addr(b, tid_in_tg, s);
    nir_ssa_def *prim_live[4] = {0};
    nir_ssa_def *gen_prim[4] = {0};
    nir_ssa_def *export_seq[4] = {0};
@@ -3002,16 +3289,16 @@ ngg_gs_build_streamout(nir_builder *b, lower_ngg_gs_state *st)
          continue;
 
       out_vtx_primflag[stream] =
-         ngg_gs_load_out_vtx_primflag(b, stream, tid_in_tg, out_vtx_lds_addr, max_vtxcnt, st);
+         ngg_gs_load_out_vtx_primflag(b, stream, tid_in_tg, out_vtx_lds_addr, max_vtxcnt, s);
 
       /* Check bit 0 of primflag for primitive alive, it's set for every last
        * vertex of a primitive.
        */
       prim_live[stream] = nir_i2b(b, nir_iand_imm(b, out_vtx_primflag[stream], 1));
 
-      unsigned scratch_stride = ALIGN(st->max_num_waves, 4);
+      unsigned scratch_stride = ALIGN(s->max_num_waves, 4);
       nir_ssa_def *scratch_base =
-         nir_iadd_imm(b, st->lds_addr_gs_scratch, stream * scratch_stride);
+         nir_iadd_imm(b, s->lds_addr_gs_scratch, stream * scratch_stride);
 
       /* We want to export primitives to streamout buffer in sequence,
        * but not all vertices are alive or mark end of a primitive, so
@@ -3027,7 +3314,7 @@ ngg_gs_build_streamout(nir_builder *b, lower_ngg_gs_state *st)
        */
       wg_repack_result rep =
          repack_invocations_in_workgroup(b, prim_live[stream], scratch_base,
-                                         st->max_num_waves, st->options->wave_size);
+                                         s->max_num_waves, s->options->wave_size);
 
       /* nir_intrinsic_set_vertex_and_primitive_count can also get primitive count of
        * current wave, but still need LDS to sum all wave's count to get workgroup count.
@@ -3048,8 +3335,8 @@ ngg_gs_build_streamout(nir_builder *b, lower_ngg_gs_state *st)
    nir_ssa_def *buffer_offsets[4] = {0};
    nir_ssa_def *so_buffer[4] = {0};
    nir_ssa_def *prim_stride[4] = {0};
-   ngg_build_streamout_buffer_info(b, info, st->options->has_xfb_prim_query,
-                                   st->lds_addr_gs_scratch, tid_in_tg, gen_prim,
+   ngg_build_streamout_buffer_info(b, info, s->options->has_xfb_prim_query,
+                                   s->lds_addr_gs_scratch, tid_in_tg, gen_prim,
                                    prim_stride, so_buffer, buffer_offsets, emit_prim);
 
    for (unsigned stream = 0; stream < 4; stream++) {
@@ -3061,20 +3348,21 @@ ngg_gs_build_streamout(nir_builder *b, lower_ngg_gs_state *st)
       {
          /* Get streamout buffer vertex index for the first vertex of this primitive. */
          nir_ssa_def *vtx_buffer_idx =
-            nir_imul_imm(b, export_seq[stream], st->num_vertices_per_primitive);
+            nir_imul_imm(b, export_seq[stream], s->num_vertices_per_primitive);
 
          /* Get all vertices' lds address of this primitive. */
          nir_ssa_def *exported_vtx_lds_addr[3];
          ngg_gs_out_prim_all_vtxptr(b, tid_in_tg, out_vtx_lds_addr,
-                                    out_vtx_primflag[stream], st,
+                                    out_vtx_primflag[stream], s,
                                     exported_vtx_lds_addr);
 
          /* Write all vertices of this primitive to streamout buffer. */
-         for (unsigned i = 0; i < st->num_vertices_per_primitive; i++) {
+         for (unsigned i = 0; i < s->num_vertices_per_primitive; i++) {
             ngg_build_streamout_vertex(b, info, stream, so_buffer,
                                        buffer_offsets,
                                        nir_iadd_imm(b, vtx_buffer_idx, i),
-                                       exported_vtx_lds_addr[i]);
+                                       exported_vtx_lds_addr[i],
+                                       &s->output_types);
          }
       }
       nir_pop_if(b, if_emit);
@@ -3140,7 +3428,12 @@ ngg_gs_finale(nir_builder *b, lower_ngg_gs_state *s)
 
    /* Allocate export space. We currently don't compact primitives, just use the maximum number. */
    nir_if *if_wave_0 = nir_push_if(b, nir_ieq(b, nir_load_subgroup_id(b), nir_imm_zero(b, 1, 32)));
-   nir_alloc_vertices_and_primitives_amd(b, workgroup_num_vertices, max_prmcnt);
+   {
+      if (s->options->gfx_level == GFX10)
+         alloc_vertices_and_primitives_gfx10_workaround(b, workgroup_num_vertices, max_prmcnt);
+      else
+         nir_alloc_vertices_and_primitives_amd(b, workgroup_num_vertices, max_prmcnt);
+   }
    nir_pop_if(b, if_wave_0);
 
    /* Vertex compaction. This makes sure there are no gaps between threads that export vertices. */
@@ -3176,9 +3469,6 @@ ac_nir_lower_ngg_gs(nir_shader *shader, const ac_nir_lower_ngg_options *options)
          state.const_out_vtxcnt[0] == shader->info.gs.vertices_out &&
          state.const_out_prmcnt[0] != -1;
    }
-
-   if (!state.output_compile_time_known)
-      state.current_clear_primflag_idx_var = nir_local_variable_create(impl, glsl_uint_type(), "current_clear_primflag_idx");
 
    if (shader->info.gs.output_primitive == SHADER_PRIM_POINTS)
       state.num_vertices_per_primitive = 1;
@@ -3221,12 +3511,23 @@ ac_nir_lower_ngg_gs(nir_shader *shader, const ac_nir_lower_ngg_options *options)
 
    /* Lower the GS intrinsics */
    lower_ngg_gs_intrinsics(shader, &state);
-   b->cursor = nir_after_cf_list(&impl->body);
 
-   if (!state.found_out_vtxcnt[0]) {
+   if (!state.vertex_count[0]) {
       fprintf(stderr, "Could not find set_vertex_and_primitive_count for stream 0. This would hang your GPU.");
       abort();
    }
+
+   /* Emit shader queries */
+   b->cursor = nir_after_cf_list(&if_gs_thread->then_list);
+   ac_nir_gs_shader_query(b,
+                          state.options->has_gen_prim_query,
+                          state.options->gfx_level < GFX11,
+                          state.num_vertices_per_primitive,
+                          state.options->wave_size,
+                          state.vertex_count,
+                          state.primitive_count);
+
+   b->cursor = nir_after_cf_list(&impl->body);
 
    /* Emit the finale sequence */
    ngg_gs_finale(b, &state);
@@ -3358,65 +3659,6 @@ ms_store_cull_flag(nir_builder *b,
 }
 
 static nir_ssa_def *
-lower_ms_store_output(nir_builder *b,
-                      nir_intrinsic_instr *intrin,
-                      lower_ngg_ms_state *s)
-{
-   nir_io_semantics io_sem = nir_intrinsic_io_semantics(intrin);
-   nir_ssa_def *store_val = intrin->src[0].ssa;
-
-   /* Component makes no sense here. */
-   assert(nir_intrinsic_component(intrin) == 0);
-
-   if (io_sem.location == VARYING_SLOT_PRIMITIVE_COUNT) {
-      /* Total number of primitives output by the mesh shader workgroup.
-       * This can be read and written by any invocation any number of times.
-       */
-
-      /* Base, offset and component make no sense here. */
-      assert(nir_src_is_const(intrin->src[1]) && nir_src_as_uint(intrin->src[1]) == 0);
-
-      ms_store_num_prims(b, store_val, s);
-   } else if (io_sem.location == VARYING_SLOT_PRIMITIVE_INDICES) {
-      /* Contrary to the name, these are not primitive indices, but
-       * vertex indices for each vertex of the output primitives.
-       * The Mesh NV API has these stored in a flat array.
-       */
-
-      nir_ssa_def *offset_src = nir_get_io_offset_src(intrin)->ssa;
-      ms_store_prim_indices(b, store_val, offset_src, s);
-   } else {
-      unreachable("Invalid mesh shader output");
-   }
-
-   return NIR_LOWER_INSTR_PROGRESS_REPLACE;
-}
-
-static nir_ssa_def *
-lower_ms_load_output(nir_builder *b,
-                     nir_intrinsic_instr *intrin,
-                     lower_ngg_ms_state *s)
-{
-   nir_io_semantics io_sem = nir_intrinsic_io_semantics(intrin);
-
-   /* Component makes no sense here. */
-   assert(nir_intrinsic_component(intrin) == 0);
-
-   if (io_sem.location == VARYING_SLOT_PRIMITIVE_COUNT) {
-      /* Base, offset and component make no sense here. */
-      assert(nir_src_is_const(intrin->src[1]) && nir_src_as_uint(intrin->src[1]) == 0);
-
-      return ms_load_num_prims(b, s);
-   } else if (io_sem.location == VARYING_SLOT_PRIMITIVE_INDICES) {
-      nir_ssa_def *offset_src = nir_get_io_offset_src(intrin)->ssa;
-      nir_ssa_def *index = ms_load_prim_indices(b, offset_src, s);
-      return nir_u2u(b, index, intrin->dest.ssa.bit_size);
-   }
-
-   unreachable("Invalid mesh shader output");
-}
-
-static nir_ssa_def *
 ms_arrayed_output_base_addr(nir_builder *b,
                             nir_ssa_def *arr_index,
                             unsigned driver_location,
@@ -3508,7 +3750,7 @@ regroup_load_val(nir_builder *b, nir_ssa_def *load, unsigned dest_bit_size)
    assert(num_components <= 4);
    nir_ssa_def *components[4] = {0};
    for (unsigned i = 0; i < num_components; ++i)
-      components[i] = nir_u2u(b, nir_channel(b, load, i), dest_bit_size);
+      components[i] = nir_u2uN(b, nir_channel(b, load, i), dest_bit_size);
 
    return nir_vec(b, components, num_components);
 }
@@ -3525,9 +3767,12 @@ ms_get_out_layout_part(unsigned location,
       if (mask & s->layout.lds.prm_attr.mask) {
          *out_mode = ms_out_mode_lds;
          return &s->layout.lds.prm_attr;
-      } else if (mask & s->layout.vram.prm_attr.mask) {
-         *out_mode = ms_out_mode_vram;
-         return &s->layout.vram.prm_attr;
+      } else if (mask & s->layout.scratch_ring.prm_attr.mask) {
+         *out_mode = ms_out_mode_scratch_ring;
+         return &s->layout.scratch_ring.prm_attr;
+      } else if (mask & s->layout.attr_ring.prm_attr.mask) {
+         *out_mode = ms_out_mode_attr_ring;
+         return &s->layout.attr_ring.prm_attr;
       } else if (mask & s->layout.var.prm_attr.mask) {
          *out_mode = ms_out_mode_var;
          return &s->layout.var.prm_attr;
@@ -3536,9 +3781,12 @@ ms_get_out_layout_part(unsigned location,
       if (mask & s->layout.lds.vtx_attr.mask) {
          *out_mode = ms_out_mode_lds;
          return &s->layout.lds.vtx_attr;
-      } else if (mask & s->layout.vram.vtx_attr.mask) {
-         *out_mode = ms_out_mode_vram;
-         return &s->layout.vram.vtx_attr;
+      } else if (mask & s->layout.scratch_ring.vtx_attr.mask) {
+         *out_mode = ms_out_mode_scratch_ring;
+         return &s->layout.scratch_ring.vtx_attr;
+      } else if (mask & s->layout.attr_ring.vtx_attr.mask) {
+         *out_mode = ms_out_mode_attr_ring;
+         return &s->layout.attr_ring.vtx_attr;
       } else if (mask & s->layout.var.vtx_attr.mask) {
          *out_mode = ms_out_mode_var;
          return &s->layout.var.vtx_attr;
@@ -3613,7 +3861,7 @@ ms_store_arrayed_output_intrin(nir_builder *b,
       nir_store_shared(b, store_val, addr, .base = const_off,
                      .write_mask = write_mask, .align_mul = 16,
                      .align_offset = const_off % 16);
-   } else if (out_mode == ms_out_mode_vram) {
+   } else if (out_mode == ms_out_mode_scratch_ring) {
       nir_ssa_def *ring = nir_load_ring_mesh_scratch_amd(b);
       nir_ssa_def *off = nir_load_ring_mesh_scratch_offset_amd(b);
       nir_ssa_def *zero = nir_imm_int(b, 0);
@@ -3622,6 +3870,21 @@ ms_store_arrayed_output_intrin(nir_builder *b,
                            .write_mask = write_mask,
                            .memory_modes = nir_var_shader_out,
                            .access = ACCESS_COHERENT);
+   } else if (out_mode == ms_out_mode_attr_ring) {
+      /* GFX11+: Store params straight to the attribute ring.
+       *
+       * Even though the access pattern may not be the most optimal,
+       * this is still much better than reserving LDS and losing waves.
+       * (Also much better than storing and reloading from the scratch ring.)
+       */
+      const nir_io_semantics io_sem = nir_intrinsic_io_semantics(intrin);
+      unsigned param_offset = s->vs_output_param_offset[io_sem.location];
+      nir_ssa_def *ring = nir_load_ring_attr_amd(b);
+      nir_ssa_def *soffset = nir_load_ring_attr_offset_amd(b);
+      nir_store_buffer_amd(b, store_val, ring, base_addr_off, soffset, arr_index,
+                           .base = const_off + param_offset * 16,
+                           .memory_modes = nir_var_shader_out,
+                           .access = ACCESS_COHERENT | ACCESS_IS_SWIZZLED_AMD);
    } else if (out_mode == ms_out_mode_var) {
       if (store_val->bit_size > 32) {
          /* Split 64-bit store values to 32-bit components. */
@@ -3668,7 +3931,7 @@ ms_load_arrayed_output(nir_builder *b,
       return nir_load_shared(b, num_components, load_bit_size, addr, .align_mul = 16,
                              .align_offset = component_addr_off % 16,
                              .base = const_off);
-   } else if (out_mode == ms_out_mode_vram) {
+   } else if (out_mode == ms_out_mode_scratch_ring) {
       nir_ssa_def *ring = nir_load_ring_mesh_scratch_amd(b);
       nir_ssa_def *off = nir_load_ring_mesh_scratch_offset_amd(b);
       nir_ssa_def *zero = nir_imm_int(b, 0);
@@ -3769,10 +4032,6 @@ lower_ms_intrinsic(nir_builder *b, nir_instr *instr, void *state)
    nir_intrinsic_instr *intrin = nir_instr_as_intrinsic(instr);
 
    switch (intrin->intrinsic) {
-   case nir_intrinsic_store_output:
-      return lower_ms_store_output(b, intrin, s);
-   case nir_intrinsic_load_output:
-      return lower_ms_load_output(b, intrin, s);
    case nir_intrinsic_store_per_vertex_output:
    case nir_intrinsic_store_per_primitive_output:
       ms_store_arrayed_output_intrin(b, intrin, s);
@@ -3793,7 +4052,7 @@ lower_ms_intrinsic(nir_builder *b, nir_instr *instr, void *state)
 
 static bool
 filter_ms_intrinsic(const nir_instr *instr,
-                    UNUSED const void *st)
+                    UNUSED const void *s)
 {
    if (instr->type != nir_instr_type_intrinsic)
       return false;
@@ -3828,7 +4087,6 @@ ms_emit_arrayed_outputs(nir_builder *b,
       /* Should not occour here, handled separately. */
       assert(slot != VARYING_SLOT_PRIMITIVE_COUNT && slot != VARYING_SLOT_PRIMITIVE_INDICES);
 
-      const nir_io_semantics io_sem = { .location = slot, .num_slots = 1 };
       unsigned component_mask = s->output_info[slot].components_mask;
 
       while (component_mask) {
@@ -3839,17 +4097,15 @@ ms_emit_arrayed_outputs(nir_builder *b,
             ms_load_arrayed_output(b, invocation_index, zero, slot, start_comp,
                                    num_components, 32, s);
 
-         nir_store_output(b, load, nir_imm_int(b, 0), .base = slot, .component = start_comp,
-                          .io_semantics = io_sem);
+         for (int i = 0; i < num_components; i++)
+            s->outputs[slot][start_comp + i] = nir_channel(b, load, i);
       }
    }
 }
 
 static void
-emit_ms_prelude(nir_builder *b, lower_ngg_ms_state *s)
+ms_create_same_invocation_vars(nir_builder *b, lower_ngg_ms_state *s)
 {
-   b->cursor = nir_before_cf_list(&b->impl->body);
-
    /* Initialize NIR variables for same-invocation outputs. */
    uint64_t same_invocation_output_mask = s->layout.var.prm_attr.mask | s->layout.var.vtx_attr.mask;
 
@@ -3859,15 +4115,23 @@ emit_ms_prelude(nir_builder *b, lower_ngg_ms_state *s)
          s->out_variables[idx] = nir_local_variable_create(b->impl, glsl_uint_type(), "ms_var_output");
       }
    }
+}
 
-   bool uses_workgroup_id =
-      BITSET_TEST(b->shader->info.system_values_read, SYSTEM_VALUE_WORKGROUP_ID) ||
-      BITSET_TEST(b->shader->info.system_values_read, SYSTEM_VALUE_WORKGROUP_INDEX);
+static void
+ms_emit_legacy_workgroup_index(nir_builder *b, lower_ngg_ms_state *s)
+{
+   /* Workgroup ID should have been lowered to workgroup index. */
+   assert(!BITSET_TEST(b->shader->info.system_values_read, SYSTEM_VALUE_WORKGROUP_ID));
 
-   if (!uses_workgroup_id)
+   /* No need to do anything if the shader doesn't use the workgroup index. */
+   if (!BITSET_TEST(b->shader->info.system_values_read, SYSTEM_VALUE_WORKGROUP_INDEX))
       return;
 
-   /* The HW doesn't support a proper workgroup index for vertex processing stages,
+   b->cursor = nir_before_cf_list(&b->impl->body);
+
+   /* Legacy fast launch mode (FAST_LAUNCH=1):
+    *
+    * The HW doesn't support a proper workgroup index for vertex processing stages,
     * so we use the vertex ID which is equivalent to the index of the current workgroup
     * within the current dispatch.
     *
@@ -3916,45 +4180,6 @@ emit_ms_prelude(nir_builder *b, lower_ngg_ms_state *s)
 
    workgroup_index = nir_if_phi(b, workgroup_index, dont_care);
    s->workgroup_index = nir_read_first_invocation(b, workgroup_index);
-}
-
-static void
-set_nv_ms_final_output_counts(nir_builder *b,
-                               lower_ngg_ms_state *s,
-                               nir_ssa_def **out_num_prm,
-                               nir_ssa_def **out_num_vtx)
-{
-   /* Limitations of the NV extension:
-    * - Number of primitives can be written and read by any invocation,
-    *   so we have to store/load it to/from LDS to make sure the general case works.
-    * - Number of vertices is not actually known, so we just always use the
-    *   maximum number here.
-    */
-   nir_ssa_def *loaded_num_prm;
-   nir_ssa_def *dont_care = nir_ssa_undef(b, 1, 32);
-   nir_if *if_elected = nir_push_if(b, nir_elect(b, 1));
-   {
-      loaded_num_prm = ms_load_num_prims(b, s);
-   }
-   nir_pop_if(b, if_elected);
-   loaded_num_prm = nir_if_phi(b, loaded_num_prm, dont_care);
-   nir_ssa_def *num_prm = nir_read_first_invocation(b, loaded_num_prm);
-   nir_ssa_def *num_vtx = nir_imm_int(b, b->shader->info.mesh.max_vertices_out);
-   num_prm = nir_umin(b, num_prm, nir_imm_int(b, b->shader->info.mesh.max_primitives_out));
-
-   /* If the shader doesn't actually create any primitives, don't allocate any output. */
-   num_vtx = nir_bcsel(b, nir_ieq_imm(b, num_prm, 0), nir_imm_int(b, 0), num_vtx);
-
-   /* Emit GS_ALLOC_REQ on Wave 0 to let the HW know the output size. */
-   nir_ssa_def *wave_id = nir_load_subgroup_id(b);
-   nir_if *if_wave_0 = nir_push_if(b, nir_ieq_imm(b, wave_id, 0));
-   {
-      nir_alloc_vertices_and_primitives_amd(b, num_vtx, num_prm);
-   }
-   nir_pop_if(b, if_wave_0);
-
-   *out_num_prm = num_prm;
-   *out_num_vtx = num_vtx;
 }
 
 static void
@@ -4037,6 +4262,137 @@ set_ms_final_output_counts(nir_builder *b,
 }
 
 static void
+ms_emit_attribute_ring_output_stores(nir_builder *b, const uint64_t outputs_mask,
+                                     lower_ngg_ms_state *s)
+{
+   if (!outputs_mask)
+      return;
+
+   nir_ssa_def *idx = nir_load_local_invocation_index(b);
+   nir_ssa_def *ring = nir_load_ring_attr_amd(b);
+   nir_ssa_def *off = nir_load_ring_attr_offset_amd(b);
+   nir_ssa_def *zero = nir_imm_int(b, 0);
+
+   u_foreach_bit64 (slot, outputs_mask) {
+      if (s->vs_output_param_offset[slot] > AC_EXP_PARAM_OFFSET_31)
+         continue;
+
+      nir_ssa_def *soffset = nir_iadd_imm(b, off, s->vs_output_param_offset[slot] * 16 * 32);
+      nir_ssa_def *store_val = nir_ssa_undef(b, 4, 32);
+      unsigned store_val_components = 0;
+      for (unsigned c = 0; c < 4; ++c) {
+         if (s->outputs[slot][c]) {
+            store_val = nir_vector_insert_imm(b, store_val, s->outputs[slot][c], c);
+            store_val_components = c + 1;
+         }
+      }
+
+      store_val = nir_trim_vector(b, store_val, store_val_components);
+      nir_store_buffer_amd(b, store_val, ring, zero, soffset, idx,
+                           .memory_modes = nir_var_shader_out,
+                           .access = ACCESS_COHERENT | ACCESS_IS_SWIZZLED_AMD);
+   }
+}
+
+static nir_ssa_def *
+ms_prim_exp_arg_ch1(nir_builder *b, nir_ssa_def *invocation_index, nir_ssa_def *num_vtx, lower_ngg_ms_state *s)
+{
+   /* Primitive connectivity data: describes which vertices the primitive uses. */
+   nir_ssa_def *prim_idx_addr = nir_imul_imm(b, invocation_index, s->vertices_per_prim);
+   nir_ssa_def *indices_loaded = NULL;
+   nir_ssa_def *cull_flag = NULL;
+
+   if (s->layout.var.prm_attr.mask & BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_INDICES)) {
+      nir_ssa_def *indices[3] = {0};
+      for (unsigned c = 0; c < s->vertices_per_prim; ++c)
+         indices[c] = nir_load_var(b, s->out_variables[VARYING_SLOT_PRIMITIVE_INDICES * 4 + c]);
+      indices_loaded = nir_vec(b, indices, s->vertices_per_prim);
+   } else {
+      indices_loaded = nir_load_shared(b, s->vertices_per_prim, 8, prim_idx_addr, .base = s->layout.lds.indices_addr);
+      indices_loaded = nir_u2u32(b, indices_loaded);
+   }
+
+   if (s->uses_cull_flags) {
+      nir_ssa_def *loaded_cull_flag = NULL;
+      if (s->layout.var.prm_attr.mask & BITFIELD64_BIT(VARYING_SLOT_CULL_PRIMITIVE))
+         loaded_cull_flag = nir_load_var(b, s->out_variables[VARYING_SLOT_CULL_PRIMITIVE * 4]);
+      else
+         loaded_cull_flag = nir_u2u32(b, nir_load_shared(b, 1, 8, prim_idx_addr, .base = s->layout.lds.cull_flags_addr));
+
+      cull_flag = nir_i2b(b, loaded_cull_flag);
+   }
+
+   nir_ssa_def *indices[3];
+   nir_ssa_def *max_vtx_idx = nir_iadd_imm(b, num_vtx, -1u);
+
+   for (unsigned i = 0; i < s->vertices_per_prim; ++i) {
+      indices[i] = nir_channel(b, indices_loaded, i);
+      indices[i] = nir_umin(b, indices[i], max_vtx_idx);
+   }
+
+   return emit_pack_ngg_prim_exp_arg(b, s->vertices_per_prim, indices, cull_flag, false);
+}
+
+static nir_ssa_def *
+ms_prim_exp_arg_ch2(nir_builder *b, uint64_t outputs_mask, lower_ngg_ms_state *s)
+{
+   nir_ssa_def *prim_exp_arg_ch2 = NULL;
+
+   if (outputs_mask) {
+      /* When layer, viewport etc. are per-primitive, they need to be encoded in
+       * the primitive export instruction's second channel. The encoding is:
+       *
+       * --- GFX10.3 ---
+       * bits 31..30: VRS rate Y
+       * bits 29..28: VRS rate X
+       * bits 23..20: viewport
+       * bits 19..17: layer
+       *
+       * --- GFX11 ---
+       * bits 31..28: VRS rate enum
+       * bits 23..20: viewport
+       * bits 12..00: layer
+       */
+      prim_exp_arg_ch2 = nir_imm_int(b, 0);
+
+      if (outputs_mask & VARYING_BIT_LAYER) {
+         nir_ssa_def *layer =
+            nir_ishl_imm(b, s->outputs[VARYING_SLOT_LAYER][0], s->gfx_level >= GFX11 ? 0 : 17);
+         prim_exp_arg_ch2 = nir_ior(b, prim_exp_arg_ch2, layer);
+      }
+
+      if (outputs_mask & VARYING_BIT_VIEWPORT) {
+         nir_ssa_def *view = nir_ishl_imm(b, s->outputs[VARYING_SLOT_VIEWPORT][0], 20);
+         prim_exp_arg_ch2 = nir_ior(b, prim_exp_arg_ch2, view);
+      }
+
+      if (outputs_mask & VARYING_BIT_PRIMITIVE_SHADING_RATE) {
+         nir_ssa_def *rate = s->outputs[VARYING_SLOT_PRIMITIVE_SHADING_RATE][0];
+         prim_exp_arg_ch2 = nir_ior(b, prim_exp_arg_ch2, rate);
+      }
+   }
+
+   return prim_exp_arg_ch2;
+}
+
+static void
+ms_emit_primitive_export(nir_builder *b,
+                         nir_ssa_def *invocation_index,
+                         nir_ssa_def *num_vtx,
+                         uint64_t per_primitive_outputs,
+                         lower_ngg_ms_state *s)
+{
+   const uint64_t outputs_mask = per_primitive_outputs & MS_PRIM_ARG_EXP_MASK;
+   nir_ssa_def *prim_exp_arg_ch1 = ms_prim_exp_arg_ch1(b, invocation_index, num_vtx, s);
+   nir_ssa_def *prim_exp_arg_ch2 = ms_prim_exp_arg_ch2(b, outputs_mask, s);
+
+   nir_ssa_def *prim_exp_arg = prim_exp_arg_ch2 ?
+      nir_vec2(b, prim_exp_arg_ch1, prim_exp_arg_ch2) : prim_exp_arg_ch1;
+
+   ac_nir_export_primitive(b, prim_exp_arg);
+}
+
+static void
 emit_ms_finale(nir_builder *b, lower_ngg_ms_state *s)
 {
    /* We assume there is always a single end block in the shader. */
@@ -4049,10 +4405,7 @@ emit_ms_finale(nir_builder *b, lower_ngg_ms_state *s)
    nir_ssa_def *num_prm;
    nir_ssa_def *num_vtx;
 
-   if (b->shader->info.mesh.nv)
-      set_nv_ms_final_output_counts(b, s, &num_prm, &num_vtx);
-   else
-      set_ms_final_output_counts(b, s, &num_prm, &num_vtx);
+   set_ms_final_output_counts(b, s, &num_prm, &num_vtx);
 
    nir_ssa_def *invocation_index = nir_load_local_invocation_index(b);
 
@@ -4064,70 +4417,117 @@ emit_ms_finale(nir_builder *b, lower_ngg_ms_state *s)
     * current thread's vertex attributes in a way the HW can export.
     */
 
-   /* Export vertices. */
-   nir_ssa_def *has_output_vertex = nir_ilt(b, invocation_index, num_vtx);
-   nir_if *if_has_output_vertex = nir_push_if(b, has_output_vertex);
-   {
-      /* All per-vertex attributes. */
-      ms_emit_arrayed_outputs(b, invocation_index, s->per_vertex_outputs, s);
-      nir_export_vertex_amd(b);
+   uint64_t per_vertex_outputs =
+      s->per_vertex_outputs & ~s->layout.attr_ring.vtx_attr.mask;
+   uint64_t per_primitive_outputs =
+      s->per_primitive_outputs & ~s->layout.attr_ring.prm_attr.mask & ~SPECIAL_MS_OUT_MASK;
+
+   /* Insert layer output store if the pipeline uses multiview but the API shader doesn't write it. */
+   if (s->insert_layer_output) {
+      b->shader->info.outputs_written |= VARYING_BIT_LAYER;
+      b->shader->info.per_primitive_outputs |= VARYING_BIT_LAYER;
+      per_primitive_outputs |= VARYING_BIT_LAYER;
    }
-   nir_pop_if(b, if_has_output_vertex);
+
+   const bool has_special_param_exports =
+      (per_vertex_outputs & MS_VERT_ARG_EXP_MASK) ||
+      (per_primitive_outputs & MS_PRIM_ARG_EXP_MASK);
+
+   const bool wait_attr_ring = s->gfx_level == GFX11 && has_special_param_exports;
+
+   /* Export vertices. */
+   if ((per_vertex_outputs & ~VARYING_BIT_POS) || !wait_attr_ring) {
+      nir_ssa_def *has_output_vertex = nir_ilt(b, invocation_index, num_vtx);
+      nir_if *if_has_output_vertex = nir_push_if(b, has_output_vertex);
+      {
+         ms_emit_arrayed_outputs(b, invocation_index, per_vertex_outputs, s);
+
+         if (!wait_attr_ring)
+            ac_nir_export_position(b, s->gfx_level, s->clipdist_enable_mask,
+                                 !s->has_param_exports, false, true,
+                                 s->per_vertex_outputs | VARYING_BIT_POS, s->outputs);
+
+         /* Export generic attributes on GFX10.3
+         * (On GFX11 they are already stored in the attribute ring.)
+         */
+         if (s->has_param_exports && s->gfx_level == GFX10_3) {
+            ac_nir_export_parameters(b, s->vs_output_param_offset, per_vertex_outputs, 0, s->outputs,
+                                    NULL, NULL);
+         }
+
+         /* GFX11+: also store special outputs to the attribute ring so PS can load them. */
+         if (s->gfx_level >= GFX11 && (per_vertex_outputs & MS_VERT_ARG_EXP_MASK)) {
+            ms_emit_attribute_ring_output_stores(b, per_vertex_outputs & MS_VERT_ARG_EXP_MASK, s);
+         }
+      }
+      nir_pop_if(b, if_has_output_vertex);
+   }
 
    /* Export primitives. */
-   nir_ssa_def *has_output_primitive = nir_ilt(b, invocation_index, num_prm);
-   nir_if *if_has_output_primitive = nir_push_if(b, has_output_primitive);
-   {
-      /* Generic per-primitive attributes. */
-      ms_emit_arrayed_outputs(b, invocation_index, s->per_primitive_outputs & ~SPECIAL_MS_OUT_MASK, s);
+   if (per_primitive_outputs || !wait_attr_ring) {
+      nir_ssa_def *has_output_primitive = nir_ilt(b, invocation_index, num_prm);
+      nir_if *if_has_output_primitive = nir_push_if(b, has_output_primitive);
+      {
+         ms_emit_arrayed_outputs(b, invocation_index, per_primitive_outputs, s);
 
-      /* Insert layer output store if the pipeline uses multiview but the API shader doesn't write it. */
-      if (s->insert_layer_output) {
-         nir_ssa_def *layer = nir_load_view_index(b);
-         const nir_io_semantics io_sem = { .location = VARYING_SLOT_LAYER, .num_slots = 1 };
-         nir_store_output(b, layer, nir_imm_int(b, 0), .base = VARYING_SLOT_LAYER, .component = 0, .io_semantics = io_sem);
-         b->shader->info.outputs_written |= VARYING_BIT_LAYER;
-         b->shader->info.per_primitive_outputs |= VARYING_BIT_LAYER;
+         /* Insert layer output store if the pipeline uses multiview but the API shader doesn't write it. */
+         if (s->insert_layer_output) {
+            s->outputs[VARYING_SLOT_LAYER][0] = nir_load_view_index(b);
+         }
+
+         if (!wait_attr_ring)
+            ms_emit_primitive_export(b, invocation_index, num_vtx, per_primitive_outputs, s);
+
+         /* Export generic attributes on GFX10.3
+         * (On GFX11 they are already stored in the attribute ring.)
+         */
+         if (s->has_param_exports && s->gfx_level == GFX10_3) {
+            ac_nir_export_parameters(b, s->vs_output_param_offset, per_primitive_outputs, 0,
+                                    s->outputs, NULL, NULL);
+         }
+
+         /* GFX11+: also store special per-primitive outputs to the attribute ring so PS can load them. */
+         if (s->gfx_level >= GFX11) {
+            ms_emit_attribute_ring_output_stores(b, per_primitive_outputs & MS_PRIM_ARG_EXP_MASK, s);
+         }
       }
-
-      /* Primitive connectivity data: describes which vertices the primitive uses. */
-      nir_ssa_def *prim_idx_addr = nir_imul_imm(b, invocation_index, s->vertices_per_prim);
-      nir_ssa_def *indices_loaded = NULL;
-      nir_ssa_def *cull_flag = NULL;
-
-      if (s->layout.var.prm_attr.mask & BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_INDICES)) {
-         nir_ssa_def *indices[3] = {0};
-         for (unsigned c = 0; c < s->vertices_per_prim; ++c)
-            indices[c] = nir_load_var(b, s->out_variables[VARYING_SLOT_PRIMITIVE_INDICES * 4 + c]);
-         indices_loaded = nir_vec(b, indices, s->vertices_per_prim);
-      }
-      else {
-         indices_loaded = nir_load_shared(b, s->vertices_per_prim, 8, prim_idx_addr, .base = s->layout.lds.indices_addr);
-         indices_loaded = nir_u2u32(b, indices_loaded);
-      }
-
-      if (s->uses_cull_flags) {
-         nir_ssa_def *loaded_cull_flag = NULL;
-         if (s->layout.var.prm_attr.mask & BITFIELD64_BIT(VARYING_SLOT_CULL_PRIMITIVE))
-            loaded_cull_flag = nir_load_var(b, s->out_variables[VARYING_SLOT_CULL_PRIMITIVE * 4]);
-         else
-            loaded_cull_flag = nir_u2u32(b, nir_load_shared(b, 1, 8, prim_idx_addr, .base = s->layout.lds.cull_flags_addr));
-
-         cull_flag = nir_i2b1(b, loaded_cull_flag);
-      }
-
-      nir_ssa_def *indices[3];
-      nir_ssa_def *max_vtx_idx = nir_iadd_imm(b, num_vtx, -1u);
-
-      for (unsigned i = 0; i < s->vertices_per_prim; ++i) {
-         indices[i] = nir_channel(b, indices_loaded, i);
-         indices[i] = nir_umin(b, indices[i], max_vtx_idx);
-      }
-
-      nir_ssa_def *prim_exp_arg = emit_pack_ngg_prim_exp_arg(b, s->vertices_per_prim, indices, cull_flag, false);
-      nir_export_primitive_amd(b, prim_exp_arg);
+      nir_pop_if(b, if_has_output_primitive);
    }
-   nir_pop_if(b, if_has_output_primitive);
+
+   /* When we need to wait for attribute ring stores, we emit both position and primitive
+    * export instructions after a barrier to make sure both per-vertex and per-primitive
+    * attribute ring stores are finished before the GPU starts rasterization.
+    */
+   if (wait_attr_ring) {
+      /* Wait for attribute stores to finish. */
+      nir_scoped_barrier(b, .execution_scope = NIR_SCOPE_SUBGROUP,
+                            .memory_scope = NIR_SCOPE_DEVICE,
+                            .memory_semantics = NIR_MEMORY_RELEASE,
+                            .memory_modes = nir_var_shader_out);
+
+      /* Position export only */
+      nir_ssa_def *has_output_vertex = nir_ilt(b, invocation_index, num_vtx);
+      nir_if *if_has_output_vertex = nir_push_if(b, has_output_vertex);
+      {
+         ms_emit_arrayed_outputs(b, invocation_index, per_vertex_outputs, s);
+         ac_nir_export_position(b, s->gfx_level, s->clipdist_enable_mask,
+                                !s->has_param_exports, false, true,
+                                s->per_vertex_outputs | VARYING_BIT_POS, s->outputs);
+      }
+      nir_pop_if(b, if_has_output_vertex);
+
+      nir_ssa_def *has_output_primitive = nir_ilt(b, invocation_index, num_prm);
+      nir_if *if_has_output_primitive = nir_push_if(b, has_output_primitive);
+      {
+         ms_emit_arrayed_outputs(b, invocation_index, per_primitive_outputs, s);
+         if (s->insert_layer_output) {
+            s->outputs[VARYING_SLOT_LAYER][0] = nir_load_view_index(b);
+         }
+
+         ms_emit_primitive_export(b, invocation_index, num_vtx, per_primitive_outputs, s);
+      }
+      nir_pop_if(b, if_has_output_primitive);
+   }
 }
 
 static void
@@ -4292,23 +4692,39 @@ ms_calculate_arrayed_output_layout(ms_out_mem_layout *l,
    l->lds.prm_attr.addr = ALIGN(l->lds.vtx_attr.addr + lds_vtx_attr_size, 16);
    l->lds.total_size = l->lds.prm_attr.addr + lds_prm_attr_size;
 
-   uint32_t vram_vtx_attr_size = util_bitcount64(l->vram.vtx_attr.mask) * max_vertices * 16;
-   l->vram.prm_attr.addr = ALIGN(l->vram.vtx_attr.addr + vram_vtx_attr_size, 16);
+   uint32_t scratch_ring_vtx_attr_size =
+      util_bitcount64(l->scratch_ring.vtx_attr.mask) * max_vertices * 16;
+   l->scratch_ring.prm_attr.addr =
+      ALIGN(l->scratch_ring.vtx_attr.addr + scratch_ring_vtx_attr_size, 16);
 }
 
 static ms_out_mem_layout
-ms_calculate_output_layout(unsigned api_shared_size,
-                           uint64_t per_vertex_output_mask,
-                           uint64_t per_primitive_output_mask,
-                           uint64_t cross_invocation_output_access,
-                           unsigned max_vertices,
-                           unsigned max_primitives,
-                           unsigned vertices_per_prim)
+ms_calculate_output_layout(enum amd_gfx_level gfx_level, unsigned api_shared_size,
+                           uint64_t per_vertex_output_mask, uint64_t per_primitive_output_mask,
+                           uint64_t cross_invocation_output_access, unsigned max_vertices,
+                           unsigned max_primitives, unsigned vertices_per_prim)
 {
+   /* These outputs always need export instructions and can't use the attributes ring. */
+   const uint64_t always_export_mask =
+      VARYING_BIT_POS | VARYING_BIT_CULL_DIST0 | VARYING_BIT_CULL_DIST1 | VARYING_BIT_CLIP_DIST0 |
+      VARYING_BIT_CLIP_DIST1 | VARYING_BIT_PSIZ | VARYING_BIT_VIEWPORT |
+      VARYING_BIT_PRIMITIVE_SHADING_RATE | VARYING_BIT_LAYER |
+      BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_COUNT) |
+      BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_INDICES) | BITFIELD64_BIT(VARYING_SLOT_CULL_PRIMITIVE);
+
+   const bool use_attr_ring = gfx_level >= GFX11;
+   const uint64_t attr_ring_per_vertex_output_mask =
+      use_attr_ring ? per_vertex_output_mask & ~always_export_mask : 0;
+   const uint64_t attr_ring_per_primitive_output_mask =
+      use_attr_ring ? per_primitive_output_mask & ~always_export_mask : 0;
+
    const uint64_t lds_per_vertex_output_mask =
-      per_vertex_output_mask & cross_invocation_output_access & ~SPECIAL_MS_OUT_MASK;
+      per_vertex_output_mask & ~attr_ring_per_vertex_output_mask & cross_invocation_output_access &
+      ~SPECIAL_MS_OUT_MASK;
    const uint64_t lds_per_primitive_output_mask =
-      per_primitive_output_mask & cross_invocation_output_access & ~SPECIAL_MS_OUT_MASK;
+      per_primitive_output_mask & ~attr_ring_per_primitive_output_mask &
+      cross_invocation_output_access & ~SPECIAL_MS_OUT_MASK;
+
    const bool cross_invocation_indices =
       cross_invocation_output_access & BITFIELD64_BIT(VARYING_SLOT_PRIMITIVE_INDICES);
    const bool cross_invocation_cull_primitive =
@@ -4317,9 +4733,15 @@ ms_calculate_output_layout(unsigned api_shared_size,
    /* Shared memory used by the API shader. */
    ms_out_mem_layout l = { .lds = { .total_size = api_shared_size } };
 
+   /* GFX11+: use attribute ring for all generic attributes. */
+   l.attr_ring.vtx_attr.mask = attr_ring_per_vertex_output_mask;
+   l.attr_ring.prm_attr.mask = attr_ring_per_primitive_output_mask;
+
    /* Outputs without cross-invocation access can be stored in variables. */
-   l.var.vtx_attr.mask = per_vertex_output_mask & ~cross_invocation_output_access;
-   l.var.prm_attr.mask = per_primitive_output_mask & ~cross_invocation_output_access;
+   l.var.vtx_attr.mask =
+      per_vertex_output_mask & ~attr_ring_per_vertex_output_mask & ~cross_invocation_output_access;
+   l.var.prm_attr.mask = per_primitive_output_mask & ~attr_ring_per_primitive_output_mask &
+                         ~cross_invocation_output_access;
 
    /* Workgroup information, see ms_workgroup_* for the layout. */
    l.lds.workgroup_info_addr = ALIGN(l.lds.total_size, 16);
@@ -4347,9 +4769,9 @@ ms_calculate_output_layout(unsigned api_shared_size,
       (cross_invocation_cull_primitive || cross_invocation_indices) ? 30 : 31;
    while (l.lds.total_size >= usable_lds_kbytes * 1024) {
       if (l.lds.prm_attr.mask)
-         ms_move_output(&l.lds.prm_attr, &l.vram.prm_attr);
+         ms_move_output(&l.lds.prm_attr, &l.scratch_ring.prm_attr);
       else if (l.lds.vtx_attr.mask)
-         ms_move_output(&l.lds.vtx_attr, &l.vram.vtx_attr);
+         ms_move_output(&l.lds.vtx_attr, &l.scratch_ring.vtx_attr);
       else
          unreachable("API shader uses too much shared memory.");
 
@@ -4375,6 +4797,10 @@ ms_calculate_output_layout(unsigned api_shared_size,
 
 void
 ac_nir_lower_ngg_ms(nir_shader *shader,
+                    enum amd_gfx_level gfx_level,
+                    uint32_t clipdist_enable_mask,
+                    const uint8_t *vs_output_param_offset,
+                    bool has_param_exports,
                     bool *out_needs_scratch_ring,
                     unsigned wave_size,
                     bool multiview)
@@ -4393,20 +4819,15 @@ ac_nir_lower_ngg_ms(nir_shader *shader,
    uint64_t cross_invocation_access = shader->info.mesh.ms_cross_invocation_output_access |
                                       shader->info.outputs_accessed_indirectly;
 
-   if (shader->info.mesh.nv) {
-      per_primitive_outputs &= ~SPECIAL_MS_OUT_MASK;
-      cross_invocation_access |= SPECIAL_MS_OUT_MASK;
-   }
-
    unsigned max_vertices = shader->info.mesh.max_vertices_out;
    unsigned max_primitives = shader->info.mesh.max_primitives_out;
 
-   ms_out_mem_layout layout =
-      ms_calculate_output_layout(shader->info.shared_size, per_vertex_outputs, per_primitive_outputs,
-                                 cross_invocation_access, max_vertices, max_primitives, vertices_per_prim);
+   ms_out_mem_layout layout = ms_calculate_output_layout(
+      gfx_level, shader->info.shared_size, per_vertex_outputs, per_primitive_outputs,
+      cross_invocation_access, max_vertices, max_primitives, vertices_per_prim);
 
    shader->info.shared_size = layout.lds.total_size;
-   *out_needs_scratch_ring = layout.vram.vtx_attr.mask || layout.vram.prm_attr.mask;
+   *out_needs_scratch_ring = layout.scratch_ring.vtx_attr.mask || layout.scratch_ring.prm_attr.mask;
 
    /* The workgroup size that is specified by the API shader may be different
     * from the size of the workgroup that actually runs on the HW, due to the
@@ -4432,6 +4853,10 @@ ac_nir_lower_ngg_ms(nir_shader *shader,
       .hw_workgroup_size = hw_workgroup_size,
       .insert_layer_output = multiview && !(shader->info.outputs_written & VARYING_BIT_LAYER),
       .uses_cull_flags = uses_cull,
+      .gfx_level = gfx_level,
+      .clipdist_enable_mask = clipdist_enable_mask,
+      .vs_output_param_offset = vs_output_param_offset,
+      .has_param_exports = has_param_exports,
    };
 
    nir_function_impl *impl = nir_shader_get_entrypoint(shader);
@@ -4448,7 +4873,8 @@ ac_nir_lower_ngg_ms(nir_shader *shader,
    b->cursor = nir_before_cf_list(&impl->body);
 
    handle_smaller_ms_api_workgroup(b, &state);
-   emit_ms_prelude(b, &state);
+   ms_emit_legacy_workgroup_index(b, &state);
+   ms_create_same_invocation_vars(b, &state);
    nir_metadata_preserve(impl, nir_metadata_none);
 
    lower_ms_intrinsics(shader, &state);

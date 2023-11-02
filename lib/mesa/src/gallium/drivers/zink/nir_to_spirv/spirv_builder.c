@@ -174,6 +174,18 @@ spirv_builder_emit_exec_mode_literal3(struct spirv_builder *b, SpvId entry_point
 }
 
 void
+spirv_builder_emit_exec_mode_id3(struct spirv_builder *b, SpvId entry_point,
+                                SpvExecutionMode exec_mode, SpvId param[3])
+{
+   spirv_buffer_prepare(&b->exec_modes, b->mem_ctx, 6);
+   spirv_buffer_emit_word(&b->exec_modes, SpvOpExecutionModeId | (6 << 16));
+   spirv_buffer_emit_word(&b->exec_modes, entry_point);
+   spirv_buffer_emit_word(&b->exec_modes, exec_mode);
+   for (unsigned i = 0; i < 3; i++)
+      spirv_buffer_emit_word(&b->exec_modes, param[i]);
+}
+
+void
 spirv_builder_emit_exec_mode(struct spirv_builder *b, SpvId entry_point,
                              SpvExecutionMode exec_mode)
 {
@@ -767,6 +779,13 @@ spirv_builder_emit_kill(struct spirv_builder *b)
 }
 
 void
+spirv_builder_emit_terminate(struct spirv_builder *b)
+{
+   spirv_buffer_prepare(&b->instructions, b->mem_ctx, 1);
+   spirv_buffer_emit_word(&b->instructions, SpvOpTerminateInvocation | (1 << 16));
+}
+
+void
 spirv_builder_emit_demote(struct spirv_builder *b)
 {
    spirv_buffer_prepare(&b->instructions, b->mem_ctx, 1);
@@ -1287,6 +1306,12 @@ SpvId
 spirv_builder_type_int(struct spirv_builder *b, unsigned width)
 {
    uint32_t args[] = { width, 1 };
+   if (width == 8)
+      spirv_builder_emit_cap(b, SpvCapabilityInt8);
+   else if (width == 16)
+      spirv_builder_emit_cap(b, SpvCapabilityInt16);
+   else if (width == 64)
+      spirv_builder_emit_cap(b, SpvCapabilityInt64);
    return get_type_def(b, SpvOpTypeInt, args, ARRAY_SIZE(args));
 }
 

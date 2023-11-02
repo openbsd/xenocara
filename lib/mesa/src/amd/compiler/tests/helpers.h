@@ -80,6 +80,7 @@ bool setup_cs(const char *input_spec, enum amd_gfx_level gfx_level,
 void finish_program(aco::Program *program);
 void finish_validator_test();
 void finish_opt_test();
+void finish_setup_reduce_temp_test();
 void finish_ra_test(aco::ra_test_policy, bool lower=false);
 void finish_optimizer_postRA_test();
 void finish_to_hw_instr_test();
@@ -102,6 +103,8 @@ aco::Temp fadd(aco::Temp src0, aco::Temp src1, aco::Builder b=bld);
 aco::Temp fmul(aco::Temp src0, aco::Temp src1, aco::Builder b=bld);
 aco::Temp fma(aco::Temp src0, aco::Temp src1, aco::Temp src2, aco::Builder b=bld);
 aco::Temp fsat(aco::Temp src, aco::Builder b=bld);
+aco::Temp fmin(aco::Temp src0, aco::Temp src1, aco::Builder b=bld);
+aco::Temp fmax(aco::Temp src0, aco::Temp src1, aco::Builder b=bld);
 aco::Temp ext_ushort(aco::Temp src, unsigned idx, aco::Builder b=bld);
 aco::Temp ext_ubyte(aco::Temp src, unsigned idx, aco::Builder b=bld);
 void emit_divergent_if_else(aco::Program* prog, aco::Builder& b, aco::Operand cond, std::function<void()> then,

@@ -83,32 +83,8 @@ remove_after_cf_node(nir_cf_node *node)
 static void
 opt_constant_if(nir_if *if_stmt, bool condition)
 {
-   /* First, we need to remove any phi nodes after the if by rewriting uses to
-    * point to the correct source.
-    */
-   nir_block *after = nir_cf_node_as_block(nir_cf_node_next(&if_stmt->cf_node));
    nir_block *last_block = condition ? nir_if_last_then_block(if_stmt)
                                      : nir_if_last_else_block(if_stmt);
-
-   nir_foreach_instr_safe(instr, after) {
-      if (instr->type != nir_instr_type_phi)
-         break;
-
-      nir_phi_instr *phi = nir_instr_as_phi(instr);
-      nir_ssa_def *def = NULL;
-      nir_foreach_phi_src(phi_src, phi) {
-         if (phi_src->pred != last_block)
-            continue;
-
-         assert(phi_src->src.is_ssa);
-         def = phi_src->src.ssa;
-      }
-
-      assert(def);
-      assert(phi->dest.is_ssa);
-      nir_ssa_def_rewrite_uses(&phi->dest.ssa, def);
-      nir_instr_remove(instr);
-   }
 
    /* The control flow list we're about to paste in may include a jump at the
     * end, and in that case we have to delete the rest of the control flow
@@ -116,10 +92,32 @@ opt_constant_if(nir_if *if_stmt, bool condition)
     * we don't.
     */
 
-   if (!exec_list_is_empty(&last_block->instr_list)) {
-      nir_instr *last_instr = nir_block_last_instr(last_block);
-      if (last_instr->type == nir_instr_type_jump)
-         remove_after_cf_node(&if_stmt->cf_node);
+   if (nir_block_ends_in_jump(last_block)) {
+      remove_after_cf_node(&if_stmt->cf_node);
+   } else {
+      /* Remove any phi nodes after the if by rewriting uses to point to the
+       * correct source.
+       */
+      nir_block *after = nir_cf_node_as_block(nir_cf_node_next(&if_stmt->cf_node));
+      nir_foreach_instr_safe(instr, after) {
+         if (instr->type != nir_instr_type_phi)
+            break;
+
+         nir_phi_instr *phi = nir_instr_as_phi(instr);
+         nir_ssa_def *def = NULL;
+         nir_foreach_phi_src(phi_src, phi) {
+            if (phi_src->pred != last_block)
+               continue;
+
+            assert(phi_src->src.is_ssa);
+            def = phi_src->src.ssa;
+         }
+
+         assert(def);
+         assert(phi->dest.is_ssa);
+         nir_ssa_def_rewrite_uses(&phi->dest.ssa, def);
+         nir_instr_remove(&phi->instr);
+      }
    }
 
    /* Finally, actually paste in the then or else branch and delete the if. */
@@ -141,7 +139,14 @@ def_only_used_in_cf_node(nir_ssa_def *def, void *_node)
    nir_block *before = nir_cf_node_as_block(nir_cf_node_prev(node));
    nir_block *after = nir_cf_node_as_block(nir_cf_node_next(node));
 
-   nir_foreach_use(use, def) {
+   nir_foreach_use_including_if(use, def) {
+      nir_block *block;
+
+      if (use->is_if)
+         block = nir_cf_node_as_block(nir_cf_node_prev(&use->parent_if->cf_node));
+      else
+         block = use->parent_instr->block;
+
       /* Because NIR is structured, we can easily determine whether or not a
        * value escapes a CF node by looking at the block indices of its uses
        * to see if they lie outside the bounds of the CF node.
@@ -155,18 +160,7 @@ def_only_used_in_cf_node(nir_ssa_def *def, void *_node)
        * corresponding predecessor is inside the loop or not because the value
        * can go through the phi into the outside world and escape the loop.
        */
-      if (use->parent_instr->block->index <= before->index ||
-          use->parent_instr->block->index >= after->index)
-         return false;
-   }
-
-   /* Same check for if-condition uses */
-   nir_foreach_if_use(use, def) {
-      nir_block *use_block =
-         nir_cf_node_as_block(nir_cf_node_prev(&use->parent_if->cf_node));
-
-      if (use_block->index <= before->index ||
-          use_block->index >= after->index)
+      if (block->index <= before->index || block->index >= after->index)
          return false;
    }
 
@@ -285,6 +279,13 @@ node_is_dead(nir_cf_node *node)
 static bool
 dead_cf_block(nir_block *block)
 {
+   /* opt_constant_if() doesn't handle this case. */
+   if (nir_block_ends_in_jump(block) &&
+       !exec_node_is_tail_sentinel(block->cf_node.node.next)) {
+      remove_after_cf_node(&block->cf_node);
+      return true;
+   }
+
    nir_if *following_if = nir_block_get_following_if(block);
    if (following_if) {
       if (nir_src_is_const(following_if->condition)) {
@@ -341,12 +342,8 @@ dead_cf_list(struct exec_list *list, bool *list_ends_in_jump)
          }
 
          if (nir_block_ends_in_jump(block)) {
+            assert(exec_node_is_tail_sentinel(cur->node.next));
             *list_ends_in_jump = true;
-
-            if (!exec_node_is_tail_sentinel(cur->node.next)) {
-               remove_after_cf_node(cur);
-               return true;
-            }
          }
 
          break;
@@ -373,6 +370,7 @@ dead_cf_list(struct exec_list *list, bool *list_ends_in_jump)
 
       case nir_cf_node_loop: {
          nir_loop *loop = nir_cf_node_as_loop(cur);
+         assert(!nir_loop_has_continue_construct(loop));
          bool dummy;
          progress |= dead_cf_list(&loop->body, &dummy);
 

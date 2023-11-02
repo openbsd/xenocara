@@ -5,20 +5,10 @@ dEQP-EGL.functional.sharing.gles2.multithread.random.images.copyteximage2d.12
 dEQP-EGL.functional.sharing.gles2.multithread.random.images.copytexsubimage2d.1
 
 # Flakes from Mar-May 2022
-dEQP-EGL.functional.color_clears.multi_context.gles2.rgb888_pbuffer
-dEQP-EGL.functional.color_clears.multi_context.gles2.rgba8888_pbuffer
-dEQP-EGL.functional.color_clears.multi_thread.gles2.rgba8888_pbuffer
-dEQP-EGL.functional.color_clears.single_context.gles2.rgb888_pbuffer
-dEQP-EGL.functional.color_clears.single_context.gles2.rgba8888_pbuffer
-dEQP-EGL.functional.color_clears.single_context.gles3.rgba8888_pbuffer
-dEQP-EGL.functional.render.multi_context.gles2_gles3.rgba8888_pbuffer
-dEQP-EGL.functional.render.multi_context.gles2.rgba8888_pbuffer
-dEQP-EGL.functional.render.multi_thread.gles2.rgba8888_pbuffer
-dEQP-EGL.functional.render.multi_thread.gles3.rgb888_pbuffer
-dEQP-EGL.functional.render.multi_thread.gles3.rgba8888_pbuffer
-dEQP-EGL.functional.render.single_context.gles2.rgba8888_pbuffer
-dEQP-EGL.functional.render.single_context.gles3.rgb888_pbuffer
-dEQP-EGL.functional.render.single_context.gles3.rgba8888_pbuffer
+dEQP-EGL.functional.color_clears.*.rgb888_pbuffer
+dEQP-EGL.functional.color_clears.*.rgba8888_pbuffer
+dEQP-EGL.functional.render.*.rgb888_pbuffer
+dEQP-EGL.functional.render.*.rgba8888_pbuffer
 dEQP-EGL.functional.sharing.gles2.multithread.random_egl_sync.programs.link.7
 dEQP-EGL.functional.sharing.gles2.multithread.random.images.copyteximage2d.19
 dEQP-EGL.functional.sharing.gles2.multithread.random.images.copyteximage2d.6

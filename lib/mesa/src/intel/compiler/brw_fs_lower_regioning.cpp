@@ -155,7 +155,8 @@ namespace {
             return t;
 
       case SHADER_OPCODE_SEL_EXEC:
-         if (!has_64bit && type_sz(t) > 4)
+         if ((!has_64bit || devinfo->has_64bit_float_via_math_pipe) &&
+             type_sz(t) > 4)
             return BRW_REGISTER_TYPE_UD;
          else
             return t;
@@ -173,10 +174,17 @@ namespace {
           *    integer DWord multiply, indirect addressing must not be
           *    used."
           *
+          * For MTL (verx10 == 125), float64 is supported, but int64 is not.
+          * Therefore we need to lower cluster broadcast using 32-bit int ops.
+          *
+          * For gfx12.5+ platforms that support int64, the register regions
+          * used by cluster broadcast aren't supported by the 64-bit pipeline.
+          *
           * Work around the above and handle platforms that don't
           * support 64-bit types at all.
           */
-         if ((!has_64bit || devinfo->platform == INTEL_PLATFORM_CHV ||
+         if ((!has_64bit || devinfo->verx10 >= 125 ||
+              devinfo->platform == INTEL_PLATFORM_CHV ||
               intel_device_info_is_9lp(devinfo)) && type_sz(t) > 4)
             return BRW_REGISTER_TYPE_UD;
          else
@@ -207,7 +215,7 @@ namespace {
    has_invalid_src_region(const intel_device_info *devinfo, const fs_inst *inst,
                           unsigned i)
    {
-      if (is_unordered(inst) || inst->is_control_source(i))
+      if (is_send(inst) || inst->is_math() || inst->is_control_source(i))
          return false;
 
       /* Empirical testing shows that Broadwell has a bug affecting half-float
@@ -248,7 +256,7 @@ namespace {
    has_invalid_dst_region(const intel_device_info *devinfo,
                           const fs_inst *inst)
    {
-      if (is_unordered(inst)) {
+      if (is_send(inst) || inst->is_math()) {
          return false;
       } else {
          const brw_reg_type exec_type = get_exec_type(inst);

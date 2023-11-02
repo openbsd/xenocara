@@ -29,6 +29,7 @@
 #include "gallium/drivers/r600/r600_shader.h"
 #include "nir.h"
 #include "nir_intrinsics.h"
+#include "nir_intrinsics_indices.h"
 #include "sfn_debug.h"
 #include "sfn_instr.h"
 #include "sfn_instr_alugroup.h"
@@ -232,7 +233,8 @@ Shader::emit_instruction_from_string(const std::string& s)
       return;
    }
 
-   auto ir = m_instr_factory->from_string(s, m_current_block->nesting_depth());
+   auto ir = m_instr_factory->from_string(s, m_current_block->nesting_depth(),
+                                          m_chip_class == ISA_CC_CAYMAN);
    if (ir) {
       emit_instruction(ir);
       if (ir->end_block())
@@ -335,7 +337,7 @@ Shader::allocate_registers_from_string(std::istream& is, Pin pin)
          auto regs = value_factory().dest_vec4_from_string(reg_str, swz, pin);
          for (int i = 0; i < 4; ++i) {
             if (swz[i] < 4 && pin == pin_fully) {
-               regs[i]->pin_live_range(true, false);
+               regs[i]->set_flag(Register::pin_start);
             }
          }
       }
@@ -520,6 +522,7 @@ Shader::allocate_local_registers(const exec_list *registers)
 {
    if (value_factory().allocate_registers(registers))
       m_indirect_files |= 1 << TGSI_FILE_TEMPORARY;
+   m_required_registers = value_factory().array_registers();
 }
 
 bool
@@ -693,36 +696,12 @@ Shader::process_if(nir_if *if_stmt)
 {
    SFN_TRACE_FUNC(SfnLog::flow, "IF");
 
-   if (!emit_if_start(if_stmt))
-      return false;
-
-   foreach_list_typed(nir_cf_node, n, node, &if_stmt->then_list)
-   {
-      SFN_TRACE_FUNC(SfnLog::flow, "IF-then");
-      if (!process_cf_node(n))
-         return false;
-   }
-
-   if (!child_block_empty(if_stmt->else_list)) {
-      if (!emit_control_flow(ControlFlowInstr::cf_else))
-         return false;
-      foreach_list_typed(nir_cf_node,
-                         n,
-                         node,
-                         &if_stmt->else_list) if (!process_cf_node(n)) return false;
-   }
-
-   if (!emit_control_flow(ControlFlowInstr::cf_endif))
-      return false;
-
-   return true;
-}
-
-bool
-Shader::emit_if_start(nir_if *if_stmt)
-{
    auto value = value_factory().src(if_stmt->condition, 0);
-   AluInstr *pred = new AluInstr(op2_pred_setne_int,
+
+   EAluOp op = child_block_empty(if_stmt->then_list) ? op2_prede_int :
+                                                       op2_pred_setne_int;
+
+   AluInstr *pred = new AluInstr(op,
                                  value_factory().temp_register(),
                                  value,
                                  value_factory().zero(),
@@ -734,6 +713,35 @@ Shader::emit_if_start(nir_if *if_stmt)
    IfInstr *ir = new IfInstr(pred);
    emit_instruction(ir);
    start_new_block(1);
+
+   if (!child_block_empty(if_stmt->then_list)) {
+      foreach_list_typed(nir_cf_node, n, node, &if_stmt->then_list)
+      {
+         SFN_TRACE_FUNC(SfnLog::flow, "IF-then");
+         if (!process_cf_node(n))
+            return false;
+      }
+      if (!child_block_empty(if_stmt->else_list)) {
+         if (!emit_control_flow(ControlFlowInstr::cf_else))
+            return false;
+         foreach_list_typed(nir_cf_node,
+                            n,
+                            node,
+                            &if_stmt->else_list)
+               if (!process_cf_node(n)) return false;
+      }
+   } else {
+      assert(!child_block_empty(if_stmt->else_list));
+      foreach_list_typed(nir_cf_node,
+                         n,
+                         node,
+                         &if_stmt->else_list)
+            if (!process_cf_node(n)) return false;
+   }
+
+   if (!emit_control_flow(ControlFlowInstr::cf_endif))
+      return false;
+
    return true;
 }
 
@@ -765,6 +773,7 @@ Shader::emit_control_flow(ControlFlowInstr::CFType type)
 bool
 Shader::process_loop(nir_loop *node)
 {
+   assert(!nir_loop_has_continue_construct(node));
    SFN_TRACE_FUNC(SfnLog::flow, "LOOP");
    if (!emit_control_flow(ControlFlowInstr::cf_loop_begin))
       return false;
@@ -922,6 +931,14 @@ Shader::emit_atomic_local_shared(nir_intrinsic_instr *instr)
 
    auto op = lds_op_from_intrinsic(instr->intrinsic, uses_retval);
 
+   /* For these two instructions we don't have opcodes that don't read back
+    * the result, so we have to add a dummy-readback to remove the the return
+    * value from read queue. */
+   if (!uses_retval &&
+       (op == LDS_XCHG_RET || op == LDS_CMP_XCHG_RET)) {
+      dest_value = vf.dest(instr->dest, 0, pin_free);
+   }
+
    auto address = vf.src(instr->src[0], 0);
 
    AluInstr::SrcValues src;
@@ -940,7 +957,8 @@ Shader::evaluate_resource_offset(nir_intrinsic_instr *instr, int src_id)
    auto& vf = value_factory();
 
    PRegister uav_id{nullptr};
-   int offset = 0;
+   int offset = nir_intrinsic_has_range_base(instr) ?
+                   nir_intrinsic_range_base(instr) : 0;
 
    auto uav_id_const = nir_src_as_const_value(instr->src[src_id]);
    if (uav_id_const) {

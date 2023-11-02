@@ -9,7 +9,7 @@
     DEQP_EXPECTED_RENDERER: llvmpipe
     LVP_POISON_MEMORY: "1"
 
-lavapipe:
+.lavapipe:
   tags:
     - mesa-swrast
   variables:
@@ -38,10 +38,10 @@ lavapipe-traces:
   variables:
     MESA_VK_IGNORE_CONFORMANCE_WARNING: 1
     PIGLIT_REPLAY_DESCRIPTION_FILE: "${CI_PROJECT_DIR}/install/traces-lavapipe.yml"
-    PIGLIT_REPLAY_DEVICE_NAME: "lvp"
+    PIGLIT_REPLAY_DEVICE_NAME: "vk-lvp"
     PIGLIT_RESULTS: "${GPU_VERSION}-replay"
   stage: software-renderer
   extends:
     - .piglit-traces-test
     - .lavapipe-test
-    - .test-manual-mr
+    - .lavapipe-manual-rules

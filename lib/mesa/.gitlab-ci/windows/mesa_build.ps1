@@ -36,7 +36,7 @@ $depsInstallPath="C:\mesa-deps"
 
 Push-Location $builddir
 
-meson `
+meson setup `
 --default-library=shared `
 --buildtype=release `
 --wrap-mode=nodownload `
@@ -49,7 +49,7 @@ meson `
 -Dshared-llvm=disabled `
 -Dvulkan-drivers="swrast,amd,microsoft-experimental" `
 -Dgallium-drivers="swrast,d3d12,zink" `
--Dgallium-va=true `
+-Dgallium-va=enabled `
 -Dvideo-codecs="h264dec,h264enc,h265dec,h265enc,vc1dec" `
 -Dshared-glapi=enabled `
 -Dgles1=enabled `
@@ -83,6 +83,5 @@ Copy-Item ".\.gitlab-ci\windows\spirv2dxil_check.ps1" -Destination $installdir
 Copy-Item ".\.gitlab-ci\windows\spirv2dxil_run.ps1" -Destination $installdir
 
 Copy-Item ".\.gitlab-ci\windows\deqp_runner_run.ps1" -Destination $installdir
-Copy-Item ".\src\microsoft\ci\deqp-dozen.toml" -Destination $installdir
 
-Get-ChildItem -Recurse -Filter "ci" | Get-ChildItem -Filter "*.txt" | Copy-Item -Destination $installdir
+Get-ChildItem -Recurse -Filter "ci" | Get-ChildItem -Include "*.txt","*.toml" | Copy-Item -Destination $installdir

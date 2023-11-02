@@ -21,7 +21,7 @@
 inc_freedreno = include_directories(['.', './registers', './registers/adreno', './common'])
 inc_freedreno_rnn = include_directories('rnn')
 
-rnn_src_path = meson.source_root() + '/src/freedreno/registers'
+rnn_src_path = dir_source_root + '/src/freedreno/registers'
 rnn_install_path = get_option('datadir') + '/freedreno/registers'
 rnn_path = rnn_src_path + ':' + get_option('prefix') + '/' + rnn_install_path
 
@@ -55,7 +55,7 @@ if with_perfetto and (with_datasources.contains('freedreno') or with_datasources
 endif
 
 # Everything that depends on rnn requires (indirectly) libxml2:
-if dep_libxml2.found()
+if dep_libxml2.found() and with_tools.contains('freedreno')
   subdir('rnn')
   subdir('decode')
   subdir('afuc')

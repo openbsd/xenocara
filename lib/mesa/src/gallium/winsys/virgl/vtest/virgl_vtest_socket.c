@@ -119,7 +119,7 @@ static int virgl_vtest_send_init(struct virgl_vtest_winsys *vws)
 {
    uint32_t buf[VTEST_HDR_SIZE];
    const char *nstr = "virtest";
-   char cmdline[64];
+   char cmdline[64] = { 0 };
    int ret;
 
    ret = os_get_process_name(cmdline, 63);
@@ -197,6 +197,7 @@ int virgl_vtest_connect(struct virgl_vtest_winsys *vws)
 {
    struct sockaddr_un un;
    int sock, ret;
+   const char* socket_name = os_get_option("VTEST_SOCKET_NAME");
 
    sock = socket(PF_UNIX, SOCK_STREAM, 0);
    if (sock < 0)
@@ -204,7 +205,8 @@ int virgl_vtest_connect(struct virgl_vtest_winsys *vws)
 
    memset(&un, 0, sizeof(un));
    un.sun_family = AF_UNIX;
-   snprintf(un.sun_path, sizeof(un.sun_path), "%s", VTEST_DEFAULT_SOCKET_NAME);
+   snprintf(un.sun_path, sizeof(un.sun_path), "%s", socket_name ?
+      socket_name : VTEST_DEFAULT_SOCKET_NAME);
 
    do {
       ret = 0;

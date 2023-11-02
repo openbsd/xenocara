@@ -143,7 +143,7 @@ ir3_compiler_create(struct fd_device *dev, const struct fd_dev_id *dev_id,
    compiler->dev = dev;
    compiler->dev_id = dev_id;
    compiler->gen = fd_dev_gen(dev_id);
-   compiler->robust_buffer_access2 = options->robust_buffer_access2;
+   compiler->options = *options;
 
    /* All known GPU's have 32k local memory (aka shared) */
    compiler->local_mem_size = 32 * 1024;
@@ -196,8 +196,6 @@ ir3_compiler_create(struct fd_device *dev, const struct fd_dev_id *dev_id,
 
       compiler->tess_use_shared = dev_info->a6xx.tess_use_shared;
 
-      compiler->storage_16bit = dev_info->a6xx.storage_16bit;
-
       compiler->has_getfiberid = dev_info->a6xx.has_getfiberid;
 
       compiler->has_dp2acc = dev_info->a6xx.has_dp2acc;
@@ -217,6 +215,8 @@ ir3_compiler_create(struct fd_device *dev, const struct fd_dev_id *dev_id,
        */
       compiler->max_const_safe = 256;
    }
+
+   compiler->has_isam_ssbo = compiler->gen >= 6;
 
    if (compiler->gen >= 6) {
       compiler->reg_size_vec4 = dev_info->a6xx.reg_size_vec4;
@@ -263,8 +263,6 @@ ir3_compiler_create(struct fd_device *dev, const struct fd_dev_id *dev_id,
 
    compiler->bool_type = (compiler->gen >= 5) ? TYPE_U16 : TYPE_U32;
    compiler->has_shared_regfile = compiler->gen >= 5;
-
-   compiler->push_ubo_with_preamble = options->push_ubo_with_preamble;
 
    /* The driver can't request this unless preambles are supported. */
    if (options->push_ubo_with_preamble)

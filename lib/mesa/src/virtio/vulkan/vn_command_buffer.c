@@ -18,6 +18,9 @@
 #include "vn_image.h"
 #include "vn_render_pass.h"
 
+static void
+vn_cmd_submit(struct vn_command_buffer *cmd);
+
 #define VN_CMD_ENQUEUE(cmd_name, commandBuffer, ...)                         \
    do {                                                                      \
       struct vn_command_buffer *_cmd =                                       \
@@ -28,6 +31,9 @@
          vn_encode_##cmd_name(&_cmd->cs, 0, commandBuffer, ##__VA_ARGS__);   \
       else                                                                   \
          _cmd->state = VN_COMMAND_BUFFER_STATE_INVALID;                      \
+                                                                             \
+      if (VN_PERF(NO_CMD_BATCHING))                                          \
+         vn_cmd_submit(_cmd);                                                \
    } while (0)
 
 static bool
@@ -78,7 +84,7 @@ vn_cmd_get_tmp_data(struct vn_command_buffer *cmd, size_t size)
    return cmd->builder.tmp.data;
 }
 
-static VkImageMemoryBarrier *
+static inline VkImageMemoryBarrier *
 vn_cmd_get_image_memory_barriers(struct vn_command_buffer *cmd,
                                  uint32_t count)
 {
@@ -632,11 +638,33 @@ vn_DestroyCommandPool(VkDevice device,
                             &pool->command_buffers, head) {
       vn_cs_encoder_fini(&cmd->cs);
       vn_object_base_fini(&cmd->base);
+
+      if (cmd->builder.present_src_images)
+         vk_free(&cmd->allocator, cmd->builder.present_src_images);
+
+      if (cmd->builder.tmp.data)
+         vk_free(&cmd->allocator, cmd->builder.tmp.data);
+
       vk_free(alloc, cmd);
    }
 
    vn_object_base_fini(&pool->base);
    vk_free(alloc, pool);
+}
+
+static void
+vn_cmd_reset(struct vn_command_buffer *cmd)
+{
+   vn_cs_encoder_reset(&cmd->cs);
+
+   cmd->builder.render_pass = NULL;
+   if (cmd->builder.present_src_images) {
+      vk_free(&cmd->allocator, cmd->builder.present_src_images);
+      cmd->builder.present_src_images = NULL;
+   }
+
+   cmd->state = VN_COMMAND_BUFFER_STATE_INITIAL;
+   cmd->draw_cmd_batched = 0;
 }
 
 VkResult
@@ -650,8 +678,7 @@ vn_ResetCommandPool(VkDevice device,
 
    list_for_each_entry_safe(struct vn_command_buffer, cmd,
                             &pool->command_buffers, head) {
-      vn_cs_encoder_reset(&cmd->cs);
-      cmd->state = VN_COMMAND_BUFFER_STATE_INITIAL;
+      vn_cmd_reset(cmd);
    }
 
    vn_async_vkResetCommandPool(dev->instance, device, commandPool, flags);
@@ -747,6 +774,9 @@ vn_FreeCommandBuffers(VkDevice device,
       if (cmd->builder.tmp.data)
          vk_free(alloc, cmd->builder.tmp.data);
 
+      if (cmd->builder.present_src_images)
+         vk_free(&cmd->allocator, cmd->builder.present_src_images);
+
       vn_cs_encoder_fini(&cmd->cs);
       list_del(&cmd->head);
 
@@ -763,9 +793,7 @@ vn_ResetCommandBuffer(VkCommandBuffer commandBuffer,
    struct vn_command_buffer *cmd =
       vn_command_buffer_from_handle(commandBuffer);
 
-   vn_cs_encoder_reset(&cmd->cs);
-   cmd->state = VN_COMMAND_BUFFER_STATE_INITIAL;
-   cmd->draw_cmd_batched = 0;
+   vn_cmd_reset(cmd);
 
    vn_async_vkResetCommandBuffer(cmd->device->instance, commandBuffer, flags);
 
@@ -870,8 +898,8 @@ vn_BeginCommandBuffer(VkCommandBuffer commandBuffer,
    struct vn_instance *instance = cmd->device->instance;
    size_t cmd_size;
 
-   vn_cs_encoder_reset(&cmd->cs);
-   cmd->draw_cmd_batched = 0;
+   /* reset regardless of VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT */
+   vn_cmd_reset(cmd);
 
    struct vn_command_buffer_begin_info local_begin_info;
    pBeginInfo =
@@ -912,9 +940,6 @@ vn_cmd_submit(struct vn_command_buffer *cmd)
       vn_cs_encoder_reset(&cmd->cs);
       return;
    }
-
-   if (unlikely(!instance->renderer->info.supports_blob_id_0))
-      vn_instance_wait_roundtrip(instance, cmd->cs.current_buffer_roundtrip);
 
    if (vn_instance_ring_submit(instance, &cmd->cs) != VK_SUCCESS) {
       cmd->state = VN_COMMAND_BUFFER_STATE_INVALID;
@@ -1443,8 +1468,8 @@ vn_CmdSetEvent(VkCommandBuffer commandBuffer,
 {
    VN_CMD_ENQUEUE(vkCmdSetEvent, commandBuffer, event, stageMask);
 
-   vn_feedback_event_cmd_record(commandBuffer, event, stageMask,
-                                VK_EVENT_SET);
+   vn_feedback_event_cmd_record(commandBuffer, event, stageMask, VK_EVENT_SET,
+                                false);
 }
 
 static VkPipelineStageFlags2
@@ -1480,8 +1505,8 @@ vn_CmdSetEvent2(VkCommandBuffer commandBuffer,
    VkPipelineStageFlags2 src_stage_mask =
       vn_dependency_info_collect_src_stage_mask(pDependencyInfo);
 
-   vn_feedback_event_cmd_record2(commandBuffer, event, src_stage_mask,
-                                 VK_EVENT_SET);
+   vn_feedback_event_cmd_record(commandBuffer, event, src_stage_mask,
+                                VK_EVENT_SET, true);
 }
 
 void
@@ -1492,7 +1517,7 @@ vn_CmdResetEvent(VkCommandBuffer commandBuffer,
    VN_CMD_ENQUEUE(vkCmdResetEvent, commandBuffer, event, stageMask);
 
    vn_feedback_event_cmd_record(commandBuffer, event, stageMask,
-                                VK_EVENT_RESET);
+                                VK_EVENT_RESET, false);
 }
 
 void
@@ -1501,8 +1526,8 @@ vn_CmdResetEvent2(VkCommandBuffer commandBuffer,
                   VkPipelineStageFlags2 stageMask)
 {
    VN_CMD_ENQUEUE(vkCmdResetEvent2, commandBuffer, event, stageMask);
-   vn_feedback_event_cmd_record2(commandBuffer, event, stageMask,
-                                 VK_EVENT_RESET);
+   vn_feedback_event_cmd_record(commandBuffer, event, stageMask,
+                                VK_EVENT_RESET, true);
 }
 
 void
@@ -2041,8 +2066,30 @@ vn_CmdPushDescriptorSetKHR(VkCommandBuffer commandBuffer,
                            uint32_t descriptorWriteCount,
                            const VkWriteDescriptorSet *pDescriptorWrites)
 {
-   VN_CMD_ENQUEUE(vkCmdPushDescriptorSetKHR, commandBuffer, pipelineBindPoint,
-                  layout, set, descriptorWriteCount, pDescriptorWrites);
+   if (vn_should_sanitize_descriptor_set_writes(descriptorWriteCount,
+                                                pDescriptorWrites, layout)) {
+      struct vn_command_buffer *cmd =
+         vn_command_buffer_from_handle(commandBuffer);
+      struct vn_update_descriptor_sets *update =
+         vn_update_descriptor_sets_parse_writes(
+            descriptorWriteCount, pDescriptorWrites, &cmd->allocator, layout);
+      if (!update) {
+         cmd->state = VN_COMMAND_BUFFER_STATE_INVALID;
+         vn_log(cmd->device->instance,
+                "descriptor set push ignored due to OOM");
+         return;
+      }
+
+      VN_CMD_ENQUEUE(vkCmdPushDescriptorSetKHR, commandBuffer,
+                     pipelineBindPoint, layout, set, update->write_count,
+                     update->writes);
+
+      vk_free(&cmd->allocator, update);
+   } else {
+      VN_CMD_ENQUEUE(vkCmdPushDescriptorSetKHR, commandBuffer,
+                     pipelineBindPoint, layout, set, descriptorWriteCount,
+                     pDescriptorWrites);
+   }
 }
 
 void

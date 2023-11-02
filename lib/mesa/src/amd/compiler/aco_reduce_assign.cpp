@@ -45,7 +45,8 @@ setup_reduce_temp(Program* program)
    std::vector<bool> hasReductions(program->blocks.size());
    for (Block& block : program->blocks) {
       for (aco_ptr<Instruction>& instr : block.instructions) {
-         if (instr->opcode == aco_opcode::p_interp_gfx11) {
+         if (instr->opcode == aco_opcode::p_interp_gfx11 ||
+             instr->opcode == aco_opcode::p_bpermute_gfx11w64) {
             maxSize = MAX2(maxSize, 1);
             hasReductions[block.index] = true;
          } else if (instr->format == Format::PSEUDO_REDUCTION) {
@@ -63,7 +64,6 @@ setup_reduce_temp(Program* program)
    Temp vtmp(0, RegClass(RegType::vgpr, maxSize).as_linear());
    int inserted_at = -1;
    int vtmp_inserted_at = -1;
-   bool vtmp_in_loop = false;
 
    for (Block& block : program->blocks) {
 
@@ -100,7 +100,8 @@ setup_reduce_temp(Program* program)
       for (it = block.instructions.begin(); it != block.instructions.end(); ++it) {
          Instruction* instr = (*it).get();
          if (instr->format != Format::PSEUDO_REDUCTION &&
-             instr->opcode != aco_opcode::p_interp_gfx11)
+             instr->opcode != aco_opcode::p_interp_gfx11 &&
+             instr->opcode != aco_opcode::p_bpermute_gfx11w64)
             continue;
 
          if ((int)last_top_level_block_idx != inserted_at) {
@@ -148,7 +149,6 @@ setup_reduce_temp(Program* program)
             need_vtmp |= cluster_size == 32;
          }
 
-         vtmp_in_loop |= need_vtmp && block.loop_nest_depth > 0;
          if (need_vtmp && (int)last_top_level_block_idx != vtmp_inserted_at) {
             vtmp = program->allocateTmp(vtmp.regClass());
             aco_ptr<Pseudo_instruction> create{create_instruction<Pseudo_instruction>(
@@ -172,7 +172,8 @@ setup_reduce_temp(Program* program)
             if (need_vtmp)
                instr->operands[2] = Operand(vtmp);
          } else {
-            assert(instr->opcode == aco_opcode::p_interp_gfx11);
+            assert(instr->opcode == aco_opcode::p_interp_gfx11 ||
+                   instr->opcode == aco_opcode::p_bpermute_gfx11w64);
             instr->operands[0] = Operand(reduceTmp);
             instr->operands[0].setLateKill(true);
          }

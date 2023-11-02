@@ -92,7 +92,8 @@ combine_and_pin_address(struct blorp_batch *blorp_batch,
    struct iris_batch *batch = blorp_batch->driver_batch;
    struct iris_bo *bo = addr.buffer;
 
-   iris_use_pinned_bo(batch, bo, addr.reloc_flags & RELOC_WRITE,
+   iris_use_pinned_bo(batch, bo,
+                      addr.reloc_flags & IRIS_BLORP_RELOC_FLAGS_EXEC_OBJECT_WRITE,
                       IRIS_DOMAIN_NONE);
 
    /* Assume this is a general address, not relative to a base. */
@@ -304,16 +305,6 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
        !(blorp_batch->flags & BLORP_BATCH_NO_EMIT_DEPTH_STENCIL))
       genX(emit_depth_state_workarounds)(ice, batch, &params->depth.surf);
 
-   /* Flush the render cache in cases where the same surface is used with
-    * different aux modes, which can lead to GPU hangs.  Invalidation of
-    * sampler caches and flushing of any caches which had previously written
-    * the source surfaces should already have been handled by the caller.
-    */
-   if (params->dst.enabled) {
-      iris_cache_flush_for_render(batch, params->dst.addr.buffer,
-                                  params->dst.aux_usage);
-   }
-
    iris_require_command_space(batch, 1400);
 
 #if GFX_VER == 8
@@ -373,8 +364,8 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
                                IRIS_STAGE_DIRTY_SAMPLER_STATES_TES |
                                IRIS_STAGE_DIRTY_SAMPLER_STATES_GS);
 
-   if (!ice->shaders.uncompiled[MESA_SHADER_TESS_EVAL]) {
-      /* BLORP disabled tessellation, that's fine for the next draw */
+   if (!ice->shaders.prog[MESA_SHADER_TESS_EVAL]) {
+      /* BLORP disabled tessellation, but it was already off anyway */
       skip_stage_bits |= IRIS_STAGE_DIRTY_TCS |
                          IRIS_STAGE_DIRTY_TES |
                          IRIS_STAGE_DIRTY_CONSTANTS_TCS |
@@ -383,8 +374,8 @@ iris_blorp_exec_render(struct blorp_batch *blorp_batch,
                          IRIS_STAGE_DIRTY_BINDINGS_TES;
    }
 
-   if (!ice->shaders.uncompiled[MESA_SHADER_GEOMETRY]) {
-      /* BLORP disabled geometry shaders, that's fine for the next draw */
+   if (!ice->shaders.prog[MESA_SHADER_GEOMETRY]) {
+      /* BLORP disabled geometry shaders, but it was already off anyway */
       skip_stage_bits |= IRIS_STAGE_DIRTY_GS |
                          IRIS_STAGE_DIRTY_CONSTANTS_GS |
                          IRIS_STAGE_DIRTY_BINDINGS_GS;

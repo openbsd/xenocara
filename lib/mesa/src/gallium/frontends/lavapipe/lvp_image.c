@@ -86,7 +86,9 @@ lvp_image_create(VkDevice _device,
                                 VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT))
          template.bind |= PIPE_BIND_SAMPLER_VIEW;
 
-      if (pCreateInfo->usage & VK_IMAGE_USAGE_STORAGE_BIT)
+      if (pCreateInfo->usage & (VK_IMAGE_USAGE_STORAGE_BIT |
+                                VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT |
+                                VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT))
          template.bind |= PIPE_BIND_SHADER_IMAGE;
 
       template.width0 = pCreateInfo->extent.width;
@@ -172,14 +174,17 @@ lvp_DestroyImage(VkDevice _device, VkImage _image,
 #include "util/u_sampler.h"
 #include "util/u_inlines.h"
 
-#define fix_depth_swizzle(x) do { \
-  if (x > PIPE_SWIZZLE_X && x < PIPE_SWIZZLE_0) \
-    x = PIPE_SWIZZLE_0;				\
-  } while (0)
-#define fix_depth_swizzle_a(x) do { \
-  if (x > PIPE_SWIZZLE_X && x < PIPE_SWIZZLE_0) \
-    x = PIPE_SWIZZLE_1;				\
-  } while (0)
+static inline char conv_depth_swiz(char swiz) {
+   switch (swiz) {
+   case PIPE_SWIZZLE_Y:
+   case PIPE_SWIZZLE_Z:
+      return PIPE_SWIZZLE_0;
+   case PIPE_SWIZZLE_W:
+      return PIPE_SWIZZLE_1;
+   default:
+      return swiz;
+   }
+}
 
 static struct pipe_sampler_view *
 lvp_create_samplerview(struct pipe_context *pctx, struct lvp_image_view *iv)
@@ -223,10 +228,10 @@ lvp_create_samplerview(struct pipe_context *pctx, struct lvp_image_view *iv)
    */
    if (iv->vk.aspects == VK_IMAGE_ASPECT_DEPTH_BIT ||
        iv->vk.aspects == VK_IMAGE_ASPECT_STENCIL_BIT) {
-      fix_depth_swizzle(templ.swizzle_r);
-      fix_depth_swizzle(templ.swizzle_g);
-      fix_depth_swizzle(templ.swizzle_b);
-      fix_depth_swizzle_a(templ.swizzle_a);
+      templ.swizzle_r = conv_depth_swiz(templ.swizzle_r);
+      templ.swizzle_g = conv_depth_swiz(templ.swizzle_g);
+      templ.swizzle_b = conv_depth_swiz(templ.swizzle_b);
+      templ.swizzle_a = conv_depth_swiz(templ.swizzle_a);
    }
 
    return pctx->create_sampler_view(pctx, iv->image->bo, &templ);
@@ -248,8 +253,8 @@ lvp_create_imageview(const struct lvp_image_view *iv)
       view.format = lvp_vk_format_to_pipe_format(iv->vk.format);
 
    if (iv->vk.view_type == VK_IMAGE_VIEW_TYPE_3D) {
-      view.u.tex.first_layer = 0;
-      view.u.tex.last_layer = iv->vk.extent.depth - 1;
+      view.u.tex.first_layer = iv->vk.storage.z_slice_offset;
+      view.u.tex.last_layer = view.u.tex.first_layer + iv->vk.storage.z_slice_count - 1;
    } else {
       view.u.tex.first_layer = iv->vk.base_array_layer,
       view.u.tex.last_layer = iv->vk.base_array_layer + iv->vk.layer_count - 1;
@@ -276,8 +281,10 @@ lvp_CreateImageView(VkDevice _device,
    view->pformat = lvp_vk_format_to_pipe_format(view->vk.format);
    view->image = image;
    view->surface = NULL;
-   view->iv = lvp_create_imageview(view);
-   view->sv = lvp_create_samplerview(device->queue.ctx, view);
+   if (image->bo->bind & PIPE_BIND_SHADER_IMAGE)
+      view->iv = lvp_create_imageview(view);
+   if (image->bo->bind & PIPE_BIND_SAMPLER_VIEW)
+      view->sv = lvp_create_samplerview(device->queue.ctx, view);
    *pView = lvp_image_view_to_handle(view);
 
    return VK_SUCCESS;
@@ -500,7 +507,7 @@ lvp_CreateBufferView(VkDevice _device,
    LVP_FROM_HANDLE(lvp_device, device, _device);
    LVP_FROM_HANDLE(lvp_buffer, buffer, pCreateInfo->buffer);
    struct lvp_buffer_view *view;
-   view = vk_alloc2(&device->vk.alloc, pAllocator, sizeof(*view), 8,
+   view = vk_zalloc2(&device->vk.alloc, pAllocator, sizeof(*view), 8,
                      VK_SYSTEM_ALLOCATION_SCOPE_OBJECT);
    if (!view)
       return vk_error(device, VK_ERROR_OUT_OF_HOST_MEMORY);
@@ -515,8 +522,10 @@ lvp_CreateBufferView(VkDevice _device,
       view->range = view->buffer->size - view->offset;
    else
       view->range = pCreateInfo->range;
-   view->sv = lvp_create_samplerview_buffer(device->queue.ctx, view);
-   view->iv = lvp_create_imageview_buffer(view);
+   if (buffer->bo->bind & PIPE_BIND_SAMPLER_VIEW)
+      view->sv = lvp_create_samplerview_buffer(device->queue.ctx, view);
+   if (buffer->bo->bind & PIPE_BIND_SHADER_IMAGE)
+      view->iv = lvp_create_imageview_buffer(view);
    *pView = lvp_buffer_view_to_handle(view);
 
    return VK_SUCCESS;

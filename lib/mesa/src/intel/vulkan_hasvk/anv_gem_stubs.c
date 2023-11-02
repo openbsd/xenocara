@@ -111,25 +111,7 @@ anv_gem_set_caching(struct anv_device *device, uint32_t gem_handle,
 }
 
 int
-anv_gem_get_param(int fd, uint32_t param)
-{
-   unreachable("Unused");
-}
-
-int
-anv_gem_create_context(struct anv_device *device)
-{
-   unreachable("Unused");
-}
-
-int
-anv_gem_destroy_context(struct anv_device *device, int context)
-{
-   unreachable("Unused");
-}
-
-int
-anv_gem_set_context_param(int fd, int context, uint32_t param, uint64_t value)
+anv_gem_set_context_param(int fd, uint32_t context, uint32_t param, uint64_t value)
 {
    unreachable("Unused");
 }
@@ -155,13 +137,6 @@ anv_gem_handle_to_fd(struct anv_device *device, uint32_t gem_handle)
 
 uint32_t
 anv_gem_fd_to_handle(struct anv_device *device, int fd)
-{
-   unreachable("Unused");
-}
-
-int
-anv_i915_query(int fd, uint64_t query_id, void *buffer,
-               int32_t *buffer_len)
 {
    unreachable("Unused");
 }

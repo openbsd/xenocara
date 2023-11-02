@@ -49,6 +49,7 @@ New features
 - various ray tracing optimizations on RADV
 - extendedDynamicState2PatchControlPoints on RADV (VK_EXT_extended_dynamic_state2 feature)
 - Radeon Raytracing Analyzer integration (using RADV_RRA_* environment variables)
+- None
 
 
 Bug fixes
@@ -2365,7 +2366,7 @@ Jan Beich (1):
 
 - util: unify FreeBSD futex_wait signature with Linux/OpenBSD/Windows
 
-Jason Ekstrand (115):
+Faith Ekstrand (115):
 
 - nir: Clean up and improve nir_dedup_inline_samplers
 - intel/fs_reg_allocate: Improve compressed instruction self-interference

@@ -54,9 +54,7 @@
 #define BRW_KEY_INIT(gen, prog_id, limit_trig_input)       \
    .base.program_string_id = prog_id,                      \
    .base.limit_trig_input_range = limit_trig_input,        \
-   .base.tex.swizzles[0 ... BRW_MAX_SAMPLERS - 1] = 0x688, \
-   .base.tex.compressed_multisample_layout_mask = ~0,      \
-   .base.tex.msaa_16 = (gen >= 9 ? ~0 : 0)
+   .base.tex.swizzles[0 ... BRW_MAX_SAMPLERS - 1] = 0x688
 
 struct iris_threaded_compile_job {
    struct iris_screen *screen;
@@ -102,7 +100,7 @@ iris_to_brw_vs_key(const struct iris_screen *screen,
                    const struct iris_vs_prog_key *key)
 {
    return (struct brw_vs_prog_key) {
-      BRW_KEY_INIT(screen->devinfo.ver, key->vue.base.program_string_id,
+      BRW_KEY_INIT(screen->devinfo->ver, key->vue.base.program_string_id,
                    key->vue.base.limit_trig_input_range),
 
       /* Don't tell the backend about our clip plane constants, we've
@@ -117,7 +115,7 @@ iris_to_brw_tcs_key(const struct iris_screen *screen,
                     const struct iris_tcs_prog_key *key)
 {
    return (struct brw_tcs_prog_key) {
-      BRW_KEY_INIT(screen->devinfo.ver, key->vue.base.program_string_id,
+      BRW_KEY_INIT(screen->devinfo->ver, key->vue.base.program_string_id,
                    key->vue.base.limit_trig_input_range),
       ._tes_primitive_mode = key->_tes_primitive_mode,
       .input_vertices = key->input_vertices,
@@ -132,7 +130,7 @@ iris_to_brw_tes_key(const struct iris_screen *screen,
                     const struct iris_tes_prog_key *key)
 {
    return (struct brw_tes_prog_key) {
-      BRW_KEY_INIT(screen->devinfo.ver, key->vue.base.program_string_id,
+      BRW_KEY_INIT(screen->devinfo->ver, key->vue.base.program_string_id,
                    key->vue.base.limit_trig_input_range),
       .patch_inputs_read = key->patch_inputs_read,
       .inputs_read = key->inputs_read,
@@ -144,7 +142,7 @@ iris_to_brw_gs_key(const struct iris_screen *screen,
                    const struct iris_gs_prog_key *key)
 {
    return (struct brw_gs_prog_key) {
-      BRW_KEY_INIT(screen->devinfo.ver, key->vue.base.program_string_id,
+      BRW_KEY_INIT(screen->devinfo->ver, key->vue.base.program_string_id,
                    key->vue.base.limit_trig_input_range),
    };
 }
@@ -154,15 +152,15 @@ iris_to_brw_fs_key(const struct iris_screen *screen,
                    const struct iris_fs_prog_key *key)
 {
    return (struct brw_wm_prog_key) {
-      BRW_KEY_INIT(screen->devinfo.ver, key->base.program_string_id,
+      BRW_KEY_INIT(screen->devinfo->ver, key->base.program_string_id,
                    key->base.limit_trig_input_range),
       .nr_color_regions = key->nr_color_regions,
       .flat_shade = key->flat_shade,
       .alpha_test_replicate_alpha = key->alpha_test_replicate_alpha,
-      .alpha_to_coverage = key->alpha_to_coverage,
+      .alpha_to_coverage = key->alpha_to_coverage ? BRW_ALWAYS : BRW_NEVER,
       .clamp_fragment_color = key->clamp_fragment_color,
-      .persample_interp = key->persample_interp,
-      .multisample_fbo = key->multisample_fbo,
+      .persample_interp = key->persample_interp ? BRW_ALWAYS : BRW_NEVER,
+      .multisample_fbo = key->multisample_fbo ? BRW_ALWAYS : BRW_NEVER,
       .force_dual_color_blend = key->force_dual_color_blend,
       .coherent_fb_fetch = key->coherent_fb_fetch,
       .color_outputs_valid = key->color_outputs_valid,
@@ -176,7 +174,7 @@ iris_to_brw_cs_key(const struct iris_screen *screen,
                    const struct iris_cs_prog_key *key)
 {
    return (struct brw_cs_prog_key) {
-      BRW_KEY_INIT(screen->devinfo.ver, key->base.program_string_id,
+      BRW_KEY_INIT(screen->devinfo->ver, key->base.program_string_id,
                    key->base.limit_trig_input_range),
    };
 }
@@ -466,7 +464,7 @@ setup_vec4_image_sysval(uint32_t *sysvals, uint32_t idx,
  * ideal situation (though the backend can reduce this).
  */
 static void
-iris_setup_uniforms(const struct brw_compiler *compiler,
+iris_setup_uniforms(ASSERTED const struct intel_device_info *devinfo,
                     void *mem_ctx,
                     nir_shader *nir,
                     struct brw_stage_prog_data *prog_data,
@@ -475,8 +473,6 @@ iris_setup_uniforms(const struct brw_compiler *compiler,
                     unsigned *out_num_system_values,
                     unsigned *out_num_cbufs)
 {
-   UNUSED const struct intel_device_info *devinfo = compiler->devinfo;
-
    unsigned system_values_start = ALIGN(kernel_input_size, sizeof(uint32_t));
 
    const unsigned IRIS_MAX_SYSTEM_VALUES =
@@ -486,6 +482,8 @@ iris_setup_uniforms(const struct brw_compiler *compiler,
    unsigned num_system_values = 0;
 
    unsigned patch_vert_idx = -1;
+   unsigned tess_outer_default_idx = -1;
+   unsigned tess_inner_default_idx = -1;
    unsigned ucp_idx[IRIS_MAX_CLIP_PLANES];
    unsigned img_idx[PIPE_MAX_SHADER_IMAGES];
    unsigned variable_group_size_idx = -1;
@@ -511,6 +509,13 @@ iris_setup_uniforms(const struct brw_compiler *compiler,
          nir_ssa_def *offset;
 
          switch (intrin->intrinsic) {
+         case nir_intrinsic_load_base_workgroup_id: {
+            /* GL doesn't have a concept of base workgroup */
+            b.cursor = nir_instr_remove(&intrin->instr);
+            nir_ssa_def_rewrite_uses(&intrin->dest.ssa,
+                                     nir_imm_zero(&b, 3, 32));
+            continue;
+         }
          case nir_intrinsic_load_constant: {
             unsigned load_size = intrin->dest.ssa.num_components *
                                  intrin->dest.ssa.bit_size / 8;
@@ -529,13 +534,18 @@ iris_setup_uniforms(const struct brw_compiler *compiler,
             unsigned max_offset = b.shader->constant_data_size - load_size;
             offset = nir_umin(&b, offset, nir_imm_int(&b, max_offset));
 
-            nir_ssa_def *const_data_base_addr = nir_pack_64_2x32_split(&b,
-               nir_load_reloc_const_intel(&b, BRW_SHADER_RELOC_CONST_DATA_ADDR_LOW),
-               nir_load_reloc_const_intel(&b, BRW_SHADER_RELOC_CONST_DATA_ADDR_HIGH));
+            /* Constant data lives in buffers within IRIS_MEMZONE_SHADER
+             * and cannot cross that 4GB boundary, so we can do the address
+             * calculation with 32-bit adds.  Also, we can ignore the high
+             * bits because IRIS_MEMZONE_SHADER is in the [0, 4GB) range.
+             */
+            assert(IRIS_MEMZONE_SHADER_START >> 32 == 0ull);
+
+            nir_ssa_def *const_data_addr =
+               nir_iadd(&b, nir_load_reloc_const_intel(&b, BRW_SHADER_RELOC_CONST_DATA_ADDR_LOW), offset);
 
             nir_ssa_def *data =
-               nir_load_global_constant(&b, nir_iadd(&b, const_data_base_addr,
-                                                     nir_u2u64(&b, offset)),
+               nir_load_global_constant(&b, nir_u2u64(&b, const_data_addr),
                                         load_align,
                                         intrin->dest.ssa.num_components,
                                         intrin->dest.ssa.bit_size);
@@ -572,6 +582,36 @@ iris_setup_uniforms(const struct brw_compiler *compiler,
             b.cursor = nir_before_instr(instr);
             offset = nir_imm_int(&b, system_values_start +
                                      patch_vert_idx * sizeof(uint32_t));
+            break;
+         case nir_intrinsic_load_tess_level_outer_default:
+            if (tess_outer_default_idx == -1) {
+               tess_outer_default_idx = num_system_values;
+               num_system_values += 4;
+            }
+
+            for (int i = 0; i < 4; i++) {
+               system_values[tess_outer_default_idx + i] =
+                  BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_X + i;
+            }
+
+            b.cursor = nir_before_instr(instr);
+            offset = nir_imm_int(&b, system_values_start +
+                                 tess_outer_default_idx * sizeof(uint32_t));
+            break;
+         case nir_intrinsic_load_tess_level_inner_default:
+            if (tess_inner_default_idx == -1) {
+               tess_inner_default_idx = num_system_values;
+               num_system_values += 2;
+            }
+
+            for (int i = 0; i < 2; i++) {
+               system_values[tess_inner_default_idx + i] =
+                  BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_X + i;
+            }
+
+            b.cursor = nir_before_instr(instr);
+            offset = nir_imm_int(&b, system_values_start +
+                                 tess_inner_default_idx * sizeof(uint32_t));
             break;
          case nir_intrinsic_image_deref_load_param_intel: {
             assert(devinfo->ver < 9);
@@ -1323,7 +1363,7 @@ iris_compile_vs(struct iris_screen *screen,
                 struct iris_compiled_shader *shader)
 {
    const struct brw_compiler *compiler = screen->compiler;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    void *mem_ctx = ralloc_context(NULL);
    struct brw_vs_prog_data *vs_prog_data =
       rzalloc(mem_ctx, struct brw_vs_prog_data);
@@ -1338,17 +1378,19 @@ iris_compile_vs(struct iris_screen *screen,
 
    if (key->vue.nr_userclip_plane_consts) {
       nir_function_impl *impl = nir_shader_get_entrypoint(nir);
-      nir_lower_clip_vs(nir, (1 << key->vue.nr_userclip_plane_consts) - 1,
-                        true, false, NULL);
-      nir_lower_io_to_temporaries(nir, impl, true, false);
-      nir_lower_global_vars_to_local(nir);
-      nir_lower_vars_to_ssa(nir);
-      nir_shader_gather_info(nir, impl);
+      /* Check if variables were found. */
+      if (nir_lower_clip_vs(nir, (1 << key->vue.nr_userclip_plane_consts) - 1,
+                            true, false, NULL)) {
+         nir_lower_io_to_temporaries(nir, impl, true, false);
+         nir_lower_global_vars_to_local(nir);
+         nir_lower_vars_to_ssa(nir);
+         nir_shader_gather_info(nir, impl);
+      }
    }
 
    prog_data->use_alt_mode = nir->info.use_legacy_math_rules;
 
-   iris_setup_uniforms(compiler, mem_ctx, nir, prog_data, 0, &system_values,
+   iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data, 0, &system_values,
                        &num_system_values, &num_cbufs);
 
    struct iris_binding_table bt;
@@ -1503,14 +1545,12 @@ iris_compile_tcs(struct iris_screen *screen,
                  struct iris_compiled_shader *shader)
 {
    const struct brw_compiler *compiler = screen->compiler;
-   const struct nir_shader_compiler_options *options =
-      compiler->nir_options[MESA_SHADER_TESS_CTRL];
    void *mem_ctx = ralloc_context(NULL);
    struct brw_tcs_prog_data *tcs_prog_data =
       rzalloc(mem_ctx, struct brw_tcs_prog_data);
    struct brw_vue_prog_data *vue_prog_data = &tcs_prog_data->base;
    struct brw_stage_prog_data *prog_data = &vue_prog_data->base;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    enum brw_param_builtin *system_values = NULL;
    unsigned num_system_values = 0;
    unsigned num_cbufs = 0;
@@ -1524,49 +1564,15 @@ iris_compile_tcs(struct iris_screen *screen,
 
    if (ish) {
       nir = nir_shader_clone(mem_ctx, ish->nir);
-
-      iris_setup_uniforms(compiler, mem_ctx, nir, prog_data, 0, &system_values,
-                          &num_system_values, &num_cbufs);
-      iris_setup_binding_table(devinfo, nir, &bt, /* num_render_targets */ 0,
-                               num_system_values, num_cbufs);
-      brw_nir_analyze_ubo_ranges(compiler, nir, NULL, prog_data->ubo_ranges);
    } else {
-      nir =
-         brw_nir_create_passthrough_tcs(mem_ctx, compiler, options, &brw_key);
-
-      /* Reserve space for passing the default tess levels as constants. */
-      num_cbufs = 1;
-      num_system_values = 8;
-      system_values =
-         rzalloc_array(mem_ctx, enum brw_param_builtin, num_system_values);
-      prog_data->param = rzalloc_array(mem_ctx, uint32_t, num_system_values);
-      prog_data->nr_params = num_system_values;
-
-      if (key->_tes_primitive_mode == TESS_PRIMITIVE_QUADS) {
-         for (int i = 0; i < 4; i++)
-            system_values[7 - i] = BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_X + i;
-
-         system_values[3] = BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_X;
-         system_values[2] = BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_Y;
-      } else if (key->_tes_primitive_mode == TESS_PRIMITIVE_TRIANGLES) {
-         for (int i = 0; i < 3; i++)
-            system_values[7 - i] = BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_X + i;
-
-         system_values[4] = BRW_PARAM_BUILTIN_TESS_LEVEL_INNER_X;
-      } else {
-         assert(key->_tes_primitive_mode == TESS_PRIMITIVE_ISOLINES);
-         system_values[7] = BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_Y;
-         system_values[6] = BRW_PARAM_BUILTIN_TESS_LEVEL_OUTER_X;
-      }
-
-      /* Manually setup the TCS binding table. */
-      memset(&bt, 0, sizeof(bt));
-      bt.sizes[IRIS_SURFACE_GROUP_UBO] = 1;
-      bt.used_mask[IRIS_SURFACE_GROUP_UBO] = 1;
-      bt.size_bytes = 4;
-
-      prog_data->ubo_ranges[0].length = 1;
+      nir = brw_nir_create_passthrough_tcs(mem_ctx, compiler, &brw_key);
    }
+
+   iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data, 0, &system_values,
+                       &num_system_values, &num_cbufs);
+   iris_setup_binding_table(devinfo, nir, &bt, /* num_render_targets */ 0,
+                            num_system_values, num_cbufs);
+   brw_nir_analyze_ubo_ranges(compiler, nir, NULL, prog_data->ubo_ranges);
 
    struct brw_compile_tcs_params params = {
       .nir = nir,
@@ -1616,7 +1622,7 @@ iris_update_compiled_tcs(struct iris_context *ice)
    struct iris_screen *screen = (struct iris_screen *)ice->ctx.screen;
    struct u_upload_mgr *uploader = ice->shaders.uploader_driver;
    const struct brw_compiler *compiler = screen->compiler;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
 
    const struct shader_info *tes_info =
       iris_get_shader_info(ice, MESA_SHADER_TESS_EVAL);
@@ -1698,7 +1704,7 @@ iris_compile_tes(struct iris_screen *screen,
    struct brw_vue_prog_data *vue_prog_data = &tes_prog_data->base;
    struct brw_stage_prog_data *prog_data = &vue_prog_data->base;
    enum brw_param_builtin *system_values;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    unsigned num_system_values;
    unsigned num_cbufs;
 
@@ -1715,7 +1721,7 @@ iris_compile_tes(struct iris_screen *screen,
       nir_shader_gather_info(nir, impl);
    }
 
-   iris_setup_uniforms(compiler, mem_ctx, nir, prog_data, 0, &system_values,
+   iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data, 0, &system_values,
                        &num_system_values, &num_cbufs);
 
    struct iris_binding_table bt;
@@ -1831,7 +1837,7 @@ iris_compile_gs(struct iris_screen *screen,
                 struct iris_compiled_shader *shader)
 {
    const struct brw_compiler *compiler = screen->compiler;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    void *mem_ctx = ralloc_context(NULL);
    struct brw_gs_prog_data *gs_prog_data =
       rzalloc(mem_ctx, struct brw_gs_prog_data);
@@ -1854,7 +1860,7 @@ iris_compile_gs(struct iris_screen *screen,
       nir_shader_gather_info(nir, impl);
    }
 
-   iris_setup_uniforms(compiler, mem_ctx, nir, prog_data, 0, &system_values,
+   iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data, 0, &system_values,
                        &num_system_values, &num_cbufs);
 
    struct iris_binding_table bt;
@@ -1971,7 +1977,7 @@ iris_compile_fs(struct iris_screen *screen,
       rzalloc(mem_ctx, struct brw_wm_prog_data);
    struct brw_stage_prog_data *prog_data = &fs_prog_data->base;
    enum brw_param_builtin *system_values;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    unsigned num_system_values;
    unsigned num_cbufs;
 
@@ -1980,7 +1986,7 @@ iris_compile_fs(struct iris_screen *screen,
 
    prog_data->use_alt_mode = nir->info.use_legacy_math_rules;
 
-   iris_setup_uniforms(compiler, mem_ctx, nir, prog_data, 0, &system_values,
+   iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data, 0, &system_values,
                        &num_system_values, &num_cbufs);
 
    /* Lower output variables to load_output intrinsics before setting up
@@ -2263,7 +2269,7 @@ iris_compile_cs(struct iris_screen *screen,
       rzalloc(mem_ctx, struct brw_cs_prog_data);
    struct brw_stage_prog_data *prog_data = &cs_prog_data->base;
    enum brw_param_builtin *system_values;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    unsigned num_system_values;
    unsigned num_cbufs;
 
@@ -2272,7 +2278,7 @@ iris_compile_cs(struct iris_screen *screen,
 
    NIR_PASS_V(nir, brw_nir_lower_cs_intrinsics);
 
-   iris_setup_uniforms(compiler, mem_ctx, nir, prog_data,
+   iris_setup_uniforms(devinfo, mem_ctx, nir, prog_data,
                        ish->kernel_input_size,
                        &system_values, &num_system_values, &num_cbufs);
 
@@ -2383,7 +2389,7 @@ iris_get_scratch_space(struct iris_context *ice,
 {
    struct iris_screen *screen = (struct iris_screen *)ice->ctx.screen;
    struct iris_bufmgr *bufmgr = screen->bufmgr;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
 
    unsigned encoded_size = ffs(per_thread_scratch) - 11;
    assert(encoded_size < ARRAY_SIZE(ice->shaders.scratch_bos));
@@ -2403,7 +2409,7 @@ iris_get_scratch_space(struct iris_context *ice,
       assert(stage < ARRAY_SIZE(devinfo->max_scratch_ids));
       uint32_t size = per_thread_scratch * devinfo->max_scratch_ids[stage];
       *bop = iris_bo_alloc(bufmgr, "scratch", size, 1024,
-                           IRIS_MEMZONE_SHADER, 0);
+                           IRIS_MEMZONE_SHADER, BO_ALLOC_PLAIN);
    }
 
    return *bop;
@@ -2414,7 +2420,7 @@ iris_get_scratch_surf(struct iris_context *ice,
                       unsigned per_thread_scratch)
 {
    struct iris_screen *screen = (struct iris_screen *)ice->ctx.screen;
-   ASSERTED const struct intel_device_info *devinfo = &screen->devinfo;
+   ASSERTED const struct intel_device_info *devinfo = screen->devinfo;
 
    assert(devinfo->verx10 >= 125);
 
@@ -2534,7 +2540,7 @@ iris_create_compute_state(struct pipe_context *ctx,
    struct iris_uncompiled_shader *ish =
       iris_create_uncompiled_shader(screen, nir, NULL);
    ish->kernel_input_size = state->req_input_mem;
-   ish->kernel_shared_size = state->req_local_mem;
+   ish->kernel_shared_size = state->static_shared_mem;
 
    // XXX: disallow more than 64KB of shared variables
 
@@ -2555,6 +2561,24 @@ iris_create_compute_state(struct pipe_context *ctx,
    }
 
    return ish;
+}
+
+static void
+iris_get_compute_state_info(struct pipe_context *ctx, void *state,
+                            struct pipe_compute_state_object_info *info)
+{
+   struct iris_screen *screen = (void *) ctx->screen;
+   struct iris_uncompiled_shader *ish = state;
+
+   info->max_threads = MIN2(1024, 32 * screen->devinfo->max_cs_workgroup_threads);
+   info->private_memory = 0;
+   info->preferred_simd_size = 32;
+
+   list_for_each_entry_safe(struct iris_compiled_shader, shader,
+                            &ish->variants, link) {
+      info->private_memory = MAX2(info->private_memory,
+                                  shader->prog_data->total_scratch);
+   }
 }
 
 static void
@@ -2689,7 +2713,7 @@ iris_create_shader_state(struct pipe_context *ctx,
       bool can_rearrange_varyings =
          util_bitcount64(info->inputs_read & BRW_FS_VARYING_INPUT_MASK) <= 16;
 
-      const struct intel_device_info *devinfo = &screen->devinfo;
+      const struct intel_device_info *devinfo = screen->devinfo;
 
       key.fs = (struct iris_fs_prog_key) {
          KEY_INIT(base),
@@ -2876,7 +2900,7 @@ iris_bind_tes_state(struct pipe_context *ctx, void *state)
 {
    struct iris_context *ice = (struct iris_context *)ctx;
    struct iris_screen *screen = (struct iris_screen *) ctx->screen;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
 
    /* Enabling/disabling optional stages requires a URB reconfiguration. */
    if (!!state != !!ice->shaders.uncompiled[MESA_SHADER_TESS_EVAL])
@@ -2903,7 +2927,7 @@ iris_bind_fs_state(struct pipe_context *ctx, void *state)
 {
    struct iris_context *ice = (struct iris_context *) ctx;
    struct iris_screen *screen = (struct iris_screen *) ctx->screen;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
    struct iris_uncompiled_shader *old_ish =
       ice->shaders.uncompiled[MESA_SHADER_FRAGMENT];
    struct iris_uncompiled_shader *new_ish = state;
@@ -2935,7 +2959,7 @@ iris_finalize_nir(struct pipe_screen *_screen, void *nirptr)
 {
    struct iris_screen *screen = (struct iris_screen *)_screen;
    struct nir_shader *nir = (struct nir_shader *) nirptr;
-   const struct intel_device_info *devinfo = &screen->devinfo;
+   const struct intel_device_info *devinfo = screen->devinfo;
 
    NIR_PASS_V(nir, iris_fix_edge_flags);
 
@@ -2955,7 +2979,8 @@ iris_set_max_shader_compiler_threads(struct pipe_screen *pscreen,
                                      unsigned max_threads)
 {
    struct iris_screen *screen = (struct iris_screen *) pscreen;
-   util_queue_adjust_num_threads(&screen->shader_compiler_queue, max_threads);
+   util_queue_adjust_num_threads(&screen->shader_compiler_queue, max_threads,
+                                 false);
 }
 
 static bool
@@ -3015,4 +3040,6 @@ iris_init_program_functions(struct pipe_context *ctx)
    ctx->bind_gs_state  = iris_bind_gs_state;
    ctx->bind_fs_state  = iris_bind_fs_state;
    ctx->bind_compute_state = iris_bind_cs_state;
+
+   ctx->get_compute_state_info = iris_get_compute_state_info;
 }

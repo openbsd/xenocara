@@ -38,7 +38,7 @@
  * @author Jose Fonseca <jfonseca@vmware.com>
  */
 
-#include "pipe/p_config.h"
+#include "util/detect.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,7 +49,7 @@
 #endif
 
 #include "pipe/p_compiler.h"
-#include "os/os_thread.h"
+#include "util/u_thread.h"
 #include "util/os_time.h"
 #include "util/simple_mtx.h"
 #include "util/u_debug.h"
@@ -658,14 +658,8 @@ void trace_dump_nir(void *nir)
    if (!dumping)
       return;
 
-   if (nir_count < 0) {
+   if (--nir_count < 0) {
       fputs("<string>...</string>", stream);
-      return;
-   }
-
-   if ((nir_count--) == 0) {
-      fputs("<string>Set GALLIUM_TRACE_NIR to a sufficiently big number "
-            "to enable NIR shader dumping.</string>", stream);
       return;
    }
 

@@ -70,7 +70,7 @@ nir_opt_move_block(nir_block *block, nir_move_options options)
    nir_instr *last_instr = nir_block_ends_in_jump(block) ?
                            nir_block_last_instr(block) : NULL;
    const nir_if *iff = nir_block_get_following_if(block);
-   const nir_instr *if_cond_instr = iff ? iff->condition.parent_instr : NULL;
+   const nir_instr *if_cond_instr = iff ? iff->condition.ssa->parent_instr : NULL;
 
    /* Walk the instructions backwards.
     * The instructions get indexed while iterating.

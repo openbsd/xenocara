@@ -147,8 +147,9 @@ get_var_pair(nir_builder *b, nir_variable *old_var,
       new_var->xy->type = glsl_dvec_type(2);
       new_var->zw->type = glsl_dvec_type(old_components - 2);
 
-      if (glsl_type_is_array(old_var->type)) {
-         unsigned array_size = glsl_get_aoa_size(old_var->type);
+      if (glsl_type_is_array_or_matrix(old_var->type)) {
+         const struct glsl_type *element_type = glsl_without_array(old_var->type);
+         unsigned array_size = glsl_get_aoa_size(old_var->type) * glsl_get_matrix_columns(element_type);
          new_var->xy->type = glsl_array_type(new_var->xy->type,
                                              array_size, 0);
          new_var->zw->type = glsl_array_type(new_var->zw->type,
@@ -213,7 +214,8 @@ split_store_deref(nir_builder *b, nir_intrinsic_instr *intr,
 
    int write_mask_zw = nir_intrinsic_write_mask(intr) & 0xc;
    if (write_mask_zw) {
-      nir_ssa_def *src_zw = nir_channels(b, intr->src[1].ssa, write_mask_zw);
+      nir_ssa_def *src_zw = nir_channels(b, intr->src[1].ssa,
+                                         nir_component_mask(intr->src[1].ssa->num_components) & 0xc);
       nir_build_store_deref(b, &deref_zw->dest.ssa, src_zw, write_mask_zw >> 2);
    }
 

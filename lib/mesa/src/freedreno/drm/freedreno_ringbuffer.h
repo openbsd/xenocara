@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include "util/u_atomic.h"
 #include "util/u_debug.h"
-#include "util/u_queue.h"
 
 #include "adreno_common.xml.h"
 #include "adreno_pm4.xml.h"
@@ -93,33 +92,11 @@ struct fd_ringbuffer *fd_submit_new_ringbuffer(struct fd_submit *submit,
                                                uint32_t size,
                                                enum fd_ringbuffer_flags flags);
 
-/**
- * Encapsulates submit out-fence(s), which consist of a 'timestamp' (per-
- * pipe (submitqueue) sequence number) and optionally, if requested, an
- * out-fence-fd
- */
-struct fd_submit_fence {
-   /**
-    * The ready fence is signaled once the submit is actually flushed down
-    * to the kernel, and fence/fence_fd are populated.  You must wait for
-    * this fence to be signaled before reading fence/fence_fd.
-    */
-   struct util_queue_fence ready;
-
-   struct fd_fence fence;
-
-   /**
-    * Optional dma_fence fd, returned by submit if use_fence_fd is true
-    */
-   int fence_fd;
-   bool use_fence_fd;
-};
-
 /* in_fence_fd: -1 for no in-fence, else fence fd
- * out_fence can be NULL if no output fence is required
+ * if use_fence_fd is true the output fence will be dma_fence fd backed
  */
-int fd_submit_flush(struct fd_submit *submit, int in_fence_fd,
-                    struct fd_submit_fence *out_fence);
+struct fd_fence *fd_submit_flush(struct fd_submit *submit, int in_fence_fd,
+                                 bool use_fence_fd);
 
 struct fd_ringbuffer;
 struct fd_reloc;
@@ -162,10 +139,33 @@ struct fd_ringbuffer {
 struct fd_ringbuffer *fd_ringbuffer_new_object(struct fd_pipe *pipe,
                                                uint32_t size);
 
+/*
+ * Helpers for ref/unref with some extra debugging.. unref() returns true if
+ * the object is still live
+ */
+
+static inline void
+ref(int32_t *ref)
+{
+   ASSERTED int32_t count = p_atomic_inc_return(ref);
+   /* We should never see a refcnt transition 0->1, this is a sign of a
+    * zombie coming back from the dead!
+    */
+   assert(count != 1);
+}
+
+static inline bool
+unref(int32_t *ref)
+{
+   int32_t count = p_atomic_dec_return(ref);
+   assert(count != -1);
+   return count == 0;
+}
+
 static inline void
 fd_ringbuffer_del(struct fd_ringbuffer *ring)
 {
-   if (!p_atomic_dec_zero(&ring->refcnt))
+   if (--ring->refcnt > 0)
       return;
 
    ring->funcs->destroy(ring);
@@ -174,7 +174,7 @@ fd_ringbuffer_del(struct fd_ringbuffer *ring)
 static inline struct fd_ringbuffer *
 fd_ringbuffer_ref(struct fd_ringbuffer *ring)
 {
-   p_atomic_inc(&ring->refcnt);
+   ring->refcnt++;
    return ring;
 }
 
@@ -182,9 +182,6 @@ static inline void
 fd_ringbuffer_grow(struct fd_ringbuffer *ring, uint32_t ndwords)
 {
    assert(ring->funcs->grow); /* unsupported on kgsl */
-
-   /* there is an upper bound on IB size, which appears to be 0x0fffff */
-   ring->size = MIN2(ring->size << 1, 0x0fffff);
 
    ring->funcs->grow(ring, ring->size);
 }

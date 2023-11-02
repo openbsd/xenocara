@@ -22,7 +22,6 @@
  */
 
 #include "nir.h"
-#include "GL/gl.h"
 #include "gl_nir.h"
 #include "gl_nir_linker.h"
 #include "linker_util.h"
@@ -30,6 +29,7 @@
 #include "main/consts_exts.h"
 #include "main/shaderobj.h"
 #include "ir_uniform.h" /* for gl_uniform_storage */
+#include "util/glheader.h"
 
 /**
  * This file included general link methods, using NIR, instead of IR as
@@ -56,6 +56,7 @@ gl_nir_opts(nir_shader *nir)
                nir_var_mem_shared,
                NULL);
 
+      NIR_PASS(progress, nir, nir_opt_find_array_copies);
       NIR_PASS(progress, nir, nir_opt_copy_prop_vars);
       NIR_PASS(progress, nir, nir_opt_dead_write_vars);
 
@@ -117,6 +118,8 @@ gl_nir_opts(nir_shader *nir)
          NIR_PASS(progress, nir, nir_opt_loop_unroll);
       }
    } while (progress);
+
+   NIR_PASS_V(nir, nir_lower_var_copies);
 }
 
 static void
@@ -483,6 +486,7 @@ add_vars_with_modes(const struct gl_constants *consts,
          resource_name_updated(&sh_var->name);
          sh_var->type = var->type;
          sh_var->location = var->data.location - loc_bias;
+         sh_var->explicit_location = var->data.explicit_location;
          sh_var->index = var->data.index;
 
          if (!link_util_add_program_resource(prog, resource_set,
@@ -904,12 +908,11 @@ validate_sampler_array_indexing(const struct gl_constants *consts,
                            "expressions is forbidden in GLSL %s %u";
          /* Backend has indicated that it has no dynamic indexing support. */
          if (no_dynamic_indexing) {
-            linker_error(prog, msg, prog->IsES ? "ES" : "",
-                         prog->data->Version);
+            linker_error(prog, msg, prog->IsES ? "ES" : "", prog->GLSL_Version);
             return false;
          } else {
             linker_warning(prog, msg, prog->IsES ? "ES" : "",
-                           prog->data->Version);
+                           prog->GLSL_Version);
          }
       }
    }
@@ -933,8 +936,8 @@ gl_nir_link_glsl(const struct gl_constants *consts,
     * with loop induction variable. This check emits a warning or error
     * depending if backend can handle dynamic indexing.
     */
-   if ((!prog->IsES && prog->data->Version < 130) ||
-       (prog->IsES && prog->data->Version < 300)) {
+   if ((!prog->IsES && prog->GLSL_Version < 130) ||
+       (prog->IsES && prog->GLSL_Version < 300)) {
       if (!validate_sampler_array_indexing(consts, prog))
          return false;
    }
@@ -993,6 +996,41 @@ gl_nir_link_glsl(const struct gl_constants *consts,
    check_image_resources(consts, exts, prog);
    gl_nir_link_assign_atomic_counter_resources(consts, prog);
    gl_nir_link_check_atomic_counter_resources(consts, prog);
+
+   /* OpenGL ES < 3.1 requires that a vertex shader and a fragment shader both
+    * be present in a linked program. GL_ARB_ES2_compatibility doesn't say
+    * anything about shader linking when one of the shaders (vertex or
+    * fragment shader) is absent. So, the extension shouldn't change the
+    * behavior specified in GLSL specification.
+    *
+    * From OpenGL ES 3.1 specification (7.3 Program Objects):
+    *     "Linking can fail for a variety of reasons as specified in the
+    *     OpenGL ES Shading Language Specification, as well as any of the
+    *     following reasons:
+    *
+    *     ...
+    *
+    *     * program contains objects to form either a vertex shader or
+    *       fragment shader, and program is not separable, and does not
+    *       contain objects to form both a vertex shader and fragment
+    *       shader."
+    *
+    * However, the only scenario in 3.1+ where we don't require them both is
+    * when we have a compute shader. For example:
+    *
+    * - No shaders is a link error.
+    * - Geom or Tess without a Vertex shader is a link error which means we
+    *   always require a Vertex shader and hence a Fragment shader.
+    * - Finally a Compute shader linked with any other stage is a link error.
+    */
+   if (!prog->SeparateShader && _mesa_is_api_gles2(api) &&
+       !prog->_LinkedShaders[MESA_SHADER_COMPUTE]) {
+      if (prog->_LinkedShaders[MESA_SHADER_VERTEX] == NULL) {
+         linker_error(prog, "program lacks a vertex shader\n");
+      } else if (prog->_LinkedShaders[MESA_SHADER_FRAGMENT] == NULL) {
+         linker_error(prog, "program lacks a fragment shader\n");
+      }
+   }
 
    if (prog->data->LinkStatus == LINKING_FAILURE)
       return false;
