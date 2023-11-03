@@ -1,4 +1,4 @@
-#	$OpenBSD: Makefile,v 1.9 2023/03/03 06:32:18 jsg Exp $
+#	$OpenBSD: Makefile,v 1.10 2023/11/03 00:58:54 jsg Exp $
 
 .include <bsd.xconf.mk>
 
@@ -27,7 +27,7 @@ LDADD+=	-Wl,--as-needed -Wl,--start-group \
 	${.CURDIR}/../libmesa_util_c11/${__objdir}/libmesa_util_c11.a \
 	${.CURDIR}/../libxmlconfig/${__objdir}/libxmlconfig.a \
 	-Wl,--gc-sections \
-	-lz -lm -lexpat -lpthread
+	-lz -lm -lexpat -lpthread -lxcb-randr
 
 .if ${XENOCARA_BUILD_DRI:L} == "yes"
 LDADD+= -L${X11BASE}/lib -ldrm
