@@ -1,6 +1,6 @@
 #!/bin/sh
 # Assign ownership of the console to the invoking user
-# $OpenBSD: GiveConsole.in,v 1.2 2022/01/06 23:35:41 jsg Exp $
+# $OpenBSD: GiveConsole.in,v 1.3 2023/11/10 18:49:21 matthieu Exp $
 #
 # By convention, both xconsole and xterm -C check that the
 # console is owned by the invoking user and is readable before attaching
@@ -10,11 +10,13 @@
 prefix="@prefix@"
 exec_prefix="@exec_prefix@"
 
-chown $USER /dev/console
+GROUP=`id -g $USER`
+
+chown $USER:$GROUP /dev/console
 if [ -c /dev/dri/card0 ]; then
-    chown $USER /dev/dri/card0
+    chown $USER:$GROUP /dev/dri/card0
 fi
 if [ -c /dev/dri/renderD128 ]; then
-    chown $USER /dev/dri/renderD128
+    chown $USER:$GROUP /dev/dri/renderD128
 fi
 @bindir@/sessreg -a -l $DISPLAY -u none $USER
