@@ -1669,6 +1669,7 @@ with_llvm = false
 if _llvm.allowed()
   dep_llvm = dependency(
     'llvm',
+    method : host_machine.system() == 'windows' ? 'auto' : 'config-tool',
     version : _llvm_version,
     modules : llvm_modules,
     optional_modules : llvm_optional_modules,
