@@ -2525,6 +2525,8 @@ RecalculateMasterButtons(DeviceIntPtr slave)
 
     if (master->button && master->button->numButtons != maxbuttons) {
         int i;
+        int last_num_buttons = master->button->numButtons;
+
         DeviceChangedEvent event = {
             .header = ET_Internal,
             .type = ET_DeviceChanged,
@@ -2535,6 +2537,15 @@ RecalculateMasterButtons(DeviceIntPtr slave)
         };
 
         master->button->numButtons = maxbuttons;
+        if (last_num_buttons < maxbuttons) {
+            master->button->xkb_acts = xnfreallocarray(master->button->xkb_acts,
+                                                       maxbuttons,
+                                                       sizeof(XkbAction));
+            memset(&master->button->xkb_acts[last_num_buttons],
+                   0,
+                   (maxbuttons - last_num_buttons) * sizeof(XkbAction));
+        }
+
 
         memcpy(&event.buttons.names, master->button->labels, maxbuttons *
                sizeof(Atom));

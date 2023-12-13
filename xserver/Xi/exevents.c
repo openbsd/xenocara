@@ -612,12 +612,16 @@ DeepCopyPointerClasses(DeviceIntPtr from, DeviceIntPtr to)
 
         if (from->button->xkb_acts) {
             if (!to->button->xkb_acts) {
-                to->button->xkb_acts = calloc(1, sizeof(XkbAction));
+                to->button->xkb_acts = calloc(from->button->numButtons, sizeof(XkbAction));
                 if (!to->button->xkb_acts)
                     FatalError("[Xi] not enough memory for xkb_acts.\n");
+            } else {
+                to->button->xkb_acts = xnfreallocarray(to->button->xkb_acts,
+                                                       from->button->numButtons,
+                                                       sizeof(XkbAction));
             }
             memcpy(to->button->xkb_acts, from->button->xkb_acts,
-                   sizeof(XkbAction));
+                   from->button->numButtons * sizeof(XkbAction));
         }
         else {
             free(to->button->xkb_acts);
