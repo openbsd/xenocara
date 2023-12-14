@@ -2659,7 +2659,7 @@ getPassword(void)
 #endif
 		/* clear plaintext password so you can not grunge around
 		   /dev/kmem */
-		(void) memset((char *) buffer, 0, sizeof (buffer));
+		explicit_bzero(buffer, sizeof (buffer));
 
 		if (done) {
 #ifdef USE_SOUND
