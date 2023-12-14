@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.2 2022/07/07 05:00:19 semarie Exp $ */
+/* $OpenBSD: privsep.c,v 1.3 2023/12/14 09:44:15 claudio Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -178,7 +178,7 @@ receive_cmd(struct imsgbuf *ibuf, char **name, char **pass, char **style)
 		goto  nomem;
 	data += hdr.passlen;
 	if (hdr.stylelen != 0) {
-		*style = strndup(data, hdr.passlen);
+		*style = strndup(data, hdr.stylelen);
 		if (*style == NULL)
 			goto nomem;
 	} else
