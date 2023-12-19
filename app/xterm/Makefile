@@ -1,4 +1,4 @@
-# $OpenBSD: Makefile,v 1.37 2021/10/31 18:38:43 matthieu Exp $
+# $OpenBSD: Makefile,v 1.38 2023/12/19 20:31:21 millert Exp $
 .include <bsd.xconf.mk>
 
 SUBDIR=	icons resize
@@ -67,7 +67,7 @@ PATCH_YMD != sed -n '/XTERM_DATE/s,[^0-9/.-]*,,gp' ${.CURDIR}/version.h
 	    -e 's%__app_version__%Patch\ \#'$(PATCH_NUM)% \
 	    -e 's%__app_date__%'${PATCH_YMD}% \
 	    -e s%__default_termname__%xterm% \
-	    -e s%__default_termid__%vt100% \
+	    -e s%__default_termid__%100% \
 	    -e s%__alt_sends_esc__%false% \
 	    -e s%__meta_sends_esc__%false% \
 	    -e s%__backarrow_is_bs__%true% \
