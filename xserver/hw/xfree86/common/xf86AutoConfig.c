@@ -246,7 +246,7 @@ listPossibleVideoDrivers(XF86MatchedDrivers *md)
         xf86PciMatchDriver(md);
         break;
 #endif
-    case WSDISPLAY_TYPE_RKDRM:
+    case WSDISPLAY_TYPE_KMS:
         xf86AddMatchedDriver(md, "modesetting");
         break;
     case WSDISPLAY_TYPE_IFB:
