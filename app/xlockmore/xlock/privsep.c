@@ -1,4 +1,4 @@
-/* $OpenBSD: privsep.c,v 1.3 2023/12/14 09:44:15 claudio Exp $ */
+/* $OpenBSD: privsep.c,v 1.4 2024/01/22 10:13:34 claudio Exp $ */
 /*
  * Copyright 2001 Niels Provos <provos@citi.umich.edu>
  * All rights reserved.
@@ -118,7 +118,6 @@ send_cmd(struct imsgbuf *ibuf, char *user, char *pass, char *style)
 			warn("imsg_add");
 			return -1;
 		}
-	wbuf->fd = -1;
 	imsg_close(ibuf, wbuf);
 
 	if ((n = msgbuf_write(&ibuf->w)) == -1 && errno != EAGAIN) {
@@ -130,63 +129,64 @@ send_cmd(struct imsgbuf *ibuf, char *user, char *pass, char *style)
 	return 0;
 }
 
+static char *
+ibuf_get_string(struct ibuf *buf, size_t len)
+{
+	char *str;
+
+	if (ibuf_size(buf) < len) {
+		errno = EBADMSG;
+		return (NULL);
+	}
+	str = strndup(ibuf_data(buf), len);
+	if (str == NULL)
+		return (NULL);
+	buf->rpos += len;
+	return (str);
+}
+
 static int
 receive_cmd(struct imsgbuf *ibuf, char **name, char **pass, char **style)
 {
 	struct imsg imsg;
+	struct ibuf buf;
 	struct priv_cmd_hdr hdr;
-	ssize_t n, nread, datalen;
-	void *data;
+	ssize_t n, nread;
 
-	if ((nread = imsg_read(ibuf)) == -1 && errno != EAGAIN) {
-		warn("imsg_read");
-		return -1;
-	}
-	if (nread == 0) {
-		/* parent exited */
-		exit(0);
-	}
-	if ((n = imsg_get(ibuf, &imsg)) == -1) {
-		warnx("imsg_get");
-		return -1;
-	}
-	if (imsg.hdr.type != XLOCK_CHECKPW_CMD) {
+	do {
+		if ((nread = imsg_read(ibuf)) == -1 && errno != EAGAIN) {
+			warn("imsg_read");
+			return -1;
+		}
+		if (nread == 0) {
+			/* parent exited */
+			exit(0);
+		}
+		if ((n = imsg_get(ibuf, &imsg)) == -1) {
+			warnx("imsg_get");
+			return -1;
+		}
+	} while (n == 0);
+	if (imsg_get_type(&imsg) != XLOCK_CHECKPW_CMD) {
 		warnx("invalid command");
-		imsg_free(&imsg);
-		return -1;
+		goto fail;
 	}
-	datalen = imsg.hdr.len - IMSG_HEADER_SIZE;
-	data = imsg.data;
-	if (datalen < sizeof(struct priv_cmd_hdr)) {
-		warnx("truncated header");
-		imsg_free(&imsg);
-		return -1;
+	if (imsg_get_ibuf(&imsg, &buf) == -1 ||
+	    ibuf_get(&buf, &hdr, sizeof(hdr)) == -1 ||
+	    (*name = ibuf_get_string(&buf, hdr.namelen)) == NULL ||
+	    (*pass = ibuf_get_string(&buf, hdr.passlen)) == NULL) {
+		warn("truncated message");
+		goto fail;
 	}
-	memcpy(&hdr, data, sizeof(struct priv_cmd_hdr));
-	if (datalen != sizeof(hdr) + hdr.namelen + hdr.passlen + hdr.stylelen) {
-		warnx("truncated strings");
-		imsg_free(&imsg);
-		return -1;
-	}
-	data += sizeof(struct priv_cmd_hdr);
-	*name = strndup(data, hdr.namelen);
-	if (*name == NULL)
-		goto nomem;
-	data += hdr.namelen;
-	*pass = strndup(data, hdr.passlen);
-	if (*pass == NULL)
-		goto  nomem;
-	data += hdr.passlen;
 	if (hdr.stylelen != 0) {
-		*style = strndup(data, hdr.stylelen);
-		if (*style == NULL)
-			goto nomem;
-	} else
-		*style = NULL;
+		if ((*style = ibuf_get_string(&buf, hdr.stylelen)) == NULL) {
+			warn("truncated message");
+			goto fail;
+		}
+	}
 	imsg_free(&imsg);
 	return 0;
-nomem:
-	warn("strndup");
+fail:
 	imsg_free(&imsg);
 	return -1;
 }
@@ -202,21 +202,21 @@ send_result(struct imsgbuf *ibuf, int result)
 static int
 receive_result(struct imsgbuf *ibuf, int *presult)
 {
-	ssize_t nread, n;
+	ssize_t n, nread;
 	int retval = 0;
 	struct imsg imsg;
 
-	if ((nread = imsg_read(ibuf)) == -1 && errno != EAGAIN)
-		return -1;
-	if (nread == 0)
-		return -1;
-	if ((n = imsg_get(ibuf, &imsg)) == -1)
-		return -1;
-	if (imsg.hdr.len - IMSG_HEADER_SIZE != sizeof(int))
+	do {
+		if ((nread = imsg_read(ibuf)) == -1 && errno != EAGAIN)
+			return -1;
+		if (nread == 0)
+			return -1;
+		if ((n = imsg_get(ibuf, &imsg)) == -1)
+			return -1;
+	} while (n == 0);
+	if (imsg_get_type(&imsg) != XLOCK_CHECKPW_RESULT ||
+	    imsg_get_data(&imsg, presult, sizeof(*presult)) == -1)
 		retval = -1;
-	if (imsg.hdr.type != XLOCK_CHECKPW_RESULT)
-		retval = -1;
-	memcpy(presult, imsg.data, sizeof(int));
 	imsg_free(&imsg);
 	return retval;
 }
@@ -267,13 +267,16 @@ priv_init(gid_t gid)
 		err(1, "pledge");
 
 	while (1) {
+		user = pass = style = NULL;
 		if (receive_cmd(&child_ibuf, &user, &pass, &style) == -1) {
 			warn("receive_cmd");
 			result = 0;
 		} else
 			result = pw_check(user, pass, style);
-		freezero(user, strlen(user));
-		freezero(pass, strlen(pass));
+		if (user != NULL)
+			freezero(user, strlen(user) + 1);
+		if (pass != NULL)
+			freezero(pass, strlen(pass) + 1);
 		free(style);
 		if (send_result(&child_ibuf, result) == -1)
 			warn("send_result");
