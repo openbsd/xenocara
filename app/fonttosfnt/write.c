@@ -208,7 +208,6 @@ readULONG(FILE *out)
 void
 fontMetrics(FontPtr font)
 {
-    int i, rc;
     double sumAwidth = 0;
     unsigned count = 0;
 
@@ -218,9 +217,9 @@ fontMetrics(FontPtr font)
     font->metrics.minX = 10000 * TWO_SIXTEENTH;
     font->metrics.minY = 10000 * TWO_SIXTEENTH;
 
-    for(i = 0; i < FONT_CODES; i++) {
+    for(int i = 0; i < FONT_CODES; i++) {
         int awidth, x0, y0, x1, y1;
-        rc = glyphMetrics(font, i, &awidth, &x0, &y0, &x1, &y1);
+        int rc = glyphMetrics(font, i, &awidth, &x0, &y0, &x1, &y1);
         if(rc < 0)
             continue;
 
@@ -483,7 +482,6 @@ static unsigned
 computeChecksum(FILE *out, int offset, int length)
 {
     int rc;
-    int i;
     unsigned sum = 0;
 
     if(offset % 4 != 0) {
@@ -498,7 +496,7 @@ computeChecksum(FILE *out, int offset, int length)
     }
 
     /* This relies on the fact that we always pad tables with zeroes. */
-    for(i = 0; i < length; i += 4) {
+    for(int i = 0; i < length; i += 4) {
         sum += readULONG(out);
     }
     return sum;
@@ -507,12 +505,9 @@ computeChecksum(FILE *out, int offset, int length)
 static int
 fixupDir(FILE *out, FontPtr font, int numTables, int *offset, int *length)
 {
-    int rc, i;
-    unsigned sum;
-
-    for(i = 0; i < numTables; i++) {
-        sum = computeChecksum(out, offset[i], length[i]);
-        rc = fseek(out, 12 + 16 * i + 4, SEEK_SET);
+    for(int i = 0; i < numTables; i++) {
+        unsigned sum = computeChecksum(out, offset[i], length[i]);
+        int rc = fseek(out, 12 + 16 * i + 4, SEEK_SET);
         if(rc != 0) {
             perror("Couldn't seek");
             return -1;
@@ -577,19 +572,18 @@ static int
 outputRaster(FILE *out, char *raster, int width, int height, int stride,
              int bit_aligned)
 {
-    int i, j;
     int len = 0;
 
     if(!bit_aligned || width % 8 == 0) {
-        for(i = 0; i < height; i++) {
+        for(int i = 0; i < height; i++) {
             writeCHARs(out, raster + i * stride, (width + 7) / 8);
             len += (width + 7) / 8;
         }
     } else {
         int bit = 0;
         unsigned char v = 0;
-        for(i = 0; i < height; i++) {
-            for(j = 0; j < width; j++) {
+        for(int i = 0; i < height; i++) {
+            for(int j = 0; j < width; j++) {
                 if(BITREF(raster, stride, j, i))
                     v |= 1 << (7 - bit);
                 bit++;
@@ -613,9 +607,6 @@ static int
 writeEBDT(FILE* out, FontPtr font)
 {
     StrikePtr strike;
-    BitmapPtr bitmap;
-    IndexSubTablePtr table;
-    int i;
     int offset;
     int ebdt_start;
 
@@ -626,10 +617,10 @@ writeEBDT(FILE* out, FontPtr font)
 
     strike = font->strikes;
     while(strike) {
-        table = strike->indexSubTables;
+        IndexSubTablePtr table = strike->indexSubTables;
         while(table) {
-            for(i = table->firstGlyphIndex; i <= table->lastGlyphIndex; i++) {
-                bitmap = strikeBitmapIndex(strike, current_cmap, i);
+            for(int i = table->firstGlyphIndex; i <= table->lastGlyphIndex; i++) {
+                BitmapPtr bitmap = strikeBitmapIndex(strike, current_cmap, i);
                 bitmap->location = offset;
                 if(bit_aligned_flag && table->constantMetrics) {
                     /* image format 5 */
@@ -662,9 +653,8 @@ writeEBDT(FILE* out, FontPtr font)
 static int 
 writeEBLC(FILE* out, FontPtr font)
 {
-    int i, rc, numstrikes, eblc_start, num, den;
+    int numstrikes, eblc_start, num, den;
     StrikePtr strike;
-    IndexSubTablePtr table;
 
     degreesToFraction(font->italicAngle, &num, &den);
 
@@ -688,7 +678,7 @@ writeEBLC(FILE* out, FontPtr font)
         writeULONG(out, 0xDEADFACE); /* indexTablesSize */
         writeULONG(out, 0xDEADFACE); /* numberOfIndexSubTables */
         writeULONG(out, 0);     /* colorRef */
-	for (i = 0; i <= 1; i++) {
+	for (int i = 0; i <= 1; i++) {
 	  writeCHAR(out, font->pxMetrics.ascent);	/* ascender */
 	  writeCHAR(out, -font->pxMetrics.descent);	/* descender */
 	  writeBYTE(out, strikeMaxWidth(strike));	/* widthMax */
@@ -714,8 +704,9 @@ writeEBLC(FILE* out, FontPtr font)
     /* indexSubTableArray, one per strike */
     strike = font->strikes;
     while(strike) {
-        int endoffset;
+        int endoffset, rc;
         int numtables = 0;
+        IndexSubTablePtr table;
 
         strike->indexSubTableLocation = ftell(out);
         table = strike->indexSubTables;
@@ -749,12 +740,11 @@ writeEBLC(FILE* out, FontPtr font)
     /* actual indexSubTables */
     strike = font->strikes;
     while(strike) {
-        table = strike->indexSubTables;
+        IndexSubTablePtr table = strike->indexSubTables;
         while(table) {
-            int location;
+            int location, rc;
             int data_location;
             int short_offsets;
-            int offset;
 
             location = ftell(out);
             if (location == -1) {
@@ -777,7 +767,7 @@ writeEBLC(FILE* out, FontPtr font)
                 strikeBitmapIndex(strike, current_cmap,
                                   table->firstGlyphIndex)->location;
             short_offsets = 1;
-            for(i = table->firstGlyphIndex; i <= table->lastGlyphIndex; i++) {
+            for(int i = table->firstGlyphIndex; i <= table->lastGlyphIndex; i++) {
                 if(strikeBitmapIndex(strike, current_cmap, i)->location -
                    data_location > 0xFFFF) {
                     short_offsets = 0;
@@ -822,9 +812,9 @@ writeEBLC(FILE* out, FontPtr font)
                 writeCHAR(out, bitmap->horiBearingY); /* vertBearingY */
                 writeBYTE(out, font->metrics.maxAwidth); /* vertAdvance */
             } else {
-                for(i = table->firstGlyphIndex; 
+                for(int i = table->firstGlyphIndex;
                     i <= table->lastGlyphIndex; i++) {
-                    offset = 
+                    int offset = 
                         strikeBitmapIndex(strike, current_cmap, i)->location -
                         data_location;
                     if(short_offsets)
@@ -975,10 +965,8 @@ writehhea(FILE* out, FontPtr font)
 static int 
 writehmtx(FILE* out, FontPtr font)
 {
-    int rc, i;
-
-    for(i = 0; i <= numglyphs; i++) {
-        int code, width, lsb;
+    for(int i = 0; i <= numglyphs; i++) {
+        int code, width, lsb, rc;
         code = findCode(current_cmap, i);
         if(code < 0)
             rc = -1;
@@ -1001,10 +989,8 @@ writehmtx(FILE* out, FontPtr font)
 static int 
 writeloca(FILE* out, FontPtr font)
 {
-    int i;
-
     /* All glyphs undefined -- loca table is empty, so offset 0 */
-    for(i = 0; i < numglyphs; i++) {
+    for(int i = 0; i < numglyphs; i++) {
         writeSHORT(out, 0);
     }
     writeSHORT(out, 0);
@@ -1035,14 +1021,13 @@ writemaxp(FILE* out, FontPtr font)
 static int 
 writename(FILE* out, FontPtr font)
 {
-    int i;
     int offset;
 
     writeUSHORT(out, 0);        /* format selector */
     writeUSHORT(out, font->numNames);
     writeUSHORT(out, 6 + font->numNames * 12); /* offset to string storage */
     offset = 0;
-    for(i = 0; i < font->numNames; i++) {
+    for(int i = 0; i < font->numNames; i++) {
         writeUSHORT(out, 3);    /* platform id -- Microsoft */
         writeUSHORT(out, 1);    /* encoding -- Unicode */
         writeUSHORT(out, 0x409); /* language id -- American English */
@@ -1051,7 +1036,7 @@ writename(FILE* out, FontPtr font)
         writeUSHORT(out, offset); /* string offset */
         offset += font->names[i].size;
     }
-    for(i = 0; i < font->numNames; i++)
+    for(int i = 0; i < font->numNames; i++)
         writeCHARs(out, font->names[i].value, font->names[i].size);
     return 0;
 }
@@ -1059,12 +1044,13 @@ writename(FILE* out, FontPtr font)
 static int 
 writepost(FILE* out, FontPtr font)
 {
-    int i, rc, previous_width, width, fixed_pitch;
+    int previous_width, fixed_pitch;
 
     fixed_pitch = 1;
     previous_width = -1;
-    for(i = 0; i < FONT_CODES; i++) {
-        rc = glyphMetrics(font, i, &width, NULL, NULL, NULL, NULL);
+    for(int i = 0; i < FONT_CODES; i++) {
+        int width = previous_width;
+        int rc = glyphMetrics(font, i, &width, NULL, NULL, NULL, NULL);
         if(rc < 0)
             continue;
         if(previous_width >= 0) {

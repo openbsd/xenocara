@@ -161,11 +161,10 @@ FontPtr makeFont(void);
 StrikePtr makeStrike(FontPtr, int, int);
 BitmapPtr makeBitmap(StrikePtr, int,
                      int, int, int, int, int, int,
-                     unsigned char*, int);
+                     const unsigned char*, int);
 IndexSubTablePtr makeIndexSubTables(StrikePtr, CmapPtr);
 int fontIndex(FontPtr, int);
 CmapPtr makeCmap(FontPtr);
-int findIndex(CmapPtr, int);
 int findCode(CmapPtr, int);
 BitmapPtr strikeBitmapIndex(StrikePtr, CmapPtr, int);
 int strikeMaxWidth(StrikePtr);
@@ -185,7 +184,6 @@ int writeFile(char *filename, FontPtr);
 char *sprintf_alloc(const char *f, ...);
 char *vsprintf_alloc(const char *f, va_list args);
 char *makeUTF16(const char *);
-unsigned makeName(const char*);
 int macTime(int *, unsigned *);
 unsigned faceFoundry(FT_Face);
 char *faceEncoding(FT_Face);
@@ -196,5 +194,11 @@ int faceWeight(FT_Face);
 int faceWidth(FT_Face);
 int faceItalicAngle(FT_Face);
 int degreesToFraction(int, int*, int*);
+
+static inline unsigned int
+makeName(const char *s)
+{
+    return s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3];
+}
 
 #endif /* _FONTTOSFNT_H_ */

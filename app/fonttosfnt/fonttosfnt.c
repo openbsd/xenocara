@@ -47,7 +47,6 @@ int
 main(int argc, char **argv)
 {
     int i;
-    int rc;
     char *output = NULL;
     FontPtr font;
 
@@ -113,11 +112,11 @@ main(int argc, char **argv)
 	    "The creation of an OpenType font collection is recommended.\n");
 
     if(i == argc) {
-        rc = readFile(NULL, font);
+        int rc = readFile(NULL, font);
         if(rc != 0)
             exit(1);
     } else while(i < argc) {
-        rc = readFile(argv[i], font);
+        int rc = readFile(argv[i], font);
         if(rc != 0)
             exit(1);
         i++;

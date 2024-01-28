@@ -36,40 +36,42 @@ makeFont(void)
     if(font == NULL)
         return NULL;
 
-    font->numNames = 0;
-    font->names = NULL;
-    font->flags = 0;
-    font->weight = 500;
-    font->width = 5;
-    font->italicAngle = 0;
-    font->pxMetrics.height = UNDEF;
-    font->pxMetrics.maxX = UNDEF;
-    font->pxMetrics.minX = UNDEF;
-    font->pxMetrics.maxY = UNDEF;
-    font->pxMetrics.minY = UNDEF;
-    font->pxMetrics.xHeight = UNDEF;
-    font->pxMetrics.capHeight = UNDEF;
-    font->pxMetrics.maxAwidth = UNDEF;
-    font->pxMetrics.awidth = UNDEF;
-    font->pxMetrics.ascent = UNDEF;
-    font->pxMetrics.descent = UNDEF;
-    font->pxMetrics.underlinePosition = UNDEF;
-    font->pxMetrics.underlineThickness = UNDEF;
-    font->metrics.height = UNDEF;
-    font->metrics.maxX = UNDEF;
-    font->metrics.minX = UNDEF;
-    font->metrics.maxY = UNDEF;
-    font->metrics.minY = UNDEF;
-    font->metrics.xHeight = UNDEF;
-    font->metrics.capHeight = UNDEF;
-    font->metrics.maxAwidth = UNDEF;
-    font->metrics.awidth = UNDEF;
-    font->metrics.ascent = UNDEF;
-    font->metrics.descent = UNDEF;
-    font->metrics.underlinePosition = UNDEF;
-    font->metrics.underlineThickness = UNDEF;
-    font->foundry = makeName("UNKN");
-    font->strikes = NULL;
+    *font = (FontRec) {
+        .numNames = 0,
+        .names = NULL,
+        .flags = 0,
+        .weight = 500,
+        .width = 5,
+        .italicAngle = 0,
+        .pxMetrics.height = UNDEF,
+        .pxMetrics.maxX = UNDEF,
+        .pxMetrics.minX = UNDEF,
+        .pxMetrics.maxY = UNDEF,
+        .pxMetrics.minY = UNDEF,
+        .pxMetrics.xHeight = UNDEF,
+        .pxMetrics.capHeight = UNDEF,
+        .pxMetrics.maxAwidth = UNDEF,
+        .pxMetrics.awidth = UNDEF,
+        .pxMetrics.ascent = UNDEF,
+        .pxMetrics.descent = UNDEF,
+        .pxMetrics.underlinePosition = UNDEF,
+        .pxMetrics.underlineThickness = UNDEF,
+        .metrics.height = UNDEF,
+        .metrics.maxX = UNDEF,
+        .metrics.minX = UNDEF,
+        .metrics.maxY = UNDEF,
+        .metrics.minY = UNDEF,
+        .metrics.xHeight = UNDEF,
+        .metrics.capHeight = UNDEF,
+        .metrics.maxAwidth = UNDEF,
+        .metrics.awidth = UNDEF,
+        .metrics.ascent = UNDEF,
+        .metrics.descent = UNDEF,
+        .metrics.underlinePosition = UNDEF,
+        .metrics.underlineThickness = UNDEF,
+        .foundry = makeName("UNKN"),
+        .strikes = NULL,
+    };
     return font;
 }
 
@@ -90,29 +92,35 @@ makeStrike(FontPtr font, int sizeX, int sizeY)
     strike = malloc(sizeof(StrikeRec));
     if(strike == NULL)
         return NULL;
-    strike->sizeX = sizeX;
-    strike->sizeY = sizeY;
-    strike->bitmaps = 
-        calloc(FONT_CODES / FONT_SEGMENT_SIZE, sizeof(BitmapPtr*));
-    if(strike->bitmaps == NULL) {
-        free(strike);
-        return NULL;
+    else {
+        BitmapPtr **bitmaps =
+            calloc(FONT_CODES / FONT_SEGMENT_SIZE, sizeof(BitmapPtr*));
+        if (bitmaps == NULL) {
+            free(strike);
+            return NULL;
+        }
+        *strike = (StrikeRec) {
+            .sizeX = sizeX,
+            .sizeY = sizeY,
+            .bitmaps = bitmaps,
+            .numSbits = 0,
+            .next = NULL,
+            .bitmapSizeTableLocation = 0xDEADFACE,
+            .indexSubTables = NULL,
+        };
+        if (last_strike)
+            last_strike->next = strike;
+        else
+            font->strikes = strike;
     }
-    strike->numSbits = 0;
-    strike->next = NULL;
-    strike->bitmapSizeTableLocation = 0xDEADFACE;
-    strike->indexSubTables = NULL;
-    if(last_strike)
-        last_strike->next = strike;
-    else
-        font->strikes = strike;
     return strike;
 }
 
 BitmapPtr
 makeBitmap(StrikePtr strike, int code,
            int advanceWidth, int horiBearingX, int horiBearingY,
-           int width, int height, int stride, unsigned char *raster, int crop)
+           int width, int height, int stride,
+           const unsigned char *raster, int crop)
 {
     BitmapPtr bitmap;
     int i, j, x, y;
@@ -122,12 +130,14 @@ makeBitmap(StrikePtr strike, int code,
     if(bitmap == NULL) 
         return NULL;
 
-    bitmap->index = -1;
-    bitmap->width = 0;
-    bitmap->height = 0;
-    bitmap->stride = 0;
-    bitmap->raster = NULL;
-    bitmap->location = 0xDEADFACE;
+    *bitmap = (BitmapRec) {
+        .index = -1,
+        .width = 0,
+        .height = 0,
+        .stride = 0,
+        .raster = NULL,
+        .location = 0xDEADFACE,
+    };
 
     i = code / FONT_SEGMENT_SIZE;
     j = code % FONT_SEGMENT_SIZE;
@@ -243,9 +253,8 @@ makeBitmap(StrikePtr strike, int code,
 IndexSubTablePtr
 makeIndexSubTables(StrikePtr strike, CmapPtr cmap)
 {
-    IndexSubTablePtr table, first, last;
-    BitmapPtr bitmap0, bitmap;
-    int index, n;
+    IndexSubTablePtr first, last;
+    int index;
 
     first = NULL;
     last = NULL;
@@ -262,6 +271,10 @@ makeIndexSubTables(StrikePtr strike, CmapPtr cmap)
     index = 0;
     while(index < 0xFFFF) {
         int constantMetrics = 1;
+        int n;
+        IndexSubTablePtr table;
+        BitmapPtr bitmap0, bitmap;
+
         bitmap0 = strikeBitmapIndex(strike, cmap, index);
         if(bitmap0 == NULL) {
             index++;
@@ -295,12 +308,14 @@ makeIndexSubTables(StrikePtr strike, CmapPtr cmap)
             constantMetrics = 0;
 
         table = malloc(sizeof(IndexSubTableRec));
-        table->firstGlyphIndex = index;
-        table->lastGlyphIndex = index + n - 1;
-        table->constantMetrics = constantMetrics;
-        table->location = 0xDEADFACE;
-        table->lastLocation = 0xDEADFACE;
-        table->next = NULL;
+        *table = (IndexSubTableRec) {
+            .firstGlyphIndex = index,
+            .lastGlyphIndex = index + n - 1,
+            .constantMetrics = constantMetrics,
+            .location = 0xDEADFACE,
+            .lastLocation = 0xDEADFACE,
+            .next = NULL,
+        };
 
         if(first == NULL) {
             first = table;
@@ -318,13 +333,12 @@ int
 fontIndex(FontPtr font, int code)
 {
     StrikePtr strike;
-    BitmapPtr bitmap;
 
     if(code == 0)
         return 0;
     strike = font->strikes;
     while(strike) {
-        bitmap = STRIKE_BITMAP(strike, code);
+        BitmapPtr bitmap = STRIKE_BITMAP(strike, code);
         if(bitmap)
             return bitmap->index;
         strike = strike->next;
@@ -338,11 +352,12 @@ makeCmap(FontPtr font)
     CmapPtr cmap_head = NULL;
     CmapPtr cmap_last = NULL;
     CmapPtr cmap;
-    int code, i, index, maxindex = 0;
+    int code, maxindex = 0;
 
     code = 0;
     while(code < FONT_CODES) {
-        index = fontIndex(font, code);
+        int i;
+        int index = fontIndex(font, code);
         if(index < 0) {
             code++;
             continue;
@@ -355,11 +370,13 @@ makeCmap(FontPtr font)
         cmap = malloc(sizeof(CmapRec));
         if(cmap == NULL)
             return NULL;
-        cmap->startCode = code;
-        cmap->endCode = code + i - 1;
-        cmap->index = index;
-        cmap->next = NULL;
-        cmap->maxindex = 0;
+        *cmap = (CmapRec) {
+            .startCode = code,
+            .endCode = code + i - 1,
+            .index = index,
+            .next = NULL,
+            .maxindex = 0,
+        };
         if(maxindex < index + i - 1)
             maxindex = index + i - 1;
         if(cmap_head == NULL)
@@ -374,7 +391,7 @@ makeCmap(FontPtr font)
     cmap_head->inverse = calloc(maxindex + 1, sizeof(int));
     cmap = cmap_head;
     while(cmap) {
-        for(i = cmap->index; 
+        for(int i = cmap->index;
             i <= cmap->endCode - cmap->startCode + cmap->index; i++) {
             cmap_head->inverse[i] =
                 i - cmap->index + cmap->startCode;
@@ -383,21 +400,6 @@ makeCmap(FontPtr font)
     }
 
     return cmap_head;
-}
-
-int
-findIndex(CmapPtr cmap_head, int code)
-{
-    CmapPtr cmap;
-    cmap = cmap_head;
-    while(cmap) {
-        if(cmap->endCode > code)
-            return -1;
-        if(cmap->startCode <= code)
-            return cmap->index + code - cmap->startCode;
-        cmap = cmap->next;
-    }
-    return -1;
 }
 
 int
@@ -428,12 +430,10 @@ strikeBitmapIndex(StrikePtr strike, CmapPtr cmap, int index)
 int
 strikeMaxWidth(StrikePtr strike)
 {
-    BitmapPtr bitmap;
-    int i;
     int width_max = 0;
 
-    for(i = 0; i < FONT_CODES; i++) {
-        bitmap = STRIKE_BITMAP(strike, i);
+    for(int i = 0; i < FONT_CODES; i++) {
+        BitmapPtr bitmap = STRIKE_BITMAP(strike, i);
         if(!bitmap)
             continue;
         if(bitmap->advanceWidth > width_max)
@@ -450,11 +450,10 @@ glyphMetrics(FontPtr font, int code,
              int *x_max_return, int *y_max_return)
 {
     StrikePtr strike;
-    BitmapPtr bitmap;
 
     strike = font->strikes;
     while(strike) {
-        bitmap = STRIKE_BITMAP(strike, code);
+        BitmapPtr bitmap = STRIKE_BITMAP(strike, code);
         if(bitmap) {
             if(width_return)
                 *width_return = 

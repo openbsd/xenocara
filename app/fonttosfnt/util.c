@@ -100,7 +100,9 @@ vsprintf_alloc(const char *f, va_list args)
 {
     int n, size = 12;
     char *string;
+#if HAVE_DECL_VA_COPY
     va_list args_copy;
+#endif
 
     while(1) {
         if(size > 4096)
@@ -132,22 +134,15 @@ vsprintf_alloc(const char *f, va_list args)
 char *
 makeUTF16(const char *string)
 {
-    int i;
     int n = strlen(string);
     char *value = malloc(2 * n);
     if(!value)
         return NULL;
-    for(i = 0; i < n; i++) {
+    for(int i = 0; i < n; i++) {
         value[2 * i] = '\0';
         value[2 * i + 1] = string[i];
     }
     return value;
-}
-
-unsigned
-makeName(const char *s)
-{
-    return s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3];
 }
 
 /* Like mktime(3), but UTC rather than local time */
@@ -445,7 +440,6 @@ degreesToFraction(int deg, int *num, int *den)
 {
     double n, d;
     double rad, val;
-    int i;
 
     if(deg <= -(60 * TWO_SIXTEENTH) || deg >= (60 * TWO_SIXTEENTH))
         goto fail;
@@ -460,7 +454,7 @@ degreesToFraction(int deg, int *num, int *den)
 
     val = atan2(n, d);
     /* There must be a cleaner way */
-    for(i = 1; i < 10000; i++) {
+    for(int i = 1; i < 10000; i++) {
         if((int)(d * i) != 0.0 &&
            fabs(atan2(ROUND(n * i), ROUND(d * i)) - val) < 0.05) {
             *num = (int)ROUND(n * i);

@@ -1,3 +1,95 @@
+commit 3b0f4a799bb7820dd27257be16f1a9d61a4969f9
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Wed Sep 27 18:37:58 2023 -0700
+
+    fonttosfnt 1.2.3
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 54fc73eeb8a2da16a49ab751d54d53dc2d693228
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 1 14:12:16 2023 -0700
+
+    Use C99 compound literals to initialize newly allocated structs
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ac44dd4a6e8324ae9f79f61ef093cb087268d72d
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 1 13:43:53 2023 -0700
+
+    Allow inlining makeName
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 15f75aa8e6578cd2a27cadfc11e31b58e2fc6683
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 1 13:02:50 2023 -0700
+
+    Remove unused function findIndex
+    
+    Found by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 11fa7c2d7c5c668ea921f1dbc6b70e97e3535afe
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 1 12:59:33 2023 -0700
+
+    makeBitmap: declare raster parameter const as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 92b565d9f9829cc0b47d019d336ef664d3f013e2
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 1 12:54:16 2023 -0700
+
+    args_copy variable is unused if HAVE_DECL_VA_COPY is not defined
+    
+    Found by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 103579f030bfead4a1f821734dd6dbaf823c5527
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Apr 1 12:52:05 2023 -0700
+
+    Variable scope reductions as recommended by cppcheck
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 4208f2d0dd928a2e627a2284337302be62b3967a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 15:43:35 2022 -0700
+
+    gitlab CI: enable gitlab's builtin static analysis
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit b2a8c9da0a61dc376151fb1992c79aa1cec7e9b6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jul 23 15:42:59 2022 -0700
+
+    gitlab CI: enable commit & merge request checks
+    
+    Uses ci-fairy from freedesktop/ci-templates
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c736c95af996b93967a3bb271f469f8a7f35f150
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Fri Dec 3 14:51:41 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 5fd5d9bdc04c3d4d318a1e017e0f5d08434fdae6
+Author: Peng Wu <pwu@redhat.com>
+Date:   Fri Aug 20 14:39:31 2021 +0800
+
+    Add CI tests
+
 commit 2726947ea34653a90f89163849887c11179b2d6d
 Author: Peter Hutterer <peter.hutterer@who-t.net>
 Date:   Tue Jun 15 10:33:54 2021 +1000
