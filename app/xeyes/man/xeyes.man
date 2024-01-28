@@ -51,10 +51,17 @@ disables Xrender and draws traditional eyes.
 .TP 8
 .B \-distance
 uses an alternative mapping, as if the eyes were set back from the screen, thus following the mouse more precisely.
+.TP 8
+.B \-biblicallyAccurate
+renders the eyes as if they belonged to a biblically accurate angel.
+.TP 8
+.B \-help
+print a usage message and exit.
+.TP 8
+.B \-version
+print the version number and exit.
 .SH "SEE ALSO"
 X(__miscmansuffix__), X Toolkit documentation
-.br
-See \fIX(__miscmansuffix__)\fP for a full statement of rights and permissions.
 .SH AUTHOR
 Keith Packard, MIT X Consortium
 .br

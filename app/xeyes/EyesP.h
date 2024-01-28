@@ -18,6 +18,23 @@
 
 #define SEG_BUFF_SIZE		128
 
+typedef struct {
+	// X offset
+	double x;
+	// Y offset
+	double y;
+} EyeLayout;
+
+typedef struct {
+	EyeLayout *eyes;
+	int count;
+
+	double w_min_x;
+	double w_max_x;
+	double w_min_y;
+double w_max_y;
+} EyeConfiguration;
+
 /* New fields for the eyes widget instance record */
 typedef struct {
 	 Pixel		pixel[PART_SHAPE];
@@ -28,7 +45,9 @@ typedef struct {
 	 Boolean	shape_window;	/* use SetWindowShapeMask */
 	 int		update;		/* current timeout index */
 	 TPoint		mouse;		/* old mouse position */
-	 TPoint		pupil[2];	/* pupil position */
+	 Boolean	biblically_accurate;
+	 EyeConfiguration *configuration;
+	 TPoint		*pupils;
 	 Transform	t;
 	 Transform	maskt;
 	 XtIntervalId	interval_id;

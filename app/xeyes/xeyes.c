@@ -44,24 +44,24 @@ from the X Consortium.
 /* Exit with message describing command line format */
 
 static void _X_NORETURN
-usage(void)
+usage(int exitval)
 {
     fprintf(stderr,
-	    "usage: xeyes\n"
-	    "       [-display [{host}]:[{vs}]]\n"
-	    "       [-geometry [{width}][x{height}][{+-}{xoff}[{+-}{yoff}]]]\n"
-	    "       [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]\n"
-	    "       [-shape | +shape] [-outline {color}] [-center {color}]\n"
-	    "       [-backing {backing-store}] [-distance]\n");
+	    "usage: xeyes [-display [{host}]:{vs}]\n"
+	    "             [-geometry [{width}][x{height}][{+-}{xoff}[{+-}{yoff}]]]\n"
+	    "             [-fg {color}] [-bg {color}] [-bd {color}] [-bw {pixels}]\n"
+	    "             [-shape | +shape] [-outline {color}] [-center {color}]\n"
+	    "             [-backing {backing-store}] [-distance]\n"
+	    "             [-biblicallyAccurate]\n"
 #ifdef XRENDER
-    fprintf(stderr,
-	    "       [-render | +render]\n");
+	    "             [-render | +render]\n"
 #endif
 #ifdef PRESENT
-    fprintf(stderr,
-	    "       [-present | +present]\n");
+	    "             [-present | +present]\n"
 #endif
-    exit(1);
+            "       xeyes -help\n"
+            "       xeyes -version\n");
+    exit(exitval);
 }
 
 /* Command line options table.  Only resources are entered here...there is a
@@ -82,6 +82,7 @@ static XrmOptionDescRec options[] = {
 {(char *)"+present",	(char *)"*eyes.present",	XrmoptionNoArg,		(char *)"FALSE"},
 #endif
 {(char *)"-distance",	(char *)"*eyes.distance",	XrmoptionNoArg,		(char *)"TRUE"},
+{(char *)"-biblicallyAccurate",	(char *)"*eyes.biblicallyAccurate",	XrmoptionNoArg,		(char *)"TRUE"},
 };
 
 static Atom wm_delete_window;
@@ -113,10 +114,36 @@ main(int argc, char **argv)
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    usage(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     toplevel = XtAppInitialize(&app_context, "XEyes",
 			       options, XtNumber(options), &argc, argv,
 			       NULL, arg, (Cardinal) 0);
-    if (argc != 1) usage();
+
+    if (argc != 1) {
+	fputs("Unknown argument(s):", stderr);
+	for (int n = 1; n < argc; n++) {
+	    if ((n < (argc -1)) || (argv[n][0] == '-')) {
+		fprintf(stderr, " %s", argv[n]);
+	    }
+	}
+	fputs("\n\n", stderr);
+	usage(1);
+    }
 
     wm_delete_window = XInternAtom(XtDisplay(toplevel), "WM_DELETE_WINDOW",
 				   False);

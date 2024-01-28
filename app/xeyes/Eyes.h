@@ -34,6 +34,7 @@
 
 #define XtNrender	"render"
 #define XtNdistance	"distance"
+#define XtNbiblicallyAccurate	"biblicallyAccurate"
 
 #define XtNpresent      "present"
 
