@@ -77,6 +77,9 @@ is loudest).
 .B \-shape
 This option indicates that the mailbox window should be shaped if masks for
 the empty or full images are given.
+.TP 8
+.B \-version
+This option indicates that \fIxbiff\fP should print its version and exit.
 .PP
 The following standard X Toolkit command line arguments are commonly used with
 .I xbiff:

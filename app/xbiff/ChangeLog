@@ -1,3 +1,105 @@
+commit 4ce1a96d300a9d63a2306331000878d6f8c34a3e
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 20 12:25:47 2024 -0800
+
+    xbiff 1.0.5
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit f7b3bb94462ea5d51514cc32d2808b5b02cea24b
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Sep 23 10:56:27 2023 -0700
+
+    Use C99 struct initializers
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 2c513f4ab38187dc7268f898e5db87eab3983715
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 11:34:44 2023 -0800
+
+    List which options were unrecognized before printing usage message
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 0f9f41f177b4713a6792a2bc87dfbb186b8926bd
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 11:34:18 2023 -0800
+
+    Add -help option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 44cc442a633a3ce39603fc879793a4f51b6ae132
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sun Feb 5 11:19:32 2023 -0800
+
+    Fix -version handling to not require opening a display first
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ed933c78bf1208140baf6103dc5ab81080f6c6fb
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 28 10:34:11 2023 -0800
+
+    Add -version option
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit fe643332c824fdd0e4f8243e5c1e67c6370d0e5a
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 28 10:26:33 2023 -0800
+
+    Combine usage message into a single string
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit ffbfe65382c8f267139b87630976700c0e80b435
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Jan 28 10:12:58 2023 -0800
+
+    Use XtAsprintf instead of manual mallocing and copying of strings
+    
+    Raises minimum libXt requirement to 1.1.0
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 7862d8d80e8612b3e7285ce2fe3ec901fda05fe6
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Tue Dec 20 12:21:37 2022 -0800
+
+    configure: Use AC_SYS_LARGEFILE to enable large file support
+    
+    Also adds include of "config.h" before any other header files
+    are included, to avoid mismatch of _FILE_OFFSET_BITS when
+    processing other header files.
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit c3d0f59af3626b73c32e8e03a41d6a712909c7af
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Thu Jul 28 17:30:21 2022 -0700
+
+    gitlab CI: stop requiring Signed-off-by in commits
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit 30528211ad661e9a3d53f6f155a6a6deac334e00
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:37:17 2021 -0800
+
+    Build xz tarballs instead of bzip2
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
+commit a5c655d67994c905629a5caae2f3e2d88b155f8c
+Author: Alan Coopersmith <alan.coopersmith@oracle.com>
+Date:   Sat Dec 4 10:37:14 2021 -0800
+
+    gitlab CI: add a basic build test
+    
+    Signed-off-by: Alan Coopersmith <alan.coopersmith@oracle.com>
+
 commit a757ec8b8f867f09deb1e95a61f07a6a6227e77c
 Author: Alan Coopersmith <alan.coopersmith@oracle.com>
 Date:   Sun Jul 14 11:29:14 2019 -0700

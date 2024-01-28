@@ -40,6 +40,10 @@ from the X Consortium.
  *         XBiff*emptyPixmap:  mailempty
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <X11/IntrinsicP.h>		/* for toolkit stuff */
 #include <X11/StringDefs.h>		/* for useful atom names */
 #include <X11/cursorfont.h>		/* for cursor constants */
@@ -226,14 +230,14 @@ WidgetClass mailboxWidgetClass = (WidgetClass) &mailboxClassRec;
 
 static GC get_mailbox_gc (MailboxWidget w)
 {
-    XtGCMask valuemask;
-    XGCValues xgcv;
-
-    valuemask = GCForeground | GCBackground | GCFunction | GCGraphicsExposures;
-    xgcv.foreground = w->mailbox.foreground_pixel;
-    xgcv.background = w->core.background_pixel;
-    xgcv.function = GXcopy;
-    xgcv.graphics_exposures = False;	/* this is Bool, not Boolean */
+    XtGCMask valuemask
+         = GCForeground | GCBackground | GCFunction | GCGraphicsExposures;
+    XGCValues xgcv = {
+        .foreground = w->mailbox.foreground_pixel,
+        .background = w->core.background_pixel,
+        .function = GXcopy,
+        .graphics_exposures = False	/* this is Bool, not Boolean */
+    };
     return (XtGetGC ((Widget) w, valuemask, &xgcv));
 }
 
@@ -541,14 +545,10 @@ static void GetMailFile (MailboxWidget w)
     }
 #endif
     if ((mailpath = getenv("MAIL"))) {
-	w->mailbox.filename = XtMalloc (strlen (mailpath) + 1);
-	strcpy (w->mailbox.filename, mailpath);
+	XtAsprintf(&w->mailbox.filename, "%s", mailpath);
     } else {
-	w->mailbox.filename = XtMalloc (strlen (MAILBOX_DIRECTORY) + 1
-						 + strlen (username) + 1);
-	strcpy (w->mailbox.filename, MAILBOX_DIRECTORY);
-	strcat (w->mailbox.filename, "/");
-	strcat (w->mailbox.filename, username);
+	XtAsprintf(&w->mailbox.filename, "%s/%s",
+		   MAILBOX_DIRECTORY, username);
     }
     return;
 }

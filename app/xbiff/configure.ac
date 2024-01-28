@@ -23,13 +23,13 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xbiff], [1.0.4],
+AC_INIT([xbiff], [1.0.5],
         [https://gitlab.freedesktop.org/xorg/app/xbiff/issues], [xbiff])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 
 # Initialize Automake
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 
 # Require X.Org macros 1.8 or later for MAN_SUBSTS set by XORG_MANPAGE_SECTIONS
 m4_ifndef([XORG_MACROS_VERSION],
@@ -38,10 +38,13 @@ XORG_MACROS_VERSION(1.8)
 XORG_DEFAULT_OPTIONS
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XBIFF, xaw7 xmu xbitmaps xext x11)
+PKG_CHECK_MODULES(XBIFF, [xaw7 xmu xt >= 1.1 xbitmaps xext x11 xproto >= 7.0.25])
 
 # Checks for headers
 AC_CHECK_HEADERS([paths.h])
+
+# Checks for typedefs, structures, and compiler characteristics.
+AC_SYS_LARGEFILE
 
 # Allow builder to set path to look for mailboxes
 AC_MSG_CHECKING([for mailbox directory])

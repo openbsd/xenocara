@@ -30,6 +30,10 @@ from the X Consortium.
 */
 /* $XFree86: xc/programs/xbiff/xbiff.c,v 1.3tsi Exp $ */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/Xatom.h>
@@ -64,27 +68,26 @@ static XtActionsRec xbiff_actions[] = {
     { "quit", quit },
 };
 
-static void Usage (void)
+static void _X_NORETURN _X_COLD
+Usage (int exitval)
 {
-    static const char *help_message[] = {
-"where options include:",
-"    -display host:dpy              X server to contact",
-"    -geometry geom                 size of mailbox",
-"    -file file                     file to watch",
-"    -update seconds                how often to check for mail",
-"    -volume percentage             how loud to ring the bell",
-"    -bg color                      background color",
-"    -fg color                      foreground color",
-"    -rv                            reverse video",
-"    -shape                         shape the window",
-NULL};
-    const char **cpp;
+    const char *help_message =
+"where options include:\n"
+"    -display host:dpy              X server to contact\n"
+"    -geometry geom                 size of mailbox\n"
+"    -file file                     file to watch\n"
+"    -update seconds                how often to check for mail\n"
+"    -volume percentage             how loud to ring the bell\n"
+"    -bg color                      background color\n"
+"    -fg color                      foreground color\n"
+"    -rv                            reverse video\n"
+"    -shape                         shape the window\n"
+"    -help                          print usage info and exit\n"
+"    -version                       print version info and exit\n";
 
     fprintf (stderr, "usage:  %s [-options ...]\n", ProgramName);
-    for (cpp = help_message; *cpp; cpp++)
-	fprintf (stderr, "%s\n", *cpp);
-    fprintf (stderr, "\n");
-    exit (1);
+    fprintf (stderr, "%s\n", help_message);
+    exit (exitval);
 }
 
 
@@ -98,9 +101,32 @@ main (int argc, char **argv)
 
     XtSetLanguageProc(NULL, (XtLanguageProc) NULL, NULL);
 
+    /* Handle args that don't require opening a display */
+    for (int n = 1; n < argc; n++) {
+	const char *argn = argv[n];
+	/* accept single or double dash for -help & -version */
+	if (argn[0] == '-' && argn[1] == '-') {
+	    argn++;
+	}
+	if (strcmp(argn, "-help") == 0) {
+	    Usage(0);
+	}
+	if (strcmp(argn, "-version") == 0) {
+	    puts(PACKAGE_STRING);
+	    exit(0);
+	}
+    }
+
     toplevel = XtAppInitialize(&xtcontext, "XBiff", options, XtNumber (options),
 			       &argc, argv, NULL, NULL, 0);
-    if (argc != 1) Usage ();
+    if (argc != 1) {
+	fputs("Unknown argument(s):", stderr);
+	for (int n = 1; n < argc; n++) {
+	    fprintf(stderr, " %s", argv[n]);
+	}
+	fputs("\n\n", stderr);
+	Usage(1);
+    }
 
     /*
      * This is a hack so that f.delete will do something useful in this
