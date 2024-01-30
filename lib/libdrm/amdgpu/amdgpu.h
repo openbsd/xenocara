@@ -1283,6 +1283,22 @@ int amdgpu_query_video_caps_info(amdgpu_device_handle dev, unsigned cap_type,
                                  unsigned size, void *value);
 
 /**
+ * Query information about VM faults
+ *
+ * The return sizeof(struct drm_amdgpu_info_gpuvm_fault)
+ *
+ * \param   dev         - \c [in] Device handle. See #amdgpu_device_initialize()
+ * \param   size        - \c [in] Size of the returned value.
+ * \param   value       - \c [out] Pointer to the return value.
+ *
+ * \return   0 on success\n
+ *          <0 - Negative POSIX Error code
+ *
+*/
+int amdgpu_query_gpuvm_fault_info(amdgpu_device_handle dev, unsigned size,
+				  void *value);
+
+/**
  * Read a set of consecutive memory-mapped registers.
  * Not all registers are allowed to be read by userspace.
  *
@@ -1367,6 +1383,11 @@ int amdgpu_va_range_alloc(amdgpu_device_handle dev,
  *
 */
 int amdgpu_va_range_free(amdgpu_va_handle va_range_handle);
+
+/**
+ * Return the starting address of the allocated virtual address range.
+ */
+uint64_t amdgpu_va_get_start_addr(amdgpu_va_handle va_handle);
 
 /**
 * Query virtual address range

@@ -177,6 +177,7 @@ static uint32_t *ib_checksum;
 static uint32_t *ib_size_in_dw;
 
 static rvcn_decode_buffer_t *decode_buffer;
+struct amdgpu_vcn_bo session_ctx_buf;
 
 static amdgpu_bo_handle resources[MAX_RESOURCES];
 static unsigned num_resources;
@@ -561,7 +562,9 @@ static void amdgpu_cs_vcn_dec_create(void)
 
 	num_resources  = 0;
 	alloc_resource(&msg_buf, 4096, AMDGPU_GEM_DOMAIN_GTT);
+	alloc_resource(&session_ctx_buf, 32 * 4096, AMDGPU_GEM_DOMAIN_VRAM);
 	resources[num_resources++] = msg_buf.handle;
+	resources[num_resources++] = session_ctx_buf.handle;
 	resources[num_resources++] = ib_handle;
 
 	r = amdgpu_bo_cpu_map(msg_buf.handle, (void **)&msg_buf.ptr);
@@ -571,9 +574,11 @@ static void amdgpu_cs_vcn_dec_create(void)
 	memcpy(msg_buf.ptr, vcn_dec_create_msg, sizeof(vcn_dec_create_msg));
 
 	len = 0;
-	if (vcn_dec_sw_ring == true)
+
+	vcn_dec_cmd(session_ctx_buf.addr, 5, &len);
+	if (vcn_dec_sw_ring == true) {
 		vcn_dec_cmd(msg_buf.addr, 0, &len);
-	else {
+	} else {
 		ib_cpu[len++] = reg[vcn_reg_index].data0;
 		ib_cpu[len++] = msg_buf.addr;
 		ib_cpu[len++] = reg[vcn_reg_index].data1;
@@ -650,6 +655,7 @@ static void amdgpu_cs_vcn_dec_decode(void)
 	dt_addr = ALIGN(dpb_addr + dpb_size, 4*1024);
 
 	len = 0;
+	vcn_dec_cmd(session_ctx_buf.addr, 0x5, &len);
 	vcn_dec_cmd(msg_addr, 0x0, &len);
 	vcn_dec_cmd(dpb_addr, 0x1, &len);
 	vcn_dec_cmd(dt_addr, 0x2, &len);
@@ -702,9 +708,10 @@ static void amdgpu_cs_vcn_dec_destroy(void)
 	memcpy(msg_buf.ptr, vcn_dec_destroy_msg, sizeof(vcn_dec_destroy_msg));
 
 	len = 0;
-	if (vcn_dec_sw_ring == true)
+	vcn_dec_cmd(session_ctx_buf.addr, 5, &len);
+	if (vcn_dec_sw_ring == true) {
 		vcn_dec_cmd(msg_buf.addr, 0, &len);
-	else {
+	} else {
 		ib_cpu[len++] = reg[vcn_reg_index].data0;
 		ib_cpu[len++] = msg_buf.addr;
 		ib_cpu[len++] = reg[vcn_reg_index].data1;
@@ -727,6 +734,7 @@ static void amdgpu_cs_vcn_dec_destroy(void)
 	CU_ASSERT_EQUAL(r, 0);
 
 	free_resource(&msg_buf);
+	free_resource(&session_ctx_buf);
 }
 
 static void amdgpu_cs_vcn_enc_create(void)
@@ -808,6 +816,8 @@ static void amdgpu_cs_vcn_enc_create(void)
 	ib_cpu[len++] = 0;
 	ib_cpu[len++] = 0;	/* pre encode mode */
 	ib_cpu[len++] = 0;	/* chroma enabled : false */
+	ib_cpu[len++] = 0;
+	ib_cpu[len++] = 0;
 	*st_size = (len - st_offset) * 4;
 
 	/* slice control */
@@ -829,7 +839,7 @@ static void amdgpu_cs_vcn_enc_create(void)
 	ib_cpu[len++] = 1;	/* quarter pel enabled */
 	ib_cpu[len++] = 100;	/* BASELINE profile */
 	ib_cpu[len++] = 11;	/* level */
-	if (vcn_ip_version_major == 3) {
+	if (vcn_ip_version_major >= 3) {
 		ib_cpu[len++] = 0;	/* b_picture_enabled */
 		ib_cpu[len++] = 0;	/* weighted_bipred_idc */
 	}
@@ -870,7 +880,7 @@ static void amdgpu_cs_vcn_enc_create(void)
 	ib_cpu[len++] = 0;	/* scene change sensitivity */
 	ib_cpu[len++] = 0;	/* scene change min idr interval */
 	ib_cpu[len++] = 0;
-	if (vcn_ip_version_major == 3)
+	if (vcn_ip_version_major >= 3)
 		ib_cpu[len++] = 0;
 	*st_size = (len - st_offset) * 4;
 
@@ -913,6 +923,7 @@ static void amdgpu_cs_vcn_enc_create(void)
 	ib_cpu[len++] = 1;
 	ib_cpu[len++] = 0;
 	ib_cpu[len++] = 1;
+	ib_cpu[len++] = 0;
 	*st_size = (len - st_offset) * 4;
 
 	/* op init rc */
@@ -1265,10 +1276,16 @@ static void check_result(struct amdgpu_vcn_bo fb_buf, struct amdgpu_vcn_bo bs_bu
 	CU_ASSERT_EQUAL(r, 0);
 }
 
+static void amdgpu_cs_vcn_ib_zero_count(int *len, int num)
+{
+	for (int i = 0; i < num; i++)
+		ib_cpu[(*len)++] = 0;
+}
+
 static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 {
-	struct amdgpu_vcn_bo bs_buf, fb_buf, vbv_buf;
-	int len, r, i;
+	struct amdgpu_vcn_bo bs_buf, fb_buf, input_buf;
+	int len, r;
 	unsigned width = 160, height = 128, buf_size;
 	uint32_t *p_task_size = NULL;
 	uint32_t task_offset = 0, st_offset;
@@ -1288,12 +1305,12 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	num_resources = 0;
 	alloc_resource(&bs_buf, 4096, AMDGPU_GEM_DOMAIN_GTT);
 	alloc_resource(&fb_buf, 4096, AMDGPU_GEM_DOMAIN_GTT);
-	alloc_resource(&vbv_buf, buf_size, AMDGPU_GEM_DOMAIN_GTT);
+	alloc_resource(&input_buf, buf_size, AMDGPU_GEM_DOMAIN_GTT);
 	resources[num_resources++] = enc_buf.handle;
 	resources[num_resources++] = cpb_buf.handle;
 	resources[num_resources++] = bs_buf.handle;
 	resources[num_resources++] = fb_buf.handle;
-	resources[num_resources++] = vbv_buf.handle;
+	resources[num_resources++] = input_buf.handle;
 	resources[num_resources++] = ib_handle;
 
 
@@ -1305,13 +1322,13 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	memset(fb_buf.ptr, 0, 4096);
 	r = amdgpu_bo_cpu_unmap(fb_buf.handle);
 
-	r = amdgpu_bo_cpu_map(vbv_buf.handle, (void **)&vbv_buf.ptr);
+	r = amdgpu_bo_cpu_map(input_buf.handle, (void **)&input_buf.ptr);
 	CU_ASSERT_EQUAL(r, 0);
 
 	for (int i = 0; i < ALIGN(height, 32) * 3 / 2; i++)
-		memcpy(vbv_buf.ptr + i * ALIGN(width, 256), frame + i * width, width);
+		memcpy(input_buf.ptr + i * ALIGN(width, 256), frame + i * width, width);
 
-	r = amdgpu_bo_cpu_unmap(vbv_buf.handle);
+	r = amdgpu_bo_cpu_unmap(input_buf.handle);
 	CU_ASSERT_EQUAL(r, 0);
 
 	len = 0;
@@ -1346,7 +1363,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 		if(vcn_ip_version_major == 1)
 			ib_cpu[len++] = 0x00000020;	/* RENCODE_IB_PARAM_DIRECT_OUTPUT_NALU vcn 1 */
 		else
-			ib_cpu[len++] = 0x0000000a;	/* RENCODE_IB_PARAM_DIRECT_OUTPUT_NALU vcn 2,3 */
+			ib_cpu[len++] = 0x0000000a;	/* RENCODE_IB_PARAM_DIRECT_OUTPUT_NALU other vcn */
 		ib_cpu[len++] = 0x00000002;	/* RENCODE_DIRECT_OUTPUT_NALU_TYPE_SPS */
 		ib_cpu[len++] = 0x00000011;	/* sps len */
 		ib_cpu[len++] = 0x00000001;	/* start code */
@@ -1362,7 +1379,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 		if(vcn_ip_version_major == 1)
 			ib_cpu[len++] = 0x00000020;	/* RENCODE_IB_PARAM_DIRECT_OUTPUT_NALU vcn 1*/
 		else
-			ib_cpu[len++] = 0x0000000a;	/* RENCODE_IB_PARAM_DIRECT_OUTPUT_NALU vcn 2,3*/
+			ib_cpu[len++] = 0x0000000a;	/* RENCODE_IB_PARAM_DIRECT_OUTPUT_NALU other vcn*/
 		ib_cpu[len++] = 0x00000003;	/* RENCODE_DIRECT_OUTPUT_NALU_TYPE_PPS */
 		ib_cpu[len++] = 0x00000008;	/* pps len */
 		ib_cpu[len++] = 0x00000001;	/* start code */
@@ -1376,7 +1393,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	if(vcn_ip_version_major == 1)
 		ib_cpu[len++] = 0x0000000a; /* RENCODE_IB_PARAM_SLICE_HEADER vcn 1 */
 	else
-		ib_cpu[len++] = 0x0000000b; /* RENCODE_IB_PARAM_SLICE_HEADER vcn 2,3 */
+		ib_cpu[len++] = 0x0000000b; /* RENCODE_IB_PARAM_SLICE_HEADER other vcn */
 	if (frame_type == 2) {
 		ib_cpu[len++] = 0x65000000;
 		ib_cpu[len++] = 0x11040000;
@@ -1385,8 +1402,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 		ib_cpu[len++] = 0x34210000;
 	}
 	ib_cpu[len++] = 0xe0000000;
-	for(i = 0; i < 13; i++)
-		ib_cpu[len++] = 0x00000000;
+	amdgpu_cs_vcn_ib_zero_count(&len, 13);
 
 	ib_cpu[len++] = 0x00000001;
 	ib_cpu[len++] = 0x00000008;
@@ -1398,24 +1414,22 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	ib_cpu[len++] = 0x00000000;
 	ib_cpu[len++] = 0x00000001;
 	ib_cpu[len++] = 0x00000003;
-	for(i = 0; i < 22; i++)
-		ib_cpu[len++] = 0x00000000;
-
+	amdgpu_cs_vcn_ib_zero_count(&len, 22);
 	*st_size = (len - st_offset) * 4;
 
 	/* encode params */
 	st_offset = len;
 	st_size = &ib_cpu[len++];	/* size */
 	if(vcn_ip_version_major == 1)
-		ib_cpu[len++] = 0x0000000b;	/* RENCODE_IB_PARAM_ENCODE_PARAMS vcn 1*/
+		ib_cpu[len++] = 0x0000000b;	/* RENCODE_IB_PARAM_ENCODE_PARAMS vcn 1 */
 	else
-		ib_cpu[len++] = 0x0000000f;	/* RENCODE_IB_PARAM_ENCODE_PARAMS vcn 2,3*/
+		ib_cpu[len++] = 0x0000000f;	/* RENCODE_IB_PARAM_ENCODE_PARAMS other vcn */
 	ib_cpu[len++] = frame_type;
 	ib_cpu[len++] = 0x0001f000;
-	ib_cpu[len++] = vbv_buf.addr >> 32;
-	ib_cpu[len++] = vbv_buf.addr;
-	ib_cpu[len++] = (vbv_buf.addr + ALIGN(width, 256) * ALIGN(height, 32)) >> 32;
-	ib_cpu[len++] = vbv_buf.addr + ALIGN(width, 256) * ALIGN(height, 32);
+	ib_cpu[len++] = input_buf.addr >> 32;
+	ib_cpu[len++] = input_buf.addr;
+	ib_cpu[len++] = (input_buf.addr + ALIGN(width, 256) * ALIGN(height, 32)) >> 32;
+	ib_cpu[len++] = input_buf.addr + ALIGN(width, 256) * ALIGN(height, 32);
 	ib_cpu[len++] = 0x00000100;
 	ib_cpu[len++] = 0x00000080;
 	ib_cpu[len++] = 0x00000000;
@@ -1427,7 +1441,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	st_offset = len;
 	st_size = &ib_cpu[len++];	/* size */
 	ib_cpu[len++] = 0x00200003;	/* RENCODE_H264_IB_PARAM_ENCODE_PARAMS */
-	if (vcn_ip_version_major != 3) {
+	if (vcn_ip_version_major <= 2) {
 		ib_cpu[len++] = 0x00000000;
 		ib_cpu[len++] = 0x00000000;
 		ib_cpu[len++] = 0x00000000;
@@ -1450,6 +1464,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 		ib_cpu[len++] = 0x00000000;
 		ib_cpu[len++] = 0x00000000;
 		ib_cpu[len++] = 0x00000000;
+		ib_cpu[len++] = 0x00000001;
 	}
 	*st_size = (len - st_offset) * 4;
 
@@ -1459,20 +1474,21 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	if(vcn_ip_version_major == 1)
 		ib_cpu[len++] = 0x0000000d;	/* ENCODE_CONTEXT_BUFFER  vcn 1 */
 	else
-		ib_cpu[len++] = 0x00000011;	/* ENCODE_CONTEXT_BUFFER  vcn 2,3 */
+		ib_cpu[len++] = 0x00000011;	/* ENCODE_CONTEXT_BUFFER  other vcn */
 	ib_cpu[len++] = cpb_buf.addr >> 32;
 	ib_cpu[len++] = cpb_buf.addr;
 	ib_cpu[len++] = 0x00000000;	/* swizzle mode */
 	ib_cpu[len++] = 0x00000100;	/* luma pitch */
 	ib_cpu[len++] = 0x00000100;	/* chroma pitch */
-	ib_cpu[len++] = 0x00000003; /* no reconstructed picture */
+	ib_cpu[len++] = 0x00000002; /* no reconstructed picture */
 	ib_cpu[len++] = 0x00000000;	/* reconstructed pic 1 luma offset */
 	ib_cpu[len++] = ALIGN(width, 256) * ALIGN(height, 32);	/* pic1 chroma offset */
+	if(vcn_ip_version_major == 4)
+		amdgpu_cs_vcn_ib_zero_count(&len, 2);
 	ib_cpu[len++] = ALIGN(width, 256) * ALIGN(height, 32) * 3 / 2;	/* pic2 luma offset */
 	ib_cpu[len++] = ALIGN(width, 256) * ALIGN(height, 32) * 5 / 2;	/* pic2 chroma offset */
 
-	for (int i = 0; i < 136; i++)
-		ib_cpu[len++] = 0x00000000;
+	amdgpu_cs_vcn_ib_zero_count(&len, 280);
 	*st_size = (len - st_offset) * 4;
 
 	/* bitstream buffer */
@@ -1481,7 +1497,8 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 	if(vcn_ip_version_major == 1)
 		ib_cpu[len++] = 0x0000000e;	/* VIDEO_BITSTREAM_BUFFER vcn 1 */
 	else
-		ib_cpu[len++] = 0x00000012;	/* VIDEO_BITSTREAM_BUFFER vcn 2,3 */
+		ib_cpu[len++] = 0x00000012;	/* VIDEO_BITSTREAM_BUFFER other vcn */
+
 	ib_cpu[len++] = 0x00000000;	/* mode */
 	ib_cpu[len++] = bs_buf.addr >> 32;
 	ib_cpu[len++] = bs_buf.addr;
@@ -1564,7 +1581,7 @@ static void amdgpu_cs_vcn_enc_encode_frame(int frame_type)
 
 	free_resource(&fb_buf);
 	free_resource(&bs_buf);
-	free_resource(&vbv_buf);
+	free_resource(&input_buf);
 }
 
 static void amdgpu_cs_vcn_enc_encode(void)

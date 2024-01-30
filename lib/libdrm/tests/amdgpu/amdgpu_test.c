@@ -296,18 +296,23 @@ static void display_test_suites(void)
 
 /** Help string for command line parameters */
 static const char usage[] =
-	"Usage: %s [-hlpr] [<-s <suite id>> [-t <test id>] [-f]] "
-	"[-b <pci_bus_id> [-d <pci_device_id>]]\n"
-	"where:\n"
-	"       l - Display all suites and their tests\n"
-	"       r - Run the tests on render node\n"
-	"       b - Specify device's PCI bus id to run tests\n"
-	"       d - Specify device's PCI device id to run tests (optional)\n"
-	"       p - Display information of AMDGPU devices in system\n"
-	"       f - Force executing inactive suite or test\n"
-	"       h - Display this help\n";
+	"Usage: %s [-hlpr] [-s <suite id>] [-e <s>[.<t>] [-e ...]] [-t <test id>] [-f] "
+	"[-b <pci_bus_id>] [-d <pci_device_id>]\n"
+	"Where,\n"
+	"  -b      Specify device's PCI bus id to run tests\n"
+	"  -d      Specify device's PCI device id to run tests (optional)\n"
+	"  -e <s>[.<t>]  Disable test <t> of suite <s>. If only <s> is given, then disable\n"
+	"          the whole suite. Can be specified more than once on the command line\n"
+	"          to disable multiple tests or suites.\n"
+	"  -f      Force executing inactive suite or test\n"
+	"  -h      Display this help\n"
+	"  -l      Display all test suites and their tests\n"
+	"  -p      Display information of AMDGPU devices in system\n"
+	"  -r      Run the tests on render node\n"
+	"  -s <s>  Enable only test suite <s>\n"
+	"  -t <t>  Enable only test <t> of test suite <s>\n";
 /** Specified options strings for getopt */
-static const char options[]   = "hlrps:t:b:d:f";
+static const char options[]   = "hlrps:t:e:b:d:f";
 
 /* Open AMD devices.
  * Return the number of AMD device opened.
@@ -662,6 +667,48 @@ char *amdgpu_get_device_from_fd(int fd)
 #endif
 }
 
+#ifndef ARRAY_SIZE
+#define ARRAY_SIZE(_A) (sizeof(_A)/sizeof(_A[0]))
+#endif
+
+static void amdgpu_test_disable(long suite, long test)
+{
+	const char *suite_name;
+
+	if (suite < 1)
+		return;
+
+	/* The array is 0-based, so subract 1. */
+	suite--;
+	if (suite >= ARRAY_SIZE(suites) - 1)
+		return;
+
+	suite_name = suites[suite].pName;
+	if (test < 1) {
+		fprintf(stderr, "Deactivating suite %s\n", suite_name);
+		amdgpu_set_suite_active(suite_name, CU_FALSE);
+	} else {
+		int ii;
+
+		/* The array is 0-based so subtract 1. */
+		test--;
+		for (ii = 0; suites[suite].pTests[ii].pName; ii++) {
+			if (ii == test) {
+				fprintf(stderr, "Deactivating %s:%s\n",
+					suite_name,
+					suites[suite].pTests[ii].pName);
+				amdgpu_set_test_active(suite_name,
+						       suites[suite].pTests[ii].pName,
+						       CU_FALSE);
+				break;
+			}
+		}
+
+		if (suites[suite].pTests[ii].pName == NULL)
+			fprintf(stderr, "No such suite.test %ld.%ld\n", suite, test);
+	}
+}
+
 /* The main() function for setting up and running the tests.
  * Returns a CUE_SUCCESS on successful running, another
  * CUnit error code on failure.
@@ -680,47 +727,20 @@ int main(int argc, char **argv)
 	int display_list = 0;
 	int force_run = 0;
 
-	for (i = 0; i < MAX_CARDS_SUPPORTED; i++)
-		drm_amdgpu[i] = -1;
-
-
-	/* Parse command line string */
+	/* Parse command line string.
+	 * Process various command line options as early as possible.
+	 */
 	opterr = 0;		/* Do not print error messages from getopt */
 	while ((c = getopt(argc, argv, options)) != -1) {
 		switch (c) {
-		case 'l':
-			display_list = 1;
-			break;
-		case 's':
-			suite_id = atoi(optarg);
-			break;
-		case 't':
-			test_id = atoi(optarg);
-			break;
-		case 'b':
-			pci_bus_id = atoi(optarg);
-			break;
-		case 'd':
-			sscanf(optarg, "%x", &pci_device_id);
-			break;
-		case 'p':
-			display_devices = 1;
-			break;
-		case 'r':
-			open_render_node = 1;
-			break;
-		case 'f':
-			force_run = 1;
-			break;
-		case '?':
 		case 'h':
 			fprintf(stderr, usage, argv[0]);
 			exit(EXIT_SUCCESS);
-		default:
-			fprintf(stderr, usage, argv[0]);
-			exit(EXIT_FAILURE);
 		}
 	}
+
+	for (i = 0; i < MAX_CARDS_SUPPORTED; i++)
+		drm_amdgpu[i] = -1;
 
 	if (amdgpu_open_devices(open_render_node) <= 0) {
 		perror("Cannot open AMDGPU device");
@@ -732,10 +752,35 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+	/* Parse command line string */
+	opterr = 0;		/* Do not print error messages from getopt */
+	optind = 1;
+	while ((c = getopt(argc, argv, options)) != -1) {
+		switch (c) {
+		case 'p':
+			display_devices = 1;
+			break;
+		}
+	}
+
 	if (display_devices) {
 		amdgpu_print_devices();
 		amdgpu_close_devices();
 		exit(EXIT_SUCCESS);
+	}
+
+	/* Parse command line string */
+	opterr = 0;		/* Do not print error messages from getopt */
+	optind = 1;
+	while ((c = getopt(argc, argv, options)) != -1) {
+		switch (c) {
+		case 'b':
+			pci_bus_id = atoi(optarg);
+			break;
+		case 'd':
+			sscanf(optarg, "%x", &pci_device_id);
+			break;
+		}
 	}
 
 	if (pci_bus_id > 0 || pci_device_id) {
@@ -780,9 +825,83 @@ int main(int argc, char **argv)
 	/* Disable suites and individual tests based on misc. conditions */
 	amdgpu_disable_suites();
 
+	/* Parse command line string */
+	opterr = 0;		/* Do not print error messages from getopt */
+	optind = 1;
+	while ((c = getopt(argc, argv, options)) != -1) {
+		switch (c) {
+		case 'l':
+			display_list = 1;
+			break;
+		}
+	}
+
 	if (display_list) {
 		display_test_suites();
 		goto end;
+	}
+
+	/* Parse command line string */
+	opterr = 0;		/* Do not print error messages from getopt */
+	optind = 1;
+	while ((c = getopt(argc, argv, options)) != -1) {
+		long esuite = -1;
+		long etest = -1;
+		char *endp;
+		switch (c) {
+		case 's':
+			suite_id = atoi(optarg);
+			break;
+		case 't':
+			test_id = atoi(optarg);
+			break;
+		case 'r':
+                       open_render_node = 1;
+                       break;
+		case 'f':
+			force_run = 1;
+			break;
+		case 'e':
+			esuite = strtol(optarg, &endp, 0);
+			if (endp == optarg) {
+				fprintf(stderr, "No digits given for -e argument\n");
+				goto end;
+			} else if (endp && *endp == '.' && esuite > 0) {
+				char *tt = endp + 1;
+				etest = strtol(tt, &endp, 0);
+				if (endp == tt) {
+					fprintf(stderr, "No digits given for test in -e s.t argument\n");
+					goto end;
+				} else if (endp && *endp != '\0') {
+					fprintf(stderr, "Bad input given for test in -e s.t argument\n");
+					goto end;
+				} else if (etest < 1) {
+					fprintf(stderr, "Test in -e s.t argument cannot be smaller than 1\n");
+					goto end;
+				}
+			} else if (endp && *endp != '\0') {
+				fprintf(stderr, "Bad input given for suite for -e s argument\n");
+				goto end;
+			} else if (esuite < 1) {
+				fprintf(stderr, "Suite in -e s argument cannot be smaller than 1\n");
+				goto end;
+			}
+			amdgpu_test_disable(esuite, etest);
+			break;
+		case 'h':
+		case 'p':
+		case 'b':
+		case 'd':
+		case 'l':
+			/* Those have been processed earlier.
+			 */
+			break;
+		case '?':
+		default:
+			fprintf(stderr, "Unknown command line option '%c'. Try -h.\n",
+				c == '?' ? optopt : c);
+			goto end;
+		}
 	}
 
 	if (suite_id != -1) {	/* If user specify particular suite? */

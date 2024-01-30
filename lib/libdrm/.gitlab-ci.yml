@@ -41,10 +41,10 @@ stages:
     BUILD_OS: debian
     FDO_DISTRIBUTION_VERSION: buster
     FDO_DISTRIBUTION_PACKAGES: 'build-essential docbook-xsl libatomic-ops-dev libcairo2-dev libcunit1-dev libpciaccess-dev meson ninja-build pkg-config python3 python3-pip python3-wheel python3-setuptools python3-docutils valgrind'
-    FDO_DISTRIBUTION_EXEC: 'pip3 install meson==0.53.0'
+    FDO_DISTRIBUTION_EXEC: 'pip3 install meson==0.59.0'
     # bump this tag every time you change something which requires rebuilding the
     # base image
-    FDO_DISTRIBUTION_TAG: "2022-08-22.0"
+    FDO_DISTRIBUTION_TAG: "2023-09-01.0"
 
 .debian-x86_64:
   extends:
@@ -67,11 +67,11 @@ stages:
 .os-freebsd:
   variables:
     BUILD_OS: freebsd
-    FDO_DISTRIBUTION_VERSION: "13.0"
-    FDO_DISTRIBUTION_PACKAGES: 'meson ninja pkgconf libpciaccess libpthread-stubs py39-docutils cairo'
+    FDO_DISTRIBUTION_VERSION: "13.2"
+    FDO_DISTRIBUTION_PACKAGES: 'meson ninja pkgconf libpciaccess py39-docutils cairo'
     # bump this tag every time you change something which requires rebuilding the
     # base image
-    FDO_DISTRIBUTION_TAG: "2022-08-22.0"
+    FDO_DISTRIBUTION_TAG: "2023-07-20.0"
 
 .freebsd-x86_64:
   extends:

@@ -70,6 +70,10 @@ CU_BOOL suite_hotunplug_tests_enable(void)
         if (minor_version < 46)
                 enable = false;
 
+        /* skip hotplug test on APUs */
+        if(device_handle->dev_info.ids_flags & AMDGPU_IDS_FLAGS_FUSION)
+                enable = false;
+
 	if (amdgpu_device_deinitialize(device_handle))
 		return CU_FALSE;
 

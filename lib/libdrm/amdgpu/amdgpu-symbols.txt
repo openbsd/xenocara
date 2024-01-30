@@ -63,6 +63,7 @@ amdgpu_query_crtc_from_id
 amdgpu_query_firmware_version
 amdgpu_query_gds_info
 amdgpu_query_gpu_info
+amdgpu_query_gpuvm_fault_info
 amdgpu_query_heap_info
 amdgpu_query_hw_ip_count
 amdgpu_query_hw_ip_info
@@ -72,6 +73,7 @@ amdgpu_query_video_caps_info
 amdgpu_read_mm_registers
 amdgpu_va_range_alloc
 amdgpu_va_range_free
+amdgpu_va_get_start_addr
 amdgpu_va_range_query
 amdgpu_vm_reserve_vmid
 amdgpu_vm_unreserve_vmid

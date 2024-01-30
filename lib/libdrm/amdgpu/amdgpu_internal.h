@@ -57,7 +57,6 @@ struct amdgpu_bo_va_mgr {
 };
 
 struct amdgpu_va {
-	amdgpu_device_handle dev;
 	uint64_t address;
 	uint64_t size;
 	enum amdgpu_gpu_va_range range;

@@ -56,9 +56,21 @@ drm_public int amdgpu_cs_ctx_create2(amdgpu_device_handle dev,
 	union drm_amdgpu_ctx args;
 	int i, j, k;
 	int r;
+	char *override_priority;
 
 	if (!dev || !context)
 		return -EINVAL;
+
+	override_priority = getenv("AMD_PRIORITY");
+	if (override_priority) {
+		/* The priority is a signed integer. The variable type is
+		 * wrong. If parsing fails, priority is unchanged.
+		 */
+		if (sscanf(override_priority, "%i", &priority) == 1) {
+			printf("amdgpu: context priority changed to %i\n",
+			       priority);
+		}
+	}
 
 	gpu_context = calloc(1, sizeof(struct amdgpu_context));
 	if (!gpu_context)
@@ -128,8 +140,8 @@ drm_public int amdgpu_cs_ctx_free(amdgpu_context_handle context)
 	for (i = 0; i < AMDGPU_HW_IP_NUM; i++) {
 		for (j = 0; j < AMDGPU_HW_IP_INSTANCE_MAX_COUNT; j++) {
 			for (k = 0; k < AMDGPU_CS_MAX_RINGS; k++) {
-				amdgpu_semaphore_handle sem;
-				LIST_FOR_EACH_ENTRY(sem, &context->sem_list[i][j][k], list) {
+				amdgpu_semaphore_handle sem, tmp;
+				LIST_FOR_EACH_ENTRY_SAFE(sem, tmp, &context->sem_list[i][j][k], list) {
 					list_del(&sem->list);
 					amdgpu_cs_reset_sem(sem);
 					amdgpu_cs_unreference_sem(sem);
