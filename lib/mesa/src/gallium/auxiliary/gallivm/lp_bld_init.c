@@ -360,6 +360,10 @@ init_gallivm_state(struct gallivm_state *gallivm, const char *name,
    lp_set_module_stack_alignment_override(gallivm->module, 4);
 #endif
 
+#if DETECT_ARCH_AARCH64
+   lp_set_module_branch_target_enforcement(gallivm->module);
+#endif
+
    gallivm->builder = LLVMCreateBuilderInContext(gallivm->context);
    if (!gallivm->builder)
       goto fail;
